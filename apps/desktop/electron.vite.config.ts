@@ -6,9 +6,19 @@ import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Workspace packages whose TS sources should be inlined into the bundle
+// (instead of left as external requires that Node would fail to import).
+const WORKSPACE_INLINE = ['@hdt/hearthdb', '@hdt/shared'];
+
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: WORKSPACE_INLINE })],
+    resolve: {
+      alias: {
+        '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
+        '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
+      },
+    },
     build: {
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/main/index.ts') },
@@ -16,7 +26,13 @@ export default defineConfig({
     },
   },
   preload: {
-    plugins: [externalizeDepsPlugin()],
+    plugins: [externalizeDepsPlugin({ exclude: WORKSPACE_INLINE })],
+    resolve: {
+      alias: {
+        '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
+        '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
+      },
+    },
     build: {
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/preload/index.ts') },
@@ -30,6 +46,7 @@ export default defineConfig({
       alias: {
         '@': resolve(__dirname, 'src/renderer/src'),
         '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
+        '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
       },
     },
     build: {
