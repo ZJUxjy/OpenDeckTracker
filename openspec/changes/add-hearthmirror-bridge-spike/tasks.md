@@ -1,9 +1,9 @@
-> 实施约定：本 change 是 spike 性质（throw-away code）。代码任务用 conventional commits 的 `chore(spike):` 前缀。Teardown 用 `chore(spike): teardown ...`。文档任务用 `docs:`。
+﻿> 实施约定：本 change 是 spike 性质（throw-away code）。代码任务用 conventional commits 的 `chore(spike):` 前缀。Teardown 用 `chore(spike): teardown ...`。文档任务用 `docs:`。
 
 ## 1. 创建 spike 包骨架
 
-- [ ] 1.1 创建目录 `packages/hearthmirror-spike/src/`。
-- [ ] 1.2 创建 `packages/hearthmirror-spike/package.json`：
+- [x] 1.1 创建目录 `packages/hearthmirror-spike/src/`。
+- [x] 1.2 创建 `packages/hearthmirror-spike/package.json`：
 
   ```json
   {
@@ -26,7 +26,7 @@
   }
   ```
 
-- [ ] 1.3 创建 `packages/hearthmirror-spike/Cargo.toml`：
+- [x] 1.3 创建 `packages/hearthmirror-spike/Cargo.toml`：
 
   ```toml
   [package]
@@ -59,7 +59,7 @@
   lto = true
   ```
 
-- [ ] 1.4 创建 `packages/hearthmirror-spike/build.rs`：
+- [x] 1.4 创建 `packages/hearthmirror-spike/build.rs`：
 
   ```rust
   fn main() {
@@ -67,7 +67,7 @@
   }
   ```
 
-- [ ] 1.5 创建 `packages/hearthmirror-spike/README.md`：
+- [x] 1.5 创建 `packages/hearthmirror-spike/README.md`：
 
   ```markdown
   # @hdt/hearthmirror-spike
@@ -80,11 +80,11 @@
   See `docs/spikes/0001-hearthmirror-spike.md` for context.
   ```
 
-- [ ] 1.6 在根 `eslint.config.js` 的 `ignores` 数组中加入 `'packages/hearthmirror-spike/**'`。
+- [x] 1.6 在根 `eslint.config.js` 的 `ignores` 数组中加入 `'packages/hearthmirror-spike/**'`。
 
 ## 2. 写 Rust spike 代码
 
-- [ ] 2.1 创建 `packages/hearthmirror-spike/src/lib.rs`，实现 `spike_read_mz`：
+- [x] 2.1 创建 `packages/hearthmirror-spike/src/lib.rs`，实现 `spike_read_mz`：
 
   ```rust
   #![deny(unsafe_op_in_unsafe_fn)]
@@ -239,17 +239,17 @@
   }
   ```
 
-- [ ] 2.2 在 `packages/hearthmirror-spike/` 下执行 `pnpm install`（仅这个包，需要 `--ignore-scripts=false` 否则不会装 napi 子依赖；如果根 `pnpm.onlyBuiltDependencies` 已包含必要项就行）。
-- [ ] 2.3 在 `packages/hearthmirror-spike/` 下执行 `pnpm exec napi build --platform --release` 构建。期望产出：
+- [x] 2.2 在 `packages/hearthmirror-spike/` 下执行 `pnpm install`（仅这个包，需要 `--ignore-scripts=false` 否则不会装 napi 子依赖；如果根 `pnpm.onlyBuiltDependencies` 已包含必要项就行）。
+- [x] 2.3 在 `packages/hearthmirror-spike/` 下执行 `pnpm exec napi build --platform --release` 构建。期望产出：
   - `packages/hearthmirror-spike/hearthmirror-spike.win32-x64-msvc.node`（约 100–500 KB）
   - `packages/hearthmirror-spike/index.cjs`（CJS 加载器）
   - `packages/hearthmirror-spike/index.d.ts`（TypeScript 类型）
-- [ ] 2.4 验证 .d.ts 包含 `export function spikeReadMz(): Promise<SpikeResult>`。
-- [ ] 2.5 commit：`git add packages/hearthmirror-spike eslint.config.js && git commit -m "chore(spike): add hearthmirror-spike rust crate with napi-rs binding"`。
+- [x] 2.4 验证 .d.ts 包含 `export function spikeReadMz(): Promise<SpikeResult>`。
+- [x] 2.5 commit：`git add packages/hearthmirror-spike eslint.config.js && git commit -m "chore(spike): add hearthmirror-spike rust crate with napi-rs binding"`。
 
 ## 3. 加 spike 触发到主进程
 
-- [ ] 3.1 修改 `apps/desktop/src/main/index.ts`，在 `app.whenReady().then(...)` 内加 spike 触发块（用清晰注释边界）：
+- [x] 3.1 修改 `apps/desktop/src/main/index.ts`，在 `app.whenReady().then(...)` 内加 spike 触发块（用清晰注释边界）：
 
   ```typescript
   // === SPIKE TRIGGER (remove on teardown of add-hearthmirror-bridge-spike) ===
@@ -268,30 +268,30 @@
   ```
 
   注意：原 main/index.ts 用 `void app.whenReady().then(() => {...})`，要把回调改为 `async () => {...}` 才能 `await import()`。
-- [ ] 3.2 在 `apps/desktop/package.json` 的 `dependencies` 中加 `"@hdt/hearthmirror-spike": "workspace:*"`。
-- [ ] 3.3 仓库根执行 `pnpm install` 让 workspace 链接生效。
-- [ ] 3.4 验证 typecheck 通过：`pnpm --filter @hdt/desktop typecheck`，期望零错误（通过 `index.d.ts` 解析）。
-- [ ] 3.5 commit：`git add apps/desktop && git commit -m "chore(spike): wire main process to call spike_read_mz once on startup"`。
+- [x] 3.2 在 `apps/desktop/package.json` 的 `dependencies` 中加 `"@hdt/hearthmirror-spike": "workspace:*"`。
+- [x] 3.3 仓库根执行 `pnpm install` 让 workspace 链接生效。
+- [x] 3.4 验证 typecheck 通过：`pnpm --filter @hdt/desktop typecheck`，期望零错误（通过 `index.d.ts` 解析）。
+- [x] 3.5 commit：`git add apps/desktop && git commit -m "chore(spike): wire main process to call spike_read_mz once on startup"`。
 
 ## 4. 场景 A 验证（用户手动开炉石）
 
-- [ ] 4.1 **要求用户配合**：本任务需要用户在本机启动炉石客户端到主菜单（不需要进对局）。
-- [ ] 4.2 在仓库根执行 `pnpm dev`，等待 Electron 主窗口出现 + 主进程 stdout 打印 `[spike:readMz] OK: ...` 行。
-- [ ] 4.3 把主进程 stdout 中 `[spike:readMz]` 行**完整复制**到 spike 报告暂存区（不要立刻关掉终端）。
-- [ ] 4.4 验证 stdout 那行匹配正则 `\[spike:readMz\] OK:.*"pid":\s*\d+.*"baseAddress":\s*"0x[0-9A-Fa-f]+".*"headerHex":\s*"4D 5A 90 00`。
-- [ ] 4.5 关闭 Electron 窗口（Ctrl+C 终端）。
+- [x] 4.1 **要求用户配合**：本任务需要用户在本机启动炉石客户端到主菜单（不需要进对局）。
+- [x] 4.2 在仓库根执行 `pnpm dev`，等待 Electron 主窗口出现 + 主进程 stdout 打印 `[spike:readMz] OK: ...` 行。
+- [x] 4.3 把主进程 stdout 中 `[spike:readMz]` 行**完整复制**到 spike 报告暂存区（不要立刻关掉终端）。
+- [x] 4.4 验证 stdout 那行匹配正则 `\[spike:readMz\] OK:.*"pid":\s*\d+.*"baseAddress":\s*"0x[0-9A-Fa-f]+".*"headerHex":\s*"4D 5A 90 00`。
+- [x] 4.5 关闭 Electron 窗口（Ctrl+C 终端）。
 
 ## 5. 场景 B 验证（炉石未运行）
 
-- [ ] 5.1 **要求用户配合**：完全关闭炉石客户端（Task Manager 确认无 `Hearthstone.exe` 进程）。
-- [ ] 5.2 仓库根再次执行 `pnpm dev`，等待 Electron 主窗口出现。
-- [ ] 5.3 主进程 stdout 必须打印 `[spike:readMz] FAIL: process not found: Hearthstone.exe is not running`。
-- [ ] 5.4 主窗口必须正常显示 "FIRESTONE"，点击 Sidebar 各 Tab 切换正常（不闪退）。
-- [ ] 5.5 关闭 Electron。
+- [x] 5.1 **要求用户配合**：完全关闭炉石客户端（Task Manager 确认无 `Hearthstone.exe` 进程）。
+- [x] 5.2 仓库根再次执行 `pnpm dev`，等待 Electron 主窗口出现。
+- [x] 5.3 主进程 stdout 必须打印 `[spike:readMz] FAIL: process not found: Hearthstone.exe is not running`。
+- [x] 5.4 主窗口必须正常显示 "FIRESTONE"，点击 Sidebar 各 Tab 切换正常（不闪退）。
+- [x] 5.5 关闭 Electron。
 
 ## 6. 性能基线（场景 A 的扩展）
 
-- [ ] 6.1 临时修改 spike 触发块，循环跑 1000 次：
+- [x] 6.1 临时修改 spike 触发块，循环跑 1000 次：
 
   ```typescript
   const N = 1000;
@@ -305,13 +305,13 @@
   console.log('[spike:perf] last result:', JSON.stringify(lastResult));
   ```
 
-- [ ] 6.2 用户开炉石后跑 `pnpm dev`，记录 `[spike:perf]` 行的微秒数。
-- [ ] 6.3 把这个数字记录到 spike report 的 Performance Baseline 章节。
-- [ ] 6.4 把循环代码恢复成单次调用版本（可选，不恢复也行因为下一步要全删）。
+- [x] 6.2 用户开炉石后跑 `pnpm dev`，记录 `[spike:perf]` 行的微秒数。
+- [x] 6.3 把这个数字记录到 spike report 的 Performance Baseline 章节。
+- [x] 6.4 把循环代码恢复成单次调用版本（可选，不恢复也行因为下一步要全删）。
 
 ## 7. 写 spike 报告
 
-- [ ] 7.1 创建 `docs/spikes/0001-hearthmirror-spike-report.md`，骨架：
+- [x] 7.1 创建 `docs/spikes/0001-hearthmirror-spike-report.md`，骨架：
 
   ```markdown
   # Spike 0001 Report: HearthMirror napi-rs Cross-Architecture Read
@@ -346,14 +346,14 @@
   - PE Header Machine Field: <如 0x014C = i386>
   ```
 
-- [ ] 7.2 把任务 4/5/6 中观察到的真实数据填入。
-- [ ] 7.3 commit：`git add docs/spikes/0001-hearthmirror-spike-report.md && git commit -m "docs(spike): write 0001 hearthmirror spike report with results"`。
+- [x] 7.2 把任务 4/5/6 中观察到的真实数据填入。
+- [x] 7.3 commit：`git add docs/spikes/0001-hearthmirror-spike-report.md && git commit -m "docs(spike): write 0001 hearthmirror spike report with results"`。
 
 ## 8. 升级 ADR 0001 状态为 Validated
 
-- [ ] 8.1 修改 `docs/adr/0001-hearthmirror-bridge.md`：
+- [x] 8.1 修改 `docs/adr/0001-hearthmirror-bridge.md`：
   - 把首部 `> **Status**: Accepted (2026-04-19)` 改为 `> **Status**: Validated (<执行日期>)`
-- [ ] 8.2 在该文件 Consequences 章节末尾追加：
+- [x] 8.2 在该文件 Consequences 章节末尾追加：
 
   ```markdown
   ### Validation
@@ -362,32 +362,32 @@
   passed in the local environment.
   ```
 
-- [ ] 8.3 commit：`git add docs/adr && git commit -m "docs(adr): upgrade 0001 status to Validated after spike pass"`。
+- [x] 8.3 commit：`git add docs/adr && git commit -m "docs(adr): upgrade 0001 status to Validated after spike pass"`。
 
 ## 9. Teardown — 删除所有 spike 代码
 
-- [ ] 9.1 删除整个 `packages/hearthmirror-spike/` 目录：
+- [x] 9.1 删除整个 `packages/hearthmirror-spike/` 目录：
 
   ```powershell
   git rm -r packages/hearthmirror-spike
   ```
 
-- [ ] 9.2 在 `apps/desktop/src/main/index.ts` 中删除 `=== SPIKE TRIGGER ===` 至 `=== END SPIKE ===` 之间的全部代码（包括边界注释行），并把回调改回 `() => {...}`（如果原来是 sync）。
-- [ ] 9.3 在 `apps/desktop/package.json` 的 `dependencies` 中删除 `"@hdt/hearthmirror-spike"` 一行。
-- [ ] 9.4 在根 `eslint.config.js` 的 `ignores` 数组中删除 `'packages/hearthmirror-spike/**'` 一行。
-- [ ] 9.5 仓库根执行 `pnpm install` 重新生成 lockfile（删除 spike workspace）。
-- [ ] 9.6 验证 spike 残留为零：
+- [x] 9.2 在 `apps/desktop/src/main/index.ts` 中删除 `=== SPIKE TRIGGER ===` 至 `=== END SPIKE ===` 之间的全部代码（包括边界注释行），并把回调改回 `() => {...}`（如果原来是 sync）。
+- [x] 9.3 在 `apps/desktop/package.json` 的 `dependencies` 中删除 `"@hdt/hearthmirror-spike"` 一行。
+- [x] 9.4 在根 `eslint.config.js` 的 `ignores` 数组中删除 `'packages/hearthmirror-spike/**'` 一行。
+- [x] 9.5 仓库根执行 `pnpm install` 重新生成 lockfile（删除 spike workspace）。
+- [x] 9.6 验证 spike 残留为零：
 
   ```powershell
   rg -i 'hearthmirror-spike|spike[A-Z][a-zA-Z]*Mz' apps/desktop/src
   ```
 
   期望：无任何匹配。
-- [ ] 9.7 commit：`git add . && git commit -m "chore(spike): teardown hearthmirror-spike after successful validation"`。
+- [x] 9.7 commit：`git add . && git commit -m "chore(spike): teardown hearthmirror-spike after successful validation"`。
 
 ## 10. 最终质量门 + OpenSpec 验收
 
-- [ ] 10.1 跑完整质量门：
+- [x] 10.1 跑完整质量门：
 
   ```powershell
   pnpm install --frozen-lockfile
@@ -398,8 +398,8 @@
   ```
 
   全部退出码 0。
-- [ ] 10.2 把本文件 1.x ~ 9.x 任务全部标 `[x]`。
-- [ ] 10.3 同步 `openspec/changes/.NEXT.md`：把 `add-hearthmirror-bridge-spike` 标 ✓，"下一步" 改为 `add-hearthmirror-bridge`。
-- [ ] 10.4 `openspec validate add-hearthmirror-bridge-spike --strict` → `Change is valid`。
-- [ ] 10.5 `openspec status --change add-hearthmirror-bridge-spike` → `4/4 artifacts complete`。
-- [ ] 10.6 final commit：`git add . && git commit -m "docs(openspec): mark all tasks complete in add-hearthmirror-bridge-spike"`。
+- [x] 10.2 把本文件 1.x ~ 9.x 任务全部标 `[x]`。
+- [x] 10.3 同步 `openspec/changes/.NEXT.md`：把 `add-hearthmirror-bridge-spike` 标 ✓，"下一步" 改为 `add-hearthmirror-bridge`。
+- [x] 10.4 `openspec validate add-hearthmirror-bridge-spike --strict` → `Change is valid`。
+- [x] 10.5 `openspec status --change add-hearthmirror-bridge-spike` → `4/4 artifacts complete`。
+- [x] 10.6 final commit：`git add . && git commit -m "docs(openspec): mark all tasks complete in add-hearthmirror-bridge-spike"`。
