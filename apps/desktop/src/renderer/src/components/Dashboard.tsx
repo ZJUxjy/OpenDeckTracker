@@ -1,9 +1,39 @@
 import { MOCK_DECK, MOCK_STATS } from '../data/mockDecks';
 import { ArrowUpRight, BarChart3, Clock, Copy, PieChart, Shield, Target, Trophy } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { MedalInfo } from '@hdt/hearthmirror';
+
+function useMedalInfo(): MedalInfo | null {
+  const [medal, setMedal] = useState<MedalInfo | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function poll(): Promise<void> {
+      const data = await window.hdt.hearthmirror.getMedalInfo().catch(() => null);
+      if (!cancelled) setMedal(data);
+    }
+
+    void poll();
+    const timer = setInterval(() => { void poll(); }, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
+  return medal;
+}
 
 export function Dashboard() {
   const cards = MOCK_DECK;
   const totalMatches = MOCK_STATS.wins + MOCK_STATS.losses;
+  const medal = useMedalInfo();
+  const liveRank = medal?.standard
+    ? medal.standard.legendRank > 0
+      ? `Legend #${medal.standard.legendRank}`
+      : `${medal.standard.starLevel}`
+    : MOCK_STATS.currentRank;
 
   const manaCurve: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
   cards.forEach(card => {
@@ -34,7 +64,7 @@ export function Dashboard() {
                 {MOCK_STATS.deckName}
               </h1>
               <div className="flex items-center text-slate-400 text-sm space-x-4">
-                <span className="flex items-center"><Trophy size={14} className="mr-1 text-yellow-500" /> Rank: {MOCK_STATS.currentRank}</span>
+                <span className="flex items-center"><Trophy size={14} className="mr-1 text-yellow-500" /> Rank: {liveRank}</span>
                 <span className="flex items-center"><Target size={14} className="mr-1 text-green-500" /> Winrate: {MOCK_STATS.winrate}%</span>
                 <span className="flex items-center"><Clock size={14} className="mr-1 text-blue-500" /> {totalMatches} Matches Played</span>
               </div>

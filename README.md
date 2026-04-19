@@ -91,7 +91,7 @@ HDT_js/
 - [x] **decide-hearthmirror-bridge** — ADR 0001 选定 64 位 napi-rs 方案
 - [x] **add-hearthmirror-bridge-spike** — 验证通过，ADR 0001 升级为 Validated
 - [x] **add-card-database** — `@hdt/hearthdb`：Cards.json 加载、卡组码编解码、IPC、UI 集成
-- [ ] add-hearthmirror-bridge — 正式实现 hearthmirror native crate
+- [x] **add-hearthmirror-bridge** — 正式实现 hearthmirror native crate (`@hdt/hearthmirror-native` Rust + `@hdt/hearthmirror` TS + IPC + renderer hooks)
 - [ ] add-deck-management — `@hdt/core/deck` + SQLite + 卡组 CRUD/导入导出
 
 详见 [`openspec/changes/.NEXT.md`](./openspec/changes/.NEXT.md)。
