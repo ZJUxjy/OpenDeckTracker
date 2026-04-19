@@ -1,0 +1,20 @@
+appId: com.hdt.desktop
+productName: HDT.js
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+asarUnpack: []
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # icon: build/icon.ico   # 待后续 change 引入正式图标
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  artifactName: HDT.js-Setup-${version}.${ext}
