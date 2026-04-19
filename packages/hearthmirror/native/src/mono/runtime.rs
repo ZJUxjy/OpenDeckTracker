@@ -97,14 +97,16 @@ fn find_mono_get_root_domain_va(
         .map_err(|e| ScryError::MetadataError(format!("by name table failed: {}", e)))?;
     let func = by
         .name("mono_get_root_domain")
-        .map_err(|_| ScryError::ClassNotFound {
-            name: "mono_get_root_domain export".into(),
-        })?;
+        .map_err(|_| missing_export_error("mono_get_root_domain"))?;
     let rva = match func {
         pelite::pe32::exports::Export::Symbol(rva) => *rva,
         _ => return Err(ScryError::Unsupported("forwarded export".into())),
     };
     Ok(RemotePtr::new(base_addr + rva))
+}
+
+fn missing_export_error(export_name: &str) -> ScryError {
+    ScryError::MetadataError(format!("required export not found: {export_name}"))
 }
 
 fn extract_global_root_domain_addr(
@@ -290,5 +292,14 @@ mod unit_tests {
         let code = [0x8B, 0x41, 0x2C, 0xC3];
         let err = extract_global_root_domain_addr_from_code(&code).unwrap_err();
         assert!(matches!(err, ScryError::DisasmError(_)));
+    }
+
+    #[test]
+    fn missing_root_domain_export_reports_metadata_error() {
+        let err = missing_export_error("mono_get_root_domain");
+        assert!(matches!(
+            err,
+            ScryError::MetadataError(msg) if msg == "required export not found: mono_get_root_domain"
+        ));
     }
 }
