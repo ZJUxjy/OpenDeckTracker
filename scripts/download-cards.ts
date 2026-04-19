@@ -7,7 +7,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const LOCALES = ['enUS', 'zhCN'] as const;
 const OUT_DIR = 'data/cards';
 const URL = (locale: string): string =>
   `https://api.hearthstonejson.com/v1/latest/${locale}/cards.collectible.json`;
@@ -25,7 +24,7 @@ async function downloadOne(locale: string): Promise<void> {
       if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
       const text = await res.text();
       // schema sanity check
-      const parsed = JSON.parse(text);
+      const parsed: unknown = JSON.parse(text);
       if (!Array.isArray(parsed)) {
         throw new Error(`expected JSON array, got ${typeof parsed}`);
       }

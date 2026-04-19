@@ -34,11 +34,9 @@ function useEnrichedCards(input: readonly Card[]): Card[] {
   useEffect(() => {
     let cancelled = false;
     const dbfIds = input.map((c) => c.dbfId).filter((v): v is number => typeof v === 'number');
-    if (dbfIds.length === 0) {
-      setEnriched([...input]);
-      return;
-    }
-    Promise.all(dbfIds.map((id) => window.hdt.cards.findByDbfId(id)))
+    if (dbfIds.length === 0) return;
+
+    void Promise.all(dbfIds.map((id) => window.hdt.cards.findByDbfId(id)))
       .then((defs) => {
         if (cancelled) return;
         const byDbfId = new Map<number, (typeof defs)[number]>();

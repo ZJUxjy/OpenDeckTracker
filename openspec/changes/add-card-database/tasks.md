@@ -1,10 +1,10 @@
-> 实施约定：Conventional Commits（`feat(hearthdb):` / `feat(desktop):` / `chore:` / `docs:` / `test:` / `build:` / `ci:`）。TDD 优先：codec 与 search 类逻辑先写失败测试。
+﻿> 实施约定：Conventional Commits（`feat(hearthdb):` / `feat(desktop):` / `chore:` / `docs:` / `test:` / `build:` / `ci:`）。TDD 优先：codec 与 search 类逻辑先写失败测试。
 > 工作目录默认 `D:\code\HDT_js`。
 
 ## 1. 创建 `@hdt/hearthdb` 包骨架
 
-- [ ] 1.1 创建目录 `packages/hearthdb/src/{deckstring,tests/fixtures}`。
-- [ ] 1.2 创建 `packages/hearthdb/package.json`：
+- [x] 1.1 创建目录 `packages/hearthdb/src/{deckstring,tests/fixtures}`。
+- [x] 1.2 创建 `packages/hearthdb/package.json`：
 
   ```json
   {
@@ -22,7 +22,7 @@
   }
   ```
 
-- [ ] 1.3 创建 `packages/hearthdb/tsconfig.json`：
+- [x] 1.3 创建 `packages/hearthdb/tsconfig.json`：
 
   ```json
   {
@@ -31,7 +31,7 @@
   }
   ```
 
-- [ ] 1.4 创建 `packages/hearthdb/vitest.config.ts`：
+- [x] 1.4 创建 `packages/hearthdb/vitest.config.ts`：
 
   ```ts
   import { defineConfig } from 'vitest/config';
@@ -40,7 +40,7 @@
   });
   ```
 
-- [ ] 1.5 把 `tsconfig.base.json` 的 `paths` 加上 `@hdt/hearthdb`：
+- [x] 1.5 把 `tsconfig.base.json` 的 `paths` 加上 `@hdt/hearthdb`：
 
   ```json
   "paths": {
@@ -49,12 +49,12 @@
   }
   ```
 
-- [ ] 1.6 commit：`git add packages/hearthdb tsconfig.base.json && git commit -m "build(hearthdb): scaffold @hdt/hearthdb package"`。
+- [x] 1.6 commit：`git add packages/hearthdb tsconfig.base.json && git commit -m "build(hearthdb): scaffold @hdt/hearthdb package"`。
 
 ## 2. 类型与枚举
 
-- [ ] 2.1 创建 `packages/hearthdb/src/card-defs.ts`，定义 `CardClass` / `Rarity` / `CardType` 字符串字面量联合类型 + `CardDef` interface（按 design D4）。完整字段见 design.md。
-- [ ] 2.2 创建 `packages/hearthdb/src/deckstring/types.ts`：
+- [x] 2.1 创建 `packages/hearthdb/src/card-defs.ts`，定义 `CardClass` / `Rarity` / `CardType` 字符串字面量联合类型 + `CardDef` interface（按 design D4）。完整字段见 design.md。
+- [x] 2.2 创建 `packages/hearthdb/src/deckstring/types.ts`：
 
   ```ts
   export const DeckFormat = {
@@ -72,12 +72,12 @@
   }
   ```
 
-- [ ] 2.3 创建 `packages/hearthdb/src/index.ts` 暴露 `CardDef` / `CardClass` / `Rarity` / `CardType` / `DeckFormat` / `DeckBlueprint`（其余后续任务追加）。
-- [ ] 2.4 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): add CardDef and DeckBlueprint types"`。
+- [x] 2.3 创建 `packages/hearthdb/src/index.ts` 暴露 `CardDef` / `CardClass` / `Rarity` / `CardType` / `DeckFormat` / `DeckBlueprint`（其余后续任务追加）。
+- [x] 2.4 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): add CardDef and DeckBlueprint types"`。
 
 ## 3. Varint（TDD）
 
-- [ ] 3.1 创建 `packages/hearthdb/src/deckstring/varint.test.ts`，按 spec `deck-codec § Varint 工具`：
+- [x] 3.1 创建 `packages/hearthdb/src/deckstring/varint.test.ts`，按 spec `deck-codec § Varint 工具`：
 
   ```ts
   import { describe, it, expect } from 'vitest';
@@ -100,8 +100,8 @@
   });
   ```
 
-- [ ] 3.2 跑 `pnpm --filter @hdt/hearthdb test`，期望 FAIL（缺 `./varint`）。
-- [ ] 3.3 创建 `packages/hearthdb/src/deckstring/varint.ts`：
+- [x] 3.2 跑 `pnpm --filter @hdt/hearthdb test`，期望 FAIL（缺 `./varint`）。
+- [x] 3.3 创建 `packages/hearthdb/src/deckstring/varint.ts`：
 
   ```ts
   export function writeVarint(out: number[], value: number): void {
@@ -132,12 +132,12 @@
   }
   ```
 
-- [ ] 3.4 重跑 test，期望全 pass。
-- [ ] 3.5 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement unsigned LEB128 varint codec"`。
+- [x] 3.4 重跑 test，期望全 pass。
+- [x] 3.5 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement unsigned LEB128 varint codec"`。
 
 ## 4. Deckstring fixture（手动准备）
 
-- [ ] 4.1 创建 `packages/hearthdb/src/tests/fixtures/known-decks.json`，包含至少 3 个真实 deckstring + expected blueprint。我可以从 HearthSim python-hearthstone 的测试 fixture 借（公开 MIT 数据）：
+- [x] 4.1 创建 `packages/hearthdb/src/tests/fixtures/known-decks.json`，包含至少 3 个真实 deckstring + expected blueprint。我可以从 HearthSim python-hearthstone 的测试 fixture 借（公开 MIT 数据）：
 
   ```json
   [
@@ -165,11 +165,11 @@
   > 注：上述 deckstring 是手动按规范构造的最小例子；实施时用 Python `python-hearthstone` 工具或现有 HDT 验证可对照。
   > 真实游戏内卡组（30 张）在 task 4.2 跑完 codec 后用 round-trip 反推。
 
-- [ ] 4.2 创建 `packages/hearthdb/src/tests/fixtures/tiny-cards.json`，10 张迷你卡牌库（手写 JSON，含各 cardClass / rarity / type / cost 范围 / 1 个含 mechanics）。
+- [x] 4.2 创建 `packages/hearthdb/src/tests/fixtures/tiny-cards.json`，10 张迷你卡牌库（手写 JSON，含各 cardClass / rarity / type / cost 范围 / 1 个含 mechanics）。
 
 ## 5. Deckstring decoder（TDD）
 
-- [ ] 5.1 创建 `packages/hearthdb/src/deckstring/decoder.test.ts`：
+- [x] 5.1 创建 `packages/hearthdb/src/deckstring/decoder.test.ts`：
 
   ```ts
   import { describe, it, expect } from 'vitest';
@@ -192,8 +192,8 @@
   });
   ```
 
-- [ ] 5.2 跑 test FAIL。
-- [ ] 5.3 创建 `packages/hearthdb/src/deckstring/decoder.ts`：
+- [x] 5.2 跑 test FAIL。
+- [x] 5.3 创建 `packages/hearthdb/src/deckstring/decoder.ts`：
 
   ```ts
   import { readVarint } from './varint';
@@ -252,12 +252,12 @@
   }
   ```
 
-- [ ] 5.4 重跑 test：全 pass。
-- [ ] 5.5 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement deckstring decoder"`。
+- [x] 5.4 重跑 test：全 pass。
+- [x] 5.5 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement deckstring decoder"`。
 
 ## 6. Deckstring encoder（TDD）
 
-- [ ] 6.1 创建 `packages/hearthdb/src/deckstring/encoder.test.ts`：
+- [x] 6.1 创建 `packages/hearthdb/src/deckstring/encoder.test.ts`：
 
   ```ts
   import { describe, it, expect } from 'vitest';
@@ -288,8 +288,8 @@
   });
   ```
 
-- [ ] 6.2 跑 test FAIL。
-- [ ] 6.3 创建 `packages/hearthdb/src/deckstring/encoder.ts`：
+- [x] 6.2 跑 test FAIL。
+- [x] 6.3 创建 `packages/hearthdb/src/deckstring/encoder.ts`：
 
   ```ts
   import { writeVarint } from './varint';
@@ -333,14 +333,14 @@
   }
   ```
 
-- [ ] 6.4 跑 test：全 pass。
-- [ ] 6.5 在 `packages/hearthdb/src/deckstring/index.ts` barrel：`export { encodeDeck } from './encoder'; export { decodeDeck } from './decoder'; export * from './types';`
-- [ ] 6.6 在 `packages/hearthdb/src/index.ts` 加 `export * from './deckstring';`
-- [ ] 6.7 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement deckstring encoder with canonical sort"`。
+- [x] 6.4 跑 test：全 pass。
+- [x] 6.5 在 `packages/hearthdb/src/deckstring/index.ts` barrel：`export { encodeDeck } from './encoder'; export { decodeDeck } from './decoder'; export * from './types';`
+- [x] 6.6 在 `packages/hearthdb/src/index.ts` 加 `export * from './deckstring';`
+- [x] 6.7 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement deckstring encoder with canonical sort"`。
 
 ## 7. CardDb loader + 索引（TDD）
 
-- [ ] 7.1 创建 `packages/hearthdb/src/card-loader.test.ts`：
+- [x] 7.1 创建 `packages/hearthdb/src/card-loader.test.ts`：
 
   ```ts
   import { describe, it, expect } from 'vitest';
@@ -374,7 +374,7 @@
   > 创建 `packages/hearthdb/src/tests/fixtures/broken.json`，内容只一行：`{not json`
   > 调整 tiny-cards.json 让其中至少一张卡 dbfId === 1。
 
-- [ ] 7.2 创建 `packages/hearthdb/src/card-db.ts`：
+- [x] 7.2 创建 `packages/hearthdb/src/card-db.ts`：
 
   ```ts
   import type { CardDef } from './card-defs';
@@ -419,7 +419,7 @@
   }
   ```
 
-- [ ] 7.3 创建 `packages/hearthdb/src/card-loader.ts`：
+- [x] 7.3 创建 `packages/hearthdb/src/card-loader.ts`：
 
   ```ts
   import fs from 'node:fs/promises';
@@ -441,11 +441,11 @@
   }
   ```
 
-- [ ] 7.4 跑 loader 测试：全 pass。
+- [x] 7.4 跑 loader 测试：全 pass。
 
 ## 8. SearchFilter（TDD）
 
-- [ ] 8.1 创建 `packages/hearthdb/src/card-search.test.ts`：
+- [x] 8.1 创建 `packages/hearthdb/src/card-search.test.ts`：
 
   ```ts
   import { describe, it, expect } from 'vitest';
@@ -486,7 +486,7 @@
   });
   ```
 
-- [ ] 8.2 创建 `packages/hearthdb/src/card-search.ts`：
+- [x] 8.2 创建 `packages/hearthdb/src/card-search.ts`：
 
   ```ts
   import type { CardClass, CardDef, CardType, Rarity } from './card-defs';
@@ -535,19 +535,19 @@
   }
   ```
 
-- [ ] 8.3 在 `packages/hearthdb/src/index.ts` 加 `export { CardDb } from './card-db'; export { loadCards } from './card-loader'; export { type SearchFilter, matches } from './card-search';`
-- [ ] 8.4 跑 search 测试 + loader 测试：全 pass。
-- [ ] 8.5 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement CardDb loader, indices, and search"`。
+- [x] 8.3 在 `packages/hearthdb/src/index.ts` 加 `export { CardDb } from './card-db'; export { loadCards } from './card-loader'; export { type SearchFilter, matches } from './card-search';`
+- [x] 8.4 跑 search 测试 + loader 测试：全 pass。
+- [x] 8.5 commit：`git add packages/hearthdb && git commit -m "feat(hearthdb): implement CardDb loader, indices, and search"`。
 
 ## 9. 数据下载脚本
 
-- [ ] 9.1 在仓库根装 `tsx`：
+- [x] 9.1 在仓库根装 `tsx`：
 
   ```bash
   pnpm add -Dw tsx
   ```
 
-- [ ] 9.2 创建 `data/cards/.gitkeep` 与 `data/cards/README.md`：
+- [x] 9.2 创建 `data/cards/.gitkeep` 与 `data/cards/README.md`：
 
   ```markdown
   # Card Data
@@ -570,22 +570,22 @@
   HearthstoneJSON provides a redistributable JSON snapshot per build.
   ```
 
-- [ ] 9.3 创建 `scripts/download-cards.ts`（按 design D8 完整实现）。
-- [ ] 9.4 在根 `package.json` `scripts` 加 `"cards:download": "tsx scripts/download-cards.ts"`。
-- [ ] 9.5 在 `.gitignore` 末尾加：
+- [x] 9.3 创建 `scripts/download-cards.ts`（按 design D8 完整实现）。
+- [x] 9.4 在根 `package.json` `scripts` 加 `"cards:download": "tsx scripts/download-cards.ts"`。
+- [x] 9.5 在 `.gitignore` 末尾加：
   ```
   # Downloaded card data (refresh with `pnpm cards:download`)
   data/cards/*.json
   ```
-- [ ] 9.6 跑 `pnpm cards:download`，期望产出 enUS 与 zhCN 两个文件，每个 ≥ 1 MB。
-- [ ] 9.7 commit：`git add . && git commit -m "feat: add cards:download script using HearthstoneJSON"`。
+- [x] 9.6 跑 `pnpm cards:download`，期望产出 enUS 与 zhCN 两个文件，每个 ≥ 1 MB。
+- [x] 9.7 commit：`git add . && git commit -m "feat: add cards:download script using HearthstoneJSON"`。
 
 ## 10. 主进程 IPC + 加载
 
-- [ ] 10.1 在 `apps/desktop/package.json` `dependencies` 加 `"@hdt/hearthdb": "workspace:*"`。
-- [ ] 10.2 仓库根 `pnpm install`。
-- [ ] 10.3 创建 `apps/desktop/src/main/cards.ts`（按 design D9）。
-- [ ] 10.4 修改 `apps/desktop/src/main/ipc.ts`，加 5 个 handler：
+- [x] 10.1 在 `apps/desktop/package.json` `dependencies` 加 `"@hdt/hearthdb": "workspace:*"`。
+- [x] 10.2 仓库根 `pnpm install`。
+- [x] 10.3 创建 `apps/desktop/src/main/cards.ts`（按 design D9）。
+- [x] 10.4 修改 `apps/desktop/src/main/ipc.ts`，加 5 个 handler：
 
   ```ts
   import { app, ipcMain } from 'electron';
@@ -630,12 +630,12 @@
   }
   ```
 
-- [ ] 10.5 跑 `pnpm typecheck`，期望零错误。
-- [ ] 10.6 commit：`git add apps/desktop pnpm-lock.yaml && git commit -m "feat(desktop): add cards/deck IPC handlers backed by @hdt/hearthdb"`。
+- [x] 10.5 跑 `pnpm typecheck`，期望零错误。
+- [x] 10.6 commit：`git add apps/desktop pnpm-lock.yaml && git commit -m "feat(desktop): add cards/deck IPC handlers backed by @hdt/hearthdb"`。
 
 ## 11. Preload 暴露 + env.d.ts
 
-- [ ] 11.1 修改 `apps/desktop/src/preload/index.ts`：
+- [x] 11.1 修改 `apps/desktop/src/preload/index.ts`：
 
   ```ts
   import { contextBridge, ipcRenderer } from 'electron';
@@ -665,30 +665,30 @@
   export type HdtApi = typeof api;
   ```
 
-- [ ] 11.2 `apps/desktop/src/renderer/src/env.d.ts` 已经引用 `HdtApi`，无需改动（类型自动同步）。
-- [ ] 11.3 跑 `pnpm typecheck`，期望零错误。
-- [ ] 11.4 commit：`git add apps/desktop && git commit -m "feat(desktop): expose window.hdt.cards and window.hdt.deck via preload"`。
+- [x] 11.2 `apps/desktop/src/renderer/src/env.d.ts` 已经引用 `HdtApi`，无需改动（类型自动同步）。
+- [x] 11.3 跑 `pnpm typecheck`，期望零错误。
+- [x] 11.4 commit：`git add apps/desktop && git commit -m "feat(desktop): expose window.hdt.cards and window.hdt.deck via preload"`。
 
 ## 12. UI 集成（Decklist + Collection）
 
-- [ ] 12.1 升级 `apps/desktop/src/renderer/src/data/mockDecks.ts`：给现有每张 mock 卡加 `dbfId` 字段（用真实 dbfId 如：Argent Squire = 1746、Fireball = 315 等；可在 `cards.collectible.enUS.json` 里查）。`Card` interface 加 `dbfId?: number`。
-- [ ] 12.2 修改 `apps/desktop/src/renderer/src/components/Decklist.tsx`，实现 design D10 的 fallback 策略（useState + useEffect + Promise.all + mergeCardDef helper）。
-- [ ] 12.3 修改 `apps/desktop/src/renderer/src/components/Collection.tsx`：把硬编码 expansions 改为 `useEffect` 内 `await window.hdt.cards.search({ limit: 5000 })` + 按 `set` 字段聚合统计。fallback 仍保留原硬编码数据。
-- [ ] 12.4 跑 `pnpm dev`，验证：
+- [x] 12.1 升级 `apps/desktop/src/renderer/src/data/mockDecks.ts`：给现有每张 mock 卡加 `dbfId` 字段（用真实 dbfId 如：Argent Squire = 1746、Fireball = 315 等；可在 `cards.collectible.enUS.json` 里查）。`Card` interface 加 `dbfId?: number`。
+- [x] 12.2 修改 `apps/desktop/src/renderer/src/components/Decklist.tsx`，实现 design D10 的 fallback 策略（useState + useEffect + Promise.all + mergeCardDef helper）。
+- [x] 12.3 修改 `apps/desktop/src/renderer/src/components/Collection.tsx`：把硬编码 expansions 改为 `useEffect` 内 `await window.hdt.cards.search({ limit: 5000 })` + 按 `set` 字段聚合统计。fallback 仍保留原硬编码数据。
+- [x] 12.4 跑 `pnpm dev`，验证：
   - Decklist 显示真实卡名（如 mock 中 Argent Squire 经查询后显示真实英文名/数值）
   - Collection 标签上的卡包数量来自真实 JSON
   - 关掉 `data/cards/cards.collectible.enUS.json` 后重启 dev：界面不白屏，仍显示 mock fallback + 控制台有 cards database 错误日志
-- [ ] 12.5 commit：`git add apps/desktop && git commit -m "feat(desktop): wire Decklist and Collection to real card data"`。
+- [x] 12.5 commit：`git add apps/desktop && git commit -m "feat(desktop): wire Decklist and Collection to real card data"`。
 
 ## 13. CI + README 同步
 
-- [ ] 13.1 修改 `.github/workflows/ci.yml`，在 `pnpm install --frozen-lockfile` 之后、`pnpm test` 之前插入：
+- [x] 13.1 修改 `.github/workflows/ci.yml`，在 `pnpm install --frozen-lockfile` 之后、`pnpm test` 之前插入：
 
   ```yaml
   - run: pnpm cards:download
   ```
 
-- [ ] 13.2 修改根 `README.md` 的 "一键启动" 段，把命令改为：
+- [x] 13.2 修改根 `README.md` 的 "一键启动" 段，把命令改为：
 
   ```bash
   corepack enable
@@ -697,16 +697,16 @@
   pnpm dev
   ```
 
-- [ ] 13.3 commit：`git add .github README.md && git commit -m "ci: download card data before tests; docs: update quickstart"`。
+- [x] 13.3 commit：`git add .github README.md && git commit -m "ci: download card data before tests; docs: update quickstart"`。
 
 ## 14. 同步 .NEXT.md
 
-- [ ] 14.1 在 `openspec/changes/.NEXT.md` 把 `add-card-database` 标 ✓，新加候选 `add-deck-management`（依赖本 change）。
-- [ ] 14.2 commit：`git add openspec/changes/.NEXT.md && git commit -m "docs(openspec): mark add-card-database done, queue add-deck-management"`。
+- [x] 14.1 在 `openspec/changes/.NEXT.md` 把 `add-card-database` 标 ✓，新加候选 `add-deck-management`（依赖本 change）。
+- [x] 14.2 commit：`git add openspec/changes/.NEXT.md && git commit -m "docs(openspec): mark add-card-database done, queue add-deck-management"`。
 
 ## 15. 最终验收
 
-- [ ] 15.1 跑全套质量门：
+- [x] 15.1 跑全套质量门：
 
   ```powershell
   pnpm install --frozen-lockfile
@@ -719,7 +719,7 @@
 
   全部退出码 0。`pnpm test` 至少 8 个新测试通过（hearthdb 包内）。
 
-- [ ] 15.2 把本文件 1.x ~ 14.x 全部标 `[x]`。
-- [ ] 15.3 `openspec validate add-card-database --strict` → valid。
-- [ ] 15.4 `openspec status --change add-card-database` → 4/4 artifacts complete。
-- [ ] 15.5 final commit：`git add . && git commit -m "docs(openspec): mark all tasks complete in add-card-database"`。
+- [x] 15.2 把本文件 1.x ~ 14.x 全部标 `[x]`。
+- [x] 15.3 `openspec validate add-card-database --strict` → valid。
+- [x] 15.4 `openspec status --change add-card-database` → 4/4 artifacts complete。
+- [x] 15.5 final commit：`git add . && git commit -m "docs(openspec): mark all tasks complete in add-card-database"`。

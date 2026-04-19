@@ -20,6 +20,7 @@
 ```bash
 corepack enable           # 启用 corepack 自动用上正确的 pnpm 版本
 pnpm install              # 安装所有 workspace 依赖
+pnpm cards:download       # 首次运行必须，从 HearthstoneJSON 拉真实卡牌数据 (~5 秒)
 pnpm dev                  # 启动 Electron 主窗口（renderer Fast Refresh + main 自动重启）
 ```
 
@@ -35,6 +36,7 @@ pnpm dev                  # 启动 Electron 主窗口（renderer Fast Refresh + 
 | `pnpm typecheck` | 跨包 TypeScript strict 检查 |
 | `pnpm test` | 跑 Vitest workspace（所有包的测试） |
 | `pnpm package` | 用 electron-builder 产出 Windows NSIS 安装包到 `apps/desktop/release/` |
+| `pnpm cards:download` | 从 HearthstoneJSON 下载最新卡牌数据到 `data/cards/`（enUS + zhCN） |
 
 ## 仓库结构
 
@@ -85,9 +87,11 @@ HDT_js/
 
 ## 当前进度
 
-- [x] **add-monorepo-skeleton**（Phase 0）— 仓库骨架、Electron 三段式、figma_design 迁入、CI 配置
-- [ ] decide-hearthmirror-bridge — FFI 架构 ADR（koffi vs napi-rs vs 32 位子进程）
-- [ ] add-card-database — `@hdt/hearthdb`：Cards.json 加载与查找
+- [x] **add-monorepo-skeleton** — 仓库骨架、Electron 三段式、figma_design 迁入、CI
+- [x] **decide-hearthmirror-bridge** — ADR 0001 选定 64 位 napi-rs 方案
+- [x] **add-hearthmirror-bridge-spike** — 验证通过，ADR 0001 升级为 Validated
+- [x] **add-card-database** — `@hdt/hearthdb`：Cards.json 加载、卡组码编解码、IPC、UI 集成
+- [ ] add-hearthmirror-bridge — 正式实现 hearthmirror native crate
 - [ ] add-deck-management — `@hdt/core/deck` + SQLite + 卡组 CRUD/导入导出
 
 详见 [`openspec/changes/.NEXT.md`](./openspec/changes/.NEXT.md)。
