@@ -31,6 +31,9 @@ target/
 # Downloaded card data (refresh with `pnpm cards:download`)
 data/cards/*.json
 
+# Git worktrees
+.worktrees/
+
 # Editor
 .idea/
 .vscode/*
