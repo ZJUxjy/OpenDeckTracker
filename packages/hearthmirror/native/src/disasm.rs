@@ -30,24 +30,22 @@ pub fn find_field_load_displacement(code: &[u8], bitness: u32) -> Result<usize, 
 pub fn find_first_absolute_load(code: &[u8], bitness: u32) -> Result<usize, ScryError> {
     let mut decoder = Decoder::with_ip(bitness, code, 0, DecoderOptions::NONE);
     let mut instr = Instruction::default();
-    let mut last_match: Option<u64> = None;
 
     while decoder.can_decode() {
         decoder.decode_out(&mut instr);
 
-        if is_absolute_load(&instr) && matches!(instr.op0_register(), Register::EAX | Register::RAX)
-        {
-            last_match = Some(instr.memory_displacement64());
-        }
-
         if instr.mnemonic() == Mnemonic::Ret {
             break;
         }
+
+        if is_absolute_load(&instr) {
+            return Ok(instr.memory_displacement64() as usize);
+        }
     }
 
-    last_match
-        .map(|addr| addr as usize)
-        .ok_or_else(|| ScryError::DisasmError("no `mov reg, [absolute]` found".into()))
+    Err(ScryError::DisasmError(
+        "no `mov reg, [absolute]` found".into(),
+    ))
 }
 
 fn is_struct_field_load(instr: &Instruction, max_disp: u64) -> bool {
@@ -85,7 +83,6 @@ fn is_absolute_load(instr: &Instruction) -> bool {
         && instr.op1_kind() == OpKind::Memory
         && instr.memory_base() == Register::None
         && instr.memory_index() == Register::None
-        && !matches!(instr.segment_prefix(), Register::FS | Register::GS)
 }
 
 #[cfg(test)]
@@ -183,14 +180,14 @@ mod tests {
     }
 
     #[test]
-    fn absolute_search_prefers_returned_load() {
+    fn absolute_search_returns_first_matching_load() {
         let code = [
             0x8B, 0x0D, 0x44, 0x33, 0x22, 0x11, // mov ecx, [0x11223344]
             0xA1, 0xEF, 0xBE, 0xAD, 0xDE, // mov eax, [0xDEADBEEF]
             0xC3,
         ];
         let addr = find_first_absolute_load(&code, 32).unwrap();
-        assert_eq!(addr, 0xDEAD_BEEF);
+        assert_eq!(addr, 0x1122_3344);
     }
 
     #[test]
@@ -200,9 +197,17 @@ mod tests {
     }
 
     #[test]
-    fn absolute_search_skips_segmented_load() {
+    fn extracts_absolute_load_from_non_eax_register() {
+        let code = [0x8B, 0x0D, 0x44, 0x33, 0x22, 0x11, 0xC3];
+        let addr = find_first_absolute_load(&code, 32).unwrap();
+        assert_eq!(addr, 0x1122_3344);
+    }
+
+    #[test]
+    fn extracts_segmented_absolute_load() {
         let code = [0x64u8, 0xA1, 0x18, 0x00, 0x00, 0x00, 0xC3];
-        assert!(find_first_absolute_load(&code, 32).is_err());
+        let addr = find_first_absolute_load(&code, 32).unwrap();
+        assert_eq!(addr, 0x18);
     }
 
     #[test]
