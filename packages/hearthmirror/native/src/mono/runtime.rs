@@ -84,11 +84,13 @@ fn find_mono_get_root_domain_va(
     // Read enough of the PE to satisfy pelite (header + tables, ~64 KB is generous).
     let pe_size = mono.size.min(0x100_000) as usize;
     let pe_bytes = memory.read_bytes(RemotePtr::new(base_addr), pe_size)?;
+    let pe = PeView::from_bytes(&pe_bytes)
+        .map_err(|e| ScryError::MetadataError(format!("invalid mono image: {}", e)))?;
+    let rva = find_mono_get_root_domain_rva(pe)?;
+    Ok(RemotePtr::new(base_addr + rva))
+}
 
-    // Safety: pe_bytes is our local copy of the module's mapped-image layout.
-    // PeView::module expects the in-memory mapped PE format, which is what we have.
-    let pe = unsafe { PeView::module(pe_bytes.as_ptr()) };
-
+fn find_mono_get_root_domain_rva<'a, P: Pe<'a>>(pe: P) -> Result<u32, ScryError> {
     let exports = pe
         .exports()
         .map_err(|e| ScryError::MetadataError(format!("no exports: {}", e)))?;
@@ -98,11 +100,10 @@ fn find_mono_get_root_domain_va(
     let func = by
         .name("mono_get_root_domain")
         .map_err(|_| missing_export_error("mono_get_root_domain"))?;
-    let rva = match func {
-        pelite::pe32::exports::Export::Symbol(rva) => *rva,
-        _ => return Err(ScryError::Unsupported("forwarded export".into())),
-    };
-    Ok(RemotePtr::new(base_addr + rva))
+    match func {
+        pelite::pe32::exports::Export::Symbol(rva) => Ok(*rva),
+        _ => Err(ScryError::Unsupported("forwarded export".into())),
+    }
 }
 
 fn missing_export_error(export_name: &str) -> ScryError {
@@ -272,6 +273,9 @@ mod integration_tests {
 #[cfg(test)]
 mod unit_tests {
     use super::*;
+    use pelite::pe32::PeFile;
+    use std::fs;
+    use std::path::PathBuf;
 
     #[test]
     fn extracts_root_domain_addr_from_absolute_load() {
@@ -297,6 +301,24 @@ mod unit_tests {
     #[test]
     fn missing_root_domain_export_reports_metadata_error() {
         let err = missing_export_error("mono_get_root_domain");
+        assert!(matches!(
+            err,
+            ScryError::MetadataError(msg) if msg == "required export not found: mono_get_root_domain"
+        ));
+    }
+
+    #[test]
+    fn missing_root_domain_export_from_pe_reports_metadata_error() {
+        let system_root = std::env::var_os("SystemRoot").expect("SystemRoot should be set on Windows");
+        let kernel32_path = PathBuf::from(system_root)
+            .join("SysWOW64")
+            .join("kernel32.dll");
+        let bytes = fs::read(&kernel32_path)
+            .unwrap_or_else(|err| panic!("failed to read {}: {err}", kernel32_path.display()));
+        let pe = PeFile::from_bytes(&bytes).expect("kernel32.dll should be a valid PE");
+
+        let err = find_mono_get_root_domain_rva(pe).unwrap_err();
+
         assert!(matches!(
             err,
             ScryError::MetadataError(msg) if msg == "required export not found: mono_get_root_domain"
