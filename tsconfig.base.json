@@ -18,7 +18,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@hdt/shared": ["./packages/shared/src/index.ts"]
+      "@hdt/shared": ["./packages/shared/src/index.ts"],
+      "@hdt/hearthdb": ["./packages/hearthdb/src/index.ts"]
     }
   }
 }

@@ -121,6 +121,8 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
 
+  packages/hearthdb: {}
+
   packages/shared: {}
 
 packages:
