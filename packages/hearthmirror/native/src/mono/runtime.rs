@@ -162,6 +162,52 @@ impl MonoRuntime {
     }
 }
 
+use crate::metadata::MetadataReader;
+use std::path::PathBuf;
+
+impl MonoRuntime {
+    /// Open the disk file `Assembly-CSharp.dll` next to mono dll.
+    pub fn open_assembly_csharp(&self) -> Result<MetadataReader, ScryError> {
+        use windows::Win32::System::ProcessStatus::GetModuleFileNameExW;
+        let mut name_buf = [0u16; 1024];
+        let len = unsafe {
+            GetModuleFileNameExW(
+                self.memory.handle().raw(),
+                self.mono_module.base,
+                &mut name_buf,
+            )
+        };
+        if len == 0 {
+            return Err(ScryError::MetadataError("GetModuleFileNameExW failed".into()));
+        }
+        let mono_path = String::from_utf16_lossy(&name_buf[..len as usize]);
+        let mono_dir = PathBuf::from(&mono_path)
+            .parent()
+            .ok_or_else(|| ScryError::MetadataError(format!("no parent dir for {}", mono_path)))?
+            .to_path_buf();
+
+        let candidates = [
+            mono_dir.join("Assembly-CSharp.dll"),
+            mono_dir.join("..").join("Managed").join("Assembly-CSharp.dll"),
+            mono_dir
+                .join("..")
+                .join("..")
+                .join("Hearthstone_Data")
+                .join("Managed")
+                .join("Assembly-CSharp.dll"),
+        ];
+        for c in &candidates {
+            if c.exists() {
+                return MetadataReader::from_disk(c);
+            }
+        }
+        Err(ScryError::MetadataError(format!(
+            "Assembly-CSharp.dll not found. Tried: {:?}",
+            candidates
+        )))
+    }
+}
+
 #[cfg(all(test, feature = "integration"))]
 mod integration_tests {
     use super::*;
@@ -185,5 +231,19 @@ mod integration_tests {
         assert!(offsets.domain_loaded_images >= 0x10 && offsets.domain_loaded_images <= 0x40,
             "loaded_images offset 0x{:02X} is wildly outside expected range",
             offsets.domain_loaded_images);
+    }
+
+    #[test]
+    fn open_assembly_csharp_finds_file() {
+        let runtime = MonoRuntime::init().expect("Hearthstone must be running");
+        let reader = runtime.open_assembly_csharp().expect("Assembly-CSharp.dll not found");
+        let bytes = reader.bytes();
+        assert!(bytes.len() > 0, "empty file");
+        // token for Entity class is always present in HS builds
+        let token = reader.find_class_token("", "Entity")
+            .or_else(|_| reader.find_class_token("Blizzard.T5.Services", "Entity"))
+            .expect("Entity class must exist in Assembly-CSharp.dll");
+        eprintln!("Entity token = 0x{:08X}", token);
+        assert_eq!(token >> 24, 0x02, "TypeDef token must have table 0x02");
     }
 }
