@@ -23,6 +23,7 @@ export function Collection() {
 
   useEffect(() => {
     let cancelled = false;
+    if (typeof window === 'undefined' || !window.hdt?.cards?.search) return;
     void window.hdt.cards
       .search({ limit: 10000 })
       .then((all) => {

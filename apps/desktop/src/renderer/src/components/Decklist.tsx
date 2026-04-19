@@ -35,6 +35,9 @@ function useEnrichedCards(input: readonly Card[]): Card[] {
     let cancelled = false;
     const dbfIds = input.map((c) => c.dbfId).filter((v): v is number => typeof v === 'number');
     if (dbfIds.length === 0) return;
+    // Defensive: window.hdt may be missing if preload failed to load
+    // (e.g. CSP block, sandbox/preload mismatch). Keep mock fallback.
+    if (typeof window === 'undefined' || !window.hdt?.cards?.findByDbfId) return;
 
     void Promise.all(dbfIds.map((id) => window.hdt.cards.findByDbfId(id)))
       .then((defs) => {

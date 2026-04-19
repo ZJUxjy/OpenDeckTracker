@@ -36,6 +36,8 @@ export default defineConfig({
     build: {
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/preload/index.ts') },
+        // Electron sandbox: true requires CommonJS preload. Force .js + cjs.
+        output: { format: 'cjs', entryFileNames: '[name].js' },
       },
     },
   },
