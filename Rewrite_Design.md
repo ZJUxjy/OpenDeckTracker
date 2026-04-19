@@ -2,6 +2,17 @@
 
 > 用 Rust (Native) + TypeScript (API) 完全替代 HearthMirror 内存读取库
 
+> **Status**: Architecture sections (§1–6 of this document) are **superseded by**
+> [`docs/adr/0001-hearthmirror-bridge.md`](docs/adr/0001-hearthmirror-bridge.md).
+> In particular, the assumption "must target x86 (32-bit)" is incorrect:
+> 64-bit processes can use standard `ReadProcessMemory` to read 32-bit process
+> memory by treating remote pointers as `u32`. The chosen architecture is
+> **64-bit `napi-rs` native module loaded into Electron main process**.
+>
+> Sections §7+ (Mono runtime structures, ECMA-335 metadata, offsets, FFI
+> examples) remain authoritative reference material for the upcoming
+> `add-hearthmirror-bridge` implementation.
+
 ## 1. 背景与目标
 
 ### 1.1 现有实现分析
