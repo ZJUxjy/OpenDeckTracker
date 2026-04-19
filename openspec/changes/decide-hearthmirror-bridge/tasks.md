@@ -3,8 +3,8 @@
 
 ## 1. 写 ADR 文档
 
-- [ ] 1.1 创建目录 `docs/adr/`（如果不存在）。
-- [ ] 1.2 创建 `docs/adr/0001-hearthmirror-bridge.md`，使用 Michael Nygard ADR 模板。文件骨架（标题用 H1，状态用 quote 块）：
+- [x] 1.1 创建目录 `docs/adr/`（如果不存在）。
+- [x] 1.2 创建 `docs/adr/0001-hearthmirror-bridge.md`，使用 Michael Nygard ADR 模板。文件骨架（标题用 H1，状态用 quote 块）：
 
   ```markdown
   # ADR 0001: Hearthstone Memory Bridge Architecture
@@ -46,14 +46,14 @@
   - Mono runtime knowledge (still authoritative): `Rewrite_Design.md` §7+
   ```
 
-- [ ] 1.3 把 design.md 的 D1 Decisions 子节内容（4 个 Options 的 Optimum/Drawbacks）摘要进 ADR 的 "Considered Options" 段，每个选项 3-5 行 bullet。
-- [ ] 1.4 把 design.md 的 Risks / Trade-offs 表前 3 行摘进 ADR "Consequences > Negative"。
-- [ ] 1.5 用 `git add docs/adr && git commit -m "docs(adr): record 0001 hearthmirror bridge architecture decision"` 提交。
+- [x] 1.3 把 design.md 的 D1 Decisions 子节内容（4 个 Options 的 Optimum/Drawbacks）摘要进 ADR 的 "Considered Options" 段，每个选项 3-5 行 bullet。
+- [x] 1.4 把 design.md 的 Risks / Trade-offs 表前 3 行摘进 ADR "Consequences > Negative"。
+- [x] 1.5 用 `git add docs/adr && git commit -m "docs(adr): record 0001 hearthmirror bridge architecture decision"` 提交。
 
 ## 2. 写 Spike 计划
 
-- [ ] 2.1 创建目录 `docs/spikes/`（如果不存在）。
-- [ ] 2.2 创建 `docs/spikes/0001-hearthmirror-spike.md`，包含以下章节（每节都必须有实质内容，禁止 TBD/placeholder）：
+- [x] 2.1 创建目录 `docs/spikes/`（如果不存在）。
+- [x] 2.2 创建 `docs/spikes/0001-hearthmirror-spike.md`，包含以下章节（每节都必须有实质内容，禁止 TBD/placeholder）：
 
   ```markdown
   # Spike 0001: HearthMirror 64-bit napi-rs Cross-Architecture Read
@@ -120,11 +120,11 @@
   - **如果 ReadProcessMemory 跨架构失败**: 重新评估 Option B（32 位 napi-rs）或 Option C；ADR 0002 记录失败原因。
   ```
 
-- [ ] 2.3 用 `git add docs/spikes && git commit -m "docs(spike): plan 0001 hearthmirror spike with explicit time box"` 提交。
+- [x] 2.3 用 `git add docs/spikes && git commit -m "docs(spike): plan 0001 hearthmirror spike with explicit time box"` 提交。
 
 ## 3. 在 Rewrite_Design.md 顶部加 supersession banner
 
-- [ ] 3.1 在 `Rewrite_Design.md` 的第一行 H1 标题（`# HearthMirror 重写设计文档`）**下方**插入一个引用块：
+- [x] 3.1 在 `Rewrite_Design.md` 的第一行 H1 标题（`# HearthMirror 重写设计文档`）**下方**插入一个引用块：
 
   ```markdown
   > **Status**: Architecture sections (§1–6 of this document) are **superseded by**
@@ -139,24 +139,24 @@
   > `add-hearthmirror-bridge` implementation.
   ```
 
-- [ ] 3.2 用 `git add Rewrite_Design.md && git commit -m "docs: add supersession banner pointing to ADR 0001"` 提交。
+- [x] 3.2 用 `git add Rewrite_Design.md && git commit -m "docs: add supersession banner pointing to ADR 0001"` 提交。
 
 ## 4. 同步 .NEXT.md
 
-- [ ] 4.1 在 `openspec/changes/.NEXT.md` 的 `decide-hearthmirror-bridge` 段落末尾追加一行：
+- [x] 4.1 在 `openspec/changes/.NEXT.md` 的 `decide-hearthmirror-bridge` 段落末尾追加一行：
 
   ```markdown
   > **状态**: 已完成。ADR 0001 选定方案 D（64 位 napi-rs）。下一步：执行 `docs/spikes/0001-hearthmirror-spike.md` 计划的 spike，建议作为 `add-hearthmirror-bridge-spike` change。
   ```
 
-- [ ] 4.2 在 `.NEXT.md` 顶部"下一个候选 change"列表中：
+- [x] 4.2 在 `.NEXT.md` 顶部"下一个候选 change"列表中：
   - 把第 1 条 `decide-hearthmirror-bridge` 标记为 ✓
   - 在它之后插入新的 `add-hearthmirror-bridge-spike`（依赖本 ADR）作为新的"第 1 优先级"
-- [ ] 4.3 用 `git add openspec/changes/.NEXT.md && git commit -m "docs(openspec): mark decide-hearthmirror-bridge done, queue spike"` 提交。
+- [x] 4.3 用 `git add openspec/changes/.NEXT.md && git commit -m "docs(openspec): mark decide-hearthmirror-bridge done, queue spike"` 提交。
 
 ## 5. 标记 tasks 完成 + 验收
 
-- [ ] 5.1 在本文件中把任务 1.x ~ 4.x 全部标 `[x]`。
-- [ ] 5.2 运行 `openspec validate decide-hearthmirror-bridge --strict`，期望 `Change is valid`。
-- [ ] 5.3 运行 `openspec status --change decide-hearthmirror-bridge`，期望 `4/4 artifacts complete`。
-- [ ] 5.4 用 `git add openspec/changes/decide-hearthmirror-bridge/tasks.md && git commit -m "docs(openspec): mark all tasks complete in decide-hearthmirror-bridge"` 提交。
+- [x] 5.1 在本文件中把任务 1.x ~ 4.x 全部标 `[x]`。
+- [x] 5.2 运行 `openspec validate decide-hearthmirror-bridge --strict`，期望 `Change is valid`。
+- [x] 5.3 运行 `openspec status --change decide-hearthmirror-bridge`，期望 `4/4 artifacts complete`。
+- [x] 5.4 用 `git add openspec/changes/decide-hearthmirror-bridge/tasks.md && git commit -m "docs(openspec): mark all tasks complete in decide-hearthmirror-bridge"` 提交。
