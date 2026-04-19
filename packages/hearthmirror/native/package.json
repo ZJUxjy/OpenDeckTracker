@@ -12,10 +12,12 @@
     "name": "hearthmirror-native",
     "triples": {
       "defaults": false,
-      "additional": ["x86_64-pc-windows-msvc"]
+      "additional": [
+        "x86_64-pc-windows-msvc"
+      ]
     }
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3"
+    "@napi-rs/cli": "^3.6.2"
   }
 }

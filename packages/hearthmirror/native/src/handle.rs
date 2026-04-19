@@ -39,6 +39,10 @@ impl OwnedProcessHandle {
     }
 }
 
+// Safety: Windows HANDLE is a kernel-object reference usable from any thread.
+// All mutable access is serialised externally (e.g. the Mutex in lib.rs).
+unsafe impl Send for OwnedProcessHandle {}
+
 impl Drop for OwnedProcessHandle {
     fn drop(&mut self) {
         if !self.handle.is_invalid() {
