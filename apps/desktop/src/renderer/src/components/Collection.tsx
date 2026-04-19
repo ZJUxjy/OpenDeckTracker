@@ -20,7 +20,7 @@ export function Collection() {
   const [activeFormat, setActiveFormat] = useState('standard');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeData = expansions.find(e => e.id === activeFormat) || expansions[0];
+  const activeData = expansions.find(e => e.id === activeFormat) ?? expansions[0]!;
   const percentage = Math.round((activeData.collected / activeData.total) * 100);
 
   return (

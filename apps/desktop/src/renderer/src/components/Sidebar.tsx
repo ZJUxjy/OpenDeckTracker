@@ -1,5 +1,5 @@
-import { AppWindow, BarChart2, BookOpen, Crown, Settings, Swords, Trophy, Users } from 'lucide-react';
-import { useState } from 'react';
+import { AppWindow, BarChart2, BookOpen, Crown, Settings } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router';
 
 const navItems = [
   { id: 'tracker', icon: AppWindow, label: 'Deck Tracker' },
@@ -7,7 +7,12 @@ const navItems = [
   { id: 'collection', icon: BookOpen, label: 'Collection' },
 ];
 
-export function Sidebar({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (id: string) => void }) {
+export function Sidebar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isActive = (id: string) => location.pathname === `/${id}`;
+
   return (
     <aside className="w-64 bg-[#14141A] border-r border-[#2A2A35] flex flex-col h-full text-slate-300">
       <div className="p-6 flex items-center space-x-3 text-orange-500">
@@ -21,29 +26,36 @@ export function Sidebar({ activeTab, setActiveTab }: { activeTab: string, setAct
         {navItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveTab(item.id)}
+            onClick={() => {
+              void navigate(`/${item.id}`);
+            }}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md transition-all duration-200 ${
-              activeTab === item.id
+              isActive(item.id)
                 ? 'bg-[#2A2A35] text-white shadow-[inset_4px_0_0_0_#F97316]'
                 : 'hover:bg-[#1C1C24] hover:text-white'
             }`}
           >
-            <item.icon size={18} className={activeTab === item.id ? 'text-orange-500' : 'text-slate-500'} />
+            <item.icon
+              size={18}
+              className={isActive(item.id) ? 'text-orange-500' : 'text-slate-500'}
+            />
             <span className="font-medium text-sm">{item.label}</span>
           </button>
         ))}
       </nav>
 
       <div className="p-4 border-t border-[#2A2A35]">
-        <button 
-          onClick={() => setActiveTab('settings')}
+        <button
+          onClick={() => {
+            void navigate('/settings');
+          }}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
-            activeTab === 'settings' 
-              ? 'bg-[#2A2A35] text-white shadow-[inset_4px_0_0_0_#F97316]' 
+            isActive('settings')
+              ? 'bg-[#2A2A35] text-white shadow-[inset_4px_0_0_0_#F97316]'
               : 'text-slate-400 hover:text-white hover:bg-[#1C1C24]'
           }`}
         >
-          <Settings size={18} className={activeTab === 'settings' ? 'text-orange-500' : ''} />
+          <Settings size={18} className={isActive('settings') ? 'text-orange-500' : ''} />
           <span className="font-medium text-sm">Settings</span>
         </button>
       </div>

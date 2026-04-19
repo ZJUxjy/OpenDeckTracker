@@ -5,11 +5,10 @@ export function Dashboard() {
   const cards = MOCK_DECK;
   const totalMatches = MOCK_STATS.wins + MOCK_STATS.losses;
 
-  // Simple Mana Curve calculations
-  const manaCurve = [0, 0, 0, 0, 0, 0, 0, 0]; // 0, 1, 2, 3, 4, 5, 6, 7+
+  const manaCurve: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
   cards.forEach(card => {
     const cost = Math.min(card.cost, 7);
-    manaCurve[cost] += card.count;
+    manaCurve[cost] = (manaCurve[cost] ?? 0) + card.count;
   });
   const maxMana = Math.max(...manaCurve);
 

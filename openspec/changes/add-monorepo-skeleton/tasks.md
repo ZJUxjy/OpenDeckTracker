@@ -60,12 +60,12 @@
 
 ## 4. ESLint + Prettier + Vitest 基线
 
-- [ ] 4.1 在根安装 dev 依赖：
+- [x] 4.1 在根安装 dev 依赖：
   ```bash
   pnpm add -Dw eslint@^9 @eslint/js typescript-eslint eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-react-refresh eslint-config-prettier prettier typescript@^5.6 vitest@^2 @vitest/coverage-v8 jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
   ```
   期望：`pnpm-lock.yaml` 在仓库根生成。
-- [ ] 4.2 创建 `eslint.config.js`（flat config）：
+- [x] 4.2 创建 `eslint.config.js`（flat config）：（最终版用 `disableTypeChecked` 处理 .js/.cjs/.mjs，并新增根 `tsconfig.json` 包含根级 ts 文件）
   ```js
   import js from '@eslint/js';
   import tseslint from 'typescript-eslint';
@@ -94,11 +94,11 @@
     prettier,
   );
   ```
-- [ ] 4.3 创建 `.prettierrc`：
+- [x] 4.3 创建 `.prettierrc`：
   ```json
   { "semi": true, "singleQuote": true, "trailingComma": "all", "printWidth": 100, "arrowParens": "always" }
   ```
-- [ ] 4.4 创建 `vitest.config.ts`：
+- [x] 4.4 创建 `vitest.config.ts`：
   ```ts
   import { defineConfig } from 'vitest/config';
   export default defineConfig({
@@ -110,21 +110,21 @@
     },
   });
   ```
-- [ ] 4.5 写一个根级 sanity 测试 `tests/sanity.test.ts`：
+- [x] 4.5 写一个根级 sanity 测试 `tests/sanity.test.ts`：
   ```ts
   import { describe, it, expect } from 'vitest';
   describe('sanity', () => {
     it('runs', () => { expect(1 + 1).toBe(2); });
   });
   ```
-- [ ] 4.6 运行 `pnpm test`，期望：1 passed。
-- [ ] 4.7 运行 `pnpm lint`，期望：0 errors（可能有少量 warning，允许）。
-- [ ] 4.8 提交：`git add . && git commit -m "build: add eslint/prettier/vitest baseline"`。
+- [x] 4.6 运行 `pnpm test`，期望：1 passed。
+- [x] 4.7 运行 `pnpm lint`，期望：0 errors（可能有少量 warning，允许）。
+- [x] 4.8 提交：`git add . && git commit -m "build: add eslint/prettier/vitest baseline"`。
 
 ## 5. `@hdt/shared` 包（验证跨包引用 + 测试管线）
 
-- [ ] 5.1 创建目录 `packages/shared/src/`。
-- [ ] 5.2 创建 `packages/shared/package.json`：
+- [x] 5.1 创建目录 `packages/shared/src/`。
+- [x] 5.2 创建 `packages/shared/package.json`：
   ```json
   {
     "name": "@hdt/shared",
@@ -137,11 +137,11 @@
     "scripts": { "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run" }
   }
   ```
-- [ ] 5.3 创建 `packages/shared/tsconfig.json`：
+- [x] 5.3 创建 `packages/shared/tsconfig.json`：
   ```json
   { "extends": "../../tsconfig.base.json", "include": ["src/**/*"] }
   ```
-- [ ] 5.4 **写失败测试** `packages/shared/src/version.test.ts`：
+- [x] 5.4 **写失败测试** `packages/shared/src/version.test.ts`：
   ```ts
   import { describe, it, expect } from 'vitest';
   import { PACKAGE_VERSION } from './index';
@@ -151,23 +151,23 @@
     });
   });
   ```
-- [ ] 5.5 运行 `pnpm --filter @hdt/shared test`，期望：FAIL（Cannot find module './index'）。
-- [ ] 5.6 创建 `packages/shared/src/version.ts`：
+- [x] 5.5 运行 `pnpm --filter @hdt/shared test`，期望：FAIL（Cannot find module './index'）。
+- [x] 5.6 创建 `packages/shared/src/version.ts`：
   ```ts
   export const PACKAGE_VERSION: string = '0.1.0';
   ```
-- [ ] 5.7 创建 `packages/shared/src/index.ts`：
+- [x] 5.7 创建 `packages/shared/src/index.ts`：
   ```ts
   export { PACKAGE_VERSION } from './version';
   ```
-- [ ] 5.8 重新运行 `pnpm --filter @hdt/shared test`，期望：1 passed。
-- [ ] 5.9 运行 `pnpm typecheck`，期望：零错误。
-- [ ] 5.10 提交：`git add packages/shared && git commit -m "feat(shared): bootstrap @hdt/shared package with version constant"`。
+- [x] 5.8 重新运行 `pnpm --filter @hdt/shared test`，期望：1 passed。
+- [x] 5.9 运行 `pnpm typecheck`，期望：零错误。
+- [x] 5.10 提交：`git add packages/shared && git commit -m "feat(shared): bootstrap @hdt/shared package with version constant"`。
 
 ## 6. `@hdt/desktop` 应用骨架与依赖
 
-- [ ] 6.1 创建目录 `apps/desktop/src/main/`、`apps/desktop/src/preload/`、`apps/desktop/src/renderer/src/`、`apps/desktop/src/renderer/tests/`。
-- [ ] 6.2 创建 `apps/desktop/package.json`：
+- [x] 6.1 创建目录 `apps/desktop/src/main/`、`apps/desktop/src/preload/`、`apps/desktop/src/renderer/src/`、`apps/desktop/src/renderer/tests/`。（由后续 Write 工具按需创建）
+- [x] 6.2 创建 `apps/desktop/package.json`：
   ```json
   {
     "name": "@hdt/desktop",
@@ -185,7 +185,7 @@
     }
   }
   ```
-- [ ] 6.3 创建 `apps/desktop/tsconfig.json`：
+- [x] 6.3 创建 `apps/desktop/tsconfig.json`：
   ```json
   {
     "extends": "../../tsconfig.base.json",
@@ -195,19 +195,19 @@
     }
   }
   ```
-- [ ] 6.4 在 `apps/desktop` 安装运行依赖：
+- [x] 6.4 在 `apps/desktop` 安装运行依赖：（实际把 electron-vite 升到 ^5 以兼容 vite 6；不需要 6.6 中的 electron-devtools-installer，未装）
   ```bash
   pnpm --filter @hdt/desktop add electron@^33 electron-vite@^2 electron-builder@^25 vite@^6 @vitejs/plugin-react@^4 @tailwindcss/vite@^4 tailwindcss@^4 react@^18.3 react-dom@^18.3 react-router@^7.13 lucide-react clsx class-variance-authority tailwind-merge tw-animate-css motion recharts sonner
   ```
-- [ ] 6.5 在 `apps/desktop` 安装实际使用的 Radix 组件（按 figma_design 实际 import 列出）：
+- [x] 6.5 在 `apps/desktop` 安装实际使用的 Radix 组件（按 figma_design 实际 import 列出）：
   ```bash
   pnpm --filter @hdt/desktop add @radix-ui/react-accordion @radix-ui/react-alert-dialog @radix-ui/react-aspect-ratio @radix-ui/react-avatar @radix-ui/react-checkbox @radix-ui/react-collapsible @radix-ui/react-context-menu @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-hover-card @radix-ui/react-label @radix-ui/react-menubar @radix-ui/react-navigation-menu @radix-ui/react-popover @radix-ui/react-progress @radix-ui/react-radio-group @radix-ui/react-scroll-area @radix-ui/react-select @radix-ui/react-separator @radix-ui/react-slider @radix-ui/react-slot @radix-ui/react-switch @radix-ui/react-tabs @radix-ui/react-toggle @radix-ui/react-toggle-group @radix-ui/react-tooltip
   ```
-- [ ] 6.6 在 `apps/desktop` 安装 dev 依赖：
+- [x] 6.6 在 `apps/desktop` 安装 dev 依赖：（仅装 @types/*，electron-devtools-installer 暂不需要）
   ```bash
   pnpm --filter @hdt/desktop add -D @types/react @types/react-dom @types/node electron-devtools-installer
   ```
-- [ ] 6.7 创建 `apps/desktop/electron.vite.config.ts`：
+- [x] 6.7 创建 `apps/desktop/electron.vite.config.ts`：（ESM 中用 `fileURLToPath(import.meta.url)` 派生 `__dirname`）
   ```ts
   import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
   import react from '@vitejs/plugin-react';
@@ -236,11 +236,11 @@
     },
   });
   ```
-- [ ] 6.8 提交：`git add apps/desktop && git commit -m "build(desktop): scaffold electron-vite three-segment build"`。
+- [x] 6.8 提交：`git add apps/desktop && git commit -m "build(desktop): scaffold electron-vite three-segment build"`。
 
 ## 7. Main / Preload 实现
 
-- [ ] 7.1 创建 `apps/desktop/src/main/window.ts`：
+- [x] 7.1 创建 `apps/desktop/src/main/window.ts`：（preload 改为 `index.mjs`，因 electron-vite 输出 ESM 时使用 .mjs 扩展名）
   ```ts
   import { BrowserWindow } from 'electron';
   import { join } from 'node:path';
@@ -272,14 +272,14 @@
     return win;
   }
   ```
-- [ ] 7.2 创建 `apps/desktop/src/main/ipc.ts`：
+- [x] 7.2 创建 `apps/desktop/src/main/ipc.ts`：
   ```ts
   import { app, ipcMain } from 'electron';
   export function registerIpc(): void {
     ipcMain.handle('app:getVersion', () => app.getVersion());
   }
   ```
-- [ ] 7.3 创建 `apps/desktop/src/main/index.ts`：
+- [x] 7.3 创建 `apps/desktop/src/main/index.ts`：
   ```ts
   import { app, BrowserWindow } from 'electron';
   import { createMainWindow } from './window';
@@ -307,7 +307,7 @@
     });
   }
   ```
-- [ ] 7.4 创建 `apps/desktop/src/preload/index.ts`：
+- [x] 7.4 创建 `apps/desktop/src/preload/index.ts`：
   ```ts
   import { contextBridge, ipcRenderer } from 'electron';
 
@@ -320,14 +320,14 @@
   contextBridge.exposeInMainWorld('hdt', api);
   export type HdtApi = typeof api;
   ```
-- [ ] 7.5 提交：`git add apps/desktop/src/main apps/desktop/src/preload && git commit -m "feat(desktop): add main process, preload bridge, IPC for app:getVersion"`。
+- [x] 7.5 提交：`git add apps/desktop/src/main apps/desktop/src/preload && git commit -m "feat(desktop): add main process, preload bridge, IPC for app:getVersion"`。
 
 ## 8. Renderer：迁移 figma_design 源码
 
 > 步骤 8.1–8.7 全部用 `git mv` 保留历史。每个 mv 后用 `git status` 验证。
 
-- [ ] 8.1 创建目标目录骨架：`apps/desktop/src/renderer/index.html`、`apps/desktop/src/renderer/src/components/`、`apps/desktop/src/renderer/src/styles/`、`apps/desktop/src/renderer/src/data/`。
-- [ ] 8.2 创建 `apps/desktop/src/renderer/index.html`：
+- [x] 8.1 创建目标目录骨架：`apps/desktop/src/renderer/index.html`、`apps/desktop/src/renderer/src/components/`、`apps/desktop/src/renderer/src/styles/`、`apps/desktop/src/renderer/src/data/`。
+- [x] 8.2 创建 `apps/desktop/src/renderer/index.html`：
   ```html
   <!doctype html>
   <html lang="zh-CN">
@@ -344,30 +344,30 @@
     </body>
   </html>
   ```
-- [ ] 8.3 用 git mv 迁移所有 figma 组件（保留历史）：
+- [x] 8.3 用 git mv 迁移所有 figma 组件（保留历史）：
   ```bash
   git mv figma_design/src/app/components apps/desktop/src/renderer/src/components
   git mv figma_design/src/app/data/mockDecks.ts apps/desktop/src/renderer/src/data/mockDecks.ts
   git mv figma_design/src/styles apps/desktop/src/renderer/src/styles
   ```
-- [ ] 8.4 迁移文档：
+- [x] 8.4 迁移文档：
   ```bash
   mkdir -p docs/figma
   git mv figma_design/ATTRIBUTIONS.md docs/figma/ATTRIBUTIONS.md
   git mv figma_design/guidelines/Guidelines.md docs/figma/Guidelines.md
   ```
-- [ ] 8.5 在 `docs/figma/Guidelines.md` 末尾追加：
+- [x] 8.5 在 `docs/figma/Guidelines.md` 末尾追加：
   ```markdown
   ## TODO（add-monorepo-skeleton change 遗留）
   - 把 OverlayView 中 `images.unsplash.com` 占位图替换为本地资源；之后从 `index.html` CSP 中移除 `https://images.unsplash.com`。
   - 把 figma_design 原 App.tsx 中 `useState('tracker')` 改造后的状态管理（HashRouter）若需要扩展，迁入 `@hdt/core/router`。
   ```
-- [ ] 8.6 删除 figma_design 残留：
+- [x] 8.6 删除 figma_design 残留：
   ```bash
   git rm -r figma_design
   ```
   期望 `git status` 显示 figma_design 整体被删除。
-- [ ] 8.7 提交：
+- [x] 8.7 提交：
   ```bash
   git add docs/figma apps/desktop/src/renderer
   git commit -m "refactor(desktop): migrate figma_design into apps/desktop renderer"

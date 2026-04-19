@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MOCK_DECK, Card } from '../data/mockDecks';
 import { DeckCard } from './Decklist';
-import { Settings, Lock, Unlock, EyeOff, LayoutGrid, Info, Shield } from 'lucide-react';
+import { Settings, Lock, Unlock, EyeOff, LayoutGrid, Shield } from 'lucide-react';
 
 function OverlayTracker({ 
   title, 
