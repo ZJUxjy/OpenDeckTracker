@@ -56,6 +56,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@hdt/hearthdb':
+        specifier: workspace:*
+        version: link:../../packages/hearthdb
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.2(vite@6.4.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
