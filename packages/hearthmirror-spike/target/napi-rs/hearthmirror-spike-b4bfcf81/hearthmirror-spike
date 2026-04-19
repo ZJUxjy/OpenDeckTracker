@@ -1,0 +1,2 @@
+{"kind": "interface", "name": "SpikeResult", "js_doc": "", "def": "pid: number\\nbaseAddress: string\\nheaderHex: string\\nelapsedMicros: number", "original_name": "SpikeResult"}
+{"kind": "fn", "name": "spikeReadMz", "js_doc": "", "def": "function spikeReadMz(): Promise<SpikeResult>"}
