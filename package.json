@@ -1,0 +1,22 @@
+{
+  "name": "hdt-js",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Hearthstone Deck Tracker — TypeScript rewrite",
+  "packageManager": "pnpm@10.10.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "preinstall": "npx -y only-allow pnpm",
+    "dev": "pnpm --filter @hdt/desktop dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "package": "pnpm --filter @hdt/desktop package"
+  },
+  "devDependencies": {}
+}
