@@ -10,6 +10,7 @@ pub enum ScryError {
     ModuleNotFound(String),
     MonoNotInitialized,
     MetadataError(String),
+    OffsetProbe(String),
     DisasmError(String),
     CollectionOverflow { max: usize },
     Unsupported(String),
@@ -30,6 +31,7 @@ impl fmt::Display for ScryError {
             Self::ModuleNotFound(name) => write!(f, "module not found: {}", name),
             Self::MonoNotInitialized => write!(f, "mono runtime not yet initialized"),
             Self::MetadataError(msg) => write!(f, "metadata error: {}", msg),
+            Self::OffsetProbe(msg) => write!(f, "offset probe error: {}", msg),
             Self::DisasmError(msg) => write!(f, "disasm error: {}", msg),
             Self::CollectionOverflow { max } => {
                 write!(f, "collection iteration exceeded max_items={}", max)

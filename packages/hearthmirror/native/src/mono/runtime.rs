@@ -137,6 +137,12 @@ pub struct MonoOffsets {
 }
 
 impl MonoRuntime {
+    pub fn probe_json_offsets(&self) -> Result<crate::mono::offsets::MonoOffsets, ScryError> {
+        let defaults = crate::mono::offsets::MonoOffsets::bundled_unity_2021_3()?;
+        crate::mono::offsets::OffsetProber::new(&self.memory, &self.mono_module, 32)
+            .probe_all(&defaults)
+    }
+
     /// Discover field offsets for the current Hearthstone build.
     /// Returns a populated MonoOffsets. Cache the result; re-probe only when
     /// mono_module.base changes (i.e., process restarted).
@@ -309,7 +315,8 @@ mod unit_tests {
 
     #[test]
     fn missing_root_domain_export_from_pe_reports_metadata_error() {
-        let system_root = std::env::var_os("SystemRoot").expect("SystemRoot should be set on Windows");
+        let system_root =
+            std::env::var_os("SystemRoot").expect("SystemRoot should be set on Windows");
         let kernel32_path = PathBuf::from(system_root)
             .join("SysWOW64")
             .join("kernel32.dll");
