@@ -59,3 +59,9 @@ or initiating processes. They communicate interactivity and should have clear, a
   * Visual Style : Text-only with no border, using primary color
   * Usage : For actions that should be available but not emphasized
 -->
+
+## TODO（add-monorepo-skeleton change 遗留）
+
+- 把 `OverlayView` 中 `images.unsplash.com` 占位图替换为本地资源；之后从 `apps/desktop/src/renderer/index.html` 的 CSP 中移除 `https://images.unsplash.com`。
+- 把 figma_design 原 `App.tsx` 中 `useState('tracker')` 改造后的状态管理（HashRouter）若需扩展，迁入 `@hdt/core/router`。
+
