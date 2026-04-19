@@ -5,16 +5,17 @@
 #![warn(clippy::expect_used)]
 #![warn(clippy::panic)]
 
-pub mod error;
-pub mod remote_ptr;
-pub mod handle;
-pub mod process;
-pub mod memory;
-pub mod mono;
-pub mod metadata;
 pub mod collections;
-pub mod service_locator;
+pub mod disasm;
+pub mod error;
+pub mod handle;
+pub mod memory;
+pub mod metadata;
+pub mod mono;
+pub mod process;
 pub mod reflection;
+pub mod remote_ptr;
+pub mod service_locator;
 
 use napi_derive::napi;
 use std::sync::Mutex;
@@ -27,10 +28,12 @@ fn try_init() -> Option<mono::MonoRuntime> {
 
 /// Run an operation against the cached MonoRuntime; returns Ok(None) if mono
 /// can't be initialized (i.e., Hearthstone not running).
-fn with_runtime<T>(f: impl FnOnce(&mono::MonoRuntime) -> Result<Option<T>, error::ScryError>)
-    -> napi::Result<Option<T>>
-{
-    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+fn with_runtime<T>(
+    f: impl FnOnce(&mono::MonoRuntime) -> Result<Option<T>, error::ScryError>,
+) -> napi::Result<Option<T>> {
+    let mut guard = MIRROR
+        .lock()
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     if guard.is_none() {
         *guard = try_init();
     }
@@ -42,10 +45,13 @@ fn with_runtime<T>(f: impl FnOnce(&mono::MonoRuntime) -> Result<Option<T>, error
 
 /// Like with_runtime but for methods that return a plain T (not Option<T>),
 /// falling back to `default` when the runtime is unavailable.
-fn with_runtime_or<T>(default: T, f: impl FnOnce(&mono::MonoRuntime) -> Result<T, error::ScryError>)
-    -> napi::Result<T>
-{
-    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+fn with_runtime_or<T>(
+    default: T,
+    f: impl FnOnce(&mono::MonoRuntime) -> Result<T, error::ScryError>,
+) -> napi::Result<T> {
+    let mut guard = MIRROR
+        .lock()
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     if guard.is_none() {
         *guard = try_init();
     }
@@ -57,7 +63,9 @@ fn with_runtime_or<T>(default: T, f: impl FnOnce(&mono::MonoRuntime) -> Result<T
 
 #[napi]
 pub async fn is_alive() -> napi::Result<bool> {
-    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    let mut guard = MIRROR
+        .lock()
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
     if guard.is_none() {
         *guard = try_init();
     }
@@ -66,73 +74,81 @@ pub async fn is_alive() -> napi::Result<bool> {
 
 #[napi]
 pub async fn get_battle_tag() -> napi::Result<Option<reflection::battle_tag::BattleTagResult>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::battle_tag::get_battle_tag_internal(rt)))
+    with_runtime(|rt| {
+        futures::executor::block_on(reflection::battle_tag::get_battle_tag_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn get_account_id() -> napi::Result<Option<reflection::account_id::AccountIdResult>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::account_id::get_account_id_internal(rt)))
+    with_runtime(|rt| {
+        futures::executor::block_on(reflection::account_id::get_account_id_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn get_game_type() -> napi::Result<i32> {
-    with_runtime_or(0, |rt| futures::executor::block_on(
-        reflection::game_state::get_game_type_internal(rt)))
+    with_runtime_or(0, |rt| {
+        futures::executor::block_on(reflection::game_state::get_game_type_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn is_spectating() -> napi::Result<bool> {
-    with_runtime_or(false, |rt| futures::executor::block_on(
-        reflection::game_state::is_spectating_internal(rt)))
+    with_runtime_or(false, |rt| {
+        futures::executor::block_on(reflection::game_state::is_spectating_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn is_game_over() -> napi::Result<bool> {
-    with_runtime_or(false, |rt| futures::executor::block_on(
-        reflection::game_state::is_game_over_internal(rt)))
+    with_runtime_or(false, |rt| {
+        futures::executor::block_on(reflection::game_state::is_game_over_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn get_match_info() -> napi::Result<Option<reflection::match_info::MatchInfoResult>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::match_info::get_match_info_internal(rt)))
+    with_runtime(|rt| {
+        futures::executor::block_on(reflection::match_info::get_match_info_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn get_medal_info() -> napi::Result<Option<reflection::medal_info::MedalInfoResult>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::medal_info::get_medal_info_internal(rt)))
+    with_runtime(|rt| {
+        futures::executor::block_on(reflection::medal_info::get_medal_info_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn get_decks() -> napi::Result<Option<Vec<reflection::decks::DeckResult>>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::decks::get_decks_internal(rt)))
+    with_runtime(|rt| futures::executor::block_on(reflection::decks::get_decks_internal(rt)))
 }
 
 #[napi]
 pub async fn get_collection() -> napi::Result<Option<Vec<reflection::collection::CardResult>>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::collection::get_collection_internal(rt)))
+    with_runtime(|rt| {
+        futures::executor::block_on(reflection::collection::get_collection_internal(rt))
+    })
 }
 
 #[napi]
 pub async fn get_arena_deck() -> napi::Result<Option<reflection::arena::ArenaInfoResult>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::arena::get_arena_deck_internal(rt)))
+    with_runtime(|rt| futures::executor::block_on(reflection::arena::get_arena_deck_internal(rt)))
 }
 
 #[napi]
-pub async fn get_battleground_rating_info() -> napi::Result<Option<reflection::battlegrounds::BattlegroundRatingInfoResult>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::battlegrounds::get_battleground_rating_info_internal(rt)))
+pub async fn get_battleground_rating_info(
+) -> napi::Result<Option<reflection::battlegrounds::BattlegroundRatingInfoResult>> {
+    with_runtime(|rt| {
+        futures::executor::block_on(
+            reflection::battlegrounds::get_battleground_rating_info_internal(rt),
+        )
+    })
 }
 
 #[napi]
 pub async fn get_server_info() -> napi::Result<Option<reflection::server::GameServerInfoResult>> {
-    with_runtime(|rt| futures::executor::block_on(
-        reflection::server::get_server_info_internal(rt)))
+    with_runtime(|rt| futures::executor::block_on(reflection::server::get_server_info_internal(rt)))
 }
-

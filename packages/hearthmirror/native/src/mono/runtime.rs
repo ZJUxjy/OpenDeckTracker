@@ -1,3 +1,4 @@
+use crate::disasm;
 use crate::error::ScryError;
 use crate::handle::OwnedProcessHandle;
 use crate::memory::ProcessMemory;
@@ -52,7 +53,10 @@ fn find_mono_module(handle: &OwnedProcessHandle) -> Result<ModuleInfo, ScryError
     }
 
     // 1. Exact match on preferred mono dll
-    if let Some(m) = modules.iter().find(|m| m.name.eq_ignore_ascii_case(PREFERRED_MONO)) {
+    if let Some(m) = modules
+        .iter()
+        .find(|m| m.name.eq_ignore_ascii_case(PREFERRED_MONO))
+    {
         return Ok(m.clone());
     }
 
@@ -88,11 +92,14 @@ fn find_mono_get_root_domain_va(
     let exports = pe
         .exports()
         .map_err(|e| ScryError::MetadataError(format!("no exports: {}", e)))?;
-    let by = exports.by()
+    let by = exports
+        .by()
         .map_err(|e| ScryError::MetadataError(format!("by name table failed: {}", e)))?;
     let func = by
         .name("mono_get_root_domain")
-        .map_err(|_| ScryError::ClassNotFound { name: "mono_get_root_domain export".into() })?;
+        .map_err(|_| ScryError::ClassNotFound {
+            name: "mono_get_root_domain export".into(),
+        })?;
     let rva = match func {
         pelite::pe32::exports::Export::Symbol(rva) => *rva,
         _ => return Err(ScryError::Unsupported("forwarded export".into())),
@@ -104,22 +111,18 @@ fn extract_global_root_domain_addr(
     memory: &ProcessMemory,
     func_va: RemotePtr,
 ) -> Result<RemotePtr, ScryError> {
-    let bytes = memory.read_bytes(func_va, 16)?;
-    // Pattern A: A1 [4 bytes addr] C3
-    if bytes.len() >= 6 && bytes[0] == 0xA1 && bytes[5] == 0xC3 {
-        let addr = u32::from_le_bytes([bytes[1], bytes[2], bytes[3], bytes[4]]);
-        return Ok(RemotePtr::new(addr));
-    }
-    // Pattern B: 55 89 E5 A1 [4 bytes] 5D C3
-    if bytes.len() >= 9
-        && bytes[0..3] == [0x55, 0x89, 0xE5]
-        && bytes[3] == 0xA1
-        && bytes[8] == 0xC3
-    {
-        let addr = u32::from_le_bytes([bytes[4], bytes[5], bytes[6], bytes[7]]);
-        return Ok(RemotePtr::new(addr));
-    }
-    Err(ScryError::DisasmPatternUnknown { bytes })
+    let bytes = memory.read_bytes(func_va, disasm::DEFAULT_PROBE_WINDOW)?;
+    extract_global_root_domain_addr_from_code(&bytes)
+}
+
+fn extract_global_root_domain_addr_from_code(code: &[u8]) -> Result<RemotePtr, ScryError> {
+    let addr = disasm::find_first_absolute_load(code, 32)?;
+    let addr = u32::try_from(addr).map_err(|_| {
+        ScryError::DisasmError(format!(
+            "absolute load address out of 32-bit range: 0x{addr:X}"
+        ))
+    })?;
+    Ok(RemotePtr::new(addr))
 }
 
 use crate::mono::probe::{looks_like_cstring, probe_field_offset};
@@ -159,7 +162,9 @@ impl MonoRuntime {
             looks_like_cstring(memory, name_ptr, 4)
         })?;
 
-        Ok(MonoOffsets { domain_loaded_images })
+        Ok(MonoOffsets {
+            domain_loaded_images,
+        })
     }
 }
 
@@ -179,7 +184,9 @@ impl MonoRuntime {
             )
         };
         if len == 0 {
-            return Err(ScryError::MetadataError("GetModuleFileNameExW failed".into()));
+            return Err(ScryError::MetadataError(
+                "GetModuleFileNameExW failed".into(),
+            ));
         }
         let mono_path = String::from_utf16_lossy(&name_buf[..len as usize]);
         let mono_dir = PathBuf::from(&mono_path)
@@ -189,7 +196,10 @@ impl MonoRuntime {
 
         let candidates = [
             mono_dir.join("Assembly-CSharp.dll"),
-            mono_dir.join("..").join("Managed").join("Assembly-CSharp.dll"),
+            mono_dir
+                .join("..")
+                .join("Managed")
+                .join("Assembly-CSharp.dll"),
             mono_dir
                 .join("..")
                 .join("..")
@@ -226,25 +236,59 @@ mod integration_tests {
     fn discover_domain_offsets() {
         let runtime = MonoRuntime::init().expect("Hearthstone must be running");
         let offsets = runtime.discover_offsets().expect("offset discovery failed");
-        eprintln!("MonoDomain.loaded_images @ +0x{:02X}", offsets.domain_loaded_images);
+        eprintln!(
+            "MonoDomain.loaded_images @ +0x{:02X}",
+            offsets.domain_loaded_images
+        );
         // §7.2 says +0x14; spike 02 confirmed.
         // We tolerate ±0x10 because newer Mono builds may shift fields.
-        assert!(offsets.domain_loaded_images >= 0x10 && offsets.domain_loaded_images <= 0x40,
+        assert!(
+            offsets.domain_loaded_images >= 0x10 && offsets.domain_loaded_images <= 0x40,
             "loaded_images offset 0x{:02X} is wildly outside expected range",
-            offsets.domain_loaded_images);
+            offsets.domain_loaded_images
+        );
     }
 
     #[test]
     fn open_assembly_csharp_finds_file() {
         let runtime = MonoRuntime::init().expect("Hearthstone must be running");
-        let reader = runtime.open_assembly_csharp().expect("Assembly-CSharp.dll not found");
+        let reader = runtime
+            .open_assembly_csharp()
+            .expect("Assembly-CSharp.dll not found");
         let bytes = reader.bytes();
         assert!(bytes.len() > 0, "empty file");
         // token for Entity class is always present in HS builds
-        let token = reader.find_class_token("", "Entity")
+        let token = reader
+            .find_class_token("", "Entity")
             .or_else(|_| reader.find_class_token("Blizzard.T5.Services", "Entity"))
             .expect("Entity class must exist in Assembly-CSharp.dll");
         eprintln!("Entity token = 0x{:08X}", token);
         assert_eq!(token >> 24, 0x02, "TypeDef token must have table 0x02");
+    }
+}
+
+#[cfg(test)]
+mod unit_tests {
+    use super::*;
+
+    #[test]
+    fn extracts_root_domain_addr_from_absolute_load() {
+        let code = [0xA1, 0x78, 0x56, 0x34, 0x12, 0xC3];
+        let addr = extract_global_root_domain_addr_from_code(&code).unwrap();
+        assert_eq!(addr, RemotePtr::new(0x1234_5678));
+    }
+
+    #[test]
+    fn extracts_root_domain_addr_from_prologued_absolute_load() {
+        let code = [0x55, 0x89, 0xE5, 0xA1, 0x78, 0x56, 0x34, 0x12, 0x5D, 0xC3];
+        let addr = extract_global_root_domain_addr_from_code(&code).unwrap();
+        assert_eq!(addr, RemotePtr::new(0x1234_5678));
+    }
+
+    #[test]
+    fn returns_disasm_error_when_absolute_load_missing() {
+        let code = [0x8B, 0x41, 0x2C, 0xC3];
+        let err = extract_global_root_domain_addr_from_code(&code).unwrap_err();
+        assert!(matches!(err, ScryError::DisasmError(_)));
     }
 }
