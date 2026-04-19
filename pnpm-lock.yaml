@@ -54,6 +54,8 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(jsdom@29.0.2)
 
+  packages/shared: {}
+
 packages:
 
   '@adobe/css-tools@4.4.4':
