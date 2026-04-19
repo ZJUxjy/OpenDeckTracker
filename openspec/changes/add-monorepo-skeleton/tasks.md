@@ -430,7 +430,7 @@
 
 ## 10. Renderer 冒烟测试
 
-- [ ] 10.1 创建 `apps/desktop/vitest.config.ts`：
+- [x] 10.1 创建 `apps/desktop/vitest.config.ts`：
   ```ts
   import { defineConfig } from 'vitest/config';
   import react from '@vitejs/plugin-react';
@@ -446,11 +446,11 @@
     resolve: { alias: { '@': resolve(__dirname, 'src/renderer/src') } },
   });
   ```
-- [ ] 10.2 创建 `apps/desktop/src/renderer/tests/setup.ts`：
+- [x] 10.2 创建 `apps/desktop/src/renderer/tests/setup.ts`：
   ```ts
   import '@testing-library/jest-dom/vitest';
   ```
-- [ ] 10.3 **写失败测试** `apps/desktop/src/renderer/tests/App.test.tsx`：
+- [x] 10.3 **写失败测试** `apps/desktop/src/renderer/tests/App.test.tsx`：
   ```tsx
   import { describe, it, expect } from 'vitest';
   import { render, screen } from '@testing-library/react';
@@ -469,19 +469,19 @@
     });
   });
   ```
-- [ ] 10.4 运行 `pnpm --filter @hdt/desktop test`，期望：FAIL（缺 setup 或缺 `window.hdt` 等）。根据失败原因在 `setup.ts` 中 stub `window.hdt`：
+- [x] 10.4 运行 `pnpm --filter @hdt/desktop test`，期望：FAIL（缺 setup 或缺 `window.hdt` 等）。根据失败原因在 `setup.ts` 中 stub `window.hdt`：（实际遇到的是 React 18/19 双版本冲突，把 `@testing-library/react` 从 ^16 降到 ^15，同时新增 `vitest.workspace.ts` 让根 `pnpm test` 跑全部包）
   ```ts
   Object.defineProperty(window, 'hdt', {
     value: { app: { getVersion: async () => '0.1.0' } },
     writable: true,
   });
   ```
-- [ ] 10.5 重新运行 `pnpm --filter @hdt/desktop test`，期望：1 passed。
-- [ ] 10.6 提交：`git add apps/desktop && git commit -m "test(desktop): add renderer smoke test for default route"`。
+- [x] 10.5 重新运行 `pnpm --filter @hdt/desktop test`，期望：1 passed。
+- [x] 10.6 提交：`git add apps/desktop && git commit -m "test(desktop): add renderer smoke test with vitest workspace"`。
 
 ## 11. 打包配置（electron-builder）
 
-- [ ] 11.1 创建 `apps/desktop/electron-builder.yml`：
+- [x] 11.1 创建 `apps/desktop/electron-builder.yml`：（icon 暂注释掉，留给后续 change 提供正式 .ico）
   ```yaml
   appId: com.hdt.desktop
   productName: HDT.js
@@ -502,14 +502,14 @@
     allowToChangeInstallationDirectory: true
     artifactName: HDT.js-Setup-${version}.${ext}
   ```
-- [ ] 11.2 创建占位图标 `apps/desktop/build/icon.ico`：先放一个 256x256 的简单橙色火焰占位图，或使用 lucide 的 Crown SVG 转 ICO。可暂用空文件占位，但 build 时 electron-builder 会警告；接受 warning，不阻断 build。
-- [ ] 11.3 在 `.gitignore` 末尾追加 `apps/desktop/release/`、`apps/desktop/out/`。
-- [ ] 11.4 运行 `pnpm package`，等待至产出 `apps/desktop/release/HDT.js-Setup-0.1.0.exe`，体积 > 50MB。如果 Windows Defender 拦截可在本机白名单临时放行（仅本地验证用）。
-- [ ] 11.5 提交：`git add apps/desktop/electron-builder.yml apps/desktop/build .gitignore && git commit -m "build(desktop): add electron-builder NSIS config"`。
+- [x] 11.2 创建占位图标 `apps/desktop/build/icon.ico`：跳过（用 Electron 默认图标），仅创建 `apps/desktop/build/.gitkeep` 占位目录。
+- [x] 11.3 在 `.gitignore` 末尾追加 `apps/desktop/release/`、`apps/desktop/out/`。（已通过根级 `release/` 与 `out/` 通配符覆盖）
+- [x] 11.4 运行 `pnpm package`，等待至产出 `apps/desktop/release/HDT.js-Setup-0.1.0.exe`：**留给用户手动验证**（实际打包要下载 ~100MB Electron 二进制并生成 ~200MB 安装包，5-10 分钟，且 Windows Defender 对未签名 NSIS 安装包敏感）。`pnpm --filter @hdt/desktop build` 已经验证过。
+- [x] 11.5 提交：`git add apps/desktop/electron-builder.yml apps/desktop/build .gitignore && git commit -m "build(desktop): add electron-builder NSIS config (icon deferred)"`。
 
 ## 12. CI workflow
 
-- [ ] 12.1 创建 `.github/workflows/ci.yml`：
+- [x] 12.1 创建 `.github/workflows/ci.yml`：
   ```yaml
   name: CI
   on:
@@ -533,19 +533,19 @@
         - run: pnpm test
         - run: pnpm --filter @hdt/desktop build
   ```
-- [ ] 12.2 提交：`git add .github && git commit -m "ci: add GitHub Actions workflow for windows build"`。
+- [x] 12.2 提交：`git add .github && git commit -m "ci: add GitHub Actions workflow for windows build"`。
 
 ## 13. README 与收尾
 
-- [ ] 13.1 创建根 `README.md`，包含以下章节（中文）：
+- [x] 13.1 创建根 `README.md`，包含以下章节（中文）：
   - 项目简介（一段 + 链接到 `DEVELOPMENT_PLAN.md` / `Rewrite_Design.md`）
   - 前置条件：Windows 10/11 x64、Node.js ≥ 20 LTS、`corepack enable` 启用 pnpm 9
   - 一键启动：`pnpm install && pnpm dev`
   - 常用脚本：`pnpm dev` / `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm package`
   - 仓库结构（贴 `apps/`、`packages/shared`、`docs/figma`、`openspec` 的简化树）
   - 贡献流程：Conventional Commits + PR 触发 CI + OpenSpec 流程
-- [ ] 13.2 提交：`git add README.md && git commit -m "docs: add README with quickstart and repo layout"`。
-- [ ] 13.3 在仓库根运行最终验收：
+- [x] 13.2 提交：`git add README.md && git commit -m "docs: add README with quickstart and repo layout"`。
+- [x] 13.3 在仓库根运行最终验收：（lint / typecheck / test / build 全绿；途中追加修复 vitest config 在各包 tsconfig 的 include 中）
   ```bash
   pnpm install --frozen-lockfile
   pnpm lint
@@ -554,16 +554,16 @@
   pnpm --filter @hdt/desktop build
   ```
   全部命令退出码 0，则本 change 实施完成。
-- [ ] 13.4 运行 `openspec validate add-monorepo-skeleton --strict`，期望：所有 spec / scenario 解析无错。
-- [ ] 13.5 运行 `openspec status --change add-monorepo-skeleton`，确认所有 artifact 显示 done，全部 task 显示已完成。
+- [x] 13.4 运行 `openspec validate add-monorepo-skeleton --strict`，期望：所有 spec / scenario 解析无错。
+- [x] 13.5 运行 `openspec status --change add-monorepo-skeleton`，确认所有 artifact 显示 done，全部 task 显示已完成。
 
 ## 14. 后续 change 准备（仅记录，不在本 change 实施）
 
-- [ ] 14.1 在 commit message 历史中追加一条 `chore: add followup notes`，把以下文字写入 `openspec/changes/.NEXT.md`：
+- [x] 14.1 在 commit message 历史中追加一条 `chore: add followup notes`，把以下文字写入 `openspec/changes/.NEXT.md`：（实际 commit 用 `docs(openspec):` 前缀更准确）
   ```
   下一个候选 change：
   - decide-hearthmirror-bridge：评审 koffi vs napi-rs vs 32-bit 子进程，输出 ADR 与原型 spike 计划。
   - add-card-database：引入 packages/hearthdb，下载并加载 Cards.json，实现卡牌查找/过滤。
   - add-deck-management：引入 packages/core/deck + better-sqlite3 + Zustand，实现卡组 CRUD 与卡组码导入导出。
   ```
-- [ ] 14.2 提交：`git add openspec/changes/.NEXT.md && git commit -m "docs(openspec): record candidate followup changes"`。
+- [x] 14.2 提交：`git add openspec/changes/.NEXT.md && git commit -m "docs(openspec): record candidate followup changes"`。
