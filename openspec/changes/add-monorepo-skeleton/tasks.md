@@ -4,11 +4,11 @@
 
 ## 1. 仓库初始化
 
-- [ ] 1.1 在 `D:\code\HDT_js` 执行 `git init -b main`，确认输出 `Initialized empty Git repository`，且生成了 `.git/` 目录。
-- [ ] 1.2 创建 `.gitignore`，内容包含：`node_modules/`、`dist/`、`out/`、`release/`、`coverage/`、`*.log`、`.DS_Store`、`Thumbs.db`、`.vite/`、`pnpm-debug.log*`、`*.tsbuildinfo`。
-- [ ] 1.3 创建 `.gitattributes`，内容：`* text=auto eol=lf` 与 `*.{png,jpg,jpeg,gif,ico,webp} binary`。
-- [ ] 1.4 创建 `.editorconfig`：`root = true`、`[*]` 段 `indent_style = space`、`indent_size = 2`、`end_of_line = lf`、`charset = utf-8`、`trim_trailing_whitespace = true`、`insert_final_newline = true`、`[*.md]` 段 `trim_trailing_whitespace = false`。
-- [ ] 1.5 把现有根目录文件（`DEVELOPMENT_PLAN.md`、`Rewrite_Design.md`、`figma_design/**`、`openspec/**`、`.claude/**`）作为 initial commit：
+- [x] 1.1 在 `D:\code\HDT_js` 执行 `git init -b main`，确认输出 `Initialized empty Git repository`，且生成了 `.git/` 目录。
+- [x] 1.2 创建 `.gitignore`，内容包含：`node_modules/`、`dist/`、`out/`、`release/`、`coverage/`、`*.log`、`.DS_Store`、`Thumbs.db`、`.vite/`、`pnpm-debug.log*`、`*.tsbuildinfo`。
+- [x] 1.3 创建 `.gitattributes`，内容：`* text=auto eol=lf` 与 `*.{png,jpg,jpeg,gif,ico,webp} binary`。
+- [x] 1.4 创建 `.editorconfig`：`root = true`、`[*]` 段 `indent_style = space`、`indent_size = 2`、`end_of_line = lf`、`charset = utf-8`、`trim_trailing_whitespace = true`、`insert_final_newline = true`、`[*.md]` 段 `trim_trailing_whitespace = false`。
+- [x] 1.5 把现有根目录文件（`DEVELOPMENT_PLAN.md`、`Rewrite_Design.md`、`figma_design/**`、`openspec/**`、`.claude/**`）作为 initial commit：
   ```bash
   git add .
   git commit -m "chore: initial commit (existing design docs and figma_design baseline)"
@@ -17,19 +17,19 @@
 
 ## 2. pnpm Workspace 与根级 package.json
 
-- [ ] 2.1 执行 `corepack enable` 并验证 `pnpm --version` 输出 ≥ 9.0.0；若未安装 corepack，提示用户先升级 Node。
-- [ ] 2.2 创建 `pnpm-workspace.yaml`，内容：
+- [x] 2.1 执行 `corepack enable` 并验证 `pnpm --version` 输出 ≥ 9.0.0；若未安装 corepack，提示用户先升级 Node。
+- [x] 2.2 创建 `pnpm-workspace.yaml`，内容：
   ```yaml
   packages:
     - 'apps/*'
     - 'packages/*'
   ```
-- [ ] 2.3 创建根 `package.json`（手写，不执行 `npm init`）：name `hdt-js`、version `0.1.0`、private `true`、type `module`、`packageManager: "pnpm@9.15.0"`、`engines: { node: ">=20", pnpm: ">=9" }`、`scripts: { preinstall: "npx -y only-allow pnpm", dev: "pnpm --filter @hdt/desktop dev", build: "pnpm -r build", lint: "eslint .", typecheck: "pnpm -r typecheck", test: "vitest run", package: "pnpm --filter @hdt/desktop package" }`，`devDependencies` 暂留空。
-- [ ] 2.4 提交：`git add pnpm-workspace.yaml package.json && git commit -m "chore: bootstrap pnpm workspaces"`。
+- [x] 2.3 创建根 `package.json`（手写，不执行 `npm init`）：name `hdt-js`、version `0.1.0`、private `true`、type `module`、`packageManager: "pnpm@10.10.0"`（实际用 10.10.0 匹配本机）、`engines: { node: ">=20", pnpm: ">=9" }`、`scripts: { preinstall: "npx -y only-allow pnpm", dev: "pnpm --filter @hdt/desktop dev", build: "pnpm -r build", lint: "eslint .", typecheck: "pnpm -r typecheck", test: "vitest run", package: "pnpm --filter @hdt/desktop package" }`，`devDependencies` 暂留空。
+- [x] 2.4 提交：`git add pnpm-workspace.yaml package.json && git commit -m "chore: bootstrap pnpm workspaces"`。
 
 ## 3. TypeScript 基线
 
-- [ ] 3.1 创建 `tsconfig.base.json`，内容包含：
+- [x] 3.1 创建 `tsconfig.base.json`，内容包含：
   ```json
   {
     "compilerOptions": {
@@ -56,7 +56,7 @@
     }
   }
   ```
-- [ ] 3.2 提交：`git add tsconfig.base.json && git commit -m "build: add shared tsconfig base with strict options"`。
+- [x] 3.2 提交：`git add tsconfig.base.json && git commit -m "build: add shared tsconfig base with strict options"`。
 
 ## 4. ESLint + Prettier + Vitest 基线
 
