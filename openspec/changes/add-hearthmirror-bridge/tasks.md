@@ -112,7 +112,7 @@
 ## Phase F — ServiceLocator（需炉石做集成测试）
 
 - [x] F.1 创建 `packages/hearthmirror/native/src/service_locator.rs`：实现 design D6 决策的 lookup 流程。
-- [x] F.2 集成测试（gated `#[cfg(feature = "integration")]`）：连炉石 → `get_service("NetCache")` 返回 Some。
+- [ ] F.2 集成测试（gated `#[cfg(feature = "integration")]`）：连炉石 → `get_service("NetCache")` 返回 Some。**NOTE: service_locator.rs 当前是 stub，返回 `ScryError::Unsupported`；真正集成测试需要炉石运行，留待后续 change。**
 - [x] F.3 commit：`feat(hearthmirror): Phase F — ServiceLocator with s_runtimeServices fallback`。
 
 ---
@@ -145,7 +145,7 @@
 - [x] H.1.3 `errors.ts`：`MirrorError` + `MirrorErrorCode`（按 spec hearthmirror-api）。
 - [x] H.1.4 `types.ts`：12 个返回类型 interface（按 spec）。
 - [x] H.1.5 `hearthmirror.ts`：`class HearthMirror` 实现 lazy connect + 12 方法转发 + isAlive。
-- [x] H.1.6 `vitest`：mock native module（用 vitest mock + import.meta.vitest），验证 lazy connect / disconnect / 方法签名。
+- [x] H.1.6 `vitest`：mock native module（vi.mock('@hdt/hearthmirror-native')），验证 getAccountId BigInt 转换 / getMatchInfo 嵌套 shape / getMedalInfo null 字段 / getBattleTag passthrough / getDecks / null-return 路径。共 12 个测试。
 - [x] H.1.7 commit：`feat(hearthmirror): Phase H.1 — TypeScript HearthMirror class with mock-based unit tests`。
 
 ### H.2 主进程 IPC
@@ -169,10 +169,10 @@
 
 ### H.4 dev 验证
 
-- [x] H.4.1 跑 `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm --filter @hdt/desktop build` 全套质量门，期望全 0 退出码。
-- [x] H.4.2 跑 `pnpm dev`，验证（炉石未运行）：顶部显示 "Game Not Running" + "Not Connected"，主窗口正常显示 FIRESTONE。
-- [x] H.4.3 [需用户配合] 跑 `pnpm dev`，验证（炉石主菜单运行 + 已登录）：顶部 5 秒内切换为 "Game Running" + 真实 BattleTag，Dashboard 段位也是真实数据。
-- [x] H.4.4 commit：`docs(hearthmirror): Phase H.4 — dev mode end-to-end verified`（如果有 minor fix）。
+- [x] H.4.1 跑 `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm --filter @hdt/desktop build` 全套质量门，期望全 0 退出码。**VERIFIED after code-review fixes: 61 tests pass, build succeeds.**
+- [ ] H.4.2 跑 `pnpm dev`，验证（炉石未运行）：顶部显示 "Game Not Running" + "Not Connected"，主窗口正常显示 FIRESTONE。（需人工验证）
+- [ ] H.4.3 [需用户配合] 跑 `pnpm dev`，验证（炉石主菜单运行 + 已登录）：顶部 5 秒内切换为 "Game Running" + 真实 BattleTag，Dashboard 段位也是真实数据。（需人工验证）
+- [ ] H.4.4 commit：`docs(hearthmirror): Phase H.4 — dev mode end-to-end verified`（如果有 minor fix）。
 
 ---
 

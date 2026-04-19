@@ -2,7 +2,7 @@
   "name": "@hdt/hearthmirror-native",
   "version": "0.1.0",
   "private": true,
-  "main": "index.cjs",
+  "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "build": "napi build --platform --release",
