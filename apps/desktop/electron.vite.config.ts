@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Workspace packages whose TS sources should be inlined into the bundle
 // (instead of left as external requires that Node would fail to import).
-const WORKSPACE_INLINE = ['@hdt/hearthdb', '@hdt/shared'];
+const WORKSPACE_INLINE = ['@hdt/hearthdb', '@hdt/shared', '@hdt/hearthmirror'];
 
 export default defineConfig({
   main: {
@@ -17,6 +17,7 @@ export default defineConfig({
       alias: {
         '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
         '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
+        '@hdt/hearthmirror': resolve(__dirname, '../../packages/hearthmirror/src/index.ts'),
       },
     },
     build: {
@@ -31,6 +32,7 @@ export default defineConfig({
       alias: {
         '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
         '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
+        '@hdt/hearthmirror': resolve(__dirname, '../../packages/hearthmirror/src/index.ts'),
       },
     },
     build: {
