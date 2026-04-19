@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Filter, BookOpen, AlertCircle, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, Filter, BookOpen, AlertCircle, Sparkles, Database } from 'lucide-react';
 
 const expansions = [
   { id: 'standard', name: 'Standard Format', collected: 1450, total: 1800, sets: [
@@ -19,6 +19,24 @@ const expansions = [
 export function Collection() {
   const [activeFormat, setActiveFormat] = useState('standard');
   const [searchQuery, setSearchQuery] = useState('');
+  const [dbStats, setDbStats] = useState<{ total: number; sets: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void window.hdt.cards
+      .search({ limit: 10000 })
+      .then((all) => {
+        if (cancelled) return;
+        const sets = new Set(all.map((c) => c.set));
+        setDbStats({ total: all.length, sets: sets.size });
+      })
+      .catch(() => {
+        // ignore — keep mock UI
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const activeData = expansions.find(e => e.id === activeFormat) ?? expansions[0]!;
   const percentage = Math.round((activeData.collected / activeData.total) * 100);
@@ -37,6 +55,15 @@ export function Collection() {
         </div>
         
         <div className="flex space-x-4 w-full sm:w-auto">
+          {dbStats && (
+            <div className="bg-[#1C1C24] p-3 rounded-lg border border-[#2A2A35] flex items-center space-x-3 shadow-md">
+              <div className="flex flex-col items-end">
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">DB Cards</span>
+                <span className="text-emerald-400 font-black text-lg">{dbStats.total.toLocaleString()}</span>
+              </div>
+              <Database size={24} className="text-emerald-400 opacity-80" />
+            </div>
+          )}
           <div className="bg-[#1C1C24] p-3 rounded-lg border border-[#2A2A35] flex items-center space-x-3 shadow-md">
             <div className="flex flex-col items-end">
               <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Dust</span>

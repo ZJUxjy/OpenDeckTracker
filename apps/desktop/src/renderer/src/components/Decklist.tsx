@@ -1,8 +1,72 @@
+import { useEffect, useState } from 'react';
 import { Card } from '../data/mockDecks';
 import { Star } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import * as HoverCard from '@radix-ui/react-hover-card';
+
+type Rarity = Card['rarity'];
+
+function rarityFromHearthDb(value: string | undefined): Rarity {
+  switch (value) {
+    case 'FREE':
+      return 'free';
+    case 'COMMON':
+      return 'common';
+    case 'RARE':
+      return 'rare';
+    case 'EPIC':
+      return 'epic';
+    case 'LEGENDARY':
+      return 'legendary';
+    default:
+      return 'common';
+  }
+}
+
+/**
+ * Enrich a deck (mock or otherwise) with real CardDef data via window.hdt.cards.
+ * Cards without dbfId or with failed lookup keep their mock fields untouched.
+ */
+function useEnrichedCards(input: readonly Card[]): Card[] {
+  const [enriched, setEnriched] = useState<Card[]>([...input]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const dbfIds = input.map((c) => c.dbfId).filter((v): v is number => typeof v === 'number');
+    if (dbfIds.length === 0) {
+      setEnriched([...input]);
+      return;
+    }
+    Promise.all(dbfIds.map((id) => window.hdt.cards.findByDbfId(id)))
+      .then((defs) => {
+        if (cancelled) return;
+        const byDbfId = new Map<number, (typeof defs)[number]>();
+        defs.forEach((def, i) => byDbfId.set(dbfIds[i]!, def));
+        setEnriched(
+          input.map((c) => {
+            if (c.dbfId == null) return c;
+            const def = byDbfId.get(c.dbfId);
+            if (!def) return c;
+            return {
+              ...c,
+              name: def.name,
+              cost: def.cost ?? c.cost,
+              rarity: rarityFromHearthDb(def.rarity),
+            };
+          }),
+        );
+      })
+      .catch(() => {
+        // mock fallback already set; nothing to do
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [input]);
+
+  return enriched;
+}
 
 function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
@@ -133,7 +197,8 @@ export function DeckCard({ card, disableTooltip = false, side = 'left' }: { card
 }
 
 export function DeckTracker({ cards }: { cards: Card[] }) {
-  const sortedCards = [...cards].sort((a, b) => {
+  const enriched = useEnrichedCards(cards);
+  const sortedCards = [...enriched].sort((a, b) => {
     if (a.cost === b.cost) return a.name.localeCompare(b.name);
     return a.cost - b.cost;
   });
