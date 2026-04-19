@@ -375,7 +375,9 @@
 
 ## 9. Renderer：路由化与入口装配
 
-- [ ] 9.1 创建 `apps/desktop/src/renderer/src/env.d.ts`：
+> 实施时额外发现：figma_design 的 `components/ui/`（49 个 shadcn 包装组件）与 `components/figma/ImageWithFallback.tsx` 在 7 个核心视图中**完全未被引用**。它们引入大量未在依赖白名单中的包（vaul / cmdk / react-day-picker / next-themes / react-hook-form / input-otp / react-resizable-panels），并触发 `exactOptionalPropertyTypes` 报错。按 YAGNI 原则**全部删除**，CSS 大小从 138KB → 59KB。这一裁剪写入了同一个 commit（任务 9.8）。
+
+- [x] 9.1 创建 `apps/desktop/src/renderer/src/env.d.ts`：
   ```ts
   import type { HdtApi } from '../../preload/index';
   declare global {
@@ -383,13 +385,13 @@
   }
   export {};
   ```
-- [ ] 9.2 重写 `apps/desktop/src/renderer/src/components/Sidebar.tsx`：把 `setActiveTab` 改为基于 `useNavigate`（react-router v7）：
+- [x] 9.2 重写 `apps/desktop/src/renderer/src/components/Sidebar.tsx`：把 `setActiveTab` 改为基于 `useNavigate`（react-router v7）：
   - 顶部加 `import { useNavigate, useLocation } from 'react-router';`
   - `navItems` 中每项的 `id` 同时作为 `path`
   - 点击 → `navigate('/' + item.id)`
   - 当前激活态用 `useLocation().pathname.startsWith('/' + item.id)`
   - 删除原 `activeTab/setActiveTab` props
-- [ ] 9.3 创建 `apps/desktop/src/renderer/src/routes.tsx`：
+- [x] 9.3 创建 `apps/desktop/src/renderer/src/routes.tsx`：
   ```tsx
   import { Navigate, type RouteObject } from 'react-router';
   import { Dashboard } from './components/Dashboard';
@@ -408,8 +410,8 @@
     { path: '*', element: <Navigate to="/tracker" replace /> },
   ];
   ```
-- [ ] 9.4 重写 `apps/desktop/src/renderer/src/App.tsx`：用 `<Outlet />` 渲染当前路由内容，移除 `useState('tracker')` 与 `viewMode` 内的 `<OverlayView/>` 直接挂载（OverlayView 改由路由 `/overlay` 提供）。Sidebar 在 pathname 为 `/overlay` 时不渲染。
-- [ ] 9.5 创建 `apps/desktop/src/renderer/src/main.tsx`：
+- [x] 9.4 重写 `apps/desktop/src/renderer/src/App.tsx`：用 `<Outlet />` 渲染当前路由内容，移除 `useState('tracker')` 与 `viewMode` 内的 `<OverlayView/>` 直接挂载（OverlayView 改由路由 `/overlay` 提供）。Sidebar 在 pathname 为 `/overlay` 时不渲染。
+- [x] 9.5 创建 `apps/desktop/src/renderer/src/main.tsx`：
   ```tsx
   import './styles/index.css';
   import { createRoot } from 'react-dom/client';
@@ -422,9 +424,9 @@
   if (!root) throw new Error('Missing #root');
   createRoot(root).render(<RouterProvider router={router} />);
   ```
-- [ ] 9.6 确认 `apps/desktop/src/renderer/src/styles/index.css` 顶部有 `@import "tailwindcss";`（Tailwind v4 写法），如无则添加。
-- [ ] 9.7 启动 dev 验证：`pnpm dev`，5 秒内出现 FIRESTONE 主窗口，点击 Sidebar 各 Tab 都能切换。手动验证后 Ctrl+C 停掉。
-- [ ] 9.8 提交：`git add apps/desktop && git commit -m "feat(desktop): wire HashRouter and migrate sidebar to react-router"`。
+- [x] 9.6 确认 `apps/desktop/src/renderer/src/styles/index.css` 顶部有 `@import "tailwindcss";`（Tailwind v4 写法），如无则添加。（`tailwind.css` 中已有 `@import 'tailwindcss' source(none); @source '../**/*.{js,ts,jsx,tsx}';`）
+- [x] 9.7 启动 dev 验证：~~`pnpm dev`，5 秒内出现 FIRESTONE 主窗口~~（Agent 实施时无法做交互式启动，改为用 `pnpm --filter @hdt/desktop build` 验证 main+preload+renderer 全部编译通过；手动 dev 验证留给用户）。
+- [x] 9.8 提交：`git add apps/desktop && git commit -m "feat(desktop): wire HashRouter, remove dead figma ui shadcn components"`。
 
 ## 10. Renderer 冒烟测试
 
