@@ -1,11 +1,11 @@
-> 实施约定：spike 性质（throw-away）。代码用 `chore(spike):` 前缀；teardown 用 `chore(spike): teardown ...`；文档用 `docs:`。
+﻿> 实施约定：spike 性质（throw-away）。代码用 `chore(spike):` 前缀；teardown 用 `chore(spike): teardown ...`；文档用 `docs:`。
 > 工作目录默认 `D:\code\HDT_js`。
 
 ## 1. 创建 spike 包骨架
 
-- [ ] 1.1 创建目录 `packages/hearthmirror-mono-spike/src/`。
-- [ ] 1.2 创建 `packages/hearthmirror-mono-spike/package.json`（沿用 spike 01 模板，name `@hdt/hearthmirror-mono-spike`，napi.name `hearthmirror-mono-spike`）。
-- [ ] 1.3 创建 `packages/hearthmirror-mono-spike/Cargo.toml`：
+- [x] 1.1 创建目录 `packages/hearthmirror-mono-spike/src/`。
+- [x] 1.2 创建 `packages/hearthmirror-mono-spike/package.json`（沿用 spike 01 模板，name `@hdt/hearthmirror-mono-spike`，napi.name `hearthmirror-mono-spike`）。
+- [x] 1.3 创建 `packages/hearthmirror-mono-spike/Cargo.toml`：
 
   ```toml
   [package]
@@ -39,13 +39,13 @@
   lto = true
   ```
 
-- [ ] 1.4 创建 `packages/hearthmirror-mono-spike/build.rs`（同 spike 01）。
-- [ ] 1.5 创建 `packages/hearthmirror-mono-spike/README.md`（标记 exploratory，引用 spike 02 计划与 ADR 0001）。
-- [ ] 1.6 在根 `eslint.config.js` 的 `ignores` 加 `'packages/hearthmirror-mono-spike/**'`。
+- [x] 1.4 创建 `packages/hearthmirror-mono-spike/build.rs`（同 spike 01）。
+- [x] 1.5 创建 `packages/hearthmirror-mono-spike/README.md`（标记 exploratory，引用 spike 02 计划与 ADR 0001）。
+- [x] 1.6 在根 `eslint.config.js` 的 `ignores` 加 `'packages/hearthmirror-mono-spike/**'`。
 
 ## 2. Rust 实现：模块查找 + PE 解析 + 反汇编 + MonoDomain 读取
 
-- [ ] 2.1 创建 `packages/hearthmirror-mono-spike/src/lib.rs`，按以下骨架实现：
+- [x] 2.1 创建 `packages/hearthmirror-mono-spike/src/lib.rs`，按以下骨架实现：
 
   ```rust
   #![deny(unsafe_op_in_unsafe_fn)]
@@ -237,12 +237,12 @@
   }
   ```
 
-- [ ] 2.2 在 `packages/hearthmirror-mono-spike/` 跑 `pnpm exec napi build --platform --release`，期望产出 `.node` 文件。
-- [ ] 2.3 commit：`git add packages/hearthmirror-mono-spike eslint.config.js && git commit -m "chore(spike): add hearthmirror-mono-spike rust crate"`。
+- [x] 2.2 在 `packages/hearthmirror-mono-spike/` 跑 `pnpm exec napi build --platform --release`，期望产出 `.node` 文件。
+- [x] 2.3 commit：`git add packages/hearthmirror-mono-spike eslint.config.js && git commit -m "chore(spike): add hearthmirror-mono-spike rust crate"`。
 
 ## 3. 主进程 SPIKE TRIGGER
 
-- [ ] 3.1 在 `apps/desktop/src/main/index.ts` 的 `app.whenReady().then(async () => {...})` 末尾追加：
+- [x] 3.1 在 `apps/desktop/src/main/index.ts` 的 `app.whenReady().then(async () => {...})` 末尾追加：
 
   ```typescript
   // === SPIKE TRIGGER (remove on teardown of add-hearthmirror-bridge-mono-spike) ===
@@ -260,36 +260,36 @@
   // === END SPIKE ===
   ```
 
-- [ ] 3.2 在 `apps/desktop/package.json` `dependencies` 加 `"@hdt/hearthmirror-mono-spike": "workspace:*"`。
-- [ ] 3.3 在仓库根跑 `pnpm install`。
-- [ ] 3.4 跑 `pnpm typecheck`，期望零错误。
-- [ ] 3.5 commit：`git add apps/desktop pnpm-lock.yaml && git commit -m "chore(spike): wire main process to call spikeLocateMono on startup"`。
+- [x] 3.2 在 `apps/desktop/package.json` `dependencies` 加 `"@hdt/hearthmirror-mono-spike": "workspace:*"`。
+- [x] 3.3 在仓库根跑 `pnpm install`。
+- [x] 3.4 跑 `pnpm typecheck`，期望零错误。
+- [x] 3.5 commit：`git add apps/desktop pnpm-lock.yaml && git commit -m "chore(spike): wire main process to call spikeLocateMono on startup"`。
 
 ## 4. 场景 A 验证（炉石主菜单运行中）
 
-- [ ] 4.1 **要求用户配合**：打开炉石客户端到主菜单（**等加载完毕后再操作**，约 5 秒，否则 root_domain 可能仍为 NULL）。
-- [ ] 4.2 杀掉所有残留 electron 进程：`Get-Process electron -ErrorAction SilentlyContinue | Stop-Process -Force`。
-- [ ] 4.3 跑 `pnpm dev`，等待主进程 stdout 打印 `[spike:mono] OK: {...}` 多行 JSON。
-- [ ] 4.4 完整复制 JSON 内容到 spike report 暂存区。
-- [ ] 4.5 验证关键字段：
+- [x] 4.1 **要求用户配合**：打开炉石客户端到主菜单（**等加载完毕后再操作**，约 5 秒，否则 root_domain 可能仍为 NULL）。
+- [x] 4.2 杀掉所有残留 electron 进程：`Get-Process electron -ErrorAction SilentlyContinue | Stop-Process -Force`。
+- [x] 4.3 跑 `pnpm dev`，等待主进程 stdout 打印 `[spike:mono] OK: {...}` 多行 JSON。
+- [x] 4.4 完整复制 JSON 内容到 spike report 暂存区。
+- [x] 4.5 验证关键字段：
   - `monoModuleName` 含 `mono-2.0-bdwgc.dll` 或以 `mono-` 开头
   - `peMachine` = `0x014C`（i386）
   - `monoGetRootDomainFirstBytes` 不全为 `00 00 ...`
   - `rootDomainPtr` 不为 `0x00000000` 也不是 `<skipped:...>`
   - `domainAssembliesPtr` 与 `loadedImagesPtr` 都是合理 32 位地址（不是 0、不是越界数）
-- [ ] 4.6 关闭 Electron。
+- [x] 4.6 关闭 Electron。
 
 ## 5. 场景 B 验证（炉石未运行）
 
-- [ ] 5.1 关闭炉石。
-- [ ] 5.2 杀残留 electron + 跑 `pnpm dev`。
-- [ ] 5.3 主进程 stdout 必须打印 `[spike:mono] FAIL: process not found: Hearthstone.exe is not running`。
-- [ ] 5.4 主窗口正常显示 FIRESTONE，Sidebar 切换正常。
-- [ ] 5.5 关闭 Electron。
+- [x] 5.1 关闭炉石。
+- [x] 5.2 杀残留 electron + 跑 `pnpm dev`。
+- [x] 5.3 主进程 stdout 必须打印 `[spike:mono] FAIL: process not found: Hearthstone.exe is not running`。
+- [x] 5.4 主窗口正常显示 FIRESTONE，Sidebar 切换正常。
+- [x] 5.5 关闭 Electron。
 
 ## 6. 写 spike 报告
 
-- [ ] 6.1 创建 `docs/spikes/0002-hearthmirror-mono-spike-report.md`，骨架：
+- [x] 6.1 创建 `docs/spikes/0002-hearthmirror-mono-spike-report.md`，骨架：
 
   ```markdown
   # Spike 0002 Report: HearthMirror Mono Runtime Locate
@@ -337,35 +337,35 @@
   - ❌ **FAILED → 开 ADR 0002，重新评估架构**
   ```
 
-- [ ] 6.2 把 task 4 中观察到的真实数据填入 + Observed Offsets 表 + 真实 Recommendations。
-- [ ] 6.3 commit：`git add docs/spikes && git commit -m "docs(spike): write 0002 hearthmirror mono spike report"`。
+- [x] 6.2 把 task 4 中观察到的真实数据填入 + Observed Offsets 表 + 真实 Recommendations。
+- [x] 6.3 commit：`git add docs/spikes && git commit -m "docs(spike): write 0002 hearthmirror mono spike report"`。
 
 ## 7. 升级 ADR 0001
 
-- [ ] 7.1 在 `docs/adr/0001-hearthmirror-bridge.md` 的 Validation 段末尾追加：
+- [x] 7.1 在 `docs/adr/0001-hearthmirror-bridge.md` 的 Validation 段末尾追加：
 
   ```markdown
   Spike 02 (mono runtime locate) PASSED on <date>; see
   `docs/spikes/0002-hearthmirror-mono-spike-report.md`.
   ```
 
-- [ ] 7.2 commit：`git add docs/adr && git commit -m "docs(adr): record spike 02 validation in ADR 0001"`。
+- [x] 7.2 commit：`git add docs/adr && git commit -m "docs(adr): record spike 02 validation in ADR 0001"`。
 
 ## 8. Teardown
 
-- [ ] 8.1 删 spike 包：`git rm -r packages/hearthmirror-mono-spike`，然后物理删除剩余目录 `Remove-Item -Recurse -Force packages/hearthmirror-mono-spike`（如有）。
-- [ ] 8.2 删 `apps/desktop/src/main/index.ts` 中 `=== SPIKE TRIGGER ===` 至 `=== END SPIKE ===` 块（spike 02 的那个；spike 01 的早已 teardown）。
-- [ ] 8.3 删 `apps/desktop/package.json` 的 `"@hdt/hearthmirror-mono-spike": "workspace:*"`。
-- [ ] 8.4 删 `eslint.config.js` 的 `'packages/hearthmirror-mono-spike/**'` ignore。
-- [ ] 8.5 跑 `pnpm install` 重生成 lockfile。
-- [ ] 8.6 验证残留为零：`rg -i 'mono-spike|spikeLocateMono' apps/desktop/src` 命中 0。
-- [ ] 8.7 commit：`git add . && git commit -m "chore(spike): teardown hearthmirror-mono-spike"`。
+- [x] 8.1 删 spike 包：`git rm -r packages/hearthmirror-mono-spike`，然后物理删除剩余目录 `Remove-Item -Recurse -Force packages/hearthmirror-mono-spike`（如有）。
+- [x] 8.2 删 `apps/desktop/src/main/index.ts` 中 `=== SPIKE TRIGGER ===` 至 `=== END SPIKE ===` 块（spike 02 的那个；spike 01 的早已 teardown）。
+- [x] 8.3 删 `apps/desktop/package.json` 的 `"@hdt/hearthmirror-mono-spike": "workspace:*"`。
+- [x] 8.4 删 `eslint.config.js` 的 `'packages/hearthmirror-mono-spike/**'` ignore。
+- [x] 8.5 跑 `pnpm install` 重生成 lockfile。
+- [x] 8.6 验证残留为零：`rg -i 'mono-spike|spikeLocateMono' apps/desktop/src` 命中 0。
+- [x] 8.7 commit：`git add . && git commit -m "chore(spike): teardown hearthmirror-mono-spike"`。
 
 ## 9. 同步 .NEXT.md + 最终验收
 
-- [ ] 9.1 在 `openspec/changes/.NEXT.md` 把 `add-hearthmirror-bridge-mono-spike` 标 ✓，next = `add-hearthmirror-bridge`。
-- [ ] 9.2 跑全套质量门：`pnpm install --frozen-lockfile && pnpm cards:download && pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @hdt/desktop build`，全 0 退出码。
-- [ ] 9.3 把本文件 1.x ~ 9.x 全部标 `[x]`。
-- [ ] 9.4 `openspec validate add-hearthmirror-bridge-mono-spike --strict` → valid。
-- [ ] 9.5 `openspec status --change add-hearthmirror-bridge-mono-spike` → 4/4 done。
-- [ ] 9.6 final commit：`git add . && git commit -m "docs(openspec): mark all tasks complete in add-hearthmirror-bridge-mono-spike"`。
+- [x] 9.1 在 `openspec/changes/.NEXT.md` 把 `add-hearthmirror-bridge-mono-spike` 标 ✓，next = `add-hearthmirror-bridge`。
+- [x] 9.2 跑全套质量门：`pnpm install --frozen-lockfile && pnpm cards:download && pnpm lint && pnpm typecheck && pnpm test && pnpm --filter @hdt/desktop build`，全 0 退出码。
+- [x] 9.3 把本文件 1.x ~ 9.x 全部标 `[x]`。
+- [x] 9.4 `openspec validate add-hearthmirror-bridge-mono-spike --strict` → valid。
+- [x] 9.5 `openspec status --change add-hearthmirror-bridge-mono-spike` → 4/4 done。
+- [x] 9.6 final commit：`git add . && git commit -m "docs(openspec): mark all tasks complete in add-hearthmirror-bridge-mono-spike"`。

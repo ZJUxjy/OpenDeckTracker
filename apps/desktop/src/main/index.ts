@@ -15,26 +15,12 @@ if (!gotLock) {
     }
   });
 
-  void app.whenReady().then(async () => {
+  void app.whenReady().then(() => {
     registerIpc();
     createMainWindow();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     });
-
-    // === SPIKE TRIGGER (remove on teardown of add-hearthmirror-bridge-mono-spike) ===
-    try {
-      const { spikeLocateMono } = await import('@hdt/hearthmirror-mono-spike');
-      try {
-        const result = await spikeLocateMono();
-        console.log('[spike:mono] OK:', JSON.stringify(result, null, 2));
-      } catch (err) {
-        console.log('[spike:mono] FAIL:', (err as Error).message);
-      }
-    } catch (loadErr) {
-      console.log('[spike:mono] MODULE LOAD FAIL:', (loadErr as Error).message);
-    }
-    // === END SPIKE ===
   });
 
   app.on('window-all-closed', () => {
