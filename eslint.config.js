@@ -15,7 +15,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/coverage/**',
       'figma_design/**',
-      'packages/hearthmirror/native/**',  // ← add this
+      'packages/hearthmirror/native/**',
     ],
   },
   js.configs.recommended,

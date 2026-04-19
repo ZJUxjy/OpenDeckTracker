@@ -1,11 +1,13 @@
 import { Bell, ChevronDown, Ghost, LayoutTemplate, Monitor, User } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { Sidebar } from './components/Sidebar';
+import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const isOverlay = location.pathname === '/overlay';
+  const { isAlive, playerName } = useHearthMirrorStatus();
 
   return (
     <div className="flex h-screen bg-[#0E0E14] text-slate-300 font-sans overflow-hidden">
@@ -15,7 +17,8 @@ export default function App() {
         <header className="h-14 bg-[#14141A] border-b border-[#2A2A35] flex items-center justify-between px-6 shrink-0 z-50 shadow-md relative">
           <div className="flex items-center space-x-4">
             <span className="text-slate-400 text-sm font-medium uppercase tracking-wider flex items-center">
-              <Monitor size={16} className="mr-2 text-green-500" /> Game Running
+              <Monitor size={16} className={`mr-2 ${isAlive ? 'text-green-500' : 'text-slate-500'}`} />
+              {isAlive ? 'Game Running' : 'Game Not Running'}
             </span>
             <div className="h-6 w-px bg-[#2A2A35] mx-2" />
 
@@ -59,7 +62,7 @@ export default function App() {
               <div className="w-7 h-7 bg-indigo-500 rounded flex items-center justify-center text-white font-bold text-sm">
                 <User size={16} />
               </div>
-              <span className="text-sm font-medium text-white">PlayerOne</span>
+              <span className="text-sm font-medium text-white">{playerName ?? 'PlayerOne'}</span>
               <ChevronDown size={14} className="text-slate-500" />
             </button>
           </div>
