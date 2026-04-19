@@ -1,0 +1,81 @@
+schema: spec-driven
+
+# Project context shown to AI when creating artifacts.
+context: |
+  HDT.js — 炉石传说记牌器（TypeScript 重写）
+
+  ## 项目目标
+  对标开源项目 Hearthstone-Deck-Tracker (HDT, C#/WPF)，用 TypeScript 为主语言重写
+  一个现代化、跨平台的炉石传说记牌器（Deck Tracker）。涉及内存读取、二进制
+  解析等性能/底层操作交给 Rust 实现并通过 FFI/IPC 暴露给 TS 层。
+
+  ## 技术栈
+  - 桌面外壳：Electron（最新稳定版，64 位）
+  - UI：React 18 + TypeScript (strict) + Tailwind CSS v4 + Radix UI + lucide-react
+  - 状态：Zustand
+  - 存储：better-sqlite3（对局/卡组/设置）
+  - 卡牌数据：Cards.json（来自 HearthDb 项目）
+  - 日志解析：自研 HearthWatcher（TS，监听 Hearthstone/Logs/）
+  - 内存读取：自研 hearthmirror-native（Rust，i686-pc-windows-msvc，独立
+    32 位子进程，与 Electron 64 位主进程通过 stdio JSON-RPC 通信）
+  - 构建：Vite（renderer）+ tsup/tsc（main/preload）+ electron-builder（打包）
+  - 包管理：pnpm workspaces，Monorepo
+  - 测试：Vitest（单元）、Playwright（E2E）
+  - Lint/Format：ESLint + Prettier
+
+  ## 仓库布局（目标态）
+  - `apps/desktop/` — Electron 应用（main / preload / renderer）
+  - `packages/core/` — 业务逻辑（game / deck / stats / arena / battlegrounds）
+  - `packages/hearthdb/` — 卡牌数据库
+  - `packages/hearthwatcher/` — 日志监听
+  - `packages/hearthmirror/` — 内存读取（Rust crate + TS API）
+  - `packages/overlay/` — 游戏内覆盖层组件库
+  - `resources/` — 图标、卡牌美术缓存、i18n 等
+  - `data/` — Cards.json 等静态数据
+  - `scripts/` — 开发脚本
+  - `figma_design/` — 已有的 Figma 输出（React + Tailwind v4），将作为 Phase 0
+    的 UI 起点迁入 `apps/desktop/renderer`
+
+  ## 约定
+  - 提交：Conventional Commits（feat / fix / chore / refactor / docs / test / build）
+  - 分支：trunk-based，PR 合入 main，feature/* 短生命周期分支
+  - 语言：代码注释/PR 描述用英文，issue/spec/聊天可中文
+  - TS：strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes
+  - 文件命名：组件用 PascalCase.tsx，hooks 用 use-xxx.ts，工具用 kebab-case.ts
+  - 路径别名：每个包内 `@/` 指向 `src/`，跨包用 workspace name `@hdt/core` 等
+  - DRY / YAGNI / TDD（核心逻辑必须有测试）
+
+  ## 关键技术决策（待 design 阶段最终敲定）
+  - FFI 方案：候选 `koffi` / `napi-rs` / 32 位 Rust 子进程 + JSON-RPC
+    （注意：原 Rewrite_Design.md 假设的 ffi-napi 已废弃，不可用）
+  - 覆盖层：独立透明 BrowserWindow，跟随 Hearthstone.exe 窗口位置
+  - 数据来源优先级：日志解析 > 内存读取（仅在日志缺失时用）
+
+  ## 现有材料
+  - `DEVELOPMENT_PLAN.md` — 14 周整体规划（Phase 0–8）
+  - `Rewrite_Design.md` — HearthMirror Rust 重写详细设计
+  - `figma_design/` — UI 设计稿 + 实现（FIRESTONE 主题，深色 + 橙色）
+
+  ## 平台
+  - 主平台：Windows 10/11 x64
+  - 后续考虑：macOS（受限于内存读取依赖 Windows API）
+
+# Per-artifact rules
+rules:
+  proposal:
+    - '必须显式列出 Non-goals（明确这次 change 不做的事）'
+    - 'Why 段落要说明跟现有 DEVELOPMENT_PLAN.md 的关系，不重复粘贴其内容'
+    - '单个 change 必须可独立交付，避免 umbrella change'
+
+  design:
+    - '必须包含 Decisions 一节，每个关键决策写出 Context / Options / Choice / Rationale'
+    - '涉及外部依赖时，必须给出版本现状核对（避免使用已弃用的库）'
+    - '涉及目录/文件结构变更时，必须画出最终目录树'
+    - '性能/安全/兼容性风险须单列'
+
+  tasks:
+    - '任务粒度 2-5 分钟一步，遵循 TDD：写失败测试 → 看到失败 → 最小实现 → 通过 → 提交'
+    - '每个任务必须给出确切的文件路径、命令、期望输出'
+    - '禁止占位符（TBD / 稍后实现 / 类似上面）'
+    - '测试为主的步骤必须给出实际测试代码'
+    - '频繁提交（按 Conventional Commits 格式给出 commit message）'
