@@ -40,9 +40,28 @@ fn with_runtime<T>(f: impl FnOnce(&mono::MonoRuntime) -> Result<Option<T>, error
     f(runtime).map_err(napi::Error::from)
 }
 
+/// Like with_runtime but for methods that return a plain T (not Option<T>),
+/// falling back to `default` when the runtime is unavailable.
+fn with_runtime_or<T>(default: T, f: impl FnOnce(&mono::MonoRuntime) -> Result<T, error::ScryError>)
+    -> napi::Result<T>
+{
+    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    if guard.is_none() {
+        *guard = try_init();
+    }
+    let Some(runtime) = guard.as_ref() else {
+        return Ok(default);
+    };
+    f(runtime).map_err(napi::Error::from)
+}
+
 #[napi]
 pub async fn is_alive() -> napi::Result<bool> {
-    Ok(try_init().is_some())
+    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    if guard.is_none() {
+        *guard = try_init();
+    }
+    Ok(guard.is_some())
 }
 
 #[napi]
@@ -59,29 +78,20 @@ pub async fn get_account_id() -> napi::Result<Option<reflection::account_id::Acc
 
 #[napi]
 pub async fn get_game_type() -> napi::Result<i32> {
-    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    if guard.is_none() { *guard = try_init(); }
-    let Some(rt) = guard.as_ref() else { return Ok(0); };
-    futures::executor::block_on(reflection::game_state::get_game_type_internal(rt))
-        .map_err(napi::Error::from)
+    with_runtime_or(0, |rt| futures::executor::block_on(
+        reflection::game_state::get_game_type_internal(rt)))
 }
 
 #[napi]
 pub async fn is_spectating() -> napi::Result<bool> {
-    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    if guard.is_none() { *guard = try_init(); }
-    let Some(rt) = guard.as_ref() else { return Ok(false); };
-    futures::executor::block_on(reflection::game_state::is_spectating_internal(rt))
-        .map_err(napi::Error::from)
+    with_runtime_or(false, |rt| futures::executor::block_on(
+        reflection::game_state::is_spectating_internal(rt)))
 }
 
 #[napi]
 pub async fn is_game_over() -> napi::Result<bool> {
-    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    if guard.is_none() { *guard = try_init(); }
-    let Some(rt) = guard.as_ref() else { return Ok(false); };
-    futures::executor::block_on(reflection::game_state::is_game_over_internal(rt))
-        .map_err(napi::Error::from)
+    with_runtime_or(false, |rt| futures::executor::block_on(
+        reflection::game_state::is_game_over_internal(rt)))
 }
 
 #[napi]

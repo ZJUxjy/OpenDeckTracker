@@ -81,8 +81,9 @@ fn find_mono_get_root_domain_va(
     let pe_size = mono.size.min(0x100_000) as usize;
     let pe_bytes = memory.read_bytes(RemotePtr::new(base_addr), pe_size)?;
 
-    let pe = PeView::from_bytes(&pe_bytes)
-        .map_err(|e| ScryError::MetadataError(format!("pelite parse failed: {}", e)))?;
+    // Safety: pe_bytes is our local copy of the module's mapped-image layout.
+    // PeView::module expects the in-memory mapped PE format, which is what we have.
+    let pe = unsafe { PeView::module(pe_bytes.as_ptr()) };
 
     let exports = pe
         .exports()
