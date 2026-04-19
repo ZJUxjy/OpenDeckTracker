@@ -28,6 +28,9 @@ Thumbs.db
 target/
 **/Cargo.lock
 
+# Downloaded card data (refresh with `pnpm cards:download`)
+data/cards/*.json
+
 # Editor
 .idea/
 .vscode/*
