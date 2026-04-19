@@ -11,3 +11,4 @@ pub mod handle;
 pub mod process;
 pub mod memory;
 pub mod mono;
+pub mod metadata;
