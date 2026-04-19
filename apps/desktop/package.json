@@ -13,7 +13,6 @@
     "package": "electron-vite build && electron-builder --config electron-builder.yml --win"
   },
   "dependencies": {
-    "@hdt/hearthmirror-spike": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@vitejs/plugin-react": "^4.7.0",
     "class-variance-authority": "^0.7.1",

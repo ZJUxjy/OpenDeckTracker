@@ -24,6 +24,10 @@ Thumbs.db
 # TS build info
 *.tsbuildinfo
 
+# Rust build artifacts
+target/
+**/Cargo.lock
+
 # Editor
 .idea/
 .vscode/*

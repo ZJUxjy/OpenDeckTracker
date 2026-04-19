@@ -5,9 +5,11 @@ import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// vitest 2.x ships vite 5 plugin types but desktop uses vite 6 — types are
+// structurally compatible at runtime; cast through `unknown` to bridge them.
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment */
 export default defineConfig({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  plugins: [react() as any],
+  plugins: [react() as unknown as any],
   test: {
     environment: 'jsdom',
     globals: true,
