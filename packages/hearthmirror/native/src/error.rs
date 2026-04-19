@@ -6,6 +6,7 @@ pub enum ScryError {
     AccessDenied(u32),
     MemoryAccess { addr: u32, reason: String },
     ClassNotFound { name: String },
+    ImageNotFound { name: String },
     FieldNotFound { class: String, field: String },
     ModuleNotFound(String),
     MonoNotInitialized,
@@ -25,6 +26,7 @@ impl fmt::Display for ScryError {
                 write!(f, "memory access failed at 0x{:08X}: {}", addr, reason)
             }
             Self::ClassNotFound { name } => write!(f, "mono class not found: {}", name),
+            Self::ImageNotFound { name } => write!(f, "mono image not found: {}", name),
             Self::FieldNotFound { class, field } => {
                 write!(f, "mono field not found: {}.{}", class, field)
             }

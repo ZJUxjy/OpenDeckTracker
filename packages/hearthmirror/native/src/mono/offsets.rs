@@ -260,8 +260,11 @@ impl<'a> OffsetProber<'a> {
             .map_err(|e| ScryError::OffsetProbe(format!("{export_name}: {e}")))
     }
 
-    pub fn probe_all(&self, defaults: &MonoOffsets) -> Result<MonoOffsets, ScryError> {
-        let exports = read_exports_map(self.mem, self.mono_module)?;
+    pub fn probe_all(
+        &self,
+        exports: &HashMap<String, usize>,
+        defaults: &MonoOffsets,
+    ) -> Result<MonoOffsets, ScryError> {
         let mut offsets = defaults.clone();
 
         let critical: &[ProbeEntry] = &[

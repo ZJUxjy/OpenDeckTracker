@@ -2,19 +2,22 @@ use crate::disasm;
 use crate::error::ScryError;
 use crate::handle::OwnedProcessHandle;
 use crate::memory::ProcessMemory;
+use crate::mono::offsets::{read_exports_map, MonoOffsets, OffsetProber};
+use crate::mono::probe::MAX_PROBE_SLOTS;
 use crate::process::{enumerate_modules_32bit, find_pid, ModuleInfo};
 use crate::remote_ptr::RemotePtr;
-use pelite::pe32::{Pe, PeView};
+use std::collections::HashMap;
 
 const HEARTHSTONE_EXE: &str = "Hearthstone.exe";
 const PREFERRED_MONO: &str = "mono-2.0-bdwgc.dll";
 const FALLBACK_PREFIXES: &[&str] = &["mono-2.0-sgen", "mono-2.0-boehm", "mono-"];
+const MAX_DOMAIN_ASSEMBLIES: usize = 4096;
 
 pub struct MonoRuntime {
     pub memory: ProcessMemory,
     pub mono_module: ModuleInfo,
-    pub mono_get_root_domain_va: RemotePtr,
-    pub global_root_domain_addr: RemotePtr,
+    pub offsets: MonoOffsets,
+    pub exports: HashMap<String, usize>,
     pub root_domain: RemotePtr,
 }
 
@@ -28,19 +31,17 @@ impl MonoRuntime {
         let memory = ProcessMemory::new(handle);
 
         let mono_module = find_mono_module(memory.handle())?;
-        let func_va = find_mono_get_root_domain_va(&memory, &mono_module)?;
-        let global_addr = extract_global_root_domain_addr(&memory, func_va)?;
-        let root_domain = memory.read_remote_ptr(global_addr)?;
-
-        if root_domain.is_null() {
-            return Err(ScryError::MonoNotInitialized);
-        }
+        let exports = read_exports_map(&memory, &mono_module)?;
+        let defaults = MonoOffsets::bundled_unity_2021_3()?;
+        let offsets =
+            OffsetProber::new(&memory, &mono_module, 32).probe_all(&exports, &defaults)?;
+        let root_domain = resolve_root_domain(&memory, &exports)?;
 
         Ok(Self {
             memory,
             mono_module,
-            mono_get_root_domain_va: func_va,
-            global_root_domain_addr: global_addr,
+            offsets,
+            exports,
             root_domain,
         })
     }
@@ -76,34 +77,16 @@ fn find_mono_module(handle: &OwnedProcessHandle) -> Result<ModuleInfo, ScryError
     )))
 }
 
-fn find_mono_get_root_domain_va(
-    memory: &ProcessMemory,
-    mono: &ModuleInfo,
+fn find_export_va(
+    exports: &HashMap<String, usize>,
+    export_name: &str,
 ) -> Result<RemotePtr, ScryError> {
-    let base_addr = mono.base.0 as u32;
-    // Read enough of the PE to satisfy pelite (header + tables, ~64 KB is generous).
-    let pe_size = mono.size.min(0x100_000) as usize;
-    let pe_bytes = memory.read_bytes(RemotePtr::new(base_addr), pe_size)?;
-    let pe = PeView::from_bytes(&pe_bytes)
-        .map_err(|e| ScryError::MetadataError(format!("invalid mono image: {}", e)))?;
-    let rva = find_mono_get_root_domain_rva(pe)?;
-    Ok(RemotePtr::new(base_addr + rva))
-}
-
-fn find_mono_get_root_domain_rva<'a, P: Pe<'a>>(pe: P) -> Result<u32, ScryError> {
-    let exports = pe
-        .exports()
-        .map_err(|e| ScryError::MetadataError(format!("no exports: {}", e)))?;
-    let by = exports
-        .by()
-        .map_err(|e| ScryError::MetadataError(format!("by name table failed: {}", e)))?;
-    let func = by
-        .name("mono_get_root_domain")
-        .map_err(|_| missing_export_error("mono_get_root_domain"))?;
-    match func {
-        pelite::pe32::exports::Export::Symbol(rva) => Ok(*rva),
-        _ => Err(ScryError::Unsupported("forwarded export".into())),
-    }
+    let addr = *exports
+        .get(export_name)
+        .ok_or_else(|| missing_export_error(export_name))?;
+    let addr = u32::try_from(addr)
+        .map_err(|_| ScryError::Unsupported(format!("export out of 32-bit range: 0x{addr:X}")))?;
+    Ok(RemotePtr::new(addr))
 }
 
 fn missing_export_error(export_name: &str) -> ScryError {
@@ -118,6 +101,19 @@ fn extract_global_root_domain_addr(
     extract_global_root_domain_addr_from_code(&bytes)
 }
 
+fn resolve_root_domain(
+    memory: &ProcessMemory,
+    exports: &HashMap<String, usize>,
+) -> Result<RemotePtr, ScryError> {
+    let func_va = find_export_va(exports, "mono_get_root_domain")?;
+    let global_addr = extract_global_root_domain_addr(memory, func_va)?;
+    let root_domain = memory.read_remote_ptr(global_addr)?;
+    if root_domain.is_null() {
+        return Err(ScryError::MonoNotInitialized);
+    }
+    Ok(root_domain)
+}
+
 fn extract_global_root_domain_addr_from_code(code: &[u8]) -> Result<RemotePtr, ScryError> {
     let addr = disasm::find_first_absolute_load(code, 32)?;
     let addr = u32::try_from(addr).map_err(|_| {
@@ -128,53 +124,165 @@ fn extract_global_root_domain_addr_from_code(code: &[u8]) -> Result<RemotePtr, S
     Ok(RemotePtr::new(addr))
 }
 
-use crate::mono::probe::{looks_like_cstring, probe_field_offset};
-
-#[derive(Debug, Clone, Default)]
-pub struct MonoOffsets {
-    /// Offset within MonoDomain to the loaded_images MonoGList*
-    pub domain_loaded_images: u32,
-}
-
 impl MonoRuntime {
-    pub fn probe_json_offsets(&self) -> Result<crate::mono::offsets::MonoOffsets, ScryError> {
-        let defaults = crate::mono::offsets::MonoOffsets::bundled_unity_2021_3()?;
-        crate::mono::offsets::OffsetProber::new(&self.memory, &self.mono_module, 32)
-            .probe_all(&defaults)
+    pub fn probe_json_offsets(&self) -> Result<MonoOffsets, ScryError> {
+        let defaults = MonoOffsets::bundled_unity_2021_3()?;
+        OffsetProber::new(&self.memory, &self.mono_module, 32).probe_all(&self.exports, &defaults)
     }
 
-    /// Discover field offsets for the current Hearthstone build.
-    /// Returns a populated MonoOffsets. Cache the result; re-probe only when
-    /// mono_module.base changes (i.e., process restarted).
     pub fn discover_offsets(&self) -> Result<MonoOffsets, ScryError> {
-        let memory = &self.memory;
-        let domain = self.root_domain;
+        let mut offsets = self.probe_json_offsets()?;
+        offsets.structs.domain.domain_assemblies = discover_domain_assemblies_offset_with(
+            self.root_domain,
+            &offsets,
+            |addr| self.memory.read_remote_ptr(addr),
+            |addr| self.memory.read_cstring(addr, 256),
+        )? as usize;
+        Ok(offsets)
+    }
 
-        let domain_loaded_images = probe_field_offset(memory, domain, |slot| {
-            // slot = candidate GList*. Read its `data` (offset 0) — should be a MonoImage*.
-            let data_ptr = match memory.read_remote_ptr(slot) {
-                Ok(p) => p,
-                Err(_) => return false,
-            };
-            if data_ptr.is_null() {
-                return false;
-            }
-            // MonoImage layout (Unity Mono 2021): name @ +0x10. Check it points
-            // to a printable cstring of length >= 4.
-            let name_ptr = match memory.read_remote_ptr(data_ptr + 0x10) {
-                Ok(p) => p,
-                Err(_) => return false,
-            };
-            if name_ptr.is_null() {
-                return false;
-            }
-            looks_like_cstring(memory, name_ptr, 4)
-        })?;
-
-        Ok(MonoOffsets {
-            domain_loaded_images,
+    pub fn enumerate_assembly_image_addrs(&self) -> Result<Vec<RemotePtr>, ScryError> {
+        enumerate_assembly_image_addrs_with(self.root_domain, &self.offsets, |addr| {
+            self.memory.read_remote_ptr(addr)
         })
     }
+
+    pub fn find_image(&self, name: &str) -> Result<RemotePtr, ScryError> {
+        let images = self.enumerate_assembly_image_addrs()?;
+        find_image_with(
+            &images,
+            &self.offsets,
+            |addr| self.memory.read_remote_ptr(addr),
+            |addr| self.memory.read_cstring(addr, 256),
+            name,
+        )
+    }
+}
+
+fn enumerate_assembly_image_addrs_with(
+    root_domain: RemotePtr,
+    offsets: &MonoOffsets,
+    mut read_remote_ptr: impl FnMut(RemotePtr) -> Result<RemotePtr, ScryError>,
+) -> Result<Vec<RemotePtr>, ScryError> {
+    let mut node = read_remote_ptr(add_offset(
+        root_domain,
+        offsets.structs.domain.domain_assemblies,
+    )?)?;
+    let mut images = Vec::new();
+    let next_offset = u32::try_from(offsets.ptr_size).map_err(|_| {
+        ScryError::Unsupported(format!("ptr_size out of range: {}", offsets.ptr_size))
+    })?;
+
+    for _ in 0..MAX_DOMAIN_ASSEMBLIES {
+        if node.is_null() {
+            return Ok(images);
+        }
+
+        let assembly = read_remote_ptr(node)?;
+        let next = read_remote_ptr(node + next_offset)?;
+        if !assembly.is_null() {
+            let image = read_remote_ptr(add_offset(assembly, offsets.structs.assembly.image)?)?;
+            if !image.is_null() {
+                images.push(image);
+            }
+        }
+        node = next;
+    }
+
+    if node.is_null() {
+        Ok(images)
+    } else {
+        Err(ScryError::CollectionOverflow {
+            max: MAX_DOMAIN_ASSEMBLIES,
+        })
+    }
+}
+
+fn find_image_with(
+    images: &[RemotePtr],
+    offsets: &MonoOffsets,
+    mut read_remote_ptr: impl FnMut(RemotePtr) -> Result<RemotePtr, ScryError>,
+    mut read_cstring: impl FnMut(RemotePtr) -> Result<String, ScryError>,
+    name: &str,
+) -> Result<RemotePtr, ScryError> {
+    for &image in images {
+        let name_ptr = read_remote_ptr(add_offset(image, offsets.structs.image.name)?)?;
+        if name_ptr.is_null() {
+            continue;
+        }
+
+        let image_name = read_cstring(name_ptr)?;
+        if image_name.eq_ignore_ascii_case(name) {
+            return Ok(image);
+        }
+    }
+
+    Err(ScryError::ImageNotFound { name: name.into() })
+}
+
+fn add_offset(base: RemotePtr, offset: usize) -> Result<RemotePtr, ScryError> {
+    let offset = u32::try_from(offset)
+        .map_err(|_| ScryError::Unsupported(format!("offset out of 32-bit range: 0x{offset:X}")))?;
+    Ok(base + offset)
+}
+
+fn discover_domain_assemblies_offset_with(
+    root_domain: RemotePtr,
+    offsets: &MonoOffsets,
+    mut read_remote_ptr: impl FnMut(RemotePtr) -> Result<RemotePtr, ScryError>,
+    mut read_cstring: impl FnMut(RemotePtr) -> Result<String, ScryError>,
+) -> Result<u32, ScryError> {
+    for slot_index in 0..MAX_PROBE_SLOTS {
+        let slot_addr = root_domain + slot_index * 4;
+        let list_head = match read_remote_ptr(slot_addr) {
+            Ok(ptr) => ptr,
+            Err(_) => continue,
+        };
+        if list_head.is_null() {
+            continue;
+        }
+
+        let assembly = match read_remote_ptr(list_head) {
+            Ok(ptr) => ptr,
+            Err(_) => continue,
+        };
+        if assembly.is_null() {
+            continue;
+        }
+
+        let image = match read_remote_ptr(add_offset(assembly, offsets.structs.assembly.image)?) {
+            Ok(ptr) => ptr,
+            Err(_) => continue,
+        };
+        if image.is_null() {
+            continue;
+        }
+
+        let name_ptr = match read_remote_ptr(add_offset(image, offsets.structs.image.name)?) {
+            Ok(ptr) => ptr,
+            Err(_) => continue,
+        };
+        if name_ptr.is_null() {
+            continue;
+        }
+
+        let image_name = match read_cstring(name_ptr) {
+            Ok(name) => name,
+            Err(_) => continue,
+        };
+        if looks_like_image_name(&image_name) {
+            return Ok(slot_index * 4);
+        }
+    }
+
+    Err(ScryError::FieldNotFound {
+        class: "MonoDomain".into(),
+        field: "domain_assemblies".into(),
+    })
+}
+
+fn looks_like_image_name(name: &str) -> bool {
+    name.len() >= 4 && name.bytes().all(|byte| (0x20..=0x7E).contains(&byte))
 }
 
 use crate::metadata::MetadataReader;
@@ -236,6 +344,8 @@ mod integration_tests {
     fn locate_mono_runtime_in_hearthstone() {
         let runtime = MonoRuntime::init().expect("Hearthstone must be running on main menu");
         assert!(runtime.mono_module.name.to_lowercase().contains("mono"));
+        assert!(runtime.exports.contains_key("mono_get_root_domain"));
+        assert_eq!(runtime.offsets.ptr_size, 4);
         assert!(!runtime.root_domain.is_null());
         eprintln!("locate OK: {:?}", runtime.mono_module.name);
         eprintln!("root_domain = {}", runtime.root_domain);
@@ -246,15 +356,14 @@ mod integration_tests {
         let runtime = MonoRuntime::init().expect("Hearthstone must be running");
         let offsets = runtime.discover_offsets().expect("offset discovery failed");
         eprintln!(
-            "MonoDomain.loaded_images @ +0x{:02X}",
-            offsets.domain_loaded_images
+            "MonoDomain.domain_assemblies @ +0x{:02X}",
+            offsets.structs.domain.domain_assemblies
         );
-        // §7.2 says +0x14; spike 02 confirmed.
-        // We tolerate ±0x10 because newer Mono builds may shift fields.
         assert!(
-            offsets.domain_loaded_images >= 0x10 && offsets.domain_loaded_images <= 0x40,
-            "loaded_images offset 0x{:02X} is wildly outside expected range",
-            offsets.domain_loaded_images
+            offsets.structs.domain.domain_assemblies >= 0x40
+                && offsets.structs.domain.domain_assemblies <= 0x80,
+            "domain_assemblies offset 0x{:02X} is wildly outside expected range",
+            offsets.structs.domain.domain_assemblies
         );
     }
 
@@ -279,9 +388,7 @@ mod integration_tests {
 #[cfg(test)]
 mod unit_tests {
     use super::*;
-    use pelite::pe32::PeFile;
-    use std::fs;
-    use std::path::PathBuf;
+    use std::collections::HashMap;
 
     #[test]
     fn extracts_root_domain_addr_from_absolute_load() {
@@ -314,21 +421,163 @@ mod unit_tests {
     }
 
     #[test]
-    fn missing_root_domain_export_from_pe_reports_metadata_error() {
-        let system_root =
-            std::env::var_os("SystemRoot").expect("SystemRoot should be set on Windows");
-        let kernel32_path = PathBuf::from(system_root)
-            .join("SysWOW64")
-            .join("kernel32.dll");
-        let bytes = fs::read(&kernel32_path)
-            .unwrap_or_else(|err| panic!("failed to read {}: {err}", kernel32_path.display()));
-        let pe = PeFile::from_bytes(&bytes).expect("kernel32.dll should be a valid PE");
-
-        let err = find_mono_get_root_domain_rva(pe).unwrap_err();
+    fn missing_root_domain_export_from_map_reports_metadata_error() {
+        let err = find_export_va(&HashMap::new(), "mono_get_root_domain").unwrap_err();
 
         assert!(matches!(
             err,
             ScryError::MetadataError(msg) if msg == "required export not found: mono_get_root_domain"
+        ));
+    }
+
+    #[test]
+    fn enumerate_assembly_image_addrs_walks_domain_assemblies() {
+        let offsets = crate::mono::offsets::MonoOffsets::bundled_unity_2021_3().unwrap();
+        let root_domain = RemotePtr::new(0x1000);
+        let first_node = RemotePtr::new(0x2000);
+        let second_node = RemotePtr::new(0x2010);
+        let first_assembly = RemotePtr::new(0x3000);
+        let second_assembly = RemotePtr::new(0x4000);
+        let first_image = RemotePtr::new(0x5000);
+        let second_image = RemotePtr::new(0x6000);
+
+        let mut ptrs = HashMap::new();
+        ptrs.insert(
+            root_domain + offsets.structs.domain.domain_assemblies as u32,
+            first_node,
+        );
+        ptrs.insert(first_node, first_assembly);
+        ptrs.insert(first_node + offsets.ptr_size as u32, second_node);
+        ptrs.insert(
+            first_assembly + offsets.structs.assembly.image as u32,
+            first_image,
+        );
+        ptrs.insert(second_node, second_assembly);
+        ptrs.insert(second_node + offsets.ptr_size as u32, RemotePtr::NULL);
+        ptrs.insert(
+            second_assembly + offsets.structs.assembly.image as u32,
+            second_image,
+        );
+
+        let images = enumerate_assembly_image_addrs_with(root_domain, &offsets, |addr| match ptrs
+            .get(&addr)
+        {
+            Some(ptr) => Ok(*ptr),
+            None => Err(ScryError::MemoryAccess {
+                addr: addr.raw(),
+                reason: "missing test pointer".into(),
+            }),
+        })
+        .unwrap();
+
+        assert_eq!(images, vec![first_image, second_image]);
+    }
+
+    #[test]
+    fn find_image_matches_name_case_insensitively() {
+        let offsets = crate::mono::offsets::MonoOffsets::bundled_unity_2021_3().unwrap();
+        let first_image = RemotePtr::new(0x5000);
+        let second_image = RemotePtr::new(0x6000);
+        let first_name = RemotePtr::new(0x7000);
+        let second_name = RemotePtr::new(0x7010);
+
+        let mut ptrs = HashMap::new();
+        ptrs.insert(first_image + offsets.structs.image.name as u32, first_name);
+        ptrs.insert(
+            second_image + offsets.structs.image.name as u32,
+            second_name,
+        );
+
+        let mut strings = HashMap::new();
+        strings.insert(first_name, "mscorlib.dll".to_string());
+        strings.insert(second_name, "Assembly-CSharp".to_string());
+
+        let found = find_image_with(
+            &[first_image, second_image],
+            &offsets,
+            |addr| match ptrs.get(&addr) {
+                Some(ptr) => Ok(*ptr),
+                None => Err(ScryError::MemoryAccess {
+                    addr: addr.raw(),
+                    reason: "missing image name pointer".into(),
+                }),
+            },
+            |addr| match strings.get(&addr) {
+                Some(name) => Ok(name.clone()),
+                None => Err(ScryError::MemoryAccess {
+                    addr: addr.raw(),
+                    reason: "missing image name".into(),
+                }),
+            },
+            "assembly-csharp",
+        )
+        .unwrap();
+
+        assert_eq!(found, second_image);
+    }
+
+    #[test]
+    fn discover_offsets_prefers_live_domain_assemblies_probe() {
+        let mut offsets = crate::mono::offsets::MonoOffsets::bundled_unity_2021_3().unwrap();
+        offsets.structs.domain.domain_assemblies = 0x58;
+
+        let root_domain = RemotePtr::new(0x1000);
+        let first_node = RemotePtr::new(0x2200);
+        let first_assembly = RemotePtr::new(0x3000);
+        let first_image = RemotePtr::new(0x5000);
+        let image_name = RemotePtr::new(0x7000);
+
+        let mut ptrs = HashMap::new();
+        ptrs.insert(root_domain + 0x14, first_node);
+        ptrs.insert(first_node, first_assembly);
+        ptrs.insert(first_node + 4, RemotePtr::NULL);
+        ptrs.insert(
+            first_assembly + offsets.structs.assembly.image as u32,
+            first_image,
+        );
+        ptrs.insert(first_image + offsets.structs.image.name as u32, image_name);
+
+        let mut strings = HashMap::new();
+        strings.insert(image_name, "Assembly-CSharp".to_string());
+
+        let discovered = discover_domain_assemblies_offset_with(
+            root_domain,
+            &offsets,
+            |addr| match ptrs.get(&addr) {
+                Some(ptr) => Ok(*ptr),
+                None => Err(ScryError::MemoryAccess {
+                    addr: addr.raw(),
+                    reason: "missing probe pointer".into(),
+                }),
+            },
+            |addr| match strings.get(&addr) {
+                Some(value) => Ok(value.clone()),
+                None => Err(ScryError::MemoryAccess {
+                    addr: addr.raw(),
+                    reason: "missing probe string".into(),
+                }),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(discovered, 0x14);
+    }
+
+    #[test]
+    fn find_image_miss_reports_image_not_found() {
+        let offsets = crate::mono::offsets::MonoOffsets::bundled_unity_2021_3().unwrap();
+        let err = find_image_with(
+            &[],
+            &offsets,
+            |_| Ok(RemotePtr::NULL),
+            |_| Ok(String::new()),
+            "missing",
+        )
+        .unwrap_err();
+
+        assert!(matches!(
+            err,
+            ScryError::ImageNotFound { name } if name == "missing"
         ));
     }
 }
