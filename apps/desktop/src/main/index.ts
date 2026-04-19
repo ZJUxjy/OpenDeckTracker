@@ -15,12 +15,26 @@ if (!gotLock) {
     }
   });
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     registerIpc();
     createMainWindow();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
     });
+
+    // === SPIKE TRIGGER (remove on teardown of add-hearthmirror-bridge-spike) ===
+    try {
+      const { spikeReadMz } = await import('@hdt/hearthmirror-spike');
+      try {
+        const result = await spikeReadMz();
+        console.log('[spike:readMz] OK:', JSON.stringify(result));
+      } catch (err) {
+        console.log('[spike:readMz] FAIL:', (err as Error).message);
+      }
+    } catch (loadErr) {
+      console.log('[spike:readMz] MODULE LOAD FAIL:', (loadErr as Error).message);
+    }
+    // === END SPIKE ===
   });
 
   app.on('window-all-closed', () => {

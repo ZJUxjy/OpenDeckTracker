@@ -53,6 +53,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@hdt/hearthmirror-spike':
+        specifier: workspace:*
+        version: link:../../packages/hearthmirror-spike
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.2(vite@6.4.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0))

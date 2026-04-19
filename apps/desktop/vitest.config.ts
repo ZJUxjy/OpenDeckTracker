@@ -6,7 +6,8 @@ import { dirname, resolve } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  plugins: [react() as any],
   test: {
     environment: 'jsdom',
     globals: true,
