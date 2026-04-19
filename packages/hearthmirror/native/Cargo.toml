@@ -11,6 +11,8 @@ crate-type = ["cdylib", "rlib"]
 napi = { version = "3", default-features = false, features = ["napi9", "async"] }
 napi-derive = "3"
 pelite = "0.10"
+futures = "0.3"
+tokio = { version = "1", features = ["rt", "rt-multi-thread"] }
 
 [dependencies.windows]
 version = "0.58"

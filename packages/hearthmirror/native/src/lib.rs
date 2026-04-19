@@ -14,3 +14,115 @@ pub mod mono;
 pub mod metadata;
 pub mod collections;
 pub mod service_locator;
+pub mod reflection;
+
+use napi_derive::napi;
+use std::sync::Mutex;
+
+static MIRROR: Mutex<Option<mono::MonoRuntime>> = Mutex::new(None);
+
+fn try_init() -> Option<mono::MonoRuntime> {
+    mono::MonoRuntime::init().ok()
+}
+
+/// Run an operation against the cached MonoRuntime; returns Ok(None) if mono
+/// can't be initialized (i.e., Hearthstone not running).
+fn with_runtime<T>(f: impl FnOnce(&mono::MonoRuntime) -> Result<Option<T>, error::ScryError>)
+    -> napi::Result<Option<T>>
+{
+    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    if guard.is_none() {
+        *guard = try_init();
+    }
+    let Some(runtime) = guard.as_ref() else {
+        return Ok(None);
+    };
+    f(runtime).map_err(napi::Error::from)
+}
+
+#[napi]
+pub async fn is_alive() -> napi::Result<bool> {
+    Ok(try_init().is_some())
+}
+
+#[napi]
+pub async fn get_battle_tag() -> napi::Result<Option<reflection::battle_tag::BattleTagResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::battle_tag::get_battle_tag_internal(rt)))
+}
+
+#[napi]
+pub async fn get_account_id() -> napi::Result<Option<reflection::account_id::AccountIdResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::account_id::get_account_id_internal(rt)))
+}
+
+#[napi]
+pub async fn get_game_type() -> napi::Result<i32> {
+    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    if guard.is_none() { *guard = try_init(); }
+    let Some(rt) = guard.as_ref() else { return Ok(0); };
+    futures::executor::block_on(reflection::game_state::get_game_type_internal(rt))
+        .map_err(napi::Error::from)
+}
+
+#[napi]
+pub async fn is_spectating() -> napi::Result<bool> {
+    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    if guard.is_none() { *guard = try_init(); }
+    let Some(rt) = guard.as_ref() else { return Ok(false); };
+    futures::executor::block_on(reflection::game_state::is_spectating_internal(rt))
+        .map_err(napi::Error::from)
+}
+
+#[napi]
+pub async fn is_game_over() -> napi::Result<bool> {
+    let mut guard = MIRROR.lock().map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    if guard.is_none() { *guard = try_init(); }
+    let Some(rt) = guard.as_ref() else { return Ok(false); };
+    futures::executor::block_on(reflection::game_state::is_game_over_internal(rt))
+        .map_err(napi::Error::from)
+}
+
+#[napi]
+pub async fn get_match_info() -> napi::Result<Option<reflection::match_info::MatchInfoResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::match_info::get_match_info_internal(rt)))
+}
+
+#[napi]
+pub async fn get_medal_info() -> napi::Result<Option<reflection::medal_info::MedalInfoResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::medal_info::get_medal_info_internal(rt)))
+}
+
+#[napi]
+pub async fn get_decks() -> napi::Result<Option<Vec<reflection::decks::DeckResult>>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::decks::get_decks_internal(rt)))
+}
+
+#[napi]
+pub async fn get_collection() -> napi::Result<Option<Vec<reflection::collection::CardResult>>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::collection::get_collection_internal(rt)))
+}
+
+#[napi]
+pub async fn get_arena_deck() -> napi::Result<Option<reflection::arena::ArenaInfoResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::arena::get_arena_deck_internal(rt)))
+}
+
+#[napi]
+pub async fn get_battleground_rating_info() -> napi::Result<Option<reflection::battlegrounds::BattlegroundRatingInfoResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::battlegrounds::get_battleground_rating_info_internal(rt)))
+}
+
+#[napi]
+pub async fn get_server_info() -> napi::Result<Option<reflection::server::GameServerInfoResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::server::get_server_info_internal(rt)))
+}
+
