@@ -12,3 +12,5 @@ pub mod process;
 pub mod memory;
 pub mod mono;
 pub mod metadata;
+pub mod collections;
+pub mod service_locator;
