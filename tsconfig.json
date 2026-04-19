@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["vitest.config.ts", "tests/**/*"],
+  "include": ["vitest.config.ts", "vitest.workspace.ts", "tests/**/*"],
   "exclude": ["node_modules", "**/dist", "**/out", "**/release", "**/.vite", "figma_design"]
 }
