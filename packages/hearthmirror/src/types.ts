@@ -77,3 +77,13 @@ export interface GameServerInfo {
   version: string;
   resumable: boolean;
 }
+
+export interface FieldDumpEntry {
+  name: string;
+  offset: number;
+}
+
+export interface ServiceEntry {
+  name: string;
+  addr: number;
+}

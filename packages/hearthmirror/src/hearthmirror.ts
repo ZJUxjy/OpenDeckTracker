@@ -7,11 +7,13 @@ import type {
   BattlegroundRatingInfo,
   Card,
   Deck,
+  FieldDumpEntry,
   GameServerInfo,
   MatchInfo,
   MatchPlayer,
   MedalInfo,
   MedalInfoData,
+  ServiceEntry,
 } from './types';
 
 export class HearthMirror {
@@ -62,6 +64,14 @@ export class HearthMirror {
 
   async isMulligan(): Promise<boolean | null> {
     return native.isMulligan();
+  }
+
+  async dumpClass(className: string): Promise<FieldDumpEntry[]> {
+    return native.dumpClass(className);
+  }
+
+  async listServices(): Promise<ServiceEntry[]> {
+    return native.listServices();
   }
 
   async getMatchInfo(): Promise<MatchInfo | null> {

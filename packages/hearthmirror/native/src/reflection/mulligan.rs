@@ -1,60 +1,24 @@
 use crate::error::ScryError;
-use crate::mono::{vtable, MonoClass, MonoImage, MonoObject, MonoRuntime};
+use crate::mono::{MonoObject, MonoRuntime};
 use crate::remote_ptr::RemotePtr;
+use crate::service_locator::ServiceLocator;
 
-const ASSEMBLY_CSHARP_IMAGE: &str = "Assembly-CSharp";
+const MULLIGAN_MANAGER_SERVICE: &str = "MulliganManager";
 
 pub async fn is_mulligan_internal(runtime: &MonoRuntime) -> Result<Option<bool>, ScryError> {
-    read_singleton_bool_field(
-        runtime,
-        "MulliganManager",
-        "s_instance",
-        "mulliganChooseBanner",
-        BoolFromPtr::Nonzero,
-    )
-}
-
-enum BoolFromPtr {
-    Nonzero,
-}
-
-fn read_singleton_bool_field(
-    runtime: &MonoRuntime,
-    class_name: &str,
-    static_field_name: &str,
-    instance_field_name: &str,
-    bool_from_ptr: BoolFromPtr,
-) -> Result<Option<bool>, ScryError> {
-    let image_addr = match runtime.find_image(ASSEMBLY_CSHARP_IMAGE) {
-        Ok(addr) => addr,
-        Err(ScryError::ImageNotFound { .. }) => return Ok(None),
-        Err(err) => return Err(err),
-    };
-    let image = MonoImage::new(runtime, image_addr);
-    let class_addr = match image.find_class(class_name) {
-        Ok(addr) => addr,
-        Err(ScryError::ClassNotFound { .. }) => return Ok(None),
-        Err(err) => return Err(err),
-    };
-    let Some(static_data) = vtable::try_static_field_data(runtime, class_addr)? else {
+    let Some(manager) = ServiceLocator::new(runtime).get_service(MULLIGAN_MANAGER_SERVICE)? else {
         return Ok(None);
     };
-
-    let class = MonoClass::new(runtime, class_addr);
-    let static_field = match class.find_field(static_field_name) {
-        Ok(field) => field,
-        Err(ScryError::FieldNotFound { .. }) => return Ok(None),
-        Err(err) => return Err(err),
-    };
-    let instance = runtime.memory.read_remote_ptr(static_data + static_field.offset)?;
-    if instance.is_null() {
+    if manager.is_null() {
         return Ok(None);
     }
 
-    let object = MonoObject::from_addr(runtime, instance)?;
-    Ok(Some(match bool_from_ptr {
-        BoolFromPtr::Nonzero => nonzero_ptr_is_true(object.read_field_ptr(instance_field_name)?),
-    }))
+    let object = MonoObject::from_addr(runtime, manager)?;
+    match object.read_field_ptr("mulliganChooseBanner") {
+        Ok(value) => Ok(Some(nonzero_ptr_is_true(value))),
+        Err(ScryError::FieldNotFound { .. }) => Ok(None),
+        Err(err) => Err(err),
+    }
 }
 
 fn nonzero_ptr_is_true(value: RemotePtr) -> bool {
@@ -65,6 +29,19 @@ fn nonzero_ptr_is_true(value: RemotePtr) -> bool {
 mod tests {
     use super::*;
 
+    const SOURCE: &str = include_str!("mulligan.rs");
+
+    fn is_mulligan_internal_source() -> &'static str {
+        let start = SOURCE
+            .find("pub async fn is_mulligan_internal")
+            .expect("is_mulligan_internal should exist");
+        let end = SOURCE[start..]
+            .find("\nfn nonzero_ptr_is_true")
+            .map(|offset| start + offset)
+            .expect("nonzero_ptr_is_true should follow is_mulligan_internal");
+        &SOURCE[start..end]
+    }
+
     #[test]
     fn nonzero_ptr_is_true_for_non_null_pointer() {
         assert!(nonzero_ptr_is_true(RemotePtr::new(0x1000)));
@@ -73,6 +50,26 @@ mod tests {
     #[test]
     fn nonzero_ptr_is_true_for_null_pointer_is_false() {
         assert!(!nonzero_ptr_is_true(RemotePtr::NULL));
+    }
+
+    #[test]
+    fn mulligan_lookup_uses_service_locator_path() {
+        assert!(is_mulligan_internal_source().contains("ServiceLocator::new(runtime).get_service"));
+    }
+
+    #[test]
+    fn mulligan_lookup_does_not_use_singleton_shortcut() {
+        assert!(!is_mulligan_internal_source().contains("\"s_instance\""));
+    }
+
+    #[test]
+    fn mulligan_lookup_treats_null_service_instance_as_unavailable() {
+        assert!(is_mulligan_internal_source().contains("if manager.is_null()"));
+    }
+
+    #[test]
+    fn mulligan_lookup_treats_missing_banner_field_as_unavailable() {
+        assert!(is_mulligan_internal_source().contains("Err(ScryError::FieldNotFound { .. }) => Ok(None)"));
     }
 }
 

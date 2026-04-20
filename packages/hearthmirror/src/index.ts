@@ -5,6 +5,7 @@ export type {
   AccountId,
   Card,
   Deck,
+  FieldDumpEntry,
   MatchInfo,
   MatchPlayer,
   MedalInfo,
@@ -12,5 +13,6 @@ export type {
   ArenaInfo,
   BattlegroundRatingInfo,
   GameServerInfo,
+  ServiceEntry,
 } from './types';
 export { GameType, FormatType } from './enums';

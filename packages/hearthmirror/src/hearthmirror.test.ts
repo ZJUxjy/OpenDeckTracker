@@ -15,6 +15,8 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getArenaDeck: vi.fn(),
   getBattlegroundRatingInfo: vi.fn(),
   getServerInfo: vi.fn(),
+  dumpClass: vi.fn(),
+  listServices: vi.fn(),
 }));
 
 import * as native from '@hdt/hearthmirror-native';
@@ -172,6 +174,34 @@ describe('HearthMirror', () => {
     it('returns null when native cannot resolve mulligan state', async () => {
       mocked(native.isMulligan).mockResolvedValue(null);
       await expect(mirror.isMulligan()).resolves.toBeNull();
+    });
+  });
+
+  describe('dumpClass', () => {
+    it('returns the native field dump entries', async () => {
+      mocked(native.dumpClass).mockResolvedValue([
+        { name: 'health', offset: 0x20 },
+        { name: 'attack', offset: 0x24 },
+      ]);
+
+      await expect(mirror.dumpClass('CollectionManager')).resolves.toEqual([
+        { name: 'health', offset: 0x20 },
+        { name: 'attack', offset: 0x24 },
+      ]);
+    });
+  });
+
+  describe('listServices', () => {
+    it('returns the native service entries', async () => {
+      mocked(native.listServices).mockResolvedValue([
+        { name: 'CollectionManager', addr: 0x1000 },
+        { name: 'GameMgr', addr: 0 },
+      ]);
+
+      await expect(mirror.listServices()).resolves.toEqual([
+        { name: 'CollectionManager', addr: 0x1000 },
+        { name: 'GameMgr', addr: 0 },
+      ]);
     });
   });
 });
