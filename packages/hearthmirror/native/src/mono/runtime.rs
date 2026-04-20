@@ -1,9 +1,14 @@
 use crate::error::ScryError;
 use crate::handle::OwnedProcessHandle;
 use crate::memory::ProcessMemory;
+use crate::mono::class::{read_mono_class, MonoClassRef};
+use crate::mono::object::MonoObject;
 use crate::process::{enumerate_modules_32bit, find_pid, ModuleInfo};
+use crate::reflection::field_paths;
 use crate::remote_ptr::RemotePtr;
 use pelite::pe32::{Pe, PeView};
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 const HEARTHSTONE_EXE: &str = "Hearthstone.exe";
 const PREFERRED_MONO: &str = "mono-2.0-bdwgc.dll";
@@ -15,6 +20,16 @@ pub struct MonoRuntime {
     pub mono_get_root_domain_va: RemotePtr,
     pub global_root_domain_addr: RemotePtr,
     pub root_domain: RemotePtr,
+    /// Lazily populated caches (interior mutability via Mutex)
+    cache: Mutex<RuntimeCache>,
+}
+
+#[derive(Default)]
+struct RuntimeCache {
+    offsets: Option<MonoOffsets>,
+    ac_image: Option<RemotePtr>,
+    class_def_table_offset: Option<u32>,
+    classes: HashMap<String, MonoClassRef>,
 }
 
 impl MonoRuntime {
@@ -41,6 +56,7 @@ impl MonoRuntime {
             mono_get_root_domain_va: func_va,
             global_root_domain_addr: global_addr,
             root_domain,
+            cache: Mutex::new(RuntimeCache::default()),
         })
     }
 }
@@ -206,6 +222,264 @@ impl MonoRuntime {
             "Assembly-CSharp.dll not found. Tried: {:?}",
             candidates
         )))
+    }
+}
+
+use crate::collections::glist;
+
+impl MonoRuntime {
+    /// Find a class by namespace + name in the running Hearthstone process.
+    ///
+    /// Walks MonoDomain.loaded_images → Assembly-CSharp MonoImage → class_def_table
+    /// → MonoClass, then enumerates fields to build a `MonoClassRef`.
+    /// Results are cached per class name for the lifetime of this runtime.
+    pub fn find_class(&self, namespace: &str, name: &str) -> Result<MonoClassRef, ScryError> {
+        let cache_key = if namespace.is_empty() {
+            name.to_string()
+        } else {
+            format!("{}.{}", namespace, name)
+        };
+
+        // Check cache
+        {
+            if let Ok(cache) = self.cache.lock() {
+                if let Some(class) = cache.classes.get(&cache_key) {
+                    return Ok(class.clone());
+                }
+            }
+        }
+
+        // 1. Find Assembly-CSharp MonoImage*
+        let image = self.find_ac_image_cached()?;
+
+        // 2. Get TypeDef token from disk metadata
+        let metadata = self.open_assembly_csharp()?;
+        let token = metadata
+            .find_class_token(namespace, name)
+            .map_err(|_| ScryError::ClassNotFound {
+                name: cache_key.clone(),
+            })?;
+        let rid = (token & 0x00FF_FFFF) as usize;
+        if rid == 0 {
+            return Err(ScryError::ClassNotFound {
+                name: cache_key.clone(),
+            });
+        }
+
+        // 3. Probe for class_def_table offset in MonoImage (cached)
+        let cdt_offset = self.find_class_def_table_offset_cached(image)?;
+
+        // 4. Read table base pointer, then index by RID-1
+        let table_base = self.memory.read_remote_ptr(image + cdt_offset)?;
+        if table_base.is_null() {
+            return Err(ScryError::ClassNotFound { name: cache_key });
+        }
+        let class_ptr =
+            self.memory
+                .read_remote_ptr(table_base + ((rid - 1) * 4) as u32)?;
+        if class_ptr.is_null() {
+            return Err(ScryError::ClassNotFound { name: cache_key });
+        }
+
+        // 5. Build MonoClassRef from the live MonoClass* structure
+        let class_ref = read_mono_class(&self.memory, class_ptr)?;
+
+        // Cache the result
+        if let Ok(mut cache) = self.cache.lock() {
+            cache.classes.insert(cache_key, class_ref.clone());
+        }
+
+        Ok(class_ref)
+    }
+
+    /// Get a singleton object via `ClassName.s_instance`.
+    ///
+    /// Returns `Ok(None)` if the class isn't loaded, s_instance field doesn't
+    /// exist, or the instance pointer is null (game not in the right state).
+    pub fn get_singleton(
+        &self,
+        namespace: &str,
+        name: &str,
+    ) -> Result<Option<MonoObject>, ScryError> {
+        let class = match self.find_class(namespace, name) {
+            Ok(c) => c,
+            Err(ScryError::ClassNotFound { .. }) => return Ok(None),
+            Err(e) => return Err(e),
+        };
+
+        let Some(&offset) = class.fields.get(field_paths::FLD_S_INSTANCE) else {
+            return Ok(None);
+        };
+
+        if class.static_field_data.is_null() {
+            return Ok(None);
+        }
+
+        let instance = self
+            .memory
+            .read_remote_ptr(class.static_field_data + offset)?;
+        if instance.is_null() {
+            return Ok(None);
+        }
+
+        Ok(Some(MonoObject::new(instance, &class)))
+    }
+
+    /// Find the Assembly-CSharp MonoImage* pointer, caching the result.
+    fn find_ac_image_cached(&self) -> Result<RemotePtr, ScryError> {
+        if let Ok(cache) = self.cache.lock() {
+            if let Some(image) = cache.ac_image {
+                return Ok(image);
+            }
+        }
+
+        let offsets = self.discover_offsets_cached()?;
+        let images_head = self
+            .memory
+            .read_remote_ptr(self.root_domain + offsets.domain_loaded_images)?;
+        let image_ptrs = glist::iter(&self.memory, images_head, 500)?;
+
+        for image_ptr in image_ptrs {
+            if image_ptr.is_null() {
+                continue;
+            }
+            let name_ptr = self
+                .memory
+                .read_remote_ptr(image_ptr + field_paths::MONO_IMAGE_NAME)?;
+            if name_ptr.is_null() {
+                continue;
+            }
+            let name = self.memory.read_cstring(name_ptr, 128)?;
+            if name.contains("Assembly-CSharp") {
+                if let Ok(mut cache) = self.cache.lock() {
+                    cache.ac_image = Some(image_ptr);
+                }
+                return Ok(image_ptr);
+            }
+        }
+
+        Err(ScryError::MetadataError(
+            "Assembly-CSharp image not found in loaded_images".into(),
+        ))
+    }
+
+    /// Probe for the class_def_table offset within MonoImage, caching the result.
+    fn find_class_def_table_offset_cached(
+        &self,
+        image: RemotePtr,
+    ) -> Result<u32, ScryError> {
+        if let Ok(cache) = self.cache.lock() {
+            if let Some(offset) = cache.class_def_table_offset {
+                return Ok(offset);
+            }
+        }
+
+        let offset = self.probe_class_def_table_offset(image)?;
+
+        if let Ok(mut cache) = self.cache.lock() {
+            cache.class_def_table_offset = Some(offset);
+        }
+        Ok(offset)
+    }
+
+    /// Discover and cache MonoOffsets.
+    fn discover_offsets_cached(&self) -> Result<MonoOffsets, ScryError> {
+        if let Ok(cache) = self.cache.lock() {
+            if let Some(ref offsets) = cache.offsets {
+                return Ok(offsets.clone());
+            }
+        }
+
+        let offsets = self.discover_offsets()?;
+
+        if let Ok(mut cache) = self.cache.lock() {
+            cache.offsets = Some(offsets.clone());
+        }
+        Ok(offsets)
+    }
+
+    /// Probe MonoImage structure to find the offset of the class_def_table pointer.
+    ///
+    /// Strategy: use a known class (from disk metadata) as a fingerprint.
+    /// For each candidate offset in MonoImage, treat the u32 there as a pointer
+    /// to an array of MonoClass* pointers, index by (RID-1), and validate by
+    /// reading MonoClass.name.
+    fn probe_class_def_table_offset(&self, image: RemotePtr) -> Result<u32, ScryError> {
+        let metadata = self.open_assembly_csharp()?;
+
+        // Pick a well-known probe class
+        let (probe_name, probe_token) = [
+            ("GameState", ("", "GameState")),
+            ("Entity", ("", "Entity")),
+            ("GameMgr", ("", "GameMgr")),
+        ]
+        .iter()
+        .find_map(|(expected_name, (ns, cls))| {
+            metadata
+                .find_class_token(ns, cls)
+                .ok()
+                .map(|t| (*expected_name, t))
+        })
+        .ok_or_else(|| {
+            ScryError::MetadataError("no probe class found in Assembly-CSharp metadata".into())
+        })?;
+
+        let probe_rid = (probe_token & 0x00FF_FFFF) as usize;
+        if probe_rid == 0 {
+            return Err(ScryError::MetadataError("probe class RID is 0".into()));
+        }
+
+        // Read a large chunk of the MonoImage structure
+        let scan_size = 0x200usize;
+        let image_bytes = self.memory.read_bytes(image, scan_size)?;
+
+        for offset in (0..scan_size).step_by(4) {
+            let candidate = u32::from_le_bytes([
+                image_bytes[offset],
+                image_bytes[offset + 1],
+                image_bytes[offset + 2],
+                image_bytes[offset + 3],
+            ]);
+
+            // Filter out obviously invalid pointers
+            if candidate == 0 || !(0x10000..=0xFFFF_0000).contains(&candidate) {
+                continue;
+            }
+
+            // Try to read candidate[probe_rid - 1] as a MonoClass*
+            let class_ptr_addr = RemotePtr::new(candidate) + ((probe_rid - 1) * 4) as u32;
+            let class_ptr = match self.memory.read_remote_ptr(class_ptr_addr) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+
+            if class_ptr.is_null() || class_ptr.raw() < 0x10000 {
+                continue;
+            }
+
+            // Validate: MonoClass.name should match our probe class
+            let name_ptr = match self
+                .memory
+                .read_remote_ptr(class_ptr + field_paths::MONO_CLASS_NAME)
+            {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if name_ptr.is_null() {
+                continue;
+            }
+            let name = match self.memory.read_cstring(name_ptr, 128) {
+                Ok(s) => s,
+                Err(_) => continue,
+            };
+            if name == probe_name {
+                return Ok(offset as u32);
+            }
+        }
+
+        Err(ScryError::MetadataError(
+            "class_def_table offset not found by probing MonoImage".into(),
+        ))
     }
 }
 

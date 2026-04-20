@@ -4,3 +4,5 @@ pub mod class;
 pub mod object;
 
 pub use runtime::MonoRuntime;
+pub use class::MonoClassRef;
+pub use object::MonoObject;
