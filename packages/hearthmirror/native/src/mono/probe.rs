@@ -1,20 +1,18 @@
-//! Mono runtime offset probing.
+//! Mono runtime offset probing via disassembly of exported Mono getter
+//! functions.
 //!
-//! Two probe families coexist here during the 5e migration:
+//! [`OffsetProber`] disassembles exported Mono getter functions (e.g.
+//! `mono_class_get_name`) and recovers field displacements directly from
+//! the machine code. Deterministic; resilient to MSVC/GCC bitfield padding
+//! differences across Unity versions. Wired into `MonoRuntime::init`.
 //!
-//! 1. **Legacy slot-scan** ([`probe_field_offset`] + helpers) — read 64 u32
-//!    slots and ask a validator closure to identify the right one.
-//!    Heuristic-based; brittle across Mono versions. Gradually being replaced
-//!    by family (2). Currently used by `MonoRuntime::discover_offsets` for
-//!    `MonoDomain.loaded_images`.
-//! 2. **Disasm-based probing** ([`OffsetProber`]) — disassemble exported Mono
-//!    getter functions (e.g. `mono_class_get_name`) and recover the field
-//!    displacement directly from the machine code. Deterministic; resilient
-//!    to MSVC/GCC bitfield padding differences across Unity versions. Wired
-//!    into `MonoRuntime::init` in 5e Phase 6.
-//!
-//! [`read_exports_map`] supports family (2) by exposing the Mono DLL's
+//! [`read_exports_map`] supports the prober by exposing the Mono DLL's
 //! export table as a `HashMap<String, RemotePtr>`.
+//!
+//! The legacy slot-scan family (`probe_field_offset` + `looks_*` helpers)
+//! that previously coexisted here was deleted in
+//! `add-hearthmirror-offset-probing` Phase 6 once the disasm path covered
+//! all production probes.
 
 use crate::disasm;
 use crate::error::ScryError;
@@ -25,72 +23,6 @@ use std::collections::HashMap;
 
 use crate::mono::offsets::MonoOffsets;
 use pelite::pe32::{Pe, PeView};
-
-/// Number of u32-aligned slots to scan when probing.
-pub const MAX_PROBE_SLOTS: u32 = 64; // 64 * 4 bytes = 0x100
-
-/// Probe a field offset within a structure.
-///
-/// Reads `MAX_PROBE_SLOTS * 4` bytes starting at `base`, treats them as
-/// `[u32; MAX_PROBE_SLOTS]`, and returns the **byte offset** (slot_index * 4)
-/// of the first slot for which `validator` returns Ok(true). Returns
-/// `Err(FieldNotFound)` if no slot validates.
-///
-/// Caller MUST pass `owner_class` and `owner_field` identifiers (e.g.
-/// `"MonoDomain"`, `"loaded_images"`) so probe failures surface actionable
-/// error strings like `mono field not found: MonoDomain.loaded_images`
-/// instead of opaque placeholders. See spike 0003 F-7.
-pub fn probe_field_offset<F>(
-    memory: &ProcessMemory,
-    base: RemotePtr,
-    owner_class: &str,
-    owner_field: &str,
-    validator: F,
-) -> Result<u32, ScryError>
-where
-    F: Fn(RemotePtr) -> bool,
-{
-    let bytes = memory.read_bytes(base, (MAX_PROBE_SLOTS * 4) as usize)?;
-    for i in 0..MAX_PROBE_SLOTS as usize {
-        let slot = u32::from_le_bytes([
-            bytes[i * 4],
-            bytes[i * 4 + 1],
-            bytes[i * 4 + 2],
-            bytes[i * 4 + 3],
-        ]);
-        if slot != 0 && validator(RemotePtr::new(slot)) {
-            return Ok((i * 4) as u32);
-        }
-    }
-    Err(ScryError::FieldNotFound {
-        class: owner_class.into(),
-        field: owner_field.into(),
-    })
-}
-
-/// Validator: a remote pointer points to memory that LOOKS like a valid heap
-/// region with at least `min_bytes` readable starting at the address.
-pub fn looks_readable(memory: &ProcessMemory, addr: RemotePtr, min_bytes: usize) -> bool {
-    memory.read_bytes(addr, min_bytes).is_ok()
-}
-
-/// Validator: the bytes at `addr` look like a printable ASCII C string of at
-/// least `min_len` characters before a null terminator.
-pub fn looks_like_cstring(memory: &ProcessMemory, addr: RemotePtr, min_len: usize) -> bool {
-    let buf = match memory.read_bytes(addr, 64) {
-        Ok(b) => b,
-        Err(_) => return false,
-    };
-    let end = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
-    if end < min_len {
-        return false;
-    }
-    buf[..end].iter().all(|&c| (0x20..=0x7E).contains(&c))
-}
-
-// =============================================================================
-// Disasm-based probing (5e Phase 4 + 5)
-// =============================================================================
 
 /// Read the Mono DLL's export table and return a name → remote address map.
 ///
@@ -298,5 +230,4 @@ mod tests {
     // and is exercised by spike 0003 Run 3 (post-Phase 6) against running
     // Hearthstone. Pure unit testing without a target process would require
     // a full mock ProcessMemory, which is more work than it's worth here.
-    // Legacy `probe_field_offset` was previously documented in the same way.
 }
