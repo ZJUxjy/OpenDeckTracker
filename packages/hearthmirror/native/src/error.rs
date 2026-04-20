@@ -10,7 +10,6 @@ pub enum ScryError {
     ModuleNotFound(String),
     MonoNotInitialized,
     MetadataError(String),
-    DisasmPatternUnknown { bytes: Vec<u8> },
     CollectionOverflow { max: usize },
     Unsupported(String),
     /// A critical disasm-based offset probe failed (5e). The string identifies
@@ -37,10 +36,6 @@ impl fmt::Display for ScryError {
             Self::ModuleNotFound(name) => write!(f, "module not found: {}", name),
             Self::MonoNotInitialized => write!(f, "mono runtime not yet initialized"),
             Self::MetadataError(msg) => write!(f, "metadata error: {}", msg),
-            Self::DisasmPatternUnknown { bytes } => {
-                let hex = bytes.iter().map(|b| format!("{:02X}", b)).collect::<Vec<_>>().join(" ");
-                write!(f, "disasm pattern unknown: {}", hex)
-            }
             Self::CollectionOverflow { max } => {
                 write!(f, "collection iteration exceeded max_items={}", max)
             }

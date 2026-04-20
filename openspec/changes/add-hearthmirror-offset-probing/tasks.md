@@ -117,23 +117,16 @@
 
 > **前置**：5.5 必须完成 — 路由层已就绪后，Phase 6 仅做"把 `Arc::new(MonoOffsets::default())` 换成 `Arc::new(prober.probe_all(default())?)`"的 hot-swap。
 
-- [ ] 6.1 在 `MonoRuntime` struct 加 `pub exports: HashMap<String, RemotePtr>` 字段（`OffsetProber` 借用，Arc 持有）
-- [ ] 6.2 在 `MonoRuntime::init()` 的 `find_mono_module` 之后插入：
-  ```rust
-  let exports = read_exports_map(&memory, &mono_module)?;
-  let baseline = MonoOffsets::default();
-  let offsets = match OffsetProber::new(&memory, &mono_module, &exports, 32)?.probe_all(baseline) {
-      Ok(refined) => refined,
-      Err(e) => { eprintln!("[hearthmirror] OffsetProber.probe_all failed: {e}; falling back to baseline"); MonoOffsets::default() }
-  };
-  ```
-  并把 `Arc::new(MonoOffsets::default())` 替换为 `Arc::new(offsets)`
-- [ ] 6.3 替换 `extract_global_root_domain_addr` 内部 byte-pattern 扫描逻辑为 `disasm::find_first_absolute_load(bytes, 32).ok_or(ScryError::OffsetProbeFailed("root_domain".into()))?`
-- [ ] 6.4 删除 `discover_offsets` 函数 + 旧 `pub struct MonoOffsets { domain_loaded_images }` + `discover_offsets_cached`；`find_ac_image_cached` 改为 `read_remote_ptr(self.root_domain + self.offsets.structs.domain.domain_assemblies)?`（注意：language change — 原来是 `loaded_images` GSList，新是 `domain_assemblies` GSList，遍历层加 `assembly.image` 间接读 — 见 Phase 6 spec）
-- [ ] 6.5 **保留** `probe_class_def_table_offset`（留给 image-walking change 处理；本 change 不动）
-- [ ] 6.6 跑 `cargo build -p hearthmirror-native` + `cargo test -p hearthmirror-native --all-features --lib` 全绿
-- [ ] 6.7 真机（如有）：跑 `cargo run -p hearthmirror-native --example diag_init` + `cargo test -p hearthmirror-native --all-features` (含 integration)；记录到 spike 0003 Run N
-- [ ] 6.8 提交：`refactor(hearthmirror): wire MonoRuntime::init to new offset probing pipeline`
+- [x] 6.1 在 `MonoRuntime` struct 加 `pub exports: HashMap<String, RemotePtr>` 字段（OffsetProber 构造期借用，初始化后 runtime 持有，便于 diag_init 复探）
+- [x] 6.2 在 `MonoRuntime::init()` 的 `find_mono_module` 之后插入 `read_exports_map` + `OffsetProber::new(...)?.probe_all(MonoOffsets::default())`，失败 fallback baseline 并 `eprintln!`，最终 `Arc::new(offsets)` 写入 `self.offsets`
+- [x] 6.3 替换 `extract_global_root_domain_addr` 内部 byte-pattern (Pattern A/B 16 字节窗) 为 `disasm::find_first_absolute_load(bytes, 32)`，窗口扩到 `DEFAULT_PROBE_WINDOW=256`；找不到时返回 `ScryError::OffsetProbeFailed`。同时删除 `find_mono_get_root_domain_va` (改用 exports map `lookup_export`)
+- [x] 6.4 删除 `discover_offsets` + `discover_offsets_cached` + 旧 `pub struct MonoOffsets { domain_loaded_images }` + `RuntimeCache::offsets` 字段；`find_ac_image_cached` 重写：`read_remote_ptr(root_domain + domain.domain_assemblies)` → `glist::iter` (GSList 与 GList 头两字段同构) → 每节点 deref `assembly.image` 拿 `MonoImage*` → 校验 `image.name`。同步删除 `RuntimeOffsets` 别名 (legacy 同名 struct 已删)、删除 `looks_like_cstring` / `probe_field_offset` import、删除集成测试 `discover_domain_offsets` (语义不再适用)
+- [x] 6.5 **保留** `probe_class_def_table_offset`（留给 image-walking change 处理；本 change 不动）
+- [x] 6.6 跑 `cargo build -p hearthmirror-native --all-features` 0 errors + `cargo test -p hearthmirror-native --all-features --lib` 53 passed (1 ignored) + `cargo clippy --all-features --lib -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic` 0 errors
+- [x] 6.7 顺手清理 `mono/probe.rs`：删 caller-less 的 `probe_field_offset` / `looks_like_cstring` / `looks_readable` / `MAX_PROBE_SLOTS` + 重写模块级 doc；删 `error.rs::DisasmPatternUnknown` (caller 已切到 `OffsetProbeFailed`)
+- [x] 6.8 加 integration test `offset_prober_runs_during_init`：验 `runtime.offsets.structs.class.name` 在合理范围 + `runtime.exports` 含 `mono_get_root_domain` (skip-if-no-HS pattern 与既有测试一致)
+- [ ] 6.9 真机（如有）：跑 `cargo run -p hearthmirror-native --example diag_init` + `cargo test -p hearthmirror-native --all-features` (含 integration)；记录到 spike 0003 Run N
+- [ ] 6.10 提交：`refactor(hearthmirror): wire MonoRuntime::init to OffsetProber + switch domain walk to domain_assemblies`
 
 ## 7. 收尾 polish + 文档（合并原 Phase 7）
 
