@@ -105,6 +105,13 @@ This decision was validated by two consecutive spikes on 2026-04-19:
 
 完整观察记录与对正式实现的 10 条建议见两份 spike report。
 
+**Spike 03 — Reflection runtime validation** ([report](../spikes/0003-hearthmirror-reflection-runtime-validation.md)):
+
+- Attempted to validate all 12 `IReflection` methods against live Hearthstone (PID 9072, Unity 2022.3.62f2).
+- **Blocked**: `MonoRuntime::init()` crashes with `STATUS_ACCESS_VIOLATION` (0xC0000005) due to a 1MB PE read cap (`mono.size.min(0x100_000)`) when `mono-2.0-bdwgc.dll` is 6.5MB. Pelite dereferences RVAs past the buffer boundary.
+- **Root cause confirmed** by step-by-step diagnostic (`diag_init` example): reading the full module eliminates the crash and completes the init chain (root domain resolved to `0x0B442E70`).
+- **Fix**: Remove the `.min(0x100_000)` cap in `find_mono_get_root_domain_va()`. One-line change, P0 priority.
+
 ### Engineering Constraints (binding for downstream changes)
 
 任何后续 `add-hearthmirror-bridge*` change 的 design.md 必须复述并细化以下约束：

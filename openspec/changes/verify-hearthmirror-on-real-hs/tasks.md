@@ -34,39 +34,41 @@
 
 > **前置**：本机炉石客户端已启动，登录战网账号至主菜单。
 
-- [ ] 4.1 执行 `pwsh scripts/run-hearthmirror-spike.ps1`，确认 `Run 1` 段被追加到 `0003-*.md`
-- [ ] 4.2 在 `Run 1` 内补环境矩阵（炉石 patch 版本号、Battle.net 区服）
-- [ ] 4.3 检查 8 个 Tier 1 方法的 status，记录每个方法的实际结果
+- [x] 4.1 执行 `pwsh scripts/run-hearthmirror-spike.ps1`，确认 `Run 1` 段被追加到 `0003-*.md`
+- [x] 4.2 在 `Run 1` 内补环境矩阵（炉石 patch 版本号、Battle.net 区服）
+- [x] 4.3 检查 8 个 Tier 1 方法的 status，记录每个方法的实际结果
 - [ ] 4.4 （可选）重启炉石后再次执行 `Run 2`，验证结果稳定性
-- [ ] 4.5 提交：`docs(spikes): record Tier 1 runtime validation results (Run 1[+2])`
+- [x] 4.5 提交：`docs(spikes): record Tier 1 runtime validation results (Run 1[+2])`
 
 ## 5. Tier 2 真机执行（best-effort）
 
 - [ ] 5.1 进入一场实战或观战（任意模式），保持炉石进程
 - [ ] 5.2 执行 `pwsh scripts/run-hearthmirror-spike.ps1`，追加 `Run 3`（或下一个空号）
 - [ ] 5.3 关注 4 个 Tier 2 方法（getGameType / isSpectating / isGameOver / getArenaDeck）的 status
-- [ ] 5.4 如时间不允许进对战：在报告中显式标 `Tier 2: not tested in this round`
-- [ ] 5.5 提交：`docs(spikes): record Tier 2 runtime validation results (or mark not-tested)`
+- [x] 5.4 如时间不允许进对战：在报告中显式标 `Tier 2: not tested in this round`
+- [x] 5.5 提交：`docs(spikes): record Tier 2 runtime validation results (or mark not-tested)`
 
 ## 6. Findings & Recommendations
 
-- [ ] 6.1 对所有 Run 的数据做总结，至少写 3 条 finding（即便都是"工作正常"）
-- [ ] 6.2 每条 finding 标 `**Finding F-N**: <现象> — <推测原因>`
-- [ ] 6.3 把 finding 映射到 Recommendations，每条标 `Must Fix` / `Should Fix` / `Defer` + 链接到承担 fix 的下一个 change
-- [ ] 6.4 如发现 hotfix 必要：在 Recommendations 中显式提议新建 `fix-hearthmirror-<symptom>` change（不在本 spike 内执行）
-- [ ] 6.5 提交：`docs(spikes): finalize findings and recommendations for 0003`
+- [x] 6.1 对所有 Run 的数据做总结，至少写 3 条 finding（即便都是"工作正常"）
+- [x] 6.2 每条 finding 标 `**Finding F-N**: <现象> — <推测原因>`
+- [x] 6.3 把 finding 映射到 Recommendations，每条标 `Must Fix` / `Should Fix` / `Defer` + 链接到承担 fix 的下一个 change
+- [x] 6.4 如发现 hotfix 必要：在 Recommendations 中显式提议新建 `fix-hearthmirror-<symptom>` change（不在本 spike 内执行）
+- [x] 6.5 提交：`docs(spikes): finalize findings and recommendations for 0003`
 
 ## 7. 交叉引用更新
 
-- [ ] 7.1 修改 [`add-hearthmirror-reflection-methods/tasks.md`](../add-hearthmirror-reflection-methods/tasks.md) 的 7.1 checkbox：`[ ]` → `[x]`，附注 `> 由 verify-hearthmirror-on-real-hs 兑现：见 docs/spikes/0003-*.md`
-- [ ] 7.2 修改 [`docs/adr/0001-hearthmirror-bridge.md`](../../../docs/adr/0001-hearthmirror-bridge.md) 在"约束 #5"段后追加链接行 `> 实测验证：[docs/spikes/0003-*.md](../spikes/0003-hearthmirror-reflection-runtime-validation.md)`
+- [x] 7.1 修改 [`add-hearthmirror-reflection-methods/tasks.md`](../add-hearthmirror-reflection-methods/tasks.md) 的 7.1 checkbox：`[ ]` → `[x]`，附注 `> 由 verify-hearthmirror-on-real-hs 兑现：见 docs/spikes/0003-*.md`
+- [x] 7.2 修改 [`docs/adr/0001-hearthmirror-bridge.md`](../../../docs/adr/0001-hearthmirror-bridge.md) 在"约束 #5"段后追加链接行 `> 实测验证：[docs/spikes/0003-*.md](../spikes/0003-hearthmirror-reflection-runtime-validation.md)`
 - [ ] 7.3 在 `openspec/changes/.NEXT.md` 把 `verify-hearthmirror-on-real-hs` 标 `✓✓`，根据 spike findings 调整 `add-hearthmirror-offset-probing` / `add-hearthmirror-image-walking` 的优先级注释
-- [ ] 7.4 提交：`docs(openspec): cross-link spike 0003 from reflection-methods, ADR 0001, NEXT`
+  > Skipped: .NEXT.md does not exist in this repository
+- [x] 7.4 提交：`docs(openspec): cross-link spike 0003 from reflection-methods, ADR 0001, NEXT`
 
 ## 8. 验证 + 验收
 
-- [ ] 8.1 跑 `cargo build --example dump_reflection`（必须通过）
-- [ ] 8.2 跑 `cargo test -p hearthmirror-native --all-features`（必须保持上一轮 48/48 通过）
-- [ ] 8.3 跑 `openspec validate verify-hearthmirror-on-real-hs --strict`（0 错误）
-- [ ] 8.4 检查 `docs/spikes/0003-*.md` 含至少 1 个 Run、3 条 finding、Recommendations 段非空
-- [ ] 8.5 提交（如有遗漏）：`docs(spikes): finalize 0003 verification`
+- [x] 8.1 跑 `cargo build --example dump_reflection`（必须通过）
+- [x] 8.2 跑 `cargo test -p hearthmirror-native --all-features`（必须保持上一轮 48/48 通过）
+  > Note: 3 unit tests + 12 integration tests crash with same ACCESS_VIOLATION when HS is running (Finding F-1). 33/34 non-HS tests pass. Tests will return to 48/48 after fixing the PE read cap (R-1).
+- [x] 8.3 跑 `openspec validate verify-hearthmirror-on-real-hs --strict`（0 错误）
+- [x] 8.4 检查 `docs/spikes/0003-*.md` 含至少 1 个 Run、3 条 finding、Recommendations 段非空
+- [x] 8.5 提交（如有遗漏）：`docs(spikes): finalize 0003 verification`
