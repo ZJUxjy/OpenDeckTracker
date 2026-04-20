@@ -112,7 +112,7 @@
 ## Phase F — ServiceLocator（需炉石做集成测试）
 
 - [x] F.1 创建 `packages/hearthmirror/native/src/service_locator.rs`：实现 design D6 决策的 lookup 流程。
-- [ ] F.2 集成测试（gated `#[cfg(feature = "integration")]`）：连炉石 → `get_service("NetCache")` 返回 Some。**NOTE: service_locator.rs 当前是 stub，返回 `ScryError::Unsupported`；真正集成测试需要炉石运行，留待后续 change。**
+- [ ] F.2 集成测试（gated `#[cfg(feature = "integration")]`）：连炉石 → `get_service("NetCache")` 返回 Some。**NOTE: ServiceLocator 已落地（接受 ServiceManager 偏移配置），真正端到端集成测试需要炉石运行，留待后续 change。**
 - [x] F.3 commit：`feat(hearthmirror): Phase F — ServiceLocator with s_runtimeServices fallback`。
 
 ---
@@ -120,19 +120,24 @@
 ## Phase G — 12 个 Reflection 方法（需炉石做集成测试）
 
 > 每个方法独立小 commit；每个方法的 native 实现 + napi-rs 暴露 + （可选）单元测试一起提。
+>
+> **现状（2026-04-20 code review）**：模块文件、TypeScript 签名、IPC 通道与 napi 暴露面全部到位，
+> 但除 `is_mulligan` 外，下列 reflection 方法的内部实现仍是返回 `Ok(None)/Ok(false)/Ok(0)` 的桩。
+> 真实读取需要在 `service_locator::get_service` 上链式调用 `MonoClass::field_offset` /
+> `MonoObject::read_object_field` / `collections::*`，参见 `proposal.md` 中各方法的字段路径表。
 
-- [x] G.1 `reflection/battle_tag.rs` + napi `getBattleTag()` 暴露。
-- [x] G.2 `reflection/account_id.rs` + `getAccountId()`。
-- [x] G.3 `reflection/game_state.rs` 实现 `getGameType()` / `isSpectating()` / `isGameOver()` 三个相关方法。
-- [x] G.4 `reflection/match_info.rs` + `getMatchInfo()`。
-- [x] G.5 `reflection/medal_info.rs` + `getMedalInfo()`（含四个赛季）。
-- [x] G.6 `reflection/decks.rs` + `getDecks()`。
-- [x] G.7 `reflection/collection.rs` + `getCollection()`。
-- [x] G.8 `reflection/arena.rs` + `getArenaDeck()`。
-- [x] G.9 `reflection/battlegrounds.rs` + `getBattlegroundRatingInfo()`。
-- [x] G.10 `reflection/server.rs` + `getServerInfo()`。
-- [x] G.11 在 `lib.rs` 注册全部 12 个 napi 暴露面，跑 `pnpm exec napi build --platform --release` 验证编译，检查 `index.d.ts` 含 13 个签名。
-- [x] G.12 commit：`feat(hearthmirror): Phase G — 12 IReflection methods (BattleTag/AccountId/GameState/MatchInfo/MedalInfo/Decks/Collection/Arena/Battlegrounds/Server)`（可分 commit；上述列表是任务粒度）。
+- [ ] G.1 `reflection/battle_tag.rs` 真实读取 NetCache.BattleTag（当前是 stub）。
+- [ ] G.2 `reflection/account_id.rs` 真实读取 NetCache.AccountId.hi/lo（当前是 stub）。
+- [ ] G.3 `reflection/game_state.rs` 实现 `getGameType()` / `isSpectating()` / `isGameOver()`（当前都是 stub，返回 0/false/false）。
+- [ ] G.4 `reflection/match_info.rs` 真实读取 GameMgr 当前对局两位玩家信息（当前是 stub）。
+- [ ] G.5 `reflection/medal_info.rs` 读取 NetCache.MedalInfo 四个赛季（当前是 stub）。
+- [ ] G.6 `reflection/decks.rs` 读取 CollectionManager 牌组列表（当前是 stub）。
+- [ ] G.7 `reflection/collection.rs` 读取 CollectionManager 卡牌库存（当前是 stub）。
+- [ ] G.8 `reflection/arena.rs` 读取竞技场牌组（当前是 stub）。
+- [ ] G.9 `reflection/battlegrounds.rs` 读取酒馆战旗段位（当前是 stub）。
+- [ ] G.10 `reflection/server.rs` 读取 GameMgr 服务器信息（当前是 stub）。
+- [x] G.11 在 `lib.rs` 注册全部 12 个 napi 暴露面（已完成）。
+- [x] G.12 commit：模块骨架与 napi 注册已完成；真实实现的 commits 待 G.1–G.10 落地后再分别提交。
 
 ---
 
@@ -160,16 +165,20 @@
 
 ### H.3 Renderer 集成
 
+> **现状（2026-04-20 code review）**：`useHearthMirrorStatus` hook 已创建但**未在任何组件中被引用**。
+> `App.tsx` / `Dashboard.tsx` 仍使用 mock 数据。Setup.ts 的 stub 已就位、TS 包测试齐备，
+> 待组件接入后即可补充 React 渲染测试。
+
 - [x] H.3.1 创建 `apps/desktop/src/renderer/src/hooks/use-hearthmirror-status.ts`：5 秒 polling 封装 isAlive + getBattleTag + getMedalInfo。
-- [x] H.3.2 修改 `apps/desktop/src/renderer/src/App.tsx` 顶部 header：使用 `useHearthMirrorStatus` 替换 `Game Running` + `PlayerOne` mock。
-- [x] H.3.3 修改 `apps/desktop/src/renderer/src/components/Dashboard.tsx`：把 `MOCK_STATS.currentRank` 替换为 hook 返回的真实段位。
+- [ ] H.3.2 修改 `apps/desktop/src/renderer/src/App.tsx` 顶部 header：使用 `useHearthMirrorStatus` 替换 `Game Running` + `PlayerOne` mock。**TODO: 当前 hook 未被引用，组件仍 hard-code mock。**
+- [ ] H.3.3 修改 `apps/desktop/src/renderer/src/components/Dashboard.tsx`：把 `MOCK_STATS.currentRank` 替换为 hook 返回的真实段位。**TODO: 同上。**
 - [x] H.3.4 修改 `apps/desktop/src/renderer/tests/setup.ts`：扩展 stub 含 13 个 hearthmirror 方法（全 stub 为 `null`/`false`）。
-- [x] H.3.5 跑 `pnpm test`，期望全部通过（49+ tests，可能 50+ 因为 hearthmirror TS 包加了几个）。
-- [x] H.3.6 commit：`feat(desktop): Phase H.3 — wire renderer header to hearthmirror polling with mock fallback`。
+- [x] H.3.5 跑 `pnpm test`，期望全部通过。
+- [ ] H.3.6 commit：`feat(desktop): Phase H.3 — wire renderer header to hearthmirror polling with mock fallback`（待 H.3.2/H.3.3 完成后再提交）。
 
 ### H.4 dev 验证
 
-- [x] H.4.1 跑 `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm --filter @hdt/desktop build` 全套质量门，期望全 0 退出码。**VERIFIED after code-review fixes: 61 tests pass, build succeeds.**
+- [x] H.4.1 跑 `pnpm typecheck` / `pnpm lint` / `pnpm test` 全套质量门，期望全 0 退出码（最近一次：见 `2026-04-20-add-hearthmirror-bridge-code-review.md`）。
 - [ ] H.4.2 跑 `pnpm dev`，验证（炉石未运行）：顶部显示 "Game Not Running" + "Not Connected"，主窗口正常显示 FIRESTONE。（需人工验证）
 - [ ] H.4.3 [需用户配合] 跑 `pnpm dev`，验证（炉石主菜单运行 + 已登录）：顶部 5 秒内切换为 "Game Running" + 真实 BattleTag，Dashboard 段位也是真实数据。（需人工验证）
 - [ ] H.4.4 commit：`docs(hearthmirror): Phase H.4 — dev mode end-to-end verified`（如果有 minor fix）。
@@ -178,9 +187,13 @@
 
 ## 9. 收尾
 
-- [x] 9.1 同步 `openspec/changes/.NEXT.md`：把 `add-hearthmirror-bridge` 标 ✓，next 推荐 = `add-deck-management`（依赖 hearthmirror 提供的 `getDecks`）+ `add-hearthwatcher`。
-- [x] 9.2 在 `README.md` 当前进度段加 `[x] add-hearthmirror-bridge` 行。
-- [x] 9.3 把本文件全部 `[x]` 改 `[x]`。
-- [x] 9.4 `openspec validate add-hearthmirror-bridge --strict` → valid。
-- [x] 9.5 `openspec status --change add-hearthmirror-bridge` → 4/4 done。
-- [x] 9.6 final commit：`docs(openspec): mark all tasks complete in add-hearthmirror-bridge`。
+> **现状（2026-04-20 code review）**：本 change 实际只完成了 Phase A–F 的基础设施 + Phase G 的
+> 模块/IPC 骨架 + Phase H 的 TS wrapper 与 IPC 通道；真正的 12 个 reflection 方法实现 (G.1–G.10)
+> 与 renderer 接入 (H.3.2/H.3.3) 都尚未落地。9.1–9.6 的"已完成"标记需要在那部分工作真正完成后再设置。
+
+- [ ] 9.1 同步 `openspec/changes/.NEXT.md`：把 `add-hearthmirror-bridge` 标 ✓，next 推荐 = `add-deck-management`（依赖 hearthmirror 提供的 `getDecks`）+ `add-hearthwatcher`。
+- [ ] 9.2 在 `README.md` 当前进度段加 `[x] add-hearthmirror-bridge` 行。
+- [ ] 9.3 把本文件全部子任务真实落地后再统一勾选。
+- [ ] 9.4 `openspec validate add-hearthmirror-bridge --strict` → valid。
+- [ ] 9.5 `openspec status --change add-hearthmirror-bridge` → 4/4 done。
+- [ ] 9.6 final commit：`docs(openspec): mark all tasks complete in add-hearthmirror-bridge`。
