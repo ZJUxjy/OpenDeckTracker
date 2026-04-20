@@ -1,0 +1,164 @@
+{
+  "$schema_comment": "Mono runtime internal struct offsets for Unity (BDWGC fork), 32-bit (i686). See docs/notes/phase0-mono-offsets-research.md for derivation.",
+  "schema_version": 1,
+  "unity_version": "2021.3.x (BDWGC mono fork: unity-master-bdwgc-release-7_6)",
+  "hearthstone_version": "32.x (国服 Battle.net, 2026-04-17)",
+  "extracted_date": "2026-04-18",
+  "extracted_by": "source-derivation (Unity-Technologies/mono GitHub) + Phase 2.3 disasm probing will overwrite",
+  "ptr_size": 4,
+  "structs": {
+    "MonoObject": {
+      "$confidence": "HIGH",
+      "vtable": "0x0",
+      "data_start": "0x8"
+    },
+    "MonoString": {
+      "$confidence": "HIGH",
+      "length": "0x8",
+      "chars": "0xC"
+    },
+    "MonoArray": {
+      "$confidence": "HIGH",
+      "bounds": "0x8",
+      "max_length": "0xC",
+      "data_start": "0x10"
+    },
+    "MonoClassField": {
+      "$confidence": "HIGH",
+      "type": "0x0",
+      "name": "0x4",
+      "parent": "0x8",
+      "offset": "0xC",
+      "size": 16
+    },
+    "MonoClass": {
+      "$confidence": "HIGH (verified by brute-force on Hearthstone Mono)",
+      "$note": "Verified 2026-04-19: all field offsets are 4 bytes higher than the GCC-style bitfield-packing estimate, suggesting MSVC inserts 4 bytes of bitfield padding. parent / vtable_size / runtime_info validated by self-consistency tests on System.Object/String/Int32/Type.",
+      "instance_size": "0x10",
+      "parent": "0x20",
+      "nested_in": "0x24",
+      "image": "0x28",
+      "name": "0x2C",
+      "name_space": "0x30",
+      "type_token": "0x34",
+      "vtable_size": "0x38",
+      "interface_count": "0x3C",
+      "fields": "0x60",
+      "methods": "0x64",
+      "runtime_info": "0x7C",
+      "vtable": "0x80",
+      "field_count": "0x9C",
+      "next_class_cache": "0xA0",
+      "$field_count_note": "field_count is in MonoClassDef which extends MonoClass. With next_class_cache verified at 0xA0, field_count = next_class_cache - 4 = 0x9C (the field directly preceding next_class_cache in MonoClassDef).",
+      "$next_class_cache_note": "Verified 2026-04-19 by brute-force scan: 0xA0 yields 50/50 valid hash collision chains in Hearthstone Mono"
+    },
+    "MonoVTable": {
+      "$confidence": "HIGH (verified against ServiceManager vtable in Hearthstone Mono)",
+      "klass": "0x0",
+      "gc_descr": "0x4",
+      "domain": "0x8",
+      "type": "0xC",
+      "interface_bitmap": "0x10",
+      "max_interface_id": "0x14",
+      "vtable_array_start": "0x2C",
+      "$verified_2026_04_19": "Inspected ServiceManager (vtable_size=4) at 0x26B2A7D0: vtable[0..4] live at +0x2C..+0x38, static_field_data slot at +0x3C. The 8-byte gap above 0x24 (vs Mono source) likely comes from MSVC bitfield/padding behaviour around imt_collisions_bitmap and runtime_generic_context.",
+      "$static_data_note": "static_field_data is at vtable_base + vtable_array_start + class.vtable_size * ptr_size (NOT a fixed offset). Consumers compute it dynamically."
+    },
+    "MonoAssembly": {
+      "$confidence": "MED",
+      "image": "0x40",
+      "$note": "image follows MonoAssemblyName which is ~0x38 bytes after ref_count(4) + basedir(4)"
+    },
+    "MonoImage": {
+      "$confidence": "HIGH for class_cache (verified by brute-force scan)",
+      "$note": "Verified 2026-04-19: class_cache @ +0x35C in Hearthstone Assembly-CSharp yields hash table with size=6247, table populated with valid MonoClass* entries. name probed via mono_image_get_name disasm.",
+      "name": "0x14",
+      "assembly": "0x420",
+      "class_cache": "0x35C",
+      "$class_cache_note": "class_cache is MonoInternalHashTable struct (not pointer): {hash_func*, key_extract*, next_value_func*, size:u32, num_entries:u32, table:MonoClass**}. Total size ~0x1C bytes."
+    },
+    "MonoInternalHashTable": {
+      "$confidence": "MED",
+      "$note": "Embedded struct in MonoImage.class_cache. Layout from Unity mono source mono-internal-hash.h",
+      "hash_func": "0x0",
+      "key_extract_func": "0x4",
+      "next_value_func": "0x8",
+      "size": "0xC",
+      "num_entries": "0x10",
+      "table": "0x14"
+    },
+    "MonoDomain": {
+      "$confidence": "HIGH (verified by brute-force scan against running Hearthstone)",
+      "$note": "Verified 2026-04-19: GSList head at +0x58 in root MonoDomain yields mscorlib, UnityEngine.* etc. when traversed.",
+      "domain_assemblies": "0x58",
+      "loaded_images_hash": "0xD0"
+    }
+  },
+  "exports_to_probe": [
+    {
+      "name": "mono_get_root_domain",
+      "kind": "absolute_load",
+      "extracts": "root_domain_global_var_addr"
+    },
+    {
+      "name": "mono_class_get_name",
+      "kind": "displacement",
+      "extracts": "MonoClass.name"
+    },
+    {
+      "name": "mono_class_get_namespace",
+      "kind": "displacement",
+      "extracts": "MonoClass.name_space"
+    },
+    {
+      "name": "mono_class_get_parent",
+      "kind": "displacement",
+      "extracts": "MonoClass.parent"
+    },
+    {
+      "name": "mono_class_get_fields",
+      "kind": "displacement",
+      "extracts": "MonoClass.fields"
+    },
+    {
+      "name": "mono_class_get_image",
+      "kind": "displacement",
+      "extracts": "MonoClass.image"
+    },
+    {
+      "name": "mono_field_get_name",
+      "kind": "displacement",
+      "extracts": "MonoClassField.name (sanity check, expect 0x4)"
+    },
+    {
+      "name": "mono_field_get_offset",
+      "kind": "displacement",
+      "extracts": "MonoClassField.offset (sanity check, expect 0xC)"
+    },
+    {
+      "name": "mono_field_get_type",
+      "kind": "displacement",
+      "extracts": "MonoClassField.type (sanity check, expect 0x0)"
+    },
+    {
+      "name": "mono_field_get_parent",
+      "kind": "displacement",
+      "extracts": "MonoClassField.parent (sanity check, expect 0x8)"
+    },
+    {
+      "name": "mono_image_get_name",
+      "kind": "displacement",
+      "extracts": "MonoImage.name"
+    },
+    {
+      "name": "mono_assembly_get_image",
+      "kind": "displacement",
+      "extracts": "MonoAssembly.image"
+    },
+    {
+      "name": "mono_vtable_get_static_field_data",
+      "kind": "complex",
+      "extracts": "MonoVTable static-field-data calc (vtable + 0x24 + vtable_size * ptr_size)"
+    }
+  ]
+}
