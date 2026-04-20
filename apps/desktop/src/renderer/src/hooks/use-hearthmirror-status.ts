@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
+import type { BattleTag, MedalInfo } from '@hdt/hearthmirror';
 
-interface HearthMirrorStatus {
+export interface HearthMirrorStatus {
   isAlive: boolean;
-  playerName: string | null;
+  battleTag: BattleTag | null;
+  medalInfo: MedalInfo | null;
+  lastUpdatedAt: number;
 }
 
 export function useHearthMirrorStatus(): HearthMirrorStatus {
   const [isAlive, setIsAlive] = useState(false);
-  const [playerName, setPlayerName] = useState<string | null>(null);
+  const [battleTag, setBattleTag] = useState<BattleTag | null>(null);
+  const [medalInfo, setMedalInfo] = useState<MedalInfo | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -19,12 +24,18 @@ export function useHearthMirrorStatus(): HearthMirrorStatus {
 
       if (alive) {
         const tag = await window.hdt.hearthmirror.getBattleTag().catch(() => null);
-        if (!cancelled && tag) {
-          setPlayerName(tag.name);
-        }
+        if (cancelled) return;
+        setBattleTag(tag);
+
+        const medal = await window.hdt.hearthmirror.getMedalInfo().catch(() => null);
+        if (cancelled) return;
+        setMedalInfo(medal);
       } else {
-        setPlayerName(null);
+        setBattleTag(null);
+        setMedalInfo(null);
       }
+
+      setLastUpdatedAt(Date.now());
     }
 
     void poll();
@@ -35,5 +46,5 @@ export function useHearthMirrorStatus(): HearthMirrorStatus {
     };
   }, []);
 
-  return { isAlive, playerName };
+  return { isAlive, battleTag, medalInfo, lastUpdatedAt };
 }
