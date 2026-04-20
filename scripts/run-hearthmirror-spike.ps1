@@ -42,19 +42,22 @@ function Get-EnvironmentSnapshot {
     if ($hsProcess) {
         try {
             $hsDir = Split-Path $hsProcess.MainModule.FileName
-            $monoDll = Join-Path $hsDir 'mono-2.0-bdwgc.dll'
-            if (Test-Path $monoDll) {
-                $hash = (Get-FileHash $monoDll -Algorithm SHA1).Hash
-                $env_info.MonoDllSHA1 = $hash
-            } else {
-                # Try Mono directory
-                $monoDll2 = Join-Path $hsDir 'Mono/mono-2.0-bdwgc.dll'
-                if (Test-Path $monoDll2) {
-                    $hash = (Get-FileHash $monoDll2 -Algorithm SHA1).Hash
+            $candidates = @(
+                (Join-Path $hsDir 'mono-2.0-bdwgc.dll'),
+                (Join-Path $hsDir 'Mono/mono-2.0-bdwgc.dll'),
+                (Join-Path $hsDir 'MonoBleedingEdge/EmbedRuntime/mono-2.0-bdwgc.dll')
+            )
+            $found = $false
+            foreach ($monoDll in $candidates) {
+                if (Test-Path $monoDll) {
+                    $hash = (Get-FileHash $monoDll -Algorithm SHA1).Hash
                     $env_info.MonoDllSHA1 = $hash
-                } else {
-                    $env_info.MonoDllSHA1 = 'unavailable (file not found)'
+                    $found = $true
+                    break
                 }
+            }
+            if (-not $found) {
+                $env_info.MonoDllSHA1 = 'unavailable (file not found)'
             }
         } catch {
             $env_info.MonoDllSHA1 = 'unavailable'
