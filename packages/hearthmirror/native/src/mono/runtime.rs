@@ -487,8 +487,25 @@ impl MonoRuntime {
 mod integration_tests {
     use super::*;
 
+    fn hearthstone_is_running() -> bool {
+        crate::process::find_pid("Hearthstone.exe")
+            .ok()
+            .flatten()
+            .is_some()
+    }
+
+    macro_rules! skip_if_no_hs {
+        () => {
+            if !hearthstone_is_running() {
+                eprintln!("SKIP: no Hearthstone process found");
+                return;
+            }
+        };
+    }
+
     #[test]
     fn locate_mono_runtime_in_hearthstone() {
+        skip_if_no_hs!();
         let runtime = MonoRuntime::init().expect("Hearthstone must be running on main menu");
         assert!(runtime.mono_module.name.to_lowercase().contains("mono"));
         assert!(!runtime.root_domain.is_null());
@@ -498,11 +515,10 @@ mod integration_tests {
 
     #[test]
     fn discover_domain_offsets() {
+        skip_if_no_hs!();
         let runtime = MonoRuntime::init().expect("Hearthstone must be running");
         let offsets = runtime.discover_offsets().expect("offset discovery failed");
         eprintln!("MonoDomain.loaded_images @ +0x{:02X}", offsets.domain_loaded_images);
-        // §7.2 says +0x14; spike 02 confirmed.
-        // We tolerate ±0x10 because newer Mono builds may shift fields.
         assert!(offsets.domain_loaded_images >= 0x10 && offsets.domain_loaded_images <= 0x40,
             "loaded_images offset 0x{:02X} is wildly outside expected range",
             offsets.domain_loaded_images);
@@ -510,11 +526,11 @@ mod integration_tests {
 
     #[test]
     fn open_assembly_csharp_finds_file() {
+        skip_if_no_hs!();
         let runtime = MonoRuntime::init().expect("Hearthstone must be running");
         let reader = runtime.open_assembly_csharp().expect("Assembly-CSharp.dll not found");
         let bytes = reader.bytes();
         assert!(bytes.len() > 0, "empty file");
-        // token for Entity class is always present in HS builds
         let token = reader.find_class_token("", "Entity")
             .or_else(|_| reader.find_class_token("Blizzard.T5.Services", "Entity"))
             .expect("Entity class must exist in Assembly-CSharp.dll");
