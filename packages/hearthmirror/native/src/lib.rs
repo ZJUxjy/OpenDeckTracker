@@ -15,6 +15,7 @@ pub mod metadata;
 pub mod collections;
 pub mod service_locator;
 pub mod reflection;
+pub mod disasm;
 
 use napi_derive::napi;
 use std::sync::Mutex;
