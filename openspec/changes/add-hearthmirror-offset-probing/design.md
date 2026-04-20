@@ -236,22 +236,40 @@ class.rs:77      MONO_CLASS_STATIC_FIELD_DATA       → vtable + dynamic (见 D1
 
 ### Decision D12: STATIC_FIELD_DATA 改用 vtable-based 计算
 
+> **Self-review followup (commit `<followup>`)**: 初版 D12 把 `MonoClass.vtable` (0x80) 当作 `MonoVTable*` 直接 deref — 这是 wrong path。对照 hearthmirror-rs `vtable.rs::try_static_field_data` 后确认：`MonoClass.vtable` 是 `MonoMethod**` (inline 函数指针数组)，与 `MonoVTable*` 是两个完全不同的概念，只是名字撞车。正确路径必须经过 `runtime_info → MonoClassRuntimeInfo.domain_vtables[0]` 间接得到 root domain 的 `MonoVTable*`。下方代码块已是修正版。
+
 - **What**: 删除 `MONO_CLASS_STATIC_FIELD_DATA = 0x58` 的硬编码读取，改为：
   ```rust
-  let vtable_ptr = memory.read_remote_ptr(klass + offsets.structs.class.vtable)?;
-  let vtable_size = memory.read_u32(klass + offsets.structs.class.vtable_size)?;
-  let static_field_data = if vtable_ptr.is_null() {
-      RemotePtr::null()
+  // 1) MonoClass.runtime_info → MonoClassRuntimeInfo* (Mono 在该 class 第一次
+  //    实例化或访问静态成员时才在该 domain 下懒构造此结构)
+  let runtime_info = memory.read_remote_ptr(klass + class_off.runtime_info)?;
+  let static_field_data = if runtime_info.is_null() {
+      RemotePtr::NULL
   } else {
-      let sfd_slot = vtable_ptr
-          + offsets.structs.vtable.vtable_array_start
-          + vtable_size * offsets.ptr_size;
-      memory.read_remote_ptr(sfd_slot)?
+      // 2) MonoClassRuntimeInfo: { max_domain: u16+pad, domain_vtables[0]: MonoVTable* }
+      //    root domain 的 vtable 槽位在 runtime_info + ptr_size。
+      let vtable_ptr = memory.read_remote_ptr(runtime_info + offsets.ptr_size)?;
+      if vtable_ptr.is_null() {
+          RemotePtr::NULL
+      } else {
+          // 3) vtable_size = 函数指针槽位数（u32 in Mono source）。
+          let vtable_size = memory.read_u32(klass + class_off.vtable_size)?;
+          if vtable_size > 100_000 {
+              return Err(ScryError::MetadataError(format!(
+                  "class @ {} vtable_size {} unreasonably large", klass, vtable_size)));
+          }
+          // 4) sfd 槽位紧跟在函数指针数组后面，再 deref 一次拿到真正的 static 区。
+          let sfd_slot = vtable_ptr
+              + vtable_off.vtable_array_start
+              + vtable_size * offsets.ptr_size;
+          memory.read_remote_ptr(sfd_slot)?
+      }
   };
   ```
-- **Why**: JSON `$static_data_note` 明确 "static_field_data is at vtable_base + vtable_array_start + class.vtable_size * ptr_size (NOT a fixed offset). Consumers compute it dynamically." 旧的 0x58 是把 GCC-bitfield 估算的 MonoClass slot 当作 sfd，对 modern BDWGC Mono 不成立 — 这正是 spike 0003 Run 1 中 12 个 reflection 方法全 stub 的可能原因之一（singleton 静态指针读到的是垃圾值，`is_null()` 提前返回）。
-- **Risk**: 对从未实例化的 class，vtable = null → static_field_data = null → `get_singleton` 返回 None。这是**正确行为**（class 未实例化 → 没有 s_instance）。Phase 5.5 不引入新失败模式。
+- **Why**: JSON `$static_data_note` 明确 "static_field_data is at vtable_base + vtable_array_start + class.vtable_size * ptr_size (NOT a fixed offset). Consumers compute it dynamically." 这里的 `vtable_base` 必须经 runtime_info 间接得到，不是 `MonoClass.vtable` 字段值。旧的 0x58 是把 GCC-bitfield 估算的 MonoClass slot 当作 sfd，对 modern BDWGC Mono 不成立 — 这正是 spike 0003 Run 1 中 12 个 reflection 方法全 stub 的可能原因之一（singleton 静态指针读到的是垃圾值，`is_null()` 提前返回）。
+- **Risk**: 对从未实例化的 class，runtime_info 或 vtable_ptr = null → static_field_data = null → `get_singleton` 返回 None。这是**正确行为**（class 未实例化 → 没有 s_instance）。Phase 5.5 不引入新失败模式。`vtable_size > 100_000` 的 sanity cap 与 hearthmirror-rs 对齐，防止偏移配置错误时把整个进程地址空间扫穿。
 - **Validation**: Phase 5.5.7 `diag_init` 真机验证；Phase 6 真机 `dump_reflection` 确认 `getBattleTag` 等 T1 方法状态不退化。
+- **Follow-up not done in 5.5**: `class.rs:41` `field_count` 仍按旧代码读 `u16`，hearthmirror-rs 读 `u32`。Hearthstone 实战中字段数 < 65535 时无差异，但偏移已切到 0x9C（MonoClassDef 中的 `guint32 field_count`）后理论上应该读 u32。Phase 6 真机若发现 reflection 字段缺失再切，避免在不能真机回归的窗口里改语义。
 
 ### 不在 Phase 5.5 范围
 
