@@ -220,7 +220,7 @@ fn find_image_with(
     Err(ScryError::ImageNotFound { name: name.into() })
 }
 
-fn add_offset(base: RemotePtr, offset: usize) -> Result<RemotePtr, ScryError> {
+pub(crate) fn add_offset(base: RemotePtr, offset: usize) -> Result<RemotePtr, ScryError> {
     let offset = u32::try_from(offset)
         .map_err(|_| ScryError::Unsupported(format!("offset out of 32-bit range: 0x{offset:X}")))?;
     Ok(base + offset)
