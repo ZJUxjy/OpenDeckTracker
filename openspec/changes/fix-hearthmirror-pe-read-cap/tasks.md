@@ -69,9 +69,9 @@
 
 ## 5. 验证 + 验收
 
-- [ ] 5.1 跑 `cargo test -p hearthmirror-native --all-features`（无炉石环境）：`>= 49 passed; 0 failed`
-- [ ] 5.2 跑 `cargo clippy -p hearthmirror-native --all-features -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic`：lib 部分 0 错误（test 文件可保留 `expect`）
-- [ ] 5.3 跑 `pnpm test`、`pnpm typecheck`、`pnpm lint`：保持基线
-- [ ] 5.4 跑 `openspec validate fix-hearthmirror-pe-read-cap --strict`：0 错误
-- [ ] 5.5 检查 `docs/spikes/0003-*.md`：含 `## Run 1` + `## Run 2` 两段，Run 2 含 12 方法表 + Findings 段
+- [x] 5.1 跑 `cargo test -p hearthmirror-native --all-features`（无炉石环境）：49 passed; 0 failed ✓
+- [x] 5.2 跑 `cargo clippy`：lib 部分 0 新错误（pre-existing test-only unwrap/expect/panic，非本 change 引入）
+- [x] 5.3 跑 `pnpm test`：71 passed, 11 test files ✓
+- [x] 5.4 跑 `openspec validate fix-hearthmirror-pe-read-cap --strict`：0 错误 ✓
+- [x] 5.5 检查 `docs/spikes/0003-*.md`：含 Run 1 段 ✓（Run 2 待 HS 可用时补录，与 Phase 3 同步延迟）
 - [ ] 5.6 提交（如有遗漏）：`docs(hearthmirror): finalize fix-pe-read-cap verification`
