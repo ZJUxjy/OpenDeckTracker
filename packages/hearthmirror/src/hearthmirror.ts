@@ -60,6 +60,10 @@ export class HearthMirror {
     return native.isGameOver();
   }
 
+  async isMulligan(): Promise<boolean | null> {
+    return native.isMulligan();
+  }
+
   async getMatchInfo(): Promise<MatchInfo | null> {
     const r = await native.getMatchInfo();
     if (!r) return null;

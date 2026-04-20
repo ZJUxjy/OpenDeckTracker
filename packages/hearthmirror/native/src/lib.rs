@@ -108,6 +108,11 @@ pub async fn is_game_over() -> napi::Result<bool> {
 }
 
 #[napi]
+pub async fn is_mulligan() -> napi::Result<Option<bool>> {
+    with_runtime(|rt| futures::executor::block_on(reflection::mulligan::is_mulligan_internal(rt)))
+}
+
+#[napi]
 pub async fn get_match_info() -> napi::Result<Option<reflection::match_info::MatchInfoResult>> {
     with_runtime(|rt| {
         futures::executor::block_on(reflection::match_info::get_match_info_internal(rt))
@@ -151,4 +156,20 @@ pub async fn get_battleground_rating_info(
 #[napi]
 pub async fn get_server_info() -> napi::Result<Option<reflection::server::GameServerInfoResult>> {
     with_runtime(|rt| futures::executor::block_on(reflection::server::get_server_info_internal(rt)))
+}
+
+#[napi]
+pub async fn dump_class(
+    class_name: String,
+) -> napi::Result<Vec<reflection::debug::FieldDumpEntry>> {
+    with_runtime_or(Vec::new(), |rt| {
+        futures::executor::block_on(reflection::debug::dump_class_internal(rt, class_name))
+    })
+}
+
+#[napi]
+pub async fn list_services() -> napi::Result<Vec<reflection::debug::ServiceEntry>> {
+    with_runtime_or(Vec::new(), |rt| {
+        futures::executor::block_on(reflection::debug::list_services_internal(rt))
+    })
 }

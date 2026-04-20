@@ -576,6 +576,7 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
+module.exports.dumpClass = nativeBinding.dumpClass
 module.exports.getAccountId = nativeBinding.getAccountId
 module.exports.getArenaDeck = nativeBinding.getArenaDeck
 module.exports.getBattlegroundRatingInfo = nativeBinding.getBattlegroundRatingInfo
@@ -588,4 +589,6 @@ module.exports.getMedalInfo = nativeBinding.getMedalInfo
 module.exports.getServerInfo = nativeBinding.getServerInfo
 module.exports.isAlive = nativeBinding.isAlive
 module.exports.isGameOver = nativeBinding.isGameOver
+module.exports.isMulligan = nativeBinding.isMulligan
 module.exports.isSpectating = nativeBinding.isSpectating
+module.exports.listServices = nativeBinding.listServices

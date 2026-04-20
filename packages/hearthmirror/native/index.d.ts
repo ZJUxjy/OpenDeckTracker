@@ -42,6 +42,13 @@ export interface DeckResult {
   cards: Array<DeckCardResult>
 }
 
+export declare function dumpClass(className: string): Promise<Array<FieldDumpEntry>>
+
+export interface FieldDumpEntry {
+  name: string
+  offset: number
+}
+
 export interface GameServerInfoResult {
   address: string
   port: number
@@ -75,7 +82,11 @@ export declare function isAlive(): Promise<boolean>
 
 export declare function isGameOver(): Promise<boolean>
 
+export declare function isMulligan(): Promise<boolean | null>
+
 export declare function isSpectating(): Promise<boolean>
+
+export declare function listServices(): Promise<Array<ServiceEntry>>
 
 export interface MatchInfoResult {
   localPlayer: MatchPlayerResult
@@ -112,4 +123,9 @@ export interface MedalInfoResult {
   wild?: MedalInfoData
   classic?: MedalInfoData
   twist?: MedalInfoData
+}
+
+export interface ServiceEntry {
+  name: string
+  addr: number
 }

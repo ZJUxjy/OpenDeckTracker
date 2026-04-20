@@ -7,6 +7,7 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getGameType: vi.fn(),
   isSpectating: vi.fn(),
   isGameOver: vi.fn(),
+  isMulligan: vi.fn(),
   getMatchInfo: vi.fn(),
   getMedalInfo: vi.fn(),
   getDecks: vi.fn(),
@@ -159,6 +160,18 @@ describe('HearthMirror', () => {
     it('returns null when native returns null', async () => {
       mocked(native.getDecks).mockResolvedValue(null);
       expect(await mirror.getDecks()).toBeNull();
+    });
+  });
+
+  describe('isMulligan', () => {
+    it('returns the native mulligan state', async () => {
+      mocked(native.isMulligan).mockResolvedValue(true);
+      await expect(mirror.isMulligan()).resolves.toBe(true);
+    });
+
+    it('returns null when native cannot resolve mulligan state', async () => {
+      mocked(native.isMulligan).mockResolvedValue(null);
+      await expect(mirror.isMulligan()).resolves.toBeNull();
     });
   });
 });
