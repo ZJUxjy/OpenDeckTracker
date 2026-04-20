@@ -93,8 +93,10 @@ fn find_mono_get_root_domain_va(
     mono: &ModuleInfo,
 ) -> Result<RemotePtr, ScryError> {
     let base_addr = mono.base.0 as u32;
-    // Read enough of the PE to satisfy pelite (header + tables, ~64 KB is generous).
-    let pe_size = mono.size.min(0x100_000) as usize;
+    // PeView::module assumes the buffer represents the full mapped PE image
+    // (export name strings can sit near the module tail). A previous 1MB cap
+    // here caused STATUS_ACCESS_VIOLATION on mono.dll (~6.5MB). See spike 0003 F-1.
+    let pe_size = mono.size as usize;
     let pe_bytes = memory.read_bytes(RemotePtr::new(base_addr), pe_size)?;
 
     // Safety: pe_bytes is our local copy of the module's mapped-image layout.
