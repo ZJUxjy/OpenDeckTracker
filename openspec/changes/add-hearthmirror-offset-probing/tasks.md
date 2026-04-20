@@ -125,8 +125,24 @@
 - [x] 6.6 跑 `cargo build -p hearthmirror-native --all-features` 0 errors + `cargo test -p hearthmirror-native --all-features --lib` 53 passed (1 ignored) + `cargo clippy --all-features --lib -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic` 0 errors
 - [x] 6.7 顺手清理 `mono/probe.rs`：删 caller-less 的 `probe_field_offset` / `looks_like_cstring` / `looks_readable` / `MAX_PROBE_SLOTS` + 重写模块级 doc；删 `error.rs::DisasmPatternUnknown` (caller 已切到 `OffsetProbeFailed`)
 - [x] 6.8 加 integration test `offset_prober_runs_during_init`：验 `runtime.offsets.structs.class.name` 在合理范围 + `runtime.exports` 含 `mono_get_root_domain` (skip-if-no-HS pattern 与既有测试一致)
-- [ ] 6.9 真机（如有）：跑 `cargo run -p hearthmirror-native --example diag_init` + `cargo test -p hearthmirror-native --all-features` (含 integration)；记录到 spike 0003 Run N
-- [ ] 6.10 提交：`refactor(hearthmirror): wire MonoRuntime::init to OffsetProber + switch domain walk to domain_assemblies`
+- [x] 6.9 真机（如有）：跑 `cargo run -p hearthmirror-native --example diag_init` + `cargo test -p hearthmirror-native --all-features` (含 integration)；记录到 spike 0003 Run N
+- [x] 6.10 提交：`refactor(hearthmirror): wire MonoRuntime::init to OffsetProber + switch domain walk to domain_assemblies`
+
+## 6.5 Phase 6 Audit — disasm probing 在 profiled-thunk 环境下的可靠性修复
+
+> **触发**：6.9 真机回归暴露 `OffsetProber` 在 Hearthstone 的 BDWGC Mono fork
+> 上极不可靠 — 多个 critical export 被反汇编启发式当成 garbage（如
+> `MonoClass.name → 0xE10`），`offset_prober_runs_during_init` 集成测试 panic。
+> 详见 design.md "Phase 6 Audit" 与 Decision D13。
+
+- [x] 6.5.1 新建 `examples/diag_prober.rs`：对 10 个 critical/best-effort export 各反汇编 32 条指令并标注 `find_field_load_displacement` 候选；用 `FastFormatter` 避免 `iced-x86` feature 膨胀
+- [x] 6.5.2 真机跑 `diag_prober`，把每个 export 按 Shape A（简单 thunk）/ Shape B（profiled thunk，含 TLS + cmp+jmp）/ 语义错配 三类编目（见 design Audit 表）
+- [x] 6.5.3 在 `mono/probe.rs` 引入 `struct ProbeSpec { export, field_label, setter, sane_range, critical }` + `const PROBE_SPECS: &[ProbeSpec]`；range 围绕 baseline 给合理漂移空间，`mono_image_get_name` 收紧到 `0x10..=0x18` 排除 `assembly_name (0x1C)` 语义错配
+- [x] 6.5.4 重写 `OffsetProber::probe_all`：disasm 结果落区外 → `eprintln!` + 回落 baseline；`ExportNotFound` 仅 critical 才 abort；`OffsetProbeFailed` 一律回落；其它 `MemoryAccess` 等错误继续 propagate
+- [x] 6.5.5 新增单元测试 `baseline_offsets_fall_inside_sane_ranges` / `mono_image_name_range_excludes_assembly_name_offset` / `profiled_thunk_garbage_displacements_are_rejected`，守住 range gate 不回退
+- [x] 6.5.6 重写 `mono/probe.rs` 模块级 doc：解释 BDWGC Mono profiled-thunk 现象 + range gate 的"sanity gate on baseline"语义
+- [x] 6.5.7 真机 `cargo test --all-features` 全绿（包括 `offset_prober_runs_during_init`）
+- [x] 6.5.8 提交：`fix(hearthmirror): range-gate OffsetProber against profiled-thunk garbage`
 
 ## 7. 收尾 polish + 文档（合并原 Phase 7）
 
