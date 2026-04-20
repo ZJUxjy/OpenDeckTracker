@@ -1,38 +1,16 @@
 import { MOCK_DECK, MOCK_STATS } from '../data/mockDecks';
 import { ArrowUpRight, BarChart3, Clock, Copy, PieChart, Shield, Target, Trophy } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import type { MedalInfo } from '@hdt/hearthmirror';
-
-function useMedalInfo(): MedalInfo | null {
-  const [medal, setMedal] = useState<MedalInfo | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function poll(): Promise<void> {
-      const data = await window.hdt.hearthmirror.getMedalInfo().catch(() => null);
-      if (!cancelled) setMedal(data);
-    }
-
-    void poll();
-    const timer = setInterval(() => { void poll(); }, 10000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, []);
-
-  return medal;
-}
+import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 
 export function Dashboard() {
   const cards = MOCK_DECK;
   const totalMatches = MOCK_STATS.wins + MOCK_STATS.losses;
-  const medal = useMedalInfo();
-  const liveRank = medal?.standard
-    ? medal.standard.legendRank > 0
-      ? `Legend #${medal.standard.legendRank}`
-      : `${medal.standard.starLevel}`
+  const { medalInfo } = useHearthMirrorStatus();
+  const std = medalInfo?.standard;
+  const liveRank = std
+    ? std.legendRank > 0
+      ? `Legend ${std.legendRank}`
+      : `Star ${std.starLevel}`
     : MOCK_STATS.currentRank;
 
   const manaCurve: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
