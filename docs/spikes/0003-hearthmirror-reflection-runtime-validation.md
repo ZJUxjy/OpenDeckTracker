@@ -185,3 +185,80 @@ The current spike proves the init chain works (F-2) but could not exercise any r
 - [Spike 0001](0001-hearthmirror-spike-report.md): Validated napi-rs + windows crate toolchain, cross-architecture memory read, ~252 µs/call.
 - [Spike 0002](0002-hearthmirror-mono-spike-report.md): Validated Mono runtime location, PE export parsing, `mono_get_root_domain` pattern matching, offset probing need identified.
 - **This spike (0003)**: Validates the full reflection chain end-to-end — class lookup → singleton resolution → field traversal → value extraction. **Blocked at init** due to PE read cap bug (F-1).
+
+## Run 2
+
+> Triggered by `fix-hearthmirror-pe-read-cap` commit `120d33e` (one-line fix: removed `mono.size.min(0x100_000)` cap in `runtime.rs:99`).
+
+### Environment
+
+| Field | Value |
+|---|---|
+| OS | Microsoft Windows NT 10.0.26200.0 (x64) |
+| Hearthstone version | 2022.3.62.7762112 |
+| mono-2.0-bdwgc.dll SHA1 | `2DEF7993A57EE783AC046E816A5B78FE3488BE90` |
+| Test date (UTC) | 2026-04-20 13:07 |
+| Game state | Main menu (logged in) |
+| Tier 2 coverage | Tested without entering match — game-state methods exercised but expected to return null |
+
+### Results
+
+| Method | Tier | Tested | Status | Value | Error | Elapsed (ms) |
+|---|---|---|---|---|---|---|
+| getBattleTag | T1 | tested | error | null | mono field not found: <probe>.<probed> | 1 |
+| getAccountId | T1 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getMedalInfo | T1 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getMatchInfo | T1 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getGameType | T2 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| isSpectating | T2 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| isGameOver | T2 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getServerInfo | T1 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getBattlegroundRatingInfo | T1 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getArenaDeck | T2 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getDecks | T1 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+| getCollection | T1 | tested | error | null | mono field not found: <probe>.<probed> | 0 |
+
+## Findings (Run 2)
+
+**Finding F-5** (Positive, fix-pe-read-cap acceptance evidence): `MonoRuntime::init()` no longer crashes with `STATUS_ACCESS_VIOLATION`. All 12 reflection methods reached the entry point and returned a typed `ScryError`, completing in < 1 ms each. The 1MB PE read cap fix (commit `120d33e`) is fully validated end-to-end against a live Hearthstone process.
+
+**Finding F-6** (Critical, **non-blocking for fix-pe-read-cap, defer to 5e/5f**): All 12 reflection methods fail with the *same* error string `mono field not found: <probe>.<probed>`. Source: [`packages/hearthmirror/native/src/mono/probe.rs:34-37`](../../packages/hearthmirror/native/src/mono/probe.rs):
+
+```rust
+Err(ScryError::FieldNotFound {
+    class: "<probe>".into(),
+    field: "<probed>".into(),
+})
+```
+
+This is not a *field name drift* — it is the `probe_field_offset` helper failing to find any valid candidate slot. The propagation chain is:
+
+1. Each reflection method calls `runtime.find_class(ns, name)`
+2. `find_class` calls `probe_class_def_table_offset` (`runtime.rs:409`)
+3. That probe iterates candidate `image` offsets, calling `probe_field_offset` to validate each slot
+4. **No slot validates** under Unity 2022.3.62f2 — the heuristic that worked under Unity 2021.3 (assumptions baked into spike 0002 + `field_paths.rs`) no longer matches the in-memory `MonoImage` / `MonoClass` layout
+
+This is exactly the failure mode that motivates [`add-hearthmirror-offset-probing`](../../openspec/changes/add-hearthmirror-offset-probing/) (replace heuristics with `iced-x86` disassembly + JSON baseline + `OffsetProber`) and [`add-hearthmirror-image-walking`](../../openspec/changes/add-hearthmirror-image-walking/) (replace `class_def_table` token probing with `MonoImage::class_cache` hashtable walk). **Validates the design** of both 5e and 5f.
+
+**Finding F-7** (Minor, hygiene): The `<probe>.<probed>` placeholder string is a poor diagnostic — it tells you "some probe failed" but not *which* probe (domain.loaded_images? class_def_table? something else?). A 5-line improvement would let `probe_field_offset` accept and propagate caller-supplied identifier strings, making future spike runs immediately diagnose the failed probe site without needing to grep source.
+
+## Recommendations (Run 2)
+
+### Must Fix (defer to 5e + 5f)
+
+**R-6**: Proceed with [`add-hearthmirror-offset-probing`](../../openspec/changes/add-hearthmirror-offset-probing/) (5e) followed by [`add-hearthmirror-image-walking`](../../openspec/changes/add-hearthmirror-image-walking/) (5f) as the path to fix F-6. Do **not** attempt a one-off hotfix to `probe_class_def_table_offset` — F-6 is the structural problem that 5e/5f are designed to solve, and a hotfix would just be incremental heuristic-tuning that breaks again on the next Hearthstone Mono upgrade.
+
+**Priority**: P0 — blocks all 12 reflection methods exactly the same way as F-1 did (different root cause, identical user impact).
+
+### Should Fix (small standalone change, optional)
+
+**R-7**: Propose `fix-hearthmirror-probe-error-msg` (5-10 minute change) to make `probe_field_offset` accept `caller_class: &str` and `caller_field: &str` parameters, so future spike runs surface *which* probe failed (e.g. `"MonoDomain.loaded_images"` vs `"MonoClass.class_def_table"`). Optional polish, not a blocker.
+
+### Updated 5e Baseline Decision
+
+Run 2 confirms F-4 (Unity 2022.3.62f2). Recommended path for 5e baseline JSON:
+
+- Start with `unity-2021.3.json` from hearthmirror-rs (proven baseline)
+- Trust `OffsetProber` to refine the 6 critical + 4 best-effort probes at runtime
+- **Do not** invest time hand-crafting a `unity-2022.3.json` baseline up front — the whole point of OffsetProber is that baseline accuracy degrades gracefully when probes succeed
+- Add a follow-up `unity-2022.3.json` *only* if 5e's real-HS regression shows OffsetProber probes failing (in which case the failures themselves give you the correct numeric values to record)
