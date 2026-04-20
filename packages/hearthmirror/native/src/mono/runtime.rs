@@ -34,6 +34,7 @@ impl MonoRuntime {
         let mono_module = find_mono_module(memory.handle())?;
         let exports = read_exports_map(&memory, &mono_module)?;
         let defaults = MonoOffsets::bundled_unity_2021_3()?;
+        log_offsets_loaded(&defaults);
         let offsets =
             OffsetProber::new(&memory, &mono_module, 32).probe_all(&exports, &defaults)?;
         let root_domain = resolve_root_domain(&memory, &exports)?;
@@ -51,6 +52,20 @@ impl MonoRuntime {
 fn find_mono_module(handle: &OwnedProcessHandle) -> Result<ModuleInfo, ScryError> {
     let modules = enumerate_modules_32bit(handle)?;
     select_mono_module(&modules)
+}
+
+/// One-shot diagnostic print so that crash reports / bug logs include which
+/// offset table was loaded. We deliberately gate this behind an env var
+/// (`HM_LOG=1`) to keep production stderr clean; users who need it can opt in.
+fn log_offsets_loaded(offsets: &MonoOffsets) {
+    if std::env::var_os("HM_LOG").is_none() {
+        return;
+    }
+    let fp = MonoOffsets::bundled_unity_2021_3_fingerprint();
+    eprintln!(
+        "[hearthmirror] loaded mono offsets: unity_version={} schema_v{} ptr_size={} fingerprint=0x{:016x}",
+        offsets.unity_version, offsets.schema_version, offsets.ptr_size, fp
+    );
 }
 
 fn find_export_va(

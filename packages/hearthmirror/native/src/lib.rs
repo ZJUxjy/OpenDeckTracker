@@ -18,12 +18,26 @@ pub mod remote_ptr;
 pub mod service_locator;
 
 use napi_derive::napi;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 static MIRROR: Mutex<Option<mono::MonoRuntime>> = Mutex::new(None);
 
-fn try_init() -> Option<mono::MonoRuntime> {
-    mono::MonoRuntime::init().ok()
+/// Acquire the global runtime mutex, lazily attempting to attach to
+/// Hearthstone the first time we observe `None`.
+///
+/// `MonoRuntime::init` errors (e.g. process not running, mono module not
+/// loaded yet) are intentionally swallowed here — callers should treat
+/// "not attached" the same as "Hearthstone not running" for graceful
+/// degradation. If you need to inspect the underlying error, call
+/// `MonoRuntime::init()` directly and bypass the cache.
+fn lock_runtime() -> napi::Result<MutexGuard<'static, Option<mono::MonoRuntime>>> {
+    let mut guard = MIRROR
+        .lock()
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+    if guard.is_none() {
+        *guard = mono::MonoRuntime::init().ok();
+    }
+    Ok(guard)
 }
 
 /// Run an operation against the cached MonoRuntime; returns Ok(None) if mono
@@ -31,12 +45,7 @@ fn try_init() -> Option<mono::MonoRuntime> {
 fn with_runtime<T>(
     f: impl FnOnce(&mono::MonoRuntime) -> Result<Option<T>, error::ScryError>,
 ) -> napi::Result<Option<T>> {
-    let mut guard = MIRROR
-        .lock()
-        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    if guard.is_none() {
-        *guard = try_init();
-    }
+    let guard = lock_runtime()?;
     let Some(runtime) = guard.as_ref() else {
         return Ok(None);
     };
@@ -49,12 +58,7 @@ fn with_runtime_or<T>(
     default: T,
     f: impl FnOnce(&mono::MonoRuntime) -> Result<T, error::ScryError>,
 ) -> napi::Result<T> {
-    let mut guard = MIRROR
-        .lock()
-        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    if guard.is_none() {
-        *guard = try_init();
-    }
+    let guard = lock_runtime()?;
     let Some(runtime) = guard.as_ref() else {
         return Ok(default);
     };
@@ -63,13 +67,7 @@ fn with_runtime_or<T>(
 
 #[napi]
 pub async fn is_alive() -> napi::Result<bool> {
-    let mut guard = MIRROR
-        .lock()
-        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
-    if guard.is_none() {
-        *guard = try_init();
-    }
-    Ok(guard.is_some())
+    Ok(lock_runtime()?.is_some())
 }
 
 #[napi]
@@ -161,9 +159,12 @@ pub async fn get_server_info() -> napi::Result<Option<reflection::server::GameSe
 #[napi]
 pub async fn dump_class(
     class_name: String,
+    limit: Option<u32>,
 ) -> napi::Result<Vec<reflection::debug::FieldDumpEntry>> {
     with_runtime_or(Vec::new(), |rt| {
-        futures::executor::block_on(reflection::debug::dump_class_internal(rt, class_name))
+        futures::executor::block_on(reflection::debug::dump_class_internal(
+            rt, class_name, limit,
+        ))
     })
 }
 

@@ -6,6 +6,13 @@ use napi_derive::napi;
 
 const ASSEMBLY_CSHARP_IMAGE: &str = "Assembly-CSharp";
 
+/// Default cap for `dump_class_internal` when no explicit limit is supplied.
+///
+/// Picked to be larger than any realistic Hearthstone class (most are <100
+/// fields) but small enough that an accidental dump on a giant generic class
+/// won't flood IPC.
+pub const DEFAULT_DUMP_LIMIT: u32 = 512;
+
 #[napi(object)]
 pub struct FieldDumpEntry {
     pub name: String,
@@ -21,6 +28,7 @@ pub struct ServiceEntry {
 pub async fn dump_class_internal(
     runtime: &MonoRuntime,
     class_name: String,
+    limit: Option<u32>,
 ) -> Result<Vec<FieldDumpEntry>, ScryError> {
     let image_addr = match runtime.find_image(ASSEMBLY_CSHARP_IMAGE) {
         Ok(addr) => addr,
@@ -37,6 +45,11 @@ pub async fn dump_class_internal(
     let class = MonoClass::new(runtime, class_addr);
     let mut fields: Vec<_> = class.fields_recursive()?.into_values().collect();
     fields.sort_by_key(|field| field.offset);
+
+    let cap = limit.unwrap_or(DEFAULT_DUMP_LIMIT) as usize;
+    if fields.len() > cap {
+        fields.truncate(cap);
+    }
     Ok(field_dump_entries(fields))
 }
 
@@ -122,6 +135,7 @@ mod integration_tests {
         let fields = futures::executor::block_on(dump_class_internal(
             &runtime,
             "CollectionManager".to_string(),
+            None,
         ))?;
         assert!(!fields.is_empty());
         Ok(())

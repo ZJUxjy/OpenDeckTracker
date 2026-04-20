@@ -213,6 +213,24 @@ impl MonoOffsets {
     pub fn bundled_unity_2021_3() -> Result<Self, ScryError> {
         Self::from_str(BUNDLED_UNITY_2021_3_JSON)
     }
+
+    /// SHA-256 of the bundled JSON content. Useful for log/debug output so
+    /// that field reports can be correlated with a known offset table.
+    /// Computed at runtime to avoid pulling in a sha2 dependency: instead we
+    /// expose a simple FNV-1a 64-bit hash, which is good enough to detect
+    /// "did this build use the same offsets?".
+    pub fn bundled_unity_2021_3_fingerprint() -> u64 {
+        fnv1a_64(BUNDLED_UNITY_2021_3_JSON.as_bytes())
+    }
+}
+
+fn fnv1a_64(bytes: &[u8]) -> u64 {
+    let mut h: u64 = 0xcbf29ce484222325;
+    for &b in bytes {
+        h ^= b as u64;
+        h = h.wrapping_mul(0x100000001b3);
+    }
+    h
 }
 
 type ProbeEntry = (&'static str, fn(&mut MonoOffsets, usize));

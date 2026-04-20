@@ -15,7 +15,11 @@ pub struct ModuleInfo {
     pub size: u32,
 }
 
-// Safety: HMODULE is a kernel-object reference valid from any thread.
+// SAFETY: `HMODULE` is a Win32 kernel-object handle (specifically a base address
+// of a loaded module within a target process); it has no thread affinity and is
+// not freed when the value is dropped (modules are owned by the target process,
+// not by us). `ModuleInfo` is a plain data record holding the handle alongside
+// owned `String`/`u32` fields, all of which are `Send`.
 unsafe impl Send for ModuleInfo {}
 
 fn pwstr_to_string(slice: &[u16]) -> String {
@@ -62,32 +66,72 @@ pub fn find_pid(target: &str) -> Result<Option<u32>, ScryError> {
 ///
 /// Note: `LIST_MODULES_32BIT` is **mandatory** when a 64-bit host enumerates
 /// a 32-bit target's modules. Without it, the call returns an empty list.
+///
+/// The buffer is sized dynamically: we first call `EnumProcessModulesEx` to
+/// learn how many bytes are needed, then allocate exactly that amount and
+/// retry. This avoids both wasting memory on the common case (~50 modules)
+/// and a panic on processes with >1024 loaded modules (overlay / anti-cheat
+/// / emulator scenarios).
+///
+/// Per-module `GetModuleBaseNameW` / `GetModuleInformation` failures are
+/// downgraded to a debug-trace + skip; only catastrophic errors (i.e. the
+/// initial `EnumProcessModulesEx` call) propagate.
 pub fn enumerate_modules_32bit(handle: &OwnedProcessHandle) -> Result<Vec<ModuleInfo>, ScryError> {
-    let mut modules = [HMODULE::default(); 1024];
-    let mut needed: u32 = 0;
-    unsafe {
-        EnumProcessModulesEx(
-            handle.raw(),
-            modules.as_mut_ptr(),
-            (modules.len() * std::mem::size_of::<HMODULE>()) as u32,
-            &mut needed,
-            LIST_MODULES_32BIT,
-        )
+    const HMODULE_SIZE: usize = std::mem::size_of::<HMODULE>();
+    const INITIAL_CAPACITY: usize = 256;
+    const MAX_CAPACITY: usize = 64 * 1024;
+
+    let mut capacity = INITIAL_CAPACITY;
+    let mut modules: Vec<HMODULE> = vec![HMODULE::default(); capacity];
+
+    loop {
+        let mut needed: u32 = 0;
+        let buf_bytes = u32::try_from(modules.len() * HMODULE_SIZE).map_err(|_| {
+            ScryError::Unsupported(format!(
+                "module enumeration buffer too large: {} entries",
+                modules.len()
+            ))
+        })?;
+        unsafe {
+            EnumProcessModulesEx(
+                handle.raw(),
+                modules.as_mut_ptr(),
+                buf_bytes,
+                &mut needed,
+                LIST_MODULES_32BIT,
+            )
+        }
+        .map_err(ScryError::from)?;
+
+        let needed_slots = needed as usize / HMODULE_SIZE;
+        if needed_slots <= capacity {
+            modules.truncate(needed_slots);
+            break;
+        }
+
+        if needed_slots > MAX_CAPACITY {
+            return Err(ScryError::Unsupported(format!(
+                "target process has {needed_slots} modules (>{MAX_CAPACITY} limit)"
+            )));
+        }
+
+        capacity = needed_slots;
+        modules.resize(capacity, HMODULE::default());
     }
-    .map_err(ScryError::from)?;
 
-    let count = needed as usize / std::mem::size_of::<HMODULE>();
-    let mut out = Vec::with_capacity(count);
-
-    for &m in &modules[..count] {
+    let mut out = Vec::with_capacity(modules.len());
+    for &m in &modules {
         let mut name_buf = [0u16; 260];
         let len = unsafe { GetModuleBaseNameW(handle.raw(), m, &mut name_buf) };
         if len == 0 {
+            // Module unloaded between enumeration and query, or query denied.
+            // Skip silently; only the absence of *all* modules matters to callers.
             continue;
         }
         let name = pwstr_to_string(&name_buf[..len as usize]);
+
         let mut info = MODULEINFO::default();
-        unsafe {
+        if unsafe {
             GetModuleInformation(
                 handle.raw(),
                 m,
@@ -95,7 +139,11 @@ pub fn enumerate_modules_32bit(handle: &OwnedProcessHandle) -> Result<Vec<Module
                 std::mem::size_of::<MODULEINFO>() as u32,
             )
         }
-        .map_err(ScryError::from)?;
+        .is_err()
+        {
+            continue;
+        }
+
         out.push(ModuleInfo {
             name,
             base: m,

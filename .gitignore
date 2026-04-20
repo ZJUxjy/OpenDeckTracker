@@ -28,6 +28,9 @@ Thumbs.db
 target/
 **/Cargo.lock
 
+# napi-rs prebuilt binaries (built locally via `pnpm -F @hdt/hearthmirror-native build`)
+packages/hearthmirror/native/*.node
+
 # Downloaded card data (refresh with `pnpm cards:download`)
 data/cards/*.json
 

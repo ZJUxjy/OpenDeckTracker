@@ -57,8 +57,8 @@ export function registerIpc(): void {
   ipcMain.handle('hearthmirror:isSpectating', () => swallow('isSpectating', () => hm().isSpectating(), false));
   ipcMain.handle('hearthmirror:isGameOver', () => swallow('isGameOver', () => hm().isGameOver(), false));
   ipcMain.handle('hearthmirror:isMulligan', () => swallow('isMulligan', () => hm().isMulligan(), false));
-  ipcMain.handle('hearthmirror:dumpClass', (_, className: string) =>
-    swallow('dumpClass', () => hm().dumpClass(className), []));
+  ipcMain.handle('hearthmirror:dumpClass', (_, className: string, limit?: number) =>
+    swallow('dumpClass', () => hm().dumpClass(className, limit), []));
   ipcMain.handle('hearthmirror:listServices', () => swallow('listServices', () => hm().listServices(), []));
   ipcMain.handle('hearthmirror:getMatchInfo', () => swallow('getMatchInfo', () => hm().getMatchInfo(), null));
   ipcMain.handle('hearthmirror:getMedalInfo', () => swallow('getMedalInfo', () => hm().getMedalInfo(), null));

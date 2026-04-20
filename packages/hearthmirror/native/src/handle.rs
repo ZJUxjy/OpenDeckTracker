@@ -37,8 +37,12 @@ impl OwnedProcessHandle {
     }
 }
 
-// Safety: Windows HANDLE is a kernel-object reference usable from any thread.
-// All mutable access is serialised externally (e.g. the Mutex in lib.rs).
+// SAFETY: Win32 process HANDLEs are kernel-object references that the Win32 API
+// allows to be used from any thread (see Microsoft docs on handle inheritance and
+// thread affinity — process handles have no thread affinity). `OwnedProcessHandle`
+// owns its handle exclusively (`!Clone`), and `Drop` calls `CloseHandle` exactly
+// once. All concurrent `read_*` access is serialised through `&self`-borrows in
+// `ProcessMemory`, so there is no aliasing of mutable state across threads.
 unsafe impl Send for OwnedProcessHandle {}
 
 impl Drop for OwnedProcessHandle {

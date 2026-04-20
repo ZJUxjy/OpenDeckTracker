@@ -66,8 +66,8 @@ export class HearthMirror {
     return (await native.isMulligan()) ?? false;
   }
 
-  async dumpClass(className: string): Promise<FieldDump[]> {
-    return native.dumpClass(className);
+  async dumpClass(className: string, limit?: number): Promise<FieldDump[]> {
+    return native.dumpClass(className, limit);
   }
 
   async listServices(): Promise<ServiceInfo[]> {

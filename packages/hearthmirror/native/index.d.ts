@@ -42,7 +42,7 @@ export interface DeckResult {
   cards: Array<DeckCardResult>
 }
 
-export declare function dumpClass(className: string): Promise<Array<FieldDumpEntry>>
+export declare function dumpClass(className: string, limit?: number | undefined | null): Promise<Array<FieldDumpEntry>>
 
 export interface FieldDumpEntry {
   name: string

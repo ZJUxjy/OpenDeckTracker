@@ -40,8 +40,8 @@ const api = {
     isSpectating: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isSpectating'),
     isGameOver: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isGameOver'),
     isMulligan: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isMulligan'),
-    dumpClass: (className: string): Promise<FieldDump[]> =>
-      ipcRenderer.invoke('hearthmirror:dumpClass', className),
+    dumpClass: (className: string, limit?: number): Promise<FieldDump[]> =>
+      ipcRenderer.invoke('hearthmirror:dumpClass', className, limit),
     listServices: (): Promise<ServiceInfo[]> => ipcRenderer.invoke('hearthmirror:listServices'),
     getMatchInfo: (): Promise<MatchInfo | null> => ipcRenderer.invoke('hearthmirror:getMatchInfo'),
     getMedalInfo: (): Promise<MedalInfo | null> => ipcRenderer.invoke('hearthmirror:getMedalInfo'),
