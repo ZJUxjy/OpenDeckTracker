@@ -5,6 +5,13 @@ use crate::remote_ptr::RemotePtr;
 
 const ENTRIES_OFFSET: u32 = 0x0C;
 const COUNT_OFFSET: u32 = 0x20;
+const DICT_ENTRY_HEADER_SIZE: u32 = (std::mem::size_of::<i32>() * 2) as u32;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReferencePairLayout {
+    pub entry_size: u32,
+    pub value_offset: u32,
+}
 
 /// Iterate a System.Collections.Generic.Dictionary<K, V>, yielding (entry_ptr, hash_code).
 pub fn iter_entries(
@@ -37,6 +44,27 @@ pub fn iter_entries(
         |addr| memory.read_i32(addr),
         |addr| memory.read_u32(addr),
     )
+}
+
+pub fn reference_pair_layout(ptr_size: usize) -> Result<ReferencePairLayout, ScryError> {
+    if ptr_size > std::mem::size_of::<u32>() {
+        return Err(ScryError::Unsupported(format!(
+            "dictionary reference pair layout requires 32-bit pointers, got {ptr_size}"
+        )));
+    }
+    let ptr_size = u32::try_from(ptr_size)
+        .map_err(|_| ScryError::Unsupported(format!("ptr_size out of range: {ptr_size}")))?;
+    let value_offset = DICT_ENTRY_HEADER_SIZE
+        .checked_add(ptr_size)
+        .ok_or_else(|| ScryError::Unsupported("dictionary value offset overflow".into()))?;
+    let entry_size = value_offset
+        .checked_add(ptr_size)
+        .ok_or_else(|| ScryError::Unsupported("dictionary entry size overflow".into()))?;
+
+    Ok(ReferencePairLayout {
+        entry_size,
+        value_offset,
+    })
 }
 
 pub(crate) fn iter_entries_with(
@@ -179,5 +207,18 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn reference_pair_layout_tracks_pointer_size() {
+        let layout = reference_pair_layout(4).expect("32-bit layout");
+        assert_eq!(layout.entry_size, 16);
+        assert_eq!(layout.value_offset, 12);
+    }
+
+    #[test]
+    fn reference_pair_layout_rejects_unsupported_pointer_sizes() {
+        let err = reference_pair_layout(8).expect_err("64-bit layout should be rejected");
+        assert!(matches!(err, ScryError::Unsupported(_)));
     }
 }

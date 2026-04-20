@@ -5,8 +5,6 @@ use crate::remote_ptr::RemotePtr;
 
 const SERVICE_LOCATOR_IMAGE: &str = "Blizzard.T5.ServiceLocator";
 const SERVICE_MANAGER_CLASS: &str = "Blizzard.T5.Services.ServiceManager";
-const SERVICE_DICT_ENTRY_SIZE: u32 = 16;
-const SERVICE_DICT_ENTRY_VALUE_OFFSET: u32 = 12;
 const MAX_SERVICE_ENTRIES: usize = 4096;
 
 pub struct ServiceLocator<'rt> {
@@ -84,17 +82,18 @@ impl<'rt> ServiceLocator<'rt> {
             return Ok(None);
         }
 
+        let entry_layout = dict::reference_pair_layout(self.runtime.offsets.ptr_size)?;
         for entry in dict::iter_entries(
             &self.runtime.memory,
             &self.runtime.offsets,
             services_dict,
-            SERVICE_DICT_ENTRY_SIZE,
+            entry_layout.entry_size,
             MAX_SERVICE_ENTRIES,
         )? {
             let service_info = self
                 .runtime
                 .memory
-                .read_remote_ptr(entry.addr + SERVICE_DICT_ENTRY_VALUE_OFFSET)?;
+                .read_remote_ptr(entry.addr + entry_layout.value_offset)?;
             if service_info.is_null() {
                 continue;
             }
@@ -118,18 +117,19 @@ impl<'rt> ServiceLocator<'rt> {
             return Ok(Vec::new());
         }
 
+        let entry_layout = dict::reference_pair_layout(self.runtime.offsets.ptr_size)?;
         let mut services = Vec::new();
         for entry in dict::iter_entries(
             &self.runtime.memory,
             &self.runtime.offsets,
             services_dict,
-            SERVICE_DICT_ENTRY_SIZE,
+            entry_layout.entry_size,
             MAX_SERVICE_ENTRIES,
         )? {
             let service_info = self
                 .runtime
                 .memory
-                .read_remote_ptr(entry.addr + SERVICE_DICT_ENTRY_VALUE_OFFSET)?;
+                .read_remote_ptr(entry.addr + entry_layout.value_offset)?;
             if service_info.is_null() {
                 continue;
             }
@@ -219,10 +219,13 @@ mod integration_tests {
             Err(err) => return Err(err),
         };
         let locator = ServiceLocator::new(&runtime);
-        let _ = locator.list_services()?;
 
         for name in ["CollectionManager", "NetCache", "GameMgr"] {
-            let _ = locator.get_service(name)?;
+            let resolved = locator.get_service(name)?;
+            assert!(
+                matches!(resolved, Some(addr) if !addr.is_null()),
+                "{name} should resolve via get_service()"
+            );
         }
 
         Ok(())
