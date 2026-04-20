@@ -7,9 +7,11 @@ import type {
   BattlegroundRatingInfo,
   Card,
   Deck,
+  FieldDump,
   GameServerInfo,
   MatchInfo,
   MedalInfo,
+  ServiceInfo,
 } from '@hdt/hearthmirror';
 
 const api = {
@@ -37,6 +39,10 @@ const api = {
     getGameType: (): Promise<number> => ipcRenderer.invoke('hearthmirror:getGameType'),
     isSpectating: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isSpectating'),
     isGameOver: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isGameOver'),
+    isMulligan: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isMulligan'),
+    dumpClass: (className: string): Promise<FieldDump[]> =>
+      ipcRenderer.invoke('hearthmirror:dumpClass', className),
+    listServices: (): Promise<ServiceInfo[]> => ipcRenderer.invoke('hearthmirror:listServices'),
     getMatchInfo: (): Promise<MatchInfo | null> => ipcRenderer.invoke('hearthmirror:getMatchInfo'),
     getMedalInfo: (): Promise<MedalInfo | null> => ipcRenderer.invoke('hearthmirror:getMedalInfo'),
     getDecks: (): Promise<Deck[] | null> => ipcRenderer.invoke('hearthmirror:getDecks'),

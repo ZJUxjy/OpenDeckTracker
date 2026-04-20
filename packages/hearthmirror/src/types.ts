@@ -78,12 +78,16 @@ export interface GameServerInfo {
   resumable: boolean;
 }
 
-export interface FieldDumpEntry {
+export interface FieldDump {
   name: string;
   offset: number;
 }
 
-export interface ServiceEntry {
+export type FieldDumpEntry = FieldDump;
+
+export interface ServiceInfo {
   name: string;
   addr: number;
 }
+
+export type ServiceEntry = ServiceInfo;

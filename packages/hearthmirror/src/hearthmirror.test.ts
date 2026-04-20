@@ -171,9 +171,9 @@ describe('HearthMirror', () => {
       await expect(mirror.isMulligan()).resolves.toBe(true);
     });
 
-    it('returns null when native cannot resolve mulligan state', async () => {
+    it('returns false when native cannot resolve mulligan state', async () => {
       mocked(native.isMulligan).mockResolvedValue(null);
-      await expect(mirror.isMulligan()).resolves.toBeNull();
+      await expect(mirror.isMulligan()).resolves.toBe(false);
     });
   });
 
