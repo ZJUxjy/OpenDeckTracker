@@ -65,14 +65,19 @@
       "$static_data_note": "static_field_data is at vtable_base + vtable_array_start + class.vtable_size * ptr_size (NOT a fixed offset). Consumers compute it dynamically."
     },
     "MonoAssembly": {
-      "$confidence": "MED",
-      "image": "0x40",
-      "$note": "image follows MonoAssemblyName which is ~0x38 bytes after ref_count(4) + basedir(4)"
+      "$confidence": "HIGH (verified 2026-04-20 by diag_image hex dump)",
+      "image": "0x48",
+      "$note": "image is at +0x48, not +0x40. MonoAssemblyName is 0x40 bytes (longer than the source-level estimate due to MSVC 4-byte alignment of public_key_token[17] + arch padding). +0x40 is MonoAssemblyName.arch (always 0x01000001 in this build). Verified: assembly[0]=mscorlib +0x48 = 0x0B71A3A8 which is in the same allocator range as MonoAssembly itself (0x0B71AC60).",
+      "$_legacy_note_kept_for_history": "image follows MonoAssemblyName which is ~0x38 bytes after ref_count(4) + basedir(4)"
     },
     "MonoImage": {
-      "$confidence": "HIGH for class_cache (verified by brute-force scan)",
-      "$note": "Verified 2026-04-19: class_cache @ +0x35C in Hearthstone Assembly-CSharp yields hash table with size=6247, table populated with valid MonoClass* entries. name probed via mono_image_get_name disasm.",
+      "$confidence": "HIGH (full layout verified 2026-04-20 by diag_image hex dump across 20 assemblies)",
+      "$note": "Full empirical layout from running Hearthstone Mono. The 4 string-ptr slots clustered at +0x14..+0x20 disambiguated by inspecting mscorlib + UnityEngine + 18 module assemblies — the relationship is consistent across every image.",
       "name": "0x14",
+      "$name_note": "Full file path (e.g. 'E:\\\\battle\\\\Hearthstone\\\\Hearthstone_Data\\\\Managed\\\\Assembly-CSharp.dll'). This is what reflection code expects. NOT what the public mono_image_get_name() returns — that one reads assembly_name at +0x1C.",
+      "$_alt_name_at_0x18": "+0x18 holds another char* with the same path string content (probably raw_data path). Not used by reflection.",
+      "$_assembly_name_at_0x1C": "+0x1C is the SHORT assembly name without '.dll' (e.g. 'Assembly-CSharp'). This is what mono_image_get_name() returns in this Unity Mono build. We intentionally reject the disasm probe value 0x1C in OffsetProber.PROBE_SPECS to keep callers on the full-path 'name' at +0x14.",
+      "$_module_name_at_0x20": "+0x20 is the filename with extension (e.g. 'Assembly-CSharp.dll'). Not currently used.",
       "assembly": "0x420",
       "class_cache": "0x35C",
       "$class_cache_note": "class_cache is MonoInternalHashTable struct (not pointer): {hash_func*, key_extract*, next_value_func*, size:u32, num_entries:u32, table:MonoClass**}. Total size ~0x1C bytes."
