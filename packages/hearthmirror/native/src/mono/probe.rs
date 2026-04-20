@@ -3,8 +3,36 @@
 //!
 //! [`OffsetProber`] disassembles exported Mono getter functions (e.g.
 //! `mono_class_get_name`) and recovers field displacements directly from
-//! the machine code. Deterministic; resilient to MSVC/GCC bitfield padding
-//! differences across Unity versions. Wired into `MonoRuntime::init`.
+//! the machine code. The result is **range-gated against the embedded
+//! `MonoOffsets` baseline** before being applied — see design D13.
+//!
+//! ## Why range-gating exists
+//!
+//! Hearthstone ships Unity's instrumented BDWGC Mono fork, where many
+//! getter exports are wrapped in a profiling thunk:
+//!
+//! ```text
+//! push ebp; mov ebp, esp; and esp, -8; sub esp, 8
+//! cmp [global_profiling_flag], 0
+//! ... profiling-on path with TLS reads (mov ecx, [eax+ecx*4+0xE10]) ...
+//! je <profiling_off_label>
+//! ... switch on a global state byte, dispatch to one of N branches ...
+//! ; the actual `mov eax, [klass+0x2C]` is buried deep behind jumps
+//! ```
+//!
+//! `disasm::find_field_load_displacement` scans linearly until the first
+//! `ret`, so for these Shape-B thunks it picks up a profiling MOV (e.g.
+//! `+0xE10` or `-0x100`) instead of the real field load. We catch that by
+//! requiring the disasm result to land in a per-export "sane range"
+//! bracketing the baseline value; out-of-range results fall back to the
+//! `$confidence: HIGH` baseline (which is itself
+//! `$verified_2026_04_19 by brute-force scan against running Hearthstone
+//! Mono` — i.e. independently validated, not just source-derived).
+//!
+//! Practically this means the prober acts as a **sanity gate** on the
+//! baseline: it confirms the simple-thunk exports (Shape A) still match
+//! the JSON, and silently keeps the baseline whenever the wrapper makes
+//! disasm too noisy.
 //!
 //! [`read_exports_map`] supports the prober by exposing the Mono DLL's
 //! export table as a `HashMap<String, RemotePtr>`.
@@ -110,55 +138,157 @@ impl<'m> OffsetProber<'m> {
         })
     }
 
-    /// Refine `baseline` offsets by probing critical + best-effort exports.
+    /// Refine `baseline` offsets by probing the 10 production exports.
     ///
-    /// Critical probes (6) — failure aborts with `OffsetProbeFailed`:
-    ///   `mono_class_get_name`, `_namespace`, `_fields`, `_image`,
-    ///   `mono_image_get_name`, `mono_assembly_get_image`
+    /// **Behavior matrix** (see [`PROBE_SPECS`] for the table):
     ///
-    /// Best-effort probes (4) — failure logs to stderr and keeps the
-    /// baseline value:
-    ///   `mono_class_get_parent`, `mono_field_get_offset`, `_name`, `_type`
+    /// | outcome                                  | critical            | best-effort         |
+    /// |------------------------------------------|---------------------|---------------------|
+    /// | disasm result inside `sane_range`        | apply               | apply               |
+    /// | disasm result outside `sane_range`       | log + keep baseline | log + keep baseline |
+    /// | export missing (`ExportNotFound`)        | **abort**           | log + keep baseline |
+    /// | no field-load found (`OffsetProbeFailed`)| log + keep baseline | log + keep baseline |
+    /// | other (e.g. `MemoryAccess`)              | **propagate**       | **propagate**       |
+    ///
+    /// The "critical" flag now only governs **export presence** (a missing
+    /// `mono_class_get_name` indicates the DLL is fundamentally not a Mono
+    /// build → fast fail). Everything else degrades gracefully to the
+    /// embedded baseline — see module docs for the rationale.
     pub fn probe_all(&self, baseline: MonoOffsets) -> Result<MonoOffsets, ScryError> {
         let mut off = baseline;
 
-        // Critical
-        type CriticalSetter = fn(&mut MonoOffsets, u32);
-        let critical: &[(&str, CriticalSetter)] = &[
-            ("mono_class_get_name", |o, v| o.structs.class.name = v),
-            ("mono_class_get_namespace", |o, v| o.structs.class.name_space = v),
-            ("mono_class_get_fields", |o, v| o.structs.class.fields = v),
-            ("mono_class_get_image", |o, v| o.structs.class.image = v),
-            ("mono_image_get_name", |o, v| o.structs.image.name = v),
-            ("mono_assembly_get_image", |o, v| o.structs.assembly.image = v),
-        ];
-        for (name, setter) in critical {
-            let v = self.probe_displacement(name)?;
-            setter(&mut off, v);
-        }
-
-        // Best-effort
-        let best_effort: &[(&str, CriticalSetter)] = &[
-            ("mono_class_get_parent", |o, v| o.structs.class.parent = v),
-            ("mono_field_get_offset", |o, v| o.structs.field.offset = v),
-            ("mono_field_get_name", |o, v| o.structs.field.name = v),
-            ("mono_field_get_type", |o, v| o.structs.field.type_ = v),
-        ];
-        for (name, setter) in best_effort {
-            match self.probe_displacement(name) {
-                Ok(v) => setter(&mut off, v),
-                Err(e) => {
+        for spec in PROBE_SPECS {
+            match self.probe_displacement(spec.export) {
+                Ok(v) if spec.sane_range.contains(&v) => (spec.setter)(&mut off, v),
+                Ok(v) => {
                     eprintln!(
-                        "OffsetProber: best-effort probe '{}' failed ({}); keeping baseline",
-                        name, e
+                        "OffsetProber: '{}' → {} returned 0x{:X} outside sane range \
+                         0x{:X}..=0x{:X}; keeping baseline (likely a profiled thunk; \
+                         see probe.rs module docs)",
+                        spec.export,
+                        spec.field_label,
+                        v,
+                        spec.sane_range.start(),
+                        spec.sane_range.end(),
                     );
                 }
+                Err(ScryError::ExportNotFound(name)) => {
+                    if spec.critical {
+                        return Err(ScryError::ExportNotFound(name));
+                    }
+                    eprintln!(
+                        "OffsetProber: best-effort export '{}' for {} missing; \
+                         keeping baseline",
+                        name, spec.field_label
+                    );
+                }
+                Err(ScryError::OffsetProbeFailed(msg)) => {
+                    eprintln!(
+                        "OffsetProber: probe '{}' for {} failed ({}); keeping baseline",
+                        spec.export, spec.field_label, msg
+                    );
+                }
+                Err(other) => return Err(other),
             }
         }
 
         Ok(off)
     }
 }
+
+/// One row in the [`OffsetProber::probe_all`] table.
+///
+/// `sane_range` brackets the baseline value with enough slack to absorb
+/// reasonable Unity-version drift while rejecting the typical garbage
+/// produced by profiled-thunk wrappers (see module docs).
+struct ProbeSpec {
+    export: &'static str,
+    field_label: &'static str,
+    setter: fn(&mut MonoOffsets, u32),
+    sane_range: std::ops::RangeInclusive<u32>,
+    critical: bool,
+}
+
+/// The 10 production probes. Sane ranges are derived from spike 0003 +
+/// real-machine `diag_prober` runs against Hearthstone; widen with care.
+///
+/// `mono_image_get_name` is intentionally tight (`0x10..=0x18`): Mono's
+/// public getter actually returns `MonoImage.assembly_name` (0x1C in this
+/// build) rather than `MonoImage.name` (0x14). The narrow gate forces the
+/// fall-back to the baseline 0x14, which is what every reflection caller
+/// in this crate expects.
+const PROBE_SPECS: &[ProbeSpec] = &[
+    ProbeSpec {
+        export: "mono_class_get_name",
+        field_label: "MonoClass.name",
+        setter: |o, v| o.structs.class.name = v,
+        sane_range: 0x04..=0x80,
+        critical: true,
+    },
+    ProbeSpec {
+        export: "mono_class_get_namespace",
+        field_label: "MonoClass.name_space",
+        setter: |o, v| o.structs.class.name_space = v,
+        sane_range: 0x04..=0x80,
+        critical: true,
+    },
+    ProbeSpec {
+        export: "mono_class_get_fields",
+        field_label: "MonoClass.fields",
+        setter: |o, v| o.structs.class.fields = v,
+        sane_range: 0x10..=0x100,
+        critical: true,
+    },
+    ProbeSpec {
+        export: "mono_class_get_image",
+        field_label: "MonoClass.image",
+        setter: |o, v| o.structs.class.image = v,
+        sane_range: 0x10..=0x80,
+        critical: true,
+    },
+    ProbeSpec {
+        export: "mono_image_get_name",
+        field_label: "MonoImage.name",
+        setter: |o, v| o.structs.image.name = v,
+        sane_range: 0x10..=0x18,
+        critical: true,
+    },
+    ProbeSpec {
+        export: "mono_assembly_get_image",
+        field_label: "MonoAssembly.image",
+        setter: |o, v| o.structs.assembly.image = v,
+        sane_range: 0x10..=0x80,
+        critical: true,
+    },
+    ProbeSpec {
+        export: "mono_class_get_parent",
+        field_label: "MonoClass.parent",
+        setter: |o, v| o.structs.class.parent = v,
+        sane_range: 0x10..=0x80,
+        critical: false,
+    },
+    ProbeSpec {
+        export: "mono_field_get_offset",
+        field_label: "MonoClassField.offset",
+        setter: |o, v| o.structs.field.offset = v,
+        sane_range: 0x04..=0x40,
+        critical: false,
+    },
+    ProbeSpec {
+        export: "mono_field_get_name",
+        field_label: "MonoClassField.name",
+        setter: |o, v| o.structs.field.name = v,
+        sane_range: 0x00..=0x40,
+        critical: false,
+    },
+    ProbeSpec {
+        export: "mono_field_get_type",
+        field_label: "MonoClassField.type",
+        setter: |o, v| o.structs.field.type_ = v,
+        sane_range: 0x00..=0x40,
+        critical: false,
+    },
+];
 
 #[cfg(test)]
 mod tests {
@@ -192,6 +322,7 @@ mod tests {
         #[allow(clippy::expect_used)]
         let prober = OffsetProber::new(&mem, &exports, 32).expect("32 must be valid");
         let baseline = MonoOffsets::default();
+        #[allow(clippy::expect_used, clippy::err_expect)]
         let err = prober.probe_all(baseline).err().expect("must fail");
         match err {
             ScryError::ExportNotFound(name) => {
@@ -230,4 +361,80 @@ mod tests {
     // and is exercised by spike 0003 Run 3 (post-Phase 6) against running
     // Hearthstone. Pure unit testing without a target process would require
     // a full mock ProcessMemory, which is more work than it's worth here.
+
+    /// Each baseline offset value (from JSON) must lie inside the
+    /// corresponding `sane_range`. We hard-code the (export, expected) pairs
+    /// to make a regression visible if either the baseline or the gate moves.
+    #[test]
+    fn baseline_offsets_fall_inside_sane_ranges() {
+        let baseline = MonoOffsets::default();
+        let pairs: &[(&str, u32)] = &[
+            ("mono_class_get_name", baseline.structs.class.name),
+            ("mono_class_get_namespace", baseline.structs.class.name_space),
+            ("mono_class_get_fields", baseline.structs.class.fields),
+            ("mono_class_get_image", baseline.structs.class.image),
+            ("mono_image_get_name", baseline.structs.image.name),
+            ("mono_assembly_get_image", baseline.structs.assembly.image),
+            ("mono_class_get_parent", baseline.structs.class.parent),
+            ("mono_field_get_offset", baseline.structs.field.offset),
+            ("mono_field_get_name", baseline.structs.field.name),
+            ("mono_field_get_type", baseline.structs.field.type_),
+        ];
+        for (export, value) in pairs {
+            let spec = PROBE_SPECS.iter().find(|s| s.export == *export);
+            #[allow(clippy::panic)]
+            let spec = match spec {
+                Some(s) => s,
+                None => panic!("no spec for {}", export),
+            };
+            assert!(
+                spec.sane_range.contains(value),
+                "{} baseline 0x{:X} not inside sane range 0x{:X}..=0x{:X}",
+                export,
+                value,
+                spec.sane_range.start(),
+                spec.sane_range.end()
+            );
+        }
+    }
+
+    /// `mono_image_get_name` MUST reject 0x1C (the wrong-semantic
+    /// `MonoImage.assembly_name` field that the public Mono getter actually
+    /// returns). If this fails, future callers will silently swap to
+    /// assembly names instead of image names.
+    #[test]
+    fn mono_image_name_range_excludes_assembly_name_offset() {
+        #[allow(clippy::expect_used)]
+        let spec = PROBE_SPECS
+            .iter()
+            .find(|s| s.export == "mono_image_get_name")
+            .expect("spec must exist");
+        assert!(
+            !spec.sane_range.contains(&0x1C),
+            "0x1C (MonoImage.assembly_name) leaked into the sane range"
+        );
+        assert!(
+            spec.sane_range.contains(&0x14),
+            "0x14 (MonoImage.name baseline) MUST be inside the sane range"
+        );
+    }
+
+    /// A typical "garbage" displacement from a profiled-thunk wrapper (e.g.
+    /// `0xE10` from a TLS fetch) MUST land outside every spec's sane range.
+    /// This is the regression guard for the `0xE10` panic that motivated
+    /// design D13.
+    #[test]
+    fn profiled_thunk_garbage_displacements_are_rejected() {
+        let garbage: &[u32] = &[0xE10, 0x1000, 0x4000, 0xFFFF_FF00];
+        for spec in PROBE_SPECS {
+            for v in garbage {
+                assert!(
+                    !spec.sane_range.contains(v),
+                    "spec '{}' would silently accept garbage 0x{:X}",
+                    spec.export,
+                    v
+                );
+            }
+        }
+    }
 }

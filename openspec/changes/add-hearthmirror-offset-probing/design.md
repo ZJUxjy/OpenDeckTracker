@@ -284,3 +284,88 @@ class.rs:77      MONO_CLASS_STATIC_FIELD_DATA       → vtable + dynamic (见 D1
 - `Select-String` `MONO_CLASS_NAME|MONO_CLASS_FIELD|MONO_IMAGE_NAME` 在 `src/` 下 0 行命中
 - 真机 `cargo run --example diag_init` Step 7 (`MonoRuntime::init`) 仍能成功（不应因 5.5 引入回归）；Step 8+ 走得更深则属于 Phase 6 才有的 bonus
 
+## Phase 6 Audit (added 2026-04-20，post-real-machine-validation)
+
+### 触发原因
+
+Phase 6 接入 `OffsetProber::probe_all` 后，真机跑 `cargo test --all-features` 时
+`mono::runtime::integration_tests::offset_prober_runs_during_init` 直接 panic：
+
+```
+MonoClass.name offset 0xE10 outside plausible range
+```
+
+`0xE10` 不是任何已知 Mono 字段，明显是 garbage。Disasm 把别的指令当成了 field load。
+
+### 调查：`diag_prober.rs` 反汇编
+
+新建 `examples/diag_prober.rs` 把 10 个 critical/best-effort export 各自的前 32 条
+指令反汇编出来，按结果分三类：
+
+| 类型 | 形态                  | 典型 export                                       | `find_field_load_displacement` |
+|------|-----------------------|---------------------------------------------------|--------------------------------|
+| **Shape A — 简单 thunk** | `mov reg, [arg+disp]; ret` | `mono_class_get_image`, `mono_field_get_offset`, `mono_field_get_name` | ✅ 正确（与 baseline 完全吻合） |
+| **Shape B — profiled thunk** | `cmp [profile_flag],0; jz off-path; ...` 中插入 TLS / profiling MOV，控制流前置长 | `mono_class_get_name`, `_namespace`, `_fields`, `_parent`, `mono_assembly_get_image`, `mono_field_get_type` | ❌ garbage（`0xE10`、`-0x100` 之类，全是 TLS 偏移 / profiling 桩） |
+| **Shape A 但语义错配** | 简单 thunk 但 Mono 公开 getter 返回的不是同名字段 | `mono_image_get_name` 实际返回 `assembly_name (0x1C)`，不是 `name (0x14)` | ⚠ 解出 0x1C，能跑但语义错 |
+
+→ Hearthstone 用的是 Unity BDWGC Mono fork，开了 profiling instrumentation，
+导致大量 getter 是 Shape B；线性扫"最后一条 RET 前的 MOV"的启发式不可靠。
+
+### Decision D13：探测结果 range-gate + 静默回落 baseline
+
+不再让任何 disasm 结果直接覆盖 baseline。每个 probe 在 `PROBE_SPECS` 里声明一个
+`sane_range`（围绕 baseline 给合理漂移空间），结果落在区间外就：
+
+1. `eprintln!` 一行诊断（保留可观察性，不污染 stdout）
+2. 保留 baseline 值（JSON 已经被 spike 0003 brute-force 验证过，confidence = HIGH）
+
+各 probe 的 sane range：
+
+| export | baseline | range | 备注 |
+|--------|----------|-------|------|
+| `mono_class_get_name` | 0x2C | `0x04..=0x80` | Shape B：必然回落 |
+| `mono_class_get_namespace` | 0x30 | `0x04..=0x80` | Shape B：必然回落 |
+| `mono_class_get_fields` | 0x60 | `0x10..=0x100` | Shape B 但巧合命中 0x60 |
+| `mono_class_get_image` | 0x28 | `0x10..=0x80` | Shape A：真探测 |
+| `mono_image_get_name` | 0x14 | `0x10..=0x18` | **特意收紧排除 0x1C**：见下 |
+| `mono_assembly_get_image` | 0x40 | `0x10..=0x80` | Shape B：必然回落 |
+| `mono_class_get_parent` | 0x20 | `0x10..=0x80` | Shape B：必然回落 |
+| `mono_field_get_offset` | 0x0C | `0x04..=0x40` | Shape A：真探测 |
+| `mono_field_get_name` | 0x04 | `0x00..=0x40` | Shape A：真探测 |
+| `mono_field_get_type` | 0x00 | `0x00..=0x40` | Shape B 但巧合命中 0 |
+
+### Critical 语义重定义
+
+旧 critical 定义（"探测失败即 abort"）在 Shape B 普遍存在的环境下会让 init 完全失败。
+新定义只对**导出存在性**生效：
+
+| 失败模式 | critical | best-effort |
+|----------|----------|-------------|
+| disasm 结果在 `sane_range` 内 | 应用 | 应用 |
+| disasm 结果在 `sane_range` 外 | log + 回落 baseline | log + 回落 baseline |
+| `ExportNotFound` | **abort**（DLL 根本不是 Mono） | log + 回落 baseline |
+| `OffsetProbeFailed`（找不到 MOV） | log + 回落 baseline | log + 回落 baseline |
+| `MemoryAccess` 等 | **propagate**（进程异常） | **propagate** |
+
+→ "critical" 现在只表达"这个 export 必须存在，否则我们不在跟 Mono 说话"，
+不再表达"这个偏移必须从 disasm 取得"。
+
+### `mono_image_get_name` 语义错配 ADR
+
+Mono 上游的 `mono_image_get_name` 实现是 `return image->assembly_name;`（不是
+`image->name`）。原 hearthmirror-rs 端 baseline 一直用 0x14 = `MonoImage.name`，
+这是反射层期望的"模块文件名（如 `Assembly-CSharp.dll`）"；用 `assembly_name`
+会拿到去后缀的 short name（`Assembly-CSharp`），破坏 `find_image_by_name` 等调用。
+
+→ `mono_image_get_name` 的 sane range **故意收紧到 `0x10..=0x18`** 排除 0x1C，
+让 prober 强制回落到 baseline 0x14。单元测试
+`mono_image_name_range_excludes_assembly_name_offset` 守住这个不变量。
+
+### Phase 6 Audit 验收
+
+- 单元测试 `baseline_offsets_fall_inside_sane_ranges`：每个 baseline 都在自己的 range 内
+- 单元测试 `mono_image_name_range_excludes_assembly_name_offset`：0x1C 被拒，0x14 被收
+- 单元测试 `profiled_thunk_garbage_displacements_are_rejected`：`0xE10/0x1000/0x4000/0xFFFFFF00` 一律落区外
+- 真机 `cargo test --all-features` 全绿（包括 `offset_prober_runs_during_init`）
+- `eprintln!` 诊断在 `cargo test -- --nocapture` 下可见，便于以后 Unity 升级时观察哪些 probe 漂移
+
