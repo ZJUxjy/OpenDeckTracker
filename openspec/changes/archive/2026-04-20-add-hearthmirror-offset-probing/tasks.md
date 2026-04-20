@@ -114,7 +114,7 @@
 - [x] 5.5.17 跑 `cargo build --all-features` 通过 (6.46s, 0 errors)
 - [x] 5.5.18 跑 `cargo test --all-features --lib` 全绿 (53 passed, 0 failed, 1 ignored — 含 5 个 offsets 测试 + 6 个 disasm 测试 + 4 个 probe 测试 + 2 个更新后的 object 测试)
 - [x] 5.5.19 跑 `cargo clippy --all-features --lib -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic` 0 错误（lib-only 是项目约定 gate；`--tests` 上 37 个 unwrap/expect 是 `add-hearthmirror-metadata-reader` 已记录的 baseline，未引入新触发）
-- [ ] 5.5.20 真机延后：当前会话 Hearthstone 未运行；Phase 6 一并真机验证（5.5 不引入新失败模式因为 Arc<MonoOffsets::default()> 在功能上等价于把 11/13 已修正的偏移挂上线，仅当 reflection 链路真正跑过 `read_mono_class` 才有可观察差异 — 走 init 时已通过单测覆盖路由）
+- [x] 5.5.20 真机延后：当前会话 Hearthstone 未运行；Phase 6 一并真机验证（5.5 不引入新失败模式因为 Arc<MonoOffsets::default()> 在功能上等价于把 11/13 已修正的偏移挂上线，仅当 reflection 链路真正跑过 `read_mono_class` 才有可观察差异 — 走 init 时已通过单测覆盖路由）。**已兑现**：Phase 6.9 真机回归覆盖 5.5 路由层 + 6.5 / Run 3 累计 4 轮真机；5.5 路由 P0 fix 已被 reflection 链路联动验证。
 - [x] 5.5.21 提交：`refactor(hearthmirror): unify Mono offset routing via Arc<MonoOffsets>; fix P0 FIELD_NAME/TYPE swap`
 
 ## 6. OffsetProber 接入 MonoRuntime（缩小 scope，5.5 后才上）
