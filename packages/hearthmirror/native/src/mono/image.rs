@@ -3,6 +3,8 @@ use super::runtime::{add_offset, MonoRuntime};
 use crate::error::ScryError;
 use crate::remote_ptr::RemotePtr;
 
+const MAX_BUCKET_CHAIN_HOPS: usize = 1024;
+
 pub struct MonoImage<'rt> {
     pub runtime: &'rt MonoRuntime,
     pub addr: RemotePtr,
@@ -50,10 +52,9 @@ impl<'rt> MonoImage<'rt> {
                 .checked_mul(bucket as u32)
                 .ok_or_else(|| ScryError::Unsupported("bucket offset overflow".into()))?;
             let mut node = self.runtime.memory.read_remote_ptr(table + bucket_offset)?;
-            for _ in 0..1024 {
-                if node.is_null() {
-                    break;
-                }
+            let bucket_head = node;
+            let mut hops = 0usize;
+            while !node.is_null() {
                 if let Some(name) = self.read_class_name(node)? {
                     classes.push((name, node));
                 }
@@ -65,6 +66,14 @@ impl<'rt> MonoImage<'rt> {
                     break;
                 }
                 node = next;
+                if !node.is_null() {
+                    hops += 1;
+                    if hops > MAX_BUCKET_CHAIN_HOPS {
+                        return Err(ScryError::OffsetProbe(format!(
+                            "class cache bucket {bucket} chain exceeded {MAX_BUCKET_CHAIN_HOPS} hops starting at {bucket_head}"
+                        )));
+                    }
+                }
             }
         }
         Ok(classes)
@@ -127,10 +136,9 @@ pub(crate) fn enumerate_classes_with(
     let mut classes = Vec::new();
     for bucket in 0..buckets {
         let mut node = read_ptr(table + (bucket as u32 * offsets.ptr_size as u32));
-        for _ in 0..1024 {
-            if node.is_null() {
-                break;
-            }
+        let bucket_head = node;
+        let mut hops = 0usize;
+        while !node.is_null() {
             let name_ptr = read_ptr(node + offsets.structs.class.name as u32);
             if !name_ptr.is_null() {
                 let name = read_cstring(name_ptr);
@@ -149,6 +157,14 @@ pub(crate) fn enumerate_classes_with(
                 break;
             }
             node = next;
+            if !node.is_null() {
+                hops += 1;
+                if hops > MAX_BUCKET_CHAIN_HOPS {
+                    return Err(ScryError::OffsetProbe(format!(
+                        "class cache bucket {bucket} chain exceeded {MAX_BUCKET_CHAIN_HOPS} hops starting at {bucket_head}"
+                    )));
+                }
+            }
         }
     }
     Ok(classes)
@@ -240,6 +256,188 @@ mod tests {
         assert_eq!(
             find_class_with(classes.iter().cloned(), "Game.Card").unwrap(),
             RemotePtr::new(0x2000)
+        );
+    }
+
+    #[test]
+    fn enumerate_classes_errors_when_bucket_chain_exceeds_cap() {
+        let offsets = MonoOffsets::bundled_unity_2021_3().unwrap();
+        let image = RemotePtr::new(0x1000);
+        let class_cache = image + offsets.structs.image.class_cache as u32;
+        let table = RemotePtr::new(0x3000);
+        let name_ptr = RemotePtr::new(0x9000);
+
+        let mut ptrs = HashMap::new();
+        ptrs.insert(class_cache + offsets.structs.hash_table.table as u32, table);
+
+        for index in 0..=1025_u32 {
+            let node = RemotePtr::new(0x4000 + index * 0x20);
+            ptrs.insert(node + offsets.structs.class.name as u32, name_ptr);
+            ptrs.insert(
+                node + offsets.structs.class.name_space as u32,
+                RemotePtr::NULL,
+            );
+            ptrs.insert(
+                node + offsets.structs.class.next_class_cache as u32,
+                RemotePtr::new(0x4000 + (index + 1) * 0x20),
+            );
+        }
+        ptrs.insert(table, RemotePtr::new(0x4000));
+
+        let mut u32s = HashMap::new();
+        u32s.insert(class_cache + offsets.structs.hash_table.size as u32, 1);
+
+        let err = enumerate_classes_with(
+            image,
+            &offsets,
+            |addr| u32s.get(&addr).copied().unwrap_or_default(),
+            |addr| ptrs.get(&addr).copied().unwrap_or(RemotePtr::NULL),
+            |addr| {
+                if addr == name_ptr {
+                    "CollectionManager".to_string()
+                } else {
+                    String::new()
+                }
+            },
+        )
+        .unwrap_err();
+
+        assert!(matches!(
+            err,
+            ScryError::OffsetProbe(msg)
+                if msg.contains("chain exceeded 1024 hops")
+        ));
+    }
+
+    #[test]
+    fn enumerate_classes_allows_exactly_bucket_chain_cap_hops() {
+        let offsets = MonoOffsets::bundled_unity_2021_3().unwrap();
+        let image = RemotePtr::new(0x1000);
+        let class_cache = image + offsets.structs.image.class_cache as u32;
+        let table = RemotePtr::new(0x3000);
+        let name_ptr = RemotePtr::new(0x9000);
+
+        let mut ptrs = HashMap::new();
+        ptrs.insert(class_cache + offsets.structs.hash_table.table as u32, table);
+
+        for index in 0..=1024_u32 {
+            let node = RemotePtr::new(0x5000 + index * 0x20);
+            ptrs.insert(node + offsets.structs.class.name as u32, name_ptr);
+            ptrs.insert(
+                node + offsets.structs.class.name_space as u32,
+                RemotePtr::NULL,
+            );
+            ptrs.insert(
+                node + offsets.structs.class.next_class_cache as u32,
+                if index == 1024 {
+                    RemotePtr::NULL
+                } else {
+                    RemotePtr::new(0x5000 + (index + 1) * 0x20)
+                },
+            );
+        }
+        ptrs.insert(table, RemotePtr::new(0x5000));
+
+        let mut u32s = HashMap::new();
+        u32s.insert(class_cache + offsets.structs.hash_table.size as u32, 1);
+
+        let classes = enumerate_classes_with(
+            image,
+            &offsets,
+            |addr| u32s.get(&addr).copied().unwrap_or_default(),
+            |addr| ptrs.get(&addr).copied().unwrap_or(RemotePtr::NULL),
+            |addr| {
+                if addr == name_ptr {
+                    "CollectionManager".to_string()
+                } else {
+                    String::new()
+                }
+            },
+        )
+        .unwrap();
+
+        assert_eq!(classes.len(), 1025);
+        assert_eq!(
+            classes.last(),
+            Some(&("CollectionManager".to_string(), RemotePtr::new(0xD000)))
+        );
+    }
+
+    #[test]
+    fn find_class_finds_collection_manager_from_enumerated_classes() {
+        let offsets = MonoOffsets::bundled_unity_2021_3().unwrap();
+        let image = RemotePtr::new(0x1000);
+        let class_cache = image + offsets.structs.image.class_cache as u32;
+        let table = RemotePtr::new(0x3000);
+        let class_addr = RemotePtr::new(0x4000);
+        let name_ptr = RemotePtr::new(0x7000);
+
+        let mut ptrs = HashMap::new();
+        ptrs.insert(class_cache + offsets.structs.hash_table.table as u32, table);
+        ptrs.insert(table, class_addr);
+        ptrs.insert(class_addr + offsets.structs.class.name as u32, name_ptr);
+        ptrs.insert(
+            class_addr + offsets.structs.class.name_space as u32,
+            RemotePtr::NULL,
+        );
+
+        let mut u32s = HashMap::new();
+        u32s.insert(class_cache + offsets.structs.hash_table.size as u32, 1);
+
+        let classes = enumerate_classes_with(
+            image,
+            &offsets,
+            |addr| u32s.get(&addr).copied().unwrap_or_default(),
+            |addr| ptrs.get(&addr).copied().unwrap_or(RemotePtr::NULL),
+            |addr| {
+                if addr == name_ptr {
+                    "CollectionManager".to_string()
+                } else {
+                    String::new()
+                }
+            },
+        )
+        .unwrap();
+
+        assert_eq!(
+            find_class_with(classes.into_iter(), "CollectionManager").unwrap(),
+            class_addr
+        );
+    }
+}
+
+#[cfg(all(test, feature = "integration"))]
+mod integration_tests {
+    use super::*;
+    use crate::mono::class::MonoClass;
+    use crate::mono::MonoRuntime;
+
+    /// Requires a running Hearthstone client with the Assembly-CSharp image loaded.
+    #[test]
+    fn enumerate_classes_and_find_class_cover_collection_manager() {
+        let runtime = MonoRuntime::init().expect("Hearthstone must be running");
+        let image_addr = runtime
+            .find_image("Assembly-CSharp")
+            .expect("Assembly-CSharp image must be discoverable");
+        let image = MonoImage::new(&runtime, image_addr);
+
+        let classes = image
+            .enumerate_classes()
+            .expect("class cache enumeration should succeed");
+        // The Phase 4G call site uses find_class("CollectionManager"), so this
+        // integration path intentionally verifies the exact enumerated name.
+        assert!(
+            classes.iter().any(|(name, _)| name == "CollectionManager"),
+            "CollectionManager should be present in Assembly-CSharp"
+        );
+
+        let class_addr = image
+            .find_class("CollectionManager")
+            .expect("CollectionManager should be findable via MonoImage::find_class");
+        let class = MonoClass::new(&runtime, class_addr);
+        assert_eq!(
+            class.full_name().expect("class full name should read"),
+            "CollectionManager"
         );
     }
 }

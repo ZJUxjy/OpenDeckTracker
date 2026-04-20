@@ -245,4 +245,59 @@ mod tests {
 
         assert_eq!(merged.len(), 64);
     }
+
+    #[test]
+    fn fields_recursive_preserves_inherited_field_owners() {
+        let base = RemotePtr::new(0x1000);
+        let middle = RemotePtr::new(0x2000);
+        let derived = RemotePtr::new(0x3000);
+
+        let mut parents = HashMap::new();
+        parents.insert(derived, Some(middle));
+        parents.insert(middle, Some(base));
+        parents.insert(base, None);
+
+        let mut fields = HashMap::new();
+        fields.insert(
+            derived,
+            vec![MonoFieldDef {
+                name: "derived_only".to_string(),
+                offset: 0x30,
+                type_ptr: RemotePtr::new(0x4000),
+                is_static: false,
+                owner_class: derived,
+            }],
+        );
+        fields.insert(
+            middle,
+            vec![MonoFieldDef {
+                name: "shared".to_string(),
+                offset: 0x20,
+                type_ptr: RemotePtr::new(0x4004),
+                is_static: false,
+                owner_class: middle,
+            }],
+        );
+        fields.insert(
+            base,
+            vec![MonoFieldDef {
+                name: "base_only".to_string(),
+                offset: 0x10,
+                type_ptr: RemotePtr::new(0x4008),
+                is_static: false,
+                owner_class: base,
+            }],
+        );
+
+        let merged = fields_recursive_with(
+            derived,
+            |addr| parents.get(&addr).copied().flatten(),
+            |addr| fields.get(&addr).cloned().unwrap_or_default(),
+        )
+        .unwrap();
+
+        assert_eq!(merged["derived_only"].owner_class, derived);
+        assert_eq!(merged["shared"].owner_class, middle);
+        assert_eq!(merged["base_only"].owner_class, base);
+    }
 }
