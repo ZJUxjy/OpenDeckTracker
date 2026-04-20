@@ -11,9 +11,16 @@ pub const MAX_PROBE_SLOTS: u32 = 64; // 64 * 4 bytes = 0x100
 /// `[u32; MAX_PROBE_SLOTS]`, and returns the **byte offset** (slot_index * 4)
 /// of the first slot for which `validator` returns Ok(true). Returns
 /// `Err(FieldNotFound)` if no slot validates.
+///
+/// Caller MUST pass `owner_class` and `owner_field` identifiers (e.g.
+/// `"MonoDomain"`, `"loaded_images"`) so probe failures surface actionable
+/// error strings like `mono field not found: MonoDomain.loaded_images`
+/// instead of opaque placeholders. See spike 0003 F-7.
 pub fn probe_field_offset<F>(
     memory: &ProcessMemory,
     base: RemotePtr,
+    owner_class: &str,
+    owner_field: &str,
     validator: F,
 ) -> Result<u32, ScryError>
 where
@@ -32,8 +39,8 @@ where
         }
     }
     Err(ScryError::FieldNotFound {
-        class: "<probe>".into(),
-        field: "<probed>".into(),
+        class: owner_class.into(),
+        field: owner_field.into(),
     })
 }
 

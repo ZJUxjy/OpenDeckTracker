@@ -222,7 +222,7 @@ The current spike proves the init chain works (F-2) but could not exercise any r
 
 **Finding F-5** (Positive, fix-pe-read-cap acceptance evidence): `MonoRuntime::init()` no longer crashes with `STATUS_ACCESS_VIOLATION`. All 12 reflection methods reached the entry point and returned a typed `ScryError`, completing in < 1 ms each. The 1MB PE read cap fix (commit `120d33e`) is fully validated end-to-end against a live Hearthstone process.
 
-**Finding F-6** (Critical, **non-blocking for fix-pe-read-cap, defer to 5e/5f**): All 12 reflection methods fail with the *same* error string `mono field not found: <probe>.<probed>`. Source: [`packages/hearthmirror/native/src/mono/probe.rs:34-37`](../../packages/hearthmirror/native/src/mono/probe.rs):
+**Finding F-6** (Critical, **non-blocking for fix-pe-read-cap, defer to 5e**): All 12 reflection methods fail with the *same* error string `mono field not found: <probe>.<probed>`. Source: [`packages/hearthmirror/native/src/mono/probe.rs:34-37`](../../packages/hearthmirror/native/src/mono/probe.rs):
 
 ```rust
 Err(ScryError::FieldNotFound {
@@ -231,14 +231,15 @@ Err(ScryError::FieldNotFound {
 })
 ```
 
-This is not a *field name drift* — it is the `probe_field_offset` helper failing to find any valid candidate slot. The propagation chain is:
+This is not a *field name drift* — it is the `probe_field_offset` helper failing to find any valid candidate slot. **Root-cause grep** (only one caller in the entire crate):
 
-1. Each reflection method calls `runtime.find_class(ns, name)`
-2. `find_class` calls `probe_class_def_table_offset` (`runtime.rs:409`)
-3. That probe iterates candidate `image` offsets, calling `probe_field_offset` to validate each slot
-4. **No slot validates** under Unity 2022.3.62f2 — the heuristic that worked under Unity 2021.3 (assumptions baked into spike 0002 + `field_paths.rs`) no longer matches the in-memory `MonoImage` / `MonoClass` layout
+```
+runtime.rs:159   let domain_loaded_images = probe_field_offset(memory, domain, |slot| { ... })
+```
 
-This is exactly the failure mode that motivates [`add-hearthmirror-offset-probing`](../../openspec/changes/add-hearthmirror-offset-probing/) (replace heuristics with `iced-x86` disassembly + JSON baseline + `OffsetProber`) and [`add-hearthmirror-image-walking`](../../openspec/changes/add-hearthmirror-image-walking/) (replace `class_def_table` token probing with `MonoImage::class_cache` hashtable walk). **Validates the design** of both 5e and 5f.
+So 12/12 failures are actually a *single* init-time failure replayed 12 times — each `dump_reflection` method independently calls `MonoRuntime::init()`, which calls `discover_offsets()`, which calls the **single** `probe_field_offset` site to find `MonoDomain.loaded_images`. Under Unity 2022.3.62f2 the slot-scan heuristic no longer matches → init fails → every method bubbles up the same `<probe>.<probed>` string.
+
+**Implication**: 5e (`add-hearthmirror-offset-probing`) is the **critical-path unblock** — without it, `MonoRuntime::init()` itself cannot complete on production Hearthstone. Replacing slot-scan with `iced-x86` disassembly of `mono_domain_get_assemblies` (and the other 5 critical exports) gives a deterministic offset rather than a 64-slot guess. 5f (`add-hearthmirror-image-walking`) is still required downstream, but only becomes reachable after 5e fixes init. **Validates 5e necessity at P0 severity.**
 
 **Finding F-7** (Minor, hygiene): The `<probe>.<probed>` placeholder string is a poor diagnostic — it tells you "some probe failed" but not *which* probe (domain.loaded_images? class_def_table? something else?). A 5-line improvement would let `probe_field_offset` accept and propagate caller-supplied identifier strings, making future spike runs immediately diagnose the failed probe site without needing to grep source.
 
@@ -246,9 +247,9 @@ This is exactly the failure mode that motivates [`add-hearthmirror-offset-probin
 
 ### Must Fix (defer to 5e + 5f)
 
-**R-6**: Proceed with [`add-hearthmirror-offset-probing`](../../openspec/changes/add-hearthmirror-offset-probing/) (5e) followed by [`add-hearthmirror-image-walking`](../../openspec/changes/add-hearthmirror-image-walking/) (5f) as the path to fix F-6. Do **not** attempt a one-off hotfix to `probe_class_def_table_offset` — F-6 is the structural problem that 5e/5f are designed to solve, and a hotfix would just be incremental heuristic-tuning that breaks again on the next Hearthstone Mono upgrade.
+**R-6**: Proceed with [`add-hearthmirror-offset-probing`](../../openspec/changes/add-hearthmirror-offset-probing/) (5e) as the path to fix F-6. The actual failure site is `discover_offsets` → `probe_field_offset` for `MonoDomain.loaded_images`, which is exactly what 5e's `OffsetProber` replaces (deterministic disassembly of `mono_domain_get_assemblies` instead of 64-slot scan). 5f (`add-hearthmirror-image-walking`) is still required for the downstream `find_class` path but only becomes reachable after 5e unblocks init. Do **not** attempt a one-off hotfix to the slot-scan heuristic.
 
-**Priority**: P0 — blocks all 12 reflection methods exactly the same way as F-1 did (different root cause, identical user impact).
+**Priority**: P0 — blocks `MonoRuntime::init()` itself on production Hearthstone (worse than F-1 was — F-1 crashed, F-6 returns a typed error but blocks the same surface area).
 
 ### Should Fix (small standalone change, optional)
 
