@@ -148,12 +148,12 @@
 
 > Phase 5.5 已完成 `field_paths.rs` 删除 + 路由替换；Phase 7 退化为 review 反馈 polish。
 
-- [ ] 7.1 (LOW 1) `OffsetProber.probe_window` 字段保留为 `pub`（评估后保持当前设计），加 doc comment 说明"未来可能为长函数 prologue（如 enumerate 类）扩到 512+"
-- [ ] 7.2 (LOW 5) 在 `OffsetProber::probe_all` 顶部 doc comment 中文档化 "JSON exports_to_probe 列了 13 个，本函数只 probe 10 个" 的差异：`mono_get_root_domain` 单独由 `extract_global_root_domain_addr` 用 `find_first_absolute_load` 处理；`mono_field_get_parent` / `mono_field_get_offset` / `mono_field_get_type` / `mono_field_get_name` 是 sanity probes（baseline 已知正确，未来可加 assertion）；`mono_vtable_get_static_field_data` 是 complex（非 displacement，按 D12 在 `read_mono_class` 内动态计算）
-- [ ] 7.3 (LOW 2) 在 `OffsetProber` 模块级 doc comment 加一行 "Best-effort failures use `eprintln!` for now; consider `tracing` once project adopts a logging framework"
-- [ ] 7.4 重跑 grep，确认 `field_paths.rs` 已无 `MONO_*` 结构常量：`Select-String -Path packages/hearthmirror/native/src/**/*.rs -Pattern "pub const MONO_CLASS_|pub const MONO_IMAGE_"` → 0 行
-- [ ] 7.5 跑 `cargo build` + `cargo test --all-features` 全绿
-- [ ] 7.6 提交：`docs(hearthmirror): polish OffsetProber per cf22d47 review`
+- [x] 7.1 (LOW 1) `OffsetProber.probe_window` 字段保留为 `pub`（评估后保持当前设计），加 doc comment 说明"未来可能为长函数 prologue（如 enumerate 类）扩到 512+"
+- [x] 7.2 (LOW 5) 在 `OffsetProber::probe_all` 顶部 doc comment 中文档化 "JSON exports_to_probe 列了 13 个，本函数只 probe 10 个" 的差异：`mono_get_root_domain` 单独由 `extract_global_root_domain_addr` 用 `find_first_absolute_load` 处理；`mono_field_get_parent` / `mono_field_get_offset` / `mono_field_get_type` / `mono_field_get_name` 是 sanity probes（baseline 已知正确，未来可加 assertion）；`mono_vtable_get_static_field_data` 是 complex（非 displacement，按 D12 在 `read_mono_class` 内动态计算）
+- [x] 7.3 (LOW 2) 在 `OffsetProber` 模块级 doc comment 加一行 "Best-effort failures use `eprintln!` for now; consider `tracing` once project adopts a logging framework"
+- [x] 7.4 重跑 grep，确认 `field_paths.rs` 已无 `MONO_*` 结构常量：`Select-String -Path packages/hearthmirror/native/src/**/*.rs -Pattern "pub const MONO_CLASS_|pub const MONO_IMAGE_"` → 0 行
+- [x] 7.5 跑 `cargo build` + `cargo test --all-features` 全绿
+- [x] 7.6 提交：`docs(hearthmirror): polish OffsetProber per cf22d47 review`
 
 ## 8. ADR & 文档更新
 
