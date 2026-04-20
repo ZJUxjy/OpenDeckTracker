@@ -156,7 +156,7 @@ impl MonoRuntime {
         let memory = &self.memory;
         let domain = self.root_domain;
 
-        let domain_loaded_images = probe_field_offset(memory, domain, |slot| {
+        let domain_loaded_images = probe_field_offset(memory, domain, "MonoDomain", "loaded_images", |slot| {
             // slot = candidate GList*. Read its `data` (offset 0) — should be a MonoImage*.
             let data_ptr = match memory.read_remote_ptr(slot) {
                 Ok(p) => p,
