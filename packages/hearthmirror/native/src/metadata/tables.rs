@@ -26,7 +26,9 @@ impl MetadataReader {
 /// Locate the raw CLI metadata bytes within a .NET PE file.
 fn locate_cli_metadata(bytes: &[u8]) -> Result<&[u8], ScryError> {
     if bytes.len() < 0x40 {
-        return Err(ScryError::MetadataError("file too small for DOS header".into()));
+        return Err(ScryError::MetadataError(
+            "file too small for DOS header".into(),
+        ));
     }
 
     let e_lfanew =
@@ -53,7 +55,9 @@ fn locate_cli_metadata(bytes: &[u8]) -> Result<&[u8], ScryError> {
     // COM descriptor is DataDirectory[14]
     let com_off = data_dir_off + 14 * 8;
     if bytes.len() < com_off + 8 {
-        return Err(ScryError::MetadataError("COM descriptor entry truncated".into()));
+        return Err(ScryError::MetadataError(
+            "COM descriptor entry truncated".into(),
+        ));
     }
     let cli_rva = u32::from_le_bytes([
         bytes[com_off],
@@ -62,7 +66,9 @@ fn locate_cli_metadata(bytes: &[u8]) -> Result<&[u8], ScryError> {
         bytes[com_off + 3],
     ]) as usize;
     if cli_rva == 0 {
-        return Err(ScryError::MetadataError("no CLI header (not a .NET assembly)".into()));
+        return Err(ScryError::MetadataError(
+            "no CLI header (not a .NET assembly)".into(),
+        ));
     }
 
     let num_sections =
@@ -77,12 +83,9 @@ fn locate_cli_metadata(bytes: &[u8]) -> Result<&[u8], ScryError> {
             if bytes.len() < sh + 40 {
                 return None;
             }
-            let virt_sz = u32::from_le_bytes([
-                bytes[sh + 8],
-                bytes[sh + 9],
-                bytes[sh + 10],
-                bytes[sh + 11],
-            ]) as usize;
+            let virt_sz =
+                u32::from_le_bytes([bytes[sh + 8], bytes[sh + 9], bytes[sh + 10], bytes[sh + 11]])
+                    as usize;
             let virt_addr = u32::from_le_bytes([
                 bytes[sh + 12],
                 bytes[sh + 13],
@@ -131,14 +134,13 @@ fn locate_cli_metadata(bytes: &[u8]) -> Result<&[u8], ScryError> {
     ]) as usize;
 
     let meta_off = rva_to_offset(meta_rva).ok_or_else(|| {
-        ScryError::MetadataError(format!(
-            "metadata RVA 0x{:X} not in any section",
-            meta_rva
-        ))
+        ScryError::MetadataError(format!("metadata RVA 0x{:X} not in any section", meta_rva))
     })?;
 
     if bytes.len() < meta_off + meta_size {
-        return Err(ScryError::MetadataError("metadata section truncated".into()));
+        return Err(ScryError::MetadataError(
+            "metadata section truncated".into(),
+        ));
     }
 
     Ok(&bytes[meta_off..meta_off + meta_size])
@@ -161,12 +163,13 @@ fn parse_metadata_streams(metadata: &[u8]) -> Result<(&[u8], &[u8]), ScryError> 
             sig
         )));
     }
-    let version_len =
-        u32::from_le_bytes([metadata[12], metadata[13], metadata[14], metadata[15]]);
+    let version_len = u32::from_le_bytes([metadata[12], metadata[13], metadata[14], metadata[15]]);
     let version_padded = ((version_len + 3) & !3) as usize;
     let mut off = 16 + version_padded;
     if metadata.len() < off + 4 {
-        return Err(ScryError::MetadataError("metadata stream header missing".into()));
+        return Err(ScryError::MetadataError(
+            "metadata stream header missing".into(),
+        ));
     }
     let _flags = u16::from_le_bytes([metadata[off], metadata[off + 1]]);
     let n_streams = u16::from_le_bytes([metadata[off + 2], metadata[off + 3]]);
@@ -210,10 +213,9 @@ fn parse_metadata_streams(metadata: &[u8]) -> Result<(&[u8], &[u8]), ScryError> 
         }
     }
 
-    let (so, ss) = strings_offset
-        .ok_or_else(|| ScryError::MetadataError("no #Strings stream".into()))?;
-    let (to, ts) = tilde_offset
-        .ok_or_else(|| ScryError::MetadataError("no #~ stream".into()))?;
+    let (so, ss) =
+        strings_offset.ok_or_else(|| ScryError::MetadataError("no #Strings stream".into()))?;
+    let (to, ts) = tilde_offset.ok_or_else(|| ScryError::MetadataError("no #~ stream".into()))?;
 
     Ok((&metadata[so..so + ss], &metadata[to..to + ts]))
 }
@@ -237,15 +239,11 @@ fn parse_typedef_table(tilde: &[u8], strings: &[u8]) -> Result<Vec<TypeDefRow>, 
 
     let mut row_counts = [0u32; 64];
     let mut rc_idx = 0;
-    for i in 0..64usize {
+    for (i, row_count) in row_counts.iter_mut().enumerate() {
         if valid & (1u64 << i) != 0 {
             let off = 24 + rc_idx * 4;
-            row_counts[i] = u32::from_le_bytes([
-                tilde[off],
-                tilde[off + 1],
-                tilde[off + 2],
-                tilde[off + 3],
-            ]);
+            *row_count =
+                u32::from_le_bytes([tilde[off], tilde[off + 1], tilde[off + 2], tilde[off + 3]]);
             rc_idx += 1;
         }
     }
@@ -274,12 +272,21 @@ fn parse_typedef_table(tilde: &[u8], strings: &[u8]) -> Result<Vec<TypeDefRow>, 
         + methoddef_idx_size;
 
     let resolution_scope_size: usize = {
-        let max_rows = [module_count, row_counts[0x1A], row_counts[0x23], typeref_count]
-            .iter()
-            .copied()
-            .max()
-            .unwrap_or(0);
-        if max_rows <= (1 << 14) { 2 } else { 4 }
+        let max_rows = [
+            module_count,
+            row_counts[0x1A],
+            row_counts[0x23],
+            typeref_count,
+        ]
+        .iter()
+        .copied()
+        .max()
+        .unwrap_or(0);
+        if max_rows <= (1 << 14) {
+            2
+        } else {
+            4
+        }
     };
 
     let module_row_size = 2 + strings_idx_size + guid_idx_size * 3;

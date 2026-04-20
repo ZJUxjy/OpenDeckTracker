@@ -9,7 +9,9 @@ pub struct CardResult {
     pub premium: i32,
 }
 
-pub async fn get_collection_internal(runtime: &MonoRuntime) -> Result<Option<Vec<CardResult>>, ScryError> {
+pub async fn get_collection_internal(
+    runtime: &MonoRuntime,
+) -> Result<Option<Vec<CardResult>>, ScryError> {
     let _ = runtime;
     Ok(None)
 }

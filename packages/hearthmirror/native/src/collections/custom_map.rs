@@ -2,6 +2,13 @@ use crate::error::ScryError;
 use crate::mono::{MonoObject, MonoRuntime};
 use crate::remote_ptr::RemotePtr;
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct SlotArrayLayout {
+    pub array_data_start: u32,
+    pub array_max_length_offset: u32,
+    pub ptr_size: u32,
+}
+
 pub fn iter_entries(
     runtime: &MonoRuntime,
     map: RemotePtr,
@@ -45,13 +52,16 @@ pub fn iter_entries(
             runtime.offsets.ptr_size
         ))
     })?;
+    let layout = SlotArrayLayout {
+        array_data_start,
+        array_max_length_offset,
+        ptr_size,
+    };
     collect_value_slots_with(
         value_slots,
         size,
         max_items,
-        array_data_start,
-        array_max_length_offset,
-        ptr_size,
+        layout,
         |addr| runtime.memory.read_u32(addr),
         |addr| runtime.memory.read_remote_ptr(addr),
     )
@@ -74,9 +84,7 @@ pub(crate) fn collect_value_slots_with(
     value_slots: RemotePtr,
     size: usize,
     max_items: usize,
-    array_data_start: u32,
-    array_max_length_offset: u32,
-    ptr_size: u32,
+    layout: SlotArrayLayout,
     mut read_u32: impl FnMut(RemotePtr) -> Result<u32, ScryError>,
     mut read_remote_ptr: impl FnMut(RemotePtr) -> Result<RemotePtr, ScryError>,
 ) -> Result<Vec<RemotePtr>, ScryError> {
@@ -86,20 +94,20 @@ pub(crate) fn collect_value_slots_with(
     if size > max_items {
         return Err(ScryError::CollectionOverflow { max: max_items });
     }
-    if ptr_size == 0 {
+    if layout.ptr_size == 0 {
         return Err(ScryError::Unsupported(
             "custom map ptr_size must be non-zero".into(),
         ));
     }
 
-    let array_len = read_u32(value_slots + array_max_length_offset)? as usize;
+    let array_len = read_u32(value_slots + layout.array_max_length_offset)? as usize;
     let limit = size.min(array_len);
     let limit = u32::try_from(limit)
         .map_err(|_| ScryError::Unsupported("custom map scan exceeds 32-bit range".into()))?;
 
     let mut entries = Vec::with_capacity(limit as usize);
     for index in 0..limit {
-        let slot = value_slots + array_data_start + index * ptr_size;
+        let slot = value_slots + layout.array_data_start + index * layout.ptr_size;
         let value = read_remote_ptr(slot)?;
         if !value.is_null() {
             entries.push(value);
@@ -145,25 +153,27 @@ mod tests {
     #[test]
     fn collect_value_slots_iterates_non_null_entries() {
         let value_slots = RemotePtr::new(0x3000);
-        let array_data_start = 0x20;
-        let array_max_length_offset = 0x0C;
-        let ptr_size = 4;
+        let layout = SlotArrayLayout {
+            array_data_start: 0x20,
+            array_max_length_offset: 0x0C,
+            ptr_size: 4,
+        };
 
         let mut u32s = HashMap::new();
-        u32s.insert(value_slots + array_max_length_offset, 4);
+        u32s.insert(value_slots + layout.array_max_length_offset, 4);
 
         let mut ptrs = HashMap::new();
-        ptrs.insert(value_slots + array_data_start, RemotePtr::NULL);
+        ptrs.insert(value_slots + layout.array_data_start, RemotePtr::NULL);
         ptrs.insert(
-            value_slots + array_data_start + ptr_size,
+            value_slots + layout.array_data_start + layout.ptr_size,
             RemotePtr::new(0x4000),
         );
         ptrs.insert(
-            value_slots + array_data_start + ptr_size * 2,
+            value_slots + layout.array_data_start + layout.ptr_size * 2,
             RemotePtr::new(0x5000),
         );
         ptrs.insert(
-            value_slots + array_data_start + ptr_size * 3,
+            value_slots + layout.array_data_start + layout.ptr_size * 3,
             RemotePtr::NULL,
         );
 
@@ -171,9 +181,7 @@ mod tests {
             value_slots,
             3,
             8,
-            array_data_start,
-            array_max_length_offset,
-            ptr_size,
+            layout,
             |addr| {
                 u32s.get(&addr)
                     .copied()

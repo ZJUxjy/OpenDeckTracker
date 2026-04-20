@@ -80,7 +80,7 @@ impl<'rt> MonoImage<'rt> {
     }
 
     pub fn find_class(&self, full_name: &str) -> Result<RemotePtr, ScryError> {
-        find_class_with(self.enumerate_classes()?.into_iter(), full_name)
+        find_class_with(self.enumerate_classes()?, full_name)
     }
 
     fn read_class_name(&self, class_addr: RemotePtr) -> Result<Option<String>, ScryError> {

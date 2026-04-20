@@ -265,38 +265,45 @@ impl<'a> OffsetProber<'a> {
         exports: &HashMap<String, usize>,
         defaults: &MonoOffsets,
     ) -> Result<MonoOffsets, ScryError> {
-        let mut offsets = defaults.clone();
-
-        let critical: &[ProbeEntry] = &[
-            ("mono_class_get_name", |o, v| o.structs.class.name = v),
-            ("mono_class_get_namespace", |o, v| {
-                o.structs.class.name_space = v
-            }),
-            ("mono_class_get_fields", |o, v| o.structs.class.fields = v),
-            ("mono_class_get_image", |o, v| o.structs.class.image = v),
-            ("mono_image_get_name", |o, v| o.structs.image.name = v),
-            ("mono_assembly_get_image", |o, v| {
-                o.structs.assembly.image = v
-            }),
-        ];
-        for (name, setter) in critical {
-            setter(&mut offsets, self.probe_displacement(&exports, name)?);
-        }
-
-        let best_effort: &[ProbeEntry] = &[
-            ("mono_class_get_parent", |o, v| o.structs.class.parent = v),
-            ("mono_field_get_offset", |o, v| o.structs.field.offset = v),
-            ("mono_field_get_name", |o, v| o.structs.field.name = v),
-            ("mono_field_get_type", |o, v| o.structs.field.type_ = v),
-        ];
-        for (name, setter) in best_effort {
-            if let Ok(value) = self.probe_displacement(&exports, name) {
-                setter(&mut offsets, value);
-            }
-        }
-
-        Ok(offsets)
+        apply_probes(defaults, |name| self.probe_displacement(exports, name))
     }
+}
+
+fn apply_probes(
+    defaults: &MonoOffsets,
+    mut probe_displacement: impl FnMut(&str) -> Result<usize, ScryError>,
+) -> Result<MonoOffsets, ScryError> {
+    let mut offsets = defaults.clone();
+
+    let critical: &[ProbeEntry] = &[
+        ("mono_class_get_name", |o, v| o.structs.class.name = v),
+        ("mono_class_get_namespace", |o, v| {
+            o.structs.class.name_space = v
+        }),
+        ("mono_class_get_fields", |o, v| o.structs.class.fields = v),
+        ("mono_class_get_image", |o, v| o.structs.class.image = v),
+        ("mono_image_get_name", |o, v| o.structs.image.name = v),
+        ("mono_assembly_get_image", |o, v| {
+            o.structs.assembly.image = v
+        }),
+    ];
+    for (name, setter) in critical {
+        setter(&mut offsets, probe_displacement(name)?);
+    }
+
+    let best_effort: &[ProbeEntry] = &[
+        ("mono_class_get_parent", |o, v| o.structs.class.parent = v),
+        ("mono_field_get_offset", |o, v| o.structs.field.offset = v),
+        ("mono_field_get_name", |o, v| o.structs.field.name = v),
+        ("mono_field_get_type", |o, v| o.structs.field.type_ = v),
+    ];
+    for (name, setter) in best_effort {
+        if let Ok(value) = probe_displacement(name) {
+            setter(&mut offsets, value);
+        }
+    }
+
+    Ok(offsets)
 }
 
 pub(crate) fn read_exports_map(
@@ -348,7 +355,7 @@ fn remote_ptr(addr: usize) -> Result<RemotePtr, ScryError> {
 mod tests {
     use super::*;
     use pelite::pe32::PeFile;
-    use std::{fs, path::PathBuf};
+    use std::{collections::HashMap, fs, path::PathBuf};
 
     #[test]
     fn loads_unity_2021_3_json_from_repo() {
@@ -466,5 +473,49 @@ mod tests {
             exports.get("GetProcAddress"),
             Some(&(image_base + expected_rva))
         );
+    }
+
+    #[test]
+    fn apply_probes_updates_critical_and_best_effort_offsets() {
+        let defaults = MonoOffsets::bundled_unity_2021_3().unwrap();
+        let mut values = HashMap::from([
+            ("mono_class_get_name", 0x2Cusize),
+            ("mono_class_get_namespace", 0x30usize),
+            ("mono_class_get_fields", 0x60usize),
+            ("mono_class_get_image", 0x28usize),
+            ("mono_image_get_name", 0x1Cusize),
+            ("mono_assembly_get_image", 0x8usize),
+            ("mono_class_get_parent", 0x20usize),
+            ("mono_field_get_offset", 0xCu32 as usize),
+        ]);
+
+        let offsets = apply_probes(&defaults, |name| {
+            values
+                .remove(name)
+                .ok_or_else(|| ScryError::OffsetProbe(format!("missing probe value for {name}")))
+        })
+        .unwrap();
+
+        assert_eq!(offsets.structs.class.name, 0x2C);
+        assert_eq!(offsets.structs.class.name_space, 0x30);
+        assert_eq!(offsets.structs.class.fields, 0x60);
+        assert_eq!(offsets.structs.class.image, 0x28);
+        assert_eq!(offsets.structs.image.name, 0x1C);
+        assert_eq!(offsets.structs.assembly.image, 0x8);
+        assert_eq!(offsets.structs.class.parent, 0x20);
+        assert_eq!(offsets.structs.field.offset, 0x0C);
+        assert_eq!(offsets.structs.field.name, defaults.structs.field.name);
+        assert_eq!(offsets.structs.field.type_, defaults.structs.field.type_);
+    }
+
+    #[test]
+    fn apply_probes_requires_all_critical_exports() {
+        let defaults = MonoOffsets::bundled_unity_2021_3().unwrap();
+        let err = apply_probes(&defaults, |_name| {
+            Err(ScryError::OffsetProbe("probe missing".into()))
+        })
+        .unwrap_err();
+
+        assert!(matches!(err, ScryError::OffsetProbe(_)));
     }
 }

@@ -10,6 +10,13 @@ pub struct ReferencePairLayout {
     pub value_offset: u32,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct EntryIterationLayout {
+    pub dictionary: super::DictionaryLayout,
+    pub array_data_start: u32,
+    pub array_max_length_offset: u32,
+}
+
 /// Iterate a System.Collections.Generic.Dictionary<K, V>, yielding (entry_ptr, hash_code).
 pub fn iter_entries(
     memory: &ProcessMemory,
@@ -32,13 +39,16 @@ pub fn iter_entries(
                 offsets.structs.array.max_length
             ))
         })?;
+    let iteration_layout = EntryIterationLayout {
+        dictionary: dictionary_layout,
+        array_data_start,
+        array_max_length_offset,
+    };
     iter_entries_with(
         dict,
         entry_size,
         max_items,
-        dictionary_layout,
-        array_data_start,
-        array_max_length_offset,
+        iteration_layout,
         |addr| memory.read_remote_ptr(addr),
         |addr| memory.read_i32(addr),
         |addr| memory.read_u32(addr),
@@ -70,9 +80,7 @@ pub(crate) fn iter_entries_with(
     dict: RemotePtr,
     entry_size: u32,
     max_items: usize,
-    dictionary_layout: super::DictionaryLayout,
-    array_data_start: u32,
-    array_max_length_offset: u32,
+    layout: EntryIterationLayout,
     mut read_remote_ptr: impl FnMut(RemotePtr) -> Result<RemotePtr, ScryError>,
     mut read_i32: impl FnMut(RemotePtr) -> Result<i32, ScryError>,
     mut read_u32: impl FnMut(RemotePtr) -> Result<u32, ScryError>,
@@ -80,8 +88,8 @@ pub(crate) fn iter_entries_with(
     if dict.is_null() {
         return Ok(Vec::new());
     }
-    let entries_array = read_remote_ptr(dict + dictionary_layout.entries_offset)?;
-    let count = read_i32(dict + dictionary_layout.count_offset)?.max(0) as usize;
+    let entries_array = read_remote_ptr(dict + layout.dictionary.entries_offset)?;
+    let count = read_i32(dict + layout.dictionary.count_offset)?.max(0) as usize;
     if count > max_items {
         return Err(ScryError::CollectionOverflow { max: max_items });
     }
@@ -94,12 +102,12 @@ pub(crate) fn iter_entries_with(
         ));
     }
 
-    let array_len = read_u32(entries_array + array_max_length_offset)? as usize;
+    let array_len = read_u32(entries_array + layout.array_max_length_offset)? as usize;
     if array_len == 0 {
         return Ok(Vec::new());
     }
 
-    let entries_start = entries_array + array_data_start;
+    let entries_start = entries_array + layout.array_data_start;
     let max_scan = array_len.min((count * 4).max(count));
     let max_scan = u32::try_from(max_scan)
         .map_err(|_| ScryError::Unsupported("dictionary scan exceeds 32-bit range".into()))?;
@@ -150,17 +158,21 @@ mod tests {
             entries_offset: 0x0C,
             count_offset: 0x20,
         };
-        let array_data_start = 0x20;
+        let layout = EntryIterationLayout {
+            dictionary: dictionary_layout,
+            array_data_start: 0x20,
+            array_max_length_offset: 0x0C,
+        };
         let entry_size = 0x10;
         let mut ptrs = HashMap::new();
         ptrs.insert(dict + dictionary_layout.entries_offset, entries);
 
         let mut i32s = HashMap::new();
         i32s.insert(dict + dictionary_layout.count_offset, 2);
-        i32s.insert(entries + array_data_start, -1);
-        i32s.insert(entries + array_data_start + entry_size, 111);
-        i32s.insert(entries + array_data_start + entry_size * 2, -1);
-        i32s.insert(entries + array_data_start + entry_size * 3, 222);
+        i32s.insert(entries + layout.array_data_start, -1);
+        i32s.insert(entries + layout.array_data_start + entry_size, 111);
+        i32s.insert(entries + layout.array_data_start + entry_size * 2, -1);
+        i32s.insert(entries + layout.array_data_start + entry_size * 3, 222);
 
         let mut u32s = HashMap::new();
         u32s.insert(entries + 0x0C, 4);
@@ -169,9 +181,7 @@ mod tests {
             dict,
             entry_size,
             8,
-            dictionary_layout,
-            array_data_start,
-            0x0C,
+            layout,
             |addr| {
                 ptrs.get(&addr)
                     .copied()

@@ -19,7 +19,9 @@ pub struct DeckResult {
     pub cards: Vec<DeckCardResult>,
 }
 
-pub async fn get_decks_internal(runtime: &MonoRuntime) -> Result<Option<Vec<DeckResult>>, ScryError> {
+pub async fn get_decks_internal(
+    runtime: &MonoRuntime,
+) -> Result<Option<Vec<DeckResult>>, ScryError> {
     let _ = runtime;
     Ok(None)
 }

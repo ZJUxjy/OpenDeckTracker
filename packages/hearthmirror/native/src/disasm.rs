@@ -1,25 +1,24 @@
 use crate::error::ScryError;
-use iced_x86::{Decoder, DecoderOptions, Instruction, Mnemonic, OpKind, Register};
 
 pub const DEFAULT_PROBE_WINDOW: usize = 256;
+const MAX_FIELD_DISP: u32 = 0x800;
 
 pub fn find_field_load_displacement(code: &[u8], bitness: u32) -> Result<usize, ScryError> {
-    const MAX_FIELD_DISP: u64 = 0x800;
+    let mut cursor = 0usize;
+    let mut last_match = None;
 
-    let mut decoder = Decoder::with_ip(bitness, code, 0, DecoderOptions::NONE);
-    let mut instr = Instruction::default();
-    let mut last_match: Option<u64> = None;
+    while cursor < code.len() {
+        let decoded = decode_instruction(code, cursor, bitness)?;
 
-    while decoder.can_decode() {
-        decoder.decode_out(&mut instr);
-
-        if is_struct_field_load(&instr, MAX_FIELD_DISP) {
-            last_match = Some(instr.memory_displacement64());
+        if let Some(LoadPattern::Field { displacement }) = decoded.load {
+            last_match = Some(displacement);
         }
 
-        if instr.mnemonic() == Mnemonic::Ret {
+        if decoded.is_ret {
             break;
         }
+
+        cursor += decoded.len.max(1);
     }
 
     last_match.map(|disp| disp as usize).ok_or_else(|| {
@@ -28,19 +27,20 @@ pub fn find_field_load_displacement(code: &[u8], bitness: u32) -> Result<usize, 
 }
 
 pub fn find_first_absolute_load(code: &[u8], bitness: u32) -> Result<usize, ScryError> {
-    let mut decoder = Decoder::with_ip(bitness, code, 0, DecoderOptions::NONE);
-    let mut instr = Instruction::default();
+    let mut cursor = 0usize;
 
-    while decoder.can_decode() {
-        decoder.decode_out(&mut instr);
+    while cursor < code.len() {
+        let decoded = decode_instruction(code, cursor, bitness)?;
 
-        if instr.mnemonic() == Mnemonic::Ret {
+        if decoded.is_ret {
             break;
         }
 
-        if is_absolute_load(&instr) {
-            return Ok(instr.memory_displacement64() as usize);
+        if let Some(LoadPattern::Absolute { address }) = decoded.load {
+            return Ok(address as usize);
         }
+
+        cursor += decoded.len.max(1);
     }
 
     Err(ScryError::DisasmError(
@@ -48,41 +48,257 @@ pub fn find_first_absolute_load(code: &[u8], bitness: u32) -> Result<usize, Scry
     ))
 }
 
-fn is_struct_field_load(instr: &Instruction, max_disp: u64) -> bool {
-    if !is_register_indirect_load(instr) {
-        return false;
-    }
-
-    let base = instr.memory_base();
-    if matches!(
-        base,
-        Register::EBP | Register::ESP | Register::RBP | Register::RSP
-    ) {
-        return false;
-    }
-
-    if instr.memory_index() != Register::None {
-        return false;
-    }
-
-    instr.memory_displacement64() <= max_disp
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LoadPattern {
+    Absolute { address: u32 },
+    Field { displacement: u32 },
 }
 
-fn is_register_indirect_load(instr: &Instruction) -> bool {
-    instr.mnemonic() == Mnemonic::Mov
-        && instr.op_count() == 2
-        && instr.op0_kind() == OpKind::Register
-        && instr.op1_kind() == OpKind::Memory
-        && instr.memory_base() != Register::None
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct DecodedInstruction {
+    len: usize,
+    is_ret: bool,
+    load: Option<LoadPattern>,
 }
 
-fn is_absolute_load(instr: &Instruction) -> bool {
-    instr.mnemonic() == Mnemonic::Mov
-        && instr.op_count() == 2
-        && instr.op0_kind() == OpKind::Register
-        && instr.op1_kind() == OpKind::Memory
-        && instr.memory_base() == Register::None
-        && instr.memory_index() == Register::None
+fn decode_instruction(
+    code: &[u8],
+    cursor: usize,
+    bitness: u32,
+) -> Result<DecodedInstruction, ScryError> {
+    if bitness != 32 {
+        return Err(ScryError::DisasmError(format!(
+            "unsupported disasm bitness: {bitness}"
+        )));
+    }
+    if cursor >= code.len() {
+        return Ok(DecodedInstruction {
+            len: 1,
+            is_ret: false,
+            load: None,
+        });
+    }
+
+    let mut offset = cursor;
+    while let Some(&byte) = code.get(offset) {
+        if byte == 0x64 {
+            offset += 1;
+        } else {
+            break;
+        }
+    }
+
+    let Some(&opcode) = code.get(offset) else {
+        return Ok(DecodedInstruction {
+            len: offset.saturating_sub(cursor).max(1),
+            is_ret: false,
+            load: None,
+        });
+    };
+
+    let opcode_offset = offset;
+    offset += 1;
+
+    match opcode {
+        0xC3 => Ok(DecodedInstruction {
+            len: offset - cursor,
+            is_ret: true,
+            load: None,
+        }),
+        0xC2 => Ok(DecodedInstruction {
+            len: instruction_len(offset - cursor, 2, code.len() - offset),
+            is_ret: true,
+            load: None,
+        }),
+        0xA1 => {
+            let address = read_u32(code, offset)?;
+            Ok(DecodedInstruction {
+                len: instruction_len(offset - cursor, 4, code.len() - offset),
+                is_ret: false,
+                load: Some(LoadPattern::Absolute { address }),
+            })
+        }
+        0x8B => decode_mov_load(code, cursor, opcode_offset),
+        0x83 => decode_modrm_instruction(code, cursor, offset, 1),
+        0xC7 => decode_modrm_instruction(code, cursor, offset, 4),
+        0x89 | 0x8D | 0x85 => decode_modrm_instruction(code, cursor, offset, 0),
+        0xE8 | 0xE9 => Ok(DecodedInstruction {
+            len: instruction_len(offset - cursor, 4, code.len() - offset),
+            is_ret: false,
+            load: None,
+        }),
+        0xEB | 0x73 | 0x74 => Ok(DecodedInstruction {
+            len: instruction_len(offset - cursor, 1, code.len() - offset),
+            is_ret: false,
+            load: None,
+        }),
+        0x50..=0x5F => Ok(DecodedInstruction {
+            len: offset - cursor,
+            is_ret: false,
+            load: None,
+        }),
+        _ => Ok(DecodedInstruction {
+            len: offset - cursor,
+            is_ret: false,
+            load: None,
+        }),
+    }
+}
+
+fn decode_mov_load(
+    code: &[u8],
+    cursor: usize,
+    modrm_offset: usize,
+) -> Result<DecodedInstruction, ScryError> {
+    let addressing = decode_modrm_memory(code, modrm_offset + 1)?;
+    let len = addressing.total_len + (modrm_offset + 1 - cursor);
+
+    let load = if addressing.is_memory {
+        if addressing.is_absolute && !addressing.has_index {
+            Some(LoadPattern::Absolute {
+                address: addressing.displacement,
+            })
+        } else if !addressing.has_index
+            && !addressing.base_is_stack
+            && addressing.displacement <= MAX_FIELD_DISP
+        {
+            Some(LoadPattern::Field {
+                displacement: addressing.displacement,
+            })
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    Ok(DecodedInstruction {
+        len,
+        is_ret: false,
+        load,
+    })
+}
+
+fn decode_modrm_instruction(
+    code: &[u8],
+    cursor: usize,
+    operand_offset: usize,
+    immediate_len: usize,
+) -> Result<DecodedInstruction, ScryError> {
+    let addressing = decode_modrm_memory(code, operand_offset)?;
+    Ok(DecodedInstruction {
+        len: addressing.total_len + (operand_offset - cursor) + immediate_len.min(code.len().saturating_sub(operand_offset + addressing.total_len)),
+        is_ret: false,
+        load: None,
+    })
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct AddressingMode {
+    total_len: usize,
+    is_memory: bool,
+    is_absolute: bool,
+    has_index: bool,
+    base_is_stack: bool,
+    displacement: u32,
+}
+
+fn decode_modrm_memory(code: &[u8], offset: usize) -> Result<AddressingMode, ScryError> {
+    let Some(&modrm) = code.get(offset) else {
+        return Ok(AddressingMode {
+            total_len: 1,
+            is_memory: false,
+            is_absolute: false,
+            has_index: false,
+            base_is_stack: false,
+            displacement: u32::MAX,
+        });
+    };
+
+    let mode = modrm >> 6;
+    let rm = modrm & 0b111;
+    if mode == 0b11 {
+        return Ok(AddressingMode {
+            total_len: 1,
+            is_memory: false,
+            is_absolute: false,
+            has_index: false,
+            base_is_stack: false,
+            displacement: u32::MAX,
+        });
+    }
+
+    let mut length = 1usize;
+    let mut has_index = false;
+    let mut base_is_stack = matches!(rm, 0b100 | 0b101);
+    let mut displacement = 0u32;
+    let mut is_absolute = mode == 0 && rm == 0b101;
+    let mut requires_disp32 = mode == 0 && rm == 0b101;
+
+    if rm == 0b100 {
+        let Some(&sib) = code.get(offset + length) else {
+            return Ok(AddressingMode {
+                total_len: length,
+                is_memory: true,
+                is_absolute,
+                has_index,
+                base_is_stack,
+                displacement,
+            });
+        };
+        length += 1;
+        let index = (sib >> 3) & 0b111;
+        let base = sib & 0b111;
+        has_index = index != 0b100;
+        base_is_stack = matches!(base, 0b100 | 0b101);
+        requires_disp32 = mode == 0 && base == 0b101;
+        if requires_disp32 {
+            is_absolute = !has_index;
+        }
+    }
+
+    let disp_len = match mode {
+        0 if requires_disp32 => 4,
+        0 => 0,
+        1 => 1,
+        2 => 4,
+        _ => 0,
+    };
+
+    displacement = match disp_len {
+        0 => 0,
+        1 => {
+            let value = code.get(offset + length).copied().unwrap_or_default() as i8;
+            if value.is_negative() {
+                u32::MAX
+            } else {
+                value as u32
+            }
+        }
+        4 => read_u32(code, offset + length)?,
+        _ => u32::MAX,
+    };
+    length += disp_len;
+
+    Ok(AddressingMode {
+        total_len: length,
+        is_memory: true,
+        is_absolute,
+        has_index,
+        base_is_stack,
+        displacement,
+    })
+}
+
+fn instruction_len(prefix_len: usize, operand_len: usize, remaining: usize) -> usize {
+    prefix_len + operand_len.min(remaining)
+}
+
+fn read_u32(code: &[u8], offset: usize) -> Result<u32, ScryError> {
+    let bytes = code
+        .get(offset..offset + 4)
+        .ok_or_else(|| ScryError::DisasmError("instruction truncated".into()))?;
+    Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
 }
 
 #[cfg(test)]

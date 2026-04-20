@@ -11,12 +11,33 @@ architecture rationale and binding constraints.
 
 ```powershell
 pnpm install
-pnpm build
+pnpm --filter @hdt/hearthmirror-native build
 ```
 
-## Test
+The release build bundles the current native artifact at:
+
+- `packages/hearthmirror/native/hearthmirror-native.win32-x64-msvc.node`
+
+## Offset probing and config
+
+- `MonoOffsets::bundled_unity_2021_3()` loads the crate-bundled JSON config at
+  `config/mono-offsets/unity-2021.3.json` via `include_str!`, so no runtime file
+  deployment step is needed.
+- `OffsetProber::probe_all()` applies the bundled config as defaults, then
+  re-probes critical runtime offsets (`MonoClass`, `MonoImage`, `MonoAssembly`)
+  and best-effort field offsets before live `MonoDomain.domain_assemblies`
+  discovery.
+- `find_image()` still resolves images from live `domain_assemblies` data and
+  matches names case-insensitively.
+- Mono runtime lookup follows the constrained fallback order:
+  `mono-2.0-bdwgc.dll` → `mono-2.0-sgen.dll` → `mono-2.0-boehm.dll` →
+  any `mono-*.dll`.
+
+## Verification
 
 ```powershell
-cargo test --release          # unit tests, no Hearthstone needed
+cargo clippy -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic
+cargo test
+cargo test --release
 cargo test --release --features integration   # integration tests, needs Hearthstone running
 ```

@@ -2,12 +2,10 @@ use crate::error::ScryError;
 use crate::handle::OwnedProcessHandle;
 use windows::Win32::Foundation::{CloseHandle, HMODULE};
 use windows::Win32::System::Diagnostics::ToolHelp::{
-    CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W,
-    TH32CS_SNAPPROCESS,
+    CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
 use windows::Win32::System::ProcessStatus::{
-    EnumProcessModulesEx, GetModuleBaseNameW, GetModuleInformation, LIST_MODULES_32BIT,
-    MODULEINFO,
+    EnumProcessModulesEx, GetModuleBaseNameW, GetModuleInformation, LIST_MODULES_32BIT, MODULEINFO,
 };
 
 #[derive(Debug, Clone)]
@@ -27,8 +25,8 @@ fn pwstr_to_string(slice: &[u16]) -> String {
 
 /// Enumerate processes by name (case-insensitive). Returns the first match.
 pub fn find_pid(target: &str) -> Result<Option<u32>, ScryError> {
-    let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }
-        .map_err(ScryError::from)?;
+    let snapshot =
+        unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }.map_err(ScryError::from)?;
 
     struct SnapshotGuard(windows::Win32::Foundation::HANDLE);
     impl Drop for SnapshotGuard {

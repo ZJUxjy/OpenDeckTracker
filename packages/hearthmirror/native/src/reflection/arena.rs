@@ -11,7 +11,9 @@ pub struct ArenaInfoResult {
     pub losses: i32,
 }
 
-pub async fn get_arena_deck_internal(runtime: &MonoRuntime) -> Result<Option<ArenaInfoResult>, ScryError> {
+pub async fn get_arena_deck_internal(
+    runtime: &MonoRuntime,
+) -> Result<Option<ArenaInfoResult>, ScryError> {
     let _ = runtime;
     Ok(None)
 }

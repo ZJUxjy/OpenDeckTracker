@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const handle = vi.fn();
 const getVersion = vi.fn(() => '0.1.0');
+type IpcHandler = (...args: unknown[]) => unknown;
 
 const hearthMirror = {
   isAlive: vi.fn(),
@@ -47,7 +48,7 @@ describe('registerIpc', () => {
     const { registerIpc } = await import('../../main/ipc');
     registerIpc();
 
-    const handlers = new Map(handle.mock.calls as Array<[string, (...args: any[]) => unknown]>);
+    const handlers = new Map<string, IpcHandler>(handle.mock.calls as Array<[string, IpcHandler]>);
     expect(handlers.has('hearthmirror:isMulligan')).toBe(true);
     expect(handlers.has('hearthmirror:dumpClass')).toBe(true);
     expect(handlers.has('hearthmirror:listServices')).toBe(true);

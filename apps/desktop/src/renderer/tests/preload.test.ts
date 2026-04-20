@@ -3,6 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const invoke = vi.fn();
 const exposeInMainWorld = vi.fn();
 
+type DebugFieldDump = { name: string; offset: number };
+type DebugServiceEntry = { name: string; addr: number };
+type PreloadApi = {
+  hearthmirror: {
+    isMulligan: () => Promise<boolean>;
+    dumpClass: (className: string) => Promise<DebugFieldDump[]>;
+    listServices: () => Promise<DebugServiceEntry[]>;
+  };
+};
+
 vi.mock('electron', () => ({
   contextBridge: {
     exposeInMainWorld,
@@ -23,7 +33,7 @@ describe('preload hearthmirror bridge', () => {
     await import('../../preload/index');
 
     expect(exposeInMainWorld).toHaveBeenCalledTimes(1);
-    const [, api] = exposeInMainWorld.mock.calls[0] as [string, any];
+    const [, api] = exposeInMainWorld.mock.calls[0] as [string, PreloadApi];
 
     invoke.mockResolvedValueOnce(false);
     await expect(api.hearthmirror.isMulligan()).resolves.toBe(false);

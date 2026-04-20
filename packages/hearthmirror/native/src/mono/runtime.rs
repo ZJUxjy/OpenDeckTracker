@@ -7,6 +7,7 @@ use crate::mono::probe::MAX_PROBE_SLOTS;
 use crate::process::{enumerate_modules_32bit, find_pid, ModuleInfo};
 use crate::remote_ptr::RemotePtr;
 use std::collections::HashMap;
+use std::path::{Component, Path, PathBuf};
 
 const HEARTHSTONE_EXE: &str = "Hearthstone.exe";
 const PREFERRED_MONO: &str = "mono-2.0-bdwgc.dll";
@@ -49,32 +50,7 @@ impl MonoRuntime {
 
 fn find_mono_module(handle: &OwnedProcessHandle) -> Result<ModuleInfo, ScryError> {
     let modules = enumerate_modules_32bit(handle)?;
-    if modules.is_empty() {
-        return Err(ScryError::ModuleNotFound("LIST_MODULES_32BIT empty".into()));
-    }
-
-    // 1. Exact match on preferred mono dll
-    if let Some(m) = modules
-        .iter()
-        .find(|m| m.name.eq_ignore_ascii_case(PREFERRED_MONO))
-    {
-        return Ok(m.clone());
-    }
-
-    // 2. Fallback prefixes in order
-    for prefix in FALLBACK_PREFIXES {
-        if let Some(m) = modules
-            .iter()
-            .find(|m| m.name.to_lowercase().starts_with(*prefix))
-        {
-            return Ok(m.clone());
-        }
-    }
-
-    Err(ScryError::ModuleNotFound(format!(
-        "no mono runtime found (preferred: {})",
-        PREFERRED_MONO
-    )))
+    select_mono_module(&modules)
 }
 
 fn find_export_va(
@@ -286,7 +262,6 @@ fn looks_like_image_name(name: &str) -> bool {
 }
 
 use crate::metadata::MetadataReader;
-use std::path::PathBuf;
 
 impl MonoRuntime {
     /// Open the disk file `Assembly-CSharp.dll` next to mono dll.
@@ -306,24 +281,8 @@ impl MonoRuntime {
             ));
         }
         let mono_path = String::from_utf16_lossy(&name_buf[..len as usize]);
-        let mono_dir = PathBuf::from(&mono_path)
-            .parent()
-            .ok_or_else(|| ScryError::MetadataError(format!("no parent dir for {}", mono_path)))?
-            .to_path_buf();
-
-        let candidates = [
-            mono_dir.join("Assembly-CSharp.dll"),
-            mono_dir
-                .join("..")
-                .join("Managed")
-                .join("Assembly-CSharp.dll"),
-            mono_dir
-                .join("..")
-                .join("..")
-                .join("Hearthstone_Data")
-                .join("Managed")
-                .join("Assembly-CSharp.dll"),
-        ];
+        let mono_path = PathBuf::from(&mono_path);
+        let candidates = assembly_csharp_candidates(&mono_path)?;
         for c in &candidates {
             if c.exists() {
                 return MetadataReader::from_disk(c);
@@ -334,6 +293,69 @@ impl MonoRuntime {
             candidates
         )))
     }
+}
+
+fn select_mono_module(modules: &[ModuleInfo]) -> Result<ModuleInfo, ScryError> {
+    if modules.is_empty() {
+        return Err(ScryError::ModuleNotFound("LIST_MODULES_32BIT empty".into()));
+    }
+
+    if let Some(module) = modules
+        .iter()
+        .find(|module| module.name.eq_ignore_ascii_case(PREFERRED_MONO))
+    {
+        return Ok(module.clone());
+    }
+
+    for prefix in FALLBACK_PREFIXES {
+        if let Some(module) = modules
+            .iter()
+            .find(|module| module.name.to_ascii_lowercase().starts_with(prefix))
+        {
+            return Ok(module.clone());
+        }
+    }
+
+    Err(ScryError::ModuleNotFound(format!(
+        "no mono runtime found (preferred: {})",
+        PREFERRED_MONO
+    )))
+}
+
+fn assembly_csharp_candidates(mono_path: &Path) -> Result<Vec<PathBuf>, ScryError> {
+    let mono_dir = mono_path
+        .parent()
+        .ok_or_else(|| ScryError::MetadataError(format!("no parent dir for {}", mono_path.display())))?;
+
+    Ok(vec![
+        normalize_path(&mono_dir.join("Assembly-CSharp.dll")),
+        normalize_path(&mono_dir.join("..").join("Managed").join("Assembly-CSharp.dll")),
+        normalize_path(
+            &mono_dir
+                .join("..")
+                .join("..")
+                .join("Managed")
+                .join("Assembly-CSharp.dll"),
+        ),
+    ])
+}
+
+fn normalize_path(path: &Path) -> PathBuf {
+    let mut normalized = PathBuf::new();
+
+    for component in path.components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                let _ = normalized.pop();
+            }
+            Component::Prefix(_) | Component::RootDir | Component::Normal(_) => {
+                normalized.push(component.as_os_str());
+            }
+        }
+    }
+
+    normalized
 }
 
 #[cfg(all(test, feature = "integration"))]
@@ -579,5 +601,73 @@ mod unit_tests {
             err,
             ScryError::ImageNotFound { name } if name == "missing"
         ));
+    }
+
+    #[test]
+    fn select_mono_module_prefers_exact_name_then_fallback_order() {
+        let modules = vec![
+            ModuleInfo {
+                name: "mono-anything.dll".into(),
+                base: Default::default(),
+                size: 1,
+            },
+            ModuleInfo {
+                name: "mono-2.0-sgen.dll".into(),
+                base: Default::default(),
+                size: 1,
+            },
+            ModuleInfo {
+                name: "mono-2.0-bdwgc.dll".into(),
+                base: Default::default(),
+                size: 1,
+            },
+        ];
+
+        let selected = select_mono_module(&modules).unwrap();
+        assert_eq!(selected.name, "mono-2.0-bdwgc.dll");
+
+        let fallback_modules = vec![
+            ModuleInfo {
+                name: "mono-other.dll".into(),
+                base: Default::default(),
+                size: 1,
+            },
+            ModuleInfo {
+                name: "mono-2.0-boehm.dll".into(),
+                base: Default::default(),
+                size: 1,
+            },
+            ModuleInfo {
+                name: "mono-2.0-sgen.dll".into(),
+                base: Default::default(),
+                size: 1,
+            },
+        ];
+        let selected = select_mono_module(&fallback_modules).unwrap();
+        assert_eq!(selected.name, "mono-2.0-sgen.dll");
+    }
+
+    #[test]
+    fn assembly_csharp_candidates_match_expected_search_order() {
+        let mono_path = PathBuf::from(
+            r"C:\Games\Hearthstone\Hearthstone_Data\MonoBleedingEdge\EmbedRuntime\mono-2.0-bdwgc.dll",
+        );
+
+        let candidates = assembly_csharp_candidates(&mono_path).unwrap();
+
+        assert_eq!(
+            candidates,
+            vec![
+                PathBuf::from(
+                    r"C:\Games\Hearthstone\Hearthstone_Data\MonoBleedingEdge\EmbedRuntime\Assembly-CSharp.dll",
+                ),
+                PathBuf::from(
+                    r"C:\Games\Hearthstone\Hearthstone_Data\MonoBleedingEdge\Managed\Assembly-CSharp.dll",
+                ),
+                PathBuf::from(
+                    r"C:\Games\Hearthstone\Hearthstone_Data\Managed\Assembly-CSharp.dll",
+                ),
+            ]
+        );
     }
 }
