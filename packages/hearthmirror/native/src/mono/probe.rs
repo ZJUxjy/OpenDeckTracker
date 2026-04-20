@@ -41,6 +41,15 @@
 //! that previously coexisted here was deleted in
 //! `add-hearthmirror-offset-probing` Phase 6 once the disasm path covered
 //! all production probes.
+//!
+//! ## Diagnostics
+//!
+//! Best-effort failures (out-of-range disasm, missing best-effort export,
+//! unparseable getter prologue) are surfaced via [`eprintln!`] for now —
+//! once this project picks up a logging framework (`tracing` is the
+//! likely choice given its async-friendly story), each `eprintln!` here
+//! should become a `tracing::warn!` with structured fields (`probe`,
+//! `expected`, `observed`, `outcome`).
 
 use crate::disasm;
 use crate::error::ScryError;
@@ -102,7 +111,16 @@ pub struct OffsetProber<'m> {
     memory: &'m ProcessMemory,
     exports: &'m HashMap<String, RemotePtr>,
     bitness: u32,
-    probe_window: usize,
+    /// Bytes of getter prologue read for each probe before bailing out.
+    ///
+    /// `pub` (vs builder method) on purpose: every getter in `PROBE_SPECS`
+    /// today fits in [`disasm::DEFAULT_PROBE_WINDOW`] (256 bytes), but the
+    /// long enumerate-style helpers Mono ships (`mono_class_get_fields`
+    /// follow-up iterators, `mono_image_get_table_info`, etc.) can run
+    /// well past that prologue once we add them. Letting tests + future
+    /// callers nudge this up to 512+ without refactoring the type keeps
+    /// that escape hatch open.
+    pub probe_window: usize,
 }
 
 impl<'m> OffsetProber<'m> {
@@ -154,6 +172,29 @@ impl<'m> OffsetProber<'m> {
     /// `mono_class_get_name` indicates the DLL is fundamentally not a Mono
     /// build → fast fail). Everything else degrades gracefully to the
     /// embedded baseline — see module docs for the rationale.
+    ///
+    /// ## Why 10, not 13
+    ///
+    /// `unity-2021.3.json` lists **13** exports under `exports_to_probe`,
+    /// but `probe_all` only walks **10** of them. The other 3 are handled
+    /// elsewhere or are intentionally skipped:
+    ///
+    /// - `mono_get_root_domain` — not a field-getter; resolved separately
+    ///   by [`crate::mono::runtime::extract_global_root_domain_addr`] via
+    ///   [`disasm::find_first_absolute_load`] (gives the global pointer's
+    ///   absolute address, not a struct displacement).
+    /// - `mono_vtable_get_static_field_data` — also not a field-getter;
+    ///   the static-field-data address is computed dynamically inside
+    ///   [`crate::mono::class::read_mono_class`] via the vtable
+    ///   indirection chain (`runtime_info → domain_vtables[0] →
+    ///   vtable_base + vtable_array_start + vtable_size * ptr_size`).
+    ///   See design.md Decision D12.
+    /// - The 4 `mono_field_get_*` helpers + `mono_class_get_parent` are
+    ///   walked here as **sanity probes**: their baseline is brute-force
+    ///   verified, the disasm result is mostly noise on profiled thunks,
+    ///   so the range gate routinely keeps the baseline. A future
+    ///   refinement could turn them into hard assertions once we trust
+    ///   disasm on every wrapped getter.
     pub fn probe_all(&self, baseline: MonoOffsets) -> Result<MonoOffsets, ScryError> {
         let mut off = baseline;
 
