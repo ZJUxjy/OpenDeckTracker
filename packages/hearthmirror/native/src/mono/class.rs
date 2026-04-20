@@ -111,6 +111,16 @@ impl<'rt> MonoClass<'rt> {
                 field: name.to_string(),
             })
     }
+
+    pub fn find_instance_field(&self, name: &str) -> Result<MonoFieldDef, ScryError> {
+        let class_name = self.full_name().unwrap_or_default();
+        find_instance_field_in(
+            self.fields_recursive()?.into_values().collect(),
+            &class_name,
+            name,
+            self.runtime.offsets.structs.object.data_start as u32,
+        )
+    }
 }
 
 pub(crate) fn compose_full_name(namespace: &str, name: &str) -> String {
@@ -141,6 +151,30 @@ pub(crate) fn fields_recursive_with(
     Err(ScryError::OffsetProbe(format!(
         "class inheritance chain exceeded 64 hops starting at {start}"
     )))
+}
+
+pub(crate) fn find_instance_field_in(
+    fields: Vec<MonoFieldDef>,
+    class_name: &str,
+    field_name: &str,
+    object_data_start: u32,
+) -> Result<MonoFieldDef, ScryError> {
+    let field = fields
+        .into_iter()
+        .find(|field| field.name == field_name)
+        .ok_or_else(|| ScryError::FieldNotFound {
+            class: class_name.to_string(),
+            field: field_name.to_string(),
+        })?;
+
+    if field.offset < object_data_start {
+        return Err(ScryError::MemoryAccess {
+            addr: 0,
+            reason: format!("field {class_name}.{field_name} is not an instance field"),
+        });
+    }
+
+    Ok(field)
 }
 
 impl MonoRuntime {
@@ -184,7 +218,6 @@ mod tests {
                 name: "id".to_string(),
                 offset: 0x20,
                 type_ptr: RemotePtr::new(0x3000),
-                is_static: false,
                 owner_class: derived,
             }],
         );
@@ -195,14 +228,12 @@ mod tests {
                     name: "id".to_string(),
                     offset: 0x10,
                     type_ptr: RemotePtr::new(0x3004),
-                    is_static: false,
                     owner_class: base,
                 },
                 MonoFieldDef {
                     name: "health".to_string(),
                     offset: 0x14,
                     type_ptr: RemotePtr::new(0x3008),
-                    is_static: false,
                     owner_class: base,
                 },
             ],
@@ -236,7 +267,6 @@ mod tests {
                     name: format!("field_{:08X}", addr.raw()),
                     offset: addr.raw(),
                     type_ptr: RemotePtr::NULL,
-                    is_static: false,
                     owner_class: addr,
                 }]
             },
@@ -264,7 +294,6 @@ mod tests {
                 name: "derived_only".to_string(),
                 offset: 0x30,
                 type_ptr: RemotePtr::new(0x4000),
-                is_static: false,
                 owner_class: derived,
             }],
         );
@@ -274,7 +303,6 @@ mod tests {
                 name: "shared".to_string(),
                 offset: 0x20,
                 type_ptr: RemotePtr::new(0x4004),
-                is_static: false,
                 owner_class: middle,
             }],
         );
@@ -284,7 +312,6 @@ mod tests {
                 name: "base_only".to_string(),
                 offset: 0x10,
                 type_ptr: RemotePtr::new(0x4008),
-                is_static: false,
                 owner_class: base,
             }],
         );
@@ -299,5 +326,23 @@ mod tests {
         assert_eq!(merged["derived_only"].owner_class, derived);
         assert_eq!(merged["shared"].owner_class, middle);
         assert_eq!(merged["base_only"].owner_class, base);
+    }
+
+    #[test]
+    fn find_instance_field_rejects_header_offsets() {
+        let class_name = "Game.Card";
+        let field = MonoFieldDef {
+            name: "counter".to_string(),
+            offset: 0x04,
+            type_ptr: RemotePtr::NULL,
+            owner_class: RemotePtr::NULL,
+        };
+
+        let err = find_instance_field_in(vec![field], class_name, "counter", 0x08).unwrap_err();
+        assert!(matches!(
+            err,
+            ScryError::MemoryAccess { reason, .. }
+                if reason == "field Game.Card.counter is not an instance field"
+        ));
     }
 }

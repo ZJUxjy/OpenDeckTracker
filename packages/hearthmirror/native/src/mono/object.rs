@@ -1,7 +1,7 @@
 use super::class::MonoClass;
 use super::field::MonoFieldDef;
 use super::runtime::{add_offset, MonoRuntime};
-use super::vtable::{self, VTable};
+use super::vtable::VTable;
 use crate::error::ScryError;
 use crate::remote_ptr::RemotePtr;
 
@@ -42,36 +42,32 @@ impl<'rt> MonoObject<'rt> {
     }
 
     pub fn read_field_raw(&self, field: &MonoFieldDef) -> Result<RemotePtr, ScryError> {
-        let static_field_data = if field.is_static {
-            vtable::try_static_field_data(
-                self.runtime,
-                field_storage_owner(self.class_addr, field),
-            )?
-        } else {
-            None
-        };
-        field_storage_addr(self.addr, field, static_field_data)
+        field_storage_addr(
+            self.addr,
+            field,
+            self.runtime.offsets.structs.object.data_start as u32,
+        )
     }
 
     pub fn read_field_ptr(&self, field_name: &str) -> Result<RemotePtr, ScryError> {
-        let field = self.class().find_field(field_name)?;
+        let field = self.class().find_instance_field(field_name)?;
         self.runtime
             .memory
             .read_remote_ptr(self.read_field_raw(&field)?)
     }
 
     pub fn read_field_i32(&self, field_name: &str) -> Result<i32, ScryError> {
-        let field = self.class().find_field(field_name)?;
+        let field = self.class().find_instance_field(field_name)?;
         self.runtime.memory.read_i32(self.read_field_raw(&field)?)
     }
 
     pub fn read_field_u32(&self, field_name: &str) -> Result<u32, ScryError> {
-        let field = self.class().find_field(field_name)?;
+        let field = self.class().find_instance_field(field_name)?;
         self.runtime.memory.read_u32(self.read_field_raw(&field)?)
     }
 
     pub fn read_field_bool(&self, field_name: &str) -> Result<bool, ScryError> {
-        let field = self.class().find_field(field_name)?;
+        let field = self.class().find_instance_field(field_name)?;
         Ok(self.runtime.memory.read_u8(self.read_field_raw(&field)?)? != 0)
     }
 
@@ -88,26 +84,18 @@ impl<'rt> MonoObject<'rt> {
 pub(crate) fn field_storage_addr(
     object_addr: RemotePtr,
     field: &MonoFieldDef,
-    static_field_data: Option<RemotePtr>,
+    object_data_start: u32,
 ) -> Result<RemotePtr, ScryError> {
-    if field.is_static {
-        let Some(base) = static_field_data else {
-            return Err(ScryError::MemoryAccess {
-                addr: object_addr.raw(),
-                reason: format!("static field {} has no vtable data area", field.name),
-            });
-        };
-        return Ok(base + field.offset);
+    if field.offset < object_data_start {
+        return Err(ScryError::MemoryAccess {
+            addr: object_addr.raw(),
+            reason: format!(
+                "field {} offset 0x{:x} is not readable from an object instance",
+                field.name, field.offset
+            ),
+        });
     }
     Ok(object_addr + field.offset)
-}
-
-pub(crate) fn field_storage_owner(object_class: RemotePtr, field: &MonoFieldDef) -> RemotePtr {
-    if field.is_static && !field.owner_class.is_null() {
-        field.owner_class
-    } else {
-        object_class
-    }
 }
 
 pub(crate) fn validate_class_addr(class_addr: RemotePtr) -> Result<(), ScryError> {
@@ -127,7 +115,7 @@ pub fn struct_field_addr(
     struct_class_addr: RemotePtr,
     inner_field_name: &str,
 ) -> Result<RemotePtr, ScryError> {
-    let inner = MonoClass::new(runtime, struct_class_addr).find_field(inner_field_name)?;
+    let inner = MonoClass::new(runtime, struct_class_addr).find_instance_field(inner_field_name)?;
     struct_field_addr_from_offsets(
         parent_addr,
         parent_field_offset,
@@ -161,14 +149,30 @@ mod tests {
             name: "value".to_string(),
             offset: 0x24,
             type_ptr: RemotePtr::NULL,
-            is_static: false,
             owner_class: RemotePtr::NULL,
         };
 
         assert_eq!(
-            field_storage_addr(RemotePtr::new(0x1000), &field, None).unwrap(),
+            field_storage_addr(RemotePtr::new(0x1000), &field, 0x08).unwrap(),
             RemotePtr::new(0x1024)
         );
+    }
+
+    #[test]
+    fn field_storage_addr_rejects_offsets_inside_object_header() {
+        let field = MonoFieldDef {
+            name: "value".to_string(),
+            offset: 0x04,
+            type_ptr: RemotePtr::NULL,
+            owner_class: RemotePtr::NULL,
+        };
+
+        let err = field_storage_addr(RemotePtr::new(0x1000), &field, 0x08).unwrap_err();
+        assert!(matches!(
+            err,
+            ScryError::MemoryAccess { reason, .. }
+                if reason == "field value offset 0x4 is not readable from an object instance"
+        ));
     }
 
     #[test]
@@ -177,21 +181,6 @@ mod tests {
             struct_field_addr_from_offsets(RemotePtr::new(0x1000), 0x20, 0x0C, 0x08).unwrap(),
             RemotePtr::new(0x1024)
         );
-    }
-
-    #[test]
-    fn static_fields_use_declaring_class_for_storage_lookup() {
-        let object_class = RemotePtr::new(0x1111);
-        let owner_class = RemotePtr::new(0x2222);
-        let field = MonoFieldDef {
-            name: "counter".to_string(),
-            offset: 0x4,
-            type_ptr: RemotePtr::NULL,
-            is_static: true,
-            owner_class,
-        };
-
-        assert_eq!(field_storage_owner(object_class, &field), owner_class);
     }
 
     #[test]

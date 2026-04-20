@@ -7,7 +7,6 @@ pub struct MonoFieldDef {
     pub name: String,
     pub offset: u32,
     pub type_ptr: RemotePtr,
-    pub is_static: bool,
     pub owner_class: RemotePtr,
 }
 
@@ -33,7 +32,6 @@ impl MonoFieldDef {
             name,
             offset,
             type_ptr,
-            is_static: offset < runtime.offsets.structs.object.data_start as u32,
             owner_class: runtime
                 .memory
                 .read_remote_ptr(add_offset(field_addr, offsets.parent)?)?,
@@ -59,8 +57,6 @@ pub(crate) fn read_field_with(
         name,
         offset: read_u32(field_addr + offsets.structs.field.offset as u32),
         type_ptr: read_ptr(field_addr + offsets.structs.field.type_ as u32),
-        is_static: read_u32(field_addr + offsets.structs.field.offset as u32)
-            < offsets.structs.object.data_start as u32,
         owner_class: read_ptr(field_addr + offsets.structs.field.parent as u32),
     })
 }
@@ -103,12 +99,11 @@ mod tests {
         assert_eq!(def.name, "m_name");
         assert_eq!(def.offset, 0x24);
         assert_eq!(def.type_ptr, type_ptr);
-        assert!(!def.is_static);
         assert_eq!(def.owner_class, RemotePtr::NULL);
     }
 
     #[test]
-    fn marks_offsets_before_object_header_as_static() {
+    fn preserves_offsets_before_object_header_without_classifying_storage() {
         let offsets = MonoOffsets::bundled_unity_2021_3().unwrap();
         let field = RemotePtr::new(0x1000);
 
@@ -121,7 +116,7 @@ mod tests {
         )
         .unwrap();
 
-        assert!(def.is_static);
+        assert_eq!(def.offset, 0x04);
     }
 
     #[test]
