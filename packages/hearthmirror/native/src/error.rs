@@ -13,6 +13,13 @@ pub enum ScryError {
     DisasmPatternUnknown { bytes: Vec<u8> },
     CollectionOverflow { max: usize },
     Unsupported(String),
+    /// A critical disasm-based offset probe failed (5e). The string identifies
+    /// the probe site (typically a Mono export name + extracted struct/field).
+    OffsetProbeFailed(String),
+    /// A required Mono DLL export is missing (5e).
+    ExportNotFound(String),
+    /// `OffsetProber` was constructed with `bitness != 32` (5e).
+    InvalidProbeBitness(u32),
 }
 
 impl fmt::Display for ScryError {
@@ -38,6 +45,11 @@ impl fmt::Display for ScryError {
                 write!(f, "collection iteration exceeded max_items={}", max)
             }
             Self::Unsupported(s) => write!(f, "unsupported: {}", s),
+            Self::OffsetProbeFailed(site) => write!(f, "offset probe failed: {}", site),
+            Self::ExportNotFound(name) => write!(f, "mono export not found: {}", name),
+            Self::InvalidProbeBitness(b) => {
+                write!(f, "invalid probe bitness: {} (only 32 supported)", b)
+            }
         }
     }
 }
