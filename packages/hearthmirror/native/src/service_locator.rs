@@ -172,14 +172,24 @@ pub(crate) fn candidate_field_names(field: &'static str) -> [&'static str; 2] {
 
 fn read_service_type_name(info: &MonoObject<'_>) -> Result<String, ScryError> {
     let [direct, backing] = candidate_field_names("ServiceTypeName");
-    info.read_field_string(direct)
-        .or_else(|_| info.read_field_string(backing))
+    read_with_backing_fallback(direct, backing, |field| info.read_field_string(field))
 }
 
 fn read_service(info: &MonoObject<'_>) -> Result<RemotePtr, ScryError> {
     let [direct, backing] = candidate_field_names("Service");
-    info.read_field_ptr(direct)
-        .or_else(|_| info.read_field_ptr(backing))
+    read_with_backing_fallback(direct, backing, |field| info.read_field_ptr(field))
+}
+
+fn read_with_backing_fallback<T>(
+    direct: &str,
+    backing: &str,
+    mut read_field: impl FnMut(&str) -> Result<T, ScryError>,
+) -> Result<T, ScryError> {
+    match read_field(direct) {
+        Ok(value) => Ok(value),
+        Err(ScryError::FieldNotFound { .. }) if backing != direct => read_field(backing),
+        Err(err) => Err(err),
+    }
 }
 
 #[cfg(test)]
@@ -203,6 +213,44 @@ mod tests {
             candidate_field_names("ServiceTypeName"),
             ["ServiceTypeName", "<ServiceTypeName>k__BackingField"]
         );
+    }
+
+    #[test]
+    fn backing_field_fallback_reads_backing_field_when_direct_field_is_missing() {
+        let value =
+            read_with_backing_fallback(
+                "Service",
+                "<Service>k__BackingField",
+                |field| match field {
+                    "Service" => Err(ScryError::FieldNotFound {
+                        class: "ServiceInfo".into(),
+                        field: field.into(),
+                    }),
+                    "<Service>k__BackingField" => Ok(RemotePtr::new(0x2000)),
+                    _ => unreachable!(),
+                },
+            )
+            .unwrap();
+
+        assert_eq!(value, RemotePtr::new(0x2000));
+    }
+
+    #[test]
+    fn backing_field_fallback_propagates_non_field_not_found_errors() {
+        let err = read_with_backing_fallback(
+            "ServiceTypeName",
+            "<ServiceTypeName>k__BackingField",
+            |field| match field {
+                "ServiceTypeName" => Err(ScryError::MemoryAccess {
+                    addr: 0x1234,
+                    reason: format!("failed to read {field}"),
+                }),
+                _ => Ok(String::new()),
+            },
+        )
+        .expect_err("unexpected read failures should not use the backing-field fallback");
+
+        assert!(matches!(err, ScryError::MemoryAccess { addr: 0x1234, .. }));
     }
 }
 

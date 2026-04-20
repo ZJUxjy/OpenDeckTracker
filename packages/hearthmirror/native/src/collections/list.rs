@@ -3,9 +3,6 @@ use crate::memory::ProcessMemory;
 use crate::mono::offsets::MonoOffsets;
 use crate::remote_ptr::RemotePtr;
 
-const ITEMS_OFFSET: u32 = 0x08;
-const SIZE_OFFSET: u32 = 0x0C;
-
 /// Iterate a System.Collections.Generic.List<T>, yielding pointers to each element slot.
 pub fn iter_element_ptrs(
     memory: &ProcessMemory,
@@ -14,6 +11,7 @@ pub fn iter_element_ptrs(
     elem_size: u32,
     max_items: usize,
 ) -> Result<Vec<RemotePtr>, ScryError> {
+    let list_layout = super::list_layout(offsets)?;
     let array_data_start = u32::try_from(offsets.structs.array.data_start).map_err(|_| {
         ScryError::Unsupported(format!(
             "array.data_start out of 32-bit range: {}",
@@ -24,6 +22,7 @@ pub fn iter_element_ptrs(
         list,
         elem_size,
         max_items,
+        list_layout,
         array_data_start,
         |addr| memory.read_remote_ptr(addr),
         |addr| memory.read_i32(addr),
@@ -34,6 +33,7 @@ pub(crate) fn iter_element_ptrs_with(
     list: RemotePtr,
     elem_size: u32,
     max_items: usize,
+    list_layout: super::ListLayout,
     array_data_start: u32,
     mut read_remote_ptr: impl FnMut(RemotePtr) -> Result<RemotePtr, ScryError>,
     mut read_i32: impl FnMut(RemotePtr) -> Result<i32, ScryError>,
@@ -41,8 +41,8 @@ pub(crate) fn iter_element_ptrs_with(
     if list.is_null() {
         return Ok(Vec::new());
     }
-    let items_array = read_remote_ptr(list + ITEMS_OFFSET)?;
-    let size = read_i32(list + SIZE_OFFSET)?.max(0) as usize;
+    let items_array = read_remote_ptr(list + list_layout.items_offset)?;
+    let size = read_i32(list + list_layout.size_offset)?.max(0) as usize;
     if size > max_items {
         return Err(ScryError::CollectionOverflow { max: max_items });
     }
@@ -75,16 +75,21 @@ mod tests {
     fn iter_element_ptrs_uses_runtime_array_data_start() {
         let list = RemotePtr::new(0x1000);
         let items = RemotePtr::new(0x2000);
+        let list_layout = super::super::ListLayout {
+            items_offset: 0x08,
+            size_offset: 0x0C,
+        };
         let mut ptrs = HashMap::new();
-        ptrs.insert(list + ITEMS_OFFSET, items);
+        ptrs.insert(list + list_layout.items_offset, items);
 
         let mut i32s = HashMap::new();
-        i32s.insert(list + SIZE_OFFSET, 3);
+        i32s.insert(list + list_layout.size_offset, 3);
 
         let result = iter_element_ptrs_with(
             list,
             8,
             8,
+            list_layout,
             0x20,
             |addr| {
                 ptrs.get(&addr)

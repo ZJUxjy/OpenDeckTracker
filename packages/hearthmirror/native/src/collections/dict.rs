@@ -2,9 +2,6 @@ use crate::error::ScryError;
 use crate::memory::ProcessMemory;
 use crate::mono::offsets::MonoOffsets;
 use crate::remote_ptr::RemotePtr;
-
-const ENTRIES_OFFSET: u32 = 0x0C;
-const COUNT_OFFSET: u32 = 0x20;
 const DICT_ENTRY_HEADER_SIZE: u32 = (std::mem::size_of::<i32>() * 2) as u32;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,6 +18,7 @@ pub fn iter_entries(
     entry_size: u32,
     max_items: usize,
 ) -> Result<Vec<DictEntry>, ScryError> {
+    let dictionary_layout = super::dictionary_layout(offsets)?;
     let array_data_start = u32::try_from(offsets.structs.array.data_start).map_err(|_| {
         ScryError::Unsupported(format!(
             "array.data_start out of 32-bit range: {}",
@@ -38,6 +36,7 @@ pub fn iter_entries(
         dict,
         entry_size,
         max_items,
+        dictionary_layout,
         array_data_start,
         array_max_length_offset,
         |addr| memory.read_remote_ptr(addr),
@@ -71,6 +70,7 @@ pub(crate) fn iter_entries_with(
     dict: RemotePtr,
     entry_size: u32,
     max_items: usize,
+    dictionary_layout: super::DictionaryLayout,
     array_data_start: u32,
     array_max_length_offset: u32,
     mut read_remote_ptr: impl FnMut(RemotePtr) -> Result<RemotePtr, ScryError>,
@@ -80,8 +80,8 @@ pub(crate) fn iter_entries_with(
     if dict.is_null() {
         return Ok(Vec::new());
     }
-    let entries_array = read_remote_ptr(dict + ENTRIES_OFFSET)?;
-    let count = read_i32(dict + COUNT_OFFSET)?.max(0) as usize;
+    let entries_array = read_remote_ptr(dict + dictionary_layout.entries_offset)?;
+    let count = read_i32(dict + dictionary_layout.count_offset)?.max(0) as usize;
     if count > max_items {
         return Err(ScryError::CollectionOverflow { max: max_items });
     }
@@ -146,13 +146,17 @@ mod tests {
     fn iter_entries_scans_past_removed_slots_until_count_is_satisfied() {
         let dict = RemotePtr::new(0x1000);
         let entries = RemotePtr::new(0x2000);
+        let dictionary_layout = super::super::DictionaryLayout {
+            entries_offset: 0x0C,
+            count_offset: 0x20,
+        };
         let array_data_start = 0x20;
         let entry_size = 0x10;
         let mut ptrs = HashMap::new();
-        ptrs.insert(dict + ENTRIES_OFFSET, entries);
+        ptrs.insert(dict + dictionary_layout.entries_offset, entries);
 
         let mut i32s = HashMap::new();
-        i32s.insert(dict + COUNT_OFFSET, 2);
+        i32s.insert(dict + dictionary_layout.count_offset, 2);
         i32s.insert(entries + array_data_start, -1);
         i32s.insert(entries + array_data_start + entry_size, 111);
         i32s.insert(entries + array_data_start + entry_size * 2, -1);
@@ -165,6 +169,7 @@ mod tests {
             dict,
             entry_size,
             8,
+            dictionary_layout,
             array_data_start,
             0x0C,
             |addr| {
