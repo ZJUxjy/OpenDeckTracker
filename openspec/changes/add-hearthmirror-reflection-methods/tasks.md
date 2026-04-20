@@ -54,13 +54,13 @@
 
 ## 6. 验证 + 验收
 
-- [ ] 6.1 跑 `cargo test -p hearthmirror-native --all-features`，全绿
-- [ ] 6.2 跑 `cargo clippy -p hearthmirror-native -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic -D clippy::todo -D clippy::unreachable`，0 错误
-- [ ] 6.3 跑 `pnpm typecheck`、`pnpm lint`、`pnpm test`，全绿
-- [ ] 6.4 修订 `openspec/changes/add-hearthmirror-bridge/tasks.md`：把 G.1–G.10 的 checkbox 重新勾上 `[x]`，删除审查报告插入的 `TODO` 注释
-- [ ] 6.5 在 `openspec/changes/.NEXT.md` 把 `add-hearthmirror-reflection-methods` 状态标 `✓`
-- [ ] 6.6 跑 `openspec validate add-hearthmirror-reflection-methods --strict`，0 错误
-- [ ] 6.7 提交：`docs(hearthmirror): finalize reflection methods, restore tasks.md`
+- [x] 6.1 跑 `cargo test -p hearthmirror-native --all-features`，全绿
+- [x] 6.2 跑 `cargo clippy -p hearthmirror-native -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic -D clippy::todo -D clippy::unreachable`，0 错误
+- [x] 6.3 跑 `pnpm typecheck`、`pnpm lint`、`pnpm test`，全绿
+- [x] 6.4 修订 `openspec/changes/add-hearthmirror-bridge/tasks.md`：把 G.1–G.10 的 checkbox 重新勾上 `[x]`，删除审查报告插入的 `TODO` 注释
+- [x] 6.5 在 `openspec/changes/.NEXT.md` 把 `add-hearthmirror-reflection-methods` 状态标 `✓`
+- [x] 6.6 跑 `openspec validate add-hearthmirror-reflection-methods --strict`，0 错误
+- [x] 6.7 提交：`docs(hearthmirror): finalize reflection methods, restore tasks.md`
 
 ## 7. （可选）本地端到端验证
 
