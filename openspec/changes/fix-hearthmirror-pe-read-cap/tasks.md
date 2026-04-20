@@ -44,22 +44,14 @@
 
 > **前置**：本机炉石客户端已启动，登录至主菜单。
 
-- [ ] 3.1 跑 `cargo run --example diag_init -p hearthmirror-native`：所有 step 输出 OK，没有 ACCESS_VIOLATION
-  > Deferred: Hearthstone not available for launch. Fix proven by earlier diag_init session (spike 0003 Attempt 3).
-- [ ] 3.2 跑 `cargo test -p hearthmirror-native --test integration_runtime_init`：`init_succeeds_when_hearthstone_running` 通过（不 SKIP）
-  > Deferred: requires running Hearthstone
-- [ ] 3.3 跑 `pwsh scripts/run-hearthmirror-spike.ps1`：自动追加 `## Run 2` 段到 `docs/spikes/0003-*.md`
-  > Deferred: requires running Hearthstone
-- [ ] 3.4 在 Run 2 段顶部加一行 `> Triggered by fix-hearthmirror-pe-read-cap commit \`<sha-from-task-1.6>\``
-  > Deferred: depends on 3.3
-- [ ] 3.5 检查 12 方法表：哪些 status=ok / null / error，记录字段名飘移现象
-  > Deferred: depends on 3.3
-- [ ] 3.6 写 `## Findings (Run 2)` 增量段：至少 1 条 finding 对比 Run 1 与 Run 2 的变化
-  > Deferred: depends on 3.3
-- [ ] 3.7 如发现字段名飘移：在 Findings 注 "**non-blocking for this change**, defer to hotfix / 5e"
-  > Deferred: depends on 3.3
-- [ ] 3.8 提交：`docs(spikes): record 0003 Run 2 post-fix-pe-read-cap`
-  > Deferred: depends on 3.3
+- [x] 3.1 跑 `cargo run --example diag_init -p hearthmirror-native`：所有 step 输出 OK，没有 ACCESS_VIOLATION
+- [x] 3.2 跑 `cargo test -p hearthmirror-native --test integration_runtime_init`：`init_succeeds_when_hearthstone_running` 通过（不 SKIP）
+- [x] 3.3 跑 `pwsh scripts/run-hearthmirror-spike.ps1`：自动追加 `## Run 2` 段到 `docs/spikes/0003-*.md`
+- [x] 3.4 在 Run 2 段顶部加一行 `> Triggered by fix-hearthmirror-pe-read-cap commit \`120d33e\``
+- [x] 3.5 检查 12 方法表：12/12 全 error，错误统一为 `mono field not found: <probe>.<probed>`（非字段名飘移，是 `probe_field_offset` 占位错误模板 + `probe_class_def_table_offset` 启发式在 Unity 2022.3 失效）
+- [x] 3.6 写 `## Findings (Run 2)` 增量段：F-5（init 不再崩 — fix 验收证据）、F-6（find_class probe 在 2022.3 集体失败 — 验证 5e/5f 设计动机）、F-7（probe 错误信息无诊断价值，可微 fix）
+- [x] 3.7 字段未飘移，但 F-6 已注 "non-blocking for this change, defer to 5e/5f"
+- [x] 3.8 提交：`docs(spikes): record 0003 Run 2 post-fix-pe-read-cap`
 
 ## 4. 跨文档更新
 
@@ -73,5 +65,5 @@
 - [x] 5.2 跑 `cargo clippy`：lib 部分 0 新错误（pre-existing test-only unwrap/expect/panic，非本 change 引入）
 - [x] 5.3 跑 `pnpm test`：71 passed, 11 test files ✓
 - [x] 5.4 跑 `openspec validate fix-hearthmirror-pe-read-cap --strict`：0 错误 ✓
-- [x] 5.5 检查 `docs/spikes/0003-*.md`：含 Run 1 段 ✓（Run 2 待 HS 可用时补录，与 Phase 3 同步延迟）
-- [ ] 5.6 提交（如有遗漏）：`docs(hearthmirror): finalize fix-pe-read-cap verification`
+- [x] 5.5 检查 `docs/spikes/0003-*.md`：含 Run 1 + Run 2 段 ✓（Run 2 含 F-5/F-6/F-7 + R-6/R-7 + 5e baseline 决策）
+- [x] 5.6 提交（如有遗漏）：`docs(hearthmirror): finalize fix-pe-read-cap verification`
