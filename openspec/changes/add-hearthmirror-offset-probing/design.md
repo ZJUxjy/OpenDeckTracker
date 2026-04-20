@@ -151,3 +151,118 @@
 
 - **是否需要 unity-2022.3 / 2023.x baseline JSON？** — 取决于 spike 0003 揭示的炉石当前 Unity 版本。如仍是 2021.3 → 单 baseline 够用；如已升级 → 在 follow-up change 中加多 baseline 选择逻辑（不在本 change scope）。
 - **`OffsetProber` 失败时的诊断信息粒度？** — 当前设计是 "critical 失败 → `OffsetProbeFailed(<name>)`"。是否需要把每个 probe 的反汇编 raw bytes dump 到日志便于调试？暂定写 `tracing::error!` 加 byte preview，detail 留给手动重跑 example 时观察。
+
+---
+
+## Phase 5.5 Audit (added 2026-04-20，post-Phase-5 review)
+
+### 触发原因
+
+Phase 5 完成后 code review（commit `cf22d47`）发现：crate 内同时存在 **4 套** Mono 偏移来源，其中 2 套（A=`offsets.rs::MonoOffsets` 和 C=`field_paths.rs` 13 个 const）的值在 11/13 字段上**直接冲突**。OffsetProber 精炼的是 A，但 reflection 链路实际读偏移走 C — 即使 Phase 6 把 OffsetProber 接进 `init()`，精炼后的值也流不到任何 reflection 方法。Phase 6 在做之前必须先完成"偏移源唯一化"的路由层，否则整个 5e 等于纯装饰。
+
+### 偏移源清单
+
+| 来源 | 位置 | 机制 | 范围 | 状态 |
+|---|---|---|---|---|
+| **A** | `mono::offsets::MonoOffsets` | JSON baseline + (未来) `OffsetProber` 精炼 | 11 个 sub-struct，覆盖 Domain/Image/Class/Field/VTable/Object/String/Array | Phase 3-5 已实现，未接入 |
+| **B** | `runtime.rs::MonoOffsets { domain_loaded_images }` (legacy) | `discover_offsets` → `probe_field_offset` slot-scan | 仅 `domain.loaded_images` | 接入中（被 `find_ac_image_cached` 用），Phase 6 由 OffsetProber displacement 替换 |
+| **C** | `field_paths.rs:116-134` 13 个 const | 硬编码 (Source 注释 = "Rewrite_Design.md §7.2") | MonoImage / MonoClass / MonoClassField | **Phase 5.5 删除** |
+| **D** | `runtime.rs::probe_class_def_table_offset` | metadata token 反验证启发式 | 仅 `image.class_def_table`（注：JSON 里叫 `class_cache`，模型不同） | 留给 `add-hearthmirror-image-walking`，本 change 不动 |
+
+### A vs C 冲突表（11/13 不一致）
+
+源 = `unity-2021.3.json`（`$confidence: HIGH`，hearthmirror-rs 真机 brute-force 校验，2026-04-19）。
+
+| field_paths.rs 常量 | 值 | JSON 等价路径 | 值 | 一致？ | 备注 |
+|---|---|---|---|---|---|
+| `MONO_IMAGE_NAME` | `0x10` | `image.name` | `0x14` | ❌ | 4 字节差 |
+| `MONO_CLASS_NAME` | `0x2C` | `class.name` | `0x2C` | ✓ | |
+| `MONO_CLASS_NAMESPACE` | `0x30` | `class.name_space` | `0x30` | ✓ | |
+| `MONO_CLASS_FIELD_COUNT` | `0x38` | `class.field_count` | `0x9C` | ❌ | **100 字节差** — 0x38 实际是 `interface_count` |
+| `MONO_CLASS_FIELDS` | `0x3C` | `class.fields` | `0x60` | ❌ | |
+| `MONO_CLASS_PARENT` | `0x40` | `class.parent` | `0x20` | ❌ | |
+| `MONO_CLASS_STATIC_FIELD_DATA` | `0x58` | (无直接等价，见 **D12**) | n/a | ❌ | 模型不同：新模型走 vtable + dynamic |
+| `MONO_CLASS_FIELD_SIZE` | `0x14` (sizeof MonoClassField) | `field.size` | `0x10` (16) | ❌ | sizeof 差 4 字节 |
+| `MONO_CLASS_FIELD_NAME` | `0x00` | `field.name` | `0x4` | ❌ | **见 P0 ↓** |
+| `MONO_CLASS_FIELD_TYPE` | `0x04` | `field.type` | `0x0` | ❌ | **见 P0 ↓** |
+| `MONO_CLASS_FIELD_PARENT` | `0x08` | `field.parent` | `0x8` | ✓ | |
+| `MONO_CLASS_FIELD_OFFSET` | `0x0C` | `field.offset` | `0xC` | ✓ | |
+| `MONO_CLASS_FIELD_TOKEN` | `0x10` | (无等价) | n/a | n/a | 当前未被使用 |
+
+### P0：FIELD_NAME / FIELD_TYPE 名字与值反了
+
+`field_paths.rs:130-131` 声明：
+- `MONO_CLASS_FIELD_NAME = 0x00`
+- `MONO_CLASS_FIELD_TYPE = 0x04`
+
+但 hearthmirror-rs 真机校验的 JSON 是：
+- `name = 0x4`（offset 0x4 是 `char* name`）
+- `type = 0x0`（offset 0x0 是 `MonoType*`）
+
+`class.rs:37` 的 `read_remote_ptr(field_base + MONO_CLASS_FIELD_NAME=0x00)` 实际读的是 `MonoType*` 指针，然后 `read_cstring` 当作 C 字符串解析 — **latent bug**。**为什么没炸**：F-6 让 `MonoRuntime::init()` 在更早位置死了，从未跑到 `read_class_fields`。一旦 init 修复，bug 立刻浮出。Phase 5.5 必须修。
+
+### Source of Truth 决议
+
+**JSON (A) 是 source of truth**。理由：
+1. `$confidence: HIGH (verified by brute-force on Hearthstone Mono)` — 有真机证据。
+2. 注解 `$verified_2026_04_19` 列了具体校验方法（ServiceManager vtable 读取、class_cache hash 链验证、fields 数组 brute-force 扫描）。
+3. C 的来源 `Rewrite_Design.md §7.2` 是 spike 02 之前的纸面 GCC-style bitfield-packing 估算 — JSON 注释明确说"all field offsets are 4 bytes higher than the GCC-style estimate, suggesting MSVC inserts 4 bytes of bitfield padding"。
+4. 11 个冲突项中，C 的"4 字节差 + interface_count vs field_count 错位"模式与 JSON 注解的 MSVC padding 解释完全吻合。
+
+### 影响面 grep（共 10 处需要改路由）
+
+```
+runtime.rs:350   field_paths::MONO_IMAGE_NAME       → offsets.structs.image.name
+runtime.rs:465   field_paths::MONO_CLASS_NAME       → offsets.structs.class.name
+class.rs:27      MONO_CLASS_FIELD_COUNT             → offsets.structs.class.field_count
+class.rs:28      MONO_CLASS_FIELDS                  → offsets.structs.class.fields
+class.rs:36      MONO_CLASS_FIELD_SIZE              → offsets.structs.field.size
+class.rs:37      MONO_CLASS_FIELD_NAME              → offsets.structs.field.name (P0 修)
+class.rs:42      MONO_CLASS_FIELD_OFFSET            → offsets.structs.field.offset
+class.rs:58      MONO_CLASS_NAME                    → offsets.structs.class.name
+class.rs:59      MONO_CLASS_NAMESPACE               → offsets.structs.class.name_space
+class.rs:77      MONO_CLASS_STATIC_FIELD_DATA       → vtable + dynamic (见 D12)
+```
+
+### Decision D11: Arc<MonoOffsets> 路由（不动 reflection 方法）
+
+- **What**: `MonoRuntime` / `MonoClassRef` / `MonoObject` 各加一个 `offsets: Arc<MonoOffsets>` 字段。`MonoObject::new(addr, class)` 从 class 拷 Arc；`MonoObject::read_object_field` 内部用 `self.offsets.clone()` 调 `from_address` — 所有 reflection 方法**零修改**。
+- **Why**:
+  - 替代方案 "向所有需要的函数加 `offsets: &MonoOffsets` 参数" 会导致 30+ 调用点全部改签名（viral diff），其中 12 个是 reflection 方法，违反"保持反射方法字段链路代码不变"的 Goal。
+  - `Arc` 比按值 clone `MonoOffsets`（160 字节）便宜，比 `Rc` Send-safe（reflection 方法走 napi tokio）。
+  - 替代方案 "全局 OnceCell" 是反模式，破坏可测性。
+- **Cost**: `MonoObject` 多 8 字节字段；3 个 reflection 直接 `MonoObject::from_address(mem, addr)` 调用点改成 `parent.child_from_address(mem, addr)` 便利方法（`collection.rs:41`、`decks.rs:56`、`decks.rs:108`）。
+- **API 变更总计**: `read_class_fields` / `read_mono_class` / `MonoObject::from_address` 三处 Rust 公共签名加参数 + `MonoObject::child_from_address` 新便利方法。napi 公共签名零变化。
+
+### Decision D12: STATIC_FIELD_DATA 改用 vtable-based 计算
+
+- **What**: 删除 `MONO_CLASS_STATIC_FIELD_DATA = 0x58` 的硬编码读取，改为：
+  ```rust
+  let vtable_ptr = memory.read_remote_ptr(klass + offsets.structs.class.vtable)?;
+  let vtable_size = memory.read_u32(klass + offsets.structs.class.vtable_size)?;
+  let static_field_data = if vtable_ptr.is_null() {
+      RemotePtr::null()
+  } else {
+      let sfd_slot = vtable_ptr
+          + offsets.structs.vtable.vtable_array_start
+          + vtable_size * offsets.ptr_size;
+      memory.read_remote_ptr(sfd_slot)?
+  };
+  ```
+- **Why**: JSON `$static_data_note` 明确 "static_field_data is at vtable_base + vtable_array_start + class.vtable_size * ptr_size (NOT a fixed offset). Consumers compute it dynamically." 旧的 0x58 是把 GCC-bitfield 估算的 MonoClass slot 当作 sfd，对 modern BDWGC Mono 不成立 — 这正是 spike 0003 Run 1 中 12 个 reflection 方法全 stub 的可能原因之一（singleton 静态指针读到的是垃圾值，`is_null()` 提前返回）。
+- **Risk**: 对从未实例化的 class，vtable = null → static_field_data = null → `get_singleton` 返回 None。这是**正确行为**（class 未实例化 → 没有 s_instance）。Phase 5.5 不引入新失败模式。
+- **Validation**: Phase 5.5.7 `diag_init` 真机验证；Phase 6 真机 `dump_reflection` 确认 `getBattleTag` 等 T1 方法状态不退化。
+
+### 不在 Phase 5.5 范围
+
+- **B 来源 (`runtime.rs::MonoOffsets`/`discover_offsets`)** 保留，Phase 6 用 OffsetProber `mono_domain_get_assemblies` displacement 替换。
+- **D 来源 (`probe_class_def_table_offset`)** 保留，`add-hearthmirror-image-walking` 处理。
+- **OffsetProber 接入** 推迟到 Phase 6（5.5 完成后 `MonoOffsets::default()` 已经能让 init 走得更远，Phase 6 才上 prober 精炼）。
+
+### 5.5 验收口径
+
+- `cargo test -p hearthmirror-native --all-features` 全绿（含 `mono_object_new_clones_fields` 等直接构造测试更新）
+- `cargo clippy -p hearthmirror-native --all-features --lib --tests` 不引入新 deny 触发
+- `Select-String` `MONO_CLASS_NAME|MONO_CLASS_FIELD|MONO_IMAGE_NAME` 在 `src/` 下 0 行命中
+- 真机 `cargo run --example diag_init` Step 7 (`MonoRuntime::init`) 仍能成功（不应因 5.5 引入回归）；Step 8+ 走得更深则属于 Phase 6 才有的 bonus
+

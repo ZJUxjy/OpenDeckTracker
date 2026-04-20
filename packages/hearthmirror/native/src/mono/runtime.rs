@@ -3,12 +3,13 @@ use crate::handle::OwnedProcessHandle;
 use crate::memory::ProcessMemory;
 use crate::mono::class::{read_mono_class, MonoClassRef};
 use crate::mono::object::MonoObject;
+use crate::mono::offsets::MonoOffsets as RuntimeOffsets;
 use crate::process::{enumerate_modules_32bit, find_pid, ModuleInfo};
 use crate::reflection::field_paths;
 use crate::remote_ptr::RemotePtr;
 use pelite::pe32::{Pe, PeView};
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 const HEARTHSTONE_EXE: &str = "Hearthstone.exe";
 const PREFERRED_MONO: &str = "mono-2.0-bdwgc.dll";
@@ -20,6 +21,11 @@ pub struct MonoRuntime {
     pub mono_get_root_domain_va: RemotePtr,
     pub global_root_domain_addr: RemotePtr,
     pub root_domain: RemotePtr,
+    /// Mono runtime offsets table (JSON baseline; Phase 6 will replace with
+    /// `OffsetProber::probe_all` refined values). Wrapped in `Arc` so the
+    /// table is shared cheaply with every `MonoClassRef` / `MonoObject` that
+    /// the runtime hands out (see design D11).
+    pub offsets: Arc<RuntimeOffsets>,
     /// Lazily populated caches (interior mutability via Mutex)
     cache: Mutex<RuntimeCache>,
 }
@@ -56,6 +62,7 @@ impl MonoRuntime {
             mono_get_root_domain_va: func_va,
             global_root_domain_addr: global_addr,
             root_domain,
+            offsets: Arc::new(RuntimeOffsets::default()),
             cache: Mutex::new(RuntimeCache::default()),
         })
     }
@@ -284,7 +291,7 @@ impl MonoRuntime {
         }
 
         // 5. Build MonoClassRef from the live MonoClass* structure
-        let class_ref = read_mono_class(&self.memory, class_ptr)?;
+        let class_ref = read_mono_class(&self.memory, class_ptr, self.offsets.clone())?;
 
         // Cache the result
         if let Ok(mut cache) = self.cache.lock() {
@@ -347,7 +354,7 @@ impl MonoRuntime {
             }
             let name_ptr = self
                 .memory
-                .read_remote_ptr(image_ptr + field_paths::MONO_IMAGE_NAME)?;
+                .read_remote_ptr(image_ptr + self.offsets.structs.image.name)?;
             if name_ptr.is_null() {
                 continue;
             }
@@ -462,7 +469,7 @@ impl MonoRuntime {
             // Validate: MonoClass.name should match our probe class
             let name_ptr = match self
                 .memory
-                .read_remote_ptr(class_ptr + field_paths::MONO_CLASS_NAME)
+                .read_remote_ptr(class_ptr + self.offsets.structs.class.name)
             {
                 Ok(p) => p,
                 Err(_) => continue,

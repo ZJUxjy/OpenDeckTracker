@@ -53,7 +53,7 @@ pub fn read_deck_from_object(
             if card_addr.is_null() {
                 continue;
             }
-            if let Some(card_obj) = MonoObject::from_address(mem, card_addr)? {
+            if let Some(card_obj) = deck.child_from_address(mem, card_addr)? {
                 cards.push(DeckCardResult {
                     dbf_id: card_obj
                         .read_int32_field(mem, FLD_CARD_DBF_ID)?
@@ -105,7 +105,7 @@ pub async fn get_decks_internal(
         if deck_addr.is_null() {
             continue;
         }
-        if let Some(deck_obj) = MonoObject::from_address(mem, deck_addr)? {
+        if let Some(deck_obj) = instance.child_from_address(mem, deck_addr)? {
             decks.push(read_deck_from_object(mem, &deck_obj)?);
         }
     }

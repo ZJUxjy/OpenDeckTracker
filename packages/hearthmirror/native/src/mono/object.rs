@@ -1,8 +1,10 @@
 use crate::error::ScryError;
 use crate::memory::ProcessMemory;
 use crate::mono::class::{read_class_fields, MonoClassRef};
+use crate::mono::offsets::MonoOffsets;
 use crate::remote_ptr::RemotePtr;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// A live Mono object in the target process with its resolved field map.
 ///
@@ -15,19 +17,31 @@ pub struct MonoObject {
     pub addr: RemotePtr,
     /// Field name → byte offset (from object start for instance fields)
     pub fields: HashMap<String, u32>,
+    /// Mono runtime offsets table, propagated from the owning class so chain
+    /// helpers can resolve nested objects without re-threading the offsets
+    /// argument through every reflection method (see design D11).
+    pub offsets: Arc<MonoOffsets>,
 }
 
 impl MonoObject {
-    /// Create a MonoObject from an address and a resolved class.
+    /// Create a MonoObject from an address and a resolved class. The returned
+    /// object inherits the class's `Arc<MonoOffsets>`.
     pub fn new(addr: RemotePtr, class: &MonoClassRef) -> Self {
         Self {
             addr,
             fields: class.fields.clone(),
+            offsets: class.offsets.clone(),
         }
     }
 
     /// Create a MonoObject from an address by reading its klass pointer.
-    pub fn from_address(memory: &ProcessMemory, addr: RemotePtr) -> Result<Option<Self>, ScryError> {
+    /// `offsets` is the runtime's shared `Arc<MonoOffsets>` (the field-name →
+    /// offset map for the resolved klass is computed via `read_class_fields`).
+    pub fn from_address(
+        memory: &ProcessMemory,
+        addr: RemotePtr,
+        offsets: Arc<MonoOffsets>,
+    ) -> Result<Option<Self>, ScryError> {
         if addr.is_null() {
             return Ok(None);
         }
@@ -36,8 +50,23 @@ impl MonoObject {
         if klass.is_null() {
             return Ok(None);
         }
-        let fields = read_class_fields(memory, klass)?;
-        Ok(Some(Self { addr, fields }))
+        let fields = read_class_fields(memory, klass, &offsets)?;
+        Ok(Some(Self {
+            addr,
+            fields,
+            offsets,
+        }))
+    }
+
+    /// Convenience: construct a sibling MonoObject sharing this object's
+    /// offsets table. Use in reflection methods that hold a parent object and
+    /// need to resolve a child object pointer.
+    pub fn child_from_address(
+        &self,
+        memory: &ProcessMemory,
+        addr: RemotePtr,
+    ) -> Result<Option<Self>, ScryError> {
+        Self::from_address(memory, addr, self.offsets.clone())
     }
 
     // ── Chain helpers ────────────────────────────────────────────────────────
@@ -106,7 +135,7 @@ impl MonoObject {
             return Ok(None);
         };
         let ptr = memory.read_remote_ptr(self.addr + offset)?;
-        MonoObject::from_address(memory, ptr)
+        MonoObject::from_address(memory, ptr, self.offsets.clone())
     }
 
     /// Read a raw pointer field. Returns None if field missing or null.
@@ -150,6 +179,7 @@ mod tests {
         let obj = MonoObject {
             addr: RemotePtr::new(0x1000),
             fields: HashMap::new(),
+            offsets: Arc::new(MonoOffsets::default()),
         };
         // We can't call the actual read methods without a real ProcessMemory,
         // but we can verify the field lookup logic returns None for missing fields
@@ -166,9 +196,12 @@ mod tests {
             addr: RemotePtr::new(0x2000),
             static_field_data: RemotePtr::new(0x3000),
             fields,
+            offsets: Arc::new(MonoOffsets::default()),
         };
         let obj = MonoObject::new(RemotePtr::new(0x4000), &class);
         assert_eq!(obj.addr.raw(), 0x4000);
         assert_eq!(obj.fields.get("test_field"), Some(&0x10u32));
+        // Offsets Arc is propagated, sharing the same underlying allocation.
+        assert!(Arc::ptr_eq(&obj.offsets, &class.offsets));
     }
 }
