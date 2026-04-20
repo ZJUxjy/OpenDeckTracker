@@ -237,10 +237,10 @@ fn parse_typedef_table(tilde: &[u8], strings: &[u8]) -> Result<Vec<TypeDefRow>, 
 
     let mut row_counts = [0u32; 64];
     let mut rc_idx = 0;
-    for i in 0..64usize {
+    for (i, count) in row_counts.iter_mut().enumerate() {
         if valid & (1u64 << i) != 0 {
             let off = 24 + rc_idx * 4;
-            row_counts[i] = u32::from_le_bytes([
+            *count = u32::from_le_bytes([
                 tilde[off],
                 tilde[off + 1],
                 tilde[off + 2],
