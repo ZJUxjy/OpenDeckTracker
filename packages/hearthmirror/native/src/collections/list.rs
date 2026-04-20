@@ -3,7 +3,7 @@ use crate::memory::ProcessMemory;
 use crate::mono::offsets::MonoOffsets;
 use crate::remote_ptr::RemotePtr;
 
-/// Iterate a System.Collections.Generic.List<T>, yielding pointers to each element slot.
+/// Iterate a System.Collections.Generic.`List<T>`, yielding pointers to each element slot.
 pub fn iter_element_ptrs(
     memory: &ProcessMemory,
     offsets: &MonoOffsets,
