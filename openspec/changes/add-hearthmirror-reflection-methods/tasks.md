@@ -12,7 +12,7 @@
 - [x] 1.10 填写 `getArenaDeck`：`DraftManager.s_instance → GetDraftDeck()`
 - [x] 1.11 填写 `getBattlegroundRatingInfo`：`BaconRatingMgr → m_lastRatingResponse`
 - [x] 1.12 填写 `getServerInfo`：`Network.s_instance → m_currentServerInfo`
-- [ ] 1.13 提交：`docs(hearthmirror): record field paths for 12 IReflection methods`
+- [x] 1.13 提交：`docs(hearthmirror): record field paths for 12 IReflection methods`
 
 ## 2. mono::object 链式 helper（TDD）
 
@@ -21,7 +21,7 @@
 - [x] 2.3 跑 `cargo test -p hearthmirror-native mono::object`，确认测试 fail
 - [x] 2.4 实现 6 个 helper：用 `MonoClass::field_offset(field_name)` 找偏移；fallback 走 `MetadataReader::find_field_token`（如 metadata change 已 merge）
 - [x] 2.5 跑测试通过；clippy 0 错误
-- [ ] 2.6 提交：`feat(hearthmirror): add MonoObject chained field readers`
+- [x] 2.6 提交：`feat(hearthmirror): add MonoObject chained field readers`
 
 ## 3. 不依赖 metadata 的 8 个反射方法
 
@@ -34,7 +34,7 @@
 - [x] 3.7 改写 `reflection/battlegrounds.rs`：mock 单测
 - [x] 3.8 改写 `reflection/arena.rs`：mock 单测
 - [x] 3.9 跑 `cargo test -p hearthmirror-native reflection`，全绿
-- [ ] 3.10 提交：每方法 1 commit，message 格式 `feat(hearthmirror): implement <methodName> via service locator chain`
+- [x] 3.10 提交：每方法 1 commit，message 格式 `feat(hearthmirror): implement <methodName> via service locator chain`
 
 ## 4. 依赖 metadata 的 4 个方法（等 add-hearthmirror-metadata-reader merge）
 
@@ -46,11 +46,11 @@
 
 ## 5. 集成测试
 
-- [ ] 5.1 在 `packages/hearthmirror/native/tests/integration_reflection.rs` 创建文件
-- [ ] 5.2 实现 `fn skip_if_no_hearthstone() -> bool`：枚举 32 位 process 名匹配 `Hearthstone.exe`，无则 println skip + return false
-- [ ] 5.3 为 12 个方法各加 1 个 `#[test]`，开头 `if !skip_if_no_hearthstone() { return; }`，调用对应 napi 函数（through `MonoRuntime::init() + service_locator + reflection::*`），断言返回值非桩
-- [ ] 5.4 在无炉石环境跑 `cargo test --test integration_reflection`，确认输出 `SKIP: no Hearthstone process found` × 12 且退出码 0
-- [ ] 5.5 提交：`test(hearthmirror): add integration tests for 12 reflection methods`
+- [x] 5.1 在 `packages/hearthmirror/native/tests/integration_reflection.rs` 创建文件
+- [x] 5.2 实现 `fn skip_if_no_hearthstone() -> bool`：枚举 32 位 process 名匹配 `Hearthstone.exe`，无则 println skip + return false
+- [x] 5.3 为 12 个方法各加 1 个 `#[test]`，开头 `if !skip_if_no_hearthstone() { return; }`，调用对应 napi 函数（through `MonoRuntime::init() + service_locator + reflection::*`），断言返回值非桩
+- [x] 5.4 在无炉石环境跑 `cargo test --test integration_reflection`，确认输出 `SKIP: no Hearthstone process found` × 12 且退出码 0
+- [x] 5.5 提交：`test(hearthmirror): add integration tests for 12 reflection methods`
 
 ## 6. 验证 + 验收
 
