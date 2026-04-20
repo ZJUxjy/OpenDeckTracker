@@ -1,5 +1,6 @@
 //! Per-method modules. Each exposes a single async fn registered as #[napi].
 
+pub mod field_paths;
 pub mod account_id;
 pub mod arena;
 pub mod battle_tag;

@@ -1,48 +1,48 @@
 ## 1. 字段路径研究（先于代码）
 
-- [ ] 1.1 fork / clone [HearthSim/HearthMirror](https://github.com/HearthSim/HearthMirror)，记录 `Reflection.cs` 当前 commit SHA
-- [ ] 1.2 创建 `docs/superpowers/research/2026-04-20-hearthmirror-field-paths.md`，模板：每方法 4 段（C# source / chain / collections / verified-against）
-- [ ] 1.3 填写 `getBattleTag` 字段链路：`ServiceManager → NetCache → m_netCacheValues[NetCacheBattleTag] → BattleTag`（参考 `Reflection.GetBattleTag`）
-- [ ] 1.4 填写 `getAccountId`：`NetCache → m_accountId → hi/lo`
-- [ ] 1.5 填写 `getMedalInfo`：`NetCache → m_netCacheValues[NetCacheMedalInfo] → standard/wild/classic/twist`
-- [ ] 1.6 填写 `getMatchInfo`：`GameMgr.s_instance → m_lastMatchInfo`（含 player1/player2/missionId/gameType/formatType）
-- [ ] 1.7 填写 `getGameType` / `isSpectating` / `isGameOver`：`GameState.Get() → m_gameType / m_isSpectator / m_gameOver`
-- [ ] 1.8 填写 `getDecks`：`CollectionManager → GetDecks() → List<Deck>`
-- [ ] 1.9 填写 `getCollection`：`CollectionManager → GetAccountCards() → List<NetCacheCard>`
-- [ ] 1.10 填写 `getArenaDeck`：`DraftManager.s_instance → GetDraftDeck()`
-- [ ] 1.11 填写 `getBattlegroundRatingInfo`：`BaconRatingMgr → m_lastRatingResponse`
-- [ ] 1.12 填写 `getServerInfo`：`Network.s_instance → m_currentServerInfo`
+- [x] 1.1 fork / clone [HearthSim/HearthMirror](https://github.com/HearthSim/HearthMirror)，记录 `Reflection.cs` 当前 commit SHA
+- [x] 1.2 创建 `docs/superpowers/research/2026-04-20-hearthmirror-field-paths.md`，模板：每方法 4 段（C# source / chain / collections / verified-against）
+- [x] 1.3 填写 `getBattleTag` 字段链路：`ServiceManager → NetCache → m_netCacheValues[NetCacheBattleTag] → BattleTag`（参考 `Reflection.GetBattleTag`）
+- [x] 1.4 填写 `getAccountId`：`NetCache → m_accountId → hi/lo`
+- [x] 1.5 填写 `getMedalInfo`：`NetCache → m_netCacheValues[NetCacheMedalInfo] → standard/wild/classic/twist`
+- [x] 1.6 填写 `getMatchInfo`：`GameMgr.s_instance → m_lastMatchInfo`（含 player1/player2/missionId/gameType/formatType）
+- [x] 1.7 填写 `getGameType` / `isSpectating` / `isGameOver`：`GameState.Get() → m_gameType / m_isSpectator / m_gameOver`
+- [x] 1.8 填写 `getDecks`：`CollectionManager → GetDecks() → List<Deck>`
+- [x] 1.9 填写 `getCollection`：`CollectionManager → GetAccountCards() → List<NetCacheCard>`
+- [x] 1.10 填写 `getArenaDeck`：`DraftManager.s_instance → GetDraftDeck()`
+- [x] 1.11 填写 `getBattlegroundRatingInfo`：`BaconRatingMgr → m_lastRatingResponse`
+- [x] 1.12 填写 `getServerInfo`：`Network.s_instance → m_currentServerInfo`
 - [ ] 1.13 提交：`docs(hearthmirror): record field paths for 12 IReflection methods`
 
 ## 2. mono::object 链式 helper（TDD）
 
-- [ ] 2.1 在 `packages/hearthmirror/native/src/mono/object.rs` 新增 6 个 helper（`read_string_field` / `read_int32_field` / `read_int64_field` / `read_bool_field` / `read_object_field` / `read_pointer_field`）的签名（占位返回 `unimplemented!()`）
-- [ ] 2.2 在 `mono/object.rs` 加 `#[cfg(test)] mod tests`，写 6 个失败测试覆盖：每个 helper 各 1 个 happy path + 1 个 NULL/missing 场景
-- [ ] 2.3 跑 `cargo test -p hearthmirror-native mono::object`，确认测试 fail
-- [ ] 2.4 实现 6 个 helper：用 `MonoClass::field_offset(field_name)` 找偏移；fallback 走 `MetadataReader::find_field_token`（如 metadata change 已 merge）
-- [ ] 2.5 跑测试通过；clippy 0 错误
+- [x] 2.1 在 `packages/hearthmirror/native/src/mono/object.rs` 新增 6 个 helper（`read_string_field` / `read_int32_field` / `read_int64_field` / `read_bool_field` / `read_object_field` / `read_pointer_field`）的签名（占位返回 `unimplemented!()`）
+- [x] 2.2 在 `mono/object.rs` 加 `#[cfg(test)] mod tests`，写 6 个失败测试覆盖：每个 helper 各 1 个 happy path + 1 个 NULL/missing 场景
+- [x] 2.3 跑 `cargo test -p hearthmirror-native mono::object`，确认测试 fail
+- [x] 2.4 实现 6 个 helper：用 `MonoClass::field_offset(field_name)` 找偏移；fallback 走 `MetadataReader::find_field_token`（如 metadata change 已 merge）
+- [x] 2.5 跑测试通过；clippy 0 错误
 - [ ] 2.6 提交：`feat(hearthmirror): add MonoObject chained field readers`
 
 ## 3. 不依赖 metadata 的 8 个反射方法
 
-- [ ] 3.1 改写 `reflection/battle_tag.rs`：mock 单测先；实现走 ServiceLocator → NetCache → BattleTag 链；通过；提交
-- [ ] 3.2 改写 `reflection/account_id.rs`：同上
-- [ ] 3.3 改写 `reflection/medal_info.rs`：同上（注意 4 个赛季的子 MonoObject）
-- [ ] 3.4 改写 `reflection/game_state.rs`：3 个方法（`getGameType` / `isSpectating` / `isGameOver`）共享 GameState 解析；mock 单测覆盖三种状态
-- [ ] 3.5 改写 `reflection/match_info.rs`：MatchInfo + 2 个 MatchPlayer 子对象；mock 单测
-- [ ] 3.6 改写 `reflection/server.rs`：mock 单测
-- [ ] 3.7 改写 `reflection/battlegrounds.rs`：mock 单测
-- [ ] 3.8 改写 `reflection/arena.rs`：mock 单测
-- [ ] 3.9 跑 `cargo test -p hearthmirror-native reflection`，全绿
+- [x] 3.1 改写 `reflection/battle_tag.rs`：mock 单测先；实现走 ServiceLocator → NetCache → BattleTag 链；通过；提交
+- [x] 3.2 改写 `reflection/account_id.rs`：同上
+- [x] 3.3 改写 `reflection/medal_info.rs`：同上（注意 4 个赛季的子 MonoObject）
+- [x] 3.4 改写 `reflection/game_state.rs`：3 个方法（`getGameType` / `isSpectating` / `isGameOver`）共享 GameState 解析；mock 单测覆盖三种状态
+- [x] 3.5 改写 `reflection/match_info.rs`：MatchInfo + 2 个 MatchPlayer 子对象；mock 单测
+- [x] 3.6 改写 `reflection/server.rs`：mock 单测
+- [x] 3.7 改写 `reflection/battlegrounds.rs`：mock 单测
+- [x] 3.8 改写 `reflection/arena.rs`：mock 单测
+- [x] 3.9 跑 `cargo test -p hearthmirror-native reflection`，全绿
 - [ ] 3.10 提交：每方法 1 commit，message 格式 `feat(hearthmirror): implement <methodName> via service locator chain`
 
 ## 4. 依赖 metadata 的 4 个方法（等 add-hearthmirror-metadata-reader merge）
 
-- [ ] 4.1 等 [`add-hearthmirror-metadata-reader`](../add-hearthmirror-metadata-reader/) 完成并 archive
-- [ ] 4.2 改写 `reflection/decks.rs`：用 `MetadataReader::find_field_token` 定位 `Deck.Cards` (generic List`1) 字段；mock + iter list；提交
-- [ ] 4.3 改写 `reflection/collection.rs`：同上 NetCacheCard List；提交
-- [ ] 4.4 验证 `arena.rs` / `match_info.rs` 中的 generic 字段路径，必要时补 metadata fallback；提交
-- [ ] 4.5 跑 `cargo test -p hearthmirror-native reflection`，全绿
+- [x] 4.1 等 [`add-hearthmirror-metadata-reader`](../add-hearthmirror-metadata-reader/) 完成并 archive
+- [x] 4.2 改写 `reflection/decks.rs`：用 `MetadataReader::find_field_token` 定位 `Deck.Cards` (generic List`1) 字段；mock + iter list；提交
+- [x] 4.3 改写 `reflection/collection.rs`：同上 NetCacheCard List；提交
+- [x] 4.4 验证 `arena.rs` / `match_info.rs` 中的 generic 字段路径，必要时补 metadata fallback；提交
+- [x] 4.5 跑 `cargo test -p hearthmirror-native reflection`，全绿
 
 ## 5. 集成测试
 
