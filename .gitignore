@@ -48,3 +48,6 @@ data/cards/*.json
 # Per-machine diagnostic outputs from hearthmirror native examples
 packages/hearthmirror/native/diag_*_run*.txt
 packages/hearthmirror/native/dump_reflection_run*.jsonl
+
+# Temporary git commit message scratchpads
+.commitmsg.tmp
