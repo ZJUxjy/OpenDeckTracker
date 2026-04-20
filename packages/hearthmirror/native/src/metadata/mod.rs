@@ -1,5 +1,7 @@
 pub mod pe;
+pub mod streams;
 pub mod tables;
+pub mod tokens;
 
 use crate::error::ScryError;
 use std::fmt;
