@@ -121,6 +121,8 @@ This decision was validated by two consecutive spikes on 2026-04-19:
 3. **`RemotePtr(u32)` newtype**：远程进程内的指针必须用 `RemotePtr` 包装，禁止裸 `u32` / `usize` / `*const T` 表示远程指针。
 4. **CI 静态门禁**：在 hearthmirror crate 内运行 `cargo clippy -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic`。
 5. **Mono 字段偏移量必须动态探测**：基于 spike 02 的发现（`MonoDomain.domain_assemblies` 偏移漂移），`Rewrite_Design.md` §7.2 的偏移表是**参考**而非绝对真理。生产实现必须为 `MonoDomain` / `MonoImage` / `MonoClass` / `MonoClassField` 实现"dump + 模式匹配"式的偏移探测，并按 Hearthstone build 缓存结果。
+
+   > **实施记录（2026-04-20）**: 由 [`add-hearthmirror-offset-probing`](../../openspec/changes/add-hearthmirror-offset-probing/) 兑现，引入 `iced-x86` 反汇编 + `MonoOffsets` JSON baseline (`packages/hearthmirror/native/config/mono-offsets/unity-2021.3.json`) + `OffsetProber`（10 个 disasm probe + 1 个 D12 动态计算 + 2 个 sanity probe，总计覆盖 13 个 export）。约束 #5 的"dump + 模式匹配"被升级为更强的"`iced-x86` 全指令解码 + `sane_range` gate (Decision D13)"。Decision D13 的引入源自 spike 0003 Run 2 / Run 3 的实测发现：Hearthstone 的 BDWGC Mono fork 把多个公开 getter 编译为 profiled thunk（含 TLS + cmp+jmp 反作弊指纹），常规反汇编启发式会读出 `0xE10` 这样的 garbage displacement；range gate 让 prober 在结果脱离 baseline 合理漂移区间时静默回落 baseline，把"探测失败"变成"探测无效"。完整证据链 + Run 3 修复（`MonoAssembly.image` 应在 `+0x48` 而非 `+0x40`，因为 MSVC 把 `MonoAssemblyName.public_key_token[17]` 与 `arch` 之间的 padding 拉到 `0x40` 字节）见 [spike 0003 Run 3](../spikes/0003-hearthmirror-reflection-runtime-validation.md#run-3)。
 6. **优先用 `loaded_images` 而非 `domain_assemblies`**：spike 02 证实前者在 §7.2 偏移上工作；后者已漂移。HDT.js 业务上需要的是 `MonoImage*`，从 `loaded_images` 链表更直接。
 7. **Mono DLL 名字是 `mono-2.0-bdwgc.dll`**（不是 `Rewrite_Design.md` §7.1 写的 `mono.dll`），fallback 顺序：`mono-2.0-bdwgc.dll` → `mono-2.0-sgen.dll` → `mono-2.0-boehm.dll` → 任何 `mono-*.dll`。
 
@@ -134,3 +136,5 @@ This decision was validated by two consecutive spikes on 2026-04-19:
 ## Amendments
 
 **2026-04-XX** (`add-hearthmirror-metadata-reader`): metadata reader 已迁移至 `pelite` 做 PE 解析 + 自实现最小 ECMA-335 reader，与 Design D2 一致。手写的 `locate_cli_metadata` / `parse_metadata_streams` / `parse_typedef_table` 已删除。新增 `Field` / `MethodDef` 表支持及 `find_class/field/method_token` 公共 API；32 个单元测试全部通过；clippy `-D warnings -D unwrap_used -D expect_used -D panic` 零错误。
+
+**2026-04-20** (`add-hearthmirror-offset-probing`): 约束 #5 由该 change 兑现 — 见 Engineering Constraints #5 实施记录段。本 change 同步把约束 #6 的"优先用 `loaded_images`"路线翻案为"用 `MonoDomain.domain_assemblies` GSList 直接遍历到 `MonoAssembly` → `MonoImage`"：spike 0002 当时观察到的 "domain_assemblies 在 `+0x0C` 是 NULL" 是因为该字段在这个 build 实际位于 `+0x58`，OffsetProber 配合 `unity-2021.3.json` 的 baseline 把它指对了。13 个 export 的 probe 矩阵（10 disasm + 1 D12 dynamic vtable lookup + 2 sanity）完整结果见 [spike 0003 Run 3](../spikes/0003-hearthmirror-reflection-runtime-validation.md#run-3)。剩余下游问题 F-11（`find_class` 仍走 `class_def_table` 启发式，应改为 `MonoImage.class_cache` MonoInternalHashTable walk）是 [`add-hearthmirror-image-walking`](../../openspec/changes/add-hearthmirror-image-walking/) 的范围。
