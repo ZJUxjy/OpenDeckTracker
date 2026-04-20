@@ -1,7 +1,44 @@
 # hearthmirror-offset-probing Specification
 
 ## Purpose
-TBD - created by archiving change add-hearthmirror-offset-probing. Update Purpose after archive.
+
+Provide a **dynamic Mono offset probing layer** for the `hearthmirror-native`
+crate so the bridge survives Hearthstone / Unity / Mono BDWGC version drift
+without per-build hand-tuning.
+
+The capability is composed of three pieces:
+
+1. A minimal `iced-x86`-based disassembly engine (`src/disasm.rs`) that
+   extracts the field-load displacement out of short Mono accessor functions
+   (`mono_class_get_name`, `mono_image_get_name`, …).
+2. A typed `MonoOffsets` struct (`src/mono/offsets.rs`) backed by a JSON
+   baseline (`config/mono-offsets/unity-2021.3.json`) embedded at build time,
+   so no runtime file IO is required and the JSON is the single source of
+   truth for "what offsets the crate believes Mono uses".
+3. An `OffsetProber` (`src/mono/probe.rs`) that walks the mono DLL's PE
+   export table, disassembles 10 well-known accessor functions, and, for each
+   probed field, either accepts the disassembled displacement (if it falls
+   inside a per-field "sane range") or falls back to the baseline value.
+   Critical probes (`image.name`, `image.class_cache`, `class.name`,
+   `class.fields`, `assembly.image`, `domain.assemblies`) abort `init()` only
+   if the corresponding mono export is missing; best-effort probes
+   (`class.parent`, `class.field_count`, `object.vtable`, `vtable.class`)
+   never abort.
+
+The "sane range" gate (Decision D13 in the originating change) was added
+after empirical evidence on Hearthstone's BDWGC Mono fork showed that several
+accessors are compiled as **profiled thunks** whose first instructions touch
+TLS / profile-counter slots rather than the target field, causing naive
+disassembly to return garbage displacements (e.g. `0xE10`). Range-gating
+keeps the crate robust against this without needing per-version JSON
+overrides for every minor Mono build.
+
+This capability replaces both the byte-pattern scans previously living in
+`runtime.rs` and the 13 hand-coded `MONO_CLASS_*` / `MONO_IMAGE_*` constants
+previously in `field_paths.rs`. It is consumed by every other hearthmirror
+module that reads Mono structures (`metadata`, `mono::class`, `mono::object`,
+`reflection::*`).
+
 ## Requirements
 ### Requirement: 反汇编引擎 disasm 模块
 
