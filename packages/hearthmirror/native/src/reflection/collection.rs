@@ -1,6 +1,5 @@
 use crate::collections::dict;
 use crate::error::ScryError;
-use crate::mono::object::MonoObject;
 use crate::mono::MonoRuntime;
 use crate::reflection::field_paths::*;
 use napi_derive::napi;
@@ -38,7 +37,7 @@ pub async fn get_collection_internal(
         if card_addr.is_null() {
             continue;
         }
-        if let Some(card_obj) = MonoObject::from_address(mem, card_addr)? {
+        if let Some(card_obj) = instance.child_from_address(mem, card_addr)? {
             cards.push(CardResult {
                 dbf_id,
                 count: card_obj

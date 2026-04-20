@@ -113,22 +113,15 @@ pub const FLD_SERVER_GAME_HANDLE: &str = "GameHandle";
 pub const FLD_SERVER_VERSION: &str = "Version";
 pub const FLD_SERVER_RESUMABLE: &str = "Resumable";
 
-// ── Mono structure offsets (Unity 2021.3 Mono, 32-bit) ───────────────────────
-// Source: Rewrite_Design.md §7.2
-// These may need runtime probing for different Mono builds.
-
-pub const MONO_IMAGE_NAME: u32 = 0x10;
-
-pub const MONO_CLASS_NAME: u32 = 0x2C;
-pub const MONO_CLASS_NAMESPACE: u32 = 0x30;
-pub const MONO_CLASS_FIELD_COUNT: u32 = 0x38;
-pub const MONO_CLASS_FIELDS: u32 = 0x3C;
-pub const MONO_CLASS_PARENT: u32 = 0x40;
-pub const MONO_CLASS_STATIC_FIELD_DATA: u32 = 0x58;
-
-pub const MONO_CLASS_FIELD_SIZE: u32 = 0x14;
-pub const MONO_CLASS_FIELD_NAME: u32 = 0x00;
-pub const MONO_CLASS_FIELD_TYPE: u32 = 0x04;
-pub const MONO_CLASS_FIELD_PARENT: u32 = 0x08;
-pub const MONO_CLASS_FIELD_OFFSET: u32 = 0x0C;
-pub const MONO_CLASS_FIELD_TOKEN: u32 = 0x10;
+// ── Mono structure offsets ───────────────────────────────────────────────────
+//
+// REMOVED 2026-04-20 by `add-hearthmirror-offset-probing` Phase 5.5: the 13
+// hardcoded `MONO_IMAGE_*` / `MONO_CLASS_*` / `MONO_CLASS_FIELD_*` constants
+// previously here have been deleted. All Mono runtime struct offsets are now
+// loaded from `crate::mono::offsets::MonoOffsets` (JSON baseline +
+// `OffsetProber` refinement). Access via `runtime.offsets.structs.<type>.<field>`
+// or, from a `MonoClassRef` / `MonoObject`, `self.offsets.structs.*`.
+//
+// See `openspec/changes/add-hearthmirror-offset-probing/design.md` "Phase 5.5
+// Audit" for the rationale (11/13 offsets in the old table were wrong, plus a
+// P0 NAME/TYPE swap latent bug fixed in the same phase).

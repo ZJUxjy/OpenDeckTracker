@@ -76,24 +76,75 @@
 - [ ] 5.7 跑测试通过
 - [ ] 5.8 提交：`feat(hearthmirror): implement OffsetProber with 6 critical + 4 best-effort probes`
 
-## 6. MonoRuntime 接入新 offset 系统
+## 5.5 偏移路由统一 + P0 修复（2026-04-20 review 后插入）
 
-- [ ] 6.1 改 `MonoRuntime` struct：增 `pub offsets: MonoOffsets` 与 `pub exports: HashMap<String, RemotePtr>` 字段
-- [ ] 6.2 重写 `MonoRuntime::init()` 按 spec Requirement "MonoRuntime::init 使用新 offset probing" 的 9 步流程
-- [ ] 6.3 删除 `extract_global_root_domain_addr` 中的 byte-pattern 扫描代码（替换为 `disasm::find_first_absolute_load(bytes, 32).ok_or(ScryError::OffsetProbeFailed("root_domain"))?`）
-- [ ] 6.4 删除 `discover_offsets` 函数及其调用方
+> **触发**：Phase 5 review 发现 crate 内 4 套偏移源，A=`MonoOffsets` 与 C=`field_paths.rs` 11/13 字段冲突，且 `FIELD_NAME`/`FIELD_TYPE` 名字与值互换 (P0)。Phase 6 必须先做这一步否则 OffsetProber 接入只是装饰。详见 design.md "Phase 5.5 Audit"。
+
+### 5.5.A 路由层（D11）
+
+- [x] 5.5.1 在 `MonoClassRef` 加 `offsets: Arc<MonoOffsets>` 字段（`use std::sync::Arc`、`use crate::mono::offsets::MonoOffsets`）
+- [x] 5.5.2 在 `MonoObject` 加 `offsets: Arc<MonoOffsets>` 字段
+- [x] 5.5.3 修改 `read_class_fields(memory, klass, offsets: &MonoOffsets)`，把 6 处常量引用换为 `offsets.structs.class.field_count` / `.fields`、`offsets.structs.field.size` / `.name` / `.offset`
+- [x] 5.5.4 修改 `read_mono_class(memory, klass, offsets: Arc<MonoOffsets>)`，把 `MONO_CLASS_NAME` / `MONO_CLASS_NAMESPACE` 换为 `offsets.structs.class.name` / `.name_space`；调用 `read_class_fields(memory, klass, &offsets)`；按 D12 改写 `static_field_data` 计算（vtable + dynamic）；返回 `MonoClassRef { ..., offsets }`
+- [x] 5.5.5 修改 `MonoObject::new(addr, class)` 从 `class.offsets.clone()` 拷贝 Arc
+- [x] 5.5.6 修改 `MonoObject::from_address(memory, addr, offsets: Arc<MonoOffsets>)`，把内部 `read_class_fields` 调用补上 `&offsets`
+- [x] 5.5.7 在 `MonoObject` 添加便利方法 `pub fn child_from_address(&self, memory, addr) -> Result<Option<Self>, ScryError> { Self::from_address(memory, addr, self.offsets.clone()) }`
+- [x] 5.5.8 修改 `MonoObject::read_object_field` 调用点：`MonoObject::from_address(memory, ptr, self.offsets.clone())`
+
+### 5.5.B Runtime + 反射调用点
+
+- [x] 5.5.9 在 `MonoRuntime` struct 加 `pub offsets: Arc<MonoOffsets>` 字段；`init()` 中初始化为 `Arc::new(MonoOffsets::default())`（Phase 6 替换为 prober 结果）。注：导入时用 `MonoOffsets as RuntimeOffsets` 别名避免与 legacy `runtime.rs::MonoOffsets { domain_loaded_images }` 冲突
+- [x] 5.5.10 在 `MonoRuntime::find_class:287` 把 `read_mono_class(&self.memory, class_ptr)` → `read_mono_class(&self.memory, class_ptr, self.offsets.clone())`
+- [x] 5.5.11 在 `MonoRuntime::find_ac_image_cached:350` 把 `field_paths::MONO_IMAGE_NAME` → `self.offsets.structs.image.name`
+- [x] 5.5.12 在 `MonoRuntime::probe_class_def_table_offset:465` 把 `field_paths::MONO_CLASS_NAME` → `self.offsets.structs.class.name`
+- [x] 5.5.13 修改 3 个 reflection 直接 `MonoObject::from_address(mem, addr)` 调用为 `parent.child_from_address(mem, addr)`：
+  - `reflection/collection.rs:41`（parent = `instance`，并删除现已不用的 `MonoObject` import）
+  - `reflection/decks.rs:56`（parent = `deck`）
+  - `reflection/decks.rs:108`（parent = `instance`）
+
+### 5.5.C 删除 + 测试更新
+
+- [x] 5.5.14 删除 `field_paths.rs:116-134` 的 13 个 Mono 结构偏移常量段；保留一个迁移说明注释指向 `MonoOffsets` 与 design.md
+- [x] 5.5.15 验证 `Get-ChildItem packages/hearthmirror/native/src -Recurse -Filter *.rs | Select-String 'MONO_CLASS_NAME|MONO_CLASS_FIELD|MONO_IMAGE_NAME'` 在 `src/` 下命中数 = 0 ✓
+- [x] 5.5.16 更新 `object.rs` 的 2 个直接构造测试 (`mono_object_missing_field_returns_none`, `mono_object_new_clones_fields`)：在结构字面量加 `offsets: Arc::new(MonoOffsets::default())`；`mono_object_new_clones_fields` 加 `Arc::ptr_eq` 断言
+- [x] 5.5.17 跑 `cargo build --all-features` 通过 (6.46s, 0 errors)
+- [x] 5.5.18 跑 `cargo test --all-features --lib` 全绿 (53 passed, 0 failed, 1 ignored — 含 5 个 offsets 测试 + 6 个 disasm 测试 + 4 个 probe 测试 + 2 个更新后的 object 测试)
+- [x] 5.5.19 跑 `cargo clippy --all-features --lib -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic` 0 错误（lib-only 是项目约定 gate；`--tests` 上 37 个 unwrap/expect 是 `add-hearthmirror-metadata-reader` 已记录的 baseline，未引入新触发）
+- [ ] 5.5.20 真机延后：当前会话 Hearthstone 未运行；Phase 6 一并真机验证（5.5 不引入新失败模式因为 Arc<MonoOffsets::default()> 在功能上等价于把 11/13 已修正的偏移挂上线，仅当 reflection 链路真正跑过 `read_mono_class` 才有可观察差异 — 走 init 时已通过单测覆盖路由）
+- [x] 5.5.21 提交：`refactor(hearthmirror): unify Mono offset routing via Arc<MonoOffsets>; fix P0 FIELD_NAME/TYPE swap`
+
+## 6. OffsetProber 接入 MonoRuntime（缩小 scope，5.5 后才上）
+
+> **前置**：5.5 必须完成 — 路由层已就绪后，Phase 6 仅做"把 `Arc::new(MonoOffsets::default())` 换成 `Arc::new(prober.probe_all(default())?)`"的 hot-swap。
+
+- [ ] 6.1 在 `MonoRuntime` struct 加 `pub exports: HashMap<String, RemotePtr>` 字段（`OffsetProber` 借用，Arc 持有）
+- [ ] 6.2 在 `MonoRuntime::init()` 的 `find_mono_module` 之后插入：
+  ```rust
+  let exports = read_exports_map(&memory, &mono_module)?;
+  let baseline = MonoOffsets::default();
+  let offsets = match OffsetProber::new(&memory, &mono_module, &exports, 32)?.probe_all(baseline) {
+      Ok(refined) => refined,
+      Err(e) => { eprintln!("[hearthmirror] OffsetProber.probe_all failed: {e}; falling back to baseline"); MonoOffsets::default() }
+  };
+  ```
+  并把 `Arc::new(MonoOffsets::default())` 替换为 `Arc::new(offsets)`
+- [ ] 6.3 替换 `extract_global_root_domain_addr` 内部 byte-pattern 扫描逻辑为 `disasm::find_first_absolute_load(bytes, 32).ok_or(ScryError::OffsetProbeFailed("root_domain".into()))?`
+- [ ] 6.4 删除 `discover_offsets` 函数 + 旧 `pub struct MonoOffsets { domain_loaded_images }` + `discover_offsets_cached`；`find_ac_image_cached` 改为 `read_remote_ptr(self.root_domain + self.offsets.structs.domain.domain_assemblies)?`（注意：language change — 原来是 `loaded_images` GSList，新是 `domain_assemblies` GSList，遍历层加 `assembly.image` 间接读 — 见 Phase 6 spec）
 - [ ] 6.5 **保留** `probe_class_def_table_offset`（留给 image-walking change 处理；本 change 不动）
-- [ ] 6.6 跑 `cargo build -p hearthmirror-native` + `cargo test -p hearthmirror-native --all-features` 全绿（有 skip-if-no-hs 的集成测试）
-- [ ] 6.7 提交：`refactor(hearthmirror): wire MonoRuntime::init to new offset probing pipeline`
+- [ ] 6.6 跑 `cargo build -p hearthmirror-native` + `cargo test -p hearthmirror-native --all-features --lib` 全绿
+- [ ] 6.7 真机（如有）：跑 `cargo run -p hearthmirror-native --example diag_init` + `cargo test -p hearthmirror-native --all-features` (含 integration)；记录到 spike 0003 Run N
+- [ ] 6.8 提交：`refactor(hearthmirror): wire MonoRuntime::init to new offset probing pipeline`
 
-## 7. 替换硬编码偏移引用
+## 7. 收尾 polish + 文档（合并原 Phase 7）
 
-- [ ] 7.1 跑 `Get-ChildItem -Path packages/hearthmirror/native/src -Filter *.rs -Recurse | Select-String "MONO_CLASS_NAME|MONO_CLASS_FIELDS|MONO_IMAGE_NAME"` 列出所有引用点
-- [ ] 7.2 把每处引用替换为 `runtime.offsets.structs.class.name` / `.fields` / `.image.name` 等（注意：这要求 `MonoClass` / `MonoObject` 持有 `&MonoRuntime` 引用 — 当前已是这种模式，确认即可）
-- [ ] 7.3 删除 `field_paths.rs:116-134` 的 13 个 Mono 结构偏移常量（保留 1-114 行业务字段名常量）
-- [ ] 7.4 重跑 grep，确认零残留：`Select-String -Path packages/hearthmirror/native/src/**/*.rs -Pattern "MONO_CLASS_NAME|MONO_CLASS_FIELDS|MONO_IMAGE_NAME"` → 0 行
+> Phase 5.5 已完成 `field_paths.rs` 删除 + 路由替换；Phase 7 退化为 review 反馈 polish。
+
+- [ ] 7.1 (LOW 1) `OffsetProber.probe_window` 字段保留为 `pub`（评估后保持当前设计），加 doc comment 说明"未来可能为长函数 prologue（如 enumerate 类）扩到 512+"
+- [ ] 7.2 (LOW 5) 在 `OffsetProber::probe_all` 顶部 doc comment 中文档化 "JSON exports_to_probe 列了 13 个，本函数只 probe 10 个" 的差异：`mono_get_root_domain` 单独由 `extract_global_root_domain_addr` 用 `find_first_absolute_load` 处理；`mono_field_get_parent` / `mono_field_get_offset` / `mono_field_get_type` / `mono_field_get_name` 是 sanity probes（baseline 已知正确，未来可加 assertion）；`mono_vtable_get_static_field_data` 是 complex（非 displacement，按 D12 在 `read_mono_class` 内动态计算）
+- [ ] 7.3 (LOW 2) 在 `OffsetProber` 模块级 doc comment 加一行 "Best-effort failures use `eprintln!` for now; consider `tracing` once project adopts a logging framework"
+- [ ] 7.4 重跑 grep，确认 `field_paths.rs` 已无 `MONO_*` 结构常量：`Select-String -Path packages/hearthmirror/native/src/**/*.rs -Pattern "pub const MONO_CLASS_|pub const MONO_IMAGE_"` → 0 行
 - [ ] 7.5 跑 `cargo build` + `cargo test --all-features` 全绿
-- [ ] 7.6 提交：`refactor(hearthmirror): replace hardcoded Mono offsets with runtime.offsets access`
+- [ ] 7.6 提交：`docs(hearthmirror): polish OffsetProber per cf22d47 review`
 
 ## 8. ADR & 文档更新
 
