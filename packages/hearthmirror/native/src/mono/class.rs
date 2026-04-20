@@ -13,9 +13,11 @@ pub struct MonoClassRef {
     /// MonoClass* in the target process
     pub addr: RemotePtr,
     /// Static field data area pointer (s_instance and other statics live here).
-    /// Computed via vtable + vtable_array_start + vtable_size * ptr_size per
-    /// `MonoOffsets` D12 — `RemotePtr::NULL` if vtable is uninitialized
-    /// (class never instantiated → no s_instance).
+    /// Computed via the per-domain MonoVTable: `runtime_info →
+    /// MonoClassRuntimeInfo.domain_vtables[0]`, then `vtable_base +
+    /// vtable_array_start + vtable_size * ptr_size` (dereferenced) — see
+    /// design D12 (corrected). `RemotePtr::NULL` if the class is uninitialized
+    /// in the root domain (Mono builds runtime_info lazily on first access).
     pub static_field_data: RemotePtr,
     /// Field name → byte offset (static fields: relative to static_field_data;
     /// instance fields: relative to object start, including the 0x0C header)
@@ -64,9 +66,18 @@ pub fn read_class_fields(
 
 /// Build a full `MonoClassRef` from a MonoClass* pointer.
 ///
-/// Computes `static_field_data` via the MonoVTable rather than a fixed
-/// MonoClass slot — see `MonoOffsets` design D12. Returns `RemotePtr::null()`
-/// for `static_field_data` when the class has no allocated vtable yet.
+/// Computes `static_field_data` via the per-domain `MonoVTable` reached
+/// through `MonoClass.runtime_info → MonoClassRuntimeInfo.domain_vtables[0]`,
+/// then `vtable_base + vtable_array_start + vtable_size * ptr_size` →
+/// dereferenced. See design D12 (corrected per hearthmirror-rs reference
+/// `vtable.rs::try_static_field_data` after self-review found `MonoClass.vtable`
+/// at +0x80 is `MonoMethod**` (inline function-pointer array), NOT a
+/// `MonoVTable*` — those are distinct concepts despite the shared name).
+///
+/// Returns `RemotePtr::NULL` for `static_field_data` when the class is
+/// uninitialized (no runtime_info, no vtable allocated for the root domain,
+/// or no static-storage slot populated). Reflection methods treat this as
+/// "class never instantiated → no s_instance" and return `Ok(None)`.
 pub fn read_mono_class(
     memory: &ProcessMemory,
     klass: RemotePtr,
@@ -74,6 +85,7 @@ pub fn read_mono_class(
 ) -> Result<MonoClassRef, ScryError> {
     let class_off = &offsets.structs.class;
     let vtable_off = &offsets.structs.vtable;
+    let ptr_size = offsets.ptr_size;
 
     let name_ptr = memory.read_remote_ptr(klass + class_off.name)?;
     let ns_ptr = memory.read_remote_ptr(klass + class_off.name_space)?;
@@ -94,13 +106,35 @@ pub fn read_mono_class(
         format!("{}.{}", ns, name)
     };
 
-    let vtable_ptr = memory.read_remote_ptr(klass + class_off.vtable)?;
-    let static_field_data = if vtable_ptr.is_null() {
+    // 1. MonoClass.runtime_info → MonoClassRuntimeInfo* (Mono builds this lazily
+    //    on first instance/static access of the class in a domain).
+    let runtime_info = memory.read_remote_ptr(klass + class_off.runtime_info)?;
+    let static_field_data = if runtime_info.is_null() {
         RemotePtr::NULL
     } else {
-        let vtable_size = memory.read_u32(klass + class_off.vtable_size)?;
-        let sfd_slot = vtable_ptr + vtable_off.vtable_array_start + vtable_size * offsets.ptr_size;
-        memory.read_remote_ptr(sfd_slot)?
+        // 2. MonoClassRuntimeInfo layout: { max_domain: u16 + padding,
+        //    domain_vtables[0]: MonoVTable* }. For the root domain (index 0),
+        //    vtable pointer slot is at offset = ptr_size (skip max_domain word).
+        let vtable_ptr = memory.read_remote_ptr(runtime_info + ptr_size)?;
+        if vtable_ptr.is_null() {
+            RemotePtr::NULL
+        } else {
+            // 3. vtable_size = number of vtable function-pointer slots (u32 in Mono
+            //    source). Sanity-cap matches hearthmirror-rs reference impl.
+            let vtable_size = memory.read_u32(klass + class_off.vtable_size)?;
+            if vtable_size > 100_000 {
+                return Err(ScryError::MetadataError(format!(
+                    "class @ {} vtable_size {} unreasonably large",
+                    klass, vtable_size
+                )));
+            }
+            // 4. static_field_data slot sits AFTER the function-pointer array.
+            //    Dereference the slot to get the actual chunk holding s_instance
+            //    and other static fields.
+            let sfd_slot =
+                vtable_ptr + vtable_off.vtable_array_start + vtable_size * ptr_size;
+            memory.read_remote_ptr(sfd_slot)?
+        }
     };
 
     let fields = read_class_fields(memory, klass, &offsets)?;
