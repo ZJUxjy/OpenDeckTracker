@@ -60,8 +60,8 @@
 
 - [x] 7.1 修改 [`add-hearthmirror-reflection-methods/tasks.md`](../add-hearthmirror-reflection-methods/tasks.md) 的 7.1 checkbox：`[ ]` → `[x]`，附注 `> 由 verify-hearthmirror-on-real-hs 兑现：见 docs/spikes/0003-*.md`
 - [x] 7.2 修改 [`docs/adr/0001-hearthmirror-bridge.md`](../../../docs/adr/0001-hearthmirror-bridge.md) 在"约束 #5"段后追加链接行 `> 实测验证：[docs/spikes/0003-*.md](../spikes/0003-hearthmirror-reflection-runtime-validation.md)`
-- [ ] 7.3 在 `openspec/changes/.NEXT.md` 把 `verify-hearthmirror-on-real-hs` 标 `✓✓`，根据 spike findings 调整 `add-hearthmirror-offset-probing` / `add-hearthmirror-image-walking` 的优先级注释
-  > Skipped: .NEXT.md does not exist in this repository
+- [x] 7.3 在 `openspec/changes/.NEXT.md` 把 `verify-hearthmirror-on-real-hs` 标 `✓✓`，根据 spike findings 调整 `add-hearthmirror-offset-probing` / `add-hearthmirror-image-walking` 的优先级注释
+  > 验收阶段补做：原 apply 报"NEXT.md 不存在"实为时间窗口错配（文件确已 git tracked）。本次更新：5d 升 ✓✓；新增 5d-fix 段 `fix-hearthmirror-pe-read-cap`（P0 阻塞修复，源于 spike 0003 F-1）；5e baseline 段加警告——实测 Unity 2022.3.62f2，原计划的 unity-2021.3 baseline 需修订。
 - [x] 7.4 提交：`docs(openspec): cross-link spike 0003 from reflection-methods, ADR 0001, NEXT`
 
 ## 8. 验证 + 验收
