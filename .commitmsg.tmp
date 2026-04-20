@@ -1,0 +1,17 @@
+chore(openspec): archive add-hearthmirror-image-walking (5f) + replace TBD Purpose
+
+- Move openspec/changes/add-hearthmirror-image-walking/ ->
+  openspec/changes/archive/2026-04-20-add-hearthmirror-image-walking/
+- Sync hearthmirror-class-resolution spec into openspec/specs/ (8 requirements)
+- Replace the auto-generated "TBD - created by archiving change" Purpose with
+  a hand-written summary covering the 4 building blocks (MonoImage hashtable
+  walk, MonoFieldDef, inheritance-aware MonoClassRef API, MonoObject delegation),
+  the runtime::find_class refactor, the deleted class_def_table heuristic,
+  and the ScryError::ClassNotFound upgrade. Documents the F-11 fix.
+
+Tasks ticked: 51/54 (3 remaining are explicit "covered by future change"
+items like pnpm test/typecheck/lint and 12-method real-HS regression in
+verify-hearthmirror-on-real-hs).
+
+openspec validate hearthmirror-class-resolution --strict: OK
+openspec list: 5f no longer active.
