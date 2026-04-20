@@ -123,3 +123,7 @@ This decision was validated by two consecutive spikes on 2026-04-19:
 - Spike 计划：[`docs/spikes/0001-hearthmirror-spike.md`](../spikes/0001-hearthmirror-spike.md)
 - Mono 运行时知识（仍为权威参考）：[`Rewrite_Design.md`](../../Rewrite_Design.md) §7+
 - Capability 契约：[`openspec/changes/decide-hearthmirror-bridge/specs/hearthmirror-bridge/spec.md`](../../openspec/changes/decide-hearthmirror-bridge/specs/hearthmirror-bridge/spec.md)
+
+## Amendments
+
+**2026-04-XX** (`add-hearthmirror-metadata-reader`): metadata reader 已迁移至 `pelite` 做 PE 解析 + 自实现最小 ECMA-335 reader，与 Design D2 一致。手写的 `locate_cli_metadata` / `parse_metadata_streams` / `parse_typedef_table` 已删除。新增 `Field` / `MethodDef` 表支持及 `find_class/field/method_token` 公共 API；32 个单元测试全部通过；clippy `-D warnings -D unwrap_used -D expect_used -D panic` 零错误。
