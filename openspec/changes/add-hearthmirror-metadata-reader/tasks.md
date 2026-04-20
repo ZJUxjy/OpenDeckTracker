@@ -66,12 +66,12 @@
 - [x] 8.2 跑 `cargo clippy -p hearthmirror-native -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic`，0 错误
 - [x] 8.3 在 `packages/hearthmirror/native/src/metadata/` 下 `rg "IMAGE_DOS_HEADER|locate_cli_metadata|parse_typedef_table"`，确认 0 命中
 - [ ] 8.4 （可选 / 本地）有炉石环境时跑 `scripts/extract-hearthstone-fixtures.ps1` 拿到真实 dll，跑 `cargo test -p hearthmirror-native --features real-fixtures`，全绿，性能 < 80 ms
-- [ ] 8.5 跑 `pnpm test`（应不受影响），全绿
-- [ ] 8.6 在仓库根跑 `openspec validate add-hearthmirror-metadata-reader --strict`，0 错误
-- [ ] 8.7 提交：`chore(hearthmirror): finalize metadata reader migration`
+- [x] 8.5 跑 `pnpm test`（应不受影响），全绿
+- [x] 8.6 在仓库根跑 `openspec validate add-hearthmirror-metadata-reader --strict`，0 错误
+- [x] 8.7 提交：`chore(hearthmirror): finalize metadata reader migration`
 
 ## 9. 文档收尾
 
-- [ ] 9.1 在 `openspec/changes/.NEXT.md` 把 `add-hearthmirror-metadata-reader` 状态从未提案改为 `✓`
-- [ ] 9.2 在 `docs/adr/0001-hearthmirror-bridge.md` 末尾追加一条 "2026-04-XX: metadata reader 已迁移到 pelite，回归 D2"
-- [ ] 9.3 提交：`docs(hearthmirror): record metadata reader migration completion`
+- [x] 9.1 在 `openspec/changes/.NEXT.md` 把 `add-hearthmirror-metadata-reader` 状态从未提案改为 `✓`
+- [x] 9.2 在 `docs/adr/0001-hearthmirror-bridge.md` 末尾追加一条 "2026-04-XX: metadata reader 已迁移到 pelite，回归 D2"
+- [x] 9.3 提交：`docs(hearthmirror): record metadata reader migration completion`
