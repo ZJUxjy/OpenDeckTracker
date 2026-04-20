@@ -263,3 +263,140 @@ Run 2 confirms F-4 (Unity 2022.3.62f2). Recommended path for 5e baseline JSON:
 - Trust `OffsetProber` to refine the 6 critical + 4 best-effort probes at runtime
 - **Do not** invest time hand-crafting a `unity-2022.3.json` baseline up front — the whole point of OffsetProber is that baseline accuracy degrades gracefully when probes succeed
 - Add a follow-up `unity-2022.3.json` *only* if 5e's real-HS regression shows OffsetProber probes failing (in which case the failures themselves give you the correct numeric values to record)
+
+## Run 3
+
+> Triggered after `add-hearthmirror-offset-probing` (5e) Phase 6 + Phase 6 Audit landed (commits `3d7bfec` → `0919d49` → `9f1da89`). Goal: validate the full reflection chain end-to-end and discover what (if anything) blocks 5e from being archived.
+
+### Environment
+
+| Field | Value |
+|---|---|
+| OS | Microsoft Windows NT 10.0.26200.0 (x64) |
+| Hearthstone version | 2022.3.62.7762112 |
+| mono-2.0-bdwgc.dll SHA1 | `2DEF7993A57EE783AC046E816A5B78FE3488BE90` |
+| Hearthstone PID (run 3a) | 21564 (32-bit WoW64) |
+| Test date (UTC) | 2026-04-20 |
+| Game state | Main menu (logged in) |
+
+### Run 3a — first dump_reflection after 5e wiring
+
+```
+$ cargo run --example dump_reflection
+OffsetProber: 'mono_class_get_name'      → 0xE10 outside sane range 0x4..=0x80 ; keeping baseline
+OffsetProber: 'mono_class_get_namespace' → 0xE10 outside sane range 0x4..=0x80 ; keeping baseline
+OffsetProber: 'mono_image_get_name'      → 0x1C  outside sane range 0x10..=0x18; keeping baseline
+OffsetProber: 'mono_assembly_get_image'  → 0xE10 outside sane range 0x10..=0x80; keeping baseline
+OffsetProber: 'mono_class_get_parent'    → 0xE10 outside sane range 0x10..=0x80; keeping baseline
+
+12/12 methods → "memory access failed at 0x00000015 ... ReadProcessMemory failed (0x8007012B)"
+```
+
+**Initial read**: prober gate works as designed — every probed-then-rejected offset falls back to the verified baseline, so init survives. But every reflection method bombs reading address `0x15`, which is suspiciously close to `0x14` = `MonoImage.name` baseline → **the `image_ptr` itself must be ~0x1**.
+
+### Run 3b — diag_singleton narrows the failure to assembly walking
+
+`examples/diag_singleton.rs` traces the `get_singleton(NetCache)` chain step-by-step. Output:
+
+```
+=== diag_singleton: .NetCache ===
+ptr_size=4 | class.runtime_info=+0x7C class.vtable_size=+0x38 ...
+Error: MemoryAccess { addr: 21, reason: "ReadProcessMemory failed (0x8007012B)" }
+```
+
+The error fires **before** `find_class` returns, i.e. inside `find_ac_image_cached`'s `MonoDomain.domain_assemblies` walk. So the error is produced when reading `image.name` (offset `0x14`) on an `image_ptr` that is itself `0x00000001`.
+
+### Run 3c — diag_image hex-dumps every assembly + image
+
+`examples/diag_image.rs` walks `MonoDomain.domain_assemblies` (GSList) and dumps each `MonoAssembly` and (via the JSON-claimed image offset) each `MonoImage`. Repeated across all 99 assemblies the same pattern shows up:
+
+```
+[0] MonoAssembly* = 0x0B71AC60
+  MonoAssembly first 0x60 bytes:
+    +0x40  01 00 00 00 00 00 00 00 A8 A3 71 0B C8 6C 71 0B
+    +0x48  ...                       ^^^^^^^^^^^ image_ptr lives here, NOT at +0x40
+
+  candidate string-pointer slots in MonoAssembly:
+    asm+0x04 → "E:\\battle\\Hearthstone\\Hearthstone_Data\\Managed\\"  (basedir)
+    asm+0x08 → "mscorlib"                                              (assembly_name.name)
+    asm+0x48 → 0x0B71A3A8 → "\u{2}"                                    (image, leading u32 = ref_count=2)
+
+  image_ptr (via JSON +0x48) = 0x0B71A3A8
+  MonoImage first 0x60 bytes:
+    +0x14  → 0x00FA7340 → "E:\\...\\mscorlib.dll"                       (full file path — what reflection wants)
+    +0x18  → 0x00FA77C0 → "E:\\...\\mscorlib.dll"                       (duplicate; raw_data path?)
+    +0x1C  → 0x0BC6D4F2 → "mscorlib"                                   (short asm name — what mono_image_get_name returns)
+    +0x20  → 0x0BC82173 → "mscorlib.dll"                               (filename + extension)
+```
+
+Same layout reproduced verbatim across `mscorlib`, `UnityEngine`, and 18 `UnityEngine.*Module` assemblies → consistent across the entire module set, not a one-off.
+
+## Findings (Run 3)
+
+**Finding F-8** (Critical, **fixed**): `MonoAssembly.image` lives at `+0x48`, not `+0x40`. The `+0x40` slot is `MonoAssemblyName.arch` (always `0x01000001` in this build). The previous JSON value `0x40` caused every `find_ac_image_cached` call to dereference `image_ptr=0x00000001`, hence the `0x00000015` read failure (`0x1 + MonoImage.name=0x14`).
+
+- **Root cause**: The structural width of `MonoAssemblyName` in this Unity Mono build is `0x40` bytes — larger than the source-level estimate that derived `0x40` for `image`. MSVC pads `public_key_token[17]` plus `arch` so that `MonoAssembly.image` ends up 8 bytes later than the hearthmirror-rs baseline expected.
+- **Evidence**: 20/20 assemblies dumped by `diag_image` show a `ref_count=2` int at `+0x48` followed by the `MonoImage*` pointer — every one of them validates against the full PE layout that follows.
+- **Fix landed**: `unity-2021.3.json` now declares `MonoAssembly.image = 0x48` with `$confidence: HIGH`. `MonoImage` block annotated with empirical names for `+0x14 / +0x18 / +0x1C / +0x20`. No code changes — JSON is the source of truth.
+
+**Finding F-9** (Informational, validates D13 range-gate): `mono_image_get_name`'s disassembly probe consistently returns `0x1C` — and `0x1C` *is* a real string-pointer slot, just for the **short** assembly name (`"mscorlib"`), not the full file path (`"E:\\...\\mscorlib.dll"`) that reflection callers expect at `+0x14`. The `OffsetProber.PROBE_SPECS` `sane_range = 0x10..=0x18` deliberately rejects `0x1C` so callers stay on the full-path slot. **Decision D13 (range-gate) is not just defensive scaffolding — it is the only thing standing between the prober and a silent semantic regression.**
+
+**Finding F-10** (Informational): The four profiled-thunk probes (`mono_class_get_name/_namespace/_parent`, `mono_assembly_get_image`) keep returning `0xE10` — far outside any sane field offset for these structures. This is the same Unity profiler-instrumentation pattern documented in 5e Phase 6 Audit (commit `9f1da89` design.md). Range-gate fallback to baseline is the correct response. No further probe-engine changes warranted; revisit only if real-HS testing surfaces a baseline that disagrees with truth.
+
+### Run 3d — final dump_reflection (post `assembly.image=0x48` fix)
+
+```
+$ cargo run --example dump_reflection
+… same 5 prober warnings as run 3a (expected, all kept on baseline) …
+
+11/12 methods → "metadata error: class_def_table offset not found by probing MonoImage"
+ 1/12         → getBattlegroundRatingInfo: status=null, value=null, error=null  (~23 ms)
+              ← class never instantiated in main-menu state; expected behaviour
+```
+
+**Result**: the `0x15` access violation is gone — `MonoRuntime::init` and the assembly walk both succeed. The remaining failure is downstream, in **class lookup** (`find_class`).
+
+## Findings (Run 3 — class_def_table)
+
+**Finding F-11** (Critical, **out-of-scope for 5e, drives 5f**): `find_class` calls `probe_class_def_table_offset(image_ptr)` which scans the first `0x200` bytes of `MonoImage` looking for a flat `MonoClass*[]` array indexed by RID. **No such structure exists in standard Mono.** Mono performs class lookup through `MonoImage.class_cache`, a `MonoInternalHashTable<MonoClass*>` at offset `+0x35C` (already declared in `unity-2021.3.json`, currently unused by reflection callers). The hash table maps `(token & MONO_TOKEN_RID_MASK)` to `MonoClass*` via an open-addressed hash with `key_extract` and `next_value_func` callbacks.
+
+- **Where it manifests**: 11/12 reflection methods fail with the same string `"metadata error: class_def_table offset not found by probing MonoImage"` (originating from `mono/runtime.rs::find_class` after `probe_class_def_table_offset` returns `Err`). The 12th (`getBattlegroundRatingInfo`) returns `null` only because BG state isn't loaded — it never reached class lookup.
+- **Why it survived earlier validation**: Unit tests use synthetic mocks. Spike Run 2 stopped at `MonoDomain.loaded_images` (F-6), which 5e fixed. Spike Run 3a/3b stopped at `MonoAssembly.image` (F-8), which the JSON fix above closes. F-11 only becomes reachable once the upstream chain is correct — exactly today.
+- **Why it's not 5e**: 5e's contract is "deterministic offset discovery via disassembly". Replacing flat-array scan with hash-table walk is a different mechanism (token hashing through `class_cache`'s `hash_func`/`key_extract`) that needs its own design + spec — exactly what `add-hearthmirror-image-walking` (5f) was already scoped for in the integration plan.
+- **Confidence**: HIGH. Cross-confirmed against (1) `MonoImage.class_cache` already declared in JSON with `$class_cache_note` describing the hash-table layout, (2) hearthmirror-rs source in `D:\code\hearthmirror-rs\hearthmirror\crates\hm-core\src\mono\image.rs` which uses exactly the hash-walk approach, (3) `class_cache` previously verified at `+0x35C` by brute-force scan (`size=6247, table populated with valid MonoClass* entries`).
+
+## Recommendations (Run 3)
+
+### Done in this run
+
+**R-8**: `MonoAssembly.image = 0x48` correction landed in `packages/hearthmirror/native/config/mono-offsets/unity-2021.3.json` together with empirical `MonoImage` field annotations. Diagnostic tooling kept as `examples/diag_image.rs` and `examples/diag_singleton.rs` for future drift validation.
+
+### Must Fix (defer to 5f)
+
+**R-9**: Proceed with `add-hearthmirror-image-walking` (5f). Scope:
+
+1. Replace `probe_class_def_table_offset` + flat-array indexing with `MonoInternalHashTable<MonoClass*>` walk against `MonoImage.class_cache` (offset `+0x35C`, already in JSON).
+2. Implement token → bucket mapping (Mono uses `token & MONO_TOKEN_RID_MASK` then `% size`, with linear chain through `next_value_func`).
+3. Update `find_class` callers (`get_singleton` + the 11 reflection methods that use type-token resolution).
+4. Acceptance test: re-run `dump_reflection` against running HS — expect non-error responses for at least the 8 Tier-1 methods, with `getBattleTag` / `getAccountId` returning string values matching the logged-in account.
+
+**Priority**: P0 — without 5f, every reflection method other than `getBattlegroundRatingInfo` returns the same `class_def_table` error. F-11 is now the *only* remaining blocker between the user and end-to-end reflection.
+
+### Defer
+
+**R-10**: A follow-up Run 4 in this spike, run after 5f lands, should re-execute `dump_reflection` and capture the non-null responses. At that point the spike can be closed.
+
+### 5e Acceptance
+
+5e (`add-hearthmirror-offset-probing`) is **complete and ready to archive** as of commits `3d7bfec` + `0919d49` + `9f1da89` + the `unity-2021.3.json` fix from this run. Its delivered scope:
+
+- iced-x86 disassembly engine + 4 unit tests (Phase 2)
+- `MonoOffsets` struct + JSON baseline + `Arc<MonoOffsets>` routing (Phase 3, 5.5)
+- `read_exports_map` helper (Phase 4)
+- `OffsetProber` with range-gating + 13 probe specs (Phase 5 + Audit)
+- `MonoRuntime::init` wired to call `OffsetProber::probe_all` (Phase 6)
+- `domain_assemblies` walk used in place of `loaded_images` (Phase 6)
+- Range-gate keeps init alive on profiled-thunk false positives (D13)
+- Run 3 closes the `image_ptr` failure mode that the prior baseline carried
+
+What 5e *does not* deliver — and was never scoped to — is the `class_cache` walk path. That moves to 5f as F-11.
