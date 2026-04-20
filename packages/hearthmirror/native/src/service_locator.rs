@@ -23,7 +23,7 @@ impl<'rt> ServiceLocator<'rt> {
             Err(err) => return Err(err),
         };
         let image = MonoImage::new(self.runtime, image_addr);
-        Ok(image.find_class(SERVICE_MANAGER_CLASS).ok())
+        resolve_service_manager_class(|| image.find_class(SERVICE_MANAGER_CLASS))
     }
 
     pub fn locator_addr(&self) -> Result<Option<RemotePtr>, ScryError> {
@@ -99,9 +99,12 @@ impl<'rt> ServiceLocator<'rt> {
             }
 
             let info = MonoObject::from_addr(self.runtime, service_info)?;
-            let type_name = read_service_type_name(&info).unwrap_or_default();
-            if type_name == name {
-                return Ok(Some(read_service(&info)?));
+            if let Some(service) = matching_service_for_name(
+                name,
+                resolve_service_type_name(|| read_service_type_name(&info)),
+                || resolve_service_instance(|| read_service(&info)),
+            )? {
+                return Ok(Some(service));
             }
         }
         Ok(None)
@@ -135,10 +138,11 @@ impl<'rt> ServiceLocator<'rt> {
             }
 
             let info = MonoObject::from_addr(self.runtime, service_info)?;
-            let type_name = read_service_type_name(&info).unwrap_or_default();
-            let service = read_service(&info).unwrap_or(RemotePtr::NULL);
-            if !type_name.is_empty() {
-                services.push((type_name, service));
+            if let Some(service) = service_entry_for_listing(
+                resolve_service_type_name(|| read_service_type_name(&info)),
+                || resolve_service_instance(|| read_service(&info)),
+            )? {
+                services.push(service);
             }
         }
         Ok(services)
@@ -190,6 +194,66 @@ fn read_with_backing_fallback<T>(
         Err(ScryError::FieldNotFound { .. }) if backing != direct => read_field(backing),
         Err(err) => Err(err),
     }
+}
+
+fn resolve_service_manager_class(
+    mut find_class: impl FnMut() -> Result<RemotePtr, ScryError>,
+) -> Result<Option<RemotePtr>, ScryError> {
+    match find_class() {
+        Ok(value) => Ok(Some(value)),
+        Err(ScryError::ClassNotFound { .. }) => Ok(None),
+        Err(err) => Err(err),
+    }
+}
+
+fn resolve_service_type_name(
+    mut read_type_name: impl FnMut() -> Result<String, ScryError>,
+) -> Result<Option<String>, ScryError> {
+    match read_type_name() {
+        Ok(value) => Ok(Some(value)),
+        Err(ScryError::FieldNotFound { .. }) => Ok(None),
+        Err(err) => Err(err),
+    }
+}
+
+fn resolve_service_instance(
+    mut read_service: impl FnMut() -> Result<RemotePtr, ScryError>,
+) -> Result<Option<RemotePtr>, ScryError> {
+    match read_service() {
+        Ok(value) => Ok(Some(value)),
+        Err(ScryError::FieldNotFound { .. }) => Ok(None),
+        Err(err) => Err(err),
+    }
+}
+
+fn matching_service_for_name(
+    requested_name: &str,
+    service_type_name: Result<Option<String>, ScryError>,
+    mut read_service: impl FnMut() -> Result<Option<RemotePtr>, ScryError>,
+) -> Result<Option<RemotePtr>, ScryError> {
+    let Some(type_name) = service_type_name? else {
+        return Ok(None);
+    };
+    if type_name != requested_name {
+        return Ok(None);
+    }
+    read_service()
+}
+
+fn service_entry_for_listing(
+    service_type_name: Result<Option<String>, ScryError>,
+    mut read_service: impl FnMut() -> Result<Option<RemotePtr>, ScryError>,
+) -> Result<Option<(String, RemotePtr)>, ScryError> {
+    let Some(type_name) = service_type_name? else {
+        return Ok(None);
+    };
+    if type_name.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some((
+        type_name,
+        read_service()?.unwrap_or(RemotePtr::NULL),
+    )))
 }
 
 #[cfg(test)]
@@ -251,6 +315,127 @@ mod tests {
         .expect_err("unexpected read failures should not use the backing-field fallback");
 
         assert!(matches!(err, ScryError::MemoryAccess { addr: 0x1234, .. }));
+    }
+
+    #[test]
+    fn missing_service_manager_class_is_treated_as_absent() {
+        let class = resolve_service_manager_class(|| {
+            Err(ScryError::ClassNotFound {
+                name: SERVICE_MANAGER_CLASS.into(),
+            })
+        })
+        .unwrap();
+
+        assert_eq!(class, None);
+    }
+
+    #[test]
+    fn service_manager_class_propagates_non_class_lookup_errors() {
+        let err = resolve_service_manager_class(|| {
+            Err(ScryError::MemoryAccess {
+                addr: 0x1234,
+                reason: "service manager class lookup failed".into(),
+            })
+        })
+        .expect_err("unexpected lookup failures should not be suppressed");
+
+        assert!(matches!(err, ScryError::MemoryAccess { addr: 0x1234, .. }));
+    }
+
+    #[test]
+    fn get_service_skips_entries_without_service_type_name() {
+        let type_name = matching_service_for_name(
+            "NetCache",
+            resolve_service_type_name(|| {
+                Err(ScryError::FieldNotFound {
+                    class: "ServiceInfo".into(),
+                    field: "ServiceTypeName".into(),
+                })
+            }),
+            || unreachable!("skipped entries should not read the service pointer"),
+        )
+        .unwrap();
+
+        assert_eq!(type_name, None);
+    }
+
+    #[test]
+    fn get_service_propagates_non_field_service_type_errors() {
+        let err = matching_service_for_name(
+            "NetCache",
+            resolve_service_type_name(|| {
+                Err(ScryError::MemoryAccess {
+                    addr: 0x5678,
+                    reason: "service info read failed".into(),
+                })
+            }),
+            || Ok(Some(RemotePtr::new(0x2222))),
+        )
+        .expect_err("runtime or layout errors should not be suppressed");
+
+        assert!(matches!(err, ScryError::MemoryAccess { addr: 0x5678, .. }));
+    }
+
+    #[test]
+    fn get_service_returns_none_when_matching_entry_has_no_service_field() {
+        let service = matching_service_for_name("NetCache", Ok(Some("NetCache".into())), || {
+            resolve_service_instance(|| {
+                Err(ScryError::FieldNotFound {
+                    class: "ServiceInfo".into(),
+                    field: "Service".into(),
+                })
+            })
+        })
+        .unwrap();
+
+        assert_eq!(service, None);
+    }
+
+    #[test]
+    fn get_service_propagates_non_field_service_errors() {
+        let err = matching_service_for_name("NetCache", Ok(Some("NetCache".into())), || {
+            resolve_service_instance(|| {
+                Err(ScryError::MemoryAccess {
+                    addr: 0x9ABC,
+                    reason: "service pointer read failed".into(),
+                })
+            })
+        })
+        .expect_err("matched service reads should propagate non-not-found errors");
+
+        assert!(matches!(err, ScryError::MemoryAccess { addr: 0x9ABC, .. }));
+    }
+
+    #[test]
+    fn list_services_propagates_non_field_service_errors() {
+        let err = service_entry_for_listing(Ok(Some("GameMgr".into())), || {
+            resolve_service_instance(|| {
+                Err(ScryError::MemoryAccess {
+                    addr: 0xABCD,
+                    reason: "service pointer read failed".into(),
+                })
+            })
+        })
+        .expect_err("runtime or layout errors should not be suppressed");
+
+        assert!(matches!(err, ScryError::MemoryAccess { addr: 0xABCD, .. }));
+    }
+
+    #[test]
+    fn list_services_skips_empty_service_type_names() {
+        let service = service_entry_for_listing(Ok(Some(String::new())), || {
+            unreachable!("empty names should be skipped before reading the service")
+        })
+        .unwrap();
+
+        assert_eq!(service, None);
+    }
+
+    #[test]
+    fn list_services_keeps_missing_service_fields_as_null_entries() {
+        let service = service_entry_for_listing(Ok(Some("GameMgr".into())), || Ok(None)).unwrap();
+
+        assert_eq!(service, Some(("GameMgr".into(), RemotePtr::NULL)));
     }
 }
 
