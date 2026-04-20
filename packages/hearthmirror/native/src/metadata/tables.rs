@@ -281,7 +281,10 @@ impl MetadataReader {
                     return Ok(0x02000000 | ((idx as u32) + 1));
                 }
             }
-            Err(ScryError::ClassNotFound { name: format!("{}.{}", namespace, name) })
+            Err(ScryError::ClassNotFound {
+                namespace: namespace.to_string(),
+                name: name.to_string(),
+            })
         })
     }
 

@@ -1,6 +1,7 @@
 use crate::error::ScryError;
 use crate::memory::ProcessMemory;
-use crate::mono::class::{read_class_fields, MonoClassRef};
+use crate::mono::class::{read_class_fields, read_mono_class, MonoClassRef};
+use crate::mono::field::MonoFieldDef;
 use crate::mono::offsets::MonoOffsets;
 use crate::remote_ptr::RemotePtr;
 use std::collections::HashMap;
@@ -152,6 +153,34 @@ impl MonoObject {
             return Ok(None);
         }
         Ok(Some(ptr))
+    }
+
+    /// Look up a field by name across the object's class hierarchy,
+    /// delegating to [`MonoClassRef::find_field`] after resolving the object's
+    /// klass pointer.
+    ///
+    /// Prefer this over the `self.fields` HashMap when the field you need
+    /// might be inherited — `self.fields` only holds fields declared on the
+    /// leaf class. Returns `Ok(None)` when the klass pointer is NULL or the
+    /// field is absent in the hierarchy.
+    pub fn find_field(
+        &self,
+        memory: &ProcessMemory,
+        name: &str,
+    ) -> Result<Option<MonoFieldDef>, ScryError> {
+        let object_off = &self.offsets.structs.object;
+        let vtable_off = &self.offsets.structs.vtable;
+
+        let vtable_ptr = memory.read_remote_ptr(self.addr + object_off.vtable)?;
+        if vtable_ptr.is_null() {
+            return Ok(None);
+        }
+        let klass = memory.read_remote_ptr(vtable_ptr + vtable_off.klass)?;
+        if klass.is_null() {
+            return Ok(None);
+        }
+        let class = read_mono_class(memory, klass, self.offsets.clone())?;
+        class.find_field(memory, name)
     }
 }
 
