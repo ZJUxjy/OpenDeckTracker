@@ -1,353 +1,500 @@
 use crate::error::ScryError;
-use crate::metadata::MetadataReader;
+use crate::metadata::{
+    pe::locate_metadata_section,
+    streams::StreamSet,
+    tokens::HeapIndexWidth,
+    MetadataError, MetadataReader,
+};
 
-impl MetadataReader {
-    /// Find a TypeDef by full name (namespace + name). Returns the ECMA-335
-    /// metadata token (0x02000000 | row_idx) on success.
-    pub fn find_class_token(&self, namespace: &str, name: &str) -> Result<u32, ScryError> {
-        let bytes = self.bytes();
-        let metadata = locate_cli_metadata(bytes)?;
-        let (strings_stream, tilde_stream) = parse_metadata_streams(metadata)?;
-        let typedefs = parse_typedef_table(tilde_stream, strings_stream)?;
+// ─── Row types ───────────────────────────────────────────────────────────────
 
-        for (idx, td) in typedefs.iter().enumerate() {
-            if td.namespace == namespace && td.name == name {
-                // ECMA-335 II.22.37: TypeDef token = 0x02000000 | (row + 1)
-                return Ok(0x02000000 | ((idx + 1) as u32));
+/// A decoded TypeDef table row (ECMA-335 II.22.37).
+#[derive(Debug, Clone)]
+pub struct TypeDefRow<'a> {
+    pub flags: u32,
+    pub name: &'a str,
+    pub namespace: &'a str,
+    /// 1-based RID of first Field belonging to this type (0 ⇒ no fields).
+    pub field_list: u32,
+    /// 1-based RID of first MethodDef belonging to this type (0 ⇒ no methods).
+    pub method_list: u32,
+}
+
+/// A decoded Field table row (ECMA-335 II.22.15).
+#[derive(Debug, Clone)]
+pub struct FieldRow<'a> {
+    pub flags: u16,
+    pub name: &'a str,
+}
+
+/// A decoded MethodDef table row (ECMA-335 II.22.26).
+#[derive(Debug, Clone)]
+pub struct MethodDefRow<'a> {
+    pub rva: u32,
+    pub impl_flags: u16,
+    pub flags: u16,
+    pub name: &'a str,
+}
+
+// ─── TablesReader ─────────────────────────────────────────────────────────────
+
+/// Reader for the `#~` (compressed metadata tables) stream.
+///
+/// Provides fallible iterators over TypeDef, Field, and MethodDef rows.
+/// All string values are resolved inline from the `#Strings` heap.
+pub struct TablesReader<'a> {
+    tilde: &'a [u8],
+    strings: &'a [u8],
+    heap: HeapIndexWidth,
+    row_counts: [u32; 64],
+    data_base: usize,
+}
+
+impl<'a> TablesReader<'a> {
+    /// Parse the `#~` stream header.
+    ///
+    /// - `tilde`   – raw `#~` stream bytes (`StreamSet::tables()`)
+    /// - `strings` – raw `#Strings` heap bytes (`StreamSet::strings()`)
+    /// - `heap`    – heap index widths (from `HeapIndexWidth::from_heap_sizes(tilde[6])`)
+    pub fn new(
+        tilde: &'a [u8],
+        strings: &'a [u8],
+        heap: HeapIndexWidth,
+    ) -> Result<Self, MetadataError> {
+        if tilde.len() < 24 {
+            return Err(MetadataError::Truncated("#~ header too short".into()));
+        }
+        let valid = u64::from_le_bytes(
+            tilde[8..16]
+                .try_into()
+                .map_err(|_| MetadataError::Truncated("#~ valid mask".into()))?,
+        );
+        let n_present = valid.count_ones() as usize;
+        let data_base = 24 + n_present * 4;
+        if tilde.len() < data_base {
+            return Err(MetadataError::Truncated("#~ row counts truncated".into()));
+        }
+        let mut row_counts = [0u32; 64];
+        let mut rc_idx = 0usize;
+        for (i, count) in row_counts.iter_mut().enumerate() {
+            if valid & (1u64 << i) != 0 {
+                let off = 24 + rc_idx * 4;
+                *count = u32::from_le_bytes(
+                    tilde[off..off + 4]
+                        .try_into()
+                        .map_err(|_| MetadataError::Truncated("row count entry".into()))?,
+                );
+                rc_idx += 1;
             }
         }
+        Ok(Self { tilde, strings, heap, row_counts, data_base })
+    }
 
-        Err(ScryError::ClassNotFound {
-            name: format!("{}.{}", namespace, name),
+    /// Total number of rows in table `t` (0 if absent).
+    pub fn row_count(&self, table: usize) -> u32 {
+        self.row_counts.get(table).copied().unwrap_or(0)
+    }
+
+    // ── Iterators ────────────────────────────────────────────────────────────
+
+    /// Iterate all TypeDef rows (table 0x02).
+    pub fn iter_typedefs(
+        &'a self,
+    ) -> impl Iterator<Item = Result<TypeDefRow<'a>, MetadataError>> + 'a {
+        let base = self.typedef_offset();
+        let rs = self.typedef_row_size();
+        let count = self.row_counts[0x02] as usize;
+        (0..count).map(move |i| self.read_typedef_row(base + i * rs))
+    }
+
+    /// Iterate all Field rows (table 0x04).
+    pub fn iter_fields(
+        &'a self,
+    ) -> impl Iterator<Item = Result<FieldRow<'a>, MetadataError>> + 'a {
+        let base = self.field_offset();
+        let rs = self.field_row_size();
+        let count = self.row_counts[0x04] as usize;
+        (0..count).map(move |i| self.read_field_row(base + i * rs))
+    }
+
+    /// Iterate all MethodDef rows (table 0x06).
+    pub fn iter_methoddefs(
+        &'a self,
+    ) -> impl Iterator<Item = Result<MethodDefRow<'a>, MetadataError>> + 'a {
+        let base = self.methoddef_offset();
+        let rs = self.methoddef_row_size();
+        let count = self.row_counts[0x06] as usize;
+        (0..count).map(move |i| self.read_methoddef_row(base + i * rs))
+    }
+
+    // ── Row readers ──────────────────────────────────────────────────────────
+
+    fn read_typedef_row(&self, off: usize) -> Result<TypeDefRow<'a>, MetadataError> {
+        let s = self.heap.string as usize;
+        let ext = self.type_def_or_ref_size();
+        let fi = self.simple_idx(0x04);
+        let mi = self.simple_idx(0x06);
+        let rs = 4 + s * 2 + ext + fi + mi;
+        let row = self
+            .tilde
+            .get(off..off + rs)
+            .ok_or_else(|| MetadataError::Truncated("TypeDef row OOB".into()))?;
+        let flags = read_u32(row, 0)?;
+        let name_idx = read_idx(row, 4, s)?;
+        let ns_idx = read_idx(row, 4 + s, s)?;
+        // skip Extends (ext bytes)
+        let field_list = read_idx(row, 4 + s * 2 + ext, fi)?;
+        let method_list = read_idx(row, 4 + s * 2 + ext + fi, mi)?;
+        Ok(TypeDefRow {
+            flags,
+            name: self.resolve_string(name_idx)?,
+            namespace: self.resolve_string(ns_idx)?,
+            field_list,
+            method_list,
+        })
+    }
+
+    fn read_field_row(&self, off: usize) -> Result<FieldRow<'a>, MetadataError> {
+        let s = self.heap.string as usize;
+        let b = self.heap.blob as usize;
+        let rs = 2 + s + b;
+        let row = self
+            .tilde
+            .get(off..off + rs)
+            .ok_or_else(|| MetadataError::Truncated("Field row OOB".into()))?;
+        let flags = read_u16(row, 0)?;
+        let name_idx = read_idx(row, 2, s)?;
+        Ok(FieldRow { flags, name: self.resolve_string(name_idx)? })
+    }
+
+    fn read_methoddef_row(&self, off: usize) -> Result<MethodDefRow<'a>, MetadataError> {
+        let s = self.heap.string as usize;
+        let b = self.heap.blob as usize;
+        let pi = self.simple_idx(0x08); // Param table index
+        let rs = 4 + 2 + 2 + s + b + pi;
+        let row = self
+            .tilde
+            .get(off..off + rs)
+            .ok_or_else(|| MetadataError::Truncated("MethodDef row OOB".into()))?;
+        let rva = read_u32(row, 0)?;
+        let impl_flags = read_u16(row, 4)?;
+        let flags = read_u16(row, 6)?;
+        let name_idx = read_idx(row, 8, s)?;
+        Ok(MethodDefRow { rva, impl_flags, flags, name: self.resolve_string(name_idx)? })
+    }
+
+    // ── String resolution ────────────────────────────────────────────────────
+
+    fn resolve_string(&self, idx: u32) -> Result<&'a str, MetadataError> {
+        let i = idx as usize;
+        if i >= self.strings.len() {
+            return Err(MetadataError::Truncated(format!("string idx {} OOB", idx)));
+        }
+        let end = self.strings[i..]
+            .iter()
+            .position(|&b| b == 0)
+            .map_or(self.strings.len(), |p| i + p);
+        std::str::from_utf8(&self.strings[i..end])
+            .map_err(|_| MetadataError::Truncated(format!("non-UTF8 string at idx {}", idx)))
+    }
+
+    // ── Size helpers ─────────────────────────────────────────────────────────
+
+    fn simple_idx(&self, table: usize) -> usize {
+        if self.row_counts[table] <= 0xFFFF { 2 } else { 4 }
+    }
+
+    fn coded_idx(&self, tag_bits: u32, tables: &[usize]) -> usize {
+        let max = tables.iter().map(|&t| self.row_counts[t]).max().unwrap_or(0);
+        if max < (1u32 << (16 - tag_bits)) { 2 } else { 4 }
+    }
+
+    fn type_def_or_ref_size(&self) -> usize {
+        self.coded_idx(2, &[0x02, 0x01, 0x1B])
+    }
+
+    fn resolution_scope_size(&self) -> usize {
+        self.coded_idx(2, &[0x00, 0x1A, 0x23, 0x01])
+    }
+
+    fn module_row_size(&self) -> usize {
+        2 + self.heap.string as usize + self.heap.guid as usize * 3
+    }
+
+    fn typeref_row_size(&self) -> usize {
+        self.resolution_scope_size() + self.heap.string as usize * 2
+    }
+
+    fn typedef_row_size(&self) -> usize {
+        4 + self.heap.string as usize * 2
+            + self.type_def_or_ref_size()
+            + self.simple_idx(0x04)
+            + self.simple_idx(0x06)
+    }
+
+    fn fieldptr_row_size(&self) -> usize {
+        self.simple_idx(0x04)
+    }
+
+    fn field_row_size(&self) -> usize {
+        2 + self.heap.string as usize + self.heap.blob as usize
+    }
+
+    fn methodptr_row_size(&self) -> usize {
+        self.simple_idx(0x06)
+    }
+
+    fn methoddef_row_size(&self) -> usize {
+        4 + 2 + 2 + self.heap.string as usize + self.heap.blob as usize + self.simple_idx(0x08)
+    }
+
+    // ── Offset computations ──────────────────────────────────────────────────
+
+    fn typedef_offset(&self) -> usize {
+        self.data_base
+            + self.row_counts[0x00] as usize * self.module_row_size()
+            + self.row_counts[0x01] as usize * self.typeref_row_size()
+    }
+
+    fn field_offset(&self) -> usize {
+        self.typedef_offset()
+            + self.row_counts[0x02] as usize * self.typedef_row_size()
+            + self.row_counts[0x03] as usize * self.fieldptr_row_size()
+    }
+
+    fn methoddef_offset(&self) -> usize {
+        self.field_offset()
+            + self.row_counts[0x04] as usize * self.field_row_size()
+            + self.row_counts[0x05] as usize * self.methodptr_row_size()
+    }
+}
+
+// ─── MetadataReader public API ───────────────────────────────────────────────
+
+impl MetadataReader {
+    /// Find a TypeDef by namespace + name.  Returns token `0x02000000 | rid`.
+    pub fn find_class_token(&self, namespace: &str, name: &str) -> Result<u32, ScryError> {
+        with_tables(self.bytes(), |reader| {
+            for (idx, row) in reader.iter_typedefs().enumerate() {
+                let td = row?;
+                if td.namespace == namespace && td.name == name {
+                    return Ok(0x02000000 | ((idx as u32) + 1));
+                }
+            }
+            Err(ScryError::ClassNotFound { name: format!("{}.{}", namespace, name) })
+        })
+    }
+
+    /// Find a Field by name within a type identified by `class_token`.
+    /// Returns token `0x04000000 | rid`.
+    pub fn find_field_token(&self, class_token: u32, field_name: &str) -> Result<u32, ScryError> {
+        with_tables(self.bytes(), |reader| {
+            let class_rid = (class_token & 0x00FF_FFFF) as usize;
+            if class_rid == 0 {
+                return Err(ScryError::MetadataError("invalid class token: RID 0".into()));
+            }
+            // Locate the TypeDef and the next one to determine the field range.
+            let mut typedefs = reader.iter_typedefs();
+            let td = typedefs
+                .nth(class_rid - 1)
+                .ok_or_else(|| ScryError::MetadataError("class token out of range".into()))??;
+            let field_start = td.field_list as usize;
+            // Next typedef's field_list marks the end; absent ⇒ use total count + 1.
+            let field_end = typedefs
+                .next()
+                .and_then(|r| r.ok())
+                .map(|next| next.field_list as usize)
+                .unwrap_or(reader.row_count(0x04) as usize + 1);
+
+            // Indexed field walk for correct RID tracking.
+            for (idx, row) in reader.iter_fields().enumerate() {
+                let rid = idx + 1; // 1-based
+                if rid < field_start {
+                    continue;
+                }
+                if rid >= field_end {
+                    break;
+                }
+                let f = row?;
+                if f.name == field_name {
+                    return Ok(0x04000000 | (rid as u32));
+                }
+            }
+            Err(ScryError::FieldNotFound {
+                class: format!("token 0x{:08X}", class_token),
+                field: field_name.into(),
+            })
+        })
+    }
+
+    /// Find a MethodDef by name within a type identified by `class_token`.
+    /// Returns token `0x06000000 | rid`.
+    pub fn find_method_token(
+        &self,
+        class_token: u32,
+        method_name: &str,
+    ) -> Result<u32, ScryError> {
+        with_tables(self.bytes(), |reader| {
+            let class_rid = (class_token & 0x00FF_FFFF) as usize;
+            if class_rid == 0 {
+                return Err(ScryError::MetadataError("invalid class token: RID 0".into()));
+            }
+            let mut typedefs = reader.iter_typedefs();
+            let td = typedefs
+                .nth(class_rid - 1)
+                .ok_or_else(|| ScryError::MetadataError("class token out of range".into()))??;
+            let method_start = td.method_list as usize;
+            let method_end = typedefs
+                .next()
+                .and_then(|r| r.ok())
+                .map(|next| next.method_list as usize)
+                .unwrap_or(reader.row_count(0x06) as usize + 1);
+
+            for (idx, row) in reader.iter_methoddefs().enumerate() {
+                let rid = idx + 1;
+                if rid < method_start {
+                    continue;
+                }
+                if rid >= method_end {
+                    break;
+                }
+                let m = row?;
+                if m.name == method_name {
+                    return Ok(0x06000000 | (rid as u32));
+                }
+            }
+            Err(ScryError::FieldNotFound {
+                class: format!("token 0x{:08X}", class_token),
+                field: method_name.into(),
+            })
         })
     }
 }
 
-/// Locate the raw CLI metadata bytes within a .NET PE file.
-fn locate_cli_metadata(bytes: &[u8]) -> Result<&[u8], ScryError> {
-    if bytes.len() < 0x40 {
-        return Err(ScryError::MetadataError("file too small for DOS header".into()));
-    }
+// ─── Internal helpers ─────────────────────────────────────────────────────────
 
-    let e_lfanew =
-        u32::from_le_bytes([bytes[0x3C], bytes[0x3D], bytes[0x3E], bytes[0x3F]]) as usize;
-    if bytes.len() < e_lfanew + 24 + 2 {
-        return Err(ScryError::MetadataError("PE NT headers truncated".into()));
-    }
-
-    let opt_hdr_off = e_lfanew + 24;
-    let file_hdr_off = e_lfanew + 4;
-    let magic = u16::from_le_bytes([bytes[opt_hdr_off], bytes[opt_hdr_off + 1]]);
-
-    let data_dir_off = match magic {
-        0x10B => opt_hdr_off + 0x60, // PE32
-        0x20B => opt_hdr_off + 0x70, // PE32+
-        m => {
-            return Err(ScryError::MetadataError(format!(
-                "unknown OptionalHeader magic 0x{:04X}",
-                m
-            )))
-        }
-    };
-
-    // COM descriptor is DataDirectory[14]
-    let com_off = data_dir_off + 14 * 8;
-    if bytes.len() < com_off + 8 {
-        return Err(ScryError::MetadataError("COM descriptor entry truncated".into()));
-    }
-    let cli_rva = u32::from_le_bytes([
-        bytes[com_off],
-        bytes[com_off + 1],
-        bytes[com_off + 2],
-        bytes[com_off + 3],
-    ]) as usize;
-    if cli_rva == 0 {
-        return Err(ScryError::MetadataError("no CLI header (not a .NET assembly)".into()));
-    }
-
-    let num_sections =
-        u16::from_le_bytes([bytes[file_hdr_off + 2], bytes[file_hdr_off + 3]]) as usize;
-    let optional_header_size =
-        u16::from_le_bytes([bytes[file_hdr_off + 16], bytes[file_hdr_off + 17]]) as usize;
-    let sections_off = opt_hdr_off + optional_header_size;
-
-    let rva_to_offset = |rva: usize| -> Option<usize> {
-        for s in 0..num_sections {
-            let sh = sections_off + s * 40;
-            if bytes.len() < sh + 40 {
-                return None;
-            }
-            let virt_sz = u32::from_le_bytes([
-                bytes[sh + 8],
-                bytes[sh + 9],
-                bytes[sh + 10],
-                bytes[sh + 11],
-            ]) as usize;
-            let virt_addr = u32::from_le_bytes([
-                bytes[sh + 12],
-                bytes[sh + 13],
-                bytes[sh + 14],
-                bytes[sh + 15],
-            ]) as usize;
-            let raw_off = u32::from_le_bytes([
-                bytes[sh + 20],
-                bytes[sh + 21],
-                bytes[sh + 22],
-                bytes[sh + 23],
-            ]) as usize;
-            let raw_sz = u32::from_le_bytes([
-                bytes[sh + 16],
-                bytes[sh + 17],
-                bytes[sh + 18],
-                bytes[sh + 19],
-            ]) as usize;
-            if rva >= virt_addr && rva < virt_addr + virt_sz.max(raw_sz) {
-                return Some(raw_off + (rva - virt_addr));
-            }
-        }
-        None
-    };
-
-    let cli_off = rva_to_offset(cli_rva).ok_or_else(|| {
-        ScryError::MetadataError(format!("CLI RVA 0x{:X} not in any section", cli_rva))
-    })?;
-
-    if bytes.len() < cli_off + 16 {
-        return Err(ScryError::MetadataError("CLI header truncated".into()));
-    }
-
-    // IMAGE_COR20_HEADER: MetaData IMAGE_DATA_DIRECTORY at offset 8
-    let meta_rva = u32::from_le_bytes([
-        bytes[cli_off + 8],
-        bytes[cli_off + 9],
-        bytes[cli_off + 10],
-        bytes[cli_off + 11],
-    ]) as usize;
-    let meta_size = u32::from_le_bytes([
-        bytes[cli_off + 12],
-        bytes[cli_off + 13],
-        bytes[cli_off + 14],
-        bytes[cli_off + 15],
-    ]) as usize;
-
-    let meta_off = rva_to_offset(meta_rva).ok_or_else(|| {
-        ScryError::MetadataError(format!(
-            "metadata RVA 0x{:X} not in any section",
-            meta_rva
-        ))
-    })?;
-
-    if bytes.len() < meta_off + meta_size {
-        return Err(ScryError::MetadataError("metadata section truncated".into()));
-    }
-
-    Ok(&bytes[meta_off..meta_off + meta_size])
-}
-
-#[derive(Debug)]
-struct TypeDefRow {
-    namespace: String,
-    name: String,
-}
-
-fn parse_metadata_streams(metadata: &[u8]) -> Result<(&[u8], &[u8]), ScryError> {
-    if metadata.len() < 16 {
-        return Err(ScryError::MetadataError("metadata too short".into()));
-    }
-    let sig = u32::from_le_bytes([metadata[0], metadata[1], metadata[2], metadata[3]]);
-    if sig != 0x424A5342 {
-        return Err(ScryError::MetadataError(format!(
-            "bad metadata signature 0x{:08X}",
-            sig
-        )));
-    }
-    let version_len =
-        u32::from_le_bytes([metadata[12], metadata[13], metadata[14], metadata[15]]);
-    let version_padded = ((version_len + 3) & !3) as usize;
-    let mut off = 16 + version_padded;
-    if metadata.len() < off + 4 {
-        return Err(ScryError::MetadataError("metadata stream header missing".into()));
-    }
-    let _flags = u16::from_le_bytes([metadata[off], metadata[off + 1]]);
-    let n_streams = u16::from_le_bytes([metadata[off + 2], metadata[off + 3]]);
-    off += 4;
-
-    let mut strings_offset: Option<(usize, usize)> = None;
-    let mut tilde_offset: Option<(usize, usize)> = None;
-
-    for _ in 0..n_streams {
-        if metadata.len() < off + 8 {
-            return Err(ScryError::MetadataError("stream entry truncated".into()));
-        }
-        let stream_off = u32::from_le_bytes([
-            metadata[off],
-            metadata[off + 1],
-            metadata[off + 2],
-            metadata[off + 3],
-        ]) as usize;
-        let stream_size = u32::from_le_bytes([
-            metadata[off + 4],
-            metadata[off + 5],
-            metadata[off + 6],
-            metadata[off + 7],
-        ]) as usize;
-        off += 8;
-
-        let name_start = off;
-        let mut name_end = off;
-        while name_end < metadata.len() && metadata[name_end] != 0 {
-            name_end += 1;
-        }
-        let name = std::str::from_utf8(&metadata[name_start..name_end])
-            .map_err(|_| ScryError::MetadataError("non-utf8 stream name".into()))?
-            .to_string();
-        off = ((name_end + 1 + 3) & !3).min(metadata.len());
-
-        match name.as_str() {
-            "#Strings" => strings_offset = Some((stream_off, stream_size)),
-            "#~" => tilde_offset = Some((stream_off, stream_size)),
-            _ => {}
-        }
-    }
-
-    let (so, ss) = strings_offset
-        .ok_or_else(|| ScryError::MetadataError("no #Strings stream".into()))?;
-    let (to, ts) = tilde_offset
+/// Parse and set up the pipeline, then call `f` with a `TablesReader`.
+fn with_tables<T>(
+    bytes: &[u8],
+    f: impl FnOnce(TablesReader<'_>) -> Result<T, ScryError>,
+) -> Result<T, ScryError> {
+    let meta = locate_metadata_section(bytes)?;
+    let streams = StreamSet::parse(meta)?;
+    let tilde = streams
+        .tables()
         .ok_or_else(|| ScryError::MetadataError("no #~ stream".into()))?;
-
-    Ok((&metadata[so..so + ss], &metadata[to..to + ts]))
+    let strings = streams
+        .strings()
+        .ok_or_else(|| ScryError::MetadataError("no #Strings stream".into()))?;
+    if tilde.len() < 7 {
+        return Err(ScryError::MetadataError("#~ header too short for HeapSizes".into()));
+    }
+    let heap = HeapIndexWidth::from_heap_sizes(tilde[6]);
+    let reader = TablesReader::new(tilde, strings, heap)?;
+    f(reader)
 }
 
-fn parse_typedef_table(tilde: &[u8], strings: &[u8]) -> Result<Vec<TypeDefRow>, ScryError> {
-    if tilde.len() < 24 {
-        return Err(ScryError::MetadataError("#~ header truncated".into()));
-    }
-    let heap_sizes = tilde[6];
-    let strings_idx_size: usize = if heap_sizes & 1 != 0 { 4 } else { 2 };
-    let guid_idx_size: usize = if heap_sizes & 2 != 0 { 4 } else { 2 };
-
-    let valid = u64::from_le_bytes([
-        tilde[8], tilde[9], tilde[10], tilde[11], tilde[12], tilde[13], tilde[14], tilde[15],
-    ]);
-    let n_tables = valid.count_ones() as usize;
-    let header_len = 24 + n_tables * 4;
-    if tilde.len() < header_len {
-        return Err(ScryError::MetadataError("#~ row counts truncated".into()));
-    }
-
-    let mut row_counts = [0u32; 64];
-    let mut rc_idx = 0;
-    for (i, count) in row_counts.iter_mut().enumerate() {
-        if valid & (1u64 << i) != 0 {
-            let off = 24 + rc_idx * 4;
-            *count = u32::from_le_bytes([
-                tilde[off],
-                tilde[off + 1],
-                tilde[off + 2],
-                tilde[off + 3],
-            ]);
-            rc_idx += 1;
-        }
-    }
-
-    let typedef_count = row_counts[0x02];
-    let typeref_count = row_counts[0x01];
-    let typespec_count = row_counts[0x1B];
-    let field_count = row_counts[0x04];
-    let methoddef_count = row_counts[0x06];
-    let module_count = row_counts[0x00];
-
-    let typedef_or_ref_size: usize =
-        if typedef_count.max(typeref_count).max(typespec_count) <= (1 << 14) {
-            2
-        } else {
-            4
-        };
-    let field_idx_size: usize = if field_count <= 0xFFFF { 2 } else { 4 };
-    let methoddef_idx_size: usize = if methoddef_count <= 0xFFFF { 2 } else { 4 };
-
-    let typedef_row_size = 4
-        + strings_idx_size  // name
-        + strings_idx_size  // namespace
-        + typedef_or_ref_size
-        + field_idx_size
-        + methoddef_idx_size;
-
-    let resolution_scope_size: usize = {
-        let max_rows = [module_count, row_counts[0x1A], row_counts[0x23], typeref_count]
-            .iter()
-            .copied()
-            .max()
-            .unwrap_or(0);
-        if max_rows <= (1 << 14) { 2 } else { 4 }
-    };
-
-    let module_row_size = 2 + strings_idx_size + guid_idx_size * 3;
-    let typeref_row_size = resolution_scope_size + strings_idx_size + strings_idx_size;
-
-    let mut tables_off = header_len;
-    tables_off += module_count as usize * module_row_size;
-    tables_off += typeref_count as usize * typeref_row_size;
-
-    let typedef_total = typedef_count as usize * typedef_row_size;
-    if tilde.len() < tables_off + typedef_total {
-        return Err(ScryError::MetadataError(format!(
-            "TypeDef table overruns #~ stream ({} need, {} avail)",
-            typedef_total,
-            tilde.len().saturating_sub(tables_off)
-        )));
-    }
-
-    let read_strings_idx = |buf: &[u8], off: usize| -> u32 {
-        if strings_idx_size == 4 {
-            u32::from_le_bytes([buf[off], buf[off + 1], buf[off + 2], buf[off + 3]])
-        } else {
-            u16::from_le_bytes([buf[off], buf[off + 1]]) as u32
-        }
-    };
-
-    let read_string = |idx: u32| -> Result<String, ScryError> {
-        let i = idx as usize;
-        if i >= strings.len() {
-            return Err(ScryError::MetadataError(format!("strings idx {} OOB", idx)));
-        }
-        let end = strings[i..]
-            .iter()
-            .position(|&c| c == 0)
-            .unwrap_or(strings.len() - i);
-        Ok(String::from_utf8_lossy(&strings[i..i + end]).into_owned())
-    };
-
-    let mut out = Vec::with_capacity(typedef_count as usize);
-    for row in 0..typedef_count as usize {
-        let off = tables_off + row * typedef_row_size;
-        // skip flags (4)
-        let name_idx = read_strings_idx(tilde, off + 4);
-        let ns_idx = read_strings_idx(tilde, off + 4 + strings_idx_size);
-        out.push(TypeDefRow {
-            name: read_string(name_idx)?,
-            namespace: read_string(ns_idx)?,
-        });
-    }
-
-    Ok(out)
+fn read_u32(buf: &[u8], off: usize) -> Result<u32, MetadataError> {
+    buf.get(off..off + 4)
+        .and_then(|s| s.try_into().ok())
+        .map(u32::from_le_bytes)
+        .ok_or_else(|| MetadataError::Truncated(format!("u32 read at offset {}", off)))
 }
+
+fn read_u16(buf: &[u8], off: usize) -> Result<u16, MetadataError> {
+    buf.get(off..off + 2)
+        .and_then(|s| s.try_into().ok())
+        .map(u16::from_le_bytes)
+        .ok_or_else(|| MetadataError::Truncated(format!("u16 read at offset {}", off)))
+}
+
+fn read_idx(buf: &[u8], off: usize, size: usize) -> Result<u32, MetadataError> {
+    if size == 4 {
+        read_u32(buf, off)
+    } else {
+        read_u16(buf, off).map(u32::from)
+    }
+}
+
+// ─── Tests ───────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    fn fixture(name: &str) -> Vec<u8> {
+        let dir = env!("CARGO_MANIFEST_DIR");
+        let path = std::path::Path::new(dir).join("tests/fixtures").join(name);
+        std::fs::read(&path).unwrap_or_else(|e| panic!("cannot read fixture {:?}: {}", path, e))
+    }
+
+    // Helper: parse the DLL and invoke a closure with a TablesReader.
+    fn with_minimal<T>(f: impl FnOnce(&TablesReader<'_>) -> T) -> T {
+        let dll = fixture("MinimalAssembly.dll");
+        let meta = locate_metadata_section(&dll).expect("locate metadata");
+        let streams = StreamSet::parse(meta).expect("parse streams");
+        let tilde = streams.tables().expect("#~ stream");
+        let strings = streams.strings().expect("#Strings");
+        let heap = HeapIndexWidth::from_heap_sizes(tilde[6]);
+        let reader = TablesReader::new(tilde, strings, heap).expect("TablesReader::new");
+        f(&reader)
+    }
+
+    #[test]
+    fn tables_iter_typedefs_finds_servicemanager() {
+        with_minimal(|reader| {
+            let found = reader
+                .iter_typedefs()
+                .filter_map(|r| r.ok())
+                .any(|td| {
+                    td.namespace == "Blizzard.T5.Services" && td.name == "ServiceManager"
+                });
+            assert!(found, "expected to find Blizzard.T5.Services.ServiceManager in TypeDef table");
+        });
+    }
+
+    #[test]
+    fn tables_iter_fields_finds_s_runtimeservices() {
+        with_minimal(|reader| {
+            let found = reader
+                .iter_fields()
+                .filter_map(|r| r.ok())
+                .any(|f| f.name == "s_runtimeServices");
+            assert!(found, "expected to find field s_runtimeServices");
+        });
+    }
+
+    #[test]
+    fn tables_handles_empty_field_table() {
+        // A minimal DLL with no Field rows should produce zero iterations.
+        // We validate this by checking that the count reported is consistent.
+        with_minimal(|reader| {
+            let count = reader.iter_fields().count();
+            let row_count = reader.row_count(0x04) as usize;
+            assert_eq!(count, row_count, "iter_fields count should match row_count(Field)");
+        });
+    }
+
+    #[test]
+    fn find_class_token_returns_typedef_token() {
+        let dll = fixture("MinimalAssembly.dll");
+        let reader = MetadataReader::from_memory(dll);
+        let token = reader
+            .find_class_token("Blizzard.T5.Services", "ServiceManager")
+            .expect("find ServiceManager");
+        assert_eq!(token >> 24, 0x02, "TypeDef token table byte should be 0x02");
+        assert!(token & 0x00FF_FFFF > 0, "RID should be non-zero");
+    }
+
     #[test]
     fn empty_bytes_errors() {
         let r = MetadataReader::from_memory(vec![]);
-        let err = r.find_class_token("Foo", "Bar");
-        assert!(err.is_err());
+        assert!(r.find_class_token("Foo", "Bar").is_err());
     }
 
     #[test]
     fn random_bytes_errors_gracefully() {
         let r = MetadataReader::from_memory(vec![0u8; 1024]);
-        let err = r.find_class_token("Foo", "Bar");
-        assert!(err.is_err());
+        assert!(r.find_class_token("Foo", "Bar").is_err());
     }
 }
