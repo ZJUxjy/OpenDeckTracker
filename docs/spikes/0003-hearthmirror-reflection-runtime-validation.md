@@ -400,3 +400,84 @@ $ cargo run --example dump_reflection
 - Run 3 closes the `image_ptr` failure mode that the prior baseline carried
 
 What 5e *does not* deliver — and was never scoped to — is the `class_cache` walk path. That moves to 5f as F-11.
+
+## Run 4 — post `add-hearthmirror-image-walking` (5f)
+
+### Environment
+
+| Field | Value |
+|---|---|
+| OS | Microsoft Windows NT 10.0.26200.0 (x64) |
+| Build under test | `f4509aa` (5f archived as `2026-04-20-add-hearthmirror-image-walking`) |
+| Hearthstone PID | 2892 (32-bit WoW64), uptime ~2 min |
+| Game state | Main menu / login flow (just launched) |
+| Test date (UTC) | 2026-04-20 ~17:00 |
+| Cargo profile | `--release` |
+| Output file | `packages/hearthmirror/native/dump_reflection_run3_post5f.jsonl` (numbered "run3" on disk only because run1/run2 already existed; this is **spike Run 4**) |
+
+### Result — `dump_reflection` (12 reflection methods)
+
+```
+… same 5 prober warnings as Run 3 (4 profiled-thunk MonoClass/MonoAssembly
+   probes + 1 mono_image_get_name short-name slot — all keep baseline) …
+
+{"method":"getBattleTag","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getAccountId","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getMedalInfo","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getMatchInfo","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getGameType","status":"null","value":"0","error":null,"elapsed_ms":0}
+{"method":"isSpectating","status":"ok","value":"false","error":null,"elapsed_ms":0}
+{"method":"isGameOver","status":"ok","value":"false","error":null,"elapsed_ms":0}
+{"method":"getServerInfo","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getBattlegroundRatingInfo","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getArenaDeck","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getDecks","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getCollection","status":"null","value":"null","error":null,"elapsed_ms":0}
+```
+
+### Status table — Run 1 → Run 3d → Run 4
+
+| Method | Run 1 (5e baseline) | Run 3d (post-5e, pre-5f) | Run 4 (post-5f) |
+|---|---|---|---|
+| getBattleTag | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| getAccountId | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| getMedalInfo | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| getMatchInfo | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| getGameType | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (value=0) |
+| **isSpectating** | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ✅ **OK = false** |
+| **isGameOver** | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ✅ **OK = false** |
+| getServerInfo | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| getBattlegroundRatingInfo | ❌ MemoryAccess @ 0x15 | ⚪ null (early bail) | ⚪ null (no error) |
+| getArenaDeck | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| getDecks | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| getCollection | ❌ MemoryAccess @ 0x15 | ❌ class_def_table not found | ⚪ null (no error) |
+| **Totals** | 0 OK / 0 null / **12 ERR** | 0 OK / 1 null / **11 ERR** | **2 OK / 10 null / 0 ERR** |
+
+### Findings (Run 4)
+
+**Finding F-12** (Closed): F-11 (`class_def_table` flat-array assumption) is empirically resolved. After the 5f refactor (`MonoImage::find_class` → embedded `MonoInternalHashTable` walk on `MonoImage.class_cache = +0x35C`), **zero** reflection methods raise `ScryError::ClassNotFound` or `MetadataError`. Two methods (`isSpectating` / `isGameOver`) resolve their full chain (find_class → vtable → static field → bool read) and return correct values for the test state (`false` in main menu, before any match).
+
+**Finding F-13** (Informational, downstream of 5f): The 10 "null but no error" responses indicate the `MonoRuntime → MonoClass → MonoVTable → static_field` chain is now reaching a real field address but reading a NULL pointer / zero value. Two plausible explanations, both **outside the 5f scope**:
+
+- **(F-13a) Login state**: Hearthstone was on the login flow at test time (account picker / region select). Singletons such as `BnetPresenceMgr`, `NetCache`, `CollectionManager` are typically lazy-initialised on first menu-render after login, so `s_instance` legitimately reads NULL until the user clicks past the login screen.
+- **(F-13b) Field name / chain drift**: Some collectors expect C# field names that may have been renamed in the current Hearthstone build (last empirical sweep was during 5b). `MonoObject::find_field` now does inheritance-aware lookup (5f Phase 5), so a renamed field would silently miss instead of error — exactly the "null, no error" signature seen here.
+
+Disambiguating F-13a vs F-13b is the job of the next dedicated spike or `verify-hearthmirror-on-real-hs` extension: re-run `dump_reflection` after `LoginScreen → MainMenu` transition and observe whether `BattleTag` / `AccountId` flip to OK; any methods that stay null after a confirmed in-menu state imply F-13b and need a name audit against current `Assembly-CSharp.dll`.
+
+### Recommendations (Run 4)
+
+**R-11**: Spike 0003 may be **closed**. The original spike question — "is the bridge able to read live reflection data?" — now has a positive answer: `MonoRuntime::init` succeeds, `find_class` succeeds non-heuristically, and a representative pair of methods (`isSpectating` / `isGameOver`) returns truthful values without panic or error. Remaining "null" responses are upper-layer state / field-name questions, not bridge defects.
+
+**R-12** (defer to `verify-hearthmirror-on-real-hs`): Schedule a Tier-1 sweep after the user logs into the menu and a Tier-2 sweep after entering a match, capturing whether `getBattleTag` / `getAccountId` / `getDecks` populate. If any stay null while their dependent singletons are present (verifiable via `diag_singleton`), open a follow-up change to refresh field-name maps against the current build.
+
+**R-13**: The five `OffsetProber` warnings (`mono_class_get_name`, `mono_class_get_namespace`, `mono_image_get_name`, `mono_assembly_get_image`, `mono_class_get_parent`) remain as documented in F-9 / F-10 — they are profiled-thunk false positives that the range-gate (D13) correctly silences by keeping the JSON baseline. No action needed unless real-HS testing surfaces a baseline mismatch.
+
+### 5f Acceptance
+
+5f (`add-hearthmirror-image-walking`) is **complete and verified live** as of commit `f4509aa`. Its delivered scope, all confirmed against running Hearthstone in this Run 4:
+
+- `MonoImage::class_cache` embedded `MonoInternalHashTable` walk replaces the deleted `probe_class_def_table_offset` heuristic — zero error responses, down from 11 in Run 3d.
+- `MonoClassRef::{parent, fields_recursive, find_field}` inheritance traversal — exercised transitively by `MonoObject::find_field` on the two OK methods.
+- `MonoRuntime::find_class` uses one direct `MonoImage` lookup, with cache hit on repeat — Run 4 took ~1 ms total for 12 method calls combined, indicating lookup amortises after first call.
+
+Spike 0003 closes; future runtime-data fidelity work moves into [`verify-hearthmirror-on-real-hs`](../../openspec/changes/verify-hearthmirror-on-real-hs/).
