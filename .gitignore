@@ -39,3 +39,12 @@ data/cards/*.json
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+
+# User-local Claude / Copilot config (project-wide commands + skills are tracked under .claude/)
+.claude/settings.json
+.claude/statusline-command.sh
+.copilot/
+
+# Per-machine diagnostic outputs from hearthmirror native examples
+packages/hearthmirror/native/diag_*_run*.txt
+packages/hearthmirror/native/dump_reflection_run*.jsonl
