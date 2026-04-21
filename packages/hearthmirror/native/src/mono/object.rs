@@ -35,9 +35,32 @@ impl MonoObject {
         }
     }
 
-    /// Create a MonoObject from an address by reading its klass pointer.
+    /// Create a MonoObject from an address by resolving its runtime class
+    /// through the object header's `MonoVTable*`, then the vtable's
+    /// `klass` slot.
+    ///
     /// `offsets` is the runtime's shared `Arc<MonoOffsets>` (the field-name →
     /// offset map for the resolved klass is computed via `read_class_fields`).
+    ///
+    /// ## Why vtable, not klass, lives at object +0x00
+    ///
+    /// Mono's object header is `struct MonoObject { MonoVTable *vtable;
+    /// MonoThreadsSync *monitor; }` — the pointer immediately following the
+    /// sync-monitor word is reserved for the GC header, NOT for the
+    /// MonoClass. The real class pointer is reached via one additional
+    /// indirection through the vtable:
+    ///
+    /// ```text
+    ///   MonoObject.vtable  → MonoVTable* (at object + offsets.object.vtable, usually +0x00)
+    ///   MonoVTable.klass   → MonoClass*  (at vtable  + offsets.vtable.klass,  usually +0x00)
+    /// ```
+    ///
+    /// An earlier implementation treated object+0x00 as a direct klass
+    /// pointer. That incorrectly returned `MonoVTable*`, which caused
+    /// downstream `read_class_fields` to read garbage bytes where it
+    /// expected MonoClass fields — producing nonsensical offsets that then
+    /// drove the P1 collection-overflow bugs (getDecks / getCollection
+    /// reading huge `_size` values out of unrelated vtable slots).
     pub fn from_address(
         memory: &ProcessMemory,
         addr: RemotePtr,
@@ -46,8 +69,11 @@ impl MonoObject {
         if addr.is_null() {
             return Ok(None);
         }
-        // Mono object header: +0x00 is MonoClass* (klass pointer)
-        let klass = memory.read_remote_ptr(addr)?;
+        let vtable_ptr = memory.read_remote_ptr(addr + offsets.structs.object.vtable)?;
+        if vtable_ptr.is_null() {
+            return Ok(None);
+        }
+        let klass = memory.read_remote_ptr(vtable_ptr + offsets.structs.vtable.klass)?;
         if klass.is_null() {
             return Ok(None);
         }

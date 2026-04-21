@@ -481,3 +481,172 @@ Disambiguating F-13a vs F-13b is the job of the next dedicated spike or `verify-
 - `MonoRuntime::find_class` uses one direct `MonoImage` lookup, with cache hit on repeat — Run 4 took ~1 ms total for 12 method calls combined, indicating lookup amortises after first call.
 
 Spike 0003 closes; future runtime-data fidelity work moves into [`verify-hearthmirror-on-real-hs`](../../openspec/changes/verify-hearthmirror-on-real-hs/).
+
+> **Reopened 2026-04-20 evening** — Runs 5–8 below document three additional bridge defects hidden beneath the "null, no error" masking pattern from F-13 (the original Run 4 close). Each was an empirically-verifiable data-path bug, not a speculative F-13b field-rename.
+
+## Run 5–6 — live re-probing after Run 4 "close"
+
+### Environment
+
+| Field | Value |
+|---|---|
+| OS | Microsoft Windows NT 10.0.26200.0 (x64) |
+| Build under test | `1431dc6` (P0-1 fix for `Assembly-CSharp` vs `Assembly-CSharp-firstpass` image selection) |
+| Hearthstone state | In-menu, logged into account (post-login, pre-match) |
+| Test date (UTC) | 2026-04-20 evening |
+
+### Finding F-14 — P0 bridge defect #1: Assembly-CSharp vs Assembly-CSharp-firstpass
+
+`MonoRuntime::find_ac_image_cached` used `name.contains("Assembly-CSharp")` to select the game's main `MonoImage`. Because `Assembly-CSharp-firstpass.dll` appears *before* `Assembly-CSharp.dll` in the Mono domain's `domain_assemblies` `GSList`, the cache locked onto `firstpass` — which only contains ~20 utility classes and none of the gameplay singletons (`NetCache`, `GameState`, `CollectionManager`, …).
+
+Combined with an independent latent bug in `MonoRuntime::get_singleton` — `Err(ClassNotFound)` was explicitly swallowed to `Ok(None)` instead of propagating — every reflection method that depended on a main-assembly singleton silently returned the collector's default (`false`/`0`/`null`) rather than the user's data. This masks the defect as "F-13-style drift" in Run 4's table.
+
+**Fix**: narrow the match to `name.ends_with("Assembly-CSharp.dll") || name == "Assembly-CSharp"`. Committed as `1431dc6` along with a new diagnostic example `diag_class_names.rs`.
+
+### Run 6 — `dump_reflection` after F-14 fix
+
+```
+{"method":"getBattleTag","status":"null","value":"null","error":null,"elapsed_ms":44}
+{"method":"getMatchInfo","status":"null","value":"null","error":null,"elapsed_ms":56}
+{"method":"getDecks","status":"error","value":"null","error":"collection iteration exceeded max_items=5000","elapsed_ms":33}
+{"method":"getCollection","status":"error","value":"null","error":"collection iteration exceeded max_items=50000","elapsed_ms":0}
+…
+```
+
+Two methods flipped from null → error (a *positive* signal: real memory is now being traversed). Elapsed-ms values changed from uniformly `0` to 30–60 ms, confirming class resolution through `Assembly-CSharp.dll` succeeds end-to-end. The two new errors expose the next layer of bugs.
+
+## Run 7 — P0 bridge defect #2: `MonoObject` header reads the wrong slot
+
+### Empirical isolation
+
+`diag_field_object` (new in this run) walks `CollectionManager.s_instance → m_decks`, dumping each object's resolved class name alongside the raw object header. Output pre-fix:
+
+```
+<root>: object @ 0x4EBC9E00
+  klass = 0x4ADDFBA8
+  type(raw) = j����.j          ← garbage string
+  vtable_size = 182517796       ← bogus, trips our sanity cap
+```
+
+Then — **critically** — dumping the supposed "klass" at `0x4ADDFBA8` (`diag_klass_dump`) revealed it was a `MonoVTable`, not a `MonoClass`. `MonoVTable.klass` at +0x00 = `0x2518BC28`, and *that* address resolves cleanly to `CollectionManager` with `field_count = 0x6F = 111`, matching `diag_class_fields` exactly.
+
+### Finding F-15 — root cause
+
+Mono's object header is `struct MonoObject { MonoVTable *vtable; MonoThreadsSync *monitor; }`. The slot at object + 0 is the **vtable**, not the class. Our `MonoObject::from_address` read `object + 0` as a `MonoClass*` and ran `read_class_fields` on vtable bytes, producing a random `HashMap` keyed on whatever happened to dereference as a printable string.
+
+This defect was latent all the way through Runs 1–6 because:
+- Singletons reached via `get_singleton` build their `MonoObject` from a `MonoClassRef` returned by `find_class` (which goes through `MonoImage.class_cache` and never looks at a live object header). Leaf reflection methods like `isSpectating` / `isGameOver` read a single `bool` off the singleton and return, so they *never* touched `from_address` — hence Run 4's two "OK" results misled us into believing the object path worked.
+- Methods with a deeper chain (`getBattleTag` → `NetCache.m_netCacheValues[…].BattleTag`, `getDecks` → `CollectionManager.m_decks[…]`) invoke `child_from_address` on each hop, which uses `from_address`. These all silently returned junk `fields` maps, so every downstream field lookup missed and bubbled up as "null, no error" — again indistinguishable from F-13's drift hypothesis without direct runtime type inspection.
+
+### Fix (P0-2)
+
+`MonoObject::from_address` now reads the vtable via `offsets.structs.object.vtable`, then dereferences `offsets.structs.vtable.klass` to obtain the real `MonoClass*`. Both offsets were already captured in `unity-2021.3.json` — the code simply was not using them. Updated `examples/diag_field_object.rs` to print both `vtable` and `klass` so future drift stays visible.
+
+### Post-fix `diag_field_object` sanity
+
+```
+<root>: object @ 0x4EBC9E00
+  vtable = 0x4ADDFBA8
+  klass  = 0x2518BC28
+  type(full) = CollectionManager    ✓
+
+step 1: m_decks @ +0x0038
+  type(full) = Blizzard.T5.Core.Map`2   ← not a List<T>!
+
+(probing m_collectibleCards)
+  type(full) = System.Collections.Generic.List`1  ← not a Dictionary<K,V>!
+```
+
+This *immediately* exposed the third defect (below) as a type-assumption bug: `m_collectibleCards` is a `List`, but reflection was iterating it as a `Dictionary`.
+
+## Run 8 — P1 bridge defect #3: wrong collection type on `m_collectibleCards`
+
+### Fix
+
+`reflection/collection.rs` rewritten to iterate `m_collectibleCards` with `list::iter_element_ptrs` (reads `_items`/`_size`), instead of `dict::iter_entries` (which had been reading `_entries`/`_count` at offsets that happen to be pointers inside a `List<T>`, producing the 50 000-item overflow). The `dbf_id` field is now read from each `CollectionCardData` via `FLD_CARD_DBF_ID` rather than extracted from a non-existent dictionary-entry key slot.
+
+### Result — `dump_reflection` Run 8 (post-P0-1 + P0-2 + P1)
+
+```
+{"method":"getBattleTag","status":"null","value":"null","error":null,"elapsed_ms":44}
+{"method":"getAccountId","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getMedalInfo","status":"null","value":"null","error":null,"elapsed_ms":0}
+{"method":"getMatchInfo","status":"null","value":"null","error":null,"elapsed_ms":57}
+{"method":"getGameType","status":"null","value":"0","error":null,"elapsed_ms":50}
+{"method":"isSpectating","status":"ok","value":"false","error":null,"elapsed_ms":0}
+{"method":"isGameOver","status":"ok","value":"false","error":null,"elapsed_ms":0}
+{"method":"getServerInfo","status":"null","value":"null","error":null,"elapsed_ms":43}
+{"method":"getBattlegroundRatingInfo","status":"null","value":"null","error":null,"elapsed_ms":57}
+{"method":"getArenaDeck","status":"null","value":"null","error":null,"elapsed_ms":45}
+{"method":"getDecks","status":"error","value":"null","error":"collection iteration exceeded max_items=5000","elapsed_ms":36}
+{"method":"getCollection","status":"ok","value":"15618 cards","error":null,"elapsed_ms":631}
+```
+
+**`getCollection` returns 15 618 cards from the live process** — the first reflection method to deliver non-trivial user data end-to-end. Elapsed `631 ms` corresponds to a realistic full traversal of a ~15k-entry `List<CollectionCardData>` with per-card field reads.
+
+### Status table — Run 4 → Run 6 → Run 8
+
+| Method | Run 4 (post-5f) | Run 6 (post-P0-1) | Run 8 (post-P0-2 + P1) |
+|---|---|---|---|
+| getBattleTag | ⚪ null | ⚪ null | ⚪ null (F-16) |
+| getAccountId | ⚪ null | ⚪ null | ⚪ null (F-16) |
+| getMedalInfo | ⚪ null | ⚪ null | ⚪ null (F-16) |
+| getMatchInfo | ⚪ null | ⚪ null | ⚪ null |
+| getGameType | ⚪ null | ⚪ null | ⚪ null |
+| **isSpectating** | ✅ OK | ✅ OK | ✅ OK |
+| **isGameOver** | ✅ OK | ✅ OK | ✅ OK |
+| getServerInfo | ⚪ null | ⚪ null | ⚪ null |
+| getBattlegroundRatingInfo | ⚪ null | ⚪ null | ⚪ null |
+| getArenaDeck | ⚪ null | ⚪ null | ⚪ null |
+| getDecks | ⚪ null | ❌ overflow 5 000 | ❌ overflow 5 000 (F-17) |
+| **getCollection** | ⚪ null | ❌ overflow 50 000 | ✅ **OK = 15 618 cards** |
+| **Totals** | 2 OK / 10 null / 0 ERR | 2 OK / 8 null / 2 ERR | **3 OK / 8 null / 1 ERR** |
+
+### Findings (Runs 5–8)
+
+**Finding F-16** — `NetCache` does not expose `s_instance`. Direct class dump shows `NetCache` has only five static fields (`m_getAccountInfoTypeMap`, `m_genericRequestTypeMap`, …) — no `s_instance`. Hearthstone reaches it via `Blizzard.T5.Services.ServiceManager.s_runtimeServices` — a `Dictionary<Type, object>` the game populates at startup. This affects `getBattleTag` / `getAccountId` / `getMedalInfo`, and likely a subset of `getMatchInfo` / `getServerInfo` that traverse from a non-singleton service. Requires proper `ServiceLocator::get_service` implementation (currently a placeholder `Err(Unsupported)` in `service_locator.rs`). **Priority**: P1 for next change.
+
+**Finding F-17** — `m_decks` is `Blizzard.T5.Core.Map<long, CollectionDeck>`, not `List` or `System.Collections.Generic.Dictionary`. Empirical layout (probed via `diag_obj_type` on live `_entries`):
+
+```
+Blizzard.T5.Core.Map<K, V> object layout (32-bit):
+  +0x00  MonoVTable *
+  +0x04  monitor
+  +0x08  _buckets   : Int32[]                 (chain head indices)
+  +0x0C  _entries   : Blizzard.T5.Core.Link[] (hash-chained key/value pairs)
+  +0x10  ?          : int[]                    (possibly an alternate index)
+  +0x14  ?          : object                   (possibly EqualityComparer / Link pool)
+  +0x18  ?          : object
+  +0x1C  _count     : i32                      (verified: = 8 in current user's collection)
+
+Link entry for <long, object ref>:
+  +0x00  hash       : i32
+  +0x04  next       : i32 (-1 = end of chain)
+  +0x08  key        : i64
+  +0x10  value      : MonoObject* (CollectionDeck)
+  +0x14  padding    : i32                      (alignment)
+  size = 24 bytes  (need brute-force verification for generic arities ≠ <long, ref>)
+```
+
+`list::iter_element_ptrs` reads `_items@+0x08` / `_size@+0x0C` and sees the `_entries` MonoArray pointer as `_size` — hence the 1.17 GB overflow report. Requires a new `collections::blizzard_map::iter_entries` module with parametric key/value sizes. **Priority**: P2 — `getDecks` is currently the only consumer, and the map walks a `Link[]` with per-entry layout that depends on the `<K, V>` generic arguments.
+
+**Finding F-18** — the remaining null methods (`getMatchInfo` / `getGameType` / `getServerInfo` / `getBattlegroundRatingInfo` / `getArenaDeck`) still return null with non-zero `elapsed_ms`, meaning the chain reaches a real field but the final pointer or value is NULL. Root causes to audit individually with `diag_field_object` in a follow-up spike:
+- `getMatchInfo` / `getServerInfo` depend on `GameMgr` or `Network` singletons being non-null during menu state.
+- `getBattlegroundRatingInfo` and `getArenaDeck` were already null-valid in menu state per Run 4 (`BaconRatingMgr.m_lastRatingResponse` / `DraftManager.m_currentDeck` legitimately NULL between modes).
+
+### Recommendations (Runs 5–8)
+
+**R-14** (P0, done): F-14 fixed by commit `1431dc6`. F-15 fixed by the change that adds this spike section (`MonoObject::from_address` now walks vtable→klass).
+
+**R-15** (P1, done): F-17's `getCollection` half delivered — iterate `List<T>` with `list::iter_element_ptrs`. 15 618 cards streaming live from the running game.
+
+**R-16** (P1, next): Implement `ServiceLocator::get_service` against `Blizzard.T5.Services.ServiceManager.s_runtimeServices`. Unblocks `getBattleTag` / `getAccountId` / `getMedalInfo` in one pass. This is the highest-impact remaining work (3 methods in one feature).
+
+**R-17** (P2, follow-up): Add `collections::blizzard_map` module with generic-arity-aware `Link[]` iteration. Rewrite `decks.rs` to consume it. Closes F-17.
+
+**R-18** (P2, follow-up): `diag_field_object` sweep for `getMatchInfo` / `getServerInfo` etc. to classify each residual null as F-18a (legitimately null in menu state) vs F-18b (field-name drift requiring re-audit).
+
+### Bridge fidelity summary
+
+With P0-1, P0-2, and P1 fixed in place, the hearthmirror bridge now reliably delivers live reflection data for three of the twelve reflection methods, including the largest single dataset (the card collection). Runs 5–8 transform the "null, no error" opacity of Run 4 into concrete, individually-classified follow-ups — the spike's original question ("can we read runtime data?") has a stronger, evidence-backed positive answer now than it did in Run 4.
+
