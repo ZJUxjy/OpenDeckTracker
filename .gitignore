@@ -46,8 +46,8 @@ data/cards/*.json
 .copilot/
 
 # Per-machine diagnostic outputs from hearthmirror native examples
-packages/hearthmirror/native/diag_*_run*.txt
-packages/hearthmirror/native/dump_reflection_run*.jsonl
+packages/hearthmirror/native/diag_*.txt
+packages/hearthmirror/native/dump_reflection_*.jsonl
 
 # Temporary git commit message scratchpads
 .commitmsg.tmp

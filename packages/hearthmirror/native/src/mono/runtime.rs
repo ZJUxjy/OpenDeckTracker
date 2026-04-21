@@ -323,7 +323,20 @@ impl MonoRuntime {
                 continue;
             }
             let name = self.memory.read_cstring(name_ptr, 128)?;
-            if name.contains("Assembly-CSharp") {
+            // Match exactly the main game assembly (path basename ==
+            // "Assembly-CSharp.dll"), NOT "Assembly-CSharp-firstpass.dll".
+            // Mono lists firstpass *before* the main assembly in
+            // `domain_assemblies`, so the previous `contains("Assembly-CSharp")`
+            // matched firstpass first — which contains only ~20 utility
+            // classes and does not include NetCache, GameState, CollectionManager,
+            // etc. The bug caused every reflection method to silently degrade
+            // to its `unwrap_or` default (false / 0 / null) since
+            // `get_singleton` swallows `ClassNotFound` as `Ok(None)`.
+            // `ends_with("Assembly-CSharp.dll")` works for any path-separator
+            // style because firstpass ends with `firstpass.dll`. The bare
+            // `name == "Assembly-CSharp"` branch covers the rare case where
+            // Mono stores the short logical name without the `.dll` suffix.
+            if name.ends_with("Assembly-CSharp.dll") || name == "Assembly-CSharp" {
                 if let Ok(mut cache) = self.cache.lock() {
                     cache.ac_image = Some(image_ptr);
                 }
