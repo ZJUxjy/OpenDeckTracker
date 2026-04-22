@@ -650,3 +650,127 @@ Link entry for <long, object ref>:
 
 With P0-1, P0-2, and P1 fixed in place, the hearthmirror bridge now reliably delivers live reflection data for three of the twelve reflection methods, including the largest single dataset (the card collection). Runs 5–8 transform the "null, no error" opacity of Run 4 into concrete, individually-classified follow-ups — the spike's original question ("can we read runtime data?") has a stronger, evidence-backed positive answer now than it did in Run 4.
 
+## Run 9 — R-16 Phase 1: ServiceLocator landed but values had moved
+
+`add-hearthmirror-service-locator` Phase 1 (sections 1–7 of `tasks.md`) brought up:
+- Cross-image `MonoClass` lookup (`find_class_in_image`).
+- Multi-image `MonoImage` cache.
+- `Blizzard.T5.Services.ServiceManager.s_runtimeServices` walk → 94 IService entries discovered live.
+- `collections::dict` corrected layout (`_entries +0x0C`, `_count +0x20`) with fixture tests.
+- `MonoRuntime::get_service(name)` with stale-pointer eviction.
+- Three NetCache reflectors re-routed from `get_singleton("","NetCache")` to `get_service("NetCache")`.
+
+`dump_reflection` after Phase 1:
+
+```
+{"method":"getBattleTag","status":"null"}      ← still null
+{"method":"getAccountId","status":"null"}      ← still null
+{"method":"getMedalInfo","status":"ok","value":"MedalInfoResult{...}"}  ← OK with empty data
+```
+
+The lookup *worked* (NetCache instance resolved), but field reads returned null/zero — confirming the data location had drifted further than the legacy hearthmirror reference suggested. Triggered Run 10 deep-dive.
+
+## Run 10 — R-16 Phase 2: chained Map iteration + BnetPresenceMgr migration
+
+### Discovery 1 — `NetCache.m_netCache` is `Blizzard.T5.Core.Map`, not `Dictionary`
+
+Diagnostic `diag_net_cache_values` dumped the runtime type:
+
+```
+Dictionary runtime type = Blizzard.T5.Core.Map`2
+entries via Map iter (populated) = 30
+```
+
+The same Blizzard hash-map type that bit `getDecks` in F-17 also lives at the top of the NetCache chain. Phase 1's `collections::dict` fix is correct for `ServiceManager.m_services` (which IS a `Dictionary<Type, ServiceInfo>`) but not for `NetCache.m_netCache`. New `collections::custom_map` module added with the Blizzard-Map slot layout (`linkSlots @ +0x0C`, `keySlots @ +0x10`, `valueSlots @ +0x14`, `touchedSlots @ +0x1C`, `count @ +0x24`), gated by `HashCode != 0` (Blizzard's `HASH_FLAG = 0x80000000` slot-occupancy convention).
+
+This **supersedes** the Run 8 R-17 deferral note — `Blizzard.T5.Core.Map<K,V>` is now first-class in the codebase and ready for `getDecks` adoption.
+
+### Discovery 2 — `BattleTag` / `BnetAccountId` migrated out of `NetCache`
+
+Iterating the 30 NetCache entries listed `NetCacheMedalInfo`, `NetCacheCardBacks`, `NetCacheRewardProgress`, etc., but **no `NetCacheBattleTag` and no `NetCacheBnetAccountInfo`**. Cross-checking with `diag_images` found:
+
+- `BattleTag` class only in `com.blizzard.mobile-unity-auth-sdk.dll` (legacy SDK class, not used in current builds).
+- `BnetBattleTag` in `Assembly-CSharp.dll` @ `0x254A0E38` (the actual current player's battle tag class).
+- `Blizzard.GameService.SDK.Client.Integration.BnetAccountId` in `blizzard.bgsclient.dll` (used internally by services, but holds the EntityId via inheritance).
+
+A full `diag_find_holders` scan (depth 4) of all 94 IService instances returned 0 hits for direct `BattleTag` / `BnetAccountId` references — confirming the values are reached through a non-service singleton.
+
+`diag_static_chain` walked `BnetPresenceMgr.s_instance` (Assembly-CSharp.dll, klass `0x25184300`):
+
+```
+s_instance @ 0x47E1F4B0 (BnetPresenceMgr)
+  m_myBattleNetAccountId @ 0x40146A60   (BnetAccountId)
+  m_myPlayer            @ 0x40281A28   (BnetPlayer)
+```
+
+`BnetPlayer.m_account.m_battleTag` is a `BnetBattleTag` with `m_name` (string) + `m_number` (string — *not* i32; live value `"5630"` for the test account). `BnetAccountId.<EntityId>k__BackingField` is a `Blizzard.GameService.Protocol.EntityId` (protobuf-generated) with `high_` + `low_` (both `ulong`).
+
+Two further sub-discoveries fell out of this:
+
+1. `BnetAccountId` declares **0** instance fields; `<EntityId>k__BackingField` lives on its parent `BnetEntityId`. Required adding parent-class field walk to `MonoObject::field_offset` (otherwise `read_object_field` always returned `None`).
+2. `m_number` is a `System.String`, not `i32` — initial code displayed `Player#1072036432` (the raw string-pointer bits cast as int). `read_string_field` returned the actual `"5630"`.
+
+### Discovery 3 — `NetCacheMedalInfo.MedalData` is itself a `Map<FormatType, MedalInfoData>`
+
+Initial Phase 2 implementation read `MedalData` as a single struct; the result was four ladders all reading 0. `diag_medal_data` dumped the runtime type:
+
+```
+MedalData runtime class: Blizzard.T5.Core.Map`2
+MedalData entries = 4
+  #02  key=0x00000001 ()  value=PegasusUtil.MedalInfoData
+  #03  key=0x00000002 ()  value=PegasusUtil.MedalInfoData (51 wins, 3 stars, lvl 34)
+```
+
+`MedalData` is a `Map<int (FormatType enum), PegasusUtil.MedalInfoData>` keyed by `FORMAT_TYPE_*` constants (1=Wild, 2=Standard, 3=Classic, 4=Twist). `Map<int, V>` stores keys inline in the `keySlots` array — the iterator's `RemotePtr.raw()` IS the FormatType integer (not a boxed Int32 pointer).
+
+`PegasusUtil.MedalInfoData` is a 43-field protobuf class; the eight that matter for ranked display are `<LeagueId>k__BackingField`, `<StarLevel>k__BackingField`, `<Stars>k__BackingField`, `<Streak>k__BackingField`, `<SeasonWins>k__BackingField`, `_LegendRank`, `_SeasonId`, `_BestStarLevel`.
+
+Schema change documented and locked: `getMedalInfo` now returns `{ wild?, standard?, classic?, twist? }` of `MedalInfoData` (vs the legacy 4-flat-fields shape).
+
+### `dump_reflection` Run 10
+
+```
+{"method":"getBattleTag","status":"ok","value":"name=纯金的小铁人, full=纯金的小铁人#5630","elapsed_ms":50}
+{"method":"getAccountId","status":"ok","value":"hi=72057594037927936, lo=206001158","elapsed_ms":0}
+{"method":"getMedalInfo","status":"ok","value":"standard{league=5, lvl=34, stars=3, streak=2, legend=0, season=150, wins=51, best=34}, wild{league=5, lvl=1, stars=0, streak=0, legend=0, season=150, wins=0, best=1}, classic{league=5, lvl=1, stars=0, ...}, twist{league=5, lvl=1, stars=0, ...}","elapsed_ms":2}
+{"method":"getMatchInfo","status":"null","elapsed_ms":53}
+{"method":"getGameType","status":"null","value":"0","elapsed_ms":47}
+{"method":"isSpectating","status":"ok","value":"false","elapsed_ms":0}
+{"method":"isGameOver","status":"ok","value":"false","elapsed_ms":0}
+{"method":"getServerInfo","status":"null","elapsed_ms":40}
+{"method":"getBattlegroundRatingInfo","status":"null","elapsed_ms":53}
+{"method":"getArenaDeck","status":"null","elapsed_ms":44}
+{"method":"getDecks","status":"error","error":"collection iteration exceeded max_items=5000","elapsed_ms":34}
+{"method":"getCollection","status":"ok","value":"15618 cards","elapsed_ms":6523}
+```
+
+**Totals: 6 OK / 4 null / 1 ERR / 1 OK-empty.**
+
+### Status table — Run 8 → Run 9 → Run 10
+
+| Method | Run 8 | Run 9 (Phase 1) | Run 10 (Phase 2) |
+|---|---|---|---|
+| **getBattleTag** | ⚪ null | ⚪ null | ✅ **OK** `纯金的小铁人#5630` |
+| **getAccountId** | ⚪ null | ⚪ null | ✅ **OK** `hi/lo non-zero` |
+| **getMedalInfo** | ⚪ null | 🟡 OK-empty | ✅ **OK** `standard wins=51` |
+| getMatchInfo | ⚪ null | ⚪ null | ⚪ null (R-18) |
+| getGameType | ⚪ null | ⚪ null | ⚪ null (R-18) |
+| isSpectating | ✅ OK | ✅ OK | ✅ OK |
+| isGameOver | ✅ OK | ✅ OK | ✅ OK |
+| getServerInfo | ⚪ null | ⚪ null | ⚪ null (R-18) |
+| getBattlegroundRatingInfo | ⚪ null | ⚪ null | ⚪ null (R-18) |
+| getArenaDeck | ⚪ null | ⚪ null | ⚪ null (R-18) |
+| getDecks | ❌ overflow | ❌ overflow | ❌ overflow (R-17, but custom_map now exists) |
+| getCollection | ✅ OK 15618 | ✅ OK | ✅ OK |
+| **Totals** | 3 OK / 8 null / 1 ERR | 3 OK / 8 null / 1 ERR | **6 OK / 5 null / 1 ERR** |
+
+**R-16 fully closed** — all three target methods deliver live, non-empty player data. Doubled OK count from Run 8.
+
+### Updated recommendations
+
+**R-17** (P2, NOW unblocked): `getDecks` rewrite. `collections::custom_map` module already implemented and live-validated against `NetCache.m_netCache` + `NetCacheMedalInfo.MedalData`. Switching `decks.rs` from `dict::iter_entries` to `custom_map::iter_entries` should be a near-mechanical change. Schedule as the next R-track item.
+
+**R-18** (P2, unchanged): `diag_field_object` sweep for `getMatchInfo` / `getServerInfo` / `getGameType` / `getBattlegroundRatingInfo` / `getArenaDeck`. Likely a mix of "menu-state legitimate null" and "field name drift" cases, similar to the migration that hit R-16.
+
+**R-19** (P3, new): Audit the rest of the Phase 1 Spec D2 assumption ("services keyed by ServiceTypeName string match"). Now that `MonoObject::field_offset` walks parents, we have building blocks for a more principled `Type` based service lookup if needed.
+
