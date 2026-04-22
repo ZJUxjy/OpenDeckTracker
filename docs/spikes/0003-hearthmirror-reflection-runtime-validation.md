@@ -880,3 +880,136 @@ R-16 + R-17 fully closed. The TS overlay layer now has every live-bridge data so
 
 **R-21** (P3, new): `cardback_id` reads 0 in `getMatchInfo.player`. Likely `Player.m_cardback` is set later in the match flow. Live-validate after the full match starts.
 
+## Run 12 — `add-deck-tracker-mvp` end-to-end live UI validation
+
+`add-deck-tracker-mvp` (M2) brings up the first user-facing
+deck-tracker UI on top of the live bridge. The Section 7 live
+validation against a real PvE Standard match confirms the full
+chain works end-to-end:
+
+```
+Hearthstone (in match)
+    │
+    │ (Mono memory reads, ~5 reflectors per poll, 500ms cadence)
+    ▼
+DeckTracker (main process, @hdt/core)
+    │
+    │ (snapshot push via webContents.send + IPC)
+    ▼
+DeckTrackerSnapshot { phase, deck.{original, remaining, extras},
+                       friendlyHand, opposingHandCount, ... }
+    │
+    │ (Zustand store applies setSnapshot)
+    ▼
+<LiveDeckPanel /> renders 30-card list with live counts
+```
+
+### Validation tape (against PvE vs-AI casual, deck "龙德" /
+HERO_06bb Druid / 30 cards / Standard)
+
+1. Boot Electron dev mode while user is mid-match
+   → DeckTracker IDLE → tick #1 sees `getMatchInfo` non-null →
+   transitions IDLE → PRE_MATCH → tick #2 sees `getDeckState` non-null
+   → IN_MATCH → `identifyDeck` runs.
+2. `InGameDeckIdentifier` returns null (DeckPickerTrayDisplay scene
+   already unloaded — expected).
+3. Snapshot's `pendingDeckSelection` becomes non-null + the renderer's
+   Zustand store reflects it via the next `state-change` push →
+   `<DeckSelectDialog>` appears with all 8 saved decks.
+4. User clicks "龙德", confirms.
+5. IPC `deck-tracker:select-deck` → main → `tracker.selectDeckById(9369585848)`
+   → looks up cached decks → `setOriginalDeck({ ..., DeckSnapshot.fromDeckCards(deck.cards) })`
+   → `awaitingDeckSelection = false` → next tick's snapshot has
+   `deck.original.length === 14` (unique card count for 30-card deck).
+6. Renderer receives the populated snapshot → `<RightPanel>` switches
+   from mock `<DeckTracker>` to `<LiveDeckPanel>` → 30 cards rendered
+   with `remaining/total` counts.
+7. Player draws a card — within ~500ms (one polling tick):
+   - The drawn card's row decrements its `remaining` count.
+   - `friendlyHand` array adds the new cardId.
+   - "Just drawn" highlight (1s CSS fade) visible.
+   - Adaptive polling kicks: `requestImmediate` schedules a faster
+     follow-up tick after detecting the hand-size delta.
+
+### Two architectural fixes shipped during validation
+
+**Fix #1 — Deck-picker scene unloads before IN_MATCH transition**
+
+`DeckPickerTrayDisplay.s_instance` only exists while the user is on
+the in-game Play menu's deck-picker scene; by the time
+`getMatchInfo` flips to non-null and the tracker enters PRE_MATCH /
+IN_MATCH, the scene has already unloaded and `getSelectedDeckId`
+returns null.
+
+→ **Fix**: DeckTracker now polls `getSelectedDeckId` during IDLE
+and PRE_MATCH ticks (cheap reflector, ~ms) and remembers the most
+recent non-null `deckId` in `lastKnownSelectedDeckId`. When IN_MATCH
+finally fires, the cached id is matched against `getDecks()` → the
+auto-detect path lights up without dialog interaction in the
+common "user picks deck → queues → match starts" flow.
+
+In Run 12 the user had picked "龙德" before app boot, so the
+cache was empty and the dialog fallback fired. Once the cache
+warms up in normal usage (app started before queueing), the
+dialog only fires for Practice / Adventure modes that don't load
+the deck-picker UI.
+
+**Fix #2 — CallbackDeckIdentifier deadlock**
+
+The original M2 design wired the dialog flow as a "blocking
+identifier": `ChainedDeckIdentifier(InGameDeckIdentifier,
+CallbackDeckIdentifier)` where `CallbackDeckIdentifier.identify`
+returned a Promise that resolved when the user picked. Problem:
+`identifyDeck` blocked on that Promise, but the dialog event
+(`needs-deck-selection`) was only emitted AFTER the Promise
+resolved — so the dialog never showed, the user couldn't pick,
+and the 60s safety timeout fired with `null`. By then the
+`pendingSelection` resolver was cleared, and the user's dialog
+click did nothing.
+
+→ **Fix**: dropped the blocking identifier. New flow:
+  1. `identifyDeck` only tries `InGameDeckIdentifier` (non-blocking).
+  2. On null: emits `needs-deck-selection` IMMEDIATELY + caches
+     the decks list.
+  3. Dialog appears.
+  4. User picks → IPC → `tracker.selectDeckById(deckId)` → looks
+     up the deck in the cache → `setOriginalDeck(...)`.
+  5. `dialogDismissed` Zustand flag suppresses the dialog from
+     re-opening on subsequent snapshot ticks until main has
+     cleared `awaitingDeckSelection`.
+
+Plus a separate race-condition fix: `pendingDeckSelection` is now
+embedded in every snapshot tick (not just the one-shot
+`needs-deck-selection` event), so renderers that haven't
+subscribed yet at app boot still see the state on their first
+`getSnapshot()` poll.
+
+### Status table — Run 11 → Run 12
+
+| Surface | Run 11 (data layer) | Run 12 (UI layer) |
+|---|---|---|
+| 19 reflectors (memory) | ✅ 14 OK in match | ✅ unchanged |
+| `@hdt/core` state machine | _absent_ | ✅ Game/Player/Entity/DeckSnapshot in main process |
+| Phase machine + adaptive polling | _absent_ | ✅ IDLE 2s / IN_MATCH 500ms with hand-draw catch-up |
+| Deck identification | _absent_ | ✅ InGameDeckIdentifier (cached) + dialog fallback |
+| `<LiveDeckPanel>` UI | _absent_ | ✅ live remaining-card list with just-drawn highlight |
+| `<DeckSelectDialog>` UI | _absent_ | ✅ Tailwind modal driven by `snapshot.pendingDeckSelection` |
+| End-to-end memory→Mono→IPC→React | _data only_ | ✅ proven in PvE Standard match |
+
+### Known limitations (carried forward to M3 / M4)
+
+- **R-22** (P3, new): The "remaining = original − seen" approximation
+  doesn't distinguish created/stolen/discovered cards from genuine
+  draws. M2 surfaces them via the `extras` badge but doesn't precision-track
+  each. M3 (log stream, future change) will populate `entity.info.created`
+  and similar from Power.log events.
+- **R-23** (P3, new): UI polish deferred. The functional MVP is
+  intentionally minimal (Tailwind, no animations beyond the
+  draw-highlight, no card-image thumbnails). Out of scope per
+  user direction "显示 ui 我们后期需要继续优化".
+- **R-24** (P3, new): `<DeckSelectDialog>` should also be reachable
+  from a manual "switch deck" affordance (e.g. a small button in
+  `<LiveDeckPanel>`). Currently only fires on auto-detect failure.
+- **R-25** (P3, new): No transparent overlay window yet (M4 scope).
+  The live deck panel is in the main Electron Dashboard window only.
+

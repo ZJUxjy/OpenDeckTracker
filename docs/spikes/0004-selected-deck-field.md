@@ -81,6 +81,24 @@ against `getDecks()` results, returns the matching saved deck or
 
 ## Live-validation status (2026-04-22)
 
-- Verified live: `s_instance` == NULL when on main menu (correct).
-- Pending verification: deck-id read while on Play screen — to be
-  done as part of `add-deck-tracker-mvp` Section 7.
+- ✅ Verified `s_instance` == NULL when on main menu (correct
+  degraded state).
+- ✅ Verified end-to-end on Play screen with "龙德" highlighted:
+
+  ```
+  selected: deckId=9369585848 templateDeckId=0 formatType=2
+  ★ id=9369585848  name="龙德"  hero=HERO_06bb  fmt=2  cards=30
+  → MATCH: deckId 9369585848 = "龙德"
+     first 5 cards: CORE_EX1_169 x2, TIME_701 x2, EDR_270 x2,
+                    END_011 x2, END_007 x2
+  ```
+
+  `getSelectedDeckId` returns the live highlighted deck id,
+  cross-references cleanly against `getDecks`, and resolves to the
+  matching saved-deck name in one round-trip. `InGameDeckIdentifier`
+  in `@hdt/core` consumes this exact path and now resolves the
+  active deck without dialog interaction in standard PvP queue
+  flows.
+
+  Validation tool: `cargo run --release --target i686-pc-windows-msvc
+  --example diag_match_selected_deck` (committed alongside).
