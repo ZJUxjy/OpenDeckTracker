@@ -6,15 +6,16 @@ import type {
   IsMulligan,
   MatchInfo,
 } from '@hdt/hearthmirror';
+import { DeckSnapshot } from '../game/deck-snapshot';
 import { Game } from '../game/game';
 import type { MatchPhase } from '../game/types';
 import { zoneFromNumber } from '../game/types';
 import {
-  ChainedDeckIdentifier,
   InGameDeckIdentifier,
   type IDeckIdentifier,
   type IdentifiedDeck,
 } from './deck-identifier';
+import type { Deck } from '@hdt/hearthmirror';
 import { computeRemaining, gatherSeenEntities } from './remaining-algorithm';
 import { nextPhase } from './phase-machine';
 import { PollingLoop } from './polling-loop';
@@ -41,6 +42,19 @@ export interface DeckTrackerSnapshot {
     remaining: { cardId: string; count: number }[];
     /** Cards in seen-but-not-original (created/stolen approximate). */
     extras: { cardId: string; count: number }[];
+  } | null;
+  /**
+   * When non-null, the orchestrator is waiting for the user to pick
+   * a deck via the dialog. Contains the deck options to render.
+   *
+   * Embedded in every snapshot tick (NOT just the one-shot
+   * `needs-deck-selection` event) so newly-connecting renderers /
+   * tracker startups before the window opens still see the state on
+   * their first `getSnapshot()` poll. Idempotent — the dialog UI
+   * is reactive on this slice.
+   */
+  pendingDeckSelection: {
+    decks: { id: number; name: string; hero: string }[];
   } | null;
   /** Friendly hand cardIds (for highlight + "drawn this turn" UI). */
   friendlyHand: string[];
@@ -88,13 +102,36 @@ export class DeckTracker {
    * the prompt on every poll.
    */
   private awaitingDeckSelection = false;
+  /**
+   * Most recent non-null `getSelectedDeckId` result observed.
+   *
+   * The in-game deck-picker scene (DeckPickerTrayDisplay) unloads as
+   * soon as a match starts, so by the time we transition into IN_MATCH
+   * the reflector returns null. We poke it during IDLE / PRE_MATCH
+   * polls and remember the last known value so the IN_MATCH transition
+   * can still resolve the deck without dialog interaction. Cleared on
+   * POST_MATCH → IDLE so a new match starts fresh.
+   */
+  private lastKnownSelectedDeckId: bigint | null = null;
+  /**
+   * Most recent `getDecks()` result. Cached when needs-deck-selection
+   * is emitted so `selectDeckById` can resolve the user's pick without
+   * an extra IPC round trip.
+   */
+  private cachedDecks: Deck[] = [];
 
   constructor(args: {
     mirror: HearthMirror;
     identifier?: IDeckIdentifier;
   }) {
     this.mirror = args.mirror;
-    this.identifier = args.identifier ?? new ChainedDeckIdentifier([new InGameDeckIdentifier(args.mirror)]);
+    // In-game memory-field identifier ONLY. The dialog fallback flow
+    // is intentionally NOT wired in here as a "blocking identifier"
+    // (which would deadlock against the dialog event being shown):
+    // the orchestrator emits `needs-deck-selection`, the renderer
+    // shows its dialog, and the user's pick comes back via the
+    // public `selectDeckById()` method below.
+    this.identifier = args.identifier ?? new InGameDeckIdentifier(args.mirror);
     this.loop = new PollingLoop();
     this.game = new Game();
     this.currentSnapshot = blankSnapshot();
@@ -141,6 +178,35 @@ export class DeckTracker {
     this.emit({ type: 'state-change', snapshot: this.currentSnapshot });
   }
 
+  /**
+   * Renderer-side dialog response by deck id. Looks up the deck in the
+   * cached decks list (set when needs-deck-selection was emitted),
+   * falls back to a fresh `mirror.getDecks()` if cache miss.
+   *
+   * Used by the IPC `deck-tracker:select-deck` handler.
+   */
+  async selectDeckById(deckId: number): Promise<void> {
+    let deck = this.cachedDecks.find((d) => d.id === deckId);
+    if (!deck) {
+      const freshDecks = (await this.mirror.getDecks()) ?? [];
+      this.cachedDecks = freshDecks;
+      deck = freshDecks.find((d) => d.id === deckId);
+    }
+    if (!deck) {
+      return;
+    }
+    this.setOriginalDeck({
+      deckId: deck.id,
+      name: deck.name,
+      originalDeck: DeckSnapshot.fromDeckCards(deck.cards),
+    });
+  }
+
+  /** Cancel the dialog wait without picking. Just clears the flag. */
+  cancelDeckSelection(): void {
+    this.awaitingDeckSelection = false;
+  }
+
   // ── Internal poll tick ─────────────────────────────────────────────
 
   private async tick(): Promise<void> {
@@ -149,6 +215,20 @@ export class DeckTracker {
     const matchInfo = await this.mirror.getMatchInfo();
     const isSpectating = await this.mirror.isSpectating();
     const isGameOverFlag = await this.mirror.isGameOver();
+
+    // Cheap probe — ride the IDLE/PRE_MATCH polls to capture the
+    // deck-picker selection BEFORE the scene unloads at match start.
+    // Skipped during IN_MATCH/POST_MATCH (scene already gone).
+    if (previousPhase === 'IDLE' || previousPhase === 'PRE_MATCH') {
+      try {
+        const selected = await this.mirror.getSelectedDeckId();
+        if (selected !== null && selected.deckId > 0n) {
+          this.lastKnownSelectedDeckId = selected.deckId;
+        }
+      } catch {
+        // Reflector failures don't kill the loop; just skip the cache update.
+      }
+    }
 
     let deckState: DeckState | null = null;
     let handState: HandState | null = null;
@@ -193,6 +273,7 @@ export class DeckTracker {
       this.game.reset();
       this.previousFriendlyHandSize = 0;
       this.awaitingDeckSelection = false;
+      this.lastKnownSelectedDeckId = null;
     }
     this.game.phase = target;
 
@@ -299,6 +380,21 @@ export class DeckTracker {
   private async identifyDeck(matchInfo: MatchInfo | null): Promise<void> {
     if (matchInfo === null) return;
     const decks = (await this.mirror.getDecks()) ?? [];
+
+    // Fast path: use the cached deck id captured during IDLE/PRE_MATCH
+    // polls (the deck-picker scene has typically unloaded by now, so
+    // the live `InGameDeckIdentifier` would return null).
+    if (this.lastKnownSelectedDeckId !== null) {
+      const cachedId = Number(this.lastKnownSelectedDeckId);
+      const matched = decks.find((d) => d.id === cachedId);
+      if (matched) {
+        this.game.localPlayer.originalDeck = DeckSnapshot.fromDeckCards(matched.cards);
+        return;
+      }
+    }
+
+    // Slow path: ask the configured identifier (typically chains
+    // InGameDeckIdentifier → CallbackDeckIdentifier).
     const identified = await this.identifier.identify({ decks, matchInfo });
     if (identified !== null) {
       this.game.localPlayer.originalDeck = identified.originalDeck;
@@ -306,6 +402,7 @@ export class DeckTracker {
     }
     // No automatic match — emit a `needs-deck-selection` event with
     // the available decks so the renderer can prompt the user.
+    this.cachedDecks = decks;
     this.awaitingDeckSelection = true;
     this.emit({
       type: 'needs-deck-selection',
@@ -343,10 +440,21 @@ export class DeckTracker {
       };
     }
 
+    const pendingDeckSelection = this.awaitingDeckSelection
+      ? {
+          decks: this.cachedDecks.map((d) => ({
+            id: d.id,
+            name: d.name,
+            hero: d.hero,
+          })),
+        }
+      : null;
+
     return {
       phase: this.game.phase,
       matchInfo,
       deck,
+      pendingDeckSelection,
       friendlyHand,
       opposingHandCount: handState?.opposingHandCount ?? 0,
       friendlyDeckCount: deckState?.friendlyDeck.length ?? 0,
@@ -399,6 +507,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     phase: 'IDLE',
     matchInfo: null,
     deck: null,
+    pendingDeckSelection: null,
     friendlyHand: [],
     opposingHandCount: 0,
     friendlyDeckCount: 0,

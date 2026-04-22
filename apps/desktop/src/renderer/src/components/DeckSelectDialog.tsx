@@ -14,7 +14,7 @@ const STORAGE_KEY_LAST_PICK = 'hdt:deck-tracker:last-deck-id';
  */
 export function DeckSelectDialog() {
   const pendingSelection = useDeckTrackerStore((s) => s.pendingSelection);
-  const clearPendingSelection = useDeckTrackerStore((s) => s.clearPendingSelection);
+  const markDialogDismissed = useDeckTrackerStore((s) => s.markDialogDismissed);
   const [chosen, setChosen] = useState<number | null>(null);
 
   const lastPickedId = useMemo<number | null>(() => {
@@ -49,12 +49,12 @@ export function DeckSelectDialog() {
       // ignore storage errors (private mode etc.)
     }
     await window.hdt?.deckTracker.selectDeck(chosen);
-    clearPendingSelection();
+    markDialogDismissed();
   };
 
   const handleCancel = async (): Promise<void> => {
     await window.hdt?.deckTracker.cancelSelection();
-    clearPendingSelection();
+    markDialogDismissed();
   };
 
   return (
