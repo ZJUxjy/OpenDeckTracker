@@ -396,3 +396,92 @@ package depends on it before this change.
 
 (All flagged as "decide during implementation" or "defer to follow-up
 change"; non-blocking for proposal acceptance.)
+
+## Post-implementation refinements (Section 7 live validation)
+
+Three architectural changes landed during the live PvE validation
+(spike-0003 Run 12). All are documented here for future maintainers
+who would otherwise expect the proposal/design as the source of
+truth.
+
+### D11 — DeckTracker poll caches `lastKnownSelectedDeckId` during IDLE / PRE_MATCH
+
+`DeckPickerTrayDisplay.s_instance` (the source of `getSelectedDeckId`)
+unloads as soon as the in-game scene transitions from Play menu to
+gameplay. By the time the tracker enters PRE_MATCH or IN_MATCH —
+which is the original D5 trigger point for `identifier.identify()` —
+the reflector is already returning null.
+
+**Fix.** Every IDLE / PRE_MATCH tick now also calls
+`mirror.getSelectedDeckId()` and remembers the most recent non-null
+`deckId` in a private `lastKnownSelectedDeckId: bigint | null` field.
+At the IN_MATCH transition, `identifyDeck` first tries the cached id
+against `getDecks()`; only falls through to the live identifier
+(now also returning null) and the dialog if no match.
+
+The cache resets on POST_MATCH → IDLE so a new match starts fresh.
+
+### D12 — Drop `CallbackDeckIdentifier` from the orchestrator chain
+
+The proposal D5 / spec wired the dialog flow as a "blocking
+identifier": `ChainedDeckIdentifier(InGameDeckIdentifier,
+CallbackDeckIdentifier)` where `CallbackDeckIdentifier` returned a
+Promise that resolved when the user picked. This deadlocked: the
+dialog couldn't show until the identifier returned (because
+`needs-deck-selection` was emitted only AFTER `identifier.identify`
+completed), but the identifier couldn't return until the user
+clicked through the dialog.
+
+**Fix.** Replaced with a non-blocking pattern:
+
+1. `identifyDeck` only calls `InGameDeckIdentifier` (instant; null
+   when the deck-picker scene is gone).
+2. On null, immediately emits `needs-deck-selection` + caches the
+   decks list in `tracker.cachedDecks`.
+3. Dialog appears (driven by Zustand `pendingSelection` slice).
+4. User picks → IPC `deck-tracker:select-deck` → main calls
+   `tracker.selectDeckById(deckId)` (NEW public method) → looks up
+   the deck in `cachedDecks` → falls through to a fresh
+   `mirror.getDecks()` if cache miss → calls the existing
+   `setOriginalDeck(...)` to mutate state + emit a snapshot.
+
+`CallbackDeckIdentifier` remains in the public API for direct
+consumers (a future CLI tool, etc.) but no longer wired into the
+default DeckTracker chain.
+
+### D13 — Embed `pendingDeckSelection` in `DeckTrackerSnapshot`
+
+The proposal D8 wired `needs-deck-selection` as a one-shot event.
+But Electron's lifecycle fires `app.whenReady` → `startDeckTracker()`
+→ `createMainWindow()` in that order, and the renderer doesn't
+subscribe to the IPC channel until React mounts `useDeckTracker()`
+inside the loaded window. Result: the FIRST poll's
+`needs-deck-selection` event broadcasts to `BrowserWindow.getAllWindows()`,
+which returns an empty array → event is dropped.
+
+**Fix.** Added `pendingDeckSelection: { decks } | null` to
+`DeckTrackerSnapshot`. Populated by `buildSnapshot` whenever
+`awaitingDeckSelection === true`. The renderer Zustand store now
+derives its `pendingSelection` slice primarily from
+`snapshot.pendingDeckSelection` (every-tick push, race-free) with
+the one-shot `needs-deck-selection` event as a low-latency
+supplement.
+
+A complementary `dialogDismissed: boolean` slice in the renderer
+store suppresses the dialog from re-opening on subsequent snapshot
+ticks (because main keeps reporting `pendingDeckSelection !== null`
+until `setOriginalDeck` or `cancelDeckSelection` runs, and we
+don't want a flicker between dismissal and main-side clearing).
+The flag resets when main eventually clears its pending state.
+
+### Bonus build-system bits (not architectural, but required for runtime)
+
+- `apps/desktop/package.json` adds `@hdt/hearthmirror-native` as a
+  direct workspace dep so Electron's ESM resolver can find the
+  externalized native binding at runtime.
+- `apps/desktop/electron.vite.config.ts` adds `@hdt/core` to
+  `WORKSPACE_INLINE` + the per-process resolve aliases, and marks
+  `@hdt/hearthmirror-native` external in main + preload
+  `rollupOptions` so the .node binary lookup uses node's native
+  require resolution rather than getting bundled (which would
+  break the relative `.node` file lookup).

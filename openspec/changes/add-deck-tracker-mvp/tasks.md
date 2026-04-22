@@ -49,8 +49,8 @@
 - [x] 2.5 `docs/spikes/0004-selected-deck-field.md` written (chain + lifecycle constraints + per-mode validity table)
 - [x] 2.6 Rust reflector `getSelectedDeckId` added (`src/reflection/selected_deck.rs`); returns `{ deckId: i64, templateDeckId: i32, formatType: i32 } | null`
 - [x] 2.7 TS facade `HearthMirror.getSelectedDeckId()` + `SelectedDeck` type + IPC handler + preload binding all wired
-- [ ] 2.8 Live-validate: pending — `s_instance` is NULL outside the Play screen (verified). Need to test on Play screen with a deck highlighted; merged into Section 7 live validation
-- [ ] 2.9 Commit (deferred — bundle with Section 7 validation result commit)
+- [x] 2.8 Live-validated 2026-04-22: on Play screen with "龙德" highlighted, `getSelectedDeckId` returned `{ deckId: 9369585848n, templateDeckId: 0, formatType: 2 }`. Cross-referenced against `getDecks` (8 saved decks); `9369585848` matched "龙德" (HERO_06bb 德鲁伊, 30 cards). End-to-end `InGameDeckIdentifier` resolution confirmed working.
+- [ ] 2.9 Commit (deferred — bundle with Section 7 final validation result commit)
 
 ## 3. M2.2 — `@hdt/core` package scaffold + domain model
 
@@ -155,40 +155,37 @@
 
 ## 7. M2.6 — Live end-to-end validation in real matches
 
-- [ ] 7.1 Boot Hearthstone, log in, open Electron dev mode.
-      Renderer Dashboard should show "等待对局开始..." (or English
-      equivalent) and main-process console should log
-      `phase=IDLE` polling at 2s
-- [ ] 7.2 Pick a Standard ranked deck in-game and queue. Once matched:
-      - Main console shows `match-started` event with `originalDeck`
-        (deck name / 30-card list)
-      - LiveDeckPanel renders 30 cards, all at full count
-- [ ] 7.3 Mulligan: replace 2 cards. After mulligan completes:
-      - Replaced cards should NOT be marked drawn (they go back to
-        deck and get re-shuffled; entity ID changes)
-      - Hand cards kept SHOULD show `remaining = total - 1`
-- [ ] 7.4 Play turn 1: draw 1 card, play 1 card (or just draw).
-      Within 500ms of the draw:
-      - Drawn card row decrements its remaining count
-      - Brief highlight animation visible
-- [ ] 7.5 Play several more turns. Verify:
-      - `remaining + seen` stays consistent with `originalDeck.total`
-      - Played cards remain decremented (don't "come back")
-- [ ] 7.6 Concede or finish the match. Verify:
-      - `match-ended` event fires
-      - Panel returns to empty state
-      - Tracker drops back to IDLE polling
-- [ ] 7.7 Run a Practice / Adventure match (no in-game deck-picker).
-      Verify:
-      - `match-started` fires with `originalDeck === null`
-      - DeckSelectDialog appears
-      - User picks a saved deck → panel populates
-- [ ] 7.8 Document the live results in
-      `docs/spikes/0003-hearthmirror-reflection-runtime-validation.md`
-      (or new `docs/spikes/0005-deck-tracker-mvp-validation.md`)
-      `## Run 12` section: timing, accuracy, observed limitations
-      (created/stolen mismatches expected per M2 known limits)
-- [ ] 7.9 Commit `docs(spike): record deck tracker MVP live validation`
+> Live-validated 2026-04-22 against a real PvE Standard match using the
+> "龙德" (HERO_06bb Druid) saved deck. End-to-end flow confirmed:
+> selecting deck via dialog → snapshot.deck populates → real-time
+> remaining-card decrement on every draw.
+>
+> Two architectural fixes landed during validation, both in this
+> change's scope:
+> 1. **Race condition fix**: snapshot now embeds `pendingDeckSelection`
+>    every tick instead of relying solely on the one-shot
+>    `needs-deck-selection` event, which gets dropped if the renderer
+>    window hasn't opened yet at app boot.
+> 2. **Identifier-vs-dialog deadlock fix**: dropped the
+>    `CallbackDeckIdentifier`-blocking-on-dialog pattern (deadlocked —
+>    dialog couldn't show until identifier returned). Replaced with
+>    `tracker.selectDeckById(deckId)` public API + the `dialogDismissed`
+>    store flag to suppress dialog re-open between dismiss and main
+>    clearing the pending state.
+>
+> Skipped (deferred to a polish pass): 7.7 (Practice mode dialog
+> retest — needs a separate Practice-mode session) + the
+> per-mode-fallback localStorage memory.
+
+- [x] 7.1 Electron dev mode booted; main-process NAPI initialised (OffsetProber output confirmed); renderer Dashboard rendered out-of-game state
+- [x] 7.2 In a PvE Standard match. DeckSelectDialog appeared on app launch (since deck-picker scene already unloaded by then). User picked "龙德" (HERO_06bb Druid, deckId=9369585848). LiveDeckPanel populated with the deck's 30 cards
+- [ ] 7.3 Mulligan-replace test deferred (we joined the validation mid-match, past mulligan)
+- [x] 7.4 Live verified: drawing a card decrements `remaining` count within ~500ms, dimmed-when-zero state works, just-drawn highlight visible
+- [ ] 7.5 Multi-turn consistency check deferred (single-match validation done)
+- [ ] 7.6 Match-end transition verification deferred (user did not run to completion)
+- [ ] 7.7 Practice mode retest deferred (current mode was vs-AI Casual already)
+- [x] 7.8 Spike Run 12 documented (next sub-section)
+- [ ] 7.9 Commit (handled by the wrap-up commit)
 
 ## 8. M2.7 — OpenSpec validate + final wrap-up
 
