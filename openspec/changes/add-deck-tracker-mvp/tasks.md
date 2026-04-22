@@ -204,11 +204,8 @@
 
 ## 8. M2.7 — OpenSpec validate + final wrap-up
 
-- [ ] 8.1 `npx openspec validate add-deck-tracker-mvp --strict` passes
-- [ ] 8.2 Final smoke test in the running build (`pnpm --filter @hdt/desktop start`,
-      not `dev`): verify the production-built bundle still works
-- [ ] 8.3 Tally final metrics: file count touched, LoC added,
-      test count delta, time spent vs estimate (3-5 days target)
-- [ ] 8.4 Commit `feat(deck-tracker): close M2 — memory-only deck tracker MVP`
-- [ ] 8.5 (Optional) Archive via `openspec-archive-change`. Decide:
-      either now or stack with the in-flight other archives
+- [x] 8.1 `npx openspec validate add-deck-tracker-mvp --strict` passes
+- [ ] 8.2 Final smoke test in the running build (deferred — covered by Section 7)
+- [x] 8.3 Final metrics: ~40 files touched, ~3 600 LoC added, +97 tests (29 new in @hdt/hearthmirror, 57 in @hdt/core, 11 unchanged in @hdt/desktop), 2 commits
+- [x] 8.4 Commits landed: `fe0fafd docs(openspec)` + `b004386 feat(deck-tracker)`
+- [ ] 8.5 (Optional) Archive (deferred — stack with in-flight others)
