@@ -64,7 +64,7 @@ export function startDeckTracker(): void {
   );
   tracker = new DeckTracker({
     mirror,
-    identifier: new ChainedDeckIdentifier([new InGameDeckIdentifier(), callbackIdentifier]),
+    identifier: new ChainedDeckIdentifier([new InGameDeckIdentifier(mirror), callbackIdentifier]),
   });
 
   tracker.on('state-change', (event: DeckTrackerEvent) => {

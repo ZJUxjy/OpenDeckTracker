@@ -241,6 +241,16 @@ pub const FLD_CHOICE_ENTITIES: &str = "<Entities>k__BackingField";
 pub const CLS_MULLIGAN_MGR: (&str, &str) = ("", "MulliganManager");
 pub const FLD_MULLIGAN_BANNER: &str = "mulliganChooseBanner";
 
+// DeckPickerTrayDisplay — the in-game Play-menu deck-picker UI singleton.
+// Used by `getSelectedDeckId` to identify the deck the user is queueing.
+// Class is only loaded when the user is on the Play screen; reflector
+// returns null in any other scene (which is the correct degraded state).
+pub const CLS_DECK_PICKER_TRAY: (&str, &str) = ("", "DeckPickerTrayDisplay");
+pub const FLD_VISUALS_FORMAT_TYPE: &str = "m_visualsFormatType";
+pub const FLD_SELECTED_CUSTOM_DECK_BOX: &str = "m_selectedCustomDeckBox";
+pub const FLD_DECK_BOX_DECK_ID: &str = "m_deckID";
+pub const FLD_DECK_BOX_TEMPLATE_ID: &str = "m_deckTemplateId";
+
 // CollectionDeck / CollectionDeckSlot — replaces the Phase-1 stub
 // constants below. CollectionDeck is held in
 // `CollectionManager.m_decks` (a `Blizzard.T5.Core.Map<long, CollectionDeck>`).

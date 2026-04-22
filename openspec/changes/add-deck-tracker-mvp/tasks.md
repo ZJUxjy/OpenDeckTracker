@@ -42,27 +42,15 @@
 
 ## 2. M2.1 Deck-identifier spike — find the in-game "selected play deck" Mono field
 
-> Spike before building M2 in earnest. Outcome decides whether
-> `InGameDeckIdentifier` (per design D5) ships with auto-detection
-> from memory, or M2 is dialog-only.
->
-> **Status: DEFERRED** — Hearthstone wasn't running during this
-> implementation session. Section 3+ proceed with `InGameDeckIdentifier`
-> as a stub that always returns null (forces dialog fallback per design
-> D5). When HS is next available, run 2.1-2.4 and either add the
-> auto-detect (2.6-2.9) or document failure (2.5).
-
-- [ ] 2.1 Use `cargo run --release --target i686-pc-windows-msvc --example diag_klass_fields`
-      against `CollectionManager` to dump fields; look for `m_lastSelected*`,
-      `m_selectedDeck`, `m_currentDeckId`, `m_loadedDeck`
-- [ ] 2.2 Cross-reference candidate field i64 values against `getDecks` IDs
-- [ ] 2.3 Repeat with `DeckPickerTrayDisplay` if needed
-- [ ] 2.4 Repeat with `Hearthstone.Network.PracticePickerScene` / `GameMgr`
-- [ ] 2.5 Document spike outcome in `docs/spikes/0004-selected-deck-field.md`
-- [ ] 2.6 If a field exists, add `getSelectedDeckId()` Rust reflector
-- [ ] 2.7 Add corresponding TS facade method + IPC + preload bindings
-- [ ] 2.8 Live-validate by selecting different decks in-game
-- [ ] 2.9 Commit `feat(hearthmirror): add getSelectedDeckId reflector`
+- [x] 2.1 `CollectionManager` field dump — no `m_lastSelected*` / `m_selectedDeck` / `m_currentDeckId`; only `m_EditedDeck` (already used by `getEditedDeck`)
+- [x] 2.2 N/A — no usable candidate on `CollectionManager`
+- [x] 2.3 `DeckPickerTrayDisplay` field dump found `s_instance` (+0x0020 STATIC) + `m_selectedCustomDeckBox` (+0x0230) + `m_visualsFormatType`. Confirmed against upstream `HearthMirror.decompiled.cs:2549` (`InternalGetDeckPickerState`)
+- [x] 2.4 N/A — `DeckPickerTrayDisplay` is the answer; Practice/Adventure modes legitimately don't load this scene → dialog fallback per design D5
+- [x] 2.5 `docs/spikes/0004-selected-deck-field.md` written (chain + lifecycle constraints + per-mode validity table)
+- [x] 2.6 Rust reflector `getSelectedDeckId` added (`src/reflection/selected_deck.rs`); returns `{ deckId: i64, templateDeckId: i32, formatType: i32 } | null`
+- [x] 2.7 TS facade `HearthMirror.getSelectedDeckId()` + `SelectedDeck` type + IPC handler + preload binding all wired
+- [ ] 2.8 Live-validate: pending — `s_instance` is NULL outside the Play screen (verified). Need to test on Play screen with a deck highlighted; merged into Section 7 live validation
+- [ ] 2.9 Commit (deferred — bundle with Section 7 validation result commit)
 
 ## 3. M2.2 — `@hdt/core` package scaffold + domain model
 

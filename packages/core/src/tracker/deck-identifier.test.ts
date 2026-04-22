@@ -34,9 +34,52 @@ const fakeMatch: MatchInfo = {
 };
 
 describe('InGameDeckIdentifier', () => {
-  it('M2 stub returns null (Spike Section 2 pending)', async () => {
-    const id = new InGameDeckIdentifier();
+  it('returns null when mirror.getSelectedDeckId returns null (deck-picker scene unloaded)', async () => {
+    const mirror = { getSelectedDeckId: vi.fn().mockResolvedValue(null) } as unknown as Parameters<typeof InGameDeckIdentifier['prototype']['identify']>[0] extends never ? never : import('@hdt/hearthmirror').HearthMirror;
+    const id = new InGameDeckIdentifier(mirror);
     expect(await id.identify({ decks: [fakeDeck(1, 'A')], matchInfo: fakeMatch })).toBeNull();
+  });
+
+  it('returns null when selected deckId is 0 (template-only / face-card-only)', async () => {
+    const mirror = {
+      getSelectedDeckId: vi.fn().mockResolvedValue({
+        deckId: 0n,
+        templateDeckId: 100,
+        formatType: 2,
+      }),
+    } as unknown as import('@hdt/hearthmirror').HearthMirror;
+    const id = new InGameDeckIdentifier(mirror);
+    expect(await id.identify({ decks: [fakeDeck(1, 'A')], matchInfo: fakeMatch })).toBeNull();
+  });
+
+  it('returns null when selected deckId is not in the decks list (template / dungeon)', async () => {
+    const mirror = {
+      getSelectedDeckId: vi.fn().mockResolvedValue({
+        deckId: 999n,
+        templateDeckId: 0,
+        formatType: 2,
+      }),
+    } as unknown as import('@hdt/hearthmirror').HearthMirror;
+    const id = new InGameDeckIdentifier(mirror);
+    expect(await id.identify({ decks: [fakeDeck(1, 'A')], matchInfo: fakeMatch })).toBeNull();
+  });
+
+  it('resolves to the matching saved deck and builds an originalDeck snapshot', async () => {
+    const mirror = {
+      getSelectedDeckId: vi.fn().mockResolvedValue({
+        deckId: 2n,
+        templateDeckId: 0,
+        formatType: 2,
+      }),
+    } as unknown as import('@hdt/hearthmirror').HearthMirror;
+    const id = new InGameDeckIdentifier(mirror);
+    const result = await id.identify({
+      decks: [fakeDeck(1, 'A'), fakeDeck(2, 'B')],
+      matchInfo: fakeMatch,
+    });
+    expect(result?.deckId).toBe(2);
+    expect(result?.name).toBe('B');
+    expect(result?.originalDeck.total()).toBe(3);
   });
 });
 

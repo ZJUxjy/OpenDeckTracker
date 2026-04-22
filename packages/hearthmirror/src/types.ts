@@ -202,3 +202,18 @@ export interface IsMulligan {
    */
   mulligan: boolean | null;
 }
+
+/**
+ * Deck the user is currently highlighting in the in-game deck picker
+ * (the deck about to be queued). Read from
+ * `DeckPickerTrayDisplay.s_instance.m_selectedCustomDeckBox` —
+ * available only when the user is actually on the Play menu.
+ */
+export interface SelectedDeck {
+  /** Saved-deck id (>0 when picking a custom CollectionDeck). */
+  deckId: bigint;
+  /** Template-deck id (>0 when picking a Blizzard template; mutually exclusive with deckId). */
+  templateDeckId: number;
+  /** Currently visible format tab — `PegasusShared.FormatType` enum (1=Wild, 2=Standard, 3=Classic, 4=Twist). */
+  formatType: number;
+}

@@ -138,6 +138,8 @@ export declare function getMedalInfo(): Promise<MedalInfoResult | null>
 
 export declare function getOpponentSecrets(): Promise<OpponentSecretsResult | null>
 
+export declare function getSelectedDeckId(): Promise<SelectedDeckResult | null>
+
 export declare function getServerInfo(): Promise<GameServerInfoResult | null>
 
 export interface HandCard {
@@ -233,4 +235,16 @@ export interface SecretEntity {
   entityId: number
   cardId: string
   zonePosition: number
+}
+
+export interface SelectedDeckResult {
+  /** Saved-deck id (>0 when the user picked a custom CollectionDeck). */
+  deckId: number
+  /**
+   * Template-deck id (>0 when the user picked a Blizzard template).
+   * Mutually exclusive with `deck_id` in practice.
+   */
+  templateDeckId: number
+  /** Currently visible format tab — `PegasusShared.FormatType` enum. */
+  formatType: number
 }

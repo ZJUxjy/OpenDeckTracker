@@ -1,4 +1,4 @@
-import type { Deck, MatchInfo } from '@hdt/hearthmirror';
+import type { Deck, HearthMirror, MatchInfo } from '@hdt/hearthmirror';
 import { DeckSnapshot } from '../game/deck-snapshot';
 
 /**
@@ -24,17 +24,36 @@ export interface IdentifiedDeck {
 }
 
 /**
- * In-game memory-field identifier. STUB until Section 2 spike completes.
+ * In-game memory-field identifier. Reads
+ * `DeckPickerTrayDisplay.s_instance.m_selectedCustomDeckBox.m_deckID`
+ * via the new `getSelectedDeckId` reflector (Section 2 spike outcome —
+ * see `selected_deck.rs` doc comment for the chain).
  *
- * Today this returns null (no auto-detection); the orchestrator falls
- * back to the dialog. When the spike finds a usable Mono field we'll
- * add a `getSelectedDeckId()` reflector and wire it here.
+ * Returns null (→ orchestrator falls back to dialog) when:
+ *   - HearthMirror is unavailable.
+ *   - The reflector returns null (typical for Practice / Brawl /
+ *     Adventure modes where the deck-picker UI doesn't load).
+ *   - The selected `deckId` doesn't match any saved deck in the
+ *     `getDecks` snapshot (template decks, dungeon decks, etc.).
+ *
+ * Constructed PvP queueing → identifier resolves the saved deck
+ * automatically; everything else → dialog.
  */
 export class InGameDeckIdentifier implements IDeckIdentifier {
-  async identify(_snapshot: { decks: Deck[]; matchInfo: MatchInfo }): Promise<IdentifiedDeck | null> {
-    // Spike Section 2 pending. Return null so callers fall back to
-    // `CallbackDeckIdentifier` (the dialog-driven flow).
-    return null;
+  constructor(private readonly mirror: HearthMirror) {}
+
+  async identify(snapshot: { decks: Deck[]; matchInfo: MatchInfo }): Promise<IdentifiedDeck | null> {
+    const selected = await this.mirror.getSelectedDeckId();
+    if (!selected) return null;
+    if (selected.deckId <= 0n) return null;
+    const deckIdNumber = Number(selected.deckId);
+    const deck = snapshot.decks.find((d) => d.id === deckIdNumber);
+    if (!deck) return null;
+    return {
+      deckId: deck.id,
+      name: deck.name,
+      originalDeck: DeckSnapshot.fromDeckCards(deck.cards),
+    };
   }
 }
 

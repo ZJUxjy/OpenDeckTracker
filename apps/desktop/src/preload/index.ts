@@ -18,6 +18,7 @@ import type {
   MatchInfo,
   MedalInfo,
   OpponentSecrets,
+  SelectedDeck,
 } from '@hdt/hearthmirror';
 
 const api = {
@@ -68,6 +69,8 @@ const api = {
       ipcRenderer.invoke('hearthmirror:getOpponentSecrets'),
     getChoices: (): Promise<Choices | null> =>
       ipcRenderer.invoke('hearthmirror:getChoices'),
+    getSelectedDeckId: (): Promise<SelectedDeck | null> =>
+      ipcRenderer.invoke('hearthmirror:getSelectedDeckId'),
   },
   deckTracker: {
     getSnapshot: (): Promise<DeckTrackerSnapshot | null> =>

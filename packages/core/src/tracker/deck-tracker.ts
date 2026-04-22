@@ -94,7 +94,7 @@ export class DeckTracker {
     identifier?: IDeckIdentifier;
   }) {
     this.mirror = args.mirror;
-    this.identifier = args.identifier ?? new ChainedDeckIdentifier([new InGameDeckIdentifier()]);
+    this.identifier = args.identifier ?? new ChainedDeckIdentifier([new InGameDeckIdentifier(args.mirror)]);
     this.loop = new PollingLoop();
     this.game = new Game();
     this.currentSnapshot = blankSnapshot();

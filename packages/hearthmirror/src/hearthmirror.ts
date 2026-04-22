@@ -26,6 +26,7 @@ import type {
   MedalInfoData,
   OpponentSecrets,
   SecretEntity,
+  SelectedDeck,
 } from './types';
 
 /**
@@ -258,6 +259,16 @@ export class HearthMirror {
     return {
       secrets: r.secrets.map(toSecret),
       count: r.count,
+    };
+  }
+
+  async getSelectedDeckId(): Promise<SelectedDeck | null> {
+    const r = await native.getSelectedDeckId();
+    if (!r) return null;
+    return {
+      deckId: toBigInt(r.deckId),
+      templateDeckId: r.templateDeckId,
+      formatType: r.formatType,
     };
   }
 

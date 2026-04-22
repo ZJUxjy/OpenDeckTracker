@@ -26,6 +26,7 @@ export type {
   MedalInfoData,
   OpponentSecrets,
   SecretEntity,
+  SelectedDeck,
 } from './types';
 // `enums.ts` exports raw enum lookups (GameType / FormatType numeric →
 // label maps); kept under different names from the new `GameType`
