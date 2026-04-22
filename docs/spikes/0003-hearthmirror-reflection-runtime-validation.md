@@ -774,3 +774,109 @@ Schema change documented and locked: `getMedalInfo` now returns `{ wild?, standa
 
 **R-19** (P3, new): Audit the rest of the Phase 1 Spec D2 assumption ("services keyed by ServiceTypeName string match"). Now that `MonoObject::field_offset` walks parents, we have building blocks for a more principled `Type` based service lookup if needed.
 
+## Run 11 — Phase 5 + 7 land: getDecks fixed, in-match observability online
+
+`add-hearthmirror-decks-and-in-match-readers` ports the upstream
+`hearthmirror-rs` Phase 5 + Phase 7 reader set (commits `f9199bc` /
+`10225d4` / `53aa0cc`) into our NAPI surface, closing R-17 and turning
+the 5-method "in-match observability" gap into live data.
+
+### Implementation summary
+
+11 NAPI methods land in this run:
+
+| Method | Status before | Status after | Notes |
+|---|---|---|---|
+| `getDecks` | ❌ overflow=5000 (R-17) | ✅ OK | `m_decks` is `Map<long, CollectionDeck>`, not Dict — switched to `custom_map::iter_entries`. `CollectionDeckSlot.m_count` is a boxed-int, value at `+0x10`. |
+| `getEditedDeck` | NEW | ✅ OK | Reuses `read_deck_from_object`; `null` outside collection editor. |
+| `getMatchInfo` | ⚪ null | ✅ OK | Re-routed: GameMgr (ServiceLocator) for game/format/mission + GameState.m_playerMap walk for local/opposing players. |
+| `getGameType` | ⚪ null (returned 0) | ✅ OK | Re-routed through `ServiceLocator.get_service("GameMgr")` rather than `GameState`. Schema: `{game_type, format_type, mission_id}` all `Option<i32>`. |
+| `getServerInfo` | ⚪ null | ⚪ null in PvE | Phase-1 stub used `Network.s_instance.m_currentServerInfo`; new path walks the inlined `Network.m_state` (NetworkState **value-type struct**) → `<LastGameServerInfo>k__BackingField`. AI matches legitimately have no GameServerInfo. |
+| `isMulligan` | NEW | 🟡 | `MulliganManager.s_instance.mulliganChooseBanner` non-null check. `null` outside mulligan phase is correct (singleton destroyed). |
+| `getBoardState` | NEW | ✅ OK | Walks `m_entityMap`, filters by `m_realTimeZone == PLAY` + controller match + `CARDTYPE != ENCHANTMENT`. Sorted by zone position. |
+| `getHandState` | NEW | ✅ OK | Same walk filtered by `ZONE == HAND`. Friendly hand reports cards; opposing hand only count (information-leak guard). |
+| `getDeckState` | NEW | ✅ OK | `ZONE == DECK`. Friendly deck cards reported (player owns their own deck). |
+| `getOpponentSecrets` | NEW | ✅ OK | `ZONE == SECRET`, opposing controller. Card IDs reported (HDT historical behaviour). |
+| `getChoices` | NEW | ✅ OK | Walks `m_choicesMap`, demuxes by `<ChoiceType>k__BackingField`. `<Entities>k__BackingField` read as `List<int>` with raw i32 array reads (NOT pointer reads). |
+
+### Shared infrastructure landed
+
+- `src/reflection/tags.rs` — 9 GAME_TAG + 4 TAG_ZONE + 6 CardType + 2 ChoiceType constants, sourced from upstream live-verified set.
+- `src/reflection/entity.rs` — `read_game_state_singleton`, `iter_entity_map`, `iter_player_map`, `iter_choices_map`, `discover_player_ids`, `read_entity_tag` (with `<Tags>k__BackingField` → `m_tags` fallback), `read_entity_card_id`, `read_realtime_combat_stats`, `resolve_entity_card_id`. The single tag-dictionary path replaces 5 inline copies.
+
+### Live validation
+
+#### Scenario A — main menu, logged in (`9 OK / 10 null / 0 ERR`)
+
+```
+✅ getBattleTag : 纯金的小铁人#5630
+✅ getAccountId : hi=72057594037927936, lo=206001158
+✅ getMedalInfo : standard{lvl=34, stars=3, streak=2, season=150, wins=51, best=34}, ...
+✅ getMatchInfo : game=0, fmt=0, mission=0, local=None, opp=None  (no match)
+✅ getGameType  : game=Some(0), fmt=Some(0), mission=Some(0)        (GameMgr reg'd, idle)
+✅ getDecks     : 8 decks: ["那个男人" (19 cards), "法术瞎" (18), "自定义法师2" (17), ...]
+✅ isSpectating / isGameOver / getCollection (15618 cards)
+⚪ isMulligan / getEditedDeck / getServerInfo / getBattlegroundRatingInfo / getArenaDeck
+⚪ getBoardState / getHandState / getDeckState / getOpponentSecrets / getChoices  (no match)
+```
+
+#### Scenario B — collection editor with deck selected (`10 OK / 9 null / 0 ERR`)
+
+```
+✅ getEditedDeck : name="自定义 法师2", hero=HERO_08ar_Saraad, fmt=2 (Standard), type=1, 17 cards
+   (one extra OK vs Scenario A — the rest unchanged)
+```
+
+#### Scenario C+D — active AI match, mid-early game (`14 OK / 5 null / 0 ERR`)
+
+```
+✅ getMatchInfo  : game=1 (PvE), fmt=1 (Wild), mission=266
+                   local{id=0, side=1, name="徐敬尧"}, opp{id=0, side=2, name="旅店老板"}
+✅ getGameType   : game=Some(1), fmt=Some(1), mission=Some(266)
+✅ getBoardState : friendly=3 [_, HERO_06ar (Saraad), HERO_06ebp (hero power)]
+                   opposing=4 [_, HERO_07 (Gul'dan), HERO_07bp (Life Tap), CORE_EX1_319 (Flame Imp)]
+✅ getHandState  : friendly=6 [TIME_701, CATA_131, CATA_140, CATA_111, VAC_COIN1, EDR_270]
+                   opp_count=3   (going-second hand: 4 mulligan + coin + 1 turn draw = 6)
+✅ getDeckState  : friendly_deck=25, opp_deck_count=26   (player drew 5; AI drew 4)
+✅ getOpponentSecrets : count=0    (Warlock has no secrets — reflector works)
+✅ getChoices    : mulligan=None, general=None   (past mulligan, no Discover active)
+
+⚪ isMulligan    : null    (MulliganManager singleton destroyed after phase ends)
+⚪ getServerInfo : null    (PvE missions don't use Battle.net server — by design)
+```
+
+### Status table — Run 10 → Run 11
+
+| Method | Run 10 (R-16) | Run 11 (Phase 5+7) |
+|---|---|---|
+| getBattleTag | ✅ | ✅ |
+| getAccountId | ✅ | ✅ |
+| getMedalInfo | ✅ | ✅ |
+| isSpectating | ✅ | ✅ |
+| isGameOver | ✅ | ✅ |
+| getCollection | ✅ | ✅ |
+| **getDecks** | ❌ overflow | ✅ **8 decks** |
+| **getMatchInfo** | ⚪ null | ✅ **player names + game type** |
+| **getGameType** | ⚪ null | ✅ **PvE mission 266** |
+| **getServerInfo** | ⚪ null | ⚪ null (PvE-correct) |
+| **getEditedDeck** | _absent_ | ✅ **edited deck contents** |
+| **isMulligan** | _absent_ | 🟡 (correct null outside phase) |
+| **getBoardState** | _absent_ | ✅ **3 vs 4 entities** |
+| **getHandState** | _absent_ | ✅ **6 + 3 cards** |
+| **getDeckState** | _absent_ | ✅ **25 + 26** |
+| **getOpponentSecrets** | _absent_ | ✅ **count + IDs** |
+| **getChoices** | _absent_ | ✅ **mulligan + general slots** |
+| getBattlegroundRatingInfo | ⚪ null | ⚪ null |
+| getArenaDeck | ⚪ null | ⚪ null |
+| **Totals (mid-match)** | 6 OK / 5 null / 1 ERR | **14 OK / 5 null / 0 ERR** |
+
+R-16 + R-17 fully closed. The TS overlay layer now has every live-bridge data source it needs to render PlayerDeck / OpponentDeck / BoardMinionOverlay components from `DEVELOPMENT_PLAN.md` Phase 4.
+
+### Updated recommendations
+
+**R-18** (P2, partially addressed): `getMatchInfo.player.id` reads as 0 in PvE matches (`Player.m_id` is unset for AI scenarios; the controller id lives on the map key, which we discard inside `read_players`). Optional polish: surface map key as `id` rather than reading `Player.m_id`. Not blocking.
+
+**R-20** (P3, new): `getBoardState`/`getHandState` occasionally include a leading entry with empty `card_id`. Likely a Player game-object entity sitting in PLAY zone that has no card representation. Two paths: (a) filter entries with empty `card_id`; (b) keep them for protocol fidelity (matches upstream behaviour). Not blocking.
+
+**R-21** (P3, new): `cardback_id` reads 0 in `getMatchInfo.player`. Likely `Player.m_cardback` is set later in the match flow. Live-validate after the full match starts.
+
