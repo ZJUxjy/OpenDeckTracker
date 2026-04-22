@@ -21,3 +21,4 @@ pub mod deck_state;
 pub mod opponent_secrets;
 pub mod choices;
 pub mod mulligan;
+pub mod selected_deck;

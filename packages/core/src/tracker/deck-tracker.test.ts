@@ -37,6 +37,9 @@ function makeMirror(): {
     getHandState: vi.fn(async () => state.handState),
     getDeckState: vi.fn(async () => state.deckState),
     getBoardState: vi.fn(async () => state.boardState),
+    // getSelectedDeckId returns null by default (deck-picker scene unloaded).
+    // Tests can override via the returned mirror's `.getSelectedDeckId`.
+    getSelectedDeckId: vi.fn(async () => null),
   } as unknown as HearthMirror;
   return { mirror, state };
 }

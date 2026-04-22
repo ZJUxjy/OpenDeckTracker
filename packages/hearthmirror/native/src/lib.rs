@@ -184,3 +184,9 @@ pub async fn get_choices() -> napi::Result<Option<reflection::choices::ChoicesRe
         reflection::choices::get_choices_internal(rt)))
 }
 
+#[napi]
+pub async fn get_selected_deck_id() -> napi::Result<Option<reflection::selected_deck::SelectedDeckResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::selected_deck::get_selected_deck_id_internal(rt)))
+}
+

@@ -84,6 +84,8 @@ export function registerIpc(): void {
     () => swallow('getOpponentSecrets', () => hm().getOpponentSecrets(), null));
   ipcMain.handle('hearthmirror:getChoices',
     () => swallow('getChoices', () => hm().getChoices(), null));
+  ipcMain.handle('hearthmirror:getSelectedDeckId',
+    () => swallow('getSelectedDeckId', () => hm().getSelectedDeckId(), null));
 
   // Deck-tracker host (M2)
   registerDeckTrackerIpc();

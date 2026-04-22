@@ -591,6 +591,7 @@ module.exports.getHandState = nativeBinding.getHandState
 module.exports.getMatchInfo = nativeBinding.getMatchInfo
 module.exports.getMedalInfo = nativeBinding.getMedalInfo
 module.exports.getOpponentSecrets = nativeBinding.getOpponentSecrets
+module.exports.getSelectedDeckId = nativeBinding.getSelectedDeckId
 module.exports.getServerInfo = nativeBinding.getServerInfo
 module.exports.isAlive = nativeBinding.isAlive
 module.exports.isGameOver = nativeBinding.isGameOver
