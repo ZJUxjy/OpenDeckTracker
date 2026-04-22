@@ -11,3 +11,4 @@ pub mod game_state;
 pub mod match_info;
 pub mod medal_info;
 pub mod server;
+pub mod service_locator;

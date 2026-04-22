@@ -42,8 +42,19 @@ pub struct MonoRuntime {
 
 #[derive(Default)]
 struct RuntimeCache {
-    ac_image: Option<RemotePtr>,
+    /// Image basename (e.g. `"Assembly-CSharp.dll"`) → `MonoImage*` address
+    /// in the target process. Walked once via `domain_assemblies`, then
+    /// returned for every subsequent `find_image_cached` / cross-image
+    /// `find_class_in_image` call. Replaced the previous
+    /// `ac_image: Option<RemotePtr>` field when `add-hearthmirror-service-locator`
+    /// generalised image lookup beyond Assembly-CSharp.
+    images: HashMap<String, RemotePtr>,
     classes: HashMap<String, MonoClassRef>,
+    /// Service name (e.g. `"NetCache"`) → resolved IService object address.
+    /// Populated lazily by `MonoRuntime::get_service`. Stale entries are
+    /// evicted by validating the cached object's vtable→klass chain on each
+    /// hit (see `add-hearthmirror-service-locator` design D3).
+    services: HashMap<String, RemotePtr>,
 }
 
 impl MonoRuntime {
@@ -286,16 +297,33 @@ impl MonoRuntime {
 
     /// Find the Assembly-CSharp `MonoImage*` pointer, caching the result.
     ///
-    /// Walks `MonoDomain.domain_assemblies` (a GSList of `MonoAssembly*`),
-    /// dereferences each `MonoAssembly.image` to its `MonoImage*`, then
-    /// inspects `MonoImage.name`. Replaces the legacy `loaded_images` GList
-    /// path that required runtime offset probing (deleted with this change).
+    /// Thin shim over [`MonoRuntime::find_image_cached`] preserved for
+    /// callers that don't care about other images. The original exact-match
+    /// defence against `Assembly-CSharp-firstpass.dll` lives in
+    /// `find_image_cached`'s matching rule.
     fn find_ac_image_cached(&self) -> Result<RemotePtr, ScryError> {
+        self.find_image_cached("Assembly-CSharp.dll")
+    }
+
+    /// Look up a loaded `MonoImage*` by basename (e.g.
+    /// `"Blizzard.T5.ServiceLocator.dll"`), caching the result.
+    ///
+    /// Matching rule: `name.ends_with(image_name) || name ==
+    /// image_name.trim_end_matches(".dll")`. The `ends_with` branch covers
+    /// `<game-install-path>/<image>.dll` paths returned by Mono on Unity,
+    /// while the trimmed exact-match covers the rare case where Mono stores
+    /// the short logical name without the `.dll` suffix. This rule
+    /// preserves the firstpass defence introduced in commit 1431dc6 because
+    /// `Assembly-CSharp-firstpass.dll` does not end with
+    /// `"Assembly-CSharp.dll"`.
+    pub fn find_image_cached(&self, image_name: &str) -> Result<RemotePtr, ScryError> {
         if let Ok(cache) = self.cache.lock() {
-            if let Some(image) = cache.ac_image {
-                return Ok(image);
+            if let Some(image) = cache.images.get(image_name) {
+                return Ok(*image);
             }
         }
+
+        let stem = image_name.trim_end_matches(".dll");
 
         let domain_off = &self.offsets.structs.domain;
         let assembly_off = &self.offsets.structs.assembly;
@@ -322,31 +350,112 @@ impl MonoRuntime {
             if name_ptr.is_null() {
                 continue;
             }
-            let name = self.memory.read_cstring(name_ptr, 128)?;
-            // Match exactly the main game assembly (path basename ==
-            // "Assembly-CSharp.dll"), NOT "Assembly-CSharp-firstpass.dll".
-            // Mono lists firstpass *before* the main assembly in
-            // `domain_assemblies`, so the previous `contains("Assembly-CSharp")`
-            // matched firstpass first — which contains only ~20 utility
-            // classes and does not include NetCache, GameState, CollectionManager,
-            // etc. The bug caused every reflection method to silently degrade
-            // to its `unwrap_or` default (false / 0 / null) since
-            // `get_singleton` swallows `ClassNotFound` as `Ok(None)`.
-            // `ends_with("Assembly-CSharp.dll")` works for any path-separator
-            // style because firstpass ends with `firstpass.dll`. The bare
-            // `name == "Assembly-CSharp"` branch covers the rare case where
-            // Mono stores the short logical name without the `.dll` suffix.
-            if name.ends_with("Assembly-CSharp.dll") || name == "Assembly-CSharp" {
+            let name = self.memory.read_cstring(name_ptr, 256)?;
+            if name.ends_with(image_name) || name == stem {
                 if let Ok(mut cache) = self.cache.lock() {
-                    cache.ac_image = Some(image_ptr);
+                    cache.images.insert(image_name.to_string(), image_ptr);
                 }
                 return Ok(image_ptr);
             }
         }
 
-        Err(ScryError::MetadataError(
-            "Assembly-CSharp image not found in domain_assemblies".into(),
-        ))
+        Err(ScryError::ModuleNotFound(image_name.to_string()))
+    }
+
+    /// Resolve a class inside the named loaded assembly (e.g.
+    /// `"Blizzard.T5.ServiceLocator.dll"`). Sister method to
+    /// [`MonoRuntime::find_class`], which only searches `Assembly-CSharp.dll`.
+    ///
+    /// Cache key includes `image_name` so the same simple class name living
+    /// in two different DLLs is never confused. Returns
+    /// `Err(ScryError::ModuleNotFound)` if the image isn't loaded into the
+    /// domain, `Err(ScryError::ClassNotFound)` if the image is loaded but
+    /// the class is absent.
+    pub fn find_class_in_image(
+        &self,
+        image_name: &str,
+        namespace: &str,
+        name: &str,
+    ) -> Result<MonoClassRef, ScryError> {
+        let cache_key = format!("{}::{}::{}", image_name, namespace, name);
+
+        if let Ok(cache) = self.cache.lock() {
+            if let Some(class) = cache.classes.get(&cache_key) {
+                return Ok(class.clone());
+            }
+        }
+
+        let image_addr = self.find_image_cached(image_name)?;
+        let image = MonoImage::new(self, image_addr);
+        let class_ref = match image.find_class(namespace, name)? {
+            Some(c) => c,
+            None => {
+                return Err(ScryError::ClassNotFound {
+                    namespace: namespace.to_string(),
+                    name: name.to_string(),
+                });
+            }
+        };
+
+        if let Ok(mut cache) = self.cache.lock() {
+            cache.classes.insert(cache_key, class_ref.clone());
+        }
+        Ok(class_ref)
+    }
+
+    /// Resolve a Hearthstone IService instance by name via the
+    /// `Blizzard.T5.Services.ServiceManager` chain, caching the resolved
+    /// object address keyed by service name.
+    ///
+    /// Cache hits are validated by reading the cached object's
+    /// vtable→klass chain — if either pointer comes back NULL (typically
+    /// meaning the service was re-registered or the address has been
+    /// reclaimed), the entry is evicted and a fresh ServiceLocator walk
+    /// runs.
+    ///
+    /// Returns `Ok(None)` for any "service not present right now" outcome
+    /// (ServiceManager unreachable, ServiceLocator NULL, name unknown,
+    /// stale-and-not-resolvable). Errors only on genuine memory-read
+    /// failures.
+    pub fn get_service(&self, name: &str) -> Result<Option<MonoObject>, ScryError> {
+        if let Some(addr) = self.cache.lock().ok().and_then(|c| c.services.get(name).copied()) {
+            if let Some(valid) = self.materialise_service(addr)? {
+                return Ok(Some(valid));
+            }
+            if let Ok(mut cache) = self.cache.lock() {
+                cache.services.remove(name);
+            }
+        }
+
+        let Some(svc) = crate::reflection::service_locator::get_service_by_name(self, name)? else {
+            return Ok(None);
+        };
+        if let Ok(mut cache) = self.cache.lock() {
+            cache.services.insert(name.to_string(), svc.addr);
+        }
+        Ok(Some(svc))
+    }
+
+    /// Validate a cached service address by reading its vtable → klass
+    /// chain. Returns `Ok(Some(MonoObject))` if alive, `Ok(None)` if the
+    /// chain reads NULL anywhere (stale).
+    fn materialise_service(&self, addr: RemotePtr) -> Result<Option<MonoObject>, ScryError> {
+        if addr.is_null() {
+            return Ok(None);
+        }
+        let vtable = self
+            .memory
+            .read_remote_ptr(addr + self.offsets.structs.object.vtable)?;
+        if vtable.is_null() {
+            return Ok(None);
+        }
+        let klass = self
+            .memory
+            .read_remote_ptr(vtable + self.offsets.structs.vtable.klass)?;
+        if klass.is_null() {
+            return Ok(None);
+        }
+        MonoObject::from_address(&self.memory, addr, self.offsets.clone())
     }
 
 }

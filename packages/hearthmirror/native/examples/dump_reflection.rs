@@ -98,13 +98,31 @@ fn main() {
     {
         let t = Instant::now();
         match futures::executor::block_on(medal_info::get_medal_info_internal(&rt)) {
-            Ok(Some(_v)) => print_result(
-                "getMedalInfo",
-                "ok",
-                "MedalInfoResult{...}",
-                "",
-                t.elapsed().as_millis(),
-            ),
+            Ok(Some(v)) => {
+                let fmt = |bucket: &str, m: Option<&medal_info::MedalInfoData>| match m {
+                    Some(d) => format!(
+                        "{}{{league={}, lvl={}, stars={}, streak={}, legend={}, season={}, wins={}, best={}}}",
+                        bucket,
+                        d.league_id,
+                        d.star_level,
+                        d.stars,
+                        d.streak,
+                        d.legend_rank,
+                        d.season_id,
+                        d.season_wins,
+                        d.best_star_level
+                    ),
+                    None => format!("{}=None", bucket),
+                };
+                let summary = format!(
+                    "{}, {}, {}, {}",
+                    fmt("standard", v.standard.as_ref()),
+                    fmt("wild", v.wild.as_ref()),
+                    fmt("classic", v.classic.as_ref()),
+                    fmt("twist", v.twist.as_ref())
+                );
+                print_result("getMedalInfo", "ok", &summary, "", t.elapsed().as_millis());
+            }
             Ok(None) => print_result("getMedalInfo", "null", "null", "", t.elapsed().as_millis()),
             Err(e) => print_result(
                 "getMedalInfo",
