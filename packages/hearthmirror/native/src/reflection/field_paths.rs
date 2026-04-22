@@ -190,6 +190,95 @@ pub const FLD_SERVER_GAME_HANDLE: &str = "GameHandle";
 pub const FLD_SERVER_VERSION: &str = "Version";
 pub const FLD_SERVER_RESUMABLE: &str = "Resumable";
 
+// ── In-match: GameState / Entity / EntityBase / TagMap / Player ──────────────
+//
+// Added by `add-hearthmirror-decks-and-in-match-readers` (Phase 7 readers).
+// `GameState` exposes a real `s_instance` (Assembly-CSharp.dll), unlike
+// NetCache which goes through ServiceLocator.
+//
+// `Entity` is the runtime in-match entity class held in
+// `GameState.m_entityMap` (a `Blizzard.T5.Core.Map<int, Entity>`).
+// `EntityBase` is the parent of both `Entity` and `EntityDef`
+// (collection-side card definitions); the tag-dictionary fallback walks
+// `Entity.<Tags>k__BackingField` first then `EntityBase.m_tags`.
+
+pub const CLS_GAME_STATE_FOR_MATCH: (&str, &str) = ("", "GameState");
+pub const FLD_ENTITY_MAP: &str = "m_entityMap";
+pub const FLD_PLAYER_MAP: &str = "m_playerMap";
+pub const FLD_CHOICES_MAP: &str = "m_choicesMap";
+
+// Entity / EntityBase tag-reading chain.
+pub const FLD_TAGS_BACKING: &str = "<Tags>k__BackingField";
+pub const FLD_TAGS_LEGACY: &str = "m_tags";
+pub const FLD_TAG_VALUES: &str = "m_values";
+pub const FLD_CARD_ID_BACKING: &str = "<CardID>k__BackingField";
+pub const FLD_CARD_ID_LEGACY: &str = "m_cardIdInternal";
+
+// Entity m_realTime* fields used to render board / hand cards without
+// re-reading their tag dictionaries (these mirror the relevant tag
+// values into i32 instance fields for game-loop perf).
+pub const FLD_REALTIME_ZONE: &str = "m_realTimeZone";
+pub const FLD_REALTIME_ZONE_POS: &str = "m_realTimeZonePosition";
+pub const FLD_REALTIME_ATTACK: &str = "m_realTimeAttack";
+pub const FLD_REALTIME_HEALTH: &str = "m_realTimeHealth";
+pub const FLD_REALTIME_DAMAGE: &str = "m_realTimeDamage";
+
+// In-match Player object (held in GameState.m_playerMap).
+pub const FLD_PLAYER_M_ID: &str = "m_id";
+pub const FLD_PLAYER_M_NAME: &str = "m_name";
+pub const FLD_PLAYER_M_LOCAL: &str = "m_local";
+pub const FLD_PLAYER_M_SIDE: &str = "m_side";
+pub const FLD_PLAYER_M_CARDBACK: &str = "m_cardback";
+
+// Choices object fields (held in GameState.m_choicesMap values).
+pub const FLD_CHOICE_TYPE: &str = "<ChoiceType>k__BackingField";
+pub const FLD_CHOICE_COUNT_MIN: &str = "<CountMin>k__BackingField";
+pub const FLD_CHOICE_COUNT_MAX: &str = "<CountMax>k__BackingField";
+pub const FLD_CHOICE_SOURCE: &str = "<Source>k__BackingField";
+pub const FLD_CHOICE_ENTITIES: &str = "<Entities>k__BackingField";
+
+// MulliganManager (Assembly-CSharp.dll, has real s_instance).
+pub const CLS_MULLIGAN_MGR: (&str, &str) = ("", "MulliganManager");
+pub const FLD_MULLIGAN_BANNER: &str = "mulliganChooseBanner";
+
+// CollectionDeck / CollectionDeckSlot — replaces the Phase-1 stub
+// constants below. CollectionDeck is held in
+// `CollectionManager.m_decks` (a `Blizzard.T5.Core.Map<long, CollectionDeck>`).
+pub const FLD_COLLECTION_DECK_ID: &str = "ID";
+pub const FLD_COLLECTION_DECK_NAME: &str = "m_name";
+pub const FLD_COLLECTION_DECK_HERO: &str = "<HeroCardID>k__BackingField";
+pub const FLD_COLLECTION_DECK_FORMAT: &str = "<FormatType>k__BackingField";
+pub const FLD_COLLECTION_DECK_TYPE: &str = "<Type>k__BackingField";
+pub const FLD_COLLECTION_DECK_SEASON: &str = "SeasonId";
+pub const FLD_COLLECTION_DECK_CARDBACK: &str = "CardBackID";
+pub const FLD_COLLECTION_DECK_CREATE_DATE: &str = "CreateDate";
+pub const FLD_COLLECTION_DECK_SLOTS: &str = "m_slots";
+pub const FLD_DECK_SLOT_CARD_ID: &str = "m_cardId";
+pub const FLD_DECK_SLOT_COUNT: &str = "m_count";
+pub const FLD_EDITED_DECK: &str = "m_EditedDeck";
+
+// Network service value-type struct chain (in-process for getServerInfo).
+pub const SVC_NETWORK: &str = "Network";
+pub const SVC_GAME_MGR: &str = "GameMgr";
+pub const FLD_NETWORK_M_STATE: &str = "m_state";
+pub const CLS_NETWORK_STATE_NESTED: &str = "Network+NetworkState";
+pub const CLS_NETWORK_STATE_BARE: &str = "NetworkState";
+pub const FLD_LAST_GAME_SERVER_INFO: &str = "<LastGameServerInfo>k__BackingField";
+pub const FLD_GS_ADDRESS: &str = "<Address>k__BackingField";
+pub const FLD_GS_PORT: &str = "<Port>k__BackingField";
+pub const FLD_GS_GAME_HANDLE: &str = "<GameHandle>k__BackingField";
+pub const FLD_GS_CLIENT_HANDLE: &str = "<ClientHandle>k__BackingField";
+pub const FLD_GS_VERSION: &str = "<Version>k__BackingField";
+pub const FLD_GS_SPECTATOR_MODE: &str = "<SpectatorMode>k__BackingField";
+pub const FLD_GS_MISSION: &str = "<Mission>k__BackingField";
+pub const FLD_GS_SPECTATOR_PASSWORD: &str = "<SpectatorPassword>k__BackingField";
+pub const FLD_GS_AURORA_PASSWORD: &str = "<AuroraPassword>k__BackingField";
+
+// GameMgr fields (held by ServiceLocator service, NOT singleton).
+pub const FLD_GAMEMGR_M_GAME_TYPE: &str = "m_gameType";
+pub const FLD_GAMEMGR_M_FORMAT_TYPE: &str = "m_formatType";
+pub const FLD_GAMEMGR_M_MISSION_ID: &str = "m_missionId";
+
 // ── Mono structure offsets ───────────────────────────────────────────────────
 //
 // REMOVED 2026-04-20 by `add-hearthmirror-offset-probing` Phase 5.5: the 13

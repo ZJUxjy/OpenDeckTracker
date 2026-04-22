@@ -78,9 +78,11 @@ pub async fn get_account_id() -> napi::Result<Option<reflection::account_id::Acc
 }
 
 #[napi]
-pub async fn get_game_type() -> napi::Result<i32> {
-    with_runtime_or(0, |rt| futures::executor::block_on(
-        reflection::game_state::get_game_type_internal(rt)))
+pub async fn get_game_type() -> napi::Result<Option<reflection::game_state::GameTypeResult>> {
+    with_runtime(|rt| {
+        let r = futures::executor::block_on(reflection::game_state::get_game_type_internal(rt))?;
+        Ok(Some(r))
+    })
 }
 
 #[napi]
@@ -135,5 +137,50 @@ pub async fn get_battleground_rating_info() -> napi::Result<Option<reflection::b
 pub async fn get_server_info() -> napi::Result<Option<reflection::server::GameServerInfoResult>> {
     with_runtime(|rt| futures::executor::block_on(
         reflection::server::get_server_info_internal(rt)))
+}
+
+// ── add-hearthmirror-decks-and-in-match-readers (R-17 + Phase-7) ────────────
+
+#[napi]
+pub async fn get_edited_deck() -> napi::Result<Option<reflection::decks::DeckResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::edited_deck::get_edited_deck_internal(rt)))
+}
+
+#[napi]
+pub async fn is_mulligan() -> napi::Result<reflection::mulligan::IsMulliganResult> {
+    with_runtime_or(reflection::mulligan::IsMulliganResult { mulligan: None }, |rt| {
+        futures::executor::block_on(reflection::mulligan::is_mulligan_internal(rt))
+    })
+}
+
+#[napi]
+pub async fn get_board_state() -> napi::Result<Option<reflection::board_state::BoardStateResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::board_state::get_board_state_internal(rt)))
+}
+
+#[napi]
+pub async fn get_hand_state() -> napi::Result<Option<reflection::hand_state::HandStateResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::hand_state::get_hand_state_internal(rt)))
+}
+
+#[napi]
+pub async fn get_deck_state() -> napi::Result<Option<reflection::deck_state::DeckStateResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::deck_state::get_deck_state_internal(rt)))
+}
+
+#[napi]
+pub async fn get_opponent_secrets() -> napi::Result<Option<reflection::opponent_secrets::OpponentSecretsResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::opponent_secrets::get_opponent_secrets_internal(rt)))
+}
+
+#[napi]
+pub async fn get_choices() -> napi::Result<Option<reflection::choices::ChoicesResult>> {
+    with_runtime(|rt| futures::executor::block_on(
+        reflection::choices::get_choices_internal(rt)))
 }
 
