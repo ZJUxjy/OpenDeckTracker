@@ -98,13 +98,39 @@ impl MonoObject {
 
     // ── Chain helpers ────────────────────────────────────────────────────────
 
+    /// Resolve a field name to its byte offset, walking the class hierarchy
+    /// when the field is not declared on the leaf.
+    ///
+    /// Fast path: hit on `self.fields` (own-class declarations).
+    /// Slow path: parent walk via [`MonoObject::find_field`] for inherited
+    /// fields like protobuf-generated `_unknownFields` or `_hasBits0`, or
+    /// SDK base-class auto-properties such as `<EntityId>k__BackingField` on
+    /// `BnetAccountId` (declared on `BnetEntityId` parent).
+    ///
+    /// Returns `Ok(None)` when the field is absent in the entire hierarchy
+    /// (or when the klass pointer is unreadable). The slow-path result is
+    /// not cached — repeated chain reads on the same nested object should
+    /// stay cheap because the parent walk is shallow (≤4 in practice for
+    /// Hearthstone's class graph) and cached `MonoFieldDef`s are computed
+    /// from already-paged memory.
+    fn field_offset(
+        &self,
+        memory: &ProcessMemory,
+        field: &str,
+    ) -> Result<Option<u32>, ScryError> {
+        if let Some(&offset) = self.fields.get(field) {
+            return Ok(Some(offset));
+        }
+        Ok(self.find_field(memory, field)?.map(|f| f.offset))
+    }
+
     /// Read a Mono string field (System.String). Returns None if field missing or null.
     pub fn read_string_field(
         &self,
         memory: &ProcessMemory,
         field: &str,
     ) -> Result<Option<String>, ScryError> {
-        let Some(&offset) = self.fields.get(field) else {
+        let Some(offset) = self.field_offset(memory, field)? else {
             return Ok(None);
         };
         let str_ptr = memory.read_remote_ptr(self.addr + offset)?;
@@ -120,10 +146,22 @@ impl MonoObject {
         memory: &ProcessMemory,
         field: &str,
     ) -> Result<Option<i32>, ScryError> {
-        let Some(&offset) = self.fields.get(field) else {
+        let Some(offset) = self.field_offset(memory, field)? else {
             return Ok(None);
         };
         Ok(Some(memory.read_i32(self.addr + offset)?))
+    }
+
+    /// Read a u32 field. Returns None if field missing.
+    pub fn read_uint32_field(
+        &self,
+        memory: &ProcessMemory,
+        field: &str,
+    ) -> Result<Option<u32>, ScryError> {
+        let Some(offset) = self.field_offset(memory, field)? else {
+            return Ok(None);
+        };
+        Ok(Some(memory.read_u32(self.addr + offset)?))
     }
 
     /// Read an i64 field. Returns None if field missing.
@@ -132,10 +170,22 @@ impl MonoObject {
         memory: &ProcessMemory,
         field: &str,
     ) -> Result<Option<i64>, ScryError> {
-        let Some(&offset) = self.fields.get(field) else {
+        let Some(offset) = self.field_offset(memory, field)? else {
             return Ok(None);
         };
         Ok(Some(memory.read_i64(self.addr + offset)?))
+    }
+
+    /// Read a u64 field. Returns None if field missing.
+    pub fn read_uint64_field(
+        &self,
+        memory: &ProcessMemory,
+        field: &str,
+    ) -> Result<Option<u64>, ScryError> {
+        let Some(offset) = self.field_offset(memory, field)? else {
+            return Ok(None);
+        };
+        Ok(Some(memory.read_u64(self.addr + offset)?))
     }
 
     /// Read a bool field (1 byte). Returns None if field missing.
@@ -144,7 +194,7 @@ impl MonoObject {
         memory: &ProcessMemory,
         field: &str,
     ) -> Result<Option<bool>, ScryError> {
-        let Some(&offset) = self.fields.get(field) else {
+        let Some(offset) = self.field_offset(memory, field)? else {
             return Ok(None);
         };
         let val = memory.read_u8(self.addr + offset)?;
@@ -158,7 +208,7 @@ impl MonoObject {
         memory: &ProcessMemory,
         field: &str,
     ) -> Result<Option<MonoObject>, ScryError> {
-        let Some(&offset) = self.fields.get(field) else {
+        let Some(offset) = self.field_offset(memory, field)? else {
             return Ok(None);
         };
         let ptr = memory.read_remote_ptr(self.addr + offset)?;
@@ -171,7 +221,7 @@ impl MonoObject {
         memory: &ProcessMemory,
         field: &str,
     ) -> Result<Option<RemotePtr>, ScryError> {
-        let Some(&offset) = self.fields.get(field) else {
+        let Some(offset) = self.field_offset(memory, field)? else {
             return Ok(None);
         };
         let ptr = memory.read_remote_ptr(self.addr + offset)?;
