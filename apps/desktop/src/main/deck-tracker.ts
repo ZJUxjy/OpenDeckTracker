@@ -1,9 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import {
-  CallbackDeckIdentifier,
-  ChainedDeckIdentifier,
   DeckTracker,
-  InGameDeckIdentifier,
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
 } from '@hdt/core';
@@ -18,19 +15,28 @@ import { getHearthMirror } from './hearthmirror';
  *   - `deck-tracker:event`  — typed event push (match-started, etc.)
  *
  * Renderer-driven IPC handlers:
- *   - `deck-tracker:get-snapshot`   — return current snapshot
- *   - `deck-tracker:select-deck`    — accept user's dialog choice and
- *                                     forward into the orchestrator
+ *   - `deck-tracker:get-snapshot`     — return current snapshot
+ *   - `deck-tracker:select-deck`      — accept user's dialog choice and
+ *                                        forward to `tracker.selectDeckById`
+ *   - `deck-tracker:cancel-selection` — user dismissed the dialog
  *
  * The renderer dialog flow:
- *   1. main emits `event` { type: 'needs-deck-selection', decks }
- *   2. renderer shows DeckSelectDialog with the listed decks
+ *   1. tracker emits `needs-deck-selection` event with `decks` payload
+ *   2. renderer shows DeckSelectDialog (driven by the Zustand
+ *      `pendingSelection` slice populated from that event)
  *   3. user picks, renderer invokes `deck-tracker:select-deck` with deckId
- *   4. main resolves the pending CallbackDeckIdentifier promise
+ *   4. main calls `tracker.selectDeckById(deckId)` → tracker resolves
+ *      the deck against its cached `getDecks()` list and sets
+ *      `originalDeck` on the local player → next snapshot push includes
+ *      the deck.
+ *
+ * The CallbackDeckIdentifier-based "blocking identifier" pattern
+ * was rejected (it deadlocked: dialog couldn't show until the
+ * identifier returned, identifier couldn't return until user picked
+ * via the dialog).
  */
 
 let tracker: DeckTracker | null = null;
-let pendingSelection: ((deckId: number | null) => void) | null = null;
 
 function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -43,29 +49,7 @@ function broadcast(channel: string, payload: unknown): void {
 export function startDeckTracker(): void {
   if (tracker !== null) return;
   const mirror = getHearthMirror();
-  const callbackIdentifier = new CallbackDeckIdentifier(
-    (decks) =>
-      new Promise<number | null>((resolve) => {
-        pendingSelection = resolve;
-        // The DeckTracker emits `needs-deck-selection` separately on
-        // its own — we just store the resolver so the IPC handler can
-        // call it when the user picks.
-        // Safety timeout: if no selection within 60s, give up so the
-        // tracker doesn't leak the resolver forever.
-        setTimeout(() => {
-          if (pendingSelection === resolve) {
-            pendingSelection = null;
-            resolve(null);
-          }
-        }, 60_000);
-        // Reference unused arg so TS doesn't complain.
-        void decks;
-      }),
-  );
-  tracker = new DeckTracker({
-    mirror,
-    identifier: new ChainedDeckIdentifier([new InGameDeckIdentifier(mirror), callbackIdentifier]),
-  });
+  tracker = new DeckTracker({ mirror });
 
   tracker.on('state-change', (event: DeckTrackerEvent) => {
     broadcast('deck-tracker:state', event.snapshot);
@@ -99,28 +83,18 @@ export function startDeckTracker(): void {
   });
 }
 
-/**
- * Wire IPC handlers for renderer-initiated calls. Called from
- * `registerIpc()` so it shares the same registration lifecycle.
- */
 export function registerDeckTrackerIpc(): void {
   ipcMain.handle('deck-tracker:get-snapshot', (): DeckTrackerSnapshot | null => {
     return tracker?.getSnapshot() ?? null;
   });
 
-  ipcMain.handle('deck-tracker:select-deck', (_, deckId: number) => {
-    if (pendingSelection !== null) {
-      const resolve = pendingSelection;
-      pendingSelection = null;
-      resolve(deckId);
+  ipcMain.handle('deck-tracker:select-deck', async (_, deckId: number) => {
+    if (tracker !== null) {
+      await tracker.selectDeckById(deckId);
     }
   });
 
   ipcMain.handle('deck-tracker:cancel-selection', () => {
-    if (pendingSelection !== null) {
-      const resolve = pendingSelection;
-      pendingSelection = null;
-      resolve(null);
-    }
+    tracker?.cancelDeckSelection();
   });
 }

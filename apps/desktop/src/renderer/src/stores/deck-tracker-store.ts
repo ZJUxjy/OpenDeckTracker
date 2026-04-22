@@ -8,34 +8,59 @@ export interface PendingDeckSelection {
 interface DeckTrackerStoreState {
   snapshot: DeckTrackerSnapshot | null;
   pendingSelection: PendingDeckSelection | null;
+  /**
+   * When the user has dismissed (cancelled or confirmed) the dialog,
+   * we set this true to suppress the dialog from re-opening on subsequent
+   * snapshot ticks until the tracker actually clears
+   * `pendingDeckSelection` (after `setOriginalDeck` or
+   * `cancelDeckSelection` runs in main).
+   */
+  dialogDismissed: boolean;
   setSnapshot: (snapshot: DeckTrackerSnapshot) => void;
   applyEvent: (event: DeckTrackerEvent) => void;
   clearPendingSelection: () => void;
+  markDialogDismissed: () => void;
 }
 
 /**
  * Renderer-side mirror of the main-process DeckTracker.
  *
- * Subscribes to two IPC streams (per design D8 in the OpenSpec change):
- *   - `deck-tracker:state` → `setSnapshot(snapshot)`  (every poll)
- *   - `deck-tracker:event` → `applyEvent(event)`       (lifecycle moments)
+ * `pendingSelection` is derived primarily from
+ * `snapshot.pendingDeckSelection` (every-tick push from main —
+ * race-free against renderer startup), with the one-shot
+ * `needs-deck-selection` event as a low-latency supplement.
  *
- * Wiring is done in `useDeckTracker()`; components consume via
- * Zustand selectors.
+ * `dialogDismissed` exists because the snapshot keeps reporting
+ * `pendingDeckSelection` non-null until the orchestrator clears
+ * `awaitingDeckSelection` (via `setOriginalDeck` or
+ * `cancelDeckSelection`). Without this guard, dismissing the dialog
+ * would cause it to immediately re-open on the next tick.
  */
-export const useDeckTrackerStore = create<DeckTrackerStoreState>((set) => ({
+export const useDeckTrackerStore = create<DeckTrackerStoreState>((set, get) => ({
   snapshot: null,
   pendingSelection: null,
-  setSnapshot: (snapshot) => set({ snapshot }),
+  dialogDismissed: false,
+  setSnapshot: (snapshot) => {
+    const dismissed = get().dialogDismissed;
+    const pendingFromSnapshot = snapshot.pendingDeckSelection;
+    set({
+      snapshot,
+      pendingSelection: dismissed ? null : (pendingFromSnapshot ?? null),
+      // Reset dismissal flag when main has cleared its pending state
+      // (so the next match's dialog can show).
+      dialogDismissed: pendingFromSnapshot === null ? false : dismissed,
+    });
+  },
   applyEvent: (event) => {
     if (event.type === 'needs-deck-selection') {
-      set({ pendingSelection: { decks: event.decks ?? [] } });
+      set({
+        pendingSelection: { decks: event.decks ?? [] },
+        dialogDismissed: false,
+      });
     } else if (event.type === 'match-ended') {
-      // On match end, clear any pending selection (it's stale now).
-      set({ pendingSelection: null });
+      set({ pendingSelection: null, dialogDismissed: false });
     }
-    // state-change / match-started / error: no extra side effects beyond
-    // the regular snapshot push (which arrives via `setSnapshot`).
   },
   clearPendingSelection: () => set({ pendingSelection: null }),
+  markDialogDismissed: () => set({ pendingSelection: null, dialogDismissed: true }),
 }));

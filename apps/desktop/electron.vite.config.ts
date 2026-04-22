@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Workspace packages whose TS sources should be inlined into the bundle
 // (instead of left as external requires that Node would fail to import).
-const WORKSPACE_INLINE = ['@hdt/hearthdb', '@hdt/shared', '@hdt/hearthmirror'];
+const WORKSPACE_INLINE = ['@hdt/hearthdb', '@hdt/shared', '@hdt/hearthmirror', '@hdt/core'];
 
 export default defineConfig({
   main: {
@@ -18,11 +18,17 @@ export default defineConfig({
         '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
         '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
         '@hdt/hearthmirror': resolve(__dirname, '../../packages/hearthmirror/src/index.ts'),
+        '@hdt/core': resolve(__dirname, '../../packages/core/src/index.ts'),
       },
     },
     build: {
       rollupOptions: {
         input: { index: resolve(__dirname, 'src/main/index.ts') },
+        // The native NAPI addon must stay external — its `index.js`
+        // does runtime path resolution to the platform-specific .node
+        // file that lives under `packages/hearthmirror/native/`. If
+        // bundled, the relative require breaks.
+        external: ['@hdt/hearthmirror-native'],
       },
     },
   },
@@ -33,6 +39,7 @@ export default defineConfig({
         '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
         '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
         '@hdt/hearthmirror': resolve(__dirname, '../../packages/hearthmirror/src/index.ts'),
+        '@hdt/core': resolve(__dirname, '../../packages/core/src/index.ts'),
       },
     },
     build: {
@@ -40,6 +47,8 @@ export default defineConfig({
         input: { index: resolve(__dirname, 'src/preload/index.ts') },
         // Electron sandbox: true requires CommonJS preload. Force .js + cjs.
         output: { format: 'cjs', entryFileNames: '[name].js' },
+        // Same reason as main — native addon must not be bundled.
+        external: ['@hdt/hearthmirror-native'],
       },
     },
   },
@@ -51,6 +60,7 @@ export default defineConfig({
         '@': resolve(__dirname, 'src/renderer/src'),
         '@hdt/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
         '@hdt/hearthdb': resolve(__dirname, '../../packages/hearthdb/src/index.ts'),
+        '@hdt/core': resolve(__dirname, '../../packages/core/src/index.ts'),
       },
     },
     build: {

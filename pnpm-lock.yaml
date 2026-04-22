@@ -65,6 +65,9 @@ importers:
       '@hdt/hearthmirror':
         specifier: workspace:*
         version: link:../../packages/hearthmirror
+      '@hdt/hearthmirror-native':
+        specifier: workspace:*
+        version: link:../../packages/hearthmirror/native
       '@radix-ui/react-hover-card':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
