@@ -7,6 +7,7 @@ import {
 } from '@hdt/hearthdb';
 import { ensureCardDb } from './cards';
 import { getHearthMirror } from './hearthmirror';
+import { registerDeckTrackerIpc } from './deck-tracker';
 
 export function registerIpc(): void {
   ipcMain.handle('app:getVersion', () => app.getVersion());
@@ -53,16 +54,38 @@ export function registerIpc(): void {
   ipcMain.handle('hearthmirror:isAlive', () => swallow('isAlive', () => hm().isAlive(), false));
   ipcMain.handle('hearthmirror:getBattleTag', () => swallow('getBattleTag', () => hm().getBattleTag(), null));
   ipcMain.handle('hearthmirror:getAccountId', () => swallow('getAccountId', () => hm().getAccountId(), null));
-  ipcMain.handle('hearthmirror:getGameType', () => swallow('getGameType', () => hm().getGameType(), 0));
+  // getGameType now returns a composite { gameType, formatType, missionId } | null
+  // (was a single number before R-17). null fallback covers IPC errors / Hearthstone
+  // closed.
+  ipcMain.handle('hearthmirror:getGameType', () => swallow('getGameType', () => hm().getGameType(), null));
   ipcMain.handle('hearthmirror:isSpectating', () => swallow('isSpectating', () => hm().isSpectating(), false));
   ipcMain.handle('hearthmirror:isGameOver', () => swallow('isGameOver', () => hm().isGameOver(), false));
+  ipcMain.handle('hearthmirror:isMulligan',
+    () => swallow('isMulligan', () => hm().isMulligan(), { mulligan: null }));
   ipcMain.handle('hearthmirror:getMatchInfo', () => swallow('getMatchInfo', () => hm().getMatchInfo(), null));
   ipcMain.handle('hearthmirror:getMedalInfo', () => swallow('getMedalInfo', () => hm().getMedalInfo(), null));
   ipcMain.handle('hearthmirror:getDecks', () => swallow('getDecks', () => hm().getDecks(), null));
+  ipcMain.handle('hearthmirror:getEditedDeck',
+    () => swallow('getEditedDeck', () => hm().getEditedDeck(), null));
   ipcMain.handle('hearthmirror:getCollection', () => swallow('getCollection', () => hm().getCollection(), null));
   ipcMain.handle('hearthmirror:getArenaDeck', () => swallow('getArenaDeck', () => hm().getArenaDeck(), null));
   ipcMain.handle('hearthmirror:getBattlegroundRatingInfo',
     () => swallow('getBattlegroundRatingInfo', () => hm().getBattlegroundRatingInfo(), null));
   ipcMain.handle('hearthmirror:getServerInfo', () => swallow('getServerInfo', () => hm().getServerInfo(), null));
+
+  // Phase 7 in-match observability
+  ipcMain.handle('hearthmirror:getBoardState',
+    () => swallow('getBoardState', () => hm().getBoardState(), null));
+  ipcMain.handle('hearthmirror:getHandState',
+    () => swallow('getHandState', () => hm().getHandState(), null));
+  ipcMain.handle('hearthmirror:getDeckState',
+    () => swallow('getDeckState', () => hm().getDeckState(), null));
+  ipcMain.handle('hearthmirror:getOpponentSecrets',
+    () => swallow('getOpponentSecrets', () => hm().getOpponentSecrets(), null));
+  ipcMain.handle('hearthmirror:getChoices',
+    () => swallow('getChoices', () => hm().getChoices(), null));
+
+  // Deck-tracker host (M2)
+  registerDeckTrackerIpc();
 }
 

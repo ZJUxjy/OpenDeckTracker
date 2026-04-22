@@ -19,6 +19,7 @@
     "baseUrl": ".",
     "paths": {
       "@hdt/shared": ["./packages/shared/src/index.ts"],
+      "@hdt/core": ["./packages/core/src/index.ts"],
       "@hdt/hearthdb": ["./packages/hearthdb/src/index.ts"],
       "@hdt/hearthmirror": ["./packages/hearthmirror/src/index.ts"]
     }

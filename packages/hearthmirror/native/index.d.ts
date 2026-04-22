@@ -21,14 +21,45 @@ export interface BattleTagResult {
   fullBattleTag: string
 }
 
+export interface BoardEntity {
+  entityId: number
+  cardId: string
+  zonePosition: number
+  attack: number
+  health: number
+  damage: number
+}
+
+export interface BoardStateResult {
+  friendly: Array<BoardEntity>
+  opposing: Array<BoardEntity>
+}
+
 export interface CardResult {
   dbfId: number
   count: number
   premium: number
 }
 
+export interface ChoiceCard {
+  entityId: number
+  cardId: string
+}
+
+export interface ChoiceGroup {
+  sourceEntityId: number
+  countMin: number
+  countMax: number
+  cards: Array<ChoiceCard>
+}
+
+export interface ChoicesResult {
+  mulligan?: ChoiceGroup
+  general?: ChoiceGroup
+}
+
 export interface DeckCardResult {
-  dbfId: number
+  cardId: string
   count: number
   premium: number
 }
@@ -39,16 +70,42 @@ export interface DeckResult {
   hero: string
   formatType: number
   deckType: number
+  seasonId: number
+  cardbackId: number
+  createDateMicrosec: number
   cards: Array<DeckCardResult>
+}
+
+export interface DeckStateResult {
+  friendlyDeck: Array<InMatchDeckCard>
+  opposingDeckCount: number
 }
 
 export interface GameServerInfoResult {
   address: string
   port: number
-  mission: number
   gameHandle: number
+  clientHandle: number
   version: string
-  resumable: boolean
+  spectatorMode: boolean
+  mission: number
+  spectatorPassword: string
+  auroraPassword: string
+}
+
+export interface GameTypeResult {
+  /**
+   * Numeric value of the `PegasusShared.GameType` enum, or `null`
+   * when the GameMgr service is not registered (very early startup).
+   */
+  gameType?: number
+  /**
+   * `PegasusShared.FormatType` enum value (1=Wild, 2=Standard,
+   * 3=Classic, 4=Twist).
+   */
+  formatType?: number
+  /** Mission/scenario id, `null` when not in a mission. */
+  missionId?: number
 }
 
 export declare function getAccountId(): Promise<AccountIdResult | null>
@@ -59,57 +116,121 @@ export declare function getBattlegroundRatingInfo(): Promise<BattlegroundRatingI
 
 export declare function getBattleTag(): Promise<BattleTagResult | null>
 
+export declare function getBoardState(): Promise<BoardStateResult | null>
+
+export declare function getChoices(): Promise<ChoicesResult | null>
+
 export declare function getCollection(): Promise<Array<CardResult> | null>
 
 export declare function getDecks(): Promise<Array<DeckResult> | null>
 
-export declare function getGameType(): Promise<number>
+export declare function getDeckState(): Promise<DeckStateResult | null>
+
+export declare function getEditedDeck(): Promise<DeckResult | null>
+
+export declare function getGameType(): Promise<GameTypeResult | null>
+
+export declare function getHandState(): Promise<HandStateResult | null>
 
 export declare function getMatchInfo(): Promise<MatchInfoResult | null>
 
 export declare function getMedalInfo(): Promise<MedalInfoResult | null>
 
+export declare function getOpponentSecrets(): Promise<OpponentSecretsResult | null>
+
 export declare function getServerInfo(): Promise<GameServerInfoResult | null>
+
+export interface HandCard {
+  entityId: number
+  cardId: string
+  zonePosition: number
+}
+
+export interface HandStateResult {
+  friendlyHand: Array<HandCard>
+  opposingHandCount: number
+}
+
+export interface InMatchDeckCard {
+  entityId: number
+  cardId: string
+}
 
 export declare function isAlive(): Promise<boolean>
 
 export declare function isGameOver(): Promise<boolean>
 
+export declare function isMulligan(): Promise<IsMulliganResult>
+
+export interface IsMulliganResult {
+  mulligan?: boolean
+}
+
 export declare function isSpectating(): Promise<boolean>
 
 export interface MatchInfoResult {
-  localPlayer: MatchPlayerResult
-  opposingPlayer: MatchPlayerResult
+  localPlayer?: MatchPlayerResult
+  opposingPlayer?: MatchPlayerResult
   missionId: number
   gameType: number
   formatType: number
+  /**
+   * Reserved season-id slots — populated by a follow-up MedalInfo
+   * translator wiring (currently 0).
+   */
+  rankedSeasonId: number
+  arenaSeasonId: number
+  brawlSeasonId: number
 }
 
 export interface MatchPlayerResult {
+  /** In-match player id (== TAG_CONTROLLER value). */
   id: number
+  /** Display name (BattleTag for human, AI name for vs-AI). */
   name: string
-  accountIdHi: number
-  accountIdLo: number
-  battleTagName: string
-  battleTagFull: string
+  /**
+   * `Player.m_side` enum value (1=friendly, 2=opposing per
+   * Hearthstone protocol).
+   */
+  side: number
+  /** Per-format ranks reserved for follow-up MedalInfo wiring. */
   standardRank: number
+  standardLegendRank: number
   wildRank: number
+  wildLegendRank: number
   classicRank: number
+  classicLegendRank: number
   twistRank: number
+  twistLegendRank: number
+  /** Cardback id (PegasusUtil.NetCacheCardBacks). */
+  cardbackId: number
 }
 
 export interface MedalInfoData {
   leagueId: number
   starLevel: number
   stars: number
+  streak: number
   legendRank: number
   seasonId: number
   seasonWins: number
+  bestStarLevel: number
 }
 
 export interface MedalInfoResult {
-  standard?: MedalInfoData
   wild?: MedalInfoData
+  standard?: MedalInfoData
   classic?: MedalInfoData
   twist?: MedalInfoData
+}
+
+export interface OpponentSecretsResult {
+  secrets: Array<SecretEntity>
+  count: number
+}
+
+export interface SecretEntity {
+  entityId: number
+  cardId: string
+  zonePosition: number
 }
