@@ -1,13 +1,18 @@
 import { Bell, ChevronDown, Ghost, LayoutTemplate, Monitor, User } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { Sidebar } from './components/Sidebar';
+import { DeckSelectDialog } from './components/DeckSelectDialog';
 import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
+import { useDeckTracker } from './hooks/use-deck-tracker';
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const isOverlay = location.pathname === '/overlay';
   const { isAlive, battleTag } = useHearthMirrorStatus();
+  // Subscribe the global deck-tracker store to main-process IPC pushes.
+  // Mounted at App root so the subscription survives all route changes.
+  useDeckTracker();
 
   return (
     <div className="flex h-screen bg-[#0E0E14] text-slate-300 font-sans overflow-hidden">
@@ -74,6 +79,9 @@ export default function App() {
           <Outlet />
         </main>
       </div>
+      {/* Global dialog — shown only when the tracker emits
+          'needs-deck-selection' (Practice / Brawl modes etc.). */}
+      <DeckSelectDialog />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from './window';
 import { registerIpc } from './ipc';
+import { startDeckTracker } from './deck-tracker';
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -17,6 +18,7 @@ if (!gotLock) {
 
   void app.whenReady().then(() => {
     registerIpc();
+    startDeckTracker();
     createMainWindow();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
