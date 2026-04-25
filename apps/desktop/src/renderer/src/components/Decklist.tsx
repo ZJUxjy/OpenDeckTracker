@@ -214,7 +214,7 @@ export function DeckTracker({ cards }: { cards: Card[] }) {
           Active Deck
         </div>
         <div className="text-white font-bold flex justify-between items-center">
-          <span>Control Warrior</span>
+          <span>Deck Preview</span>
           <span className="text-orange-400 text-sm">{cardsRemaining} / {cardsInDeck}</span>
         </div>
       </div>

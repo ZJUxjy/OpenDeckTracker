@@ -3,11 +3,12 @@ import { render, screen, act } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import App from '../src/App';
 import { routes } from '../src/routes';
+import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
 
-function renderDashboard() {
+function renderRoute(initialEntry = '/') {
   const router = createMemoryRouter(
     [{ path: '/', element: <App />, children: routes }],
-    { initialEntries: ['/'] },
+    { initialEntries: [initialEntry] },
   );
   return render(<RouterProvider router={router} />);
 }
@@ -15,21 +16,28 @@ function renderDashboard() {
 describe('Dashboard rank display', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    useDeckTrackerStore.setState({
+      snapshot: null,
+      pendingSelection: null,
+      dialogDismissed: false,
+    });
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it('shows mock fallback rank when medalInfo is null', async () => {
+  it('shows no active deck when medalInfo is null', async () => {
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(false);
 
-    renderDashboard();
+    renderRoute();
     await act(async () => { await vi.advanceTimersByTimeAsync(100); });
 
     expect(screen.getByText(/Rank:/)).toBeInTheDocument();
-    // Should show MOCK_STATS.currentRank as fallback
-    expect(screen.getByText(/Legend/)).toBeInTheDocument();
+    expect(screen.getByText(/Unavailable/)).toBeInTheDocument();
+    expect(screen.getByText('No Active Deck')).toBeInTheDocument();
+    expect(screen.queryByText(/Control Warrior/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Control Odyn Warrior/i)).not.toBeInTheDocument();
   });
 
   it('shows "Star N" when starLevel > 0 and not legend', async () => {
@@ -42,7 +50,7 @@ describe('Dashboard rank display', () => {
       twist: null,
     });
 
-    renderDashboard();
+    renderRoute();
     await act(async () => { await vi.advanceTimersByTimeAsync(100); });
 
     expect(screen.getByText(/Star 5/)).toBeInTheDocument();
@@ -58,9 +66,19 @@ describe('Dashboard rank display', () => {
       twist: null,
     });
 
-    renderDashboard();
+    renderRoute();
     await act(async () => { await vi.advanceTimersByTimeAsync(100); });
 
     expect(screen.getByText(/Legend 42/)).toBeInTheDocument();
+  });
+
+  it('does not render the mock warrior deck in the overlay route', async () => {
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(false);
+
+    renderRoute('/overlay');
+    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+
+    expect(screen.queryByText(/Control Warrior/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Control Odyn Warrior/i)).not.toBeInTheDocument();
   });
 });

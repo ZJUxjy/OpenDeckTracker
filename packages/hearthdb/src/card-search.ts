@@ -8,6 +8,7 @@ export interface SearchFilter {
   set?: string | string[];
   type?: CardType | CardType[];
   mechanic?: string;
+  collectible?: boolean;
   limit?: number;
   offset?: number;
 }
@@ -40,6 +41,10 @@ export function matches(card: CardDef, f: SearchFilter): boolean {
   if (!inOneOf(card.rarity, f.rarity)) return false;
   if (!inOneOf(card.set, f.set)) return false;
   if (!inOneOf(card.type, f.type)) return false;
+
+  if (f.collectible !== undefined && card.collectible !== f.collectible) {
+    return false;
+  }
 
   if (f.mechanic) {
     if (!(card.mechanics ?? []).includes(f.mechanic)) return false;

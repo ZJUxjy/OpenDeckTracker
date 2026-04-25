@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { app } from 'electron';
 import { loadCards, type CardDb } from '@hdt/hearthdb';
 
-const RELATIVE_JSON = 'data/cards/cards.collectible.enUS.json';
+const RELATIVE_JSON = 'data/cards/generated/cards.all.enUS.json';
 
 /**
  * Locate the cards JSON. In dev, main bundle lives at
@@ -38,10 +38,10 @@ export function ensureCardDb(): Promise<CardDb> {
     const jsonPath = resolveCardsJsonPath();
     dbPromise = loadCards(jsonPath);
     dbPromise.catch((e: Error) => {
-      console.error('[cards] failed to load cards.collectible.enUS.json:', e.message);
+      console.error('[cards] failed to load cards.all.enUS.json:', e.message);
       console.error('[cards] tried path:', jsonPath);
       console.error(
-        "[cards] Run 'pnpm cards:download' from the repo root to fetch the data, then restart the app.",
+        "[cards] Run 'pnpm cards:convert' from the repo root to generate the data, then restart the app.",
       );
     });
   }

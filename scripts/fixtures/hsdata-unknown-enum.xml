@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CardDefs build="240818">
+  <Entity CardID="BAD_CARDTYPE" ID="900003" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString"><enUS>Bad Card Type</enUS></Tag>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="3"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="12"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="9999"/>
+  </Entity>
+</CardDefs>

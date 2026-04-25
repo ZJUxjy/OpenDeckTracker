@@ -20,7 +20,7 @@
 ```bash
 corepack enable           # 启用 corepack 自动用上正确的 pnpm 版本
 pnpm install              # 安装所有 workspace 依赖
-pnpm cards:download       # 首次运行必须，从 HearthstoneJSON 拉真实卡牌数据 (~5 秒)
+pnpm cards:convert        # 首次运行必须，从本地 hsdata/CardDefs.xml 生成卡牌数据
 pnpm dev                  # 启动 Electron 主窗口（renderer Fast Refresh + main 自动重启）
 ```
 
@@ -36,7 +36,8 @@ pnpm dev                  # 启动 Electron 主窗口（renderer Fast Refresh + 
 | `pnpm typecheck` | 跨包 TypeScript strict 检查 |
 | `pnpm test` | 跑 Vitest workspace（所有包的测试） |
 | `pnpm package` | 用 electron-builder 产出 Windows NSIS 安装包到 `apps/desktop/release/` |
-| `pnpm cards:download` | 从 HearthstoneJSON 下载最新卡牌数据到 `data/cards/`（enUS + zhCN） |
+| `pnpm cards:convert` | 从 `data/cards/hsdata/CardDefs.xml` 生成运行时卡牌 JSON（enUS + zhCN，全量 + 可收藏） |
+| `pnpm cards:download` | 旧的 HearthstoneJSON 下载备用脚本 |
 
 ## 仓库结构
 

@@ -1,5 +1,19 @@
 @custom-variant dark (&:is(.dark *));
 
+/* Deck tracker card exit animation */
+@keyframes deckExit {
+  0%   { opacity: 1; transform: translateX(0); }
+  20%  { opacity: 1; transform: translateX(0); background: rgba(251,146,60,0.25); }
+  100% { opacity: 0; transform: translateX(40px); max-height: 0; padding: 0; border-width: 0; }
+}
+.animate-deck-exit {
+  animation: deckExit 2000ms forwards ease-out;
+  animation-delay: 0ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-deck-exit { animation: deckExit 50ms forwards linear; }
+}
+
 :root {
   --font-size: 16px;
   --background: #ffffff;

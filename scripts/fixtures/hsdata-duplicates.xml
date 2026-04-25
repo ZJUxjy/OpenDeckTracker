@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CardDefs build="240818">
+  <Entity CardID="DUP_CARD" ID="900001" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString"><enUS>Duplicate A</enUS></Tag>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="3"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="12"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="4"/>
+  </Entity>
+  <Entity CardID="DUP_CARD" ID="900002" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString"><enUS>Duplicate B</enUS></Tag>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="3"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="12"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="4"/>
+  </Entity>
+</CardDefs>
