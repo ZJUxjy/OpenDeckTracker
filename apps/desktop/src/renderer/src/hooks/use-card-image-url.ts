@@ -47,8 +47,16 @@ export function useCardImageUrl(cardId: string): {
       };
     }
 
+    const cardImagesApi = window.hdt?.cardImages;
+    if (!cardImagesApi) {
+      setCachedUrl(null);
+      return () => {
+        alive = false;
+      };
+    }
+
     setCachedUrl(null);
-    void window.hdt.cardImages.get(cardId)
+    void cardImagesApi.get(cardId)
       .then((cached) => {
         if (!alive || !cached?.url) return;
         cachedImageUrls.set(cardId, cached.url);
