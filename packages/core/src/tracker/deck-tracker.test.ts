@@ -1,5 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import type { Deck, HearthMirror, MatchInfo } from '@hdt/hearthmirror';
+import type {
+  BoardState,
+  Deck,
+  DeckState,
+  HandState,
+  HearthMirror,
+  MatchInfo,
+} from '@hdt/hearthmirror';
 import { DeckTracker, type DeckTrackerEvent, type DeckTrackerEventName } from './deck-tracker';
 import { CallbackDeckIdentifier, ChainedDeckIdentifier } from './deck-identifier';
 
@@ -12,9 +19,9 @@ function makeMirror(): {
     isSpectating: boolean;
     isMulligan: { mulligan: boolean | null };
     decks: Deck[];
-    handState: { friendlyHand: { entityId: number; cardId: string; zonePosition: number }[]; opposingHandCount: number } | null;
-    deckState: { friendlyDeck: { entityId: number; cardId: string }[]; opposingDeckCount: number } | null;
-    boardState: { friendly: never[]; opposing: never[] } | null;
+    handState: HandState | null;
+    deckState: DeckState | null;
+    boardState: BoardState | null;
   };
 } {
   const state = {
@@ -23,9 +30,9 @@ function makeMirror(): {
     isSpectating: false,
     isMulligan: { mulligan: null as boolean | null },
     decks: [] as Deck[],
-    handState: null as { friendlyHand: { entityId: number; cardId: string; zonePosition: number }[]; opposingHandCount: number } | null,
-    deckState: null as { friendlyDeck: { entityId: number; cardId: string }[]; opposingDeckCount: number } | null,
-    boardState: null as { friendly: never[]; opposing: never[] } | null,
+    handState: null as HandState | null,
+    deckState: null as DeckState | null,
+    boardState: null as BoardState | null,
   };
   const mirror = {
     isAlive: vi.fn(async () => true),
@@ -168,6 +175,44 @@ describe('DeckTracker', () => {
     expect(tracker.getSnapshot().deck).not.toBeNull();
     expect(tracker.getSnapshot().deck?.original.length).toBe(2);
     expect(tracker.getSnapshot().deck?.remaining.length).toBe(2);
+    tracker.stop();
+  });
+
+  it('does not put a dead friendly minion back into the remaining deck', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = {
+      friendlyDeck: [
+        { entityId: 100, cardId: '' },
+        { entityId: 101, cardId: '' },
+      ],
+      opposingDeckCount: 0,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = {
+      friendly: [
+        { entityId: 10, cardId: 'A', zonePosition: 1, attack: 1, health: 1, damage: 0 },
+      ],
+      opposing: [],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+    expect(
+      tracker.getSnapshot().deck?.remaining.find((card) => card.cardId === 'A')?.count,
+    ).toBe(1);
+
+    state.boardState = { friendly: [], opposing: [] };
+    await advanceTicks(2);
+
+    expect(
+      tracker.getSnapshot().deck?.remaining.find((card) => card.cardId === 'A')?.count,
+    ).toBe(1);
     tracker.stop();
   });
 

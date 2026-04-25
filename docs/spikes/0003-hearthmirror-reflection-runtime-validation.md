@@ -1013,3 +1013,37 @@ subscribed yet at app boot still see the state on their first
 - **R-25** (P3, new): No transparent overlay window yet (M4 scope).
   The live deck panel is in the main Electron Dashboard window only.
 
+---
+
+## Run 13 — UI Polish Validation (2026-04-24)
+
+**Context**: `polish-deck-tracker-card-display` change applied to
+`LiveDeckPanel` to upgrade from M2 minimal UI to HDT-level visual quality.
+
+**Changes verified**:
+
+1. **Per-copy row rendering**: `expandDeckToCopies` (new `@hdt/core` pure
+   function) expands aggregated `{ cardId, count }` into individual rows.
+   30-card deck → 30 rows, each with unique `copyKey` (`cardId#ordinal`).
+   Sorting by cost ↑ → name ↑ → cardId ↑ is stable.
+
+2. **Draw-pop animation**: When `remaining[cardId]` decreases, the
+   highest-ordinal copy gets `animate-deck-exit` CSS class (fade + slide
+   + collapse, 600ms). After `onAnimationEnd`, the row is removed from
+   DOM. `prefers-reduced-motion` fallback = 50ms.
+
+3. **Card hover art**: `CardImagePopover` fetches card render PNG from
+   `art.hearthstonejson.com` CDN (zhCN primary, enUS fallback). 300ms
+   hover delay prevents accidental triggers. CSP `img-src` updated.
+
+4. **No regressions**: All 67 core tests + 29 desktop tests pass.
+   Core and desktop typechecks clean (0 errors).
+
+**Test coverage added**:
+- `expand-copies.test.ts` — 7 tests (expansion, stability, edge cases)
+- `LiveDeckPanel.test.tsx` — 10 tests (5 sorting + 3 animation + 2 hover)
+- `CardImagePopover.test.tsx` — 4 tests (URL, fallback, close, loading)
+- `use-card-image-url.test.ts` — 4 tests (URL build, cache)
+
+**Status**: Automated verification complete. Manual smoke in a real match
+(task 5.2) deferred to next in-game testing session.

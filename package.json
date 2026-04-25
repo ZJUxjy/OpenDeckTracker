@@ -17,6 +17,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "package": "pnpm --filter @hdt/desktop package",
+    "cards:convert": "tsx scripts/convert-hsdata-cards.ts",
     "cards:download": "tsx scripts/download-cards.ts"
   },
   "pnpm": {
@@ -39,6 +40,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "jsdom": "^29.0.2",
     "prettier": "^3.8.3",
+    "saxes": "^6.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.58.2",

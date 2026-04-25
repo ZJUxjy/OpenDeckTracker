@@ -116,9 +116,12 @@ export class Game {
   /**
    * Reconcile the entities map against a fresh poll snapshot.
    *
-   * Strategy (M2): trust the snapshot completely. Replace each entity's
-   * zone + cardId. Insert new entities; remove entities not present in
-   * the snapshot (they've been garbage-collected by Hearthstone).
+   * Strategy (M2): trust visible zones from the snapshot, but keep
+   * revealed entities that disappear from the snapshot as GRAVEYARD.
+   * Memory polling does not currently read the graveyard directly; if
+   * a played minion/spell falls out of HAND/PLAY/SECRET, deleting it
+   * would make the remaining-deck algorithm think the card returned to
+   * the library.
    *
    * In M3 with log events, this strategy will change to "additive only"
    * (events tell us each transition; we never bulk-replace).
@@ -150,10 +153,16 @@ export class Game {
         );
       }
     }
-    // Remove entities that fell out of the snapshot.
-    for (const id of this.entities.keys()) {
+    // Entities that fall out of the reflected HAND/PLAY/SECRET snapshot
+    // have usually been consumed or destroyed. Keep them in GRAVEYARD so
+    // they still count as seen and do not reappear in the remaining deck.
+    for (const [id, entity] of this.entities) {
       if (!seen.has(id)) {
-        this.entities.delete(id);
+        if (entity.isRevealed && !entity.isInDeck) {
+          entity.zone = 'GRAVEYARD';
+        } else {
+          this.entities.delete(id);
+        }
       }
     }
   }

@@ -1,34 +1,49 @@
 # Card Data
 
-This directory holds the local copy of card definitions downloaded from
-[HearthstoneJSON](https://hearthstonejson.com/), maintained by HearthSim.
+This directory holds card definitions used by `@hdt/hearthdb` and the desktop
+app.
 
-**Files in this directory are NOT committed to git** (see root `.gitignore`).
-Both local development and CI must run the download script:
+## Default source: hsdata
+
+`data/cards/hsdata/CardDefs.xml` is a local dump from HearthSim hsdata:
+
+- `CardDefs.xml` — full card definitions extracted from the Hearthstone client
+- `README.md` — upstream version/provenance
+
+Current local dump:
+
+- Hearthstone version: `35.2.2.240818`
+- Build: `240818`
+
+The `hsdata/` directory is ignored by git because it is a local source checkout
+or dump. Update it from your local hsdata source, then regenerate runtime JSON:
 
 ```powershell
-pnpm cards:download
+pnpm cards:convert
 ```
 
-## Files produced
+## Generated files
 
-- `cards.collectible.enUS.json` — used by the desktop main process at runtime
-- `cards.collectible.zhCN.json` — Chinese locale, reserved for future i18n change
+`pnpm cards:convert` writes generated JSON under `data/cards/generated/`:
 
-Both files contain only **collectible** cards (cards that appear in your
-collection and base heroes). For non-collectible cards (tokens, hero powers,
-passive enchantments) you would need `cards.json`, which is **not** downloaded
-by this script.
+- `cards.all.enUS.json`
+- `cards.all.zhCN.json`
+- `cards.collectible.enUS.json`
+- `cards.collectible.zhCN.json`
+- `card-build.json`
+
+Generated JSON files are not committed to git by default; see the root
+`.gitignore`. The desktop main process loads `cards.all.enUS.json` so deck
+tracker flows can resolve non-collectible cards such as tokens and hero powers.
+
+## Legacy fallback
+
+`pnpm cards:download` still downloads collectible-only data from
+[HearthstoneJSON](https://hearthstonejson.com/). It is kept as a fallback
+utility, but local development and CI use `pnpm cards:convert`.
 
 ## License attribution
 
-Card data is property of Blizzard Entertainment.
-[HearthstoneJSON](https://hearthstonejson.com/) provides a redistributable JSON
-snapshot per game build. See their [license](https://hearthstonejson.com/) for
-exact redistribution terms.
-
-## Refresh frequency
-
-HearthstoneJSON publishes a new build a few hours after each Hearthstone
-client patch. There is no automatic update — re-run `pnpm cards:download`
-manually when you need the latest data.
+Card data is property of Blizzard Entertainment. HearthSim hsdata and
+HearthstoneJSON provide extracted data snapshots for tooling. Check the upstream
+projects for exact redistribution terms.

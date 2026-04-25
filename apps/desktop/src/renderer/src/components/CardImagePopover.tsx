@@ -1,0 +1,75 @@
+import { useState, useEffect, useCallback } from 'react';
+import { markFallback, markSuccess, useCardImageUrl } from '../hooks/use-card-image-url';
+
+interface CardImagePopoverProps {
+  cardId: string;
+  anchorRect: DOMRect;
+  onClose: () => void;
+}
+
+export function CardImagePopover({ cardId, anchorRect, onClose }: CardImagePopoverProps) {
+  const { primary, fallback } = useCardImageUrl(cardId);
+  const [src, setSrc] = useState(primary);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setSrc(primary);
+    setError(false);
+    setLoading(true);
+  }, [cardId, primary]);
+
+  const handleImageError = useCallback(() => {
+    if (src !== fallback) {
+      markFallback(cardId);
+      setLoading(true);
+      setSrc(fallback);
+    } else {
+      setError(true);
+      setLoading(false);
+    }
+  }, [src, cardId, fallback]);
+
+  const handleImageLoad = useCallback(() => {
+    markSuccess(cardId, src);
+    setLoading(false);
+    setError(false);
+  }, [cardId, src]);
+
+  // Position: left of the panel
+  const top = Math.max(8, Math.min(anchorRect.top - 80, window.innerHeight - 420));
+  const right = window.innerWidth - anchorRect.left + 8;
+
+  return (
+    <div
+      className="fixed z-50"
+      style={{ top: `${top}px`, right: `${right}px` }}
+      onMouseLeave={onClose}
+    >
+      <div className="w-[256px] bg-[#1C1C24] rounded-lg shadow-2xl border border-[#2A2A35] overflow-hidden">
+        {loading && (
+          <div className="h-[386px] flex items-center justify-center text-slate-400 text-xs">
+            加载中...
+          </div>
+        )}
+        {error && (
+          <div className="h-[386px] flex items-center justify-center text-slate-400 text-xs">
+            卡图加载失败
+          </div>
+        )}
+        <img
+          src={src}
+          alt={cardId}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          className={clsx_(loading || error ? 'hidden' : 'block')}
+          draggable={false}
+        />
+      </div>
+    </div>
+  );
+}
+
+function clsx_(...args: (string | false | undefined)[]) {
+  return args.filter(Boolean).join(' ');
+}

@@ -146,12 +146,25 @@ describe('Game.applyEntitySnapshot', () => {
     expect(g.entities.get(1)?.zone).toBe('HAND');
   });
 
-  it('removes entities not in the new snapshot', () => {
+  it('removes unrevealed deck entities not in the new snapshot', () => {
     const g = new Game();
-    g.applyEntitySnapshot([{ entityId: 1, cardId: 'A', zone: 'DECK', controllerId: 1 }]);
+    g.applyEntitySnapshot([{ entityId: 1, cardId: '', zone: 'DECK', controllerId: 1 }]);
     g.applyEntitySnapshot([{ entityId: 2, cardId: 'B', zone: 'HAND', controllerId: 1 }]);
     expect(g.entities.has(1)).toBe(false);
     expect(g.entities.has(2)).toBe(true);
+  });
+
+  it('moves revealed non-deck entities missing from a snapshot to graveyard', () => {
+    const g = new Game();
+    g.applyEntitySnapshot([
+      { entityId: 1, cardId: 'A', zone: 'PLAY', controllerId: 1 },
+      { entityId: 2, cardId: 'B', zone: 'HAND', controllerId: 1 },
+    ]);
+    g.applyEntitySnapshot([]);
+
+    expect(g.entities.get(1)?.zone).toBe('GRAVEYARD');
+    expect(g.entities.get(2)?.zone).toBe('GRAVEYARD');
+    expect(g.localPlayer.graveyard.map((entity) => entity.cardId)).toEqual(['A', 'B']);
   });
 
   it('does NOT downgrade a revealed cardId back to empty', () => {

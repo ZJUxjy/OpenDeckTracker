@@ -21,7 +21,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm cards:download
+      - run: pnpm cards:convert
 
       - run: pnpm lint
 

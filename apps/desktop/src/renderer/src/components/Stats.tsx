@@ -3,11 +3,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Swords, Trophy, Clock, Target } from 'lucide-react';
 
 const mockMatchHistory = [
-  { id: 1, deck: 'Control Warrior', opponent: 'Frost Mage', result: 'Win', duration: '12:45', date: '2 hours ago', coins: true },
-  { id: 2, deck: 'Control Warrior', opponent: 'Aggro DH', result: 'Loss', duration: '05:30', date: '3 hours ago', coins: false },
-  { id: 3, deck: 'Control Warrior', opponent: 'Thief Rogue', result: 'Win', duration: '15:20', date: '5 hours ago', coins: true },
-  { id: 4, deck: 'Control Warrior', opponent: 'Ramp Druid', result: 'Loss', duration: '11:10', date: '1 day ago', coins: false },
-  { id: 5, deck: 'Control Warrior', opponent: 'Shadow Priest', result: 'Win', duration: '08:45', date: '1 day ago', coins: false },
+  { id: 1, deck: 'Recorded Deck', opponent: 'Frost Mage', result: 'Win', duration: '12:45', date: '2 hours ago', coins: true },
+  { id: 2, deck: 'Recorded Deck', opponent: 'Aggro DH', result: 'Loss', duration: '05:30', date: '3 hours ago', coins: false },
+  { id: 3, deck: 'Recorded Deck', opponent: 'Thief Rogue', result: 'Win', duration: '15:20', date: '5 hours ago', coins: true },
+  { id: 4, deck: 'Recorded Deck', opponent: 'Ramp Druid', result: 'Loss', duration: '11:10', date: '1 day ago', coins: false },
+  { id: 5, deck: 'Recorded Deck', opponent: 'Shadow Priest', result: 'Win', duration: '08:45', date: '1 day ago', coins: false },
 ];
 
 const classWinrates = [
@@ -86,8 +86,8 @@ export function Stats() {
               <Target size={100} />
             </div>
             <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Best Deck</span>
-            <div className="text-xl font-bold text-orange-400 truncate mt-1">Control Warrior</div>
-            <div className="text-sm mt-2 text-slate-400">64.2% Winrate (120 games)</div>
+            <div className="text-xl font-bold text-orange-400 truncate mt-1">No tracked deck</div>
+            <div className="text-sm mt-2 text-slate-400">Stats will appear after tracked games</div>
           </div>
         </div>
 

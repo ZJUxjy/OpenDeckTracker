@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CardDefs build="240818">
+  <Entity CardID="CS2_029" ID="315" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString">
+      <enUS>Fireball</enUS>
+      <zhCN>火球术</zhCN>
+    </Tag>
+    <Tag enumID="184" name="CARDTEXT" type="LocString">
+      <enUS>Deal $6 damage.</enUS>
+      <zhCN>造成$6点伤害。</zhCN>
+    </Tag>
+    <Tag enumID="48" name="COST" type="Int" value="4"/>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="1635"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="4"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="5"/>
+    <Tag enumID="203" name="RARITY" type="Int" value="2"/>
+    <Tag enumID="321" name="COLLECTIBLE" type="Int" value="1"/>
+    <Tag enumID="208" name="FREEZE" type="Int" value="1"/>
+  </Entity>
+  <Entity CardID="HERO_08bp" ID="807" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString">
+      <enUS>Steady Shot</enUS>
+      <zhCN>稳固射击</zhCN>
+    </Tag>
+    <Tag enumID="184" name="CARDTEXT" type="LocString">
+      <enUS>Hero Power&lt;br/&gt;Deal $2 damage to the enemy hero.</enUS>
+      <zhCN>英雄技能&lt;br/&gt;对敌方英雄造成$2点伤害。</zhCN>
+    </Tag>
+    <Tag enumID="48" name="COST" type="Int" value="2"/>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="3"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="3"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="10"/>
+  </Entity>
+  <Entity CardID="TEST_NO_ZHCN" ID="999001" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString">
+      <enUS>Fallback Name</enUS>
+    </Tag>
+    <Tag enumID="184" name="CARDTEXT" type="LocString">
+      <enUS>Fallback text.</enUS>
+    </Tag>
+    <Tag enumID="48" name="COST" type="Int" value="1"/>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="3"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="12"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="4"/>
+    <Tag enumID="203" name="RARITY" type="Int" value="1"/>
+    <Tag enumID="321" name="COLLECTIBLE" type="Int" value="1"/>
+  </Entity>
+</CardDefs>

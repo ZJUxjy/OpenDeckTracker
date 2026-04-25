@@ -30,6 +30,8 @@ target/
 
 # Downloaded card data (refresh with `pnpm cards:download`)
 data/cards/*.json
+data/cards/hsdata/
+data/cards/generated/*.json
 
 # Git worktrees
 .worktrees/
@@ -51,3 +53,6 @@ packages/hearthmirror/native/dump_reflection_*.jsonl
 
 # Temporary git commit message scratchpads
 .commitmsg.tmp
+.github
+.cursor
+.codex
