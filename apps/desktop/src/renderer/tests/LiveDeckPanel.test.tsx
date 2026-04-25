@@ -36,6 +36,10 @@ function makeSnapshot(overrides: {
     pendingDeckSelection: null,
     friendlyHand: [],
     opposingHandCount: 0,
+    opponent: {
+      revealed: [],
+      graveyard: [],
+    },
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
     error: null,
     updatedAt: Date.now(),

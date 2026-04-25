@@ -5,16 +5,28 @@ import { Collection } from './components/Collection';
 import { Settings } from './components/Settings';
 import { OverlayView } from './components/OverlayView';
 import { LiveDeckPanel } from './components/LiveDeckPanel';
+import { OpponentCardsPanel } from './components/OpponentCardsPanel';
+import { useDeckTrackerStore } from './stores/deck-tracker-store';
 
 function RightPanel() {
-  return <LiveDeckPanel />;
+  const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
+
+  return (
+    <div className="flex h-full gap-4">
+      <OpponentCardsPanel
+        revealed={opponent?.revealed ?? []}
+        graveyard={opponent?.graveyard ?? []}
+      />
+      <LiveDeckPanel />
+    </div>
+  );
 }
 
 function TrackerRoute() {
   return (
     <>
       <Dashboard />
-      <div className="hidden lg:block h-full bg-[#0E0E14] p-6 border-l border-[#2A2A35]">
+      <div className="hidden xl:block h-full bg-[#0E0E14] p-6 border-l border-[#2A2A35]">
         <RightPanel />
       </div>
     </>
