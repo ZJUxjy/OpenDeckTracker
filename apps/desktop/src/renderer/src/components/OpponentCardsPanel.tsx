@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
+import { CardImagePopover } from './CardImagePopover';
 
 interface OpponentCardsPanelProps {
   revealed: OpponentCardRecord[];
@@ -29,6 +30,33 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
   const revealedGroups = useMemo(() => groupRecords(revealed), [revealed]);
   const graveyardGroups = useMemo(() => groupRecords(graveyard), [graveyard]);
   const isEmpty = revealedGroups.length === 0 && graveyardGroups.length === 0;
+  const [popover, setPopover] = useState<{
+    cardId: string;
+    anchorRect: DOMRect;
+  } | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleRowMouseEnter = useCallback((cardId: string, el: HTMLDivElement) => {
+    hoverTimerRef.current = setTimeout(() => {
+      setPopover({ cardId, anchorRect: el.getBoundingClientRect() });
+    }, 300);
+  }, []);
+
+  const handleRowMouseLeave = useCallback(() => {
+    if (hoverTimerRef.current !== null) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    setPopover(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current !== null) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <aside className="w-[260px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
@@ -46,11 +74,31 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
           </div>
         ) : (
           <div className="space-y-3">
-            <OpponentCardSection title="Played" cards={revealedGroups} defs={defs} />
-            <OpponentCardSection title="Graveyard" cards={graveyardGroups} defs={defs} />
+            <OpponentCardSection
+              title="Played"
+              cards={revealedGroups}
+              defs={defs}
+              onMouseEnter={handleRowMouseEnter}
+              onMouseLeave={handleRowMouseLeave}
+            />
+            <OpponentCardSection
+              title="Graveyard"
+              cards={graveyardGroups}
+              defs={defs}
+              onMouseEnter={handleRowMouseEnter}
+              onMouseLeave={handleRowMouseLeave}
+            />
           </div>
         )}
       </div>
+      {popover && (
+        <CardImagePopover
+          cardId={popover.cardId}
+          anchorRect={popover.anchorRect}
+          onClose={handleRowMouseLeave}
+          placement="right"
+        />
+      )}
     </aside>
   );
 }
@@ -59,10 +107,14 @@ function OpponentCardSection({
   title,
   cards,
   defs,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   title: string;
   cards: GroupedOpponentCard[];
   defs: Map<string, CardDisplayDef>;
+  onMouseEnter: (cardId: string, el: HTMLDivElement) => void;
+  onMouseLeave: () => void;
 }) {
   if (cards.length === 0) return null;
 
@@ -76,35 +128,65 @@ function OpponentCardSection({
           const def = defs.get(card.cardId);
           const rarity = (def?.rarity ?? '').toLowerCase();
           return (
-            <div
+            <OpponentCardRow
               key={card.cardId}
-              className="flex items-center px-2 py-1.5 rounded text-sm border-b border-[#1C1C24] last:border-b-0"
-            >
-              <div className="w-7 h-7 rounded bg-red-900/40 flex items-center justify-center text-red-100 font-bold text-xs shrink-0">
-                {def?.cost ?? 0}
-              </div>
-              <div className="flex-1 min-w-0 px-2">
-                <div
-                  className={clsx(
-                    'truncate font-medium',
-                    rarity === 'legendary' ? 'text-orange-300' : '',
-                    rarity === 'epic' ? 'text-purple-300' : '',
-                    rarity === 'rare' ? 'text-blue-300' : '',
-                    rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-slate-200' : '',
-                  )}
-                  title={card.cardId}
-                >
-                  {def?.name ?? card.cardId}
-                </div>
-              </div>
-              {card.count > 1 && (
-                <div className="text-xs text-slate-300 font-bold shrink-0">x{card.count}</div>
-              )}
-            </div>
+              card={card}
+              def={def}
+              rarity={rarity}
+              onMouseEnter={onMouseEnter}
+              onMouseLeave={onMouseLeave}
+            />
           );
         })}
       </div>
     </section>
+  );
+}
+
+function OpponentCardRow({
+  card,
+  def,
+  rarity,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  card: GroupedOpponentCard;
+  def: CardDisplayDef | undefined;
+  rarity: string;
+  onMouseEnter: (cardId: string, el: HTMLDivElement) => void;
+  onMouseLeave: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  return (
+    <div
+      ref={ref}
+      data-testid="opponent-card-row"
+      className="flex items-center px-2 py-1.5 rounded text-sm border-b border-[#1C1C24] last:border-b-0 transition-colors hover:bg-[#1C1C24]"
+      onMouseEnter={() => ref.current && onMouseEnter(card.cardId, ref.current)}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="w-7 h-7 rounded bg-red-900/40 flex items-center justify-center text-red-100 font-bold text-xs shrink-0">
+        {def?.cost ?? 0}
+      </div>
+      <div className="flex-1 min-w-0 px-2">
+        <div
+          className={clsx(
+            'truncate font-medium',
+            rarity === 'legendary' ? 'text-orange-300' : '',
+            rarity === 'epic' ? 'text-purple-300' : '',
+            rarity === 'rare' ? 'text-blue-300' : '',
+            rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-slate-200' : '',
+          )}
+          title={card.cardId}
+        >
+          {def?.name ?? card.cardId}
+        </div>
+      </div>
+      {card.count > 1 && (
+        <div className="text-xs text-slate-300 font-bold shrink-0">x{card.count}</div>
+      )}
+    </div>
   );
 }
 

@@ -1,5 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { OpponentCardsPanel } from '../src/components/OpponentCardsPanel';
@@ -21,6 +21,9 @@ function record(
 
 describe('OpponentCardsPanel', () => {
   beforeEach(() => {
+    Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true });
+    window.hdt.cardImages.get = vi.fn().mockResolvedValue(null);
     window.hdt.cards.findById = vi.fn(async (cardId: string) => {
       const def = CARD_DEFS[cardId];
       if (!def) return null;
@@ -37,6 +40,10 @@ describe('OpponentCardsPanel', () => {
       };
       return cardDef;
     });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders revealed opponent cards by card name', async () => {
@@ -87,5 +94,29 @@ describe('OpponentCardsPanel', () => {
       expect(screen.getByText('Fireball')).toBeInTheDocument();
       expect(screen.getByText('x2')).toBeInTheDocument();
     });
+  });
+
+  it('shows card image popover after hovering an opponent card row', async () => {
+    render(
+      <OpponentCardsPanel
+        revealed={[record({ entityId: 20, cardId: 'CS2_029' })]}
+        graveyard={[]}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    vi.useFakeTimers();
+    fireEvent.mouseEnter(screen.getByTestId('opponent-card-row'));
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    const popoverImg = screen.getByRole('img');
+    expect(popoverImg).toHaveAttribute('src', expect.stringContaining('CS2_029'));
   });
 });
