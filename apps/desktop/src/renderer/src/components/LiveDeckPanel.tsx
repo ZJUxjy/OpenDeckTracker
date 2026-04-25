@@ -81,26 +81,23 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
 
   // Build card defs map for sorting
   const cardIds = useMemo(
-    () => [...new Set(deck.original.map((e) => e.cardId))],
-    [deck.original],
+    () => [...new Set([...deck.original, ...deck.remaining].map((e) => e.cardId))],
+    [deck.original, deck.remaining],
   );
   const cardDefs = useCardDefs(cardIds);
 
   const totalOriginal = deck.original.reduce((s, c) => s + c.count, 0);
   const totalRemaining = deck.remaining.reduce((s, c) => s + c.count, 0);
 
-  // Expand original deck to physical copies, then filter to only those still remaining.
+  // Expand current remaining deck to physical copies so shuffled-in cards
+  // absent from the original deck can render as real rows.
   const remainingCount = remainingByCardId;
   const copies = useMemo(() => {
-    const all = expandDeckToCopies(deck.original);
-    // Filter to only copies still in deck (ordinal < remainingCount for that cardId)
-    const visible = all.filter(
-      (c) => c.ordinal < (remainingCount.get(c.cardId) ?? 0),
-    );
+    const visible = expandDeckToCopies(deck.remaining);
     // Sort using card definitions
     visible.sort((a, b) => compareDeckCopies(a, b, cardDefs));
     return visible;
-  }, [deck.original, remainingCount, cardDefs]);
+  }, [deck.remaining, cardDefs]);
 
   // Track exiting copy keys for draw animation.
   // IMPORTANT: compare against previous map keys so cards that drop to 0
