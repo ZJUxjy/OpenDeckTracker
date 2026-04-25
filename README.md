@@ -1,12 +1,12 @@
-# HDT.js
+# OpenDeckTracker
 
-> 炉石传说记牌器 — TypeScript 重写版本，对标开源项目 [Hearthstone-Deck-Tracker](https://github.com/HearthSim/Hearthstone-Deck-Tracker)。
+> 炉石传说记牌器 — TypeScript 实现，对标开源项目 [Hearthstone-Deck-Tracker](https://github.com/HearthSim/Hearthstone-Deck-Tracker)。
 
 ## 项目背景
 
 - 整体规划：[`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)（14 周 Phase 0–8）
 - HearthMirror Rust 重写设计：[`Rewrite_Design.md`](./Rewrite_Design.md)
-- UI 设计参考（FIRESTONE 主题）：[`docs/figma/Guidelines.md`](./docs/figma/Guidelines.md)
+- UI 设计参考：[`docs/figma/Guidelines.md`](./docs/figma/Guidelines.md)
 - 工作流：本仓库使用 [OpenSpec](https://github.com/openspec/openspec) 做 spec-driven 开发，每一项变更先在 `openspec/changes/` 写 proposal/design/specs/tasks，然后实施。
 
 ## 前置条件
@@ -21,10 +21,11 @@
 corepack enable           # 启用 corepack 自动用上正确的 pnpm 版本
 pnpm install              # 安装所有 workspace 依赖
 pnpm cards:convert        # 首次运行必须，从本地 hsdata/CardDefs.xml 生成卡牌数据
+pnpm cards:images         # 可选，预下载卡牌图片到本地缓存布局
 pnpm dev                  # 启动 Electron 主窗口（renderer Fast Refresh + main 自动重启）
 ```
 
-成功后会出现一个标题为 **FIRESTONE** 的深色窗口，顶部有 Desktop App / In-Game Overlay 切换，左侧 Sidebar 切换 Tracker / Stats / Collection / Settings。
+成功后会出现一个标题为 **OpenDeckTracker** 的深色窗口，顶部有 Desktop App / In-Game Overlay 切换，左侧 Sidebar 切换 Tracker / Stats / Collection / Settings。
 
 ## 常用脚本
 
@@ -38,6 +39,7 @@ pnpm dev                  # 启动 Electron 主窗口（renderer Fast Refresh + 
 | `pnpm package` | 用 electron-builder 产出 Windows NSIS 安装包到 `apps/desktop/release/` |
 | `pnpm cards:convert` | 从 `data/cards/hsdata/CardDefs.xml` 生成运行时卡牌 JSON（enUS + zhCN，全量 + 可收藏） |
 | `pnpm cards:download` | 旧的 HearthstoneJSON 下载备用脚本 |
+| `pnpm cards:images` | 预下载卡牌图片到本地缓存布局，运行时悬浮卡图可复用 |
 
 ## 仓库结构
 

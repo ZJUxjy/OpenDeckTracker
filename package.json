@@ -1,9 +1,9 @@
 {
-  "name": "hdt-js",
+  "name": "opendecktracker",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Hearthstone Deck Tracker — TypeScript rewrite",
+  "description": "OpenDeckTracker — TypeScript Hearthstone deck tracker",
   "packageManager": "pnpm@10.10.0",
   "engines": {
     "node": ">=20",
