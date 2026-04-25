@@ -216,6 +216,77 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('tracks a revealed opposing board card in the snapshot', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 20, cardId: 'CS2_029', zonePosition: 1, attack: 0, health: 0, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().opponent.revealed[0]?.cardId).toBe('CS2_029');
+    tracker.stop();
+  });
+
+  it('keeps a revealed opposing card in opponent graveyard after it leaves visible play', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 20, cardId: 'CS2_029', zonePosition: 1, attack: 0, health: 0, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    state.boardState = { friendly: [], opposing: [] };
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().opponent.graveyard[0]?.cardId).toBe('CS2_029');
+    tracker.stop();
+  });
+
+  it('does not synthesize opponent card identities from hidden hand or deck counts', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().opponent.revealed).toEqual([]);
+    expect(tracker.getSnapshot().opponent.graveyard).toEqual([]);
+    tracker.stop();
+  });
+
   it('errors do not stop the loop; routed to error event', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

@@ -8,7 +8,7 @@ import type {
 } from '@hdt/hearthmirror';
 import { DeckSnapshot } from '../game/deck-snapshot';
 import { Game } from '../game/game';
-import type { MatchPhase } from '../game/types';
+import type { MatchPhase, Zone } from '../game/types';
 import { zoneFromNumber } from '../game/types';
 import {
   InGameDeckIdentifier,
@@ -28,6 +28,13 @@ const INTERVAL_IN_MATCH_MS = 500;
 const INTERVAL_IMMEDIATE_MS = 0;
 
 /** Snapshot pushed over IPC + reflected in the renderer Zustand store. */
+export interface OpponentCardRecord {
+  entityId: number;
+  cardId: string;
+  zone: Zone;
+  order: number;
+}
+
 export interface DeckTrackerSnapshot {
   phase: MatchPhase;
   /** Match metadata (game/format/mission/players) — null in IDLE. */
@@ -60,6 +67,11 @@ export interface DeckTrackerSnapshot {
   friendlyHand: string[];
   /** Opposing hand size (count only — info-leak guard). */
   opposingHandCount: number;
+  /** Opponent cards that have been publicly revealed this match. */
+  opponent: {
+    revealed: OpponentCardRecord[];
+    graveyard: OpponentCardRecord[];
+  };
   /** Friendly remaining deck count (for header summary). */
   friendlyDeckCount: number;
   /** Last error from the poll loop (null when healthy). */
@@ -96,6 +108,8 @@ export class DeckTracker {
   private game: Game;
   private currentSnapshot: DeckTrackerSnapshot;
   private previousFriendlyHandSize = 0;
+  private opponentRecordOrder = 0;
+  private readonly opponentEntityOrders = new Map<number, number>();
   /**
    * Set when the orchestrator has emitted `needs-deck-selection` and is
    * waiting for the renderer to call `setOriginalDeck`. Avoids re-emitting
@@ -256,6 +270,7 @@ export class DeckTracker {
     // Lifecycle transitions.
     if (previousPhase === 'IDLE' && target === 'PRE_MATCH') {
       this.game.reset();
+      this.resetOpponentRecords();
       this.game.transitionTo('PRE_MATCH');
       this.applyMatchInfo(matchInfo);
     }
@@ -272,6 +287,7 @@ export class DeckTracker {
     if (previousPhase === 'POST_MATCH' && target === 'IDLE') {
       this.game.reset();
       this.previousFriendlyHandSize = 0;
+      this.resetOpponentRecords();
       this.awaitingDeckSelection = false;
       this.lastKnownSelectedDeckId = null;
     }
@@ -361,6 +377,9 @@ export class DeckTracker {
     });
     args.boardState?.opposing.forEach((b) => {
       entries.push({ entityId: b.entityId, cardId: b.cardId, zone: 'PLAY', controllerId: opposing });
+      if (b.cardId !== '') {
+        this.ensureOpponentRecordOrder(b.entityId);
+      }
     });
     args.deckState?.friendlyDeck.forEach((d) => {
       entries.push({ entityId: d.entityId, cardId: d.cardId, zone: 'DECK', controllerId: local });
@@ -457,6 +476,7 @@ export class DeckTracker {
       pendingDeckSelection,
       friendlyHand,
       opposingHandCount: handState?.opposingHandCount ?? 0,
+      opponent: this.buildOpponentRecords(),
       friendlyDeckCount: deckState?.friendlyDeck.length ?? 0,
       error: this.currentSnapshot.error,
       updatedAt: Date.now(),
@@ -485,6 +505,36 @@ export class DeckTracker {
     this.currentSnapshot = errorSnapshot;
     this.emit({ type: 'error', snapshot: errorSnapshot, error: message });
   }
+
+  private resetOpponentRecords(): void {
+    this.opponentRecordOrder = 0;
+    this.opponentEntityOrders.clear();
+  }
+
+  private ensureOpponentRecordOrder(entityId: number): number {
+    const existing = this.opponentEntityOrders.get(entityId);
+    if (existing !== undefined) return existing;
+    this.opponentRecordOrder += 1;
+    this.opponentEntityOrders.set(entityId, this.opponentRecordOrder);
+    return this.opponentRecordOrder;
+  }
+
+  private buildOpponentRecords(): DeckTrackerSnapshot['opponent'] {
+    const records = this.game.opposingPlayer.entities
+      .filter((entity) => entity.isRevealed && (entity.isInPlay || entity.isInGraveyard || entity.isInSecret))
+      .map((entity) => ({
+        entityId: entity.entityId,
+        cardId: entity.cardId,
+        zone: entity.zone,
+        order: this.ensureOpponentRecordOrder(entity.entityId),
+      }))
+      .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
+
+    return {
+      revealed: records.filter((record) => record.zone !== 'GRAVEYARD'),
+      graveyard: records.filter((record) => record.zone === 'GRAVEYARD'),
+    };
+  }
 }
 
 function zoneToNumber(zone: 'HAND' | 'PLAY' | 'DECK' | 'SECRET' | 'GRAVEYARD'): number {
@@ -510,6 +560,10 @@ function blankSnapshot(): DeckTrackerSnapshot {
     pendingDeckSelection: null,
     friendlyHand: [],
     opposingHandCount: 0,
+    opponent: {
+      revealed: [],
+      graveyard: [],
+    },
     friendlyDeckCount: 0,
     error: null,
     updatedAt: 0,
