@@ -5,12 +5,14 @@ import App from '../src/App';
 import { routes } from '../src/routes';
 
 describe('App', () => {
-  it('renders FIRESTONE brand and default Tracker view', () => {
+  it('renders OpenDeckTracker brand and removes legacy prototype names', () => {
+    const legacyBrandPattern = new RegExp(['FIRE', 'STONE|Fire', 'place'].join(''), 'i');
     const router = createMemoryRouter(
       [{ path: '/', element: <App />, children: routes }],
       { initialEntries: ['/'] },
     );
     render(<RouterProvider router={router} />);
-    expect(screen.getByText(/FIRESTONE/i)).toBeInTheDocument();
+    expect(screen.getByText('OpenDeckTracker')).toBeInTheDocument();
+    expect(screen.queryByText(legacyBrandPattern)).not.toBeInTheDocument();
   });
 });

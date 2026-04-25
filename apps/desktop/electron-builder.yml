@@ -1,5 +1,5 @@
-appId: com.hdt.desktop
-productName: HDT.js
+appId: com.opendecktracker.desktop
+productName: OpenDeckTracker
 directories:
   output: release
   buildResources: build
@@ -17,4 +17,4 @@ nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-  artifactName: HDT.js-Setup-${version}.${ext}
+  artifactName: OpenDeckTracker-Setup-${version}.${ext}

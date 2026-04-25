@@ -19,7 +19,7 @@ export function Sidebar() {
         <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
           <Crown size={20} className="text-orange-500" />
         </div>
-        <span className="text-xl font-bold tracking-wide">FIRESTONE</span>
+        <span className="text-xl font-bold tracking-wide">OpenDeckTracker</span>
       </div>
 
       <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
