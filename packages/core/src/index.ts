@@ -25,6 +25,7 @@ export type {
   DeckTrackerSnapshot,
   DeckTrackerEvent,
   DeckTrackerEventName,
+  OpponentCardRecord,
 } from './tracker/deck-tracker';
 
 // Deck identifiers.
