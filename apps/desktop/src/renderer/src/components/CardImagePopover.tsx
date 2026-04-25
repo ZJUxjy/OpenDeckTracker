@@ -5,9 +5,15 @@ interface CardImagePopoverProps {
   cardId: string;
   anchorRect: DOMRect;
   onClose: () => void;
+  placement?: 'left' | 'right';
 }
 
-export function CardImagePopover({ cardId, anchorRect, onClose }: CardImagePopoverProps) {
+export function CardImagePopover({
+  cardId,
+  anchorRect,
+  onClose,
+  placement = 'left',
+}: CardImagePopoverProps) {
   const { primary, fallback } = useCardImageUrl(cardId);
   const [src, setSrc] = useState(primary);
   const [error, setError] = useState(false);
@@ -36,14 +42,15 @@ export function CardImagePopover({ cardId, anchorRect, onClose }: CardImagePopov
     setError(false);
   }, [cardId, src]);
 
-  // Position: left of the panel
+  // Default position: left of the local deck panel. Opponent panel can request right side.
   const top = Math.max(8, Math.min(anchorRect.top - 80, window.innerHeight - 420));
   const right = window.innerWidth - anchorRect.left + 8;
+  const left = anchorRect.right + 8;
 
   return (
     <div
       className="fixed z-50"
-      style={{ top: `${top}px`, right: `${right}px` }}
+      style={placement === 'right' ? { top: `${top}px`, left: `${left}px` } : { top: `${top}px`, right: `${right}px` }}
       onMouseLeave={onClose}
     >
       <div className="w-[256px] bg-[#1C1C24] rounded-lg shadow-2xl border border-[#2A2A35] overflow-hidden">
