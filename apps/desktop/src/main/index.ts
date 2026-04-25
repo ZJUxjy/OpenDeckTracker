@@ -1,7 +1,18 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import { createMainWindow } from './window';
 import { registerIpc } from './ipc';
 import { startDeckTracker } from './deck-tracker';
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'hdt-card-image',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+    },
+  },
+]);
 
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {

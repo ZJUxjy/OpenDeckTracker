@@ -1,4 +1,5 @@
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, net, protocol } from 'electron';
+import { pathToFileURL } from 'node:url';
 import {
   encodeDeck,
   decodeDeck,
@@ -6,11 +7,21 @@ import {
   type SearchFilter,
 } from '@hdt/hearthdb';
 import { ensureCardDb } from './cards';
+import {
+  CARD_IMAGE_PROTOCOL,
+  cardImageCachePathFromUrl,
+  defaultCardImageCacheRoot,
+  ensureCardImageCached,
+} from './card-image-cache';
 import { getHearthMirror } from './hearthmirror';
 import { registerDeckTrackerIpc } from './deck-tracker';
 
+let cardImageProtocolRegistered = false;
+
 export function registerIpc(): void {
   ipcMain.handle('app:getVersion', () => app.getVersion());
+  const cardImageRoot = defaultCardImageCacheRoot(app.getPath('userData'));
+  registerCardImageProtocol(cardImageRoot);
 
   ipcMain.handle('cards:findByDbfId', async (_, dbfId: number) => {
     try {
@@ -39,6 +50,20 @@ export function registerIpc(): void {
     } catch (e) {
       console.error('[ipc cards:search]', (e as Error).message);
       return [];
+    }
+  });
+
+  ipcMain.handle('card-images:get', async (_, cardId: string) => {
+    try {
+      const cached = await ensureCardImageCached(cardId, { root: cardImageRoot });
+      return {
+        url: cached.url,
+        locale: cached.locale,
+        size: cached.size,
+      };
+    } catch (e) {
+      console.error('[ipc card-images:get]', (e as Error).message);
+      return null;
     }
   });
 
@@ -91,3 +116,17 @@ export function registerIpc(): void {
   registerDeckTrackerIpc();
 }
 
+function registerCardImageProtocol(root: string): void {
+  if (cardImageProtocolRegistered) return;
+  cardImageProtocolRegistered = true;
+
+  protocol.handle(CARD_IMAGE_PROTOCOL, (request) => {
+    try {
+      const imagePath = cardImageCachePathFromUrl(request.url, root);
+      return net.fetch(pathToFileURL(imagePath).toString());
+    } catch (e) {
+      console.error('[protocol card-image]', (e as Error).message);
+      return new Response('Not found', { status: 404 });
+    }
+  });
+}

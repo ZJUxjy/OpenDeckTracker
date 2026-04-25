@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const PRIMARY_LOCALE = 'zhCN';
 const FALLBACK_LOCALE = 'enUS';
@@ -10,6 +10,7 @@ const BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
  * from creating multiple HTTP requests.
  */
 const resolvedUrls = new Map<string, string>();
+const cachedImageUrls = new Map<string, string>();
 
 function buildUrl(cardId: string, locale: string): string {
   return `${BASE_URL}/${locale}/${SIZE}/${cardId}.png`;
@@ -34,7 +35,42 @@ export function useCardImageUrl(cardId: string): {
   primary: string;
   fallback: string;
 } {
+  const [cachedUrl, setCachedUrl] = useState(() => cachedImageUrls.get(cardId) ?? null);
+
+  useEffect(() => {
+    let alive = true;
+    const existing = cachedImageUrls.get(cardId);
+    if (existing) {
+      setCachedUrl(existing);
+      return () => {
+        alive = false;
+      };
+    }
+
+    setCachedUrl(null);
+    void window.hdt.cardImages.get(cardId)
+      .then((cached) => {
+        if (!alive || !cached?.url) return;
+        cachedImageUrls.set(cardId, cached.url);
+        setCachedUrl(cached.url);
+      })
+      .catch(() => {
+        if (alive) setCachedUrl(null);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [cardId]);
+
   return useMemo(() => {
+    if (cachedUrl) {
+      return {
+        primary: cachedUrl,
+        fallback: cachedUrl,
+      };
+    }
+
     // Check cache first
     const cached = resolvedUrls.get(cardId);
     if (cached) {
@@ -47,7 +83,7 @@ export function useCardImageUrl(cardId: string): {
       }
     }
     return getCardImageUrl(cardId);
-  }, [cardId]);
+  }, [cardId, cachedUrl]);
 }
 
 /**
