@@ -3,10 +3,13 @@ import type { Entity } from '../game/entity';
 
 /**
  * Compute the displayable "remaining cards in deck" multiset using the
- * M2 simplified algorithm (per design D3):
+ * memory-only algorithm:
  *
- *   remaining = originalDeck − seenCards
- *   extras    = seenCards − originalDeck
+ *   baseRemaining   = originalDeck − seenCards
+ *   knownDeck       = known friendly cards currently in DECK
+ *   shuffledIntoDeck = knownDeck − baseRemaining
+ *   remaining       = baseRemaining + shuffledIntoDeck
+ *   extras          = seenCards − originalDeck
  *
  * where `seenCards` is the multiset of cardIds we've revealed leaving
  * the DECK zone (i.e. they're now in HAND / PLAY / GRAVEYARD / SECRET
@@ -29,12 +32,13 @@ import type { Entity } from '../game/entity';
 export function computeRemaining(args: {
   originalDeck: DeckSnapshot;
   seenEntities: readonly Entity[];
+  deckEntities: readonly Entity[];
   localControllerId: number;
 }): {
   remaining: DeckSnapshot;
   extras: { cardId: string; count: number }[];
 } {
-  const { originalDeck, seenEntities, localControllerId } = args;
+  const { originalDeck, seenEntities, deckEntities, localControllerId } = args;
 
   const seenCardIds: string[] = [];
   for (const e of seenEntities) {
@@ -44,9 +48,19 @@ export function computeRemaining(args: {
     seenCardIds.push(e.cardId);
   }
 
+  const deckCardIds: string[] = [];
+  for (const e of deckEntities) {
+    if (e.cardId === '') continue;
+    if (e.controllerId !== localControllerId) continue;
+    deckCardIds.push(e.cardId);
+  }
+
   const seenSnapshot = DeckSnapshot.fromCardIds(seenCardIds);
+  const baseRemaining = originalDeck.subtract(seenSnapshot);
+  const knownDeckSnapshot = DeckSnapshot.fromCardIds(deckCardIds);
+  const shuffledIntoDeck = baseRemaining.extras(knownDeckSnapshot);
   return {
-    remaining: originalDeck.subtract(seenSnapshot),
+    remaining: baseRemaining.add(shuffledIntoDeck),
     extras: originalDeck.extras(seenSnapshot),
   };
 }

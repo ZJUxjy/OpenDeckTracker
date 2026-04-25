@@ -110,6 +110,7 @@ export class DeckTracker {
   private previousFriendlyHandSize = 0;
   private opponentRecordOrder = 0;
   private readonly opponentEntityOrders = new Map<number, number>();
+  private identifiedDeck: { id: number; name: string } | null = null;
   /**
    * Set when the orchestrator has emitted `needs-deck-selection` and is
    * waiting for the renderer to call `setOriginalDeck`. Avoids re-emitting
@@ -186,7 +187,7 @@ export class DeckTracker {
    * player + clears the awaiting flag + emits a fresh snapshot.
    */
   setOriginalDeck(identified: IdentifiedDeck): void {
-    this.game.localPlayer.originalDeck = identified.originalDeck;
+    this.applyIdentifiedDeck(identified);
     this.awaitingDeckSelection = false;
     this.currentSnapshot = this.buildSnapshot();
     this.emit({ type: 'state-change', snapshot: this.currentSnapshot });
@@ -278,7 +279,7 @@ export class DeckTracker {
       this.game.transitionTo('IN_MATCH');
       // First-time entry: try to identify the deck.
       if (this.game.localPlayer.originalDeck === null && !this.awaitingDeckSelection) {
-        await this.identifyDeck(matchInfo);
+        await this.identifyDeck(matchInfo, { handState, boardState });
       }
     }
     if (target === 'POST_MATCH' && previousPhase !== 'POST_MATCH') {
@@ -290,6 +291,7 @@ export class DeckTracker {
       this.resetOpponentRecords();
       this.awaitingDeckSelection = false;
       this.lastKnownSelectedDeckId = null;
+      this.identifiedDeck = null;
     }
     this.game.phase = target;
 
@@ -350,10 +352,15 @@ export class DeckTracker {
     this.game.formatType = info.formatType;
     this.game.missionId = info.missionId;
     if (info.localPlayer || info.opposingPlayer) {
+      const localControllerId = validControllerId(info.localPlayer?.id) ?? 1;
+      const reflectedOpponentId = validControllerId(info.opposingPlayer?.id);
       this.game.setPlayers({
-        localControllerId: info.localPlayer?.id ?? 1,
+        localControllerId,
         localName: info.localPlayer?.name ?? '',
-        opposingControllerId: info.opposingPlayer?.id ?? 2,
+        opposingControllerId:
+          reflectedOpponentId !== undefined && reflectedOpponentId !== localControllerId
+            ? reflectedOpponentId
+            : localControllerId === 1 ? 2 : 1,
         opposingName: info.opposingPlayer?.name ?? '',
       });
     }
@@ -396,7 +403,10 @@ export class DeckTracker {
     );
   }
 
-  private async identifyDeck(matchInfo: MatchInfo | null): Promise<void> {
+  private async identifyDeck(matchInfo: MatchInfo | null, visibleState: {
+    handState: HandState | null;
+    boardState: BoardState | null;
+  }): Promise<void> {
     if (matchInfo === null) return;
     const decks = (await this.mirror.getDecks()) ?? [];
 
@@ -407,7 +417,7 @@ export class DeckTracker {
       const cachedId = Number(this.lastKnownSelectedDeckId);
       const matched = decks.find((d) => d.id === cachedId);
       if (matched) {
-        this.game.localPlayer.originalDeck = DeckSnapshot.fromDeckCards(matched.cards);
+        this.applyIdentifiedDeck(deckToIdentified(matched));
         return;
       }
     }
@@ -416,17 +426,24 @@ export class DeckTracker {
     // InGameDeckIdentifier → CallbackDeckIdentifier).
     const identified = await this.identifier.identify({ decks, matchInfo });
     if (identified !== null) {
-      this.game.localPlayer.originalDeck = identified.originalDeck;
+      this.applyIdentifiedDeck(identified);
+      return;
+    }
+
+    const visibleCandidates = findDecksFromVisibleFriendlyCards(decks, visibleState);
+    const visibleIdentified = identifyDeckFromVisibleCandidates(visibleCandidates);
+    if (visibleIdentified !== null) {
+      this.applyIdentifiedDeck(visibleIdentified);
       return;
     }
     // No automatic match — emit a `needs-deck-selection` event with
     // the available decks so the renderer can prompt the user.
-    this.cachedDecks = decks;
+    this.cachedDecks = visibleCandidates.length > 0 ? visibleCandidates : decks;
     this.awaitingDeckSelection = true;
     this.emit({
       type: 'needs-deck-selection',
       snapshot: this.currentSnapshot,
-      decks: decks.map((d) => ({ id: d.id, name: d.name, hero: d.hero })),
+      decks: this.cachedDecks.map((d) => ({ id: d.id, name: d.name, hero: d.hero })),
     });
   }
 
@@ -448,11 +465,12 @@ export class DeckTracker {
       const result = computeRemaining({
         originalDeck: original,
         seenEntities: seen,
+        deckEntities: this.game.localPlayer.deck,
         localControllerId: this.game.localPlayer.controllerId,
       });
       deck = {
-        id: 0, // Backfilled by setOriginalDeck if available; UI uses name primarily.
-        name: this.game.localPlayer.name || '',
+        id: this.identifiedDeck?.id ?? 0,
+        name: this.identifiedDeck?.name ?? this.game.localPlayer.name ?? '',
         original: original.entries(),
         remaining: result.remaining.entries(),
         extras: result.extras,
@@ -506,6 +524,11 @@ export class DeckTracker {
     this.emit({ type: 'error', snapshot: errorSnapshot, error: message });
   }
 
+  private applyIdentifiedDeck(identified: IdentifiedDeck): void {
+    this.game.localPlayer.originalDeck = identified.originalDeck;
+    this.identifiedDeck = { id: identified.deckId, name: identified.name };
+  }
+
   private resetOpponentRecords(): void {
     this.opponentRecordOrder = 0;
     this.opponentEntityOrders.clear();
@@ -550,6 +573,97 @@ function zoneToNumber(zone: 'HAND' | 'PLAY' | 'DECK' | 'SECRET' | 'GRAVEYARD'): 
     case 'SECRET':
       return 7;
   }
+}
+
+function validControllerId(id: number | undefined): number | undefined {
+  return id !== undefined && id > 0 ? id : undefined;
+}
+
+function deckToIdentified(deck: Deck): IdentifiedDeck {
+  return {
+    deckId: deck.id,
+    name: deck.name,
+    originalDeck: DeckSnapshot.fromDeckCards(deck.cards),
+  };
+}
+
+function findDecksFromVisibleFriendlyCards(
+  decks: Deck[],
+  state: {
+    handState: HandState | null;
+    boardState: BoardState | null;
+  },
+): Deck[] {
+  const visibleCounts = countVisibleFriendlyCards(state);
+  if (sumCounts(visibleCounts) < 2) return [];
+
+  return decks.filter((deck) => deckContainsVisibleCards(deck, visibleCounts));
+}
+
+function identifyDeckFromVisibleCandidates(matches: Deck[]): IdentifiedDeck | null {
+  if (matches.length === 0) return null;
+  if (matches.length === 1) return deckToIdentified(matches[0]!);
+
+  const [first, ...rest] = matches;
+  if (rest.every((deck) => deckSignature(deck) === deckSignature(first!))) {
+    return deckToIdentified(first!);
+  }
+  return null;
+}
+
+function countVisibleFriendlyCards(state: {
+  handState: HandState | null;
+  boardState: BoardState | null;
+}): Map<string, number> {
+  const counts = new Map<string, number>();
+  const add = (cardId: string): void => {
+    if (!isDeckIdentityCardId(cardId)) return;
+    counts.set(cardId, (counts.get(cardId) ?? 0) + 1);
+  };
+
+  for (const card of state.handState?.friendlyHand ?? []) {
+    add(card.cardId);
+  }
+  for (const card of state.boardState?.friendly ?? []) {
+    add(card.cardId);
+  }
+  return counts;
+}
+
+function isDeckIdentityCardId(cardId: string): boolean {
+  if (cardId === '') return false;
+  if (cardId.startsWith('HERO_')) return false;
+  if (cardId === 'GAME_005' || cardId.endsWith('_COIN') || cardId.includes('COIN')) {
+    return false;
+  }
+  return true;
+}
+
+function deckContainsVisibleCards(deck: Deck, visibleCounts: Map<string, number>): boolean {
+  const deckCounts = new Map<string, number>();
+  for (const card of deck.cards) {
+    deckCounts.set(card.cardId, (deckCounts.get(card.cardId) ?? 0) + card.count);
+  }
+
+  for (const [cardId, count] of visibleCounts) {
+    if ((deckCounts.get(cardId) ?? 0) < count) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function deckSignature(deck: Deck): string {
+  return deck.cards
+    .map((card) => `${card.cardId}:${card.count}`)
+    .sort((a, b) => a.localeCompare(b))
+    .join('|');
+}
+
+function sumCounts(counts: Map<string, number>): number {
+  let total = 0;
+  for (const count of counts.values()) total += count;
+  return total;
 }
 
 function blankSnapshot(): DeckTrackerSnapshot {

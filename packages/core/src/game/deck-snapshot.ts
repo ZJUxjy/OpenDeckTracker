@@ -96,6 +96,21 @@ export class DeckSnapshot {
   }
 
   /**
+   * Returns a new snapshot with `other` added to this snapshot. Array
+   * entries default to one copy when `count` is omitted.
+   */
+  add(other: DeckSnapshot | readonly { readonly cardId: string; readonly count?: number }[]): DeckSnapshot {
+    const result = new Map(this.counts);
+    const otherCounts = other instanceof DeckSnapshot
+      ? new Map(other.counts)
+      : countByCardIdWithOptionalCount(other);
+    for (const [cardId, count] of otherCounts) {
+      result.set(cardId, (result.get(cardId) ?? 0) + count);
+    }
+    return new DeckSnapshot(result);
+  }
+
+  /**
    * Returns the cards in `seen` that aren't in `this` (or that exceed
    * `this`'s count) — i.e. the "extras" Hearthstone added mid-game
    * (Discover offers, stolen cards, Burgle-injected coins, etc.).
@@ -125,6 +140,19 @@ function countByCardId(items: readonly { readonly cardId: string }[]): Map<strin
   for (const it of items) {
     if (!it.cardId) continue;
     m.set(it.cardId, (m.get(it.cardId) ?? 0) + 1);
+  }
+  return m;
+}
+
+function countByCardIdWithOptionalCount(
+  items: readonly { readonly cardId: string; readonly count?: number }[],
+): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const it of items) {
+    if (!it.cardId) continue;
+    const count = it.count ?? 1;
+    if (count <= 0) continue;
+    m.set(it.cardId, (m.get(it.cardId) ?? 0) + count);
   }
   return m;
 }
