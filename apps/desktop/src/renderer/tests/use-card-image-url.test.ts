@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import {
   useCardImageUrl,
   getCardImageUrl,
@@ -11,6 +11,7 @@ describe('useCardImageUrl', () => {
   beforeEach(() => {
     // Reset module-level cache between tests
     vi.resetModules();
+    window.hdt.cardImages.get = vi.fn().mockResolvedValue(null);
   });
 
   it('returns zhCN primary URL', () => {
@@ -40,5 +41,20 @@ describe('useCardImageUrl', () => {
     expect(urls.fallback).toBe(
       'https://art.hearthstonejson.com/v1/render/latest/enUS/256x/CS2_029.png',
     );
+  });
+
+  it('uses cached URL when preload API resolves', async () => {
+    window.hdt.cardImages.get = vi.fn().mockResolvedValue({
+      url: 'hdt-card-image://cache/zhCN/256x/EX1_277.png',
+      locale: 'zhCN',
+      size: '256x',
+    });
+
+    const { result } = renderHook(() => useCardImageUrl('EX1_277'));
+
+    await waitFor(() => {
+      expect(result.current.primary).toBe('hdt-card-image://cache/zhCN/256x/EX1_277.png');
+    });
+    expect(result.current.fallback).toBe('hdt-card-image://cache/zhCN/256x/EX1_277.png');
   });
 });

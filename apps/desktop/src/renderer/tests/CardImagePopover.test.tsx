@@ -21,6 +21,7 @@ describe('CardImagePopover', () => {
     // Reset window.innerWidth/innerHeight for consistent positioning
     Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true });
     Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true });
+    window.hdt.cardImages.get = vi.fn().mockResolvedValue(null);
   });
 
   it('renders with zhCN image URL', () => {
@@ -64,5 +65,24 @@ describe('CardImagePopover', () => {
       <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
     );
     expect(screen.getByText('加载中...')).toBeInTheDocument();
+  });
+
+  it('uses cached image source when preload API resolves', async () => {
+    window.hdt.cardImages.get = vi.fn().mockResolvedValue({
+      url: 'hdt-card-image://cache/zhCN/256x/EX1_277.png',
+      locale: 'zhCN',
+      size: '256x',
+    });
+
+    render(
+      <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('img')).toHaveAttribute(
+        'src',
+        'hdt-card-image://cache/zhCN/256x/EX1_277.png',
+      );
+    });
   });
 });

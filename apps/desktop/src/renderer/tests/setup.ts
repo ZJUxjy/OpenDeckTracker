@@ -10,6 +10,9 @@ Object.defineProperty(window, 'hdt', {
       findById: async () => Promise.resolve(null),
       search: async () => Promise.resolve([]),
     },
+    cardImages: {
+      get: async () => Promise.resolve(null),
+    },
     deck: {
       encode: async () => Promise.resolve(''),
       decode: async () => Promise.reject(new Error('not stubbed')),

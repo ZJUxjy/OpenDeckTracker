@@ -33,6 +33,10 @@ const api = {
     search: (filter: SearchFilter): Promise<CardDef[]> =>
       ipcRenderer.invoke('cards:search', filter),
   },
+  cardImages: {
+    get: (cardId: string): Promise<{ url: string; locale: string; size: string } | null> =>
+      ipcRenderer.invoke('card-images:get', cardId),
+  },
   deck: {
     encode: (blueprint: DeckBlueprint): Promise<string> =>
       ipcRenderer.invoke('deck:encode', blueprint),
