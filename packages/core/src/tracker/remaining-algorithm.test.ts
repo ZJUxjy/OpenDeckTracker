@@ -14,7 +14,12 @@ describe('computeRemaining', () => {
       { cardId: 'B', count: 2 },
       { cardId: 'C', count: 1 },
     ]);
-    const result = computeRemaining({ originalDeck: original, seenEntities: [], localControllerId: 1 });
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [],
+      deckEntities: [],
+      localControllerId: 1,
+    });
     expect(result.remaining.total()).toBe(5);
     expect(result.extras).toEqual([]);
   });
@@ -27,6 +32,7 @@ describe('computeRemaining', () => {
     const result = computeRemaining({
       originalDeck: original,
       seenEntities: [e(1, 'A', 'HAND'), e(2, 'B', 'PLAY')],
+      deckEntities: [],
       localControllerId: 1,
     });
     expect(result.remaining.countOf('A')).toBe(1);
@@ -40,6 +46,7 @@ describe('computeRemaining', () => {
     const result = computeRemaining({
       originalDeck: original,
       seenEntities: [e(1, 'STOLEN', 'PLAY')],
+      deckEntities: [],
       localControllerId: 1,
     });
     expect(result.remaining.countOf('A')).toBe(1);
@@ -52,6 +59,7 @@ describe('computeRemaining', () => {
     const result = computeRemaining({
       originalDeck: original,
       seenEntities: [e(1, '', 'DECK'), e(2, 'A', 'HAND')],
+      deckEntities: [],
       localControllerId: 1,
     });
     expect(result.remaining.countOf('A')).toBe(1);
@@ -62,6 +70,7 @@ describe('computeRemaining', () => {
     const result = computeRemaining({
       originalDeck: original,
       seenEntities: [e(1, 'A', 'HAND', 2 /* opponent */), e(2, 'A', 'HAND', 1)],
+      deckEntities: [],
       localControllerId: 1,
     });
     expect(result.remaining.countOf('A')).toBe(1);
@@ -73,6 +82,7 @@ describe('computeRemaining', () => {
     const result = computeRemaining({
       originalDeck: original,
       seenEntities: [created],
+      deckEntities: [],
       localControllerId: 1,
     });
     // Created card should not subtract from remaining; instead show
@@ -87,9 +97,61 @@ describe('computeRemaining', () => {
     const result = computeRemaining({
       originalDeck: original,
       seenEntities: [e(1, 'A', 'HAND'), e(2, 'A', 'PLAY'), e(3, 'B', 'GRAVEYARD')],
+      deckEntities: [],
       localControllerId: 1,
     });
     expect(result.remaining.total()).toBe(0);
+  });
+
+  it('includes known shuffled cards that are currently in deck', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [],
+      deckEntities: [e(10, 'Albatross', 'DECK')],
+      localControllerId: 1,
+    });
+    expect(result.remaining.countOf('Fireball')).toBe(2);
+    expect(result.remaining.countOf('Albatross')).toBe(1);
+    expect(result.remaining.total()).toBe(3);
+    expect(result.extras).toEqual([]);
+  });
+
+  it('only adds same-card shuffled overflow', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [e(1, 'Fireball', 'HAND')],
+      deckEntities: [
+        e(10, 'Fireball', 'DECK'),
+        e(11, 'Fireball', 'DECK'),
+      ],
+      localControllerId: 1,
+    });
+    expect(result.remaining.countOf('Fireball')).toBe(2);
+  });
+
+  it('does not double-count known original deck entities', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [],
+      deckEntities: [e(10, 'Fireball', 'DECK')],
+      localControllerId: 1,
+    });
+    expect(result.remaining.countOf('Fireball')).toBe(2);
+    expect(result.remaining.total()).toBe(2);
+  });
+
+  it('ignores face-down deck entities for displayed card rows', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [],
+      deckEntities: [e(10, '', 'DECK')],
+      localControllerId: 1,
+    });
+    expect(result.remaining.entries()).toEqual([{ cardId: 'Fireball', count: 2 }]);
   });
 });
 

@@ -66,6 +66,22 @@ const fakeDeck = (id: number, name: string): Deck => ({
   ],
 });
 
+const deckWithCards = (
+  id: number,
+  name: string,
+  cards: { cardId: string; count: number }[],
+): Deck => ({
+  id,
+  name,
+  hero: 'HERO_01',
+  formatType: 2,
+  deckType: 1,
+  seasonId: 0,
+  cardbackId: 0,
+  createDateMicrosec: 0,
+  cards: cards.map((card) => ({ ...card, premium: 0 })),
+});
+
 const fakeMatch = (overrides: Partial<MatchInfo> = {}): MatchInfo => ({
   localPlayer: {
     id: 1,
@@ -178,6 +194,89 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('identifies a saved deck from visible friendly hand cards when selected deck id is unavailable', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'Wrong Deck', [
+        { cardId: 'X', count: 2 },
+        { cardId: 'Y', count: 1 },
+      ]),
+      deckWithCards(2, 'Visible Match', [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+        { cardId: 'C', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [{ entityId: 100, cardId: '' }],
+      opposingDeckCount: 20,
+    };
+    state.handState = {
+      friendlyHand: [
+        { entityId: 1, cardId: 'A', zonePosition: 1 },
+        { entityId: 2, cardId: 'B', zonePosition: 2 },
+        { entityId: 3, cardId: 'GAME_005', zonePosition: 3 },
+      ],
+      opposingHandCount: 4,
+    };
+
+    const tracker = new DeckTracker({ mirror });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().deck?.id).toBe(2);
+    expect(tracker.getSnapshot().deck?.name).toBe('Visible Match');
+    expect(tracker.getSnapshot().pendingDeckSelection).toBeNull();
+    tracker.stop();
+  });
+
+  it('narrows manual deck selection to visible-card candidates when fallback is ambiguous', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'Wrong Deck', [
+        { cardId: 'X', count: 2 },
+        { cardId: 'Y', count: 1 },
+      ]),
+      deckWithCards(2, 'Candidate A', [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+        { cardId: 'C', count: 1 },
+      ]),
+      deckWithCards(3, 'Candidate B', [
+        { cardId: 'A', count: 1 },
+        { cardId: 'B', count: 1 },
+        { cardId: 'D', count: 2 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [{ entityId: 100, cardId: '' }],
+      opposingDeckCount: 20,
+    };
+    state.handState = {
+      friendlyHand: [
+        { entityId: 1, cardId: 'A', zonePosition: 1 },
+        { entityId: 2, cardId: 'B', zonePosition: 2 },
+      ],
+      opposingHandCount: 4,
+    };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({ mirror });
+    tracker.on('needs-deck-selection', (e) => events.push(e));
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().deck).toBeNull();
+    expect(events[0]?.decks?.map((deck) => deck.name)).toEqual(['Candidate A', 'Candidate B']);
+    expect(tracker.getSnapshot().pendingDeckSelection?.decks.map((deck) => deck.name)).toEqual([
+      'Candidate A',
+      'Candidate B',
+    ]);
+    tracker.stop();
+  });
+
   it('does not put a dead friendly minion back into the remaining deck', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();
@@ -216,6 +315,34 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('includes known shuffled-in deck cards in snapshot remaining', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [deckWithCards(1, 'A', [{ cardId: 'A', count: 2 }])];
+    state.deckState = {
+      friendlyDeck: [
+        { entityId: 100, cardId: '' },
+        { entityId: 200, cardId: 'ALBATROSS' },
+      ],
+      opposingDeckCount: 0,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().deck?.remaining).toContainEqual({
+      cardId: 'ALBATROSS',
+      count: 1,
+    });
+    tracker.stop();
+  });
+
   it('tracks a revealed opposing board card in the snapshot', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();
@@ -237,6 +364,60 @@ describe('DeckTracker', () => {
     await advanceTicks(4);
 
     expect(tracker.getSnapshot().opponent.revealed[0]?.cardId).toBe('CS2_029');
+    tracker.stop();
+  });
+
+  it('uses distinct fallback controllers when matchInfo player ids are zero', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch({
+      localPlayer: {
+        id: 0,
+        name: 'Local',
+        side: 1,
+        standardRank: 0,
+        standardLegendRank: 0,
+        wildRank: 0,
+        wildLegendRank: 0,
+        classicRank: 0,
+        classicLegendRank: 0,
+        twistRank: 0,
+        twistLegendRank: 0,
+        cardbackId: 0,
+      },
+      opposingPlayer: {
+        id: 0,
+        name: 'Opponent',
+        side: 2,
+        standardRank: 0,
+        standardLegendRank: 0,
+        wildRank: 0,
+        wildLegendRank: 0,
+        classicRank: 0,
+        classicLegendRank: 0,
+        twistRank: 0,
+        twistLegendRank: 0,
+        cardbackId: 0,
+      },
+    });
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [{ entityId: 10, cardId: 'A', zonePosition: 1, attack: 1, health: 1, damage: 0 }],
+      opposing: [
+        { entityId: 20, cardId: 'CS2_029', zonePosition: 1, attack: 0, health: 0, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().opponent.revealed[0]?.cardId).toBe('CS2_029');
+    expect(tracker.getSnapshot().deck?.remaining.find((card) => card.cardId === 'A')?.count).toBe(1);
     tracker.stop();
   });
 
