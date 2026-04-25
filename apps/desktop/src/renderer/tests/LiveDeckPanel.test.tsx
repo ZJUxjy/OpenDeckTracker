@@ -56,6 +56,7 @@ const CARD_DEFS: Record<string, { name: string; cost?: number; rarity?: string }
   EX1_287: { name: 'Counterspell', cost: 3, rarity: 'RARE' },
   GAME_005: { name: 'The Coin', cost: 0, rarity: 'FREE' },
   HERO_01: { name: 'Fireblast', rarity: 'FREE' }, // no cost — hero power
+  ALBATROSS: { name: 'Bad Luck Albatross', cost: 3, rarity: 'RARE' },
 };
 
 // Mock useCardDef to return stubs from CARD_DEFS.
@@ -230,6 +231,25 @@ describe('LiveDeckPanel sorting', () => {
       expect(rows).toHaveLength(30);
     });
   });
+
+  it('renders remaining-only shuffled cards as physical rows', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 2 }],
+      remaining: [
+        { cardId: 'CS2_029', count: 2 },
+        { cardId: 'ALBATROSS', count: 1 },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      const rows = screen.getAllByTestId('card-copy-row');
+      expect(rows).toHaveLength(3);
+      expect(rows.some((row) => row.textContent?.includes('Bad Luck Albatross'))).toBe(true);
+    });
+  });
 });
 
 describe('LiveDeckPanel draw animation', () => {
@@ -376,6 +396,37 @@ describe('LiveDeckPanel draw animation', () => {
         expect.stringContaining('Frostbolt'),
       ]),
     );
+  });
+
+  it('animates shuffled-in row when it leaves remaining', () => {
+    const original = [{ cardId: 'CS2_029', count: 2 }];
+    const snapBefore = makeSnapshot({
+      original,
+      remaining: [
+        { cardId: 'CS2_029', count: 2 },
+        { cardId: 'ALBATROSS', count: 1 },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snapBefore });
+
+    const { rerender } = render(<LiveDeckPanel />);
+    expect(screen.getAllByTestId('card-copy-row')).toHaveLength(3);
+
+    const snapAfter = makeSnapshot({
+      original,
+      remaining: [{ cardId: 'CS2_029', count: 2 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snapAfter });
+    rerender(<LiveDeckPanel />);
+
+    const exitingAlbatross = screen
+      .getAllByTestId('card-copy-row')
+      .find(
+        (el) =>
+          el.textContent?.includes('Bad Luck Albatross') &&
+          el.classList.contains('animate-deck-exit'),
+      );
+    expect(exitingAlbatross).toBeTruthy();
   });
 });
 
