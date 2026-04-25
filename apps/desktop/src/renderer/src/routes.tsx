@@ -13,10 +13,12 @@ function RightPanel() {
 
   return (
     <div className="flex h-full gap-4">
-      <OpponentCardsPanel
-        revealed={opponent?.revealed ?? []}
-        graveyard={opponent?.graveyard ?? []}
-      />
+      <div className="hidden xl:block h-full">
+        <OpponentCardsPanel
+          revealed={opponent?.revealed ?? []}
+          graveyard={opponent?.graveyard ?? []}
+        />
+      </div>
       <LiveDeckPanel />
     </div>
   );
@@ -26,7 +28,7 @@ function TrackerRoute() {
   return (
     <>
       <Dashboard />
-      <div className="hidden xl:block h-full bg-[#0E0E14] p-6 border-l border-[#2A2A35]">
+      <div className="hidden lg:block h-full bg-[#0E0E14] p-6 border-l border-[#2A2A35]">
         <RightPanel />
       </div>
     </>

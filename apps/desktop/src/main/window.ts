@@ -8,7 +8,7 @@ export function createMainWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
-    title: 'FIRESTONE',
+    title: 'OpenDeckTracker',
     backgroundColor: '#0E0E14',
     autoHideMenuBar: true,
     webPreferences: {
