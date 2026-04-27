@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
+import { useTranslation } from '../i18n';
 
 const STORAGE_KEY_LAST_PICK = 'hdt:deck-tracker:last-deck-id';
 
@@ -13,6 +14,7 @@ const STORAGE_KEY_LAST_PICK = 'hdt:deck-tracker:last-deck-id';
  * occurrence pre-selects it.
  */
 export function DeckSelectDialog() {
+  const { t } = useTranslation();
   const pendingSelection = useDeckTrackerStore((s) => s.pendingSelection);
   const markDialogDismissed = useDeckTrackerStore((s) => s.markDialogDismissed);
   const [chosen, setChosen] = useState<number | null>(null);
@@ -67,16 +69,16 @@ export function DeckSelectDialog() {
       <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-lg shadow-2xl w-[440px] max-h-[80vh] flex flex-col">
         <div className="px-6 py-4 border-b border-[#2A2A35]">
           <h2 id="deck-select-title" className="text-lg font-bold text-white">
-            选择当前对局使用的卡组
+            {t('deckSelect.title')}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            未能自动识别。请从下方挑选你正在使用的卡组。
+            {t('deckSelect.description')}
           </p>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
           {pendingSelection.decks.length === 0 ? (
             <div className="text-slate-400 text-sm text-center py-8">
-              没有保存的卡组。请先在游戏内创建一套卡组。
+              {t('deckSelect.empty')}
             </div>
           ) : (
             <ul className="space-y-1">
@@ -92,7 +94,7 @@ export function DeckSelectDialog() {
                         : 'bg-[#12121A] hover:bg-[#2A2A35] text-slate-200')
                     }
                   >
-                    <span className="font-medium truncate">{deck.name || '未命名卡组'}</span>
+                    <span className="font-medium truncate">{deck.name || t('deckSelect.unnamedDeck')}</span>
                     <span className="text-xs opacity-70 ml-2 shrink-0">{deck.hero}</span>
                   </button>
                 </li>
@@ -106,7 +108,7 @@ export function DeckSelectDialog() {
             onClick={handleCancel}
             className="px-4 py-2 text-slate-300 hover:text-white text-sm"
           >
-            取消
+            {t('deckSelect.cancel')}
           </button>
           <button
             type="button"
@@ -114,7 +116,7 @@ export function DeckSelectDialog() {
             disabled={chosen === null}
             className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded text-sm font-medium"
           >
-            确认选择
+            {t('deckSelect.confirm')}
           </button>
         </div>
       </div>

@@ -4,10 +4,12 @@ import { Sidebar } from './components/Sidebar';
 import { DeckSelectDialog } from './components/DeckSelectDialog';
 import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
+import { useTranslation } from './i18n';
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const isOverlay = location.pathname === '/overlay';
   const { isAlive, battleTag } = useHearthMirrorStatus();
   // Subscribe the global deck-tracker store to main-process IPC pushes.
@@ -24,8 +26,8 @@ export default function App() {
             <span className="text-slate-400 text-sm font-medium uppercase tracking-wider flex items-center">
               <Monitor size={16} className={`mr-2 ${isAlive ? (battleTag ? 'text-emerald-500' : 'text-amber-500') : 'text-zinc-500'}`} />
               {isAlive
-                ? (battleTag ? 'Game Running' : 'Not Logged In')
-                : 'Game Not Running'}
+                ? (battleTag ? t('app.status.gameRunning') : t('app.status.notLoggedIn'))
+                : t('app.status.gameNotRunning')}
             </span>
             <div className="h-6 w-px bg-[#2A2A35] mx-2" />
 
@@ -41,7 +43,7 @@ export default function App() {
                 }`}
               >
                 <LayoutTemplate size={14} />
-                <span>Desktop App</span>
+                <span>{t('app.mode.desktop')}</span>
               </button>
               <button
                 onClick={() => {
@@ -54,7 +56,7 @@ export default function App() {
                 }`}
               >
                 <Ghost size={14} />
-                <span>In-Game Overlay</span>
+                <span>{t('app.mode.overlay')}</span>
               </button>
             </div>
           </div>
@@ -69,7 +71,7 @@ export default function App() {
               <div className="w-7 h-7 bg-indigo-500 rounded flex items-center justify-center text-white font-bold text-sm">
                 <User size={16} />
               </div>
-              <span className="text-sm font-medium text-white">{battleTag?.fullBattleTag ?? 'PlayerOne'}</span>
+              <span className="text-sm font-medium text-white">{battleTag?.fullBattleTag ?? t('app.playerFallback')}</span>
               <ChevronDown size={14} className="text-slate-500" />
             </button>
           </div>

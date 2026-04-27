@@ -4,6 +4,7 @@ import { useCardDef } from '../hooks/use-card-def';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
 import { clsx } from 'clsx';
 import { CardImagePopover } from './CardImagePopover';
+import { useLocale, useTranslation } from '../i18n';
 
 /**
  * Live "remaining cards in deck" panel — replaces the mock Decklist
@@ -17,34 +18,36 @@ import { CardImagePopover } from './CardImagePopover';
  *   - error                          → small error banner above list
  */
 export function LiveDeckPanel() {
+  const { t } = useTranslation();
   const snapshot = useDeckTrackerStore((s) => s.snapshot);
 
   if (!snapshot || snapshot.phase === 'IDLE') {
-    return <EmptyState message="等待对局开始..." />;
+    return <EmptyState message={t('deckTracker.waitingForMatch')} />;
   }
   if (snapshot.phase === 'PRE_MATCH' && !snapshot.deck) {
-    return <EmptyState message="正在加载对局信息..." />;
+    return <EmptyState message={t('deckTracker.loadingMatch')} />;
   }
   if (!snapshot.deck) {
-    return <EmptyState message="未识别到当前卡组（可在弹窗中手动选择）" />;
+    return <EmptyState message={t('deckTracker.deckNotDetected')} />;
   }
 
   return <DeckPanelInner snapshot={snapshot} />;
 }
 
 function EmptyState({ message }: { message: string }) {
+  const { t } = useTranslation();
   return (
-    <div className="w-[280px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+    <aside className="w-[260px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
       <div className="bg-[#1C1C24] p-3 border-b border-[#2A2A35]">
         <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
-          实时记牌器
+          {t('deckTracker.deck')}
         </div>
-        <div className="text-white font-bold text-sm opacity-70">未在对局中</div>
+        <div className="text-white font-bold text-sm">{t('deckTracker.remainingCards')}</div>
       </div>
       <div className="flex-1 flex items-center justify-center text-slate-500 text-sm px-4 text-center">
         {message}
       </div>
-    </div>
+    </aside>
   );
 }
 
@@ -71,6 +74,7 @@ function compareDeckCopies(
 }
 
 function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
+  const { t } = useTranslation();
   const deck = snapshot.deck!;
 
   const remainingByCardId = useMemo(() => {
@@ -169,63 +173,75 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   }, []);
 
   return (
-    <div className="w-[280px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+    <aside className="w-[260px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
       <div className="bg-[#1C1C24] p-3 border-b border-[#2A2A35]">
         <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
-          实时记牌器
+          {t('deckTracker.deck')}
         </div>
-        <div className="text-white font-bold flex justify-between items-center">
-          <span className="truncate max-w-[180px]" title={deck.name || '未命名卡组'}>
-            {deck.name || '未命名卡组'}
+        <div className="text-white font-bold text-sm flex justify-between items-center gap-3">
+          <span className="truncate" title={deck.name || t('deckTracker.unnamedDeck')}>
+            {deck.name || t('deckTracker.unnamedDeck')}
           </span>
-          <span className="text-orange-400 text-sm">
+          <span className="text-orange-400 text-xs shrink-0">
             {totalRemaining} / {totalOriginal}
           </span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-[#2A2A35] scrollbar-track-transparent">
-        {copies.map((copy) => (
-          <CardCopyRow
-            key={copy.copyKey}
-            copyKey={copy.copyKey}
-            cardId={copy.cardId}
-            exiting={exitingCopyKeys.has(copy.copyKey)}
-            onAnimationEnd={handleAnimationEnd}
-            onMouseEnter={handleRowMouseEnter}
-            onMouseLeave={handleRowMouseLeave}
-          />
-        ))}
-        {/* Render exiting rows (with animation class, invisible to copies list) */}
-        {[...exitingCopyKeys]
-          .filter((key) => !copies.some((c) => c.copyKey === key))
-          .map((copyKey) => {
-            const cardId = copyKey.split('#')[0]!;
-            return (
+        <section>
+          <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            {t('deckTracker.remaining')}
+          </h3>
+          <div className="space-y-1">
+            {copies.map((copy) => (
               <CardCopyRow
-                key={copyKey}
-                copyKey={copyKey}
-                cardId={cardId}
-                exiting={true}
+                key={copy.copyKey}
+                copyKey={copy.copyKey}
+                cardId={copy.cardId}
+                exiting={exitingCopyKeys.has(copy.copyKey)}
                 onAnimationEnd={handleAnimationEnd}
                 onMouseEnter={handleRowMouseEnter}
                 onMouseLeave={handleRowMouseLeave}
               />
-            );
-          })}
+            ))}
+            {/* Render exiting rows (with animation class, invisible to copies list) */}
+            {[...exitingCopyKeys]
+              .filter((key) => !copies.some((c) => c.copyKey === key))
+              .map((copyKey) => {
+                const cardId = copyKey.split('#')[0]!;
+                return (
+                  <CardCopyRow
+                    key={copyKey}
+                    copyKey={copyKey}
+                    cardId={cardId}
+                    exiting={true}
+                    onAnimationEnd={handleAnimationEnd}
+                    onMouseEnter={handleRowMouseEnter}
+                    onMouseLeave={handleRowMouseLeave}
+                  />
+                );
+              })}
+          </div>
+        </section>
         {deck.extras.length > 0 && (
           <div className="mt-3 px-2 py-1 text-xs text-blue-300/80 border-t border-[#2A2A35] pt-2">
-            +{deck.extras.reduce((s, c) => s + c.count, 0)} 张额外卡牌（生成/偷取）
+            {t('deckTracker.extraCards', {
+              count: deck.extras.reduce((s, c) => s + c.count, 0),
+            })}
           </div>
         )}
       </div>
 
       <div className="bg-[#1C1C24] p-3 border-t border-[#2A2A35] flex justify-between items-center text-xs text-slate-400">
         <div>
-          手牌 {snapshot.friendlyHand.length} · 对手 {snapshot.opposingHandCount}
+          {t('deckTracker.handAndOpponent', {
+            hand: snapshot.friendlyHand.length,
+            opponent: snapshot.opposingHandCount,
+          })}
         </div>
         <div className="text-orange-500/80 font-medium">
-          {snapshot.error ? '错误' : 'LIVE'}
+          {snapshot.error ? t('deckTracker.error') : t('deckTracker.live')}
         </div>
       </div>
 
@@ -236,7 +252,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
           onClose={handleRowMouseLeave}
         />
       )}
-    </div>
+    </aside>
   );
 }
 
@@ -245,6 +261,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
  * keyed by cardId with name/cost for sorting.
  */
 function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: number }> {
+  const locale = useLocale();
   const [defs, setDefs] = useState<Map<string, { name: string; cost?: number }>>(
     () => new Map(),
   );
@@ -265,7 +282,7 @@ function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: numb
       };
     }
 
-    void Promise.all(ids.map(async (id) => [id, await api.findById(id)] as const)).then(
+    void Promise.all(ids.map(async (id) => [id, await api.findById(id, locale)] as const)).then(
       (rows) => {
         if (!alive) return;
         const next = new Map<string, { name: string; cost?: number }>();
@@ -287,7 +304,7 @@ function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: numb
     return () => {
       alive = false;
     };
-  }, [cardIds]);
+  }, [cardIds, locale]);
 
   return defs;
 }
@@ -320,7 +337,7 @@ function CardCopyRow({
       ref={ref}
       data-testid="card-copy-row"
       className={clsx(
-        'flex items-center px-2 py-1.5 rounded text-sm border-b border-[#1C1C24] last:border-b-0 transition-colors',
+        'flex items-center px-2 py-1.5 rounded text-sm border-b border-[#1C1C24] last:border-b-0 transition-colors hover:bg-[#1C1C24]',
         exiting ? 'animate-deck-exit' : '',
       )}
       style={exiting ? undefined : undefined}

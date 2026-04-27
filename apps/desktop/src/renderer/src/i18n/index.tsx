@@ -39,7 +39,7 @@ interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue>({
   locale: 'en-US',
   preference: DEFAULT_LANGUAGE_PREFERENCE,
-  t: (key) => key,
+  t: (key, values) => translate(defaultMessages, 'en-US', key, values),
 });
 
 interface I18nProviderProps extends PropsWithChildren {

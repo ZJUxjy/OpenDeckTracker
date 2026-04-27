@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { CardDef } from '@hdt/hearthdb';
+import { useLocale } from '../i18n';
 
 const CARD_CACHE = new Map<string, CardDef | null>();
 const PENDING = new Map<string, Promise<CardDef | null>>();
+
+function cacheKey(cardId: string, locale: string): string {
+  return `${locale}:${cardId}`;
+}
 
 /**
  * Look up a card definition by cardId via the IPC-exposed
@@ -16,8 +21,10 @@ const PENDING = new Map<string, Promise<CardDef | null>>();
  *   - `CardDef` on success.
  */
 export function useCardDef(cardId: string): CardDef | null | undefined {
+  const locale = useLocale();
+  const key = cacheKey(cardId, locale);
   const [def, setDef] = useState<CardDef | null | undefined>(() =>
-    CARD_CACHE.get(cardId),
+    CARD_CACHE.get(key),
   );
 
   useEffect(() => {
@@ -25,23 +32,23 @@ export function useCardDef(cardId: string): CardDef | null | undefined {
       setDef(null);
       return;
     }
-    if (CARD_CACHE.has(cardId)) {
-      setDef(CARD_CACHE.get(cardId));
+    if (CARD_CACHE.has(key)) {
+      setDef(CARD_CACHE.get(key));
       return;
     }
-    let pending = PENDING.get(cardId);
+    let pending = PENDING.get(key);
     if (!pending) {
       const api = window.hdt?.cards;
       if (!api) {
         setDef(null);
         return;
       }
-      pending = api.findById(cardId).then((result) => {
-        CARD_CACHE.set(cardId, result);
-        PENDING.delete(cardId);
+      pending = api.findById(cardId, locale).then((result) => {
+        CARD_CACHE.set(key, result);
+        PENDING.delete(key);
         return result;
       });
-      PENDING.set(cardId, pending);
+      PENDING.set(key, pending);
     }
     let alive = true;
     void pending.then((result) => {
@@ -50,7 +57,7 @@ export function useCardDef(cardId: string): CardDef | null | undefined {
     return () => {
       alive = false;
     };
-  }, [cardId]);
+  }, [cardId, key, locale]);
 
   return def;
 }

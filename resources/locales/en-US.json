@@ -79,10 +79,15 @@
     "played": "Played",
     "revealed": "Revealed",
     "graveyard": "Graveyard",
-    "empty": "No opponent cards tracked yet"
+    "empty": "No opponent cards revealed"
   },
   "decklist": {
     "title": "Decklist",
+    "activeDeck": "Active Deck",
+    "deckPreview": "Deck Preview",
+    "options": "Options",
+    "export": "Export",
+    "syncing": "Syncing...",
     "empty": "No cards"
   },
   "cardImage": {
