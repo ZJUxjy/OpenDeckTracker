@@ -6,6 +6,8 @@ import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
 import { useTranslation } from './i18n';
 
+import { useHearthWatcherStatus } from './hooks/use-hearthwatcher-status';
+
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,6 +17,8 @@ export default function App() {
   // Subscribe the global deck-tracker store to main-process IPC pushes.
   // Mounted at App root so the subscription survives all route changes.
   useDeckTracker();
+  // Activate hearthwatcher diagnostics subscription (status displayed in Dashboard).
+  useHearthWatcherStatus();
 
   return (
     <div className="flex h-screen bg-[#0E0E14] text-slate-300 font-sans overflow-hidden">
