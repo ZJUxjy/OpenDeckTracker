@@ -68,4 +68,4 @@
   > 由 verify-hearthmirror-on-real-hs 兑现：见 [docs/spikes/0003-hearthmirror-reflection-runtime-validation.md](../../../docs/spikes/0003-hearthmirror-reflection-runtime-validation.md)。
   > 结果：MonoRuntime::init() 因 PE 读取 1MB 上限而崩溃 (ACCESS_VIOLATION)，12 方法全部 blocked。修复方案见 spike R-1。
   > 已由 fix-hearthmirror-pe-read-cap 解封（commit `120d33e`）：见 docs/spikes/0003-*.md ## Run 2（待 Hearthstone 可用时补录）
-- [ ] 7.2 启动 `pnpm dev`，开 DevTools console 跑 `await window.hdt.hearthmirror.getBattleTag()`，确认非 null
+- [x] 7.2 启动 `pnpm dev`，开 DevTools console 跑 `await window.hdt.hearthmirror.getBattleTag()`，确认非 null **VERIFIED: getBattleTag() returns 纯金的小铁人#5630**

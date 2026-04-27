@@ -220,12 +220,13 @@
 
 ## 16. 提交 + OpenSpec 收口
 
-- [ ] 16.1 拆 commit（推荐 4 个）：
+- [x] 16.1 拆 commit（推荐 4 个）：
       - `feat(hearthmirror): close R-17 — getDecks via custom_map`
       - `feat(hearthmirror): wire getMatchInfo/getGameType/getServerInfo
         through ServiceLocator`
       - `feat(hearthmirror): in-match observability (board/hand/deck/
         secrets/choices/mulligan + entity/tag infrastructure)`
       - `docs(spike-0003,openspec): record Run 11 — 13 OK after Phase 5+7`
-- [ ] 16.2 archive `add-hearthmirror-decks-and-in-match-readers`
+      **RESOLVED: all implementation already committed on main (a811273, ca30358, b004386, b5f4365).**
+- [x] 16.2 archive `add-hearthmirror-decks-and-in-match-readers`
       （`openspec-archive-change` 流程，独立于 R-16 的归档轨道）
