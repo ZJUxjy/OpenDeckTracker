@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { access, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { HearthWatcherDiagnostic } from './types/diagnostics';
@@ -28,17 +29,33 @@ export async function discoverPowerLog(
   }
 
   const env = options.env ?? process.env;
-  const searchedPaths = standardPowerLogPaths(env);
+  let searchedPaths = standardPowerLogPaths(env);
+
   for (const candidate of searchedPaths) {
     if (await exists(candidate)) {
       return { powerLogPath: candidate, searchedPaths, diagnostic: null };
     }
   }
 
+  // Detect the Hearthstone install directory from the running process
+  // and add its Logs/ path. This covers non-standard installs (e.g.
+  // Battle.net CN on a custom drive).
+  const hsInstallDir = detectHearthstoneInstallDir();
+  if (hsInstallDir !== null) {
+    const installLogPath = join(hsInstallDir, 'Logs', 'Power.log');
+    searchedPaths = [...searchedPaths, installLogPath];
+    if (await exists(installLogPath)) {
+      return { powerLogPath: installLogPath, searchedPaths, diagnostic: null };
+    }
+  }
+
   // Hearthstone on some installs (especially Battle.net CN) writes to
   // timestamped subdirectories under Logs/ (e.g. Logs/Hearthstone_2026_04_27_15_34_09/Power.log).
   // Scan parent log dirs for the most recent one.
-  const scannedPaths = await scanTimestampedLogDirs(env, searchedPaths, exists);
+  if (hsInstallDir !== null) {
+    searchedPaths = [...searchedPaths, join(hsInstallDir, 'Logs', 'Power.log')];
+  }
+  const scannedPaths = await scanTimestampedLogDirs(env, searchedPaths, exists, hsInstallDir);
   if (scannedPaths.length > 0) {
     return {
       powerLogPath: scannedPaths[0]!,
@@ -69,6 +86,29 @@ export function standardPowerLogPaths(env: NodeJS.ProcessEnv = process.env): str
 }
 
 /**
+ * Locate the running Hearthstone process and return its install directory.
+ * Uses WMIC on Windows; returns `null` on any failure.
+ */
+function detectHearthstoneInstallDir(): string | null {
+  if (process.platform !== 'win32') return null;
+  try {
+    const out = execSync(
+      'wmic process where "name=\'Hearthstone.exe\'" get ExecutablePath /format:list',
+      { encoding: 'utf8', timeout: 3000 },
+    );
+    const match = out.match(/ExecutablePath=(.+)/i);
+    if (match && match[1]) {
+      const exe = match[1].trim();
+      // exe is .../Hearthstone/Hearthstone.exe → parent is install dir
+      return exe.replace(/[\\/]Hearthstone\.exe$/i, '');
+    }
+  } catch {
+    // WMIC not available or process not found — best-effort.
+  }
+  return null;
+}
+
+/**
  * For each unique *parent* Logs directory among `searchedPaths`, scan for
  * `Hearthstone_*` subdirectories and collect their `Power.log` paths, sorted
  * newest-first by directory name (which includes an ISO-like timestamp).
@@ -77,6 +117,7 @@ async function scanTimestampedLogDirs(
   env: NodeJS.ProcessEnv,
   searchedPaths: string[],
   exists: (path: string) => Promise<boolean>,
+  hsInstallDir: string | null,
 ): Promise<string[]> {
   // Derive unique parent directories from the standard paths.
   const logDirs = new Set<string>();
@@ -85,9 +126,11 @@ async function scanTimestampedLogDirs(
     const parent = p.replace(/[\\/]Power\.log$/i, '');
     logDirs.add(parent);
   }
-  // Also check the game install's Logs if we can infer it from program paths.
   if (env['ProgramFiles(x86)']) {
     logDirs.add(join(env['ProgramFiles(x86)'], 'Hearthstone', 'Logs'));
+  }
+  if (hsInstallDir !== null) {
+    logDirs.add(join(hsInstallDir, 'Logs'));
   }
 
   const results: string[] = [];
