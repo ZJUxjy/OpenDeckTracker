@@ -16,15 +16,18 @@ import {
   type InterpolationValues,
   type MessagesByLocale,
 } from './messages';
+import { useI18nStore } from './i18n-store';
+import enUS from '../../../../../../resources/locales/en-US.json';
+import zhCN from '../../../../../../resources/locales/zh-CN.json';
 
 export { translate };
 export type { InterpolationValues, MessagesByLocale };
 export type { AppLocale, LanguagePreference };
 export { toHearthstoneLocale, resolveAppLocale } from './locale';
 
-const EMPTY_MESSAGES: MessagesByLocale = {
-  'en-US': {},
-  'zh-CN': {},
+export const defaultMessages: MessagesByLocale = {
+  'en-US': enUS,
+  'zh-CN': zhCN,
 };
 
 interface I18nContextValue {
@@ -47,18 +50,20 @@ interface I18nProviderProps extends PropsWithChildren {
 
 export function I18nProvider({
   children,
-  messages = EMPTY_MESSAGES,
-  preference = DEFAULT_LANGUAGE_PREFERENCE,
+  messages = defaultMessages,
+  preference,
   systemLanguage = getSystemLanguage(),
 }: I18nProviderProps) {
-  const locale = resolveAppLocale(preference, systemLanguage);
+  const storePreference = useI18nStore((state) => state.languagePreference);
+  const resolvedPreference = preference ?? storePreference ?? DEFAULT_LANGUAGE_PREFERENCE;
+  const locale = resolveAppLocale(resolvedPreference, systemLanguage);
   const value = useMemo<I18nContextValue>(
     () => ({
       locale,
-      preference,
+      preference: resolvedPreference,
       t: (key, values) => translate(messages, locale, key, values),
     }),
-    [locale, messages, preference],
+    [locale, messages, resolvedPreference],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
