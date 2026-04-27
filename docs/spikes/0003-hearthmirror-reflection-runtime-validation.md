@@ -1047,3 +1047,40 @@ subscribed yet at app boot still see the state on their first
 
 **Status**: Automated verification complete. Manual smoke in a real match
 (task 5.2) deferred to next in-game testing session.
+
+## Run 14
+
+### Environment
+
+| Field | Value |
+|---|---|
+| OS | Microsoft Windows NT 10.0.26200.0 (x64) |
+| Hearthstone version | 2022.3.62.7762112 |
+| mono-2.0-bdwgc.dll SHA1 | `2DEF7993A57EE783AC046E816A5B78FE3488BE90` |
+| Test date (UTC) | 2026-04-27 09:06 |
+
+### Results
+
+| Method | Tier | Tested | Status | Value | Error | Elapsed (ms) |
+|---|---|---|---|---|---|---|
+| getBattleTag | T1 | tested | ok | name=τ║»ΘçæτÜäσ░ÅΘôüΣ║║, full=τ║»ΘçæτÜäσ░ÅΘôüΣ║║#5630 | - | 92 |
+| getAccountId | T1 | tested | ok | hi=72057594037927936, lo=206001158 | - | 0 |
+| getMedalInfo | T1 | tested | ok | standard{lvl=37, stars=1, streak=2, season=150, wins=58, best=37}, wild{lvl=1... | - | 5 |
+| getMatchInfo | T1 | tested | ok | game=1, fmt=1, mission=268, local{id=0, side=1, name="τ║»ΘçæτÜäσ░ÅΘôüΣ║║", cb... | - | 90 |
+| getGameType | T2 | tested | ok | game=Some(1), fmt=Some(1), mission=Some(268) | - | 0 |
+| isSpectating | T2 | tested | ok | false | - | 0 |
+| isGameOver | T2 | tested | ok | false | - | 0 |
+| isMulligan | ? | tested | null | None | - | 87 |
+| getServerInfo | T1 | tested | null | null | - | 178 |
+| getBattlegroundRatingInfo | T1 | tested | null | null | - | 107 |
+| getDecks | T1 | tested | ok | 9 decks: ["ΘéúΣ╕¬τö╖Σ║║" (19 cards), "µ│òµ£»τ₧Ä" (18 cards), "Θ╛Öσ╛╖" (19 car... | - | 85 |
+| getEditedDeck | ? | tested | null | null | - | 0 |
+| getArenaDeck | T2 | tested | null | null | - | 88 |
+| getCollection | T1 | tested | ok | 15618 cards | - | 12729 |
+| getBoardState | ? | tested | ok | friendly=1 ([""]), opposing=1 ([""]) | - | 87 |
+| getHandState | ? | tested | ok | friendly=4 (["EDR_000", "EDR_270", "TIME_702", "CATA_140"]), opp_count=6 | - | 59 |
+| getDeckState | ? | tested | ok | friendly_deck=26, opp_deck_count=25 | - | 195 |
+| getOpponentSecrets | ? | tested | ok | count=0, secrets=[] | - | 31 |
+| getChoices | ? | tested | ok | mulligan=None, general=None | - | 0 |
+
+
