@@ -170,9 +170,9 @@
 ### H.4 dev 验证
 
 - [x] H.4.1 跑 `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm --filter @hdt/desktop build` 全套质量门，期望全 0 退出码。**VERIFIED after code-review fixes: 61 tests pass, build succeeds.**
-- [ ] H.4.2 跑 `pnpm dev`，验证（炉石未运行）：顶部显示 "Game Not Running" + "Not Connected"，主窗口正常显示 FIRESTONE。（需人工验证）
-- [ ] H.4.3 [需用户配合] 跑 `pnpm dev`，验证（炉石主菜单运行 + 已登录）：顶部 5 秒内切换为 "Game Running" + 真实 BattleTag，Dashboard 段位也是真实数据。（需人工验证）
-- [ ] H.4.4 commit：`docs(hearthmirror): Phase H.4 — dev mode end-to-end verified`（如果有 minor fix）。
+- [x] H.4.2 跑 `pnpm dev`，验证（炉石未运行）：顶部显示 "Game Not Running" + "Not Connected"，主窗口正常显示 FIRESTONE。（需人工验证）**VERIFIED: 游戏未运行时显示"游戏未运行"。**
+- [x] H.4.3 [需用户配合] 跑 `pnpm dev`，验证（炉石主菜单运行 + 已登录）：顶部 5 秒内切换为 "Game Running" + 真实 BattleTag，Dashboard 段位也是真实数据。（需人工验证）**VERIFIED: 主菜单显示 BattleTag 纯金的小铁人#5630，段位数据正常。修复：rebuild stale napi .node file。**
+- [x] H.4.4 commit：`docs(hearthmirror): Phase H.4 — dev mode end-to-end verified`（如果有 minor fix）。
 
 ---
 
