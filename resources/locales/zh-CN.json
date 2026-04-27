@@ -1,0 +1,99 @@
+{
+  "app": {
+    "status": {
+      "gameRunning": "游戏运行中",
+      "notLoggedIn": "未登录",
+      "gameNotRunning": "游戏未运行"
+    },
+    "mode": {
+      "desktop": "桌面应用",
+      "overlay": "游戏内覆盖层"
+    },
+    "playerFallback": "玩家"
+  },
+  "sidebar": {
+    "deckTracker": "记牌器",
+    "stats": "统计",
+    "collection": "收藏",
+    "settings": "设置"
+  },
+  "settings": {
+    "title": "设置",
+    "subtitle": "配置你的使用体验和记牌器行为。",
+    "general": "通用",
+    "tracker": "记牌器",
+    "overlay": "游戏内覆盖层",
+    "notifications": "通知",
+    "data": "数据与同步",
+    "audio": "音频",
+    "appBehavior": "应用行为",
+    "appBehaviorDescription": "管理应用如何启动和运行。",
+    "language": "语言",
+    "languageDescription": "选择应用显示语言。",
+    "languageSystem": "跟随系统",
+    "languageEnglish": "英语",
+    "languageChinese": "简体中文",
+    "autoStart": "开机自启动",
+    "autoStartDescription": "电脑启动时自动启动应用",
+    "minimizeToTray": "最小化到系统托盘",
+    "minimizeToTrayDescription": "关闭窗口后继续在后台运行",
+    "hardwareAcceleration": "硬件加速",
+    "hardwareAccelerationDescription": "使用 GPU 渲染界面。若出现卡顿可关闭。",
+    "deckTrackerTitle": "记牌器",
+    "deckTrackerDescription": "配置对局中显示哪些信息。",
+    "showPlayerTracker": "显示我方记牌器",
+    "showPlayerTrackerDescription": "显示牌库中剩余卡牌",
+    "showOpponentTracker": "显示对手记牌器",
+    "showOpponentTrackerDescription": "追踪对手打出的卡牌",
+    "secretsHelper": "奥秘助手",
+    "secretsHelperDescription": "对手打出奥秘时显示可能的奥秘",
+    "underConstruction": "功能建设中",
+    "underConstructionDescription": "这些设置会在后续更新中提供。请稍后再查看。"
+  },
+  "deckTracker": {
+    "deck": "卡组",
+    "remainingCards": "剩余卡牌",
+    "remaining": "剩余",
+    "waitingForMatch": "等待对局开始...",
+    "loadingMatch": "正在加载对局信息...",
+    "deckNotDetected": "未识别到当前卡组。请在弹窗中选择。",
+    "unnamedDeck": "未命名卡组",
+    "extraCards": "+{count} 张额外卡牌（生成/偷取）",
+    "handAndOpponent": "手牌 {hand} · 对手 {opponent}",
+    "error": "错误",
+    "live": "LIVE",
+    "hearthstoneNotRunning": "炉石传说未运行",
+    "matchNotDetected": "未识别到对局"
+  },
+  "deckSelect": {
+    "title": "选择当前对局使用的卡组",
+    "description": "未能自动识别。请从下方挑选你正在使用的卡组。",
+    "empty": "没有保存的卡组。请先在游戏内创建一套卡组。",
+    "unnamedDeck": "未命名卡组",
+    "cancel": "取消",
+    "confirm": "确认选择",
+    "filterLabel": "按职业筛选"
+  },
+  "opponent": {
+    "title": "对手",
+    "played": "已打出",
+    "revealed": "已揭示",
+    "graveyard": "墓地",
+    "empty": "尚未追踪到对手卡牌"
+  },
+  "decklist": {
+    "title": "卡组列表",
+    "empty": "没有卡牌"
+  },
+  "cardImage": {
+    "loading": "正在加载卡牌图片...",
+    "unavailable": "卡牌图片不可用",
+    "close": "关闭"
+  },
+  "generic": {
+    "unknown": "未知",
+    "none": "无",
+    "confirm": "确认",
+    "cancel": "取消"
+  }
+}

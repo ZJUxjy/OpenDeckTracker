@@ -1,0 +1,99 @@
+{
+  "app": {
+    "status": {
+      "gameRunning": "Game Running",
+      "notLoggedIn": "Not Logged In",
+      "gameNotRunning": "Game Not Running"
+    },
+    "mode": {
+      "desktop": "Desktop App",
+      "overlay": "In-Game Overlay"
+    },
+    "playerFallback": "PlayerOne"
+  },
+  "sidebar": {
+    "deckTracker": "Deck Tracker",
+    "stats": "Stats",
+    "collection": "Collection",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Configure your experience and tracker behavior.",
+    "general": "General",
+    "tracker": "Deck Tracker",
+    "overlay": "In-Game Overlay",
+    "notifications": "Notifications",
+    "data": "Data & Sync",
+    "audio": "Audio",
+    "appBehavior": "App Behavior",
+    "appBehaviorDescription": "Manage how the application launches and runs.",
+    "language": "Language",
+    "languageDescription": "Choose the display language for the app.",
+    "languageSystem": "System",
+    "languageEnglish": "English",
+    "languageChinese": "Simplified Chinese",
+    "autoStart": "Auto-start on Boot",
+    "autoStartDescription": "Launch the app when your computer starts",
+    "minimizeToTray": "Minimize to System Tray",
+    "minimizeToTrayDescription": "Keep running in background when closed",
+    "hardwareAcceleration": "Hardware Acceleration",
+    "hardwareAccelerationDescription": "Use GPU to render UI. Disable if you experience stuttering.",
+    "deckTrackerTitle": "Deck Tracker",
+    "deckTrackerDescription": "Configure what information is shown during matches.",
+    "showPlayerTracker": "Show Player Tracker",
+    "showPlayerTrackerDescription": "Display remaining cards in your deck",
+    "showOpponentTracker": "Show Opponent Tracker",
+    "showOpponentTrackerDescription": "Track cards played by your opponent",
+    "secretsHelper": "Secrets Helper",
+    "secretsHelperDescription": "Display possible secrets when opponent plays one",
+    "underConstruction": "Section Under Construction",
+    "underConstructionDescription": "These settings will be available in the next update. Please check back later."
+  },
+  "deckTracker": {
+    "deck": "Deck",
+    "remainingCards": "Remaining Cards",
+    "remaining": "Remaining",
+    "waitingForMatch": "Waiting for match to start...",
+    "loadingMatch": "Loading match information...",
+    "deckNotDetected": "Current deck not detected. Select it in the dialog.",
+    "unnamedDeck": "Unnamed Deck",
+    "extraCards": "+{count} extra cards (created/stolen)",
+    "handAndOpponent": "Hand {hand} · Opponent {opponent}",
+    "error": "Error",
+    "live": "LIVE",
+    "hearthstoneNotRunning": "Hearthstone not running",
+    "matchNotDetected": "Match not detected"
+  },
+  "deckSelect": {
+    "title": "Select the deck for this match",
+    "description": "Automatic detection failed. Choose the deck you are currently using.",
+    "empty": "No saved decks. Create a deck in Hearthstone first.",
+    "unnamedDeck": "Unnamed Deck",
+    "cancel": "Cancel",
+    "confirm": "Confirm Selection",
+    "filterLabel": "Filter by class"
+  },
+  "opponent": {
+    "title": "Opponent",
+    "played": "Played",
+    "revealed": "Revealed",
+    "graveyard": "Graveyard",
+    "empty": "No opponent cards tracked yet"
+  },
+  "decklist": {
+    "title": "Decklist",
+    "empty": "No cards"
+  },
+  "cardImage": {
+    "loading": "Loading card image...",
+    "unavailable": "Card image unavailable",
+    "close": "Close"
+  },
+  "generic": {
+    "unknown": "Unknown",
+    "none": "None",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  }
+}
