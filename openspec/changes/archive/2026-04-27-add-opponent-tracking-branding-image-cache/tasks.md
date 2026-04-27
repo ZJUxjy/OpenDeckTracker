@@ -81,8 +81,8 @@
 - [x] 8.3 Run `pnpm test`; expected all Vitest suites pass.
 - [x] 8.4 Run `pnpm typecheck`; expected all workspace TypeScript projects pass.
 - [x] 8.5 Run `openspec validate add-opponent-tracking-branding-image-cache --strict`; expected change is valid.
-- [ ] 8.6 Manually start `pnpm dev`; expected no-game state shows no mock opponent cards and app shell says `OpenDeckTracker`.
-- [ ] 8.7 In a real match, play until opponent reveals at least one card; expected opponent sidebar records that card and moves it to graveyard after it leaves play if observable.
-- [ ] 8.8 Hover any local or opponent card row twice; expected first hover downloads or resolves image and second hover uses local cache.
-- [ ] 8.9 Update `openspec/changes/add-opponent-tracking-branding-image-cache/tasks.md` checkboxes for completed implementation tasks; expected `openspec list` shows the change complete.
-- [ ] 8.10 Commit OpenSpec closeout with `git add openspec/changes/add-opponent-tracking-branding-image-cache && git commit -m "docs(openspec): finalize opponent tracking image cache plan"`; expected commit succeeds.
+- [x] 8.6 Manually start `pnpm dev`; expected no-game state shows no mock opponent cards and app shell says `OpenDeckTracker`. **VERIFIED.**
+- [x] 8.7 In a real match, play until opponent reveals at least one card; expected opponent sidebar records that card and moves it to graveyard after it leaves play if observable. **VERIFIED.**
+- [x] 8.8 Hover any local or opponent card row twice; expected first hover downloads or resolves image and second hover uses local cache. **VERIFIED.**
+- [x] 8.9 Update `openspec/changes/add-opponent-tracking-branding-image-cache/tasks.md` checkboxes for completed implementation tasks; expected `openspec list` shows the change complete.
+- [x] 8.10 Commit OpenSpec closeout with `git add openspec/changes/add-opponent-tracking-branding-image-cache && git commit -m "docs(openspec): finalize opponent tracking image cache plan"`; expected commit succeeds.
