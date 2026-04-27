@@ -5,6 +5,7 @@ import {
   type DeckTrackerSnapshot,
 } from '@hdt/core';
 import { getHearthMirror } from './hearthmirror';
+import { recordCompletedMatch } from './stats-host';
 
 /**
  * Per-app session DeckTracker host.
@@ -58,7 +59,14 @@ export function startDeckTracker(): void {
     broadcast('deck-tracker:event', { type: event.type, snapshot: event.snapshot });
   });
   tracker.on('match-ended', (event: DeckTrackerEvent) => {
-    broadcast('deck-tracker:event', { type: event.type, snapshot: event.snapshot });
+    if (event.completedMatch !== undefined) {
+      recordCompletedMatch(event.completedMatch);
+    }
+    broadcast('deck-tracker:event', {
+      type: event.type,
+      snapshot: event.snapshot,
+      ...(event.completedMatch !== undefined ? { completedMatch: event.completedMatch } : {}),
+    });
   });
   tracker.on('error', (event: DeckTrackerEvent) => {
     broadcast('deck-tracker:event', {
@@ -81,6 +89,10 @@ export function startDeckTracker(): void {
     tracker?.stop();
     tracker = null;
   });
+}
+
+export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {
+  return tracker?.getSnapshot() ?? null;
 }
 
 export function registerDeckTrackerIpc(): void {

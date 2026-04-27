@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
-import type { DeckTrackerEvent, DeckTrackerSnapshot } from '@hdt/core';
+import type {
+  DeckTrackerEvent,
+  DeckTrackerSnapshot,
+  MatchHistoryRecord,
+  StatsSummary,
+  StatsTimeFilter,
+} from '@hdt/core';
 import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 import type {
   AccountId,
@@ -48,6 +54,12 @@ const api = {
       ipcRenderer.invoke('deck:encode', blueprint),
     decode: (deckstring: string): Promise<DeckBlueprint> =>
       ipcRenderer.invoke('deck:decode', deckstring),
+  },
+  stats: {
+    getSummary: (filter: StatsTimeFilter): Promise<StatsSummary> =>
+      ipcRenderer.invoke('stats:get-summary', filter),
+    listRecent: (filter: StatsTimeFilter, limit: number): Promise<MatchHistoryRecord[]> =>
+      ipcRenderer.invoke('stats:list-recent', filter, limit),
   },
   hearthmirror: {
     isAlive: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isAlive'),

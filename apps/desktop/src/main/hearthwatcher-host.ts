@@ -4,6 +4,9 @@ import {
   type HearthWatcherDiagnostic,
   type PowerEvent,
 } from '@hdt/hearthwatcher';
+import { getLatestDeckTrackerSnapshot } from './deck-tracker';
+import { createPowerMatchRecorder } from './power-match-recorder';
+import { recordCompletedMatch } from './stats-host';
 
 let watcher: ReturnType<typeof createHearthWatcher> | null = null;
 let latestStatus: HearthWatcherDiagnostic | null = null;
@@ -19,11 +22,17 @@ function broadcast(channel: string, payload: unknown): void {
 export function startHearthWatcher(): void {
   if (watcher !== null) return;
   watcher = createHearthWatcher();
+  const matchRecorder = createPowerMatchRecorder({
+    getSnapshot: getLatestDeckTrackerSnapshot,
+    record: recordCompletedMatch,
+  });
   watcher.onStatus((status) => {
+    logHearthWatcherStatus(status);
     latestStatus = status;
     broadcast('hearthwatcher:status', status);
   });
   watcher.onEvent((event: PowerEvent) => {
+    matchRecorder.handleEvent(event);
     broadcast('hearthwatcher:event', event);
   });
 
@@ -40,6 +49,27 @@ export function startHearthWatcher(): void {
     watcher?.stop();
     watcher = null;
   });
+}
+
+function logHearthWatcherStatus(status: HearthWatcherDiagnostic): void {
+  const details = {
+    kind: status.kind,
+    message: status.message,
+    path: status.path,
+    recordType: status.recordType,
+    line: status.line,
+    searchedPathCount: status.searchedPaths?.length,
+    searchedPaths: status.searchedPaths,
+    droppedLines: status.droppedLines,
+    timestamp: new Date(status.timestamp).toISOString(),
+  };
+
+  if (status.kind === 'missing-log' || status.kind === 'parser-error') {
+    console.warn('[hearthwatcher] status', details);
+    return;
+  }
+
+  console.info('[hearthwatcher] status', details);
 }
 
 export function registerHearthWatcherIpc(): void {

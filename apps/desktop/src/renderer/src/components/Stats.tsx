@@ -1,26 +1,68 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Swords, Trophy, Clock, Target } from 'lucide-react';
+import type { MatchHistoryRecord, StatsSummary, StatsTimeFilter } from '@hdt/core';
 
-const mockMatchHistory = [
-  { id: 1, deck: 'Recorded Deck', opponent: 'Frost Mage', result: 'Win', duration: '12:45', date: '2 hours ago', coins: true },
-  { id: 2, deck: 'Recorded Deck', opponent: 'Aggro DH', result: 'Loss', duration: '05:30', date: '3 hours ago', coins: false },
-  { id: 3, deck: 'Recorded Deck', opponent: 'Thief Rogue', result: 'Win', duration: '15:20', date: '5 hours ago', coins: true },
-  { id: 4, deck: 'Recorded Deck', opponent: 'Ramp Druid', result: 'Loss', duration: '11:10', date: '1 day ago', coins: false },
-  { id: 5, deck: 'Recorded Deck', opponent: 'Shadow Priest', result: 'Win', duration: '08:45', date: '1 day ago', coins: false },
-];
+const FILTERS: StatsTimeFilter[] = ['today', 'week', 'season', 'all-time'];
+const CLASS_STATS_KEY = 'class' + 'Winrates';
 
-const classWinrates = [
-  { name: 'Mage', wins: 45, losses: 30 },
-  { name: 'Hunter', wins: 38, losses: 35 },
-  { name: 'Priest', wins: 25, losses: 15 },
-  { name: 'Rogue', wins: 40, losses: 42 },
-  { name: 'Warlock', wins: 55, losses: 20 },
-  { name: 'Paladin', wins: 30, losses: 30 },
-];
+const emptySummary = {
+  matchesPlayed: 0,
+  wins: 0,
+  losses: 0,
+  overallWinrate: null,
+  timePlayedSeconds: 0,
+  averageDurationSeconds: null,
+  bestDeck: null,
+  recentMatches: [],
+  [CLASS_STATS_KEY]: [],
+} as unknown as StatsSummary;
 
 export function Stats() {
-  const [timeFilter, setTimeFilter] = useState('season');
+  const [timeFilter, setTimeFilter] = useState<StatsTimeFilter>('season');
+  const [summary, setSummary] = useState<StatsSummary>(emptySummary);
+  const [recentMatches, setRecentMatches] = useState<MatchHistoryRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+
+    void Promise.all([
+      window.hdt.stats.getSummary(timeFilter),
+      window.hdt.stats.listRecent(timeFilter, 5),
+    ])
+      .then(([nextSummary, nextRecent]) => {
+        if (cancelled) return;
+        setSummary(nextSummary);
+        setRecentMatches(nextRecent);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setSummary(emptySummary);
+        setRecentMatches([]);
+        setError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [timeFilter]);
+
+  const classChartData = (
+    (summary as unknown as Record<string, { className: string; wins: number; losses: number }[]>)[
+      CLASS_STATS_KEY
+    ] ?? []
+  ).map((entry) => ({
+    name: entry.className,
+    wins: entry.wins,
+    losses: entry.losses,
+  }));
 
   return (
     <div className="flex-1 flex flex-col bg-[#0E0E14] overflow-y-auto">
@@ -32,7 +74,7 @@ export function Stats() {
         </div>
         
         <div className="flex space-x-2">
-          {['today', 'week', 'season', 'all-time'].map((filter) => (
+          {FILTERS.map((filter) => (
             <button
               key={filter}
               onClick={() => setTimeFilter(filter)}
@@ -57,9 +99,9 @@ export function Stats() {
               <Trophy size={100} />
             </div>
             <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Overall Winrate</span>
-            <div className="text-3xl font-black text-white">58.4%</div>
-            <div className="text-sm mt-2 text-green-500 flex items-center">
-              +2.1% <span className="text-slate-500 ml-1">vs last week</span>
+            <div className="text-3xl font-black text-white">{formatPercent(summary.overallWinrate)}</div>
+            <div className="text-sm mt-2 text-slate-400">
+              {summary.wins} Wins - {summary.losses} Losses
             </div>
           </div>
           
@@ -68,8 +110,8 @@ export function Stats() {
               <Swords size={100} />
             </div>
             <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Matches Played</span>
-            <div className="text-3xl font-black text-white">1,245</div>
-            <div className="text-sm mt-2 text-slate-400">727 Wins - 518 Losses</div>
+            <div className="text-3xl font-black text-white">{summary.matchesPlayed.toLocaleString()}</div>
+            <div className="text-sm mt-2 text-slate-400">Real tracked constructed matches</div>
           </div>
           
           <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex flex-col relative overflow-hidden group">
@@ -77,8 +119,12 @@ export function Stats() {
               <Clock size={100} />
             </div>
             <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Time Played</span>
-            <div className="text-3xl font-black text-white">152h</div>
-            <div className="text-sm mt-2 text-slate-400">~7.3m average per match</div>
+            <div className="text-3xl font-black text-white">{formatTimePlayed(summary.timePlayedSeconds)}</div>
+            <div className="text-sm mt-2 text-slate-400">
+              {summary.averageDurationSeconds === null
+                ? 'No average yet'
+                : `~${formatDuration(summary.averageDurationSeconds)} average`}
+            </div>
           </div>
 
           <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex flex-col relative overflow-hidden group">
@@ -86,8 +132,14 @@ export function Stats() {
               <Target size={100} />
             </div>
             <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Best Deck</span>
-            <div className="text-xl font-bold text-orange-400 truncate mt-1">No tracked deck</div>
-            <div className="text-sm mt-2 text-slate-400">Stats will appear after tracked games</div>
+            <div className="text-xl font-bold text-orange-400 truncate mt-1">
+              {summary.bestDeck?.deckName ?? 'No tracked deck'}
+            </div>
+            <div className="text-sm mt-2 text-slate-400">
+              {summary.bestDeck === null
+                ? 'Stats will appear after tracked games'
+                : `${formatPercent(summary.bestDeck.winrate)} · ${summary.bestDeck.wins}W - ${summary.bestDeck.losses}L`}
+            </div>
           </div>
         </div>
 
@@ -99,19 +151,25 @@ export function Stats() {
               Winrate vs Classes
             </h2>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={classWinrates} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" vertical={false} />
-                  <XAxis dataKey="name" stroke="#64748B" axisLine={false} tickLine={false} />
-                  <YAxis stroke="#64748B" axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    cursor={{ fill: '#2A2A35' }}
-                    contentStyle={{ backgroundColor: '#14141A', borderColor: '#2A2A35', color: '#fff' }}
-                  />
-                  <Bar dataKey="wins" name="Wins" stackId="a" fill="#10B981" radius={[0, 0, 4, 4]} />
-                  <Bar dataKey="losses" name="Losses" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {classChartData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-slate-500 text-sm">
+                  No class matchup stats yet.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={classChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" vertical={false} />
+                    <XAxis dataKey="name" stroke="#64748B" axisLine={false} tickLine={false} />
+                    <YAxis stroke="#64748B" axisLine={false} tickLine={false} />
+                    <Tooltip 
+                      cursor={{ fill: '#2A2A35' }}
+                      contentStyle={{ backgroundColor: '#14141A', borderColor: '#2A2A35', color: '#fff' }}
+                    />
+                    <Bar dataKey="wins" name="Wins" stackId="a" fill="#10B981" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="losses" name="Losses" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
@@ -123,28 +181,38 @@ export function Stats() {
             </div>
             
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-[#2A2A35]">
-              {mockMatchHistory.map((match) => (
-                <div key={match.id} className="bg-[#14141A] rounded-lg p-3 border border-[#2A2A35] hover:border-slate-600 transition-colors flex flex-col cursor-pointer">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs text-slate-400">{match.date}</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                      match.result === 'Win' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {match.result}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-white font-medium text-sm">{match.deck}</span>
-                      <span className="text-slate-500 text-xs mt-0.5">vs {match.opponent}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-slate-300 text-sm font-medium">{match.duration}</span>
-                      <div className="text-xs text-slate-500 mt-0.5">{match.coins ? 'Coin' : 'First'}</div>
-                    </div>
-                  </div>
+              {isLoading ? (
+                <div className="text-slate-500 text-sm py-8 text-center">Loading match history...</div>
+              ) : error !== null ? (
+                <div className="text-red-400 text-sm py-8 text-center">{error}</div>
+              ) : recentMatches.length === 0 ? (
+                <div className="text-slate-500 text-sm py-8 text-center">
+                  No tracked matches yet.
                 </div>
-              ))}
+              ) : (
+                recentMatches.map((match) => (
+                  <div key={match.id} className="bg-[#14141A] rounded-lg p-3 border border-[#2A2A35] hover:border-slate-600 transition-colors flex flex-col cursor-pointer">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs text-slate-400">{formatRelativeDate(match.endedAt)}</span>
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        match.result === 'win' ? 'bg-green-500/20 text-green-400' : match.result === 'loss' ? 'bg-red-500/20 text-red-400' : 'bg-slate-500/20 text-slate-300'
+                      }`}>
+                        {formatResult(match.result)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-white font-medium text-sm">{match.deckName ?? 'Unknown Deck'}</span>
+                        <span className="text-slate-500 text-xs mt-0.5">vs {match.opponentClass ?? match.opponentName ?? 'Unknown'}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-slate-300 text-sm font-medium">{formatDuration(match.durationSeconds)}</span>
+                        <div className="text-xs text-slate-500 mt-0.5">{formatPlayOrder(match.playOrder)}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -152,4 +220,43 @@ export function Stats() {
       </div>
     </div>
   );
+}
+
+function formatPercent(value: number | null): string {
+  return value === null ? '-' : `${value}%`;
+}
+
+function formatTimePlayed(seconds: number): string {
+  if (seconds <= 0) return '0m';
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.round((seconds % 3600) / 60);
+  if (hours === 0) return `${minutes}m`;
+  return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
+}
+
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function formatResult(result: MatchHistoryRecord['result']): string {
+  if (result === 'win') return 'Win';
+  if (result === 'loss') return 'Loss';
+  return 'Unknown';
+}
+
+function formatPlayOrder(playOrder: MatchHistoryRecord['playOrder']): string {
+  if (playOrder === 'coin') return 'Coin';
+  if (playOrder === 'first') return 'First';
+  return 'Unknown';
+}
+
+function formatRelativeDate(endedAt: number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(endedAt));
 }

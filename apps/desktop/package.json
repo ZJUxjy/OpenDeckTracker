@@ -5,9 +5,13 @@
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
+    "predev": "pnpm run rebuild:native",
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "start": "electron-vite preview",
+    "rebuild:native": "electron-rebuild -f -w better-sqlite3",
+    "rebuild:node": "pnpm rebuild better-sqlite3",
+    "pretest": "pnpm run rebuild:node",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "package": "electron-vite build && electron-builder --config electron-builder.yml --win"
@@ -15,12 +19,13 @@
   "dependencies": {
     "@hdt/core": "workspace:*",
     "@hdt/hearthdb": "workspace:*",
-    "@hdt/hearthwatcher": "workspace:*",
     "@hdt/hearthmirror": "workspace:*",
     "@hdt/hearthmirror-native": "workspace:*",
+    "@hdt/hearthwatcher": "workspace:*",
     "@radix-ui/react-hover-card": "^1.1.15",
     "@tailwindcss/vite": "^4.2.2",
     "@vitejs/plugin-react": "^4.7.0",
+    "better-sqlite3": "^12.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "electron": "^33.4.11",
@@ -40,7 +45,9 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
     "@testing-library/react": "^15.0.7",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3"
