@@ -2,6 +2,7 @@ import { app, BrowserWindow, protocol } from 'electron';
 import { createMainWindow } from './window';
 import { registerIpc } from './ipc';
 import { startDeckTracker } from './deck-tracker';
+import { startHearthWatcher } from './hearthwatcher-host';
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -30,6 +31,7 @@ if (!gotLock) {
   void app.whenReady().then(() => {
     registerIpc();
     startDeckTracker();
+    startHearthWatcher();
     createMainWindow();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow();

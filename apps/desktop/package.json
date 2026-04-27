@@ -15,6 +15,7 @@
   "dependencies": {
     "@hdt/core": "workspace:*",
     "@hdt/hearthdb": "workspace:*",
+    "@hdt/hearthwatcher": "workspace:*",
     "@hdt/hearthmirror": "workspace:*",
     "@hdt/hearthmirror-native": "workspace:*",
     "@radix-ui/react-hover-card": "^1.1.15",
