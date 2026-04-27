@@ -1,6 +1,8 @@
-import { Activity, Clock, Hand, Layers, Trophy } from 'lucide-react';
+import { Activity, Clock, Hand, Layers, Radio, Trophy } from 'lucide-react';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
+import { useHearthWatcherStore } from '../stores/hearthwatcher-store';
+import type { HearthWatcherStatusKind } from '@hdt/hearthwatcher';
 
 function rankLabel(
   standard: {
@@ -14,9 +16,19 @@ function rankLabel(
   return 'Unranked';
 }
 
+const WATCHER_COLORS: Record<HearthWatcherStatusKind, string> = {
+  ready: 'text-emerald-400',
+  'waiting-for-lines': 'text-amber-400',
+  'missing-log': 'text-red-400',
+  'parser-error': 'text-red-500',
+  lag: 'text-amber-500',
+  'rotation-or-truncation': 'text-purple-400',
+};
+
 export function Dashboard() {
   const snapshot = useDeckTrackerStore((s) => s.snapshot);
   const { medalInfo } = useHearthMirrorStatus();
+  const watcherStatus = useHearthWatcherStore((s) => s.status);
   const deck = snapshot?.deck ?? null;
   const totalOriginal = deck?.original.reduce((sum, card) => sum + card.count, 0) ?? 0;
   const totalRemaining = deck?.remaining.reduce((sum, card) => sum + card.count, 0) ?? 0;
@@ -85,6 +97,18 @@ export function Dashboard() {
           </div>
           <div className="text-3xl font-black text-white">
             {deck ? 'Live' : 'Idle'}
+          </div>
+        </div>
+
+        <div className="bg-[#1C1C24] p-5 rounded-xl border border-[#2A2A35]">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider">
+              Watcher
+            </span>
+            <Radio size={18} className={watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-slate-500' : 'text-slate-500'} />
+          </div>
+          <div className={`text-sm font-bold ${watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-slate-500' : 'text-slate-500'}`}>
+            {watcherStatus?.kind ?? 'disconnected'}
           </div>
         </div>
       </div>
