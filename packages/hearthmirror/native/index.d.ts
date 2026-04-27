@@ -162,7 +162,7 @@ export declare function isAlive(): Promise<boolean>
 
 export declare function isGameOver(): Promise<boolean>
 
-export declare function isMulligan(): Promise<IsMulliganResult>
+export declare function isMulligan(): Promise<IsMulliganResult | null>
 
 export interface IsMulliganResult {
   mulligan?: boolean

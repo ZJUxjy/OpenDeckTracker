@@ -7,7 +7,8 @@ import type { MatchPhase } from '../game/types';
  *
  *   IDLE         → PRE_MATCH        when getMatchInfo non-null
  *   PRE_MATCH    → IN_MATCH         when getDeckState non-null (cards dealt)
- *   IN_MATCH    → POST_MATCH        when isGameOver true OR matchInfo null
+ *   IN_MATCH    → POST_MATCH        when matchInfo null, or when isGameOver
+ *                                      true after active deck state disappears
  *   POST_MATCH  → IDLE              always (one-shot transition)
  *
  * Spectator mode (`isSpectating === true`) forces the phase back to
@@ -29,11 +30,10 @@ export function nextPhase(current: MatchPhase, signals: PhaseSignals): MatchPhas
       return signals.hasMatchInfo ? 'PRE_MATCH' : 'IDLE';
     case 'PRE_MATCH':
       if (!signals.hasMatchInfo) return 'IDLE';
-      if (signals.isGameOver) return 'POST_MATCH';
       return signals.hasDeckState ? 'IN_MATCH' : 'PRE_MATCH';
     case 'IN_MATCH':
-      if (signals.isGameOver) return 'POST_MATCH';
       if (!signals.hasMatchInfo) return 'POST_MATCH';
+      if (signals.isGameOver && !signals.hasDeckState) return 'POST_MATCH';
       return 'IN_MATCH';
     case 'POST_MATCH':
       // One-shot — once consumers have seen POST_MATCH, the next tick

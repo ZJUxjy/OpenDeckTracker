@@ -130,6 +130,11 @@ describe('HearthMirror', () => {
   });
 
   describe('isMulligan', () => {
+    it('coerces null → null', async () => {
+      mocked(native.isMulligan).mockResolvedValue(null);
+      expect(await mirror.isMulligan()).toEqual({ mulligan: null });
+    });
+
     it('coerces undefined → null', async () => {
       mocked(native.isMulligan).mockResolvedValue({});
       expect(await mirror.isMulligan()).toEqual({ mulligan: null });

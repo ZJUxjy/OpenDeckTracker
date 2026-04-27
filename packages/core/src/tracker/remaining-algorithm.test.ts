@@ -92,6 +92,57 @@ describe('computeRemaining', () => {
     expect(result.extras).toEqual([]);
   });
 
+  it('created same-card copies do not subtract original copies', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const created = new Entity({
+      entityId: 1,
+      cardId: 'Fireball',
+      zone: 'HAND',
+      controllerId: 1,
+      info: { created: true },
+    });
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [created],
+      deckEntities: [],
+      localControllerId: 1,
+    });
+    expect(result.remaining.countOf('Fireball')).toBe(2);
+  });
+
+  it('original same-card copies still subtract original copies', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [e(1, 'Fireball', 'HAND')],
+      deckEntities: [],
+      localControllerId: 1,
+    });
+    expect(result.remaining.countOf('Fireball')).toBe(1);
+  });
+
+  it('generated same-card deck entities appear only as overflow', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const created = new Entity({
+      entityId: 12,
+      cardId: 'Fireball',
+      zone: 'DECK',
+      controllerId: 1,
+      info: { created: true },
+    });
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [],
+      deckEntities: [
+        e(10, 'Fireball', 'DECK'),
+        e(11, 'Fireball', 'DECK'),
+        created,
+      ],
+      localControllerId: 1,
+    });
+    expect(result.remaining.countOf('Fireball')).toBe(3);
+  });
+
   it('multiple copies tracked independently', () => {
     const original = DeckSnapshot.fromDeckCards([{ cardId: 'A', count: 2 }, { cardId: 'B', count: 1 }]);
     const result = computeRemaining({

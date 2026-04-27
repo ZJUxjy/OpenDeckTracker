@@ -31,12 +31,20 @@ describe('nextPhase', () => {
     expect(nextPhase('PRE_MATCH', sig())).toBe('IDLE');
   });
 
-  it('PRE_MATCH → POST_MATCH if isGameOver before deck state (rare reconnect)', () => {
-    expect(nextPhase('PRE_MATCH', sig({ hasMatchInfo: true, isGameOver: true }))).toBe('POST_MATCH');
+  it('PRE_MATCH ignores game-over flag while waiting for active deck state', () => {
+    expect(nextPhase('PRE_MATCH', sig({ hasMatchInfo: true, isGameOver: true }))).toBe('PRE_MATCH');
   });
 
-  it('IN_MATCH → POST_MATCH on game over', () => {
+  it('PRE_MATCH → IN_MATCH when deck state appears even if game-over flag is stale', () => {
+    expect(nextPhase('PRE_MATCH', sig({ hasMatchInfo: true, hasDeckState: true, isGameOver: true }))).toBe('IN_MATCH');
+  });
+
+  it('IN_MATCH → POST_MATCH on game over after deck state disappears', () => {
     expect(nextPhase('IN_MATCH', sig({ hasMatchInfo: true, isGameOver: true }))).toBe('POST_MATCH');
+  });
+
+  it('IN_MATCH stays IN_MATCH when active deck state contradicts stale game-over flag', () => {
+    expect(nextPhase('IN_MATCH', sig({ hasMatchInfo: true, hasDeckState: true, isGameOver: true }))).toBe('IN_MATCH');
   });
 
   it('IN_MATCH → POST_MATCH if matchInfo disappears (concede / quit)', () => {
