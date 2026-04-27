@@ -63,14 +63,6 @@ export async function discoverPowerLog(
     };
   }
 
-  // Debug: log what was actually searched (visible in main-process console).
-  console.error(
-    '[hearthwatcher] discoverPowerLog failed.\n' +
-      `  hsInstallDir: ${hsInstallDir ?? 'null'}\n` +
-      `  searchedPaths: ${JSON.stringify(searchedPaths)}\n` +
-      `  scannedPaths: ${JSON.stringify(scannedPaths)}`,
-  );
-
   return {
     powerLogPath: null,
     searchedPaths: [...searchedPaths, ...scannedPaths],
@@ -110,11 +102,9 @@ function detectHearthstoneInstallDir(): string | null {
     });
     const exe = out.trim();
     if (exe.length > 0) {
-      console.error('[hearthwatcher] detected HS install via PowerShell:', exe);
       return exe.replace(/[\\/]Hearthstone\.exe$/i, '');
     }
-  } catch (err) {
-    console.error('[hearthwatcher] PowerShell detection failed:', String(err));
+  } catch {
     // Fallback: scan common install roots for Hearthstone dirs.
     const roots = ['C:', 'D:', 'E:', 'F:', 'G:'];
     for (const root of roots) {
@@ -122,14 +112,12 @@ function detectHearthstoneInstallDir(): string | null {
         const candidate = `${root}\\${sub}\\`;
         try {
           require('node:fs').accessSync(candidate);
-          console.error('[hearthwatcher] detected HS install via fallback:', candidate);
           return candidate.replace(/[\\/]$/, '');
         } catch {
           // ignore
         }
       }
     }
-    console.error('[hearthwatcher] all detection methods failed');
   }
   return null;
 }
