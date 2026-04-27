@@ -49,9 +49,8 @@ export async function discoverPowerLog(
     }
   }
 
-  // Hearthstone on some installs (especially Battle.net CN) writes to
-  // timestamped subdirectories under Logs/ (e.g. Logs/Hearthstone_2026_04_27_15_34_09/Power.log).
-  // Scan parent log dirs for the most recent one.
+  // Hearthstone on some installs writes to timestamped subdirectories
+  // under Logs/ (e.g. Logs/Hearthstone_2026_04_27_15_34_09/Power.log).
   if (hsInstallDir !== null) {
     searchedPaths = [...searchedPaths, join(hsInstallDir, 'Logs', 'Power.log')];
   }
@@ -63,6 +62,14 @@ export async function discoverPowerLog(
       diagnostic: null,
     };
   }
+
+  // Debug: log what was actually searched (visible in main-process console).
+  console.error(
+    '[hearthwatcher] discoverPowerLog failed.\n' +
+      `  hsInstallDir: ${hsInstallDir ?? 'null'}\n` +
+      `  searchedPaths: ${JSON.stringify(searchedPaths)}\n` +
+      `  scannedPaths: ${JSON.stringify(scannedPaths)}`,
+  );
 
   return {
     powerLogPath: null,
@@ -87,23 +94,42 @@ export function standardPowerLogPaths(env: NodeJS.ProcessEnv = process.env): str
 
 /**
  * Locate the running Hearthstone process and return its install directory.
- * Uses WMIC on Windows; returns `null` on any failure.
+ * Uses PowerShell on Windows (more reliably available than WMIC); returns
+ * `null` on any failure.
  */
 function detectHearthstoneInstallDir(): string | null {
   if (process.platform !== 'win32') return null;
   try {
-    const out = execSync(
-      'wmic process where "name=\'Hearthstone.exe\'" get ExecutablePath /format:list',
-      { encoding: 'utf8', timeout: 3000 },
-    );
-    const match = out.match(/ExecutablePath=(.+)/i);
-    if (match && match[1]) {
-      const exe = match[1].trim();
-      // exe is .../Hearthstone/Hearthstone.exe → parent is install dir
+    const psCmd =
+      'Get-Process -Name Hearthstone -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path';
+    const out = execSync(psCmd, {
+      encoding: 'utf8',
+      timeout: 3000,
+      windowsHide: true,
+      shell: 'powershell.exe',
+    });
+    const exe = out.trim();
+    if (exe.length > 0) {
+      console.error('[hearthwatcher] detected HS install via PowerShell:', exe);
       return exe.replace(/[\\/]Hearthstone\.exe$/i, '');
     }
-  } catch {
-    // WMIC not available or process not found — best-effort.
+  } catch (err) {
+    console.error('[hearthwatcher] PowerShell detection failed:', String(err));
+    // Fallback: scan common install roots for Hearthstone dirs.
+    const roots = ['C:', 'D:', 'E:', 'F:', 'G:'];
+    for (const root of roots) {
+      for (const sub of ['battle\\Hearthstone', 'Hearthstone']) {
+        const candidate = `${root}\\${sub}\\`;
+        try {
+          require('node:fs').accessSync(candidate);
+          console.error('[hearthwatcher] detected HS install via fallback:', candidate);
+          return candidate.replace(/[\\/]$/, '');
+        } catch {
+          // ignore
+        }
+      }
+    }
+    console.error('[hearthwatcher] all detection methods failed');
   }
   return null;
 }
