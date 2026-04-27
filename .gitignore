@@ -56,3 +56,5 @@ packages/hearthmirror/native/dump_reflection_*.jsonl
 .github
 .cursor
 .codex
+data/hsguru-data/
+data/hsguru-data-spider/
