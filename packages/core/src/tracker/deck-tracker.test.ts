@@ -367,6 +367,34 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('does not record opponent hero or hero power entities as cards', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 20, cardId: 'HERO_07bo', zonePosition: 0, attack: 0, health: 30, damage: 0 },
+        { entityId: 21, cardId: 'HERO_07ebp', zonePosition: 0, attack: 0, health: 0, damage: 0 },
+        { entityId: 22, cardId: 'CS2_029', zonePosition: 1, attack: 0, health: 0, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().opponent.revealed.map((record) => record.cardId)).toEqual([
+      'CS2_029',
+    ]);
+    tracker.stop();
+  });
+
   it('uses distinct fallback controllers when matchInfo player ids are zero', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch({

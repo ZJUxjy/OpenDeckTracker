@@ -1,11 +1,11 @@
-//! `getBoardState` — friendly + opposing minions on the board, sorted
-//! by zone position. Enchantments are filtered out (they belong to
-//! their parent minion's effects, not the player-facing board display).
+//! `getBoardState` — friendly + opposing board cards, sorted by zone
+//! position. Heroes, hero powers, and enchantments are filtered out
+//! because they are not opponent deck-history cards.
 //!
 //! Per-entity selection criteria:
 //! * `m_realTimeZone == zone::PLAY`
 //! * `read_entity_controller(...) == friendly_id` (or opposing_id)
-//! * `read_entity_tag(..., CARDTYPE) != ENCHANTMENT`
+//! * `read_entity_tag(..., CARDTYPE)` is not HERO / HERO_POWER / ENCHANTMENT
 //!
 //! Returns `None` when no match is active (`GameState.s_instance` NULL,
 //! or controller-id discovery fails). See change `design.md` D7 for the
@@ -56,9 +56,9 @@ pub async fn get_board_state_internal(
             continue;
         }
         let ctrl = read_entity_controller(runtime, &entity)?;
-        // Exclude enchantments from board display (they're attached
-        // effects, not standalone minions).
-        if read_entity_tag(runtime, &entity, tags::CARDTYPE)? == card_type::ENCHANTMENT {
+        // Exclude always-present actors/effects that should not be
+        // recorded as opponent cards.
+        if !is_trackable_board_card_type(read_entity_tag(runtime, &entity, tags::CARDTYPE)?) {
             continue;
         }
 
@@ -83,4 +83,30 @@ pub async fn get_board_state_internal(
     opposing.sort_by_key(|e| e.zone_position);
 
     Ok(Some(BoardStateResult { friendly, opposing }))
+}
+
+fn is_trackable_board_card_type(card_type_value: i32) -> bool {
+    !matches!(
+        card_type_value,
+        card_type::HERO | card_type::HERO_POWER | card_type::ENCHANTMENT
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trackable_board_card_type_excludes_non_card_history_entities() {
+        assert!(!is_trackable_board_card_type(card_type::HERO));
+        assert!(!is_trackable_board_card_type(card_type::HERO_POWER));
+        assert!(!is_trackable_board_card_type(card_type::ENCHANTMENT));
+    }
+
+    #[test]
+    fn trackable_board_card_type_keeps_played_cards() {
+        assert!(is_trackable_board_card_type(card_type::MINION));
+        assert!(is_trackable_board_card_type(card_type::SPELL));
+        assert!(is_trackable_board_card_type(card_type::WEAPON));
+    }
 }

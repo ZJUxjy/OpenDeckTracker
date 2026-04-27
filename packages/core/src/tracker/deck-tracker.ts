@@ -544,7 +544,11 @@ export class DeckTracker {
 
   private buildOpponentRecords(): DeckTrackerSnapshot['opponent'] {
     const records = this.game.opposingPlayer.entities
-      .filter((entity) => entity.isRevealed && (entity.isInPlay || entity.isInGraveyard || entity.isInSecret))
+      .filter((entity) =>
+        entity.isRevealed &&
+        isOpponentHistoryCardId(entity.cardId) &&
+        (entity.isInPlay || entity.isInGraveyard || entity.isInSecret)
+      )
       .map((entity) => ({
         entityId: entity.entityId,
         cardId: entity.cardId,
@@ -636,6 +640,12 @@ function isDeckIdentityCardId(cardId: string): boolean {
   if (cardId === 'GAME_005' || cardId.endsWith('_COIN') || cardId.includes('COIN')) {
     return false;
   }
+  return true;
+}
+
+function isOpponentHistoryCardId(cardId: string): boolean {
+  if (cardId === '') return false;
+  if (cardId.startsWith('HERO_')) return false;
   return true;
 }
 

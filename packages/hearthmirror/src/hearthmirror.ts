@@ -93,6 +93,7 @@ export class HearthMirror {
 
   async isMulligan(): Promise<IsMulligan> {
     const r = await native.isMulligan();
+    if (!r) return { mulligan: null };
     return { mulligan: r.mulligan ?? null };
   }
 
