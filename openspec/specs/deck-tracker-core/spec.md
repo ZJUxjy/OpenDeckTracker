@@ -211,6 +211,8 @@ polling loop against `@hdt/hearthmirror` and emits typed events.
 - NEVER call `getCollection` from the poll loop (per design D6).
 - Surface poll errors via the event stream (`{ type: 'error',
   reflector: 'getMatchInfo', message }`) instead of throwing.
+- Emit `match-ended` with a completed-match summary when the tracker can
+  classify the finished game as a real constructed match.
 
 The `IDeckIdentifier` interface MUST allow injecting either the
 in-game memory-field reader (default M2 implementation) or a
@@ -223,6 +225,20 @@ interface IDeckIdentifier {
   ): Promise<{ deckId: number; cards: { cardId: string, count: number }[] } | null>;
 }
 ```
+
+The completed-match summary MUST include:
+
+- `fingerprint`: a stable idempotency key for the completed game.
+- `startedAt` and `endedAt`: wall-clock timestamps.
+- `result`: `win`, `loss`, or `unknown`.
+- `playOrder`: `first`, `coin`, or `unknown`.
+- `deckId` and `deckName` when the local deck was identified.
+- `opponentName` and `opponentClass` when known.
+- `gameType` and `formatType` from match metadata.
+
+The tracker MUST NOT emit a completed-match summary for unsupported or
+unclassified modes unless the mode is explicitly recognized as
+constructed.
 
 #### Scenario: Idle polling rate
 
@@ -248,6 +264,23 @@ interface IDeckIdentifier {
 - **THEN** the tracker emits the sequence: `match-started` →
   N × `state-change` → `match-ended`, with phase strictly
   monotonic IDLE → PRE_MATCH → IN_MATCH → POST_MATCH → IDLE
+
+#### Scenario: Completed constructed match carries stats summary
+
+- **GIVEN** the tracker has observed a constructed match with an
+  identified local deck, opponent metadata, start time, and end time
+- **WHEN** the match ends
+- **THEN** the `match-ended` event includes a completed-match summary
+  with `fingerprint`, timestamps, deck identity, opponent metadata,
+  result, play order, `gameType`, and `formatType`
+
+#### Scenario: Unsupported mode omits stats summary
+
+- **GIVEN** the tracker observes a match whose `gameType` / `formatType`
+  is not recognized as constructed
+- **WHEN** the match ends
+- **THEN** the `match-ended` event does not include a completed-match
+  summary for stats recording
 
 ### Requirement: Default in-game deck identifier
 

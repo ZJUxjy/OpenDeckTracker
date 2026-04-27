@@ -15,6 +15,17 @@ export interface HearthWatcherOptions {
   maxBytesPerTick?: number;
   maxBufferedLines?: number;
   discovery?: Omit<LogDiscoveryOptions, 'overridePath'>;
+  /**
+   * How often to re-run `discoverPowerLog` when Power.log is missing.
+   * Defaults to `pollIntervalMs`, which keeps the retry cadence consistent
+   * with tailing polls. Set to 0 to disable retries (useful for tests).
+   */
+  discoveryRetryIntervalMs?: number;
+  /**
+   * How often to check whether Hearthstone has started writing to a newer
+   * timestamped Power.log. Defaults to 2000ms. Set to 0 to disable.
+   */
+  latestLogCheckIntervalMs?: number;
 }
 
 export class HearthWatcher {
@@ -22,6 +33,11 @@ export class HearthWatcher {
   private readonly eventHandlers = new Set<EventHandler>();
   private readonly statusHandlers = new Set<StatusHandler>();
   private tailer: LogFileWatcher | null = null;
+  private running = false;
+  private discoveryTimer: NodeJS.Timeout | null = null;
+  private latestLogTimer: NodeJS.Timeout | null = null;
+  private latestLogCheckInFlight = false;
+  private currentPowerLogPath: string | null = null;
 
   constructor(options: HearthWatcherOptions = {}) {
     this.options = options;
@@ -38,22 +54,52 @@ export class HearthWatcher {
   }
 
   async start(): Promise<void> {
-    if (this.tailer !== null) return;
-    const discoveryOptions = { ...this.options.discovery };
+    if (this.running) return;
+    this.running = true;
+    await this.attemptDiscoveryAndTail();
+  }
+
+  stop(): void {
+    this.running = false;
+    if (this.discoveryTimer !== null) {
+      clearTimeout(this.discoveryTimer);
+      this.discoveryTimer = null;
+    }
+    if (this.latestLogTimer !== null) {
+      clearTimeout(this.latestLogTimer);
+      this.latestLogTimer = null;
+    }
+    this.tailer?.stop();
+    this.tailer = null;
+    this.currentPowerLogPath = null;
+  }
+
+  private async attemptDiscoveryAndTail(): Promise<void> {
+    if (!this.running || this.tailer !== null) return;
+
+    const discoveryOptions: LogDiscoveryOptions = { ...this.options.discovery };
     if (this.options.powerLogPath !== undefined) {
-      Object.assign(discoveryOptions, { overridePath: this.options.powerLogPath });
+      discoveryOptions.overridePath = this.options.powerLogPath;
     }
     const discovery = await discoverPowerLog(discoveryOptions);
 
-    if (discovery.diagnostic !== null) {
-      this.emitStatus(discovery.diagnostic);
+    if (discovery.powerLogPath === null) {
+      if (discovery.diagnostic !== null) {
+        this.emitStatus(discovery.diagnostic);
+      }
+      this.scheduleDiscoveryRetry();
+      return;
     }
-    if (discovery.powerLogPath === null) return;
 
+    this.currentPowerLogPath = discovery.powerLogPath;
+    this.tailer = this.buildTailer(discovery.powerLogPath);
+    await this.tailer.start();
+    this.scheduleLatestLogCheck();
+  }
+
+  private buildTailer(powerLogPath: string): LogFileWatcher {
     const diagnostics = createParserDiagnostics();
-    const tailerOptions: LogFileWatcherOptions = {
-      path: discovery.powerLogPath,
-    };
+    const tailerOptions: LogFileWatcherOptions = { path: powerLogPath };
     if (this.options.readFrom !== undefined) tailerOptions.readFrom = this.options.readFrom;
     if (this.options.pollIntervalMs !== undefined) {
       tailerOptions.pollIntervalMs = this.options.pollIntervalMs;
@@ -64,30 +110,85 @@ export class HearthWatcher {
     if (this.options.maxBufferedLines !== undefined) {
       tailerOptions.maxBufferedLines = this.options.maxBufferedLines;
     }
-    this.tailer = new LogFileWatcher(tailerOptions);
-    this.tailer.onDiagnostic((diagnostic) => this.emitStatus(diagnostic));
-    this.tailer.onLine((line) => {
+
+    const tailer = new LogFileWatcher(tailerOptions);
+    tailer.onDiagnostic((diagnostic) => this.emitStatus(diagnostic));
+
+    let readyEmitted = false;
+    tailer.onLine((line) => {
       const before = diagnostics.malformedRecords;
       const event = parsePowerLine(line, { diagnostics });
       if (event !== null) {
+        if (!readyEmitted) {
+          readyEmitted = true;
+          this.emitStatus({
+            kind: 'ready',
+            message: `Parsing Power.log events from ${powerLogPath}`,
+            path: powerLogPath,
+            timestamp: Date.now(),
+          });
+        }
         this.emitEvent(event);
       } else if (diagnostics.malformedRecords > before) {
+        const recordType = inferPowerRecordType(line);
         const status: HearthWatcherDiagnostic = {
           kind: 'parser-error',
-          message: 'Malformed Power.log record',
+          message:
+            recordType === null
+              ? 'Malformed Power.log record'
+              : `Malformed Power.log ${recordType} record`,
           line,
+          path: powerLogPath,
+          ...(recordType !== null ? { recordType } : {}),
           timestamp: Date.now(),
         };
-        if (discovery.powerLogPath !== null) status.path = discovery.powerLogPath;
         this.emitStatus(status);
       }
     });
-    await this.tailer.start();
+
+    return tailer;
   }
 
-  stop(): void {
-    this.tailer?.stop();
-    this.tailer = null;
+  private scheduleDiscoveryRetry(): void {
+    if (!this.running || this.discoveryTimer !== null) return;
+    const interval =
+      this.options.discoveryRetryIntervalMs ?? this.options.pollIntervalMs ?? 2000;
+    if (interval <= 0) return;
+    this.discoveryTimer = setTimeout(() => {
+      this.discoveryTimer = null;
+      void this.attemptDiscoveryAndTail();
+    }, interval);
+  }
+
+  private scheduleLatestLogCheck(): void {
+    if (!this.running || this.latestLogTimer !== null || this.options.powerLogPath !== undefined) {
+      return;
+    }
+    const interval = this.options.latestLogCheckIntervalMs ?? 2000;
+    if (interval <= 0) return;
+    this.latestLogTimer = setTimeout(() => {
+      this.latestLogTimer = null;
+      void this.checkForLatestPowerLog();
+    }, interval);
+  }
+
+  private async checkForLatestPowerLog(): Promise<void> {
+    if (!this.running || this.latestLogCheckInFlight || this.options.powerLogPath !== undefined) {
+      return;
+    }
+    this.latestLogCheckInFlight = true;
+    try {
+      const discovery = await discoverPowerLog({ ...this.options.discovery });
+      if (discovery.powerLogPath !== null && discovery.powerLogPath !== this.currentPowerLogPath) {
+        this.tailer?.stop();
+        this.currentPowerLogPath = discovery.powerLogPath;
+        this.tailer = this.buildTailer(discovery.powerLogPath);
+        await this.tailer.start();
+      }
+    } finally {
+      this.latestLogCheckInFlight = false;
+      this.scheduleLatestLogCheck();
+    }
   }
 
   private emitEvent(event: PowerEvent): void {
@@ -101,4 +202,9 @@ export class HearthWatcher {
 
 export function createHearthWatcher(options: HearthWatcherOptions = {}): HearthWatcher {
   return new HearthWatcher(options);
+}
+
+function inferPowerRecordType(line: string): string | null {
+  const match = line.match(/\s-\s+([A-Z_]+)(?:\s|$)/);
+  return match?.[1] ?? null;
 }

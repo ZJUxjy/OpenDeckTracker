@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HearthWatcherDiagnostic } from '@hdt/hearthwatcher';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 
 const mocks = vi.hoisted(() => {
   const statusHandlers: ((status: HearthWatcherDiagnostic) => void)[] = [];
@@ -16,11 +16,16 @@ const mocks = vi.hoisted(() => {
     start: vi.fn(async () => undefined),
     stop: vi.fn(),
   };
+  const powerRecorder = { handleEvent: vi.fn() };
   return {
     statusHandlers,
     eventHandlers,
     watcher,
     createHearthWatcher: vi.fn(() => watcher),
+    createPowerMatchRecorder: vi.fn(() => powerRecorder),
+    getLatestDeckTrackerSnapshot: vi.fn(() => null),
+    recordCompletedMatch: vi.fn(),
+    powerRecorder,
     ipcMain: { handle: vi.fn() },
     app: { on: vi.fn() },
     send: vi.fn(),
@@ -29,6 +34,18 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@hdt/hearthwatcher', () => ({
   createHearthWatcher: mocks.createHearthWatcher,
+}));
+
+vi.mock('./power-match-recorder', () => ({
+  createPowerMatchRecorder: mocks.createPowerMatchRecorder,
+}));
+
+vi.mock('./deck-tracker', () => ({
+  getLatestDeckTrackerSnapshot: mocks.getLatestDeckTrackerSnapshot,
+}));
+
+vi.mock('./stats-host', () => ({
+  recordCompletedMatch: mocks.recordCompletedMatch,
 }));
 
 vi.mock('electron', () => ({
@@ -52,7 +69,12 @@ describe('hearthwatcher-host', () => {
     vi.resetModules();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('starts HearthWatcher and broadcasts status updates', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     const { startHearthWatcher } = await import('./hearthwatcher-host');
     startHearthWatcher();
 
@@ -66,6 +88,51 @@ describe('hearthwatcher-host', () => {
     };
     mocks.statusHandlers[0]?.(status);
     expect(mocks.send).toHaveBeenCalledWith('hearthwatcher:status', status);
+    expect(info).toHaveBeenCalledWith(
+      '[hearthwatcher] status',
+      expect.objectContaining({ kind: 'ready', message: 'ready' }),
+    );
+  });
+
+  it('logs parser-error diagnostics with line context', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const status: HearthWatcherDiagnostic = {
+      kind: 'parser-error',
+      message: 'Malformed Power.log record',
+      path: 'E:\\battle\\Hearthstone\\Logs\\Hearthstone_2026_04_27_15_34_09\\Power.log',
+      recordType: 'TAG_CHANGE',
+      line: 'TAG_CHANGE bad',
+      timestamp: 1,
+    };
+    mocks.statusHandlers[0]?.(status);
+
+    expect(warn).toHaveBeenCalledWith(
+      '[hearthwatcher] status',
+      expect.objectContaining({
+        kind: 'parser-error',
+        path: status.path,
+        recordType: 'TAG_CHANGE',
+        line: 'TAG_CHANGE bad',
+      }),
+    );
+  });
+
+  it('routes Power.log events through the match recorder before broadcasting', async () => {
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const event: PowerEvent = { type: 'create-game', raw: '', content: '' };
+    mocks.eventHandlers[0]?.(event);
+
+    expect(mocks.createPowerMatchRecorder).toHaveBeenCalledWith({
+      getSnapshot: mocks.getLatestDeckTrackerSnapshot,
+      record: mocks.recordCompletedMatch,
+    });
+    expect(mocks.powerRecorder.handleEvent).toHaveBeenCalledWith(event);
+    expect(mocks.send).toHaveBeenCalledWith('hearthwatcher:event', event);
   });
 
   it('registers IPC handler for latest status', async () => {

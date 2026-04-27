@@ -36,6 +36,34 @@ export {
 } from './tracker/deck-identifier';
 export type { IDeckIdentifier, IdentifiedDeck } from './tracker/deck-identifier';
 
+// Stats and match history.
+export {
+  buildMatchFingerprint,
+  isConstructedMatch,
+  normalizeCompletedMatch,
+} from './stats/match-history';
+export type {
+  CompletedMatchSummary,
+  MatchClassification,
+  MatchHistoryRecord,
+  MatchHistorySource,
+  MatchResult,
+  NormalizedCompletedMatch,
+  PlayOrder,
+  StatsTimeFilter,
+} from './stats/match-history';
+export {
+  aggregateStats,
+  filterMatchesByTime,
+} from './stats/stats-aggregation';
+export type {
+  BestDeckStats,
+  ClassWinrate,
+  RecentMatchView,
+  StatsQueryOptions,
+  StatsSummary,
+} from './stats/stats-aggregation';
+
 // Lower-level utilities (exposed for testing + advanced consumers).
 export { PollingLoop } from './tracker/polling-loop';
 export { nextPhase } from './tracker/phase-machine';

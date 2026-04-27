@@ -16,6 +16,11 @@ import {
   type IdentifiedDeck,
 } from './deck-identifier';
 import type { Deck } from '@hdt/hearthmirror';
+import {
+  isConstructedMatch,
+  normalizeCompletedMatch,
+  type NormalizedCompletedMatch,
+} from '../stats/match-history';
 import { computeRemaining, gatherSeenEntities } from './remaining-algorithm';
 import { nextPhase } from './phase-machine';
 import { PollingLoop } from './polling-loop';
@@ -83,6 +88,7 @@ export interface DeckTrackerSnapshot {
 export interface DeckTrackerEvent {
   type: 'state-change' | 'match-started' | 'match-ended' | 'error' | 'needs-deck-selection';
   snapshot: DeckTrackerSnapshot;
+  completedMatch?: NormalizedCompletedMatch;
   error?: string;
   /** For 'needs-deck-selection': the available decks the renderer should display. */
   decks?: { id: number; name: string; hero: string }[];
@@ -295,6 +301,11 @@ export class DeckTracker {
     }
     this.game.phase = target;
 
+    const completedMatch =
+      previousPhase === 'IN_MATCH' && target === 'POST_MATCH'
+        ? this.buildCompletedMatch(matchInfo ?? this.currentSnapshot.matchInfo)
+        : undefined;
+
     // Apply entities from snapshots.
     if (target === 'IN_MATCH' || target === 'PRE_MATCH') {
       this.applyEntitySnapshots({ matchInfo, deckState, handState, boardState });
@@ -315,7 +326,11 @@ export class DeckTracker {
       this.emit({ type: 'match-started', snapshot: this.currentSnapshot });
     }
     if (previousPhase === 'IN_MATCH' && target === 'POST_MATCH') {
-      this.emit({ type: 'match-ended', snapshot: this.currentSnapshot });
+      this.emit({
+        type: 'match-ended',
+        snapshot: this.currentSnapshot,
+        ...(completedMatch !== undefined ? { completedMatch } : {}),
+      });
     }
     this.emit({ type: 'state-change', snapshot: this.currentSnapshot });
 
@@ -561,6 +576,32 @@ export class DeckTracker {
       revealed: records.filter((record) => record.zone !== 'GRAVEYARD'),
       graveyard: records.filter((record) => record.zone === 'GRAVEYARD'),
     };
+  }
+
+  private buildCompletedMatch(matchInfo: MatchInfo | null): NormalizedCompletedMatch | undefined {
+    const gameType = matchInfo?.gameType ?? this.game.gameType;
+    const formatType = matchInfo?.formatType ?? this.game.formatType;
+    const missionId = matchInfo?.missionId ?? this.game.missionId;
+    if (!isConstructedMatch({ gameType, formatType, missionId })) return undefined;
+
+    const startedAt = this.game.startedAt ?? this.currentSnapshot.updatedAt;
+    const endedAt = this.game.endedAt ?? Date.now();
+
+    return normalizeCompletedMatch({
+      fingerprint: '',
+      startedAt,
+      endedAt,
+      result: 'unknown',
+      playOrder: 'unknown',
+      deckId: this.identifiedDeck?.id ?? null,
+      deckName: this.identifiedDeck?.name ?? null,
+      opponentName: matchInfo?.opposingPlayer?.name ?? this.game.opposingPlayer.name ?? null,
+      opponentClass: null,
+      gameType,
+      formatType,
+      missionId,
+      source: 'deck-tracker',
+    });
   }
 }
 

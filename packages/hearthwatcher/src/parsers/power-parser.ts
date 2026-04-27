@@ -42,11 +42,14 @@ export function parsePowerLine(
   if (content.startsWith('FULL_ENTITY')) {
     const match = FULL_ENTITY_RE.exec(content);
     if (!match) return malformed(diagnostics, 'FULL_ENTITY');
+    const entityId =
+      match[1] === undefined ? numericEntityRef(parseEntityRef(match[3] ?? '')) : Number(match[1]);
+    if (entityId === null) return malformed(diagnostics, 'FULL_ENTITY');
     return {
       ...base,
       type: 'full-entity',
-      entityId: Number(match[1]),
-      cardId: match[2] ?? '',
+      entityId,
+      cardId: match[2] ?? match[4] ?? '',
       tags: parseInlineTags(content),
     };
   }
@@ -94,7 +97,7 @@ export function parsePowerLine(
       type: 'tag-change',
       entity: parseEntityRef(match[1] ?? ''),
       tag: normalizePowerTagName(match[2] ?? ''),
-      value: parsePowerTagValue(match[3] ?? ''),
+      value: parsePowerTagValue((match[3] ?? '').trim()),
     };
   }
 
@@ -106,7 +109,7 @@ export function parsePowerLine(
       type: 'block-start',
       blockType: match[1] ?? '',
       entity: parseNullableEntityRef(match[2] ?? ''),
-      effectCardId: match[3] ?? '',
+      effectCardId: (match[3] ?? '').trim(),
       target: parseNullableEntityRef(match[4] ?? ''),
       subOption: match[5] === undefined ? null : Number(match[5]),
     };
@@ -150,9 +153,19 @@ function parseInlineTags(content: string): PowerTagMap {
   for (const match of content.matchAll(/\btag=([A-Za-z0-9_]+)\s+value=([^\]\s]+)/g)) {
     tags[normalizePowerTagName(match[1] ?? '')] = parsePowerTagValue(match[2] ?? '');
   }
-  for (const match of content.matchAll(/\b([A-Z_]+)=([A-Za-z0-9_]+)\b/g)) {
-    const key = normalizePowerTagName(match[1] ?? '');
-    if (key === 'CARDID' || key === 'ENTITY' || key === 'ID') continue;
+  for (const match of content.matchAll(/\b([A-Za-z_][A-Za-z0-9_]*)=([A-Za-z0-9_]+)\b/g)) {
+    const rawKey = match[1] ?? '';
+    const key = normalizePowerTagName(rawKey === 'player' ? 'PLAYER_ID' : rawKey);
+    if (
+      key === 'CARDID' ||
+      key === 'ENTITY' ||
+      key === 'ID' ||
+      key === 'ENTITYNAME' ||
+      key === 'CARDTYPE' ||
+      key === 'ZONEPOS'
+    ) {
+      continue;
+    }
     tags[key] = parsePowerTagValue(match[2] ?? '');
   }
   return tags;
@@ -161,6 +174,10 @@ function parseInlineTags(content: string): PowerTagMap {
 function malformed(diagnostics: ParserDiagnostics, recordType: string): null {
   recordMalformedRecord(diagnostics, recordType);
   return null;
+}
+
+function numericEntityRef(value: PowerEntityRef): number | null {
+  return typeof value === 'number' ? value : null;
 }
 
 function basePowerEvent(line: LogLine): Pick<PowerEvent, 'raw' | 'content' | 'timestamp'> {

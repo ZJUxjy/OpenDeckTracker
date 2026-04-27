@@ -7,6 +7,10 @@ export interface LogDiscoveryOptions {
   overridePath?: string;
   env?: NodeJS.ProcessEnv;
   exists?: (path: string) => Promise<boolean>;
+  readDir?: (path: string) => Promise<string[]>;
+  candidatePaths?: string[];
+  installDirs?: string[];
+  detectInstallDir?: () => string | null;
 }
 
 export interface LogDiscoveryResult {
@@ -19,6 +23,7 @@ export async function discoverPowerLog(
   options: LogDiscoveryOptions = {},
 ): Promise<LogDiscoveryResult> {
   const exists = options.exists ?? pathExists;
+  const readDir = options.readDir ?? readdir;
   if (options.overridePath !== undefined) {
     const found = await exists(options.overridePath);
     return {
@@ -29,38 +34,48 @@ export async function discoverPowerLog(
   }
 
   const env = options.env ?? process.env;
-  let searchedPaths = standardPowerLogPaths(env);
-
-  for (const candidate of searchedPaths) {
+  const explicitCandidates = uniquePaths(options.candidatePaths ?? []);
+  for (const candidate of explicitCandidates) {
     if (await exists(candidate)) {
-      return { powerLogPath: candidate, searchedPaths, diagnostic: null };
+      return { powerLogPath: candidate, searchedPaths: explicitCandidates, diagnostic: null };
     }
   }
+
+  let searchedPaths = uniquePaths([
+    ...standardPowerLogPaths(env),
+    ...explicitCandidates,
+  ]);
 
   // Detect the Hearthstone install directory from the running process
   // and add its Logs/ path. This covers non-standard installs (e.g.
   // Battle.net CN on a custom drive).
-  const hsInstallDir = detectHearthstoneInstallDir();
-  if (hsInstallDir !== null) {
+  const installDirs = uniquePaths([
+    ...(options.installDirs ?? []),
+    ...detectedInstallDirs(options.detectInstallDir ?? detectHearthstoneInstallDir),
+  ]);
+  for (const hsInstallDir of installDirs) {
     const installLogPath = join(hsInstallDir, 'Logs', 'Power.log');
-    searchedPaths = [...searchedPaths, installLogPath];
-    if (await exists(installLogPath)) {
-      return { powerLogPath: installLogPath, searchedPaths, diagnostic: null };
-    }
+    searchedPaths = uniquePaths([...searchedPaths, installLogPath]);
   }
 
   // Hearthstone on some installs writes to timestamped subdirectories
   // under Logs/ (e.g. Logs/Hearthstone_2026_04_27_15_34_09/Power.log).
-  if (hsInstallDir !== null) {
-    searchedPaths = [...searchedPaths, join(hsInstallDir, 'Logs', 'Power.log')];
-  }
-  const scannedPaths = await scanTimestampedLogDirs(env, searchedPaths, exists, hsInstallDir);
+  // Prefer the newest timestamped log over a root Logs/Power.log, because
+  // Hearthstone can leave stale root logs behind while writing active games
+  // into per-run directories.
+  const scannedPaths = await scanTimestampedLogDirs(env, searchedPaths, exists, readDir, installDirs);
   if (scannedPaths.length > 0) {
     return {
       powerLogPath: scannedPaths[0]!,
       searchedPaths: [...searchedPaths, ...scannedPaths],
       diagnostic: null,
     };
+  }
+
+  for (const candidate of searchedPaths) {
+    if (await exists(candidate)) {
+      return { powerLogPath: candidate, searchedPaths, diagnostic: null };
+    }
   }
 
   return {
@@ -100,7 +115,10 @@ function detectHearthstoneInstallDir(): string | null {
       windowsHide: true,
       shell: 'powershell.exe',
     });
-    const exe = out.trim();
+    const exe = out
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.length > 0) ?? '';
     if (exe.length > 0) {
       return exe.replace(/[\\/]Hearthstone\.exe$/i, '');
     }
@@ -131,7 +149,8 @@ async function scanTimestampedLogDirs(
   env: NodeJS.ProcessEnv,
   searchedPaths: string[],
   exists: (path: string) => Promise<boolean>,
-  hsInstallDir: string | null,
+  readDir: (path: string) => Promise<string[]>,
+  installDirs: string[],
 ): Promise<string[]> {
   // Derive unique parent directories from the standard paths.
   const logDirs = new Set<string>();
@@ -143,7 +162,7 @@ async function scanTimestampedLogDirs(
   if (env['ProgramFiles(x86)']) {
     logDirs.add(join(env['ProgramFiles(x86)'], 'Hearthstone', 'Logs'));
   }
-  if (hsInstallDir !== null) {
+  for (const hsInstallDir of installDirs) {
     logDirs.add(join(hsInstallDir, 'Logs'));
   }
 
@@ -151,7 +170,7 @@ async function scanTimestampedLogDirs(
   for (const dir of logDirs) {
     let entries: string[];
     try {
-      entries = await readdir(dir);
+      entries = await readDir(dir);
     } catch {
       continue;
     }
@@ -168,6 +187,15 @@ async function scanTimestampedLogDirs(
     }
   }
   return results;
+}
+
+function detectedInstallDirs(detectInstallDir: () => string | null): string[] {
+  const detected = detectInstallDir();
+  return detected === null ? [] : [detected];
+}
+
+function uniquePaths(paths: string[]): string[] {
+  return [...new Set(paths.filter((path) => path.length > 0))];
 }
 
 async function pathExists(path: string): Promise<boolean> {

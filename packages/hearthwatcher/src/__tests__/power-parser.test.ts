@@ -66,4 +66,70 @@ describe('parsePowerLine', () => {
     expect(diagnostics.malformedRecords).toBe(1);
     expect(diagnostics.byRecordType.TAG_CHANGE).toBe(1);
   });
+
+  it('parses TAG_CHANGE records with trailing whitespace', () => {
+    const diagnostics = createParserDiagnostics();
+    const event = parsePowerLine(
+      'D 00:00:00.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=1 tag=STATE value=RUNNING  ',
+      { diagnostics },
+    );
+
+    expect(event).toMatchObject({
+      type: 'tag-change',
+      entity: 1,
+      tag: 'STATE',
+      value: 'RUNNING',
+    });
+    expect(diagnostics.malformedRecords).toBe(0);
+  });
+
+  it('parses TAG_CHANGE records with definition-change value suffixes', () => {
+    const diagnostics = createParserDiagnostics();
+    const event = parsePowerLine(
+      'D 20:39:07.9485103 GameState.DebugPrintPower() - TAG_CHANGE Entity=[entityName=foo id=130 zone=SETASIDE zonePos=0 cardId=TLC_100t1 player=1] tag=MODULAR_ENTITY_PART_1 value=117779 DEF CHANGE',
+      { diagnostics },
+    );
+
+    expect(event).toMatchObject({
+      type: 'tag-change',
+      entity: 130,
+      tag: 'MODULAR_ENTITY_PART_1',
+      value: '117779 DEF CHANGE',
+    });
+    expect(diagnostics.malformedRecords).toBe(0);
+  });
+
+  it('parses BLOCK_START records with EffectIndex and collection EffectCardId', () => {
+    const diagnostics = createParserDiagnostics();
+    const event = parsePowerLine(
+      'D 17:57:12.7673221 GameState.DebugPrintPower() - BLOCK_START BlockType=PLAY Entity=[entityName=foo id=26 zone=HAND zonePos=1 cardId=EDR_270 player=1] EffectCardId=System.Collections.Generic.List`1[System.String] EffectIndex=0 Target=0 SubOption=-1 ',
+      { diagnostics },
+    );
+
+    expect(event).toMatchObject({
+      type: 'block-start',
+      blockType: 'PLAY',
+      entity: 26,
+      effectCardId: 'System.Collections.Generic.List`1[System.String]',
+      target: null,
+      subOption: -1,
+    });
+    expect(diagnostics.malformedRecords).toBe(0);
+  });
+
+  it('parses FULL_ENTITY updating records', () => {
+    const diagnostics = createParserDiagnostics();
+    const event = parsePowerLine(
+      'D 17:57:12.7769580 PowerTaskList.DebugPrintPower() -         FULL_ENTITY - Updating [entityName=foo id=82 zone=SETASIDE zonePos=0 cardId=END_009 player=1] CardID=END_009',
+      { diagnostics },
+    );
+
+    expect(event).toMatchObject({
+      type: 'full-entity',
+      entityId: 82,
+      cardId: 'END_009',
+      tags: { ZONE: 'SETASIDE' },
+    });
+    expect(diagnostics.malformedRecords).toBe(0);
+  });
 });

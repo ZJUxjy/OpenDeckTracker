@@ -15,6 +15,7 @@
     "build": "pnpm -r build",
     "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
+    "pretest": "pnpm rebuild better-sqlite3",
     "test": "vitest run",
     "package": "pnpm --filter @hdt/desktop package",
     "cards:convert": "tsx scripts/convert-hsdata-cards.ts",
@@ -23,6 +24,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "better-sqlite3",
       "electron",
       "electron-winstaller",
       "esbuild",

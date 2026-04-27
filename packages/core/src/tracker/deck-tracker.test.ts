@@ -343,6 +343,103 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('emits completedMatch summary when a constructed match ends', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch({
+      gameType: 3,
+      formatType: 2,
+      opposingPlayer: {
+        id: 2,
+        name: 'Opponent',
+        side: 2,
+        standardRank: 0,
+        standardLegendRank: 0,
+        wildRank: 0,
+        wildLegendRank: 0,
+        classicRank: 0,
+        classicLegendRank: 0,
+        twistRank: 0,
+        twistLegendRank: 0,
+        cardbackId: 0,
+      },
+    });
+    state.decks = [fakeDeck(42, 'Recorded Real Deck')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 42),
+    });
+    tracker.on('match-ended', (event) => events.push(event));
+    tracker.start();
+    await advanceTicks(4);
+
+    state.deckState = null;
+    await advanceTicks(2);
+
+    expect(events.at(-1)?.completedMatch).toMatchObject({
+      result: 'unknown',
+      playOrder: 'unknown',
+      deckId: 42,
+      deckName: 'Recorded Real Deck',
+      opponentName: 'Opponent',
+      gameType: 3,
+      formatType: 2,
+    });
+    tracker.stop();
+  });
+
+  it('omits completedMatch summary for arena games', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch({ gameType: 5, formatType: 2 });
+    state.decks = [fakeDeck(42, 'Arena-like Deck')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 42),
+    });
+    tracker.on('match-ended', (event) => events.push(event));
+    tracker.start();
+    await advanceTicks(4);
+
+    state.deckState = null;
+    await advanceTicks(2);
+
+    expect(events.at(-1)?.completedMatch).toBeUndefined();
+    tracker.stop();
+  });
+
+  it('omits completedMatch summary for mission or practice games', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch({ gameType: 3, formatType: 2, missionId: 270 });
+    state.decks = [fakeDeck(42, 'Practice Deck')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 42),
+    });
+    tracker.on('match-ended', (event) => events.push(event));
+    tracker.start();
+    await advanceTicks(4);
+
+    state.deckState = null;
+    await advanceTicks(2);
+
+    expect(events.at(-1)?.completedMatch).toBeUndefined();
+    tracker.stop();
+  });
+
   it('tracks a revealed opposing board card in the snapshot', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();
