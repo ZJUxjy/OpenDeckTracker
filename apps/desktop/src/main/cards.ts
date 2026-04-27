@@ -4,7 +4,12 @@ import { fileURLToPath } from 'node:url';
 import { app } from 'electron';
 import { loadCards, type CardDb } from '@hdt/hearthdb';
 
-const RELATIVE_JSON = 'data/cards/generated/cards.all.enUS.json';
+const DEFAULT_CARDS_LOCALE = 'enUS';
+type CardsLocale = string;
+
+function relativeJson(locale: CardsLocale): string {
+  return `data/cards/generated/cards.all.${locale}.json`;
+}
 
 /**
  * Locate the cards JSON. In dev, main bundle lives at
@@ -13,16 +18,22 @@ const RELATIVE_JSON = 'data/cards/generated/cards.all.enUS.json';
  *
  * Try a few likely locations and return the first that exists.
  */
-function resolveCardsJsonPath(): string {
+function resolveCardsJsonPath(locale: CardsLocale): string {
   const here = dirname(fileURLToPath(import.meta.url));
+  const relativeJsonPath = relativeJson(locale);
+  const appPath = typeof app?.getAppPath === 'function' ? app.getAppPath() : null;
   const candidates = [
     // dev: from out/main go up 3 levels to monorepo root
-    resolve(here, '../../../..', RELATIVE_JSON),
+    resolve(here, '../../../..', relativeJsonPath),
     // legacy / explicit cwd at repo root
-    resolve(process.cwd(), RELATIVE_JSON),
+    resolve(process.cwd(), relativeJsonPath),
     // fallback to electron app path (production / packaged)
-    resolve(app.getAppPath(), RELATIVE_JSON),
-    resolve(app.getAppPath(), '../..', RELATIVE_JSON),
+    ...(appPath
+      ? [
+          resolve(appPath, relativeJsonPath),
+          resolve(appPath, '../..', relativeJsonPath),
+        ]
+      : []),
   ];
   for (const p of candidates) {
     if (existsSync(p)) return p;
@@ -31,19 +42,39 @@ function resolveCardsJsonPath(): string {
   return candidates[0]!;
 }
 
-let dbPromise: Promise<CardDb> | null = null;
+const dbPromises = new Map<string, Promise<CardDb>>();
 
-export function ensureCardDb(): Promise<CardDb> {
-  if (!dbPromise) {
-    const jsonPath = resolveCardsJsonPath();
-    dbPromise = loadCards(jsonPath);
-    dbPromise.catch((e: Error) => {
-      console.error('[cards] failed to load cards.all.enUS.json:', e.message);
-      console.error('[cards] tried path:', jsonPath);
-      console.error(
-        "[cards] Run 'pnpm cards:convert' from the repo root to generate the data, then restart the app.",
-      );
-    });
-  }
+export function ensureCardDb(locale: CardsLocale = DEFAULT_CARDS_LOCALE): Promise<CardDb> {
+  const normalizedLocale = locale || DEFAULT_CARDS_LOCALE;
+  const existing = dbPromises.get(normalizedLocale);
+  if (existing) return existing;
+
+  const dbPromise = loadCardDb(normalizedLocale);
+  dbPromises.set(normalizedLocale, dbPromise);
   return dbPromise;
+}
+
+function loadCardDb(locale: CardsLocale): Promise<CardDb> {
+  const jsonPath = resolveCardsJsonPath(locale);
+  const dbPromise = loadCards(jsonPath).catch((e: Error) => {
+    if (locale !== DEFAULT_CARDS_LOCALE) {
+      console.error(
+        `[cards] failed to load cards.all.${locale}.json, falling back to ${DEFAULT_CARDS_LOCALE}:`,
+        e.message,
+      );
+      return ensureCardDb(DEFAULT_CARDS_LOCALE);
+    }
+
+    console.error(`[cards] failed to load cards.all.${locale}.json:`, e.message);
+    console.error('[cards] tried path:', jsonPath);
+    console.error(
+      "[cards] Run 'pnpm cards:convert' from the repo root to generate the data, then restart the app.",
+    );
+    throw e;
+  });
+  return dbPromise;
+}
+
+export function clearCardDbCacheForTests(): void {
+  dbPromises.clear();
 }

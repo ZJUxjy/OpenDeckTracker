@@ -1,15 +1,17 @@
 import { AppWindow, BarChart2, BookOpen, Crown, Settings } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
+import { useTranslation } from '../i18n';
 
 const navItems = [
-  { id: 'tracker', icon: AppWindow, label: 'Deck Tracker' },
-  { id: 'stats', icon: BarChart2, label: 'Stats' },
-  { id: 'collection', icon: BookOpen, label: 'Collection' },
+  { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker' },
+  { id: 'stats', icon: BarChart2, labelKey: 'sidebar.stats' },
+  { id: 'collection', icon: BookOpen, labelKey: 'sidebar.collection' },
 ];
 
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const isActive = (id: string) => location.pathname === `/${id}`;
 
@@ -39,7 +41,7 @@ export function Sidebar() {
               size={18}
               className={isActive(item.id) ? 'text-orange-500' : 'text-slate-500'}
             />
-            <span className="font-medium text-sm">{item.label}</span>
+            <span className="font-medium text-sm">{t(item.labelKey)}</span>
           </button>
         ))}
       </nav>
@@ -56,7 +58,7 @@ export function Sidebar() {
           }`}
         >
           <Settings size={18} className={isActive('settings') ? 'text-orange-500' : ''} />
-          <span className="font-medium text-sm">Settings</span>
+          <span className="font-medium text-sm">{t('sidebar.settings')}</span>
         </button>
       </div>
     </aside>

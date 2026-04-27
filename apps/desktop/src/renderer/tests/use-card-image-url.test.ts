@@ -1,11 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { createElement, type ReactNode } from 'react';
 import {
   useCardImageUrl,
   getCardImageUrl,
   markFallback,
-  markSuccess,
 } from '../src/hooks/use-card-image-url';
+import { I18nProvider } from '../src/i18n';
+
+function zhCNWrapper({ children }: { children: ReactNode }) {
+  return createElement(I18nProvider, { preference: 'zh-CN' }, children);
+}
 
 describe('useCardImageUrl', () => {
   beforeEach(() => {
@@ -15,20 +20,20 @@ describe('useCardImageUrl', () => {
   });
 
   it('returns zhCN primary URL', () => {
-    const { result } = renderHook(() => useCardImageUrl('EX1_277'));
+    const { result } = renderHook(() => useCardImageUrl('EX1_277'), { wrapper: zhCNWrapper });
     expect(result.current.primary).toContain('/zhCN/');
     expect(result.current.primary).toContain('EX1_277.png');
   });
 
   it('returns enUS fallback URL', () => {
-    const { result } = renderHook(() => useCardImageUrl('EX1_277'));
+    const { result } = renderHook(() => useCardImageUrl('EX1_277'), { wrapper: zhCNWrapper });
     expect(result.current.fallback).toContain('/enUS/');
     expect(result.current.fallback).toContain('EX1_277.png');
   });
 
   it('uses cached fallback after markFallback', () => {
     markFallback('EX1_277');
-    const { result } = renderHook(() => useCardImageUrl('EX1_277'));
+    const { result } = renderHook(() => useCardImageUrl('EX1_277'), { wrapper: zhCNWrapper });
     // After fallback was marked, primary should also be fallback
     expect(result.current.primary).toContain('/enUS/');
   });
@@ -50,7 +55,7 @@ describe('useCardImageUrl', () => {
       size: '256x',
     });
 
-    const { result } = renderHook(() => useCardImageUrl('EX1_277'));
+    const { result } = renderHook(() => useCardImageUrl('EX1_277'), { wrapper: zhCNWrapper });
 
     await waitFor(() => {
       expect(result.current.primary).toBe('hdt-card-image://cache/zhCN/256x/EX1_277.png');

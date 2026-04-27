@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { CardImagePopover } from '../src/components/CardImagePopover';
+import { I18nProvider } from '../src/i18n';
 
 function getMockRect(): DOMRect {
   return {
@@ -16,6 +18,10 @@ function getMockRect(): DOMRect {
   };
 }
 
+function renderZhCN(element: ReactElement) {
+  return render(<I18nProvider preference="zh-CN">{element}</I18nProvider>);
+}
+
 describe('CardImagePopover', () => {
   beforeEach(() => {
     // Reset window.innerWidth/innerHeight for consistent positioning
@@ -25,7 +31,7 @@ describe('CardImagePopover', () => {
   });
 
   it('renders with zhCN image URL', () => {
-    render(
+    renderZhCN(
       <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
     );
     const img = screen.getByRole('img');
@@ -34,7 +40,7 @@ describe('CardImagePopover', () => {
   });
 
   it('falls back to enUS on error', async () => {
-    render(
+    renderZhCN(
       <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
     );
     const img = screen.getByRole('img');
@@ -46,13 +52,13 @@ describe('CardImagePopover', () => {
     // Simulate second error (enUS → error state)
     fireEvent.error(img);
     await waitFor(() => {
-      expect(screen.getByText('卡图加载失败')).toBeInTheDocument();
+      expect(screen.getByText('卡牌图片不可用')).toBeInTheDocument();
     });
   });
 
   it('calls onClose on mouse leave', () => {
     const onClose = vi.fn();
-    render(
+    renderZhCN(
       <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={onClose} />,
     );
     const container = screen.getByRole('img').closest('.fixed')!;
@@ -61,10 +67,10 @@ describe('CardImagePopover', () => {
   });
 
   it('shows loading state initially', () => {
-    render(
+    renderZhCN(
       <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
     );
-    expect(screen.getByText('加载中...')).toBeInTheDocument();
+    expect(screen.getByText('正在加载卡牌图片...')).toBeInTheDocument();
   });
 
   it('uses cached image source when preload API resolves', async () => {
@@ -74,7 +80,7 @@ describe('CardImagePopover', () => {
       size: '256x',
     });
 
-    render(
+    renderZhCN(
       <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
     );
 

@@ -83,6 +83,11 @@
   },
   "decklist": {
     "title": "卡组列表",
+    "activeDeck": "当前卡组",
+    "deckPreview": "卡组预览",
+    "options": "选项",
+    "export": "导出",
+    "syncing": "同步中...",
     "empty": "没有卡牌"
   },
   "cardImage": {

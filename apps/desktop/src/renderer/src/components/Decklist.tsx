@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import * as HoverCard from '@radix-ui/react-hover-card';
+import { useLocale, useTranslation } from '../i18n';
 
 type Rarity = Card['rarity'];
 
@@ -29,6 +30,7 @@ function rarityFromHearthDb(value: string | undefined): Rarity {
  * Cards without dbfId or with failed lookup keep their mock fields untouched.
  */
 function useEnrichedCards(input: readonly Card[]): Card[] {
+  const locale = useLocale();
   const [enriched, setEnriched] = useState<Card[]>([...input]);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ function useEnrichedCards(input: readonly Card[]): Card[] {
     // (e.g. CSP block, sandbox/preload mismatch). Keep mock fallback.
     if (typeof window === 'undefined' || !window.hdt?.cards?.findByDbfId) return;
 
-    void Promise.all(dbfIds.map((id) => window.hdt.cards.findByDbfId(id)))
+    void Promise.all(dbfIds.map((id) => window.hdt.cards.findByDbfId(id, locale)))
       .then((defs) => {
         if (cancelled) return;
         const byDbfId = new Map<number, (typeof defs)[number]>();
@@ -64,7 +66,7 @@ function useEnrichedCards(input: readonly Card[]): Card[] {
     return () => {
       cancelled = true;
     };
-  }, [input]);
+  }, [input, locale]);
 
   return enriched;
 }
@@ -198,6 +200,7 @@ export function DeckCard({ card, disableTooltip = false, side = 'left' }: { card
 }
 
 export function DeckTracker({ cards }: { cards: Card[] }) {
+  const { t } = useTranslation();
   const enriched = useEnrichedCards(cards);
   const sortedCards = [...enriched].sort((a, b) => {
     if (a.cost === b.cost) return a.name.localeCompare(b.name);
@@ -211,10 +214,10 @@ export function DeckTracker({ cards }: { cards: Card[] }) {
     <div className="w-[280px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden relative">
       <div className="bg-[#1C1C24] p-3 flex flex-col justify-center border-b border-[#2A2A35]">
         <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
-          Active Deck
+          {t('decklist.activeDeck')}
         </div>
         <div className="text-white font-bold flex justify-between items-center">
-          <span>Deck Preview</span>
+          <span>{t('decklist.deckPreview')}</span>
           <span className="text-orange-400 text-sm">{cardsRemaining} / {cardsInDeck}</span>
         </div>
       </div>
@@ -227,10 +230,10 @@ export function DeckTracker({ cards }: { cards: Card[] }) {
       
       <div className="bg-[#1C1C24] p-3 border-t border-[#2A2A35] flex justify-between items-center text-xs text-slate-400">
         <div className="flex space-x-3">
-          <button className="hover:text-white transition-colors">Options</button>
-          <button className="hover:text-white transition-colors">Export</button>
+          <button className="hover:text-white transition-colors">{t('decklist.options')}</button>
+          <button className="hover:text-white transition-colors">{t('decklist.export')}</button>
         </div>
-        <div className="text-orange-500/80 font-medium">Syncing...</div>
+        <div className="text-orange-500/80 font-medium">{t('decklist.syncing')}</div>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { markFallback, markSuccess, useCardImageUrl } from '../hooks/use-card-image-url';
+import { useLocale, useTranslation } from '../i18n';
 
 interface CardImagePopoverProps {
   cardId: string;
@@ -14,6 +15,8 @@ export function CardImagePopover({
   onClose,
   placement = 'left',
 }: CardImagePopoverProps) {
+  const { t } = useTranslation();
+  const locale = useLocale();
   const { primary, fallback } = useCardImageUrl(cardId);
   const [src, setSrc] = useState(primary);
   const [error, setError] = useState(false);
@@ -27,20 +30,20 @@ export function CardImagePopover({
 
   const handleImageError = useCallback(() => {
     if (src !== fallback) {
-      markFallback(cardId);
+      markFallback(cardId, locale);
       setLoading(true);
       setSrc(fallback);
     } else {
       setError(true);
       setLoading(false);
     }
-  }, [src, cardId, fallback]);
+  }, [src, cardId, fallback, locale]);
 
   const handleImageLoad = useCallback(() => {
-    markSuccess(cardId, src);
+    markSuccess(cardId, src, locale);
     setLoading(false);
     setError(false);
-  }, [cardId, src]);
+  }, [cardId, locale, src]);
 
   // Default position: left of the local deck panel. Opponent panel can request right side.
   const top = Math.max(8, Math.min(anchorRect.top - 80, window.innerHeight - 420));
@@ -56,12 +59,12 @@ export function CardImagePopover({
       <div className="w-[256px] bg-[#1C1C24] rounded-lg shadow-2xl border border-[#2A2A35] overflow-hidden">
         {loading && (
           <div className="h-[386px] flex items-center justify-center text-slate-400 text-xs">
-            加载中...
+            {t('cardImage.loading')}
           </div>
         )}
         {error && (
           <div className="h-[386px] flex items-center justify-center text-slate-400 text-xs">
-            卡图加载失败
+            {t('cardImage.unavailable')}
           </div>
         )}
         <img

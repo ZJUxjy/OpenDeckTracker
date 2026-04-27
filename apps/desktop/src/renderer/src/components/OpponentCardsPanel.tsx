@@ -3,6 +3,7 @@ import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
 import { CardImagePopover } from './CardImagePopover';
+import { useLocale, useTranslation } from '../i18n';
 
 interface OpponentCardsPanelProps {
   revealed: OpponentCardRecord[];
@@ -22,6 +23,7 @@ interface GroupedOpponentCard {
 }
 
 export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelProps) {
+  const { t } = useTranslation();
   const cardIds = useMemo(
     () => [...new Set([...revealed, ...graveyard].map((record) => record.cardId))],
     [revealed, graveyard],
@@ -62,27 +64,27 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
     <aside className="w-[260px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
       <div className="bg-[#1C1C24] p-3 border-b border-[#2A2A35]">
         <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
-          Opponent
+          {t('opponent.title')}
         </div>
-        <div className="text-white font-bold text-sm">Revealed Cards</div>
+        <div className="text-white font-bold text-sm">{t('opponent.revealed')}</div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-[#2A2A35] scrollbar-track-transparent">
         {isEmpty ? (
           <div className="h-full flex items-center justify-center text-slate-500 text-sm px-4 text-center">
-            No opponent cards revealed
+            {t('opponent.empty')}
           </div>
         ) : (
           <div className="space-y-3">
             <OpponentCardSection
-              title="Played"
+              title={t('opponent.played')}
               cards={revealedGroups}
               defs={defs}
               onMouseEnter={handleRowMouseEnter}
               onMouseLeave={handleRowMouseLeave}
             />
             <OpponentCardSection
-              title="Graveyard"
+              title={t('opponent.graveyard')}
               cards={graveyardGroups}
               defs={defs}
               onMouseEnter={handleRowMouseEnter}
@@ -217,6 +219,7 @@ function toCardDisplayDef(def: CardDef): CardDisplayDef {
 }
 
 function useOpponentCardDefs(cardIds: string[]): Map<string, CardDisplayDef> {
+  const locale = useLocale();
   const [defs, setDefs] = useState<Map<string, CardDisplayDef>>(() => new Map());
 
   useEffect(() => {
@@ -231,7 +234,7 @@ function useOpponentCardDefs(cardIds: string[]): Map<string, CardDisplayDef> {
       };
     }
 
-    void Promise.all(ids.map(async (id) => [id, await api.findById(id)] as const)).then(
+    void Promise.all(ids.map(async (id) => [id, await api.findById(id, locale)] as const)).then(
       (rows) => {
         if (!alive) return;
         const next = new Map<string, CardDisplayDef>();
@@ -245,7 +248,7 @@ function useOpponentCardDefs(cardIds: string[]): Map<string, CardDisplayDef> {
     return () => {
       alive = false;
     };
-  }, [cardIds]);
+  }, [cardIds, locale]);
 
   return defs;
 }

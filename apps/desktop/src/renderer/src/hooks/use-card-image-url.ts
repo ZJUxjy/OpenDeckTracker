@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocale, type AppLocale } from '../i18n';
 
-const PRIMARY_LOCALE = 'zhCN';
 const FALLBACK_LOCALE = 'enUS';
+const DEFAULT_APP_LOCALE_FOR_CARD_IMAGES: AppLocale = 'zh-CN';
 const SIZE = '256x';
 const BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
 
@@ -12,16 +13,28 @@ const BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
 const resolvedUrls = new Map<string, string>();
 const cachedImageUrls = new Map<string, string>();
 
+function toHearthstoneLocale(appLocale: AppLocale): 'enUS' | 'zhCN' {
+  return appLocale === 'zh-CN' ? 'zhCN' : 'enUS';
+}
+
+function cacheKey(cardId: string, appLocale: AppLocale): string {
+  return `${appLocale}:${cardId}`;
+}
+
 function buildUrl(cardId: string, locale: string): string {
   return `${BASE_URL}/${locale}/${SIZE}/${cardId}.png`;
 }
 
-export function getCardImageUrl(cardId: string): {
+export function getCardImageUrl(
+  cardId: string,
+  appLocale: AppLocale = DEFAULT_APP_LOCALE_FOR_CARD_IMAGES,
+): {
   primary: string;
   fallback: string;
 } {
+  const primaryLocale = toHearthstoneLocale(appLocale);
   return {
-    primary: buildUrl(cardId, PRIMARY_LOCALE),
+    primary: buildUrl(cardId, primaryLocale),
     fallback: buildUrl(cardId, FALLBACK_LOCALE),
   };
 }
@@ -35,11 +48,13 @@ export function useCardImageUrl(cardId: string): {
   primary: string;
   fallback: string;
 } {
-  const [cachedUrl, setCachedUrl] = useState(() => cachedImageUrls.get(cardId) ?? null);
+  const appLocale = useLocale();
+  const key = cacheKey(cardId, appLocale);
+  const [cachedUrl, setCachedUrl] = useState(() => cachedImageUrls.get(key) ?? null);
 
   useEffect(() => {
     let alive = true;
-    const existing = cachedImageUrls.get(cardId);
+    const existing = cachedImageUrls.get(key);
     if (existing) {
       setCachedUrl(existing);
       return () => {
@@ -56,10 +71,10 @@ export function useCardImageUrl(cardId: string): {
     }
 
     setCachedUrl(null);
-    void cardImagesApi.get(cardId)
+    void cardImagesApi.get(cardId, appLocale)
       .then((cached) => {
         if (!alive || !cached?.url) return;
-        cachedImageUrls.set(cardId, cached.url);
+        cachedImageUrls.set(key, cached.url);
         setCachedUrl(cached.url);
       })
       .catch(() => {
@@ -69,7 +84,7 @@ export function useCardImageUrl(cardId: string): {
     return () => {
       alive = false;
     };
-  }, [cardId]);
+  }, [appLocale, cardId, key]);
 
   return useMemo(() => {
     if (cachedUrl) {
@@ -80,7 +95,7 @@ export function useCardImageUrl(cardId: string): {
     }
 
     // Check cache first
-    const cached = resolvedUrls.get(cardId);
+    const cached = resolvedUrls.get(key);
     if (cached) {
       // If we know the fallback works, use it
       if (cached === 'fallback') {
@@ -90,24 +105,32 @@ export function useCardImageUrl(cardId: string): {
         };
       }
     }
-    return getCardImageUrl(cardId);
-  }, [cardId, cachedUrl]);
+    return getCardImageUrl(cardId, appLocale);
+  }, [appLocale, cardId, cachedUrl, key]);
 }
 
 /**
  * Mark that a cardId's primary URL failed and fallback should be used.
  */
-export function markFallback(cardId: string): void {
-  resolvedUrls.set(cardId, 'fallback');
+export function markFallback(
+  cardId: string,
+  appLocale: AppLocale = DEFAULT_APP_LOCALE_FOR_CARD_IMAGES,
+): void {
+  resolvedUrls.set(cacheKey(cardId, appLocale), 'fallback');
 }
 
 /**
  * Mark that a cardId loaded successfully with the given URL.
  */
-export function markSuccess(cardId: string, url: string): void {
-  if (url.includes(`/${PRIMARY_LOCALE}/`)) {
-    resolvedUrls.set(cardId, 'primary');
+export function markSuccess(
+  cardId: string,
+  url: string,
+  appLocale: AppLocale = DEFAULT_APP_LOCALE_FOR_CARD_IMAGES,
+): void {
+  const key = cacheKey(cardId, appLocale);
+  if (url.includes(`/${toHearthstoneLocale(appLocale)}/`)) {
+    resolvedUrls.set(key, 'primary');
   } else {
-    resolvedUrls.set(cardId, 'fallback');
+    resolvedUrls.set(key, 'fallback');
   }
 }
