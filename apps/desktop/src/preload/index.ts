@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
 import type { DeckTrackerEvent, DeckTrackerSnapshot } from '@hdt/core';
+import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 import type {
   AccountId,
   ArenaInfo,
@@ -21,21 +22,26 @@ import type {
   SelectedDeck,
 } from '@hdt/hearthmirror';
 
+type AppLocale = 'en-US' | 'zh-CN';
+
 const api = {
   app: {
     getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
   },
   cards: {
-    findByDbfId: (dbfId: number): Promise<CardDef | null> =>
-      ipcRenderer.invoke('cards:findByDbfId', dbfId),
-    findById: (id: string): Promise<CardDef | null> =>
-      ipcRenderer.invoke('cards:findById', id),
-    search: (filter: SearchFilter): Promise<CardDef[]> =>
-      ipcRenderer.invoke('cards:search', filter),
+    findByDbfId: (dbfId: number, locale?: AppLocale): Promise<CardDef | null> =>
+      ipcRenderer.invoke('cards:findByDbfId', dbfId, locale),
+    findById: (id: string, locale?: AppLocale): Promise<CardDef | null> =>
+      ipcRenderer.invoke('cards:findById', id, locale),
+    search: (filter: SearchFilter, locale?: AppLocale): Promise<CardDef[]> =>
+      ipcRenderer.invoke('cards:search', filter, locale),
   },
   cardImages: {
-    get: (cardId: string): Promise<{ url: string; locale: string; size: string } | null> =>
-      ipcRenderer.invoke('card-images:get', cardId),
+    get: (
+      cardId: string,
+      locale?: AppLocale,
+    ): Promise<{ url: string; locale: string; size: string } | null> =>
+      ipcRenderer.invoke('card-images:get', cardId, locale),
   },
   deck: {
     encode: (blueprint: DeckBlueprint): Promise<string> =>
@@ -94,6 +100,20 @@ const api = {
       const handler = (_e: IpcRendererEvent, event: DeckTrackerEvent): void => cb(event);
       ipcRenderer.on('deck-tracker:event', handler);
       return () => ipcRenderer.removeListener('deck-tracker:event', handler);
+    },
+  },
+  hearthwatcher: {
+    getStatus: (): Promise<HearthWatcherDiagnostic | null> =>
+      ipcRenderer.invoke('hearthwatcher:get-status'),
+    onStatus: (cb: (status: HearthWatcherDiagnostic) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, status: HearthWatcherDiagnostic): void => cb(status);
+      ipcRenderer.on('hearthwatcher:status', handler);
+      return () => ipcRenderer.removeListener('hearthwatcher:status', handler);
+    },
+    onEvent: (cb: (event: PowerEvent) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, event: PowerEvent): void => cb(event);
+      ipcRenderer.on('hearthwatcher:event', handler);
+      return () => ipcRenderer.removeListener('hearthwatcher:event', handler);
     },
   },
 };

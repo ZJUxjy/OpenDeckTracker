@@ -1,6 +1,6 @@
 import { Entity } from './entity';
 import { Player } from './player';
-import type { MatchPhase, Zone } from './types';
+import type { EntityInfo, MatchPhase, Zone } from './types';
 
 export interface GameInit {
   /** Optional pre-existing match id (undefined for fresh games). */
@@ -8,6 +8,14 @@ export interface GameInit {
   gameType?: number;
   formatType?: number;
   missionId?: number;
+}
+
+export interface LogDerivedEntityUpdate {
+  entityId: number;
+  cardId?: string;
+  zone?: Zone;
+  controllerId?: number;
+  info?: EntityInfo;
 }
 
 /**
@@ -164,6 +172,39 @@ export class Game {
           this.entities.delete(id);
         }
       }
+    }
+  }
+
+  /**
+   * Apply one additive entity update from the log stream.
+   *
+   * Unlike `applyEntitySnapshot`, this never deletes unseen entities:
+   * Power.log is an event source, so absence in one event does not mean
+   * an entity disappeared from the match.
+   */
+  applyLogDerivedEntityUpdate(update: LogDerivedEntityUpdate): void {
+    const existing = this.entities.get(update.entityId);
+    if (existing) {
+      if (update.cardId !== undefined) existing.cardId = update.cardId;
+      if (update.zone !== undefined) existing.zone = update.zone;
+      if (update.controllerId !== undefined) existing.controllerId = update.controllerId;
+      if (update.info !== undefined) existing.info = { ...existing.info, ...update.info };
+      return;
+    }
+
+    const entityArgs: ConstructorParameters<typeof Entity>[0] = {
+      entityId: update.entityId,
+      cardId: update.cardId ?? '',
+      zone: update.zone ?? 'INVALID',
+      controllerId: update.controllerId ?? 0,
+    };
+    if (update.info !== undefined) entityArgs.info = update.info;
+    this.entities.set(update.entityId, new Entity(entityArgs));
+  }
+
+  applyLogDerivedEntityUpdates(updates: Iterable<LogDerivedEntityUpdate>): void {
+    for (const update of updates) {
+      this.applyLogDerivedEntityUpdate(update);
     }
   }
 }

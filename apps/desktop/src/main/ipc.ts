@@ -15,17 +15,22 @@ import {
 } from './card-image-cache';
 import { getHearthMirror } from './hearthmirror';
 import { registerDeckTrackerIpc } from './deck-tracker';
+import { registerHearthWatcherIpc } from './hearthwatcher-host';
 
 let cardImageProtocolRegistered = false;
+
+function toHearthstoneLocale(appLocale?: string): 'enUS' | 'zhCN' {
+  return appLocale === 'zh-CN' ? 'zhCN' : 'enUS';
+}
 
 export function registerIpc(): void {
   ipcMain.handle('app:getVersion', () => app.getVersion());
   const cardImageRoot = defaultCardImageCacheRoot(app.getPath('userData'));
   registerCardImageProtocol(cardImageRoot);
 
-  ipcMain.handle('cards:findByDbfId', async (_, dbfId: number) => {
+  ipcMain.handle('cards:findByDbfId', async (_, dbfId: number, appLocale?: string) => {
     try {
-      const db = await ensureCardDb();
+      const db = await ensureCardDb(toHearthstoneLocale(appLocale));
       return db.findByDbfId(dbfId) ?? null;
     } catch (e) {
       console.error('[ipc cards:findByDbfId]', (e as Error).message);
@@ -33,9 +38,9 @@ export function registerIpc(): void {
     }
   });
 
-  ipcMain.handle('cards:findById', async (_, id: string) => {
+  ipcMain.handle('cards:findById', async (_, id: string, appLocale?: string) => {
     try {
-      const db = await ensureCardDb();
+      const db = await ensureCardDb(toHearthstoneLocale(appLocale));
       return db.findById(id) ?? null;
     } catch (e) {
       console.error('[ipc cards:findById]', (e as Error).message);
@@ -43,9 +48,9 @@ export function registerIpc(): void {
     }
   });
 
-  ipcMain.handle('cards:search', async (_, filter: SearchFilter) => {
+  ipcMain.handle('cards:search', async (_, filter: SearchFilter, appLocale?: string) => {
     try {
-      const db = await ensureCardDb();
+      const db = await ensureCardDb(toHearthstoneLocale(appLocale));
       return db.search(filter);
     } catch (e) {
       console.error('[ipc cards:search]', (e as Error).message);
@@ -53,9 +58,12 @@ export function registerIpc(): void {
     }
   });
 
-  ipcMain.handle('card-images:get', async (_, cardId: string) => {
+  ipcMain.handle('card-images:get', async (_, cardId: string, appLocale?: string) => {
     try {
-      const cached = await ensureCardImageCached(cardId, { root: cardImageRoot });
+      const cached = await ensureCardImageCached(cardId, {
+        root: cardImageRoot,
+        primaryLocale: toHearthstoneLocale(appLocale),
+      });
       return {
         url: cached.url,
         locale: cached.locale,
@@ -114,6 +122,7 @@ export function registerIpc(): void {
 
   // Deck-tracker host (M2)
   registerDeckTrackerIpc();
+  registerHearthWatcherIpc();
 }
 
 function registerCardImageProtocol(root: string): void {

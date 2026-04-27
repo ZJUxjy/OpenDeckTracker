@@ -5,7 +5,7 @@ export { Game } from './game/game';
 export { Player } from './game/player';
 export { Entity } from './game/entity';
 export { DeckSnapshot } from './game/deck-snapshot';
-export type { GameInit } from './game/game';
+export type { GameInit, LogDerivedEntityUpdate } from './game/game';
 export type { EntityInfo, MatchPhase, Zone } from './game/types';
 export { ZONE_BY_VALUE, zoneFromNumber } from './game/types';
 
