@@ -39,11 +39,22 @@ describe('nextPhase', () => {
     expect(nextPhase('PRE_MATCH', sig({ hasMatchInfo: true, hasDeckState: true, isGameOver: true }))).toBe('IN_MATCH');
   });
 
+  it('IN_MATCH → POST_MATCH when deck state disappears (game ended)', () => {
+    // hasMatchInfo still true (GameMgr persists at main menu),
+    // isGameOver is false (GameState singleton already torn down),
+    // but deck state is gone → match is over.
+    expect(nextPhase('IN_MATCH', sig({ hasMatchInfo: true }))).toBe('POST_MATCH');
+  });
+
   it('IN_MATCH → POST_MATCH on game over after deck state disappears', () => {
     expect(nextPhase('IN_MATCH', sig({ hasMatchInfo: true, isGameOver: true }))).toBe('POST_MATCH');
   });
 
-  it('IN_MATCH stays IN_MATCH when active deck state contradicts stale game-over flag', () => {
+  it('IN_MATCH stays IN_MATCH while playing', () => {
+    expect(nextPhase('IN_MATCH', sig({ hasMatchInfo: true, hasDeckState: true }))).toBe('IN_MATCH');
+  });
+
+  it('IN_MATCH stays IN_MATCH with deck state even if game-over flag is set', () => {
     expect(nextPhase('IN_MATCH', sig({ hasMatchInfo: true, hasDeckState: true, isGameOver: true }))).toBe('IN_MATCH');
   });
 
