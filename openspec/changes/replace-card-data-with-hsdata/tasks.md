@@ -5,7 +5,7 @@
 - [x] 1.3 Create `packages/hearthdb/src/tests/fixtures/hsdata-mini.xml` with three entities: collectible Fireball (`CS2_029`), a non-collectible hero power, and a card missing `zhCN`; expected fixture includes `CARDNAME`, `CARDTEXT_INHAND`, `COST`, `CLASS`, `CARD_SET`, `CARDTYPE`, `RARITY`, and `COLLECTIBLE` tags.
 - [x] 1.4 Create `scripts/fixtures/hsdata-duplicates.xml` with two entities sharing the same `CardID`; expected converter tests can assert duplicate detection.
 - [x] 1.5 Create `scripts/fixtures/hsdata-unknown-enum.xml` with one entity using an unsupported `CARDTYPE`; expected converter tests can assert contextual enum errors.
-- [ ] 1.6 Commit setup with `git add package.json pnpm-lock.yaml packages/hearthdb/src/tests/fixtures scripts/fixtures && git commit -m "test(hearthdb): add hsdata XML conversion fixtures"`; expected commit succeeds.
+- [x] 1.6 Commit setup with `git add package.json pnpm-lock.yaml packages/hearthdb/src/tests/fixtures scripts/fixtures && git commit -m "test(hearthdb): add hsdata XML conversion fixtures"`; expected commit succeeds.
 
 ## 2. Converter Tests First
 
@@ -31,7 +31,7 @@
 - [x] 3.9 Write `card-build.json` with XML build number, source path, generated timestamp, total card count, collectible card count, and locales; expected metadata test passes.
 - [x] 3.10 Run `pnpm exec vitest run scripts/convert-hsdata-cards.test.ts`; expected all converter tests pass.
 - [x] 3.11 Run `pnpm cards:convert` against `data/cards/hsdata/CardDefs.xml`; expected exit 0 and generated files `cards.all.enUS.json`, `cards.all.zhCN.json`, `cards.collectible.enUS.json`, `cards.collectible.zhCN.json`, `card-build.json`.
-- [ ] 3.12 Commit converter with `git add scripts package.json pnpm-lock.yaml data/cards && git commit -m "feat(hearthdb): convert hsdata CardDefs XML to generated JSON"`; expected commit succeeds.
+- [x] 3.12 Commit converter with `git add scripts package.json pnpm-lock.yaml data/cards && git commit -m "feat(hearthdb): convert hsdata CardDefs XML to generated JSON"`; expected commit succeeds.
 
 ## 4. CardDb Compatibility
 
@@ -41,7 +41,7 @@
 - [x] 4.4 Implement `collectible` filtering in `matches(card, filter)`; expected `pnpm --filter @hdt/hearthdb test card-search.hsdata` passes.
 - [x] 4.5 Add `packages/hearthdb/src/card-loader.hsdata.test.ts` loading fixture-generated full and collectible JSON; expected full size is greater than or equal to collectible size and collectible output contains only `collectible === true`.
 - [x] 4.6 Run `pnpm --filter @hdt/hearthdb test`; expected all hearthdb tests pass.
-- [ ] 4.7 Commit CardDb compatibility with `git add packages/hearthdb && git commit -m "feat(hearthdb): support full hsdata generated card database"`; expected commit succeeds.
+- [x] 4.7 Commit CardDb compatibility with `git add packages/hearthdb && git commit -m "feat(hearthdb): support full hsdata generated card database"`; expected commit succeeds.
 
 ## 5. Runtime Path, Docs, and CI
 
@@ -50,7 +50,7 @@
 - [x] 5.3 Update `.gitignore` to exclude `data/cards/generated/*.json` and retain relevant legacy JSON ignores; expected generated JSON files do not appear in `git status --short`.
 - [x] 5.4 Update root `README.md` quickstart to use `pnpm cards:convert` instead of `pnpm cards:download`; expected quickstart commands are accurate for local hsdata.
 - [x] 5.5 Update `.github/workflows/ci.yml` to run `pnpm cards:convert` after install and before tests; expected CI no longer depends on HearthstoneJSON network access for card data.
-- [ ] 5.6 Commit docs/CI/runtime path with `git add apps/desktop data/cards README.md .github .gitignore && git commit -m "build: use hsdata conversion as default card data source"`; expected commit succeeds.
+- [x] 5.6 Commit docs/CI/runtime path with `git add apps/desktop data/cards README.md .github .gitignore && git commit -m "build: use hsdata conversion as default card data source"`; expected commit succeeds.
 
 ## 6. Validation and Closeout
 
@@ -60,4 +60,4 @@
 - [x] 6.4 Run `pnpm typecheck`; expected all workspace TypeScript projects pass.
 - [x] 6.5 Run `openspec validate replace-card-data-with-hsdata --strict`; expected change is valid.
 - [x] 6.6 Update this `tasks.md` checklist to mark completed items `[x]`; expected `openspec status --change replace-card-data-with-hsdata` shows apply-required artifacts complete.
-- [ ] 6.7 Commit OpenSpec closeout with `git add openspec/changes/replace-card-data-with-hsdata && git commit -m "docs(openspec): finalize replace-card-data-with-hsdata plan"`; expected commit succeeds.
+- [x] 6.7 Commit OpenSpec closeout with `git add openspec/changes/replace-card-data-with-hsdata && git commit -m "docs(openspec): finalize replace-card-data-with-hsdata plan"`; expected commit succeeds.
