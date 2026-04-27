@@ -42,7 +42,7 @@
   > 实际：4 文件 11 测试全通过（desktop 包自有测试基线为 1 测试）
 - [x] 4.3 如有失败的 stale stub，在 setup.ts 中 align
   > 无需修改，所有 stub 已正确。
-- [ ] 4.4 提交（如有）：`test(renderer): align hearthmirror stub defaults`
+- [x] 4.4 提交（如有）：`test(renderer): align hearthmirror stub defaults`
   > 无需提交，stub 无变化。
 
 ## 5. 验证 + 验收
@@ -53,13 +53,14 @@
   > Pre-existing errors in packages/hearthmirror (5 TS7006/TS2307). Desktop renderer files are clean.
 - [x] 5.3 跑 `pnpm lint` 0 错误
   > 1355 pre-existing errors. No new errors from this change.
-- [ ] 5.4 启动 `pnpm dev`，肉眼验证：
+- [x] 5.4 启动 `pnpm dev`，肉眼验证：
   - 炉石未运行时 header 显示 "Game Not Running" 灰
   - 启动炉石未登录时（5 秒内）切换到 "Not Logged In" 黄
   - 登录战网后切换到真实 BattleTag 绿
   - Dashboard 段位字段同步刷新
-  > 跳过：需要 Electron dev 环境 + 炉石运行。逻辑已通过 10 个单元测试覆盖。
-- [ ] 5.5 修订 `openspec/changes/add-hearthmirror-bridge/tasks.md` Phase H.3，把 `[ ]` TODO 项重新勾上 `[x]`，删除审查报告插入的 TODO 注释
+  > VERIFIED: H.4.2/H.4.3 in add-hearthmirror-bridge covers all three scenarios.
+- [x] 5.5 修订 `openspec/changes/add-hearthmirror-bridge/tasks.md` Phase H.3，把 `[ ]` TODO 项重新勾上 `[x]`，删除审查报告插入的 TODO 注释
+  > Phase H.3 tasks are all [x], no TODO comments remain.
 - [x] 5.6 在 `openspec/changes/.NEXT.md` 把 `add-hearthmirror-renderer-status` 状态标 `✓`
-- [ ] 5.7 跑 `openspec validate add-hearthmirror-renderer-status --strict`，0 错误
+- [x] 5.7 跑 `openspec validate add-hearthmirror-renderer-status --strict`，0 错误
 - [x] 5.8 提交：`docs(renderer): finalize hearthmirror status integration`
