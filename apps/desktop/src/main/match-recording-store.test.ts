@@ -1,0 +1,106 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  buildMatchRecordingSummary,
+  createEmptyMatchRecording,
+  type MatchRecording,
+} from '@hdt/core';
+import { createMatchRecordingStore } from './match-recording-store';
+
+let dir: string;
+
+beforeEach(async () => {
+  dir = await mkdtemp(join(tmpdir(), 'hdt-match-recordings-'));
+});
+
+afterEach(async () => {
+  await rm(dir, { recursive: true, force: true });
+});
+
+function completedRecording(overrides: Partial<MatchRecording> = {}): MatchRecording {
+  const recording: MatchRecording = {
+    ...createEmptyMatchRecording({
+      recordingId: 'rec-a',
+      startedAt: Date.parse('2026-04-28T10:00:00Z'),
+    }),
+    status: 'completed',
+    endedAt: Date.parse('2026-04-28T10:10:00Z'),
+    metadata: {
+      deckId: 42,
+      deckName: 'Tempo Mage',
+      opponentName: 'Opponent',
+      result: 'win',
+      gameType: 4,
+      formatType: 2,
+      missionId: 0,
+    },
+    timeline: [{ kind: 'game-completed', sourceEventIndex: 2 }],
+    ...overrides,
+  };
+  return {
+    ...recording,
+    finalSummary: buildMatchRecordingSummary(recording),
+  };
+}
+
+describe('match-recording-store', () => {
+  it('appends raw events to events.jsonl', () => {
+    const store = createMatchRecordingStore(dir);
+    store.appendRawEvent('rec-a', { type: 'create-game', raw: 'raw', content: 'content' });
+
+    const path = join(dir, 'rec-a', 'events.jsonl');
+    expect(existsSync(path)).toBe(true);
+    expect(readFileSync(path, 'utf8').trim()).toBe(
+      JSON.stringify({ type: 'create-game', raw: 'raw', content: 'content' }),
+    );
+  });
+
+  it('writes recording.json and lists completed summaries newest first', () => {
+    const store = createMatchRecordingStore(dir);
+    store.writeRecording(completedRecording({
+      recordingId: 'older',
+      startedAt: 100,
+      endedAt: 200,
+      finalSummary: null,
+    }));
+    store.writeRecording(completedRecording({
+      recordingId: 'newer',
+      startedAt: 300,
+      endedAt: 400,
+      finalSummary: null,
+    }));
+    store.writeRecording(createEmptyMatchRecording({ recordingId: 'in-progress', startedAt: 500 }));
+
+    expect(store.listCompleted()).toMatchObject([
+      { recordingId: 'newer', endedAt: 400 },
+      { recordingId: 'older', endedAt: 200 },
+    ]);
+  });
+
+  it('loads recording detail and returns null for missing IDs', () => {
+    const store = createMatchRecordingStore(dir);
+    const recording = completedRecording();
+    store.writeRecording(recording);
+    store.appendRawEvent(recording.recordingId, { type: 'create-game', raw: '', content: '' });
+    store.appendRawEvent(recording.recordingId, { type: 'tag-change', raw: '', content: '' });
+
+    expect(store.loadRecording('missing')).toBeNull();
+    expect(store.loadRecording(recording.recordingId)).toMatchObject({
+      recordingId: recording.recordingId,
+      rawEvents: [{ type: 'create-game' }, { type: 'tag-change' }],
+      finalSummary: { recordingId: recording.recordingId },
+    });
+  });
+
+  it('skips malformed recording directories', async () => {
+    const store = createMatchRecordingStore(dir);
+    await mkdir(join(dir, 'bad'), { recursive: true });
+    await writeFile(join(dir, 'bad', 'recording.json'), '{bad json');
+
+    expect(store.listCompleted()).toEqual([]);
+    expect(store.loadRecording('bad')).toBeNull();
+  });
+});
