@@ -13,6 +13,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@hdt/hearthdb": "workspace:*",
     "@hdt/hearthmirror": "workspace:*"
   }
 }

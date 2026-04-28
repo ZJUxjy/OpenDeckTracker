@@ -159,6 +159,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@hdt/hearthdb':
+        specifier: workspace:*
+        version: link:../hearthdb
       '@hdt/hearthmirror':
         specifier: workspace:*
         version: link:../hearthmirror

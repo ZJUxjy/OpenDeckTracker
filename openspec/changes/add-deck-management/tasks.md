@@ -22,13 +22,13 @@
 
 ## 4. Import / Export Pure Functions
 
-- [ ] 4.1 Add failing tests in `packages/core/src/deck/import-export.test.ts` covering `toDeckstring` round-trip with a 30-card legal Druid deck (use `@hdt/hearthdb` deckstring fixture seeded into a stub `cardLookup`); run `pnpm --filter @hdt/core test -- import-export` and expect failure.
-- [ ] 4.2 Create `packages/core/src/deck/import-export.ts` exporting `toDeckstring(deck, cardLookup)`, `fromDeckstring(text, cardLookup)`, `toJson(deck)`, `fromJson(text)`, plus typed errors `UnknownCardError`, `DeckstringDecodeError`, `IllegalDeckExportError` (each subclassing `Error` with a non-default `name`); wire into `@hdt/hearthdb`'s existing deckstring encoder/decoder (declare a peer dep on `@hdt/hearthdb`); run `pnpm --filter @hdt/core test -- import-export` and expect pass.
-- [ ] 4.3 Extend `import-export.test.ts` with: `toDeckstring` on a 16-card deck throws `IllegalDeckExportError`, `fromDeckstring` with an unknown `cardId` throws `UnknownCardError` carrying that id, and `fromDeckstring` with malformed base64 throws `DeckstringDecodeError`; run `pnpm --filter @hdt/core test -- import-export` and expect pass.
-- [ ] 4.4 Add JSON envelope `schemaVersion: 1` to `toJson` output and a `fromJson` schema-version mismatch test asserting it throws `DeckstringDecodeError` with a clear message; run `pnpm --filter @hdt/core test -- import-export` and expect pass after implementation.
-- [ ] 4.5 Add a JSON round-trip test asserting `fromJson(toJson(deck))` preserves notes and tags; run `pnpm --filter @hdt/core test -- import-export` and expect pass.
-- [ ] 4.6 Run `pnpm --filter @hdt/core typecheck` and expect exit code 0; run `pnpm --filter @hdt/core test` and expect all `@hdt/core/deck` tests passing.
-- [ ] 4.7 Commit import/export work with message `feat(core): add deck import/export pure functions`.
+- [x] 4.1 Add failing tests in `packages/core/src/deck/import-export.test.ts` covering `toDeckstring` round-trip with a 30-card legal Druid deck (use `@hdt/hearthdb` deckstring fixture seeded into a stub `cardLookup`); run `pnpm --filter @hdt/core test -- import-export` and expect failure.
+- [x] 4.2 Create `packages/core/src/deck/import-export.ts` exporting `toDeckstring(deck, cardLookup)`, `fromDeckstring(text, cardLookup)`, `toJson(deck)`, `fromJson(text)`, plus typed errors `UnknownCardError`, `DeckstringDecodeError`, `IllegalDeckExportError` (each subclassing `Error` with a non-default `name`); wire into `@hdt/hearthdb`'s existing deckstring encoder/decoder (declare a peer dep on `@hdt/hearthdb`); run `pnpm --filter @hdt/core test -- import-export` and expect pass.
+- [x] 4.3 Extend `import-export.test.ts` with: `toDeckstring` on a 16-card deck throws `IllegalDeckExportError`, `fromDeckstring` with an unknown `cardId` throws `UnknownCardError` carrying that id, and `fromDeckstring` with malformed base64 throws `DeckstringDecodeError`; run `pnpm --filter @hdt/core test -- import-export` and expect pass.
+- [x] 4.4 Add JSON envelope `schemaVersion: 1` to `toJson` output and a `fromJson` schema-version mismatch test asserting it throws `DeckstringDecodeError` with a clear message; run `pnpm --filter @hdt/core test -- import-export` and expect pass after implementation.
+- [x] 4.5 Add a JSON round-trip test asserting `fromJson(toJson(deck))` preserves notes and tags; run `pnpm --filter @hdt/core test -- import-export` and expect pass.
+- [x] 4.6 Run `pnpm --filter @hdt/core typecheck` and expect exit code 0; run `pnpm --filter @hdt/core test` and expect all `@hdt/core/deck` tests passing.
+- [x] 4.7 Commit import/export work with message `feat(core): add deck import/export pure functions`.
 
 ## 5. SQLite-Backed DeckStore
 

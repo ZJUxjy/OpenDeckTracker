@@ -22,3 +22,15 @@ export {
 } from './validity';
 
 export { areCardListsEqual, canonicalCardListHash } from './deck-diff';
+
+export {
+  type DeckCodecLookup,
+  type DeckJsonEnvelope,
+  DeckstringDecodeError,
+  fromDeckstring,
+  fromJson,
+  IllegalDeckExportError,
+  toDeckstring,
+  toJson,
+  UnknownCardError,
+} from './import-export';
