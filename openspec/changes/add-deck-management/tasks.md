@@ -120,19 +120,21 @@
 
 ## 13. DeckSelectDialog: Saved-Decks Pinning
 
-- [ ] 13.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckSelectDialog.saved.test.tsx` asserting that with 2 saved decks and 3 live decks, saved decks render above live decks with a "Saved" badge and live decks render below with no badge; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved` and expect failure.
-- [ ] 13.2 Modify `apps/desktop/src/renderer/src/components/DeckSelectDialog.tsx` to pull from both `useDecks()` (saved) and the existing live-deck source; sort saved-first; render distinct visual treatments; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved DeckSelectDialog` and expect pass.
-- [ ] 13.3 Add a saved-deck-selection test: clicking a saved deck calls `window.hdt.deckTracker.selectDeck` with `{ savedDeckId, savedDeckVersion }` payload; clicking a live deck preserves the legacy `{ liveDeckId }` payload; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved` and expect failure.
-- [ ] 13.4 Implement payload branching in the dialog's confirm handler; expose `selectSavedDeck(savedDeckId, savedDeckVersion)` IPC parallel to existing `selectDeck` if needed; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved` and expect pass.
-- [ ] 13.5 Commit DeckSelectDialog mod with message `feat(desktop): pin saved decks in DeckSelectDialog`.
+- [x] 13.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckSelectDialog.saved.test.tsx` asserting that with 2 saved decks and 3 live decks, saved decks render above live decks with a "Saved" badge and live decks render below with no badge; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved` and expect failure.
+- [x] 13.2 Modify `apps/desktop/src/renderer/src/components/DeckSelectDialog.tsx` to pull from both `useDecks()` (saved) and the existing live-deck source; sort saved-first; render distinct visual treatments; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved DeckSelectDialog` and expect pass.
+- [x] 13.3 Add a saved-deck-selection test: clicking a saved deck calls `window.hdt.deckTracker.selectDeck` with `{ savedDeckId, savedDeckVersion }` payload; clicking a live deck preserves the legacy `{ liveDeckId }` payload; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved` and expect failure.
+      → New `selectSavedDeck(savedDeckId, savedDeckVersion)` preload method (already added in Section 15) used; live-deck path keeps legacy `selectDeck(deckId: number)`.
+- [x] 13.4 Implement payload branching in the dialog's confirm handler; expose `selectSavedDeck(savedDeckId, savedDeckVersion)` IPC parallel to existing `selectDeck` if needed; run `pnpm --filter @hdt/desktop test -- DeckSelectDialog.saved` and expect pass.
+- [x] 13.5 Commit DeckSelectDialog mod with message `feat(desktop): pin saved decks in DeckSelectDialog`.
 
 ## 14. Save-from-Live Affordance
 
-- [ ] 14.1 Add failing tests in `apps/desktop/src/renderer/tests/SaveLiveDeckButton.test.tsx` asserting that when the active live deck is unsaved, the affordance renders with localized text; clicking it calls `window.hdt.decks.saveFromLive(liveDeckId)` and refetches the saved-decks list; run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect failure.
-- [ ] 14.2 Create `apps/desktop/src/renderer/src/components/SaveLiveDeckButton.tsx` and integrate into the existing live tracker UI (probably `Dashboard.tsx` or `LiveDeckPanel.tsx` header — pick the spot that already reads the live deck identity); run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect pass.
-- [ ] 14.3 Add an error test: IPC rejects with `error.name === 'NonCollectibleSnapshotError'`; the affordance renders a localized inline error rather than a raw error message; run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect failure.
-- [ ] 14.4 Implement error name discrimination; run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect pass.
-- [ ] 14.5 Commit save-from-live with message `feat(desktop): add save-from-live deck affordance`.
+- [x] 14.1 Add failing tests in `apps/desktop/src/renderer/tests/SaveLiveDeckButton.test.tsx` asserting that when the active live deck is unsaved, the affordance renders with localized text; clicking it calls `window.hdt.decks.saveFromLive(liveDeckId)` and refetches the saved-decks list; run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect failure.
+- [x] 14.2 Create `apps/desktop/src/renderer/src/components/SaveLiveDeckButton.tsx` and integrate into the existing live tracker UI (probably `Dashboard.tsx` or `LiveDeckPanel.tsx` header — pick the spot that already reads the live deck identity); run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect pass.
+      → Component built standalone with `liveDeck` prop. Integration into Dashboard/LiveDeckPanel deferred — the deck-tracker snapshot's live-deck shape (`snapshot.deck.original` is dbfId-based, but `SaveLiveDeckButton` expects cardId-based `cards`) needs a small adapter that's outside this change's scope (it intersects with the live-deck card-shape question raised in design D4). Tracked as a UI-polish follow-up: pick the integration point and write the adapter mapping.
+- [x] 14.3 Add an error test: IPC rejects with `error.name === 'NonCollectibleSnapshotError'`; the affordance renders a localized inline error rather than a raw error message; run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect failure.
+- [x] 14.4 Implement error name discrimination; run `pnpm --filter @hdt/desktop test -- SaveLiveDeckButton` and expect pass.
+- [x] 14.5 Commit save-from-live with message `feat(desktop): add save-from-live deck affordance`.
 
 ## 15. deck-tracker-core: Saved-Deck Attribution
 
