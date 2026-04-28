@@ -20,40 +20,41 @@
 
 ## 2. RuntimeSlot Wrapper + Back-off
 
-- [ ] 2.1 Add a failing test in `packages/hearthmirror/native/src/lib.rs` (or a new sibling `runtime_slot.rs` if cleaner) named `back_off_short_circuits_repeated_failed_inits` that:
+- [x] 2.1 Add a failing test in `packages/hearthmirror/native/src/lib.rs` (or a new sibling `runtime_slot.rs` if cleaner) named `back_off_short_circuits_repeated_failed_inits` that:
       - constructs a `RuntimeSlot` with a stub `try_init` that always returns `None` and counts invocations,
       - calls the cache-miss path twice within 100 ms,
       - asserts the stub was called exactly once.
       Run `cargo test -p hearthmirror-native --lib back_off_short_circuits` and expect failure.
-- [ ] 2.2 Define a new `struct RuntimeSlot { runtime: Option<MonoRuntime>, last_failed_init: Option<Instant>, reinit_count: u64 }`. Replace the existing `static MIRROR: Mutex<Option<MonoRuntime>>` with `static MIRROR: Mutex<RuntimeSlot>`. Provide `RuntimeSlot::default()`.
-- [ ] 2.3 Refactor `with_runtime`, `with_runtime_or`, and `is_alive` to operate on `RuntimeSlot`. The cache-miss path:
+- [x] 2.2 Define a new `struct RuntimeSlot { runtime: Option<MonoRuntime>, last_failed_init: Option<Instant>, reinit_count: u64 }`. Replace the existing `static MIRROR: Mutex<Option<MonoRuntime>>` with `static MIRROR: Mutex<RuntimeSlot>`. Provide `RuntimeSlot::default()`.
+- [x] 2.3 Refactor `with_runtime`, `with_runtime_or`, and `is_alive` to operate on `RuntimeSlot`. The cache-miss path:
       - Read the `last_failed_init` timestamp; if it is within the back-off window, return `Ok(None)` / `Ok(default)` / `Ok(false)` immediately.
       - Otherwise call `try_init()`; on `Some`, populate `runtime` and clear `last_failed_init`. On `None`, set `last_failed_init = Some(Instant::now())`.
-- [ ] 2.4 Read the back-off window from `std::env::var("HDT_HEARTHMIRROR_REINIT_BACKOFF_MS")`, default to `2000`. Memoize the parse via a `OnceLock`.
-- [ ] 2.5 Add a unit test for `back_off_clears_on_successful_init` asserting that a successful init resets the timer so a subsequent simulated failure can attempt again immediately. Run `cargo test -p hearthmirror-native --lib back_off` and expect both back-off tests pass.
-- [ ] 2.6 Add a unit test `wrapper_invalidates_runtime_when_probe_returns_false` using a stub liveness probe (e.g. inject the probe via a closure parameter — refactor the wrapper helper to accept it). Assert the cached runtime is dropped and `try_init` is called.
-- [ ] 2.7 Run `cargo test -p hearthmirror-native --lib` and expect all baseline tests still pass plus the new ones (≥80 + 3 = 83 minimum).
-- [ ] 2.8 Run `cargo clippy --lib --all-features -- -D warnings` and expect exit code 0.
-- [ ] 2.9 Commit with message `feat(hearthmirror): add RuntimeSlot with staleness invalidation and back-off`.
+- [x] 2.4 Read the back-off window from `std::env::var("HDT_HEARTHMIRROR_REINIT_BACKOFF_MS")`, default to `2000`. Memoize the parse via a `OnceLock`.
+- [x] 2.5 Add a unit test for `back_off_clears_on_successful_init` asserting that a successful init resets the timer so a subsequent simulated failure can attempt again immediately. Run `cargo test -p hearthmirror-native --lib back_off` and expect both back-off tests pass.
+- [x] 2.6 Add a unit test `wrapper_invalidates_runtime_when_probe_returns_false` using a stub liveness probe (e.g. inject the probe via a closure parameter — refactor the wrapper helper to accept it). Assert the cached runtime is dropped and `try_init` is called.
+- [x] 2.7 Run `cargo test -p hearthmirror-native --lib` and expect all baseline tests still pass plus the new ones (≥80 + 3 = 83 minimum).
+- [x] 2.8 Run `cargo clippy --lib --all-features -- -D warnings` and expect exit code 0.
+- [x] 2.9 Commit with message `feat(hearthmirror): add RuntimeSlot with staleness invalidation and back-off`.
+      → Scope merged with Sections 3 and 4 in a single commit because the `RuntimeSlot` rewrite, the AC retry path, and the diagnostic `eprintln!` lines all live in `lib.rs::with_runtime` / `with_runtime_or` and cannot land independently without a half-broken intermediate state. Single commit message `feat(hearthmirror): runtime recovery via slot + retry + diag`. New file `runtime_slot.rs` (generic over runtime type for unit testability), 6 slot-state tests, 4 wrapper-logic tests with a stub `StubRuntime: i32`. The diagnostic `eprintln!` lines are emitted inline in `drop_if_stale` and the AC retry branch.
 
 ## 3. Single-Retry on Assembly-CSharp ModuleNotFound
 
-- [ ] 3.1 Add a failing test `with_runtime_retries_once_on_assembly_csharp_not_found` in `lib.rs` injecting:
+- [x] 3.1 Add a failing test `with_runtime_retries_once_on_assembly_csharp_not_found` in `lib.rs` injecting:
       - a stub `try_init` that always returns `Some(MonoRuntime)` (counted),
       - a stub closure `f` that returns `Err(ModuleNotFound("Assembly-CSharp.dll"))` on first call and `Ok(Some(()))` on second.
       Assert `try_init` is called twice (initial + retry) and `f` is called twice. Run `cargo test -p hearthmirror-native --lib with_runtime_retries` and expect failure.
-- [ ] 3.2 Add a failing companion test `with_runtime_does_not_retry_on_other_module_not_found` where `f` returns `Err(ModuleNotFound("blizzard.bgsclient.dll"))`. Assert `try_init` is called only once and `f` is called only once. Run the same test command and expect failure.
-- [ ] 3.3 Implement the retry path in `with_runtime` and `with_runtime_or`. Match on the error variant; trigger only when `image_name == "Assembly-CSharp.dll"`. Replace the runtime, replay `f` exactly once. Run both tests and expect pass.
-- [ ] 3.4 Add unit test `retry_increments_reinit_count` asserting `reinit_count` reflects the retry. Run and expect pass.
-- [ ] 3.5 Run `cargo clippy --lib --all-features -- -D warnings` and expect exit code 0.
-- [ ] 3.6 Commit with message `feat(hearthmirror): retry once when Assembly-CSharp goes missing`.
+- [x] 3.2 Add a failing companion test `with_runtime_does_not_retry_on_other_module_not_found` where `f` returns `Err(ModuleNotFound("blizzard.bgsclient.dll"))`. Assert `try_init` is called only once and `f` is called only once. Run the same test command and expect failure.
+- [x] 3.3 Implement the retry path in `with_runtime` and `with_runtime_or`. Match on the error variant; trigger only when `image_name == "Assembly-CSharp.dll"`. Replace the runtime, replay `f` exactly once. Run both tests and expect pass.
+- [x] 3.4 Add unit test `retry_increments_reinit_count` asserting `reinit_count` reflects the retry. Run and expect pass.
+- [x] 3.5 Run `cargo clippy --lib --all-features -- -D warnings` and expect exit code 0.
+- [x] 3.6 Commit with message `feat(hearthmirror): retry once when Assembly-CSharp goes missing`.
 
 ## 4. Diagnostic Logging
 
-- [ ] 4.1 In each invalidation site (staleness probe + retry trigger), emit `eprintln!("MonoRuntime: invalidated (reason={} pid_was={} pid_now={})", reason, prev_pid, curr_pid_or_dash)`. Use a small enum `InvalidationReason { ProcessExited, PidChanged, AssemblyCSharpNotFound }`.
-- [ ] 4.2 Update `examples/dump_reflection.rs` to print a header line `runtime: pid=<n> reinit_count=<m>` before the per-method dump. Run `cargo build --example dump_reflection` and expect exit code 0.
-- [ ] 4.3 Add a unit test capturing stderr (via `std::process::Command` + `cargo run --example`-style harness — or simpler, just verify the format string with a unit-tested formatter helper) confirming the line shape. If too brittle, skip with a comment and rely on manual smoke (Section 6).
-- [ ] 4.4 Commit with message `feat(hearthmirror): emit diagnostic line on each runtime invalidation`.
+- [x] 4.1 In each invalidation site (staleness probe + retry trigger), emit `eprintln!("MonoRuntime: invalidated (reason={} pid_was={} pid_now={})", reason, prev_pid, curr_pid_or_dash)`. Use a small enum `InvalidationReason { ProcessExited, PidChanged, AssemblyCSharpNotFound }`.
+- [x] 4.2 Update `examples/dump_reflection.rs` to print a header line `runtime: pid=<n> reinit_count=<m>` before the per-method dump. Run `cargo build --example dump_reflection` and expect exit code 0.
+- [x] 4.3 Add a unit test capturing stderr (via `std::process::Command` + `cargo run --example`-style harness — or simpler, just verify the format string with a unit-tested formatter helper) confirming the line shape. If too brittle, skip with a comment and rely on manual smoke (Section 6).
+- [x] 4.4 Commit with message `feat(hearthmirror): emit diagnostic line on each runtime invalidation`.
 
 ## 5. Integration Test (Feature-Gated, Manual)
 
