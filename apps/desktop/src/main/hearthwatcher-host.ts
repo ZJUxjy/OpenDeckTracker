@@ -5,6 +5,10 @@ import {
   type PowerEvent,
 } from '@hdt/hearthwatcher';
 import { getLatestDeckTrackerSnapshot } from './deck-tracker';
+import {
+  createDefaultMatchRecordingStore,
+  createMatchRecordingRecorder,
+} from './match-recording-recorder';
 import { createPowerMatchRecorder } from './power-match-recorder';
 import { recordCompletedMatch } from './stats-host';
 
@@ -26,6 +30,10 @@ export function startHearthWatcher(): void {
     getSnapshot: getLatestDeckTrackerSnapshot,
     record: recordCompletedMatch,
   });
+  const recordingRecorder = createMatchRecordingRecorder({
+    store: createDefaultMatchRecordingStore(app.getPath('userData')),
+    getSnapshot: getLatestDeckTrackerSnapshot,
+  });
   watcher.onStatus((status) => {
     logHearthWatcherStatus(status);
     latestStatus = status;
@@ -33,6 +41,7 @@ export function startHearthWatcher(): void {
   });
   watcher.onEvent((event: PowerEvent) => {
     matchRecorder.handleEvent(event);
+    recordingRecorder.handleEvent(event);
     broadcast('hearthwatcher:event', event);
   });
 

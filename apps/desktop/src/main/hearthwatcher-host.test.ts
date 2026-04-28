@@ -17,17 +17,21 @@ const mocks = vi.hoisted(() => {
     stop: vi.fn(),
   };
   const powerRecorder = { handleEvent: vi.fn() };
+  const matchRecordingRecorder = { handleEvent: vi.fn() };
   return {
     statusHandlers,
     eventHandlers,
     watcher,
     createHearthWatcher: vi.fn(() => watcher),
     createPowerMatchRecorder: vi.fn(() => powerRecorder),
+    createDefaultMatchRecordingStore: vi.fn(() => ({ kind: 'store' })),
+    createMatchRecordingRecorder: vi.fn(() => matchRecordingRecorder),
     getLatestDeckTrackerSnapshot: vi.fn(() => null),
     recordCompletedMatch: vi.fn(),
     powerRecorder,
+    matchRecordingRecorder,
     ipcMain: { handle: vi.fn() },
-    app: { on: vi.fn() },
+    app: { on: vi.fn(), getPath: vi.fn(() => 'C:\\Users\\me\\AppData\\Roaming\\HDT') },
     send: vi.fn(),
   };
 });
@@ -38,6 +42,11 @@ vi.mock('@hdt/hearthwatcher', () => ({
 
 vi.mock('./power-match-recorder', () => ({
   createPowerMatchRecorder: mocks.createPowerMatchRecorder,
+}));
+
+vi.mock('./match-recording-recorder', () => ({
+  createDefaultMatchRecordingStore: mocks.createDefaultMatchRecordingStore,
+  createMatchRecordingRecorder: mocks.createMatchRecordingRecorder,
 }));
 
 vi.mock('./deck-tracker', () => ({
@@ -131,7 +140,15 @@ describe('hearthwatcher-host', () => {
       getSnapshot: mocks.getLatestDeckTrackerSnapshot,
       record: mocks.recordCompletedMatch,
     });
+    expect(mocks.createDefaultMatchRecordingStore).toHaveBeenCalledWith(
+      'C:\\Users\\me\\AppData\\Roaming\\HDT',
+    );
+    expect(mocks.createMatchRecordingRecorder).toHaveBeenCalledWith({
+      store: { kind: 'store' },
+      getSnapshot: mocks.getLatestDeckTrackerSnapshot,
+    });
     expect(mocks.powerRecorder.handleEvent).toHaveBeenCalledWith(event);
+    expect(mocks.matchRecordingRecorder.handleEvent).toHaveBeenCalledWith(event);
     expect(mocks.send).toHaveBeenCalledWith('hearthwatcher:event', event);
   });
 

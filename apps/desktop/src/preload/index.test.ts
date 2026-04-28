@@ -41,4 +41,20 @@ describe('preload api', () => {
     expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('stats:get-summary', 'season');
     expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('stats:list-recent', 'season', 5);
   });
+
+  it('exposes read-only match recording queries', async () => {
+    await import('./index');
+    const api = mocks.exposed as {
+      recordings: {
+        list(): Promise<unknown>;
+        get(recordingId: string): Promise<unknown>;
+      };
+    };
+
+    await api.recordings.list();
+    await api.recordings.get('rec-a');
+
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('recordings:list');
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('recordings:get', 'rec-a');
+  });
 });

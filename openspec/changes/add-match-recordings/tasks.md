@@ -34,17 +34,17 @@
 - [x] 3.9 Extend `match-recording-recorder.test.ts` with failing tests that a second `create-game` closes the previous recording as incomplete before starting the next one; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
 - [x] 3.10 Implement incomplete-recording closure in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
 - [x] 3.11 Add privacy regression tests in `match-recording-recorder.test.ts` asserting hidden opponent hand/deck cards are persisted without card IDs and revealed opponent cards are persisted after `show-entity`/`change-entity`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass after implementation.
-- [ ] 3.12 Commit recorder work with message `feat(desktop): record hearthwatcher match events`.
+- [x] 3.12 Commit recorder work with message `feat(desktop): record hearthwatcher match events`.
 
 ## 4. Desktop Wiring and IPC
 
-- [ ] 4.1 Update `apps/desktop/src/main/hearthwatcher-host.test.ts` with a failing expectation that HearthWatcher events are routed through `createMatchRecordingRecorder().handleEvent()` in addition to `createPowerMatchRecorder().handleEvent()`; run `pnpm --filter @hdt/desktop test -- hearthwatcher-host` and expect failure.
-- [ ] 4.2 Wire `createMatchRecordingRecorder()` into `apps/desktop/src/main/hearthwatcher-host.ts` using `app.getPath('userData')`, `getLatestDeckTrackerSnapshot`, and the file store; run `pnpm --filter @hdt/desktop test -- hearthwatcher-host` and expect pass.
-- [ ] 4.3 Add failing tests in `apps/desktop/src/main/match-recordings-ipc.test.ts` asserting `recordings:list` returns serializable summaries and `recordings:get` returns detail or `null`; run `pnpm --filter @hdt/desktop test -- match-recordings-ipc` and expect failure.
-- [ ] 4.4 Create `apps/desktop/src/main/match-recordings-ipc.ts` and register read-only IPC handlers; run `pnpm --filter @hdt/desktop test -- match-recordings-ipc` and expect pass.
-- [ ] 4.5 Update `apps/desktop/src/main/index.ts` or existing service registration to call the recording IPC registrar; run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
-- [ ] 4.6 Update `apps/desktop/src/preload/index.ts` with `window.hdt.recordings.list()` and `window.hdt.recordings.get(id)`; add failing preload tests in `apps/desktop/src/preload/index.test.ts`; run `pnpm --filter @hdt/desktop test -- index.test` and expect failure.
-- [ ] 4.7 Implement preload recording API exposure and renderer type declarations in `apps/desktop/src/renderer/src/env.d.ts`; run `pnpm --filter @hdt/desktop test -- index.test` and `pnpm --filter @hdt/desktop typecheck` and expect both pass.
+- [x] 4.1 Update `apps/desktop/src/main/hearthwatcher-host.test.ts` with a failing expectation that HearthWatcher events are routed through `createMatchRecordingRecorder().handleEvent()` in addition to `createPowerMatchRecorder().handleEvent()`; run `pnpm --filter @hdt/desktop test -- hearthwatcher-host` and expect failure.
+- [x] 4.2 Wire `createMatchRecordingRecorder()` into `apps/desktop/src/main/hearthwatcher-host.ts` using `app.getPath('userData')`, `getLatestDeckTrackerSnapshot`, and the file store; run `pnpm --filter @hdt/desktop test -- hearthwatcher-host` and expect pass.
+- [x] 4.3 Add failing tests in `apps/desktop/src/main/match-recordings-ipc.test.ts` asserting `recordings:list` returns serializable summaries and `recordings:get` returns detail or `null`; run `pnpm --filter @hdt/desktop test -- match-recordings-ipc` and expect failure.
+- [x] 4.4 Create `apps/desktop/src/main/match-recordings-ipc.ts` and register read-only IPC handlers; run `pnpm --filter @hdt/desktop test -- match-recordings-ipc` and expect pass.
+- [x] 4.5 Update `apps/desktop/src/main/index.ts` or existing service registration to call the recording IPC registrar; run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
+- [x] 4.6 Update `apps/desktop/src/preload/index.ts` with `window.hdt.recordings.list()` and `window.hdt.recordings.get(id)`; add failing preload tests in `apps/desktop/src/preload/index.test.ts`; run `pnpm --filter @hdt/desktop test -- index.test` and expect failure.
+- [x] 4.7 Implement preload recording API exposure and renderer type declarations in `apps/desktop/src/renderer/src/env.d.ts`; run `pnpm --filter @hdt/desktop test -- index.test` and `pnpm --filter @hdt/desktop typecheck` and expect both pass.
 - [ ] 4.8 Commit wiring and IPC work with message `feat(desktop): expose match recording reads`.
 
 ## 5. Verification and Cleanup
