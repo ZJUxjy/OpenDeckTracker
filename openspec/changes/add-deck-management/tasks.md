@@ -32,20 +32,20 @@
 
 ## 5. SQLite-Backed DeckStore
 
-- [ ] 5.1 Add failing tests in `apps/desktop/src/main/deck-store.test.ts` using `os.tmpdir()` + `fs.mkdtempSync` to construct a temp root, asserting first-open creates `decks.db` in the dir and `list()` returns `[]`; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
-- [ ] 5.2 Create `apps/desktop/src/main/deck-store.ts` exposing `createDeckStore(rootDir): DeckStore` with `better-sqlite3` open, `PRAGMA journal_mode = WAL`, schema bootstrap via inline `CREATE TABLE IF NOT EXISTS` for `decks`, `deck_cards`, `deck_versions`, `schema_version`; run `pnpm --filter @hdt/desktop test -- deck-store` and expect first-open + empty-list test to pass.
-- [ ] 5.3 Extend `deck-store.test.ts` with `create()` + `list()` round-trip and `getById()` returning full detail with cards; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
-- [ ] 5.4 Implement `create` (insert into `decks`, `deck_cards`, `deck_versions` v1 in a single transaction) and `getById` (left-join on `deck_cards` + `deck_versions`); run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
-- [ ] 5.5 Extend `deck-store.test.ts` with `update()` versioning rules: card-list-changing edit bumps `version` and appends a new `deck_versions` row; rename / retag / note edit does NOT bump version but refreshes `updatedAt`; insertion-order-only change does NOT bump version; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
-- [ ] 5.6 Implement `update` using `canonicalCardListHash` from `@hdt/core/deck` to drive the version bump decision; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
-- [ ] 5.7 Extend `deck-store.test.ts` with `duplicate(id)` (new id, copies cards + version 1, name suffix " (copy)"), `delete(id)` (idempotent), `getById` returns null after delete; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
-- [ ] 5.8 Implement `duplicate`, `delete`, `setSortIndex`; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
-- [ ] 5.9 Extend `deck-store.test.ts` with `saveFromLive`: collectible-only live deck snapshots successfully (assert returned cards equal input multiset); live deck containing a non-collectible cardId throws `NonCollectibleSnapshotError` (use stub cardLookup that flags one cardId as `collectible: false`); run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
-- [ ] 5.10 Implement `saveFromLive(liveDeck, cardLookup)` filtering by collectibility; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
-- [ ] 5.11 Extend `deck-store.test.ts` with an integrity-guard test: write a corrupt `decks.db` (`fs.writeFileSync(p, Buffer.from('not a sqlite file'))`), construct the store, assert original is renamed `decks.corrupt-*.db` and a fresh `decks.db` exists; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
-- [ ] 5.12 Implement `PRAGMA integrity_check` boot path with rename-on-fail behavior; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
-- [ ] 5.13 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
-- [ ] 5.14 Commit store work with message `feat(desktop): add deck SQLite store`.
+- [x] 5.1 Add failing tests in `apps/desktop/src/main/deck-store.test.ts` using `os.tmpdir()` + `fs.mkdtempSync` to construct a temp root, asserting first-open creates `decks.db` in the dir and `list()` returns `[]`; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
+- [x] 5.2 Create `apps/desktop/src/main/deck-store.ts` exposing `createDeckStore(rootDir): DeckStore` with `better-sqlite3` open, `PRAGMA journal_mode = WAL`, schema bootstrap via inline `CREATE TABLE IF NOT EXISTS` for `decks`, `deck_cards`, `deck_versions`, `schema_version`; run `pnpm --filter @hdt/desktop test -- deck-store` and expect first-open + empty-list test to pass.
+- [x] 5.3 Extend `deck-store.test.ts` with `create()` + `list()` round-trip and `getById()` returning full detail with cards; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
+- [x] 5.4 Implement `create` (insert into `decks`, `deck_cards`, `deck_versions` v1 in a single transaction) and `getById` (left-join on `deck_cards` + `deck_versions`); run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
+- [x] 5.5 Extend `deck-store.test.ts` with `update()` versioning rules: card-list-changing edit bumps `version` and appends a new `deck_versions` row; rename / retag / note edit does NOT bump version but refreshes `updatedAt`; insertion-order-only change does NOT bump version; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
+- [x] 5.6 Implement `update` using `canonicalCardListHash` from `@hdt/core/deck` to drive the version bump decision; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
+- [x] 5.7 Extend `deck-store.test.ts` with `duplicate(id)` (new id, copies cards + version 1, name suffix " (copy)"), `delete(id)` (idempotent), `getById` returns null after delete; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
+- [x] 5.8 Implement `duplicate`, `delete`, `setSortIndex`; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
+- [x] 5.9 Extend `deck-store.test.ts` with `saveFromLive`: collectible-only live deck snapshots successfully (assert returned cards equal input multiset); live deck containing a non-collectible cardId throws `NonCollectibleSnapshotError` (use stub cardLookup that flags one cardId as `collectible: false`); run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
+- [x] 5.10 Implement `saveFromLive(liveDeck, cardLookup)` filtering by collectibility; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
+- [x] 5.11 Extend `deck-store.test.ts` with an integrity-guard test: write a corrupt `decks.db` (`fs.writeFileSync(p, Buffer.from('not a sqlite file'))`), construct the store, assert original is renamed `decks.corrupt-*.db` and a fresh `decks.db` exists; run `pnpm --filter @hdt/desktop test -- deck-store` and expect failure.
+- [x] 5.12 Implement `PRAGMA integrity_check` boot path with rename-on-fail behavior; run `pnpm --filter @hdt/desktop test -- deck-store` and expect pass.
+- [x] 5.13 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
+- [x] 5.14 Commit store work with message `feat(desktop): add deck SQLite store`.
 
 ## 6. Deck IPC Handlers
 
