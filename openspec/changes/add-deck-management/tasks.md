@@ -8,11 +8,11 @@
 
 ## 2. Validity Checker
 
-- [ ] 2.1 Add failing tests in `packages/core/src/deck/validity.test.ts` covering: empty deck → `under-card-limit`, single legendary `count: 2` → `legendary-over-limit`, mage deck with warrior spell → `off-class-card`, hero card in main deck → `hero-in-main-deck`, three copies of a non-legendary → `over-copy-limit`, and a 30-card legal mono-class deck → `ok: true`; run `pnpm --filter @hdt/core test -- validity` and expect failure.
-- [ ] 2.2 Create `packages/core/src/deck/validity.ts` exporting `validateDeck(deck, cardLookup): { ok: boolean; issues: ValidityIssue[] }`; run `pnpm --filter @hdt/core test -- validity` and expect pass.
-- [ ] 2.3 Extend `validity.test.ts` with a 30-card neutral-only deck (no class card) → `ok: true` and an over-30 (32-card) deck → `over-card-limit`; run `pnpm --filter @hdt/core test -- validity` and expect pass.
-- [ ] 2.4 Add `validity.ts` JSDoc on each `ValidityIssue` discriminator listing example values; run `pnpm --filter @hdt/core typecheck` and expect exit code 0.
-- [ ] 2.5 Commit validity work with message `feat(core): add deck validity checker`.
+- [x] 2.1 Add failing tests in `packages/core/src/deck/validity.test.ts` covering: empty deck → `under-card-limit`, single legendary `count: 2` → `legendary-over-limit`, mage deck with warrior spell → `off-class-card`, hero card in main deck → `hero-in-main-deck`, three copies of a non-legendary → `over-copy-limit`, and a 30-card legal mono-class deck → `ok: true`; run `pnpm --filter @hdt/core test -- validity` and expect failure.
+- [x] 2.2 Create `packages/core/src/deck/validity.ts` exporting `validateDeck(deck, cardLookup): { ok: boolean; issues: ValidityIssue[] }`; run `pnpm --filter @hdt/core test -- validity` and expect pass.
+- [x] 2.3 Extend `validity.test.ts` with a 30-card neutral-only deck (no class card) → `ok: true` and an over-30 (32-card) deck → `over-card-limit`; run `pnpm --filter @hdt/core test -- validity` and expect pass.
+- [x] 2.4 Add `validity.ts` JSDoc on each `ValidityIssue` discriminator listing example values; run `pnpm --filter @hdt/core typecheck` and expect exit code 0.
+- [x] 2.5 Commit validity work with message `feat(core): add deck validity checker`.
 
 ## 3. Card-list Canonical Hash and Equality
 

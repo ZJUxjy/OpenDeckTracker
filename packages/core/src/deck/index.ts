@@ -13,3 +13,10 @@ export {
   type ValidityIssue,
   type ValidityIssueKind,
 } from './deck-types';
+
+export {
+  aggregateCardCount,
+  type CardLegalityInfo,
+  type CardLookup,
+  validateDeck,
+} from './validity';
