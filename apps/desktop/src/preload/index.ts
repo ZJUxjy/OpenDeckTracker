@@ -130,6 +130,10 @@ const api = {
       ipcRenderer.invoke('deck-tracker:get-snapshot'),
     selectDeck: (deckId: number): Promise<void> =>
       ipcRenderer.invoke('deck-tracker:select-deck', deckId),
+    selectSavedDeck: (savedDeckId: string, savedDeckVersion: number): Promise<void> =>
+      ipcRenderer.invoke('deck-tracker:select-saved-deck', savedDeckId, savedDeckVersion),
+    clearSavedDeck: (): Promise<void> =>
+      ipcRenderer.invoke('deck-tracker:clear-saved-deck'),
     cancelSelection: (): Promise<void> =>
       ipcRenderer.invoke('deck-tracker:cancel-selection'),
     /** Subscribe to per-tick snapshot pushes; returns an unsubscribe function. */

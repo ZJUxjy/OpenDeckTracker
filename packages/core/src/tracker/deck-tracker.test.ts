@@ -440,6 +440,89 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('selectSavedDeck flows savedDeckId/savedDeckVersion into match-ended summary', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch({ gameType: 3, formatType: 2 });
+    state.decks = [fakeDeck(42, 'Saved Druid')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 42),
+    });
+    tracker.on('match-ended', (event) => events.push(event));
+    tracker.selectSavedDeck('saved-d-1', 3);
+    tracker.start();
+    await advanceTicks(4);
+
+    state.deckState = null;
+    await advanceTicks(2);
+
+    expect(events.at(-1)?.completedMatch).toMatchObject({
+      deckId: 42,
+      savedDeckId: 'saved-d-1',
+      savedDeckVersion: 3,
+    });
+    tracker.stop();
+  });
+
+  it('omits savedDeckId/savedDeckVersion when selectSavedDeck is not called', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch({ gameType: 3, formatType: 2 });
+    state.decks = [fakeDeck(42, 'Live Druid')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 42),
+    });
+    tracker.on('match-ended', (event) => events.push(event));
+    tracker.start();
+    await advanceTicks(4);
+
+    state.deckState = null;
+    await advanceTicks(2);
+
+    const summary = events.at(-1)?.completedMatch as Record<string, unknown> | undefined;
+    expect(summary).toBeDefined();
+    expect(summary).not.toHaveProperty('savedDeckId');
+    expect(summary).not.toHaveProperty('savedDeckVersion');
+    tracker.stop();
+  });
+
+  it('clearSavedDeckAttribution removes a previously set saved-deck binding', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch({ gameType: 3, formatType: 2 });
+    state.decks = [fakeDeck(42, 'Live Druid')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 42),
+    });
+    tracker.on('match-ended', (event) => events.push(event));
+    tracker.selectSavedDeck('saved-d-1', 3);
+    tracker.clearSavedDeckAttribution();
+    tracker.start();
+    await advanceTicks(4);
+
+    state.deckState = null;
+    await advanceTicks(2);
+
+    const summary = events.at(-1)?.completedMatch as Record<string, unknown> | undefined;
+    expect(summary).not.toHaveProperty('savedDeckId');
+    tracker.stop();
+  });
+
   it('tracks a revealed opposing board card in the snapshot', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

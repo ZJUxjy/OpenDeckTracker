@@ -118,6 +118,13 @@ export class DeckTracker {
   private readonly opponentEntityOrders = new Map<number, number>();
   private identifiedDeck: { id: number; name: string } | null = null;
   /**
+   * App-managed saved-deck attribution. Set via `selectSavedDeck` when the
+   * user picks a saved deck through the renderer's `DeckSelectDialog`.
+   * Flows into `match-ended` summary as opaque values; the IPC host owns
+   * the link to the actual `DeckStore` row.
+   */
+  private savedDeckAttribution: { savedDeckId: string; savedDeckVersion: number } | null = null;
+  /**
    * Set when the orchestrator has emitted `needs-deck-selection` and is
    * waiting for the renderer to call `setOriginalDeck`. Avoids re-emitting
    * the prompt on every poll.
@@ -226,6 +233,22 @@ export class DeckTracker {
   /** Cancel the dialog wait without picking. Just clears the flag. */
   cancelDeckSelection(): void {
     this.awaitingDeckSelection = false;
+  }
+
+  /**
+   * Bind app-managed saved-deck attribution to the next emitted match-ended
+   * summary. The IPC host calls this when the renderer picks a saved deck
+   * via `DeckSelectDialog`. Live-deck identity (`identifiedDeck`) is set
+   * separately via `setOriginalDeck` / `selectDeckById` and remains the
+   * authoritative live ID; saved-deck values are additive.
+   */
+  selectSavedDeck(savedDeckId: string, savedDeckVersion: number): void {
+    this.savedDeckAttribution = { savedDeckId, savedDeckVersion };
+  }
+
+  /** Drop a previously-set saved-deck attribution (renderer cancelled). */
+  clearSavedDeckAttribution(): void {
+    this.savedDeckAttribution = null;
   }
 
   // ── Internal poll tick ─────────────────────────────────────────────
@@ -595,6 +618,12 @@ export class DeckTracker {
       playOrder: 'unknown',
       deckId: this.identifiedDeck?.id ?? null,
       deckName: this.identifiedDeck?.name ?? null,
+      ...(this.savedDeckAttribution !== null
+        ? {
+            savedDeckId: this.savedDeckAttribution.savedDeckId,
+            savedDeckVersion: this.savedDeckAttribution.savedDeckVersion,
+          }
+        : {}),
       opponentName: matchInfo?.opposingPlayer?.name ?? this.game.opposingPlayer.name ?? null,
       opponentClass: null,
       gameType,

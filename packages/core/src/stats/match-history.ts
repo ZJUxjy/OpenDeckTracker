@@ -17,6 +17,15 @@ export interface CompletedMatchSummary extends MatchClassification {
   playOrder: PlayOrder;
   deckId: number | null;
   deckName: string | null;
+  /**
+   * App-managed saved-deck reference, populated when the user picked a
+   * saved deck via `DeckSelectDialog` before the match. Absent when the
+   * user picked a live deck or no deck attribution was set. Stable across
+   * deck edits — `savedDeckVersion` pins the card list at the time of the
+   * match.
+   */
+  savedDeckId?: string;
+  savedDeckVersion?: number;
   opponentName: string | null;
   opponentClass: string | null;
   source: MatchHistorySource;

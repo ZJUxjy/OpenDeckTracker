@@ -109,4 +109,15 @@ export function registerDeckTrackerIpc(): void {
   ipcMain.handle('deck-tracker:cancel-selection', () => {
     tracker?.cancelDeckSelection();
   });
+
+  ipcMain.handle(
+    'deck-tracker:select-saved-deck',
+    (_, savedDeckId: string, savedDeckVersion: number) => {
+      tracker?.selectSavedDeck(savedDeckId, savedDeckVersion);
+    },
+  );
+
+  ipcMain.handle('deck-tracker:clear-saved-deck', () => {
+    tracker?.clearSavedDeckAttribution();
+  });
 }

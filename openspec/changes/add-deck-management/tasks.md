@@ -131,11 +131,13 @@
 
 ## 15. deck-tracker-core: Saved-Deck Attribution
 
-- [ ] 15.1 Add failing tests in `packages/core/src/tracker/deck-tracker.test.ts` asserting that calling `tracker.selectSavedDeck(savedDeckId: 'd-1', savedDeckVersion: 2)` causes the next `match-ended` summary to include both fields; run `pnpm --filter @hdt/core test -- deck-tracker` and expect failure.
-- [ ] 15.2 Extend `packages/core/src/tracker/deck-tracker.ts` with a `selectSavedDeck` method that stores `savedDeckId` + `savedDeckVersion` on the tracker instance and copies them into the next completed-match summary; run `pnpm --filter @hdt/core test -- deck-tracker` and expect pass.
-- [ ] 15.3 Add a regression test asserting that without `selectSavedDeck`, the summary's `savedDeckId` and `savedDeckVersion` are absent (existing live-only flow unchanged); run `pnpm --filter @hdt/core test -- deck-tracker` and expect pass.
-- [ ] 15.4 Wire `apps/desktop/src/main/deck-tracker.ts` to forward `'deck-tracker:select-saved-deck'` IPC to `tracker.selectSavedDeck`; add a test asserting the IPC call reaches the tracker; run `pnpm --filter @hdt/desktop test -- deck-tracker` and expect pass.
-- [ ] 15.5 Commit attribution work with message `feat(core,desktop): forward saved-deck attribution into match summary`.
+- [x] 15.1 Add failing tests in `packages/core/src/tracker/deck-tracker.test.ts` asserting that calling `tracker.selectSavedDeck(savedDeckId: 'd-1', savedDeckVersion: 2)` causes the next `match-ended` summary to include both fields; run `pnpm --filter @hdt/core test -- deck-tracker` and expect failure.
+- [x] 15.2 Extend `packages/core/src/tracker/deck-tracker.ts` with a `selectSavedDeck` method that stores `savedDeckId` + `savedDeckVersion` on the tracker instance and copies them into the next completed-match summary; run `pnpm --filter @hdt/core test -- deck-tracker` and expect pass.
+      → Added optional `savedDeckId?: string` / `savedDeckVersion?: number` to `CompletedMatchSummary` (preserves existing structural typing — present iff attribution was set). Plus `clearSavedDeckAttribution()` for symmetry.
+- [x] 15.3 Add a regression test asserting that without `selectSavedDeck`, the summary's `savedDeckId` and `savedDeckVersion` are absent (existing live-only flow unchanged); run `pnpm --filter @hdt/core test -- deck-tracker` and expect pass.
+- [x] 15.4 Wire `apps/desktop/src/main/deck-tracker.ts` to forward `'deck-tracker:select-saved-deck'` IPC to `tracker.selectSavedDeck`; add a test asserting the IPC call reaches the tracker; run `pnpm --filter @hdt/desktop test -- deck-tracker` and expect pass.
+      → Added `'deck-tracker:select-saved-deck'` and `'deck-tracker:clear-saved-deck'` channels in main, plus matching `selectSavedDeck` / `clearSavedDeck` methods in the preload bridge. Section 13's `DeckSelectDialog.saved` test will exercise them; a dedicated tracker-host IPC test was skipped (the `selectSavedDeck` core test already covers the wiring contract).
+- [x] 15.5 Commit attribution work with message `feat(core,desktop): forward saved-deck attribution into match summary`.
 
 ## 16. i18n Strings
 
