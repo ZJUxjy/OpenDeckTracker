@@ -13,9 +13,89 @@
   },
   "sidebar": {
     "deckTracker": "记牌器",
+    "decks": "卡组",
     "stats": "统计",
     "collection": "收藏",
     "settings": "设置"
+  },
+  "decks": {
+    "list": {
+      "title": "已保存的卡组",
+      "empty": {
+        "title": "尚无已保存的卡组",
+        "create": "新建卡组",
+        "import": "导入卡组码"
+      },
+      "row": {
+        "edit": "编辑",
+        "duplicate": "复制",
+        "export": "导出",
+        "delete": "删除",
+        "deleteConfirm": {
+          "title": "删除此卡组？",
+          "description": "将一并移除卡组及其全部版本历史。",
+          "cancel": "取消",
+          "confirm": "删除"
+        },
+        "savedBadge": "已保存",
+        "cardCount": "{count} / 30"
+      }
+    },
+    "editor": {
+      "title": "卡组编辑器",
+      "name": "名称",
+      "namePlaceholder": "未命名卡组",
+      "class": "职业",
+      "format": "模式",
+      "notes": "备注",
+      "tags": "标签",
+      "search": {
+        "placeholder": "搜索卡牌…"
+      },
+      "save": "保存并关闭",
+      "cancel": "取消",
+      "validity": {
+        "ok": "卡组合法。",
+        "underCardLimit": "需要 {required} 张卡，当前 {actual} 张。",
+        "overCardLimit": "卡牌过多：{actual} 张（上限 {required}）。",
+        "overCopyLimit": "{cardId}：副本过多（{count} 张）。",
+        "legendaryOverLimit": "{cardId}：传说至多 1 张。",
+        "offClassCard": "{cardId} 是 {cardClass} 职业卡；当前卡组职业为 {deckClass}。",
+        "heroInMainDeck": "{cardId}：英雄卡不可放入主卡组。"
+      }
+    },
+    "import": {
+      "title": "导入卡组",
+      "deckstringLabel": "粘贴卡组码或从剪贴板加载",
+      "deckstringPlaceholder": "AAEBA…",
+      "previewTitle": "预览",
+      "confirm": "导入",
+      "cancel": "取消",
+      "error": {
+        "unknownCard": "此卡组引用了未在卡牌数据库中的卡（cardId: {cardId}）。卡组码可能来自未来版本。",
+        "decode": "无法解析卡组码。",
+        "illegalExport": "卡组不合法。"
+      }
+    },
+    "export": {
+      "title": "导出卡组",
+      "deckstring": "卡组码",
+      "json": "JSON",
+      "copy": "复制",
+      "copied": "已复制！",
+      "illegalDeck": "无法导出非法卡组，请先补齐卡牌。"
+    },
+    "select": {
+      "savedBadge": "已保存",
+      "detected": "游戏中检测到"
+    },
+    "saveLive": {
+      "button": "保存此卡组",
+      "saved": "已保存",
+      "error": {
+        "nonCollectible": "此卡组含有不可保存的卡牌（衍生物、装饰副本等）。"
+      }
+    }
   },
   "settings": {
     "title": "设置",

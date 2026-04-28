@@ -1,9 +1,10 @@
-import { AppWindow, BarChart2, BookOpen, Crown, Settings } from 'lucide-react';
+import { AppWindow, BarChart2, BookOpen, Crown, Layers, Settings } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from '../i18n';
 
 const navItems = [
   { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker' },
+  { id: 'decks', icon: Layers, labelKey: 'sidebar.decks' },
   { id: 'stats', icon: BarChart2, labelKey: 'sidebar.stats' },
   { id: 'collection', icon: BookOpen, labelKey: 'sidebar.collection' },
 ];

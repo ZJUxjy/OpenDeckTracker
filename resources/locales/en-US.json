@@ -13,9 +13,89 @@
   },
   "sidebar": {
     "deckTracker": "Deck Tracker",
+    "decks": "Decks",
     "stats": "Stats",
     "collection": "Collection",
     "settings": "Settings"
+  },
+  "decks": {
+    "list": {
+      "title": "Saved Decks",
+      "empty": {
+        "title": "No saved decks yet",
+        "create": "Create deck",
+        "import": "Import deckstring"
+      },
+      "row": {
+        "edit": "Edit",
+        "duplicate": "Duplicate",
+        "export": "Export",
+        "delete": "Delete",
+        "deleteConfirm": {
+          "title": "Delete this deck?",
+          "description": "This will remove the deck and all its version history.",
+          "cancel": "Cancel",
+          "confirm": "Delete"
+        },
+        "savedBadge": "Saved",
+        "cardCount": "{count} / 30"
+      }
+    },
+    "editor": {
+      "title": "Deck Editor",
+      "name": "Name",
+      "namePlaceholder": "Untitled deck",
+      "class": "Class",
+      "format": "Format",
+      "notes": "Notes",
+      "tags": "Tags",
+      "search": {
+        "placeholder": "Search cards…"
+      },
+      "save": "Save & Close",
+      "cancel": "Cancel",
+      "validity": {
+        "ok": "Deck is legal.",
+        "underCardLimit": "Need {required} cards, have {actual}.",
+        "overCardLimit": "Too many cards: {actual} (max {required}).",
+        "overCopyLimit": "{cardId}: too many copies ({count}).",
+        "legendaryOverLimit": "{cardId}: legendary may have at most 1 copy.",
+        "offClassCard": "{cardId} is a {cardClass} card; deck class is {deckClass}.",
+        "heroInMainDeck": "{cardId}: hero cards are not allowed in the main deck."
+      }
+    },
+    "import": {
+      "title": "Import Deck",
+      "deckstringLabel": "Paste a deckstring or load from clipboard",
+      "deckstringPlaceholder": "AAEBA…",
+      "previewTitle": "Preview",
+      "confirm": "Import",
+      "cancel": "Cancel",
+      "error": {
+        "unknownCard": "This deck references a card not in your card database (cardId: {cardId}). The deckstring may be from a future patch.",
+        "decode": "Could not decode deckstring.",
+        "illegalExport": "Deck is not legal."
+      }
+    },
+    "export": {
+      "title": "Export Deck",
+      "deckstring": "Deckstring",
+      "json": "JSON",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "illegalDeck": "Cannot export an illegal deck. Add the missing cards first."
+    },
+    "select": {
+      "savedBadge": "Saved",
+      "detected": "Detected in game"
+    },
+    "saveLive": {
+      "button": "Save this deck",
+      "saved": "Saved",
+      "error": {
+        "nonCollectible": "This deck contains cards that cannot be saved (generated tokens, cosmetic copies, etc.)."
+      }
+    }
   },
   "settings": {
     "title": "Settings",
