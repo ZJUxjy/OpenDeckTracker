@@ -1,4 +1,14 @@
-import { randomUUID } from 'node:crypto';
+/**
+ * Cross-runtime UUID v4. Uses Web Crypto's `crypto.randomUUID()` (available in
+ * modern Electron renderer + Node 20+ main + browsers). Falls back to
+ * `Math.random()` for ancient runtimes — UUID uniqueness is per-deck, not a
+ * security boundary, so the fallback is acceptable.
+ */
+function uuid(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  if (c?.randomUUID) return c.randomUUID();
+  return `dk-${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`;
+}
 
 export type HeroClass =
   | 'DEATHKNIGHT'
@@ -105,7 +115,7 @@ export interface CreateDeckArgs extends CreateDeckInput {
 export function createDeck(args: CreateDeckArgs): Deck {
   const now = args.now ?? Date.now();
   return {
-    id: args.id ?? randomUUID(),
+    id: args.id ?? uuid(),
     name: args.name,
     class: args.class,
     format: args.format,

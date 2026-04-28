@@ -6,11 +6,8 @@ import {
   type DeckDetail,
   type DeckSummary,
   type UpdateDeckPatch,
-  fromDeckstring,
-  fromJson,
-  toDeckstring,
-  toJson,
 } from '@hdt/core';
+import { fromDeckstring, fromJson, toDeckstring, toJson } from '@hdt/core/deck/codec';
 
 import {
   type DeckStore,
