@@ -90,15 +90,15 @@
 
 ## 10. Deck Editor Modal
 
-- [ ] 10.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckEditor.test.tsx` asserting that opening the editor on an existing deck shows its current name and card list, and that typing into the name input + clicking "Save & Close" calls `window.hdt.decks.update(id, { name: '<new>' })` once; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
-- [ ] 10.2 Create `apps/desktop/src/renderer/src/components/DeckEditor.tsx` as a Radix Dialog with name input, class select, format select, notes textarea, tags chip input, and a card-list editor pane; wire "Save & Close" to flush a debounced `update` call; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
-- [ ] 10.3 Add a card-search test: typing "Tirion" into the search input and pressing Enter appends Tirion Fordring (`EX1_383`) to the deck with `count: 1` and clears the input; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
-- [ ] 10.4 Implement search using `window.hdt.cards.search` and click-to-add behavior; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
-- [ ] 10.5 Add a validity-panel test: editor on a 16-card deck shows the validity panel with `under-card-limit`; adding 14 more cards causes the panel to re-render with no issues; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
-- [ ] 10.6 Implement validity panel calling `validateDeck` from `@hdt/core/deck` against the live editor state with `useMemo`; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
-- [ ] 10.7 Add a debounce test: typing rapidly into the name input issues only one `update` call within a 400 ms window; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
-- [ ] 10.8 Implement debounce via `useDebouncedCallback`-style helper; ensure "Save & Close" flushes pending callback before closing; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
-- [ ] 10.9 Commit editor with message `feat(desktop): add deck editor modal`.
+- [x] 10.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckEditor.test.tsx` asserting that opening the editor on an existing deck shows its current name and card list, and that typing into the name input + clicking "Save & Close" calls `window.hdt.decks.update(id, { name: '<new>' })` once; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
+- [x] 10.2 Create `apps/desktop/src/renderer/src/components/DeckEditor.tsx` as a Radix Dialog with name input, class select, format select, notes textarea, tags chip input, and a card-list editor pane; wire "Save & Close" to flush a debounced `update` call; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
+- [x] 10.3 Add a card-search test: typing "Tirion" into the search input and pressing Enter appends Tirion Fordring (`EX1_383`) to the deck with `count: 1` and clears the input; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
+- [x] 10.4 Implement search using `window.hdt.cards.search` and click-to-add behavior; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
+- [x] 10.5 Add a validity-panel test: editor on a 16-card deck shows the validity panel with `under-card-limit`; adding 14 more cards causes the panel to re-render with no issues; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
+- [x] 10.6 Implement validity panel calling `validateDeck` from `@hdt/core/deck` against the live editor state with `useMemo`; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
+- [x] 10.7 Add a debounce test: typing rapidly into the name input issues only one `update` call within a 400 ms window; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect failure.
+- [x] 10.8 Implement debounce via `useDebouncedCallback`-style helper; ensure "Save & Close" flushes pending callback before closing; run `pnpm --filter @hdt/desktop test -- DeckEditor` and expect pass.
+- [x] 10.9 Commit editor with message `feat(desktop): add deck editor modal`.
 
 ## 11. Import Dialog
 
