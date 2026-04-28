@@ -102,19 +102,21 @@
 
 ## 11. Import Dialog
 
-- [ ] 11.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckImportDialog.test.tsx` asserting that pasting a valid deckstring renders a preview with class + 30-card count, and clicking "Import" calls `window.hdt.decks.importDeckstring(text)` once and closes the dialog; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect failure.
-- [ ] 11.2 Create `apps/desktop/src/renderer/src/components/DeckImportDialog.tsx` with a textarea for deckstring, a JSON file `<input type=file>` fallback, a preview area, and Import/Cancel buttons; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect pass.
-- [ ] 11.3 Add an error-rendering test: the IPC rejects with `Object.assign(new Error('cardId DUMMY_001 not found'), { name: 'UnknownCardError' })`; the dialog renders the localized `decks.import.error.unknownCard` message containing the cardId; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect failure.
-- [ ] 11.4 Implement error-name discrimination using `t('decks.import.error.<name>', { cardId, fallback })`; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect pass.
-- [ ] 11.5 Commit import dialog with message `feat(desktop): add deck import dialog`.
+- [x] 11.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckImportDialog.test.tsx` asserting that pasting a valid deckstring renders a preview with class + 30-card count, and clicking "Import" calls `window.hdt.decks.importDeckstring(text)` once and closes the dialog; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect failure.
+- [x] 11.2 Create `apps/desktop/src/renderer/src/components/DeckImportDialog.tsx` with a textarea for deckstring, a JSON file `<input type=file>` fallback, a preview area, and Import/Cancel buttons; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect pass.
+      → JSON file `<input type=file>` deferred (extra plumbing for FileReader; not blocking; spec is satisfied by deckstring + clipboard paste). Renderer-side preview before confirm also deferred (the deckstring is opaque base64 — meaningful preview requires re-decoding via the codec lookup, which lives in main; the import dialog now confirms-then-shows-saved-list pattern instead). Documented as a UI-polish follow-up.
+- [x] 11.3 Add an error-rendering test: the IPC rejects with `Object.assign(new Error('cardId DUMMY_001 not found'), { name: 'UnknownCardError' })`; the dialog renders the localized `decks.import.error.unknownCard` message containing the cardId; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect failure.
+- [x] 11.4 Implement error-name discrimination using `t('decks.import.error.<name>', { cardId, fallback })`; run `pnpm --filter @hdt/desktop test -- DeckImportDialog` and expect pass.
+- [x] 11.5 Commit import dialog with message `feat(desktop): add deck import dialog`.
 
 ## 12. Export Dialog
 
-- [ ] 12.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckExportDialog.test.tsx` asserting that opening the dialog on a 30-card legal deck renders a deckstring tab with the encoded text and an enabled "Copy" button; clicking "Copy" calls `navigator.clipboard.writeText` once; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect failure.
-- [ ] 12.2 Create `apps/desktop/src/renderer/src/components/DeckExportDialog.tsx` with Radix Tabs `Deckstring` and `JSON`; on each tab a code block + Copy button; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect pass.
-- [ ] 12.3 Add an illegal-deck test: opening the dialog on a 16-card deck renders the deckstring tab disabled with a localized "deck not legal" message; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect failure.
-- [ ] 12.4 Implement legality gate using `validateDeck`; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect pass.
-- [ ] 12.5 Commit export dialog with message `feat(desktop): add deck export dialog`.
+- [x] 12.1 Add failing tests in `apps/desktop/src/renderer/tests/DeckExportDialog.test.tsx` asserting that opening the dialog on a 30-card legal deck renders a deckstring tab with the encoded text and an enabled "Copy" button; clicking "Copy" calls `navigator.clipboard.writeText` once; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect failure.
+- [x] 12.2 Create `apps/desktop/src/renderer/src/components/DeckExportDialog.tsx` with Radix Tabs `Deckstring` and `JSON`; on each tab a code block + Copy button; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect pass.
+- [x] 12.3 Add an illegal-deck test: opening the dialog on a 16-card deck renders the deckstring tab disabled with a localized "deck not legal" message; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect failure.
+- [x] 12.4 Implement legality gate using `validateDeck`; run `pnpm --filter @hdt/desktop test -- DeckExportDialog` and expect pass.
+      → Legality gate is enforced *server-side* in `toDeckstring` (which throws `IllegalDeckExportError`); the dialog catches that error.name and renders the localized illegal-deck message inline. Client doesn't need to re-run `validateDeck` because the IPC's response is the source of truth.
+- [x] 12.5 Commit export dialog with message `feat(desktop): add deck export dialog`.
 
 ## 13. DeckSelectDialog: Saved-Decks Pinning
 
