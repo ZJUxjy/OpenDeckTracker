@@ -45,13 +45,13 @@
 - [x] 4.5 Update `apps/desktop/src/main/index.ts` or existing service registration to call the recording IPC registrar; run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
 - [x] 4.6 Update `apps/desktop/src/preload/index.ts` with `window.hdt.recordings.list()` and `window.hdt.recordings.get(id)`; add failing preload tests in `apps/desktop/src/preload/index.test.ts`; run `pnpm --filter @hdt/desktop test -- index.test` and expect failure.
 - [x] 4.7 Implement preload recording API exposure and renderer type declarations in `apps/desktop/src/renderer/src/env.d.ts`; run `pnpm --filter @hdt/desktop test -- index.test` and `pnpm --filter @hdt/desktop typecheck` and expect both pass.
-- [ ] 4.8 Commit wiring and IPC work with message `feat(desktop): expose match recording reads`.
+- [x] 4.8 Commit wiring and IPC work with message `feat(desktop): expose match recording reads`.
 
 ## 5. Verification and Cleanup
 
-- [ ] 5.1 Run `pnpm --filter @hdt/core test -- recordings` and expect all recording domain tests to pass.
-- [ ] 5.2 Run `pnpm --filter @hdt/desktop test -- match-recording` and expect all recording store/recorder/IPC tests to pass.
-- [ ] 5.3 Run `pnpm --filter @hdt/desktop test -- hearthwatcher-host index.test` and expect integration/preload tests to pass.
-- [ ] 5.4 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/desktop typecheck` and expect both exit code 0.
-- [ ] 5.5 Run `openspec validate add-match-recordings --strict` and expect validation success.
-- [ ] 5.6 Commit final cleanup with message `test: verify match recording workflow`.
+- [x] 5.1 Run `pnpm --filter @hdt/core test -- recordings` and expect all recording domain tests to pass.
+- [x] 5.2 Run `pnpm --filter @hdt/desktop test -- match-recording` and expect all recording store/recorder/IPC tests to pass.
+- [x] 5.3 Run `pnpm --filter @hdt/desktop test -- hearthwatcher-host index.test` and expect integration/preload tests to pass.
+- [x] 5.4 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/desktop typecheck` and expect both exit code 0.
+- [x] 5.5 Run `openspec validate add-match-recordings --strict` and expect validation success.
+- [x] 5.6 Commit final cleanup with message `test: verify match recording workflow`.
