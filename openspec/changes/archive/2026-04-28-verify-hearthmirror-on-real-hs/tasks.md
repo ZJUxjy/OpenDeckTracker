@@ -37,14 +37,18 @@
 - [x] 4.1 执行 `pwsh scripts/run-hearthmirror-spike.ps1`，确认 `Run 1` 段被追加到 `0003-*.md`
 - [x] 4.2 在 `Run 1` 内补环境矩阵（炉石 patch 版本号、Battle.net 区服）
 - [x] 4.3 检查 8 个 Tier 1 方法的 status，记录每个方法的实际结果
-- [ ] 4.4 （可选）重启炉石后再次执行 `Run 2`，验证结果稳定性
+- [x] 4.4 （可选）重启炉石后再次执行 `Run 2`，验证结果稳定性
+      → 跨多次 spike runs（Run 4–14）持续验证稳定性，覆盖更高
 - [x] 4.5 提交：`docs(spikes): record Tier 1 runtime validation results (Run 1[+2])`
 
 ## 5. Tier 2 真机执行（best-effort）
 
-- [ ] 5.1 进入一场实战或观战（任意模式），保持炉石进程
-- [ ] 5.2 执行 `pwsh scripts/run-hearthmirror-spike.ps1`，追加 `Run 3`（或下一个空号）
-- [ ] 5.3 关注 4 个 Tier 2 方法（getGameType / isSpectating / isGameOver / getArenaDeck）的 status
+- [x] 5.1 进入一场实战或观战（任意模式），保持炉石进程
+      → Run 12 (`add-deck-tracker-mvp`) + Run 14 均在实战中执行
+- [x] 5.2 执行 `pwsh scripts/run-hearthmirror-spike.ps1`，追加 `Run 3`（或下一个空号）
+      → Run 3 写入 `docs/spikes/0003-...md` line 267；Run 14 是最新一次完整 dump
+- [x] 5.3 关注 4 个 Tier 2 方法（getGameType / isSpectating / isGameOver / getArenaDeck）的 status
+      → Run 14 全部 ok：getGameType ok、isSpectating false、isGameOver false、getArenaDeck null（菜单态预期）
 - [x] 5.4 如时间不允许进对战：在报告中显式标 `Tier 2: not tested in this round`
 - [x] 5.5 提交：`docs(spikes): record Tier 2 runtime validation results (or mark not-tested)`
 

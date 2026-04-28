@@ -28,7 +28,8 @@
 - [x] 3.6 Update `apps/desktop/src/renderer/src/hooks/use-card-def.ts` and any bulk card lookup in `LiveDeckPanel.tsx` to include active locale in cache keys and IPC calls; run `pnpm --filter @hdt/desktop test use-card-def.i18n` and expect the hook test to pass.
 - [x] 3.7 Add failing card-image locale test in `apps/desktop/src/renderer/tests/use-card-image-url.i18n.test.ts` asserting active `zh-CN` requests use `window.hdt.cardImages.get(cardId, 'zh-CN')`; run `pnpm --filter @hdt/desktop test use-card-image-url.i18n` and expect failure until locale is passed.
 - [x] 3.8 Update `apps/desktop/src/preload/index.ts`, `apps/desktop/src/main/ipc.ts`, and `apps/desktop/src/renderer/src/hooks/use-card-image-url.ts` so card image requests pass app locale and primary `zhCN` still falls back to `enUS`; run `pnpm --filter @hdt/desktop test use-card-image-url.i18n card-image-cache` and expect all card image tests to pass.
-- [ ] 3.9 Commit card locale routing with `git add apps/desktop/src/main apps/desktop/src/preload apps/desktop/src/renderer/src/hooks apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx apps/desktop/src/renderer/tests && git commit -m "feat: route card data by app locale"` and expect a Conventional Commit.
+- [x] 3.9 Commit card locale routing with `git add apps/desktop/src/main apps/desktop/src/preload apps/desktop/src/renderer/src/hooks apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx apps/desktop/src/renderer/tests && git commit -m "feat: route card data by app locale"` and expect a Conventional Commit.
+      → Subsumed by `a282fb8 feat(i18n): route card data and localize desktop UI` (combined sections 3 + 4 commits).
 
 ## 4. Localize Existing UI Surfaces
 
@@ -39,13 +40,16 @@
 - [x] 4.5 Add failing DeckSelectDialog i18n test in `apps/desktop/src/renderer/tests/DeckSelectDialog.i18n.test.tsx` asserting English locale renders localized title, filter label, confirm, cancel, and empty-state strings; run `pnpm --filter @hdt/desktop test DeckSelectDialog.i18n` and expect failure until dialog strings use i18n.
 - [x] 4.6 Update `apps/desktop/src/renderer/src/components/DeckSelectDialog.tsx` and related dialog tests to use translation keys for all user-visible text; run `pnpm --filter @hdt/desktop test DeckSelectDialog.i18n` and expect the dialog i18n test to pass.
 - [x] 4.7 Update `apps/desktop/src/renderer/src/components/OpponentCardsPanel.tsx`, `Decklist.tsx`, and `CardImagePopover.tsx` user-visible labels to use translation keys where they are part of current desktop chrome; run `pnpm --filter @hdt/desktop test OpponentCardsPanel CardImagePopover` and expect existing tests to pass.
-- [ ] 4.8 Commit UI localization with `git add apps/desktop/src/renderer/src apps/desktop/src/renderer/tests resources/locales && git commit -m "feat: localize desktop tracker UI"` and expect a Conventional Commit.
+- [x] 4.8 Commit UI localization with `git add apps/desktop/src/renderer/src apps/desktop/src/renderer/tests resources/locales && git commit -m "feat: localize desktop tracker UI"` and expect a Conventional Commit.
+      → Subsumed by `a282fb8 feat(i18n): route card data and localize desktop UI` (combined sections 3 + 4 commits).
 
 ## 5. Validation
 
 - [x] 5.1 Run `pnpm --filter @hdt/desktop test i18n-locale i18n-translate i18n-messages i18n-store Settings.i18n App.i18n LiveDeckPanel.i18n DeckSelectDialog.i18n use-card-def.i18n use-card-image-url.i18n cards.i18n` and expect all focused i18n tests to pass.
 - [x] 5.2 Run `pnpm --filter @hdt/desktop test` and expect the full desktop Vitest suite to pass with no localized-string regressions.
 - [x] 5.3 Run `pnpm --filter @hdt/desktop typecheck` and expect TypeScript strict mode to pass for renderer, preload, and main changes.
-- [ ] 5.4 Run `pnpm lint` and expect no ESLint violations from new i18n modules, locale imports, or component string replacements.
+- [x] 5.4 Run `pnpm lint` and expect no ESLint violations from new i18n modules, locale imports, or component string replacements.
+      → 2026-04-28 verified: i18n-scope files (`renderer/src/i18n/**`, `resources/locales/**`, localized component edits) produce zero ESLint errors; only one non-blocking `react-refresh/only-export-components` warning on `i18n/index.tsx` (mixed component+constant export — acceptable for the provider pattern). Project-wide pre-existing lint errors in unrelated files (hearthwatcher tests, scripts, log-paths.ts) are out of scope per task wording.
 - [x] 5.5 Run `openspec validate add-i18n-support --strict` and expect the change to validate without spec formatting or scenario errors.
-- [ ] 5.6 Create final commit if validation changed files with `git add . && git commit -m "test: cover i18n support"` and expect either a new Conventional Commit or `nothing to commit, working tree clean`.
+- [x] 5.6 Create final commit if validation changed files with `git add . && git commit -m "test: cover i18n support"` and expect either a new Conventional Commit or `nothing to commit, working tree clean`.
+      → No validation-driven file changes occurred (5.1–5.4 are read-only test/lint runs). i18n implementation already landed in `8b67db0`, `c72479e`, `a282fb8`. Tree is clean for this change's scope; the alternative branch of the task ("nothing to commit, working tree clean") applies.
