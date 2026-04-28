@@ -69,10 +69,11 @@
 
 ## 8. Renderer Zustand Store + Hook
 
-- [ ] 8.1 Add failing tests in `apps/desktop/src/renderer/tests/decks-store.test.ts` asserting `useDecksStore.getState().decks` is initially `[]` and `refresh()` calls `window.hdt.decks.list` (mock via `vi.stubGlobal('hdt', ...)`) then commits the array to state; run `pnpm --filter @hdt/desktop test -- decks-store` and expect failure.
-- [ ] 8.2 Create `apps/desktop/src/renderer/src/stores/decks-store.ts` (Zustand) with `decks: DeckSummary[]`, `loading: boolean`, `error: string | null`, `refresh()`, `getById(id)` actions; run `pnpm --filter @hdt/desktop test -- decks-store` and expect pass.
-- [ ] 8.3 Create `apps/desktop/src/renderer/src/hooks/use-decks.ts` exporting `useDecks()` (selectors + auto-refresh on mount) plus `useDeckDetail(id)` hook; add a smoke test asserting `useDecks()` returns the current `decks` slice; run `pnpm --filter @hdt/desktop test -- use-decks` and expect pass.
-- [ ] 8.4 Commit renderer store with message `feat(desktop): add decks Zustand store and hooks`.
+- [x] 8.1 Add failing tests in `apps/desktop/src/renderer/tests/decks-store.test.ts` asserting `useDecksStore.getState().decks` is initially `[]` and `refresh()` calls `window.hdt.decks.list` (mock via `vi.stubGlobal('hdt', ...)`) then commits the array to state; run `pnpm --filter @hdt/desktop test -- decks-store` and expect failure.
+- [x] 8.2 Create `apps/desktop/src/renderer/src/stores/decks-store.ts` (Zustand) with `decks: DeckSummary[]`, `loading: boolean`, `error: string | null`, `refresh()`, `getById(id)` actions; run `pnpm --filter @hdt/desktop test -- decks-store` and expect pass.
+      → Mocked `window.hdt.decks` via property mutation rather than `Object.defineProperty` redefine; the existing `tests/setup.ts` defines `window.hdt` as non-configurable. Added a `decks: { ... }` group to `setup.ts` defaults so other tests that touch the global don't break.
+- [x] 8.3 Create `apps/desktop/src/renderer/src/hooks/use-decks.ts` exporting `useDecks()` (selectors + auto-refresh on mount) plus `useDeckDetail(id)` hook; add a smoke test asserting `useDecks()` returns the current `decks` slice; run `pnpm --filter @hdt/desktop test -- use-decks` and expect pass.
+- [x] 8.4 Commit renderer store with message `feat(desktop): add decks Zustand store and hooks`.
 
 ## 9. Saved-Decks List (Decklist.tsx)
 
