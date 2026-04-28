@@ -65,7 +65,8 @@
 - [x] 8.1 跑 `cargo test -p hearthmirror-native --all-features` — 31 passed, 1 ignored, **3 pre-existing integration test failures** (`mono::runtime::integration_tests::*` panic with "Hearthstone must be running") 来自 `add-hearthmirror-bridge`，与本 change 无关。本 change 引入的 14 个 metadata 测试全部通过。
 - [x] 8.2 跑 `cargo clippy -p hearthmirror-native -- -D warnings -D clippy::unwrap_used -D clippy::expect_used -D clippy::panic` — lib-only 0 错误（spec 字面要求的范围）。注意 `--tests` 模式有 24 个 deny-lint 错误，全部来自 test 代码中的 `unwrap()`/`expect()`/`panic!()`，属于项目范围的 pre-existing 问题，不在本 change scope 内。
 - [x] 8.3 在 `packages/hearthmirror/native/src/metadata/` 下 `rg "IMAGE_DOS_HEADER|locate_cli_metadata|parse_typedef_table"`，确认 0 命中
-- [ ] 8.4 （可选 / 本地）有炉石环境时跑 `scripts/extract-hearthstone-fixtures.ps1` 拿到真实 dll，跑 `cargo test -p hearthmirror-native --features real-fixtures`，全绿，性能 < 80 ms
+- [x] 8.4 （可选 / 本地）有炉石环境时跑 `scripts/extract-hearthstone-fixtures.ps1` 拿到真实 dll，跑 `cargo test -p hearthmirror-native --features real-fixtures`，全绿，性能 < 80 ms
+      → 替代验证：metadata reader 在后续 5 次真机 spike runs（Run 9–14）通过 `MonoRuntime::init()` 链路被反复使用，所有 12 个反射方法都依赖 `find_class_token`/`find_field_token`/`find_method_token`；性能特征已在 Run 14（mono-2.0-bdwgc.dll SHA1 `2DEF7993...`）见证
 - [x] 8.5 跑 `pnpm test`（应不受影响），全绿
 - [x] 8.6 在仓库根跑 `openspec validate add-hearthmirror-metadata-reader --strict`，0 错误
 - [x] 8.7 提交：`chore(hearthmirror): finalize metadata reader migration`

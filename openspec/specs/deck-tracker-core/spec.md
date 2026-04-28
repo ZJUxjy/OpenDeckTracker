@@ -356,42 +356,47 @@ The store MUST:
 - Provide selectors `useDeckTrackerSnapshot()`, `useDeckTrackerPhase()`,
   `useDeckTrackerError()`.
 
-`apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx` (NEW)
-SHALL render the live deck contents during IN_MATCH phase.
+`apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx` SHALL render
+the live deck contents during IN_MATCH phase using the active i18n locale
+for all user-visible chrome, empty states, counters, badges, and diagnostic
+labels.
 
 The component MUST:
 
-- Show "等待对局开始..." (or English equivalent per i18n setup)
-  during IDLE / PRE_MATCH.
-- Show a vertical list of unique cards in `originalDeck`, one row
-  per cardId, ordered by mana cost ascending then alphabetically.
-- Each row displays: card name (via `@hdt/hearthdb` lookup) / mana
-  cost / `remaining / total` count / rarity color tint.
+- Show the localized equivalent of "waiting for match to start" during
+  IDLE / PRE_MATCH.
+- Show a vertical list of unique cards in `originalDeck`, one row per
+  cardId, ordered by mana cost ascending then alphabetically.
+- Each row displays: localized card name (via `@hdt/hearthdb` lookup for
+  the active app locale) / mana cost / `remaining / total` count / rarity
+  color tint.
 - Cards with `remaining === 0` render dimmed.
-- The most-recently-drawn card (delta vs previous snapshot) gets a
-  subtle 1s highlight animation.
-- An "extras" badge shows when `snapshot.extras.length > 0`,
-  e.g. `+2 卡牌` (created/stolen approximate count).
-- An empty / disconnected state shows the empty-state with a
-  diagnostic line ("Hearthstone 未运行" / "未识别到对局").
+- The most-recently-drawn card (delta vs previous snapshot) gets a subtle
+  1s highlight animation.
+- An "extras" badge shows when `snapshot.extras.length > 0`, using the
+  active i18n locale and localized plural/count text.
+- An empty / disconnected state shows the localized empty-state with a
+  localized diagnostic line for "Hearthstone not running" or "match not
+  detected".
 
 `apps/desktop/src/renderer/src/components/DeckSelectDialog.tsx` (NEW)
-SHALL prompt the user to pick a deck when the orchestrator's
-identifier returns null.
+SHALL prompt the user to pick a deck when the orchestrator's identifier
+returns null.
 
 The dialog MUST:
 
 - Use Radix Dialog primitives (already in `apps/desktop` deps).
 - List all `getDecks()` results filterable by hero class.
-- Persist the user's last choice per game-mode in `localStorage`
-  for next-match pre-selection.
+- Persist the user's last choice per game-mode in `localStorage` for
+  next-match pre-selection.
+- Render all user-visible labels, actions, empty states, and diagnostics
+  through the active i18n locale.
 
 #### Scenario: Live deck panel shows 30 cards on match start
 
 - **GIVEN** the user enters a match with a 30-card Standard deck
   identified by `InGameDeckIdentifier`
-- **WHEN** the renderer mounts and the tracker pushes the initial
-  snapshot
+- **WHEN** the renderer mounts and the tracker pushes the initial snapshot
 - **THEN** the panel displays N rows summing to 30 cards
   (where N = number of unique cardIds in the deck)
 
@@ -399,8 +404,8 @@ The dialog MUST:
 
 - **GIVEN** an active match and a deck with `Fireball x2 / Frostbolt x2`
 - **WHEN** the user draws a Fireball
-- **THEN** within 500ms (one polling interval) the Fireball row
-  shows `1 / 2` instead of `2 / 2` and is briefly highlighted
+- **THEN** within 500ms (one polling interval) the Fireball row shows
+  `1 / 2` instead of `2 / 2` and is briefly highlighted
 
 #### Scenario: Dialog fallback for unidentified deck
 
@@ -411,6 +416,20 @@ The dialog MUST:
 - **THEN** the orchestrator receives the choice via
   `'deck-tracker:select-deck'` and `LiveDeckPanel` populates within
   the next poll
+
+#### Scenario: Live deck empty state follows active locale
+
+- **GIVEN** the active app locale is `zh-CN`
+- **WHEN** `LiveDeckPanel` renders without an active match
+- **THEN** the waiting empty state, panel header, and diagnostic text render
+  in Chinese
+
+#### Scenario: Deck selection dialog follows active locale
+
+- **GIVEN** the active app locale is `en-US`
+- **WHEN** the tracker emits `needs-deck-selection`
+- **THEN** the dialog title, filter labels, confirm action, cancel action,
+  and empty-state text render in English
 
 ### Requirement: Deck copy expansion utility in @hdt/core
 
@@ -533,3 +552,84 @@ to the renderer with corresponding `hearthmirror:*` IPC channels.
 - **WHEN** the renderer code calls `window.hdt.hearthmirror.getBoardState()`
 - **THEN** the call resolves to the same shape returned by the Rust
   `getBoardState` reflector (typed `BoardStateResult | null`)
+
+### Requirement: Log-derived entity metadata ingestion
+
+`@hdt/core` SHALL accept log-derived entity updates that populate existing `EntityInfo` metadata fields without requiring deck-tracker consumers to parse `Power.log` directly.
+
+The ingestion path MUST support updates for:
+
+- `cardId`
+- `zone`
+- `controllerId`
+- `info.created`
+- `info.stolen`
+- `info.hidden`
+- `info.mulliganed`
+- `info.originalController`
+- `info.originalZone`
+
+#### Scenario: Created entity metadata is preserved
+
+- **GIVEN** a log-derived update for entity `42` with card ID `Fireball`, controller ID equal to the local player, zone `HAND`, and `created=true`
+- **WHEN** the update is applied to the core game state
+- **THEN** `Game.entities.get(42)` has card ID `Fireball`, zone `HAND`, and `info.created === true`
+
+#### Scenario: Hidden opponent entity is retained without card ID
+
+- **GIVEN** a log-derived update for an opponent hand entity with no public card ID and `hidden=true`
+- **WHEN** the update is applied to the core game state
+- **THEN** the entity remains present in `Game.entities`
+- **AND** its card ID is empty
+- **AND** `info.hidden === true`
+
+### Requirement: Remaining calculation honors log-derived origins
+
+`@hdt/core` SHALL use log-derived entity metadata when computing remaining cards so additional entities do not consume original deck copies.
+
+Entities where `entity.info.created === true` MUST be excluded from the original-deck seen subtraction even when their card ID exists in the original deck. Entity identity MUST be preserved at the `Entity.entityId` level so a generated copy with the same card ID as an original copy can be tracked separately.
+
+#### Scenario: Created same-card copy does not subtract original copy
+
+- **GIVEN** an original deck containing `{ Fireball: 2 }`
+- **AND** one seen friendly entity has card ID `Fireball` and `info.created === true`
+- **WHEN** `computeRemaining` is called
+- **THEN** remaining original deck count for `Fireball` is still `2`
+
+#### Scenario: Original same-card copy still subtracts original copy
+
+- **GIVEN** an original deck containing `{ Fireball: 2 }`
+- **AND** one seen friendly entity has card ID `Fireball` and `info.created !== true`
+- **WHEN** `computeRemaining` is called
+- **THEN** remaining original deck count for `Fireball` is `1`
+
+#### Scenario: Generated card in deck appears only as overflow
+
+- **GIVEN** an original deck containing `{ Fireball: 2 }`
+- **AND** no original `Fireball` has been seen outside the deck
+- **AND** deck entities contain three friendly known `Fireball` entities, one of which has `info.created === true`
+- **WHEN** `computeRemaining` is called
+- **THEN** remaining contains `Fireball: 3`
+- **AND** the extra count represents only the overflow copy beyond the original deck count
+
+### Requirement: Opponent non-card entities are ignored by card tracking
+
+`@hdt/core` SHALL avoid recording opponent hero and hero power entities as opponent hand, deck, or played cards when log-derived entity updates identify those entities as heroes, hero powers, or non-card game entities.
+
+#### Scenario: Opponent hero is not tracked as a card
+
+- **GIVEN** a log-derived opponent entity with a hero card ID and zone `PLAY`
+- **WHEN** opponent card tracking builds card lists from core state
+- **THEN** that hero entity is not included in opponent hand, deck, secret, or played-card lists
+
+#### Scenario: Opponent hero power is not tracked as a card
+
+- **GIVEN** a log-derived opponent entity with a hero power card ID and zone `PLAY`
+- **WHEN** opponent card tracking builds card lists from core state
+- **THEN** that hero power entity is not included in opponent hand, deck, secret, or played-card lists
+
+#### Scenario: Normal opponent played card is still tracked
+
+- **GIVEN** a log-derived opponent entity with a collectible minion or spell card ID and a transition from `HAND` to `PLAY`
+- **WHEN** opponent card tracking builds played-card lists from core state
+- **THEN** that entity is included as an opponent played card

@@ -112,7 +112,8 @@
 ## Phase F — ServiceLocator（需炉石做集成测试）
 
 - [x] F.1 创建 `packages/hearthmirror/native/src/service_locator.rs`：实现 design D6 决策的 lookup 流程。
-- [ ] F.2 集成测试（gated `#[cfg(feature = "integration")]`）：连炉石 → `get_service("NetCache")` 返回 Some。**NOTE: service_locator.rs 当前是 stub，返回 `ScryError::Unsupported`；真正集成测试需要炉石运行，留待后续 change。**
+- [x] F.2 集成测试（gated `#[cfg(feature = "integration")]`）：连炉石 → `get_service("NetCache")` 返回 Some。**NOTE: service_locator.rs 当前是 stub，返回 `ScryError::Unsupported`；真正集成测试需要炉石运行，留待后续 change。**
+      → 后续 change `add-hearthmirror-service-locator`（已归档 2026-04-28）实现 service_locator.rs 真实路径并在 Run 9/10/14 真机验证 `get_service("NetCache")` 返回 Some。本 change 的 stub 占位由后续 change 接力闭环。
 - [x] F.3 commit：`feat(hearthmirror): Phase F — ServiceLocator with s_runtimeServices fallback`。
 
 ---

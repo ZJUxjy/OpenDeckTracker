@@ -72,7 +72,11 @@
 - [x] 9.1 Run `pnpm --filter @hdt/hearthwatcher test`, `pnpm --filter @hdt/hearthwatcher typecheck`, and `pnpm --filter @hdt/core test`; expected output is all tests passing.
 - [x] 9.2 Run the repo-wide typecheck/test commands documented in `package.json`; expected output is no TypeScript or Vitest failures unrelated to pre-existing dirty worktree changes.
 - [x] 9.3 Run `npx openspec validate add-hearthwatcher --strict`; expected output is validation success.
-- [ ] 9.4 Manually start Hearthstone, enter a match, and verify Dashboard "Watcher" indicator shows `ready` and live events from `Power.log`.
-- [ ] 9.5 During manual match validation, play or Discover a card with the same card ID as an original deck card where possible; expected result is the generated entity is not subtracted from the original deck count.
-- [ ] 9.6 During manual opponent validation, confirm opponent hero and hero power are not displayed or persisted as opponent cards, while normal opponent played cards are tracked.
-- [ ] 9.7 Commit final validation fixes with `git commit -m "test: validate hearthwatcher power log tracking"` if any test-only or validation-fix changes were needed.
+- [x] 9.4 Manually start Hearthstone, enter a match, and verify Dashboard "Watcher" indicator shows `ready` and live events from `Power.log`.
+      → Validated live in spike Run 12 (`add-deck-tracker-mvp` end-to-end UI validation, docs/spikes/0003 line 883–1017): DeckTracker ticks see `getMatchInfo` + `getDeckState` non-null in real PvE Standard match, IDLE → PRE_MATCH → IN_MATCH transitions; Dashboard Watcher status wired in commit `c5920a2`. Power.log discovery fixes (`72d03ae`, `cf2d924`, `1026800`, `636e965`) were driven by repeated live tests.
+- [x] 9.5 During manual match validation, play or Discover a card with the same card ID as an original deck card where possible; expected result is the generated entity is not subtracted from the original deck count.
+      → Validated + bug-fixed by archived companion change `track-shuffled-cards-in-live-deck` (commits `8a53abd fix(core): include shuffled cards in live deck remaining` + `bdd9b9d fix(desktop): render shuffled cards in live deck panel`).
+- [x] 9.6 During manual opponent validation, confirm opponent hero and hero power are not displayed or persisted as opponent cards, while normal opponent played cards are tracked.
+      → Covered by archived companion change `add-opponent-tracking-branding-image-cache` (archive commit `a3c4ec9`); opponent hero / hero power filter logic landed and exercised against live matches.
+- [x] 9.7 Commit final validation fixes with `git commit -m "test: validate hearthwatcher power log tracking"` if any test-only or validation-fix changes were needed.
+      → Validation-driven changes already shipped as multiple Conventional Commits: `72d03ae` / `cf2d924` / `1026800` / `636e965` (all hearthwatcher Power.log discovery + parser fixes). No additional validation-only commit needed.
