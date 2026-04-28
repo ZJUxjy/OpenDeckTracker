@@ -83,11 +83,14 @@
 
 ## 7. Final Validation and Archive
 
-- [ ] 7.1 Run `cargo test -p hearthmirror-native --lib --all-features` and expect all unit tests pass (baseline ≥80 + new ones).
-- [ ] 7.2 Run `cargo clippy -p hearthmirror-native --lib --all-features -- -D warnings` and expect exit code 0.
-- [ ] 7.3 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0 (no TS surface change but rebuilds the napi binding).
+- [x] 7.1 Run `cargo test -p hearthmirror-native --lib --all-features` and expect all unit tests pass (baseline ≥80 + new ones). → 96/96 ✓ (10 new: 6 runtime_slot + 4 wrapper_tests; plus 4 liveness_probe_tests; integration tests under `feature = "integration"` also passing).
+- [x] 7.2 Run `cargo clippy -p hearthmirror-native --lib --all-features -- -D warnings` and expect exit code 0. → ✓
+- [x] 7.3 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0 (no TS surface change but rebuilds the napi binding). → ✓
 - [ ] 7.4 Run `pnpm --filter @hdt/desktop test` and expect existing 162 tests still green.
-- [ ] 7.5 Run `npx openspec validate add-hearthmirror-runtime-recovery --strict` and expect "Change … is valid".
+      → Skipped this session: `pnpm --filter @hdt/desktop test` triggers `electron-rebuild` of `better-sqlite3` which fails when `pnpm dev` holds the .node file open. No TS-side changes here (only Rust + spec); the napi surface added (`get_reinit_count`, `get_bound_pid`) does not break any TS consumer. **User: run when `pnpm dev` is stopped.**
+- [x] 7.5 Run `npx openspec validate add-hearthmirror-runtime-recovery --strict` and expect "Change … is valid". → ✓
 - [ ] 7.6 Manual smoke: launch `pnpm dev` while Hearthstone is closed; observe `useHearthMirrorStatus` shows grey/disconnected; launch Hearthstone; observe status flips green within ~2 s of main menu reaching steady state. Then close Hearthstone; observe status flips grey within one poll. Restart Hearthstone; observe status flips green again. Document the result in spike Run 15.
-- [ ] 7.7 Run `git status` to confirm only in-scope files changed; commit any small fixes with descriptive messages.
+      → User-driven; spike Run 15 has placeholder rows ready to fill in.
+- [x] 7.7 Run `git status` to confirm only in-scope files changed; commit any small fixes with descriptive messages.
 - [ ] 7.8 Archive change via `/opsx:archive add-hearthmirror-runtime-recovery`.
+      → User-driven.
