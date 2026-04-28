@@ -148,17 +148,22 @@
 
 ## 16. i18n Strings
 
-- [ ] 16.1 Add new keys to `resources/locales/enUS.json` under `decks.*`: `list.empty.title`, `list.empty.create`, `list.empty.import`, `list.row.edit`, `list.row.duplicate`, `list.row.export`, `list.row.delete`, `list.row.deleteConfirm.title`, `list.row.deleteConfirm.cancel`, `list.row.deleteConfirm.confirm`, `editor.title`, `editor.name`, `editor.class`, `editor.format`, `editor.notes`, `editor.tags`, `editor.search.placeholder`, `editor.save`, `editor.cancel`, `editor.validity.<issue>` (one per ValidityIssue kind), `import.title`, `import.placeholder`, `import.confirm`, `import.error.unknownCard`, `import.error.decode`, `export.title`, `export.deckstring`, `export.json`, `export.copy`, `export.illegal`, `select.savedBadge`, `select.detected`, `saveLive.button`, `saveLive.error.nonCollectible`; run `node -e "JSON.parse(require('fs').readFileSync('resources/locales/enUS.json','utf8'))"` and expect no syntax error.
-- [ ] 16.2 Mirror the same keys with translated values into `resources/locales/zhCN.json`; run the same JSON syntax check.
-- [ ] 16.3 Extend `apps/desktop/src/renderer/tests/App.i18n.test.tsx` (or add `Decks.i18n.test.tsx`) asserting that under `zhCN` the editor title is non-empty and not equal to the translation key, and under `enUS` likewise; run `pnpm --filter @hdt/desktop test -- i18n` and expect pass.
-- [ ] 16.4 Commit i18n with message `feat(i18n): add deck management strings`.
+- [x] 16.1 Add new keys to `resources/locales/enUS.json` under `decks.*`: `list.empty.title`, `list.empty.create`, `list.empty.import`, `list.row.edit`, `list.row.duplicate`, `list.row.export`, `list.row.delete`, `list.row.deleteConfirm.title`, `list.row.deleteConfirm.cancel`, `list.row.deleteConfirm.confirm`, `editor.title`, `editor.name`, `editor.class`, `editor.format`, `editor.notes`, `editor.tags`, `editor.search.placeholder`, `editor.save`, `editor.cancel`, `editor.validity.<issue>` (one per ValidityIssue kind), `import.title`, `import.placeholder`, `import.confirm`, `import.error.unknownCard`, `import.error.decode`, `export.title`, `export.deckstring`, `export.json`, `export.copy`, `export.illegal`, `select.savedBadge`, `select.detected`, `saveLive.button`, `saveLive.error.nonCollectible`; run `node -e "JSON.parse(require('fs').readFileSync('resources/locales/enUS.json','utf8'))"` and expect no syntax error.
+      → Locale file is `en-US.json` (with hyphen) per existing convention; same hyphen variant for `zh-CN.json`.
+- [x] 16.2 Mirror the same keys with translated values into `resources/locales/zhCN.json`; run the same JSON syntax check.
+- [x] 16.3 Extend `apps/desktop/src/renderer/tests/App.i18n.test.tsx` (or add `Decks.i18n.test.tsx`) asserting that under `zhCN` the editor title is non-empty and not equal to the translation key, and under `enUS` likewise; run `pnpm --filter @hdt/desktop test -- i18n` and expect pass.
+      → Added `Decks.i18n.test.tsx` covering all 5 new components × 2 locales = 10 tests.
+- [x] 16.4 Commit i18n with message `feat(i18n): add deck management strings`.
+      → Locale JSON keys committed inline with Section 9; final smoke test committed alongside Section 17.
 
 ## 17. Final Validation and Archive
 
-- [ ] 17.1 Run `pnpm --filter @hdt/core test` and expect all `@hdt/core` tests passing (no regressions in existing match-recordings / deck-tracker / stats suites).
-- [ ] 17.2 Run `pnpm --filter @hdt/desktop test` and expect all desktop tests passing.
-- [ ] 17.3 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/desktop typecheck` and expect both at exit code 0.
-- [ ] 17.4 Run `npx openspec validate add-deck-management --strict` and expect "Change 'add-deck-management' is valid".
+- [x] 17.1 Run `pnpm --filter @hdt/core test` and expect all `@hdt/core` tests passing (no regressions in existing match-recordings / deck-tracker / stats suites). → 142/142 ✓
+- [x] 17.2 Run `pnpm --filter @hdt/desktop test` and expect all desktop tests passing. → 159/159 ✓
+- [x] 17.3 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/desktop typecheck` and expect both at exit code 0. → both ✓
+- [x] 17.4 Run `npx openspec validate add-deck-management --strict` and expect "Change 'add-deck-management' is valid". → ✓
 - [ ] 17.5 Manually launch `pnpm dev`, create a deck via the editor, edit it (verify version bumps in `decks.db` via `sqlite3 <userdata>/decks.db "select id,version from decks"`), import a deckstring, export it back, save a live deck, delete a deck — confirm each surface works end-to-end. Document any defects discovered as follow-up tickets.
-- [ ] 17.6 Run `git status` to confirm no unintended changes outside scope; commit any final small fixes with a descriptive Conventional Commit.
+      → Deferred to user (manual smoke). All automated coverage green.
+- [x] 17.6 Run `git status` to confirm no unintended changes outside scope; commit any final small fixes with a descriptive Conventional Commit.
 - [ ] 17.7 Archive change via `/opsx:archive add-deck-management` (sync delta specs → main, move to `openspec/changes/archive/YYYY-MM-DD-add-deck-management/`).
+      → User-driven action.
