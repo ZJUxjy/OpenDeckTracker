@@ -16,9 +16,9 @@
 
 ## 3. Card-list Canonical Hash and Equality
 
-- [ ] 3.1 Add failing tests in `packages/core/src/deck/deck-diff.test.ts` covering: identical multisets in different insertion order produce equal hashes, single-copy difference produces unequal hashes, and `areCardListsEqual` returns true/false matching the hash semantics; run `pnpm --filter @hdt/core test -- deck-diff` and expect failure.
-- [ ] 3.2 Create `packages/core/src/deck/deck-diff.ts` exporting `canonicalCardListHash(cards): string` (sort by cardId, aggregate counts, hash via `crypto.createHash('sha1')` over the canonical string) and `areCardListsEqual(a, b): boolean`; run `pnpm --filter @hdt/core test -- deck-diff` and expect pass.
-- [ ] 3.3 Commit diff work with message `feat(core): add deck card-list canonical diff`.
+- [x] 3.1 Add failing tests in `packages/core/src/deck/deck-diff.test.ts` covering: identical multisets in different insertion order produce equal hashes, single-copy difference produces unequal hashes, and `areCardListsEqual` returns true/false matching the hash semantics; run `pnpm --filter @hdt/core test -- deck-diff` and expect failure.
+- [x] 3.2 Create `packages/core/src/deck/deck-diff.ts` exporting `canonicalCardListHash(cards): string` (sort by cardId, aggregate counts, hash via `crypto.createHash('sha1')` over the canonical string) and `areCardListsEqual(a, b): boolean`; run `pnpm --filter @hdt/core test -- deck-diff` and expect pass.
+- [x] 3.3 Commit diff work with message `feat(core): add deck card-list canonical diff`.
 
 ## 4. Import / Export Pure Functions
 

@@ -20,3 +20,5 @@ export {
   type CardLookup,
   validateDeck,
 } from './validity';
+
+export { areCardListsEqual, canonicalCardListHash } from './deck-diff';
