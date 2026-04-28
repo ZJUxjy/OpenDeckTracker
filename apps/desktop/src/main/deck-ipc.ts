@@ -2,12 +2,17 @@ import { ipcMain } from 'electron';
 
 import {
   type CreateDeckInput,
-  type DeckCodecLookup,
   type DeckDetail,
   type DeckSummary,
   type UpdateDeckPatch,
 } from '@hdt/core';
-import { fromDeckstring, fromJson, toDeckstring, toJson } from '@hdt/core/deck/codec';
+import {
+  type DeckCodecLookup,
+  fromDeckstring,
+  fromJson,
+  toDeckstring,
+  toJson,
+} from './deck-codec';
 
 import {
   type DeckStore,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createDeck, type HeroClass } from './deck-types';
+import { createDeck, type HeroClass } from '@hdt/core';
 import {
   type DeckCodecLookup,
   DeckstringDecodeError,
@@ -10,7 +10,7 @@ import {
   toDeckstring,
   toJson,
   UnknownCardError,
-} from './import-export';
+} from './deck-codec';
 
 interface FakeCard {
   cardId: string;

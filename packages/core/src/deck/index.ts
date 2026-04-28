@@ -23,13 +23,9 @@ export {
 
 export { areCardListsEqual, canonicalCardListHash } from './deck-diff';
 
-// NOTE: deckstring/JSON import-export functions are exposed via the
-// `@hdt/core/deck/codec` subpath, NOT the main barrel. They depend on
-// `@hdt/hearthdb`'s `Buffer.from(...)`-using deckstring encoder/decoder,
-// which is Node-only and would fail to bundle in the renderer (Vite). The
-// renderer never needs these directly — main-process IPC handlers wrap
-// them. Type-only re-exports are still safe at the barrel.
-export type {
-  DeckCodecLookup,
-  DeckJsonEnvelope,
-} from './import-export';
+// NOTE: deckstring/JSON import-export functions live in
+// `apps/desktop/src/main/deck-codec.ts` (not in @hdt/core), because they
+// depend on `@hdt/hearthdb`'s `Buffer.from(...)`-using encoder/decoder
+// which is Node-only. Hoisting them out of @hdt/core keeps the barrel
+// renderer-safe under Vite. The renderer never needs these directly —
+// main-process IPC handlers wrap them.

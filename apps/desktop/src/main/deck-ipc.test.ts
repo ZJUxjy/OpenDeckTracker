@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type DeckCodecLookup } from '@hdt/core';
 import {
+  type DeckCodecLookup,
   DeckstringDecodeError,
   IllegalDeckExportError,
   UnknownCardError,
-} from '@hdt/core/deck/codec';
+} from './deck-codec';
 
 import { type DeckIpcOptions, registerDeckIpc } from './deck-ipc';
 import {

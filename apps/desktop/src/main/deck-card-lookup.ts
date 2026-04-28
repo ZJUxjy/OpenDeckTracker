@@ -1,6 +1,7 @@
 import type { CardClass, CardDb, CardDef } from '@hdt/hearthdb';
-import type { DeckCodecLookup, HeroClass } from '@hdt/core';
+import type { HeroClass } from '@hdt/core';
 
+import type { DeckCodecLookup } from './deck-codec';
 import type { SaveFromLiveCardLookup } from './deck-store';
 
 const HERO_CLASS_VALUES: ReadonlySet<string> = new Set<HeroClass>([

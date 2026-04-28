@@ -1,8 +1,14 @@
 import { decodeDeck, DeckFormat, encodeDeck } from '@hdt/hearthdb';
 
-import type { Deck, DeckCard, Format, HeroClass } from './deck-types';
-import { createDeck } from './deck-types';
-import { type CardLookup, validateDeck } from './validity';
+import {
+  type CardLookup,
+  createDeck,
+  type Deck,
+  type DeckCard,
+  type Format,
+  type HeroClass,
+  validateDeck,
+} from '@hdt/core';
 
 /**
  * Lookup interface used by import/export. Adapters wrap a card database
