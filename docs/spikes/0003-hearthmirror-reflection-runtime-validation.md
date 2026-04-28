@@ -1084,3 +1084,59 @@ subscribed yet at app boot still see the state on their first
 | getChoices | ? | tested | ok | mulligan=None, general=None | - | 0 |
 
 
+
+
+## Run 15 — runtime recovery validation (add-hearthmirror-runtime-recovery)
+
+**Context:** `add-hearthmirror-runtime-recovery` lands the `RuntimeSlot`
+wrapper, the `MonoRuntime::is_process_alive_and_same()` liveness probe,
+the single-retry path on `ModuleNotFound("Assembly-CSharp.dll")`, and the
+back-off-bounded re-init loop. This run captures the round-trip behavior
+against a real Hearthstone instance.
+
+### Procedure
+
+```powershell
+cargo test --test integration_runtime_recovery --features integration `
+    -- --ignored --nocapture live_recovery_round_trip
+```
+
+### Environment
+
+| Field | Value |
+|---|---|
+| OS | _<filled in at run time>_ |
+| Hearthstone version | _<filled in at run time>_ |
+| mono-2.0-bdwgc.dll SHA1 | _<filled in at run time>_ |
+| Test date (UTC) | _<filled in at run time>_ |
+
+### Findings (placeholders — fill after manual smoke)
+
+- **F-RR-1 (cold start)**: with `pnpm dev` launched while Hearthstone is
+  closed, time from clicking "Play" in Hearthstone to first successful
+  `getBattleTag` reaching the renderer = _<measure>_. Expected: ≤ back-off
+  window (default 2 s) + Mono init time (~250 ms).
+- **F-RR-2 (HS exit)**: with deck-tracker active, time from
+  Hearthstone process death to `useHearthMirrorStatus` flipping grey =
+  _<measure>_. Expected: ≤ one poll cadence (500 ms in IN_MATCH, 2 s in
+  IDLE).
+- **F-RR-3 (HS restart mid-session)**: with deck-tracker active, kill HS,
+  restart it, observe time from new HS reaching main menu to status flipping
+  green = _<measure>_. Expected: same as F-RR-1.
+- **F-RR-4 (no false flap)**: confirm steady-state polling (no HS state
+  change for 5 minutes) does NOT trigger any `MonoRuntime: invalidated`
+  log lines.
+
+### Status
+
+- Cold start: _<pass/fail>_
+- HS exit detection: _<pass/fail>_
+- HS restart recovery: _<pass/fail>_
+- Steady-state stability: _<pass/fail>_
+
+### Closes
+
+- Restoration of the user-reported regression where `pnpm dev` launched
+  before Hearthstone resulted in a permanently stale runtime (
+  `[hearthmirror:getBattleTag] Error: module not found: Assembly-CSharp.dll`
+  loop with no self-healing).

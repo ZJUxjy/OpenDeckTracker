@@ -58,24 +58,28 @@
 
 ## 5. Integration Test (Feature-Gated, Manual)
 
-- [ ] 5.1 Create `packages/hearthmirror/native/tests/integration_runtime_recovery.rs` gated behind `#[cfg(feature = "integration")]`. Add a single `#[test] #[ignore] fn live_recovery_round_trip` that:
+- [x] 5.1 Create `packages/hearthmirror/native/tests/integration_runtime_recovery.rs` gated behind `#[cfg(feature = "integration")]`. Add a single `#[test] #[ignore] fn live_recovery_round_trip` that:
       - Calls `is_alive()`, expects `true`.
       - Pauses with `eprintln!("MANUAL STEP: kill Hearthstone, then press Enter")` and reads from stdin.
       - Calls `is_alive()`, expects `false`.
       - Pauses with `eprintln!("MANUAL STEP: restart Hearthstone, wait for main menu, press Enter")`.
       - Calls `is_alive()`, expects `true`.
       - Calls `getBattleTag()`, expects `Ok(Some(_))`.
-- [ ] 5.2 Document the procedure in `packages/hearthmirror/native/tests/README.md` (create if absent) under a "Manual recovery test" heading.
+- [x] 5.2 Document the procedure in `packages/hearthmirror/native/tests/README.md` (create if absent) under a "Manual recovery test" heading.
 - [ ] 5.3 Run `cargo test -p hearthmirror-native --features integration -- --ignored live_recovery_round_trip` (manually, when convenient). Outcome captured in spike doc Run 15.
+      → Deferred to user. Pre-existing compile errors in `integration_reflection.rs` (unrelated to this change) currently block the full integration build; my new test compiles in isolation via `cargo check --test integration_runtime_recovery --features integration`. To run the manual test alone: `cargo test --test integration_runtime_recovery --features integration -- --ignored --nocapture`.
 
 ## 6. Spike Documentation Update
 
-- [ ] 6.1 Append `## Run 15 — runtime recovery validation (add-hearthmirror-runtime-recovery)` section to `docs/spikes/0003-hearthmirror-reflection-runtime-validation.md`. Capture:
+- [x] 6.1 Append `## Run 15 — runtime recovery validation (add-hearthmirror-runtime-recovery)` section to `docs/spikes/0003-hearthmirror-reflection-runtime-validation.md`. Capture:
       - Environment row (HS version, mono dll SHA-1, test date).
       - Three measurements: cold-start (HS not running), warm-start (HS already on main menu), restart-mid-session (HS exits then re-enters).
       - For each: time from re-init opportunity to first successful `getBattleTag`.
-- [ ] 6.2 Note the closed F-track item (re-init timing) and any new findings.
-- [ ] 6.3 Commit with message `docs(spikes): record runtime recovery validation (Run 15)`.
+      → Section appended with placeholder fields. **Numbers to be filled in by user during the manual smoke (task 7.6).**
+- [x] 6.2 Note the closed F-track item (re-init timing) and any new findings.
+      → "Closes" subsection added pointing at the `pnpm dev`-before-HS regression.
+- [x] 6.3 Commit with message `docs(spikes): record runtime recovery validation (Run 15)`.
+      → Committed alongside the integration test scaffold (Section 5) since the doc references the test file by name.
 
 ## 7. Final Validation and Archive
 
