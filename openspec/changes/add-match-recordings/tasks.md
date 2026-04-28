@@ -19,21 +19,21 @@
 - [x] 2.5 Extend `match-recording-store.test.ts` with failing tests for `loadRecording(id)` returning full detail and returning `null` for a missing ID; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect failure.
 - [x] 2.6 Implement `loadRecording(id)` and JSONL event loading in `match-recording-store.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass.
 - [x] 2.7 Add a malformed-file resilience test in `match-recording-store.test.ts` asserting a bad recording directory is skipped during list and returns `null` on load; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass after implementation.
-- [ ] 2.8 Commit storage work with message `feat(desktop): add match recording file store`.
+- [x] 2.8 Commit storage work with message `feat(desktop): add match recording file store`.
 
 ## 3. Match Recording Recorder
 
-- [ ] 3.1 Add failing tests in `apps/desktop/src/main/match-recording-recorder.test.ts` asserting `create-game` starts an in-progress recording and appends subsequent raw events; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
-- [ ] 3.2 Create `apps/desktop/src/main/match-recording-recorder.ts` with `createMatchRecordingRecorder({ store, getSnapshot, now })`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect initial lifecycle tests to pass.
-- [ ] 3.3 Extend `match-recording-recorder.test.ts` with failing tests that latest `DeckTrackerSnapshot.deck` populates deck ID, deck name, and original deck counts; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
-- [ ] 3.4 Implement snapshot metadata capture in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
-- [ ] 3.5 Extend `match-recording-recorder.test.ts` with failing tests for starting hand and post-mulligan hand capture from reduced local entities; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
-- [ ] 3.6 Implement initial hand and mulligan capture in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
-- [ ] 3.7 Extend `match-recording-recorder.test.ts` with failing tests for finalizing on `GameEntity STATE=COMPLETE` and `GameEntity STEP=FINAL_GAMEOVER`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
-- [ ] 3.8 Implement completion detection and summary finalization in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
-- [ ] 3.9 Extend `match-recording-recorder.test.ts` with failing tests that a second `create-game` closes the previous recording as incomplete before starting the next one; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
-- [ ] 3.10 Implement incomplete-recording closure in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
-- [ ] 3.11 Add privacy regression tests in `match-recording-recorder.test.ts` asserting hidden opponent hand/deck cards are persisted without card IDs and revealed opponent cards are persisted after `show-entity`/`change-entity`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass after implementation.
+- [x] 3.1 Add failing tests in `apps/desktop/src/main/match-recording-recorder.test.ts` asserting `create-game` starts an in-progress recording and appends subsequent raw events; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
+- [x] 3.2 Create `apps/desktop/src/main/match-recording-recorder.ts` with `createMatchRecordingRecorder({ store, getSnapshot, now })`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect initial lifecycle tests to pass.
+- [x] 3.3 Extend `match-recording-recorder.test.ts` with failing tests that latest `DeckTrackerSnapshot.deck` populates deck ID, deck name, and original deck counts; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
+- [x] 3.4 Implement snapshot metadata capture in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
+- [x] 3.5 Extend `match-recording-recorder.test.ts` with failing tests for starting hand and post-mulligan hand capture from reduced local entities; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
+- [x] 3.6 Implement initial hand and mulligan capture in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
+- [x] 3.7 Extend `match-recording-recorder.test.ts` with failing tests for finalizing on `GameEntity STATE=COMPLETE` and `GameEntity STEP=FINAL_GAMEOVER`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
+- [x] 3.8 Implement completion detection and summary finalization in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
+- [x] 3.9 Extend `match-recording-recorder.test.ts` with failing tests that a second `create-game` closes the previous recording as incomplete before starting the next one; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect failure.
+- [x] 3.10 Implement incomplete-recording closure in `match-recording-recorder.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass.
+- [x] 3.11 Add privacy regression tests in `match-recording-recorder.test.ts` asserting hidden opponent hand/deck cards are persisted without card IDs and revealed opponent cards are persisted after `show-entity`/`change-entity`; run `pnpm --filter @hdt/desktop test -- match-recording-recorder` and expect pass after implementation.
 - [ ] 3.12 Commit recorder work with message `feat(desktop): record hearthwatcher match events`.
 
 ## 4. Desktop Wiring and IPC
