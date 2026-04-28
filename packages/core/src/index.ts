@@ -64,6 +64,41 @@ export type {
   StatsSummary,
 } from './stats/stats-aggregation';
 
+// Match recordings.
+export {
+  buildMatchRecordingSummary,
+  createEmptyMatchRecording,
+} from './recordings/match-recording';
+export type {
+  BaseTimelineEvent,
+  DrawTimelineEvent,
+  MatchRecording,
+  MatchRecordingDetail,
+  MatchRecordingInitialState,
+  MatchRecordingMetadata,
+  MatchRecordingStatus,
+  MatchRecordingSummary,
+  MatchTimelineEvent,
+  OpponentRevealTimelineEvent,
+  PlayCardTimelineEvent,
+  RawEventRef,
+  RecordedCardRef,
+  RecordedDeckCard,
+  RecordedEntityState,
+  ShuffleDeckTimelineEvent,
+  SimpleTimelineEvent,
+  TurnStartTimelineEvent,
+} from './recordings/match-recording';
+export {
+  deriveTimelineEvents,
+  sanitizeEntityForRecording,
+} from './recordings/timeline-deriver';
+export type {
+  RecordingEntityLike,
+  RecordingEntityRef,
+  RecordingEventLike,
+} from './recordings/timeline-deriver';
+
 // Lower-level utilities (exposed for testing + advanced consumers).
 export { PollingLoop } from './tracker/polling-loop';
 export { nextPhase } from './tracker/phase-machine';
