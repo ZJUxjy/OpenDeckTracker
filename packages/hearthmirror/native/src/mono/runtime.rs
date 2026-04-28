@@ -26,6 +26,11 @@ pub struct MonoRuntime {
     pub mono_get_root_domain_va: RemotePtr,
     pub global_root_domain_addr: RemotePtr,
     pub root_domain: RemotePtr,
+    /// PID this runtime was bound to during `init()`. Used by
+    /// `is_process_alive_and_same()` to detect when Hearthstone has exited
+    /// or been replaced by a different `Hearthstone.exe` instance, which
+    /// invalidates every cached pointer in this struct.
+    bound_pid: u32,
     /// Mono runtime offsets table. Built in `init()` by starting from the
     /// embedded baseline (`MonoOffsets::default()`) and refining via
     /// `OffsetProber::probe_all`. Wrapped in `Arc` so the table is shared
@@ -106,8 +111,52 @@ impl MonoRuntime {
             offsets: Arc::new(offsets),
             exports,
             cache: Mutex::new(RuntimeCache::default()),
+            bound_pid: pid,
         })
     }
+
+    /// PID this runtime was bound to in `init()`.
+    pub fn pid(&self) -> u32 {
+        self.bound_pid
+    }
+
+    /// Cheap liveness probe. Returns `true` only if BOTH the bound process
+    /// is still alive AND the current `Hearthstone.exe` PID equals the bound
+    /// PID. A `WAIT_FAILED` from the kernel is treated as "not alive" so
+    /// the caller can drop and re-init rather than ride a half-dead handle.
+    ///
+    /// Cost: one `WaitForSingleObject(handle, 0)` plus one Toolhelp32
+    /// snapshot via `find_pid`. Both are O(1)–O(processes), no memory
+    /// reads. Safe to call on every poll.
+    pub fn is_process_alive_and_same(&self) -> bool {
+        let raw = self.memory.handle().raw();
+        let current_target = crate::process::find_pid(HEARTHSTONE_EXE)
+            .ok()
+            .flatten();
+        is_alive_and_same(raw, self.bound_pid, current_target)
+    }
+}
+
+/// Pure-logic core of the liveness probe, factored out for unit testability.
+/// `current_target_pid` is the result of `find_pid(HEARTHSTONE_EXE)` —
+/// `Some(pid)` if a Hearthstone instance is running, `None` otherwise.
+pub(crate) fn is_alive_and_same(
+    handle_raw: windows::Win32::Foundation::HANDLE,
+    bound_pid: u32,
+    current_target_pid: Option<u32>,
+) -> bool {
+    use windows::Win32::Foundation::WAIT_TIMEOUT;
+    use windows::Win32::System::Threading::WaitForSingleObject;
+
+    // SAFETY: WaitForSingleObject is safe to call with any HANDLE value;
+    // invalid handles return WAIT_FAILED, which we treat as "not alive".
+    let wait_result = unsafe { WaitForSingleObject(handle_raw, 0) };
+    if wait_result != WAIT_TIMEOUT {
+        // WAIT_OBJECT_0 (process exited), WAIT_FAILED (invalid handle),
+        // any other code → treat as not alive.
+        return false;
+    }
+    current_target_pid == Some(bound_pid)
 }
 
 fn find_mono_module(handle: &OwnedProcessHandle) -> Result<ModuleInfo, ScryError> {
@@ -460,6 +509,45 @@ impl MonoRuntime {
 
 }
 
+#[cfg(test)]
+mod liveness_probe_tests {
+    use super::*;
+    use crate::handle::OwnedProcessHandle;
+    use windows::Win32::Foundation::HANDLE;
+
+    #[test]
+    fn is_alive_and_same_true_for_self_pid() {
+        // A pseudo-handle from GetCurrentProcess is non-signalled (this thread
+        // is still running). Pretending it's the "Hearthstone" handle and
+        // matching our own PID should return true.
+        let h = OwnedProcessHandle::current();
+        let my_pid = std::process::id();
+        assert!(is_alive_and_same(h.raw(), my_pid, Some(my_pid)));
+    }
+
+    #[test]
+    fn is_alive_and_same_false_for_invalid_handle() {
+        // HANDLE(0) is invalid; WaitForSingleObject returns WAIT_FAILED.
+        let invalid = HANDLE(std::ptr::null_mut());
+        assert!(!is_alive_and_same(invalid, 1234, Some(1234)));
+    }
+
+    #[test]
+    fn is_alive_and_same_false_when_pids_differ() {
+        // Live handle, but the running Hearthstone PID is different from
+        // what we captured.
+        let h = OwnedProcessHandle::current();
+        assert!(!is_alive_and_same(h.raw(), 1111, Some(2222)));
+    }
+
+    #[test]
+    fn is_alive_and_same_false_when_no_hearthstone_running() {
+        // Live handle, but find_pid returned None (HS not running).
+        let h = OwnedProcessHandle::current();
+        assert!(!is_alive_and_same(h.raw(), 1111, None));
+    }
+}
+
 #[cfg(all(test, feature = "integration"))]
 mod integration_tests {
     use super::*;
@@ -488,6 +576,22 @@ mod integration_tests {
         assert!(!runtime.root_domain.is_null());
         eprintln!("locate OK: {:?}", runtime.mono_module.name);
         eprintln!("root_domain = {}", runtime.root_domain);
+    }
+
+    #[test]
+    fn pid_getter_returns_bound_pid() {
+        skip_if_no_hs!();
+        let runtime = MonoRuntime::init().expect("Hearthstone must be running");
+        let expected =
+            crate::process::find_pid("Hearthstone.exe").unwrap().expect("HS pid present");
+        assert_eq!(runtime.pid(), expected);
+    }
+
+    #[test]
+    fn is_process_alive_and_same_true_against_running_hs() {
+        skip_if_no_hs!();
+        let runtime = MonoRuntime::init().expect("Hearthstone must be running");
+        assert!(runtime.is_process_alive_and_same());
     }
 
     /// Phase 6 sanity: prober refines `MonoClass.name` from the embedded

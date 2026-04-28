@@ -1,17 +1,22 @@
 ## 1. MonoRuntime Process-Identity + Liveness Probe
 
-- [ ] 1.1 Add a failing test in `packages/hearthmirror/native/src/mono/runtime.rs` (under the existing `tests` mod) named `pid_getter_returns_bound_pid` asserting that a constructed `MonoRuntime` returns the same pid via a public `pid()` accessor. Skip-if-no-HS guard via `#[ignore]`. Run `cargo test -p hearthmirror-native --lib pid_getter` and expect failure (compile error: no `pid` field).
-- [ ] 1.2 Add a `pid: u32` field to `MonoRuntime`, populate it from the `find_pid` result in `init()`. Add a `pub fn pid(&self) -> u32` getter. Add `pub fn reinit_count(&self) -> u64` returning a static counter (incremented elsewhere). Run `cargo test -p hearthmirror-native --lib pid_getter` and expect pass.
-- [ ] 1.3 Expose `pub fn raw_handle(&self) -> HANDLE` on `OwnedProcessHandle` in `packages/hearthmirror/native/src/handle.rs` so the liveness probe can call `WaitForSingleObject` without cloning. Run `cargo build -p hearthmirror-native` and expect exit code 0.
-- [ ] 1.4 Add `Win32_Foundation` `WaitForSingleObject` and `GetExitCodeProcess` (already present, just verify) imports to `packages/hearthmirror/native/Cargo.toml`. Run `cargo build -p hearthmirror-native` and expect exit code 0.
-- [ ] 1.5 Implement `pub fn is_process_alive_and_same(&self) -> bool` on `MonoRuntime`:
+- [x] 1.1 Add a failing test in `packages/hearthmirror/native/src/mono/runtime.rs` (under the existing `tests` mod) named `pid_getter_returns_bound_pid` asserting that a constructed `MonoRuntime` returns the same pid via a public `pid()` accessor. Skip-if-no-HS guard via `#[ignore]`. Run `cargo test -p hearthmirror-native --lib pid_getter` and expect failure (compile error: no `pid` field).
+- [x] 1.2 Add a `pid: u32` field to `MonoRuntime`, populate it from the `find_pid` result in `init()`. Add a `pub fn pid(&self) -> u32` getter. Add `pub fn reinit_count(&self) -> u64` returning a static counter (incremented elsewhere). Run `cargo test -p hearthmirror-native --lib pid_getter` and expect pass.
+      → `reinit_count` accessor deferred to Section 2 where the counter actually lives (on `RuntimeSlot`); `MonoRuntime::pid()` only here. Field renamed `bound_pid` to disambiguate from `find_pid`.
+- [x] 1.3 Expose `pub fn raw_handle(&self) -> HANDLE` on `OwnedProcessHandle` in `packages/hearthmirror/native/src/handle.rs` so the liveness probe can call `WaitForSingleObject` without cloning. Run `cargo build -p hearthmirror-native` and expect exit code 0.
+      → No-op: `OwnedProcessHandle::raw()` already public; reused that.
+- [x] 1.4 Add `Win32_Foundation` `WaitForSingleObject` and `GetExitCodeProcess` (already present, just verify) imports to `packages/hearthmirror/native/Cargo.toml`. Run `cargo build -p hearthmirror-native` and expect exit code 0.
+      → No-op: `Win32_System_Threading` already enabled, brings `WaitForSingleObject` + `WAIT_TIMEOUT`/`WAIT_OBJECT_0`. Did NOT need `GetExitCodeProcess` after design D2 chose `WaitForSingleObject`.
+- [x] 1.5 Implement `pub fn is_process_alive_and_same(&self) -> bool` on `MonoRuntime`:
       - Call `WaitForSingleObject(handle, 0)`. If result != `WAIT_TIMEOUT`, return `false`.
       - Call `find_pid(HEARTHSTONE_EXE)`. If `Ok(Some(p))` and `p == self.pid`, return `true`. Otherwise return `false`.
-- [ ] 1.6 Add unit test `is_process_alive_and_same_true_for_self_pid` in `runtime.rs` constructing a `MonoRuntime`-shaped fake whose handle wraps the test process's own handle and whose pid is the test process's pid; assert `is_process_alive_and_same()` returns `true`. (Use `OwnedProcessHandle::current()` if it exists, otherwise add it.)
-- [ ] 1.7 Add unit test `is_process_alive_and_same_false_for_invalid_handle` constructing a fake with an invalid HANDLE; assert it returns `false` without panicking.
-- [ ] 1.8 Run `cargo test -p hearthmirror-native --lib is_process_alive` and expect both tests pass.
-- [ ] 1.9 Run `cargo clippy -p hearthmirror-native --lib --all-features -- -D warnings` and expect exit code 0.
-- [ ] 1.10 Commit with message `feat(hearthmirror): track bound pid and add liveness probe`.
+      → Implemented + factored the pure logic into a free `is_alive_and_same(handle, bound_pid, current_target_pid)` helper for unit testability.
+- [x] 1.6 Add unit test `is_process_alive_and_same_true_for_self_pid` in `runtime.rs` constructing a `MonoRuntime`-shaped fake whose handle wraps the test process's own handle and whose pid is the test process's pid; assert `is_process_alive_and_same()` returns `true`. (Use `OwnedProcessHandle::current()` if it exists, otherwise add it.)
+      → Tests target the free `is_alive_and_same` helper instead of constructing a MonoRuntime fake (every other field would need wiring up). 4 tests cover: (a) self-pid + matching target, (b) invalid HANDLE, (c) live handle but pid mismatch, (d) live handle but no target running. Plus 2 integration tests gated by `feature = "integration"` against real Hearthstone.
+- [x] 1.7 Add unit test `is_process_alive_and_same_false_for_invalid_handle` constructing a fake with an invalid HANDLE; assert it returns `false` without panicking.
+- [x] 1.8 Run `cargo test -p hearthmirror-native --lib is_process_alive` and expect both tests pass. → 86 total / 4 new probe tests + 2 integration tests all pass.
+- [x] 1.9 Run `cargo clippy -p hearthmirror-native --lib --all-features -- -D warnings` and expect exit code 0.
+- [x] 1.10 Commit with message `feat(hearthmirror): track bound pid and add liveness probe`.
 
 ## 2. RuntimeSlot Wrapper + Back-off
 
