@@ -18,6 +18,10 @@ import { registerDeckTrackerIpc } from './deck-tracker';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
 import { registerMatchRecordingsIpc } from './match-recordings-ipc';
 import { registerStatsIpc } from './stats-host';
+import { join } from 'node:path';
+import { createDeckStore } from './deck-store';
+import { registerDeckIpc } from './deck-ipc';
+import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 
 let cardImageProtocolRegistered = false;
 
@@ -127,6 +131,26 @@ export function registerIpc(): void {
   registerHearthWatcherIpc();
   registerMatchRecordingsIpc();
   registerStatsIpc();
+
+  // Saved deck management (deck CRUD + deckstring import/export).
+  const deckStore = createDeckStore(join(app.getPath('userData'), 'decks.db'));
+  registerDeckIpc({
+    store: deckStore,
+    codecLookup: () => {
+      throw new Error('codecLookup: card database not yet ready');
+    },
+    collectibleLookup: () => {
+      throw new Error('collectibleLookup: card database not yet ready');
+    },
+  });
+  // Replace lazy lookups once the default-locale CardDb finishes loading.
+  void ensureCardDb().then((db) => {
+    registerDeckIpc({
+      store: deckStore,
+      codecLookup: () => makeDeckCodecLookup(db),
+      collectibleLookup: () => makeCollectibleLookup(db),
+    });
+  });
 }
 
 function registerCardImageProtocol(root: string): void {
