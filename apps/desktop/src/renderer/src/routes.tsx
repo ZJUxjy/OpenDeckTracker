@@ -1,6 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { Dashboard } from './components/Dashboard';
-import { SavedDecksList } from './components/Decklist';
+import { DecksPage } from './components/DecksPage';
 import { Stats } from './components/Stats';
 import { Collection } from './components/Collection';
 import { Settings } from './components/Settings';
@@ -39,7 +39,7 @@ function TrackerRoute() {
 export const routes: RouteObject[] = [
   { index: true, element: <Navigate to="/tracker" replace /> },
   { path: 'tracker', element: <TrackerRoute /> },
-  { path: 'decks', element: <SavedDecksList /> },
+  { path: 'decks', element: <DecksPage /> },
   { path: 'stats', element: <Stats /> },
   { path: 'collection', element: <Collection /> },
   { path: 'settings', element: <Settings /> },

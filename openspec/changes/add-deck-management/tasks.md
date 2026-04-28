@@ -156,6 +156,12 @@
 - [x] 16.4 Commit i18n with message `feat(i18n): add deck management strings`.
       → Locale JSON keys committed inline with Section 9; final smoke test committed alongside Section 17.
 
+## 16.5. DecksPage Wiring Container (post-section-15 follow-up)
+
+- [x] 16.5.1 Add `apps/desktop/src/renderer/src/components/DecksPage.tsx` orchestrating SavedDecksList + DeckEditor + DeckImportDialog + DeckExportDialog state. Wires empty-state CTAs and row actions (Edit / Export) to dialog open/close.
+- [x] 16.5.2 Replace `<SavedDecksList />` in `routes.tsx` with `<DecksPage />` so the `/decks` route serves the integrated page.
+- [x] 16.5.3 Add `apps/desktop/src/renderer/tests/DecksPage.test.tsx` smoke test (Create + Import button click flows; row Edit verified via prop signature). Full row Edit menu interaction deferred to e2e.
+
 ## 17. Final Validation and Archive
 
 - [x] 17.1 Run `pnpm --filter @hdt/core test` and expect all `@hdt/core` tests passing (no regressions in existing match-recordings / deck-tracker / stats suites). → 142/142 ✓
