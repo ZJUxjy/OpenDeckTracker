@@ -213,6 +213,10 @@ polling loop against `@hdt/hearthmirror` and emits typed events.
   reflector: 'getMatchInfo', message }`) instead of throwing.
 - Emit `match-ended` with a completed-match summary when the tracker can
   classify the finished game as a real constructed match.
+- Accept a saved-deck attribution payload via the deck-selection IPC
+  flow so the orchestrator can record `savedDeckId` and
+  `savedDeckVersion` alongside the live `deckId` when the user has
+  picked a saved deck for the current match.
 
 The `IDeckIdentifier` interface MUST allow injecting either the
 in-game memory-field reader (default M2 implementation) or a
@@ -232,13 +236,23 @@ The completed-match summary MUST include:
 - `startedAt` and `endedAt`: wall-clock timestamps.
 - `result`: `win`, `loss`, or `unknown`.
 - `playOrder`: `first`, `coin`, or `unknown`.
-- `deckId` and `deckName` when the local deck was identified.
+- `deckId` and `deckName` when the live deck was identified.
+- `savedDeckId` and `savedDeckVersion` when the user has picked a
+  saved deck for the current match. These fields are optional: if
+  the user picked a live deck or no deck attribution was possible,
+  they are absent.
 - `opponentName` and `opponentClass` when known.
 - `gameType` and `formatType` from match metadata.
 
 The tracker MUST NOT emit a completed-match summary for unsupported or
 unclassified modes unless the mode is explicitly recognized as
 constructed.
+
+The tracker MUST NOT couple itself to the deck store: it accepts
+saved-deck attribution as opaque values (`savedDeckId: string`,
+`savedDeckVersion: number`) injected via `selectDeckById` /
+`selectSavedDeck` and forwards them into the summary unchanged. The
+attribution-to-store link is owned by the IPC host, not the tracker.
 
 #### Scenario: Idle polling rate
 
@@ -268,11 +282,28 @@ constructed.
 #### Scenario: Completed constructed match carries stats summary
 
 - **GIVEN** the tracker has observed a constructed match with an
-  identified local deck, opponent metadata, start time, and end time
+  identified live deck, opponent metadata, start time, and end time
 - **WHEN** the match ends
 - **THEN** the `match-ended` event includes a completed-match summary
   with `fingerprint`, timestamps, deck identity, opponent metadata,
   result, play order, `gameType`, and `formatType`
+
+#### Scenario: Saved-deck attribution flows into summary
+
+- **GIVEN** the tracker observed a constructed match and the user
+  picked a saved deck via `DeckSelectDialog` before play
+- **WHEN** the match ends
+- **THEN** the `match-ended` summary includes both `savedDeckId`
+  (string) and `savedDeckVersion` (number) AND the legacy `deckId`
+  field (live `i64`) is also populated
+
+#### Scenario: Live-only attribution omits saved-deck fields
+
+- **GIVEN** the tracker observed a constructed match and the user
+  picked a live deck (or no deck) via `DeckSelectDialog`
+- **WHEN** the match ends
+- **THEN** the `match-ended` summary's `savedDeckId` and
+  `savedDeckVersion` fields are absent
 
 #### Scenario: Unsupported mode omits stats summary
 
