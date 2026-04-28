@@ -3,6 +3,8 @@ import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
 import type {
   DeckTrackerEvent,
   DeckTrackerSnapshot,
+  MatchRecordingDetail,
+  MatchRecordingSummary,
   MatchHistoryRecord,
   StatsSummary,
   StatsTimeFilter,
@@ -60,6 +62,11 @@ const api = {
       ipcRenderer.invoke('stats:get-summary', filter),
     listRecent: (filter: StatsTimeFilter, limit: number): Promise<MatchHistoryRecord[]> =>
       ipcRenderer.invoke('stats:list-recent', filter, limit),
+  },
+  recordings: {
+    list: (): Promise<MatchRecordingSummary[]> => ipcRenderer.invoke('recordings:list'),
+    get: (recordingId: string): Promise<MatchRecordingDetail | null> =>
+      ipcRenderer.invoke('recordings:get', recordingId),
   },
   hearthmirror: {
     isAlive: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isAlive'),

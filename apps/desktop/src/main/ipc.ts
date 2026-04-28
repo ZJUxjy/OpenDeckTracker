@@ -16,6 +16,7 @@ import {
 import { getHearthMirror } from './hearthmirror';
 import { registerDeckTrackerIpc } from './deck-tracker';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
+import { registerMatchRecordingsIpc } from './match-recordings-ipc';
 import { registerStatsIpc } from './stats-host';
 
 let cardImageProtocolRegistered = false;
@@ -124,6 +125,7 @@ export function registerIpc(): void {
   // Deck-tracker host (M2)
   registerDeckTrackerIpc();
   registerHearthWatcherIpc();
+  registerMatchRecordingsIpc();
   registerStatsIpc();
 }
 

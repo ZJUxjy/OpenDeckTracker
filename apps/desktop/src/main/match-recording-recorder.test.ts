@@ -4,6 +4,21 @@ import type { PowerEvent } from '@hdt/hearthwatcher';
 import { createMatchRecordingRecorder } from './match-recording-recorder';
 import type { MatchRecordingStore } from './match-recording-store';
 
+const player = (id: number, name: string, side: number) => ({
+  id,
+  name,
+  side,
+  standardRank: 0,
+  standardLegendRank: 0,
+  wildRank: 0,
+  wildLegendRank: 0,
+  classicRank: 0,
+  classicLegendRank: 0,
+  twistRank: 0,
+  twistLegendRank: 0,
+  cardbackId: 0,
+});
+
 function snapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTrackerSnapshot {
   return {
     phase: 'IN_MATCH',
@@ -11,8 +26,11 @@ function snapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTrackerSnap
       gameType: 4,
       formatType: 2,
       missionId: 0,
-      localPlayer: { id: 1, name: 'Me' },
-      opposingPlayer: { id: 2, name: 'Opponent' },
+      rankedSeasonId: 0,
+      arenaSeasonId: 0,
+      brawlSeasonId: 0,
+      localPlayer: player(1, 'Me', 1),
+      opposingPlayer: player(2, 'Opponent', 2),
     },
     deck: {
       id: 42,
