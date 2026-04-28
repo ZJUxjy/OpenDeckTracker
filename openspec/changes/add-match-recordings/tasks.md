@@ -8,17 +8,17 @@
 - [x] 1.6 Extend `timeline-deriver.test.ts` with failing cases for `opponent-reveal`, `shuffle-deck`, `turn-start`, and conservative no-event behavior for unsupported events; run `pnpm --filter @hdt/core test -- timeline-deriver` and expect failure.
 - [x] 1.7 Implement the remaining conservative derivation helpers in `timeline-deriver.ts`; run `pnpm --filter @hdt/core test -- timeline-deriver` and expect pass.
 - [x] 1.8 Add privacy tests in `timeline-deriver.test.ts` asserting hidden opponent hand/deck entities never expose `cardId`; run `pnpm --filter @hdt/core test -- timeline-deriver` and expect pass after implementation.
-- [ ] 1.9 Commit core recording domain work with message `feat(core): add match recording timeline domain`.
+- [x] 1.9 Commit core recording domain work with message `feat(core): add match recording timeline domain`.
 
 ## 2. Main-Process Recording Store
 
-- [ ] 2.1 Add failing tests in `apps/desktop/src/main/match-recording-store.test.ts` using a temp directory to assert `appendRawEvent()` creates `<root>/<recordingId>/events.jsonl`; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect failure.
-- [ ] 2.2 Create `apps/desktop/src/main/match-recording-store.ts` with a filesystem-backed store using explicit root directory injection for tests; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect the append test to pass.
-- [ ] 2.3 Extend `match-recording-store.test.ts` with failing tests for writing `recording.json`, listing completed summaries newest-first, and excluding in-progress recordings from the default completed list; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect failure.
-- [ ] 2.4 Implement summary write/list behavior in `match-recording-store.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass.
-- [ ] 2.5 Extend `match-recording-store.test.ts` with failing tests for `loadRecording(id)` returning full detail and returning `null` for a missing ID; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect failure.
-- [ ] 2.6 Implement `loadRecording(id)` and JSONL event loading in `match-recording-store.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass.
-- [ ] 2.7 Add a malformed-file resilience test in `match-recording-store.test.ts` asserting a bad recording directory is skipped during list and returns `null` on load; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass after implementation.
+- [x] 2.1 Add failing tests in `apps/desktop/src/main/match-recording-store.test.ts` using a temp directory to assert `appendRawEvent()` creates `<root>/<recordingId>/events.jsonl`; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect failure.
+- [x] 2.2 Create `apps/desktop/src/main/match-recording-store.ts` with a filesystem-backed store using explicit root directory injection for tests; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect the append test to pass.
+- [x] 2.3 Extend `match-recording-store.test.ts` with failing tests for writing `recording.json`, listing completed summaries newest-first, and excluding in-progress recordings from the default completed list; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect failure.
+- [x] 2.4 Implement summary write/list behavior in `match-recording-store.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass.
+- [x] 2.5 Extend `match-recording-store.test.ts` with failing tests for `loadRecording(id)` returning full detail and returning `null` for a missing ID; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect failure.
+- [x] 2.6 Implement `loadRecording(id)` and JSONL event loading in `match-recording-store.ts`; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass.
+- [x] 2.7 Add a malformed-file resilience test in `match-recording-store.test.ts` asserting a bad recording directory is skipped during list and returns `null` on load; run `pnpm --filter @hdt/desktop test -- match-recording-store` and expect pass after implementation.
 - [ ] 2.8 Commit storage work with message `feat(desktop): add match recording file store`.
 
 ## 3. Match Recording Recorder
