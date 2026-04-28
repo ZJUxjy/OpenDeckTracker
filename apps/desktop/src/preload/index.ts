@@ -1,14 +1,19 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
 import type {
+  CreateDeckInput,
   DeckTrackerEvent,
   DeckTrackerSnapshot,
+  DeckDetail,
+  DeckSummary,
   MatchRecordingDetail,
   MatchRecordingSummary,
   MatchHistoryRecord,
   StatsSummary,
   StatsTimeFilter,
+  UpdateDeckPatch,
 } from '@hdt/core';
+import type { LiveDeckSnapshotInput } from '../main/deck-store';
 import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 import type {
   AccountId,
@@ -67,6 +72,25 @@ const api = {
     list: (): Promise<MatchRecordingSummary[]> => ipcRenderer.invoke('recordings:list'),
     get: (recordingId: string): Promise<MatchRecordingDetail | null> =>
       ipcRenderer.invoke('recordings:get', recordingId),
+  },
+  decks: {
+    list: (): Promise<DeckSummary[]> => ipcRenderer.invoke('decks:list'),
+    getById: (id: string): Promise<DeckDetail | null> => ipcRenderer.invoke('decks:get-by-id', id),
+    create: (input: CreateDeckInput): Promise<DeckDetail> => ipcRenderer.invoke('decks:create', input),
+    update: (id: string, patch: UpdateDeckPatch): Promise<DeckDetail> =>
+      ipcRenderer.invoke('decks:update', id, patch),
+    duplicate: (id: string): Promise<DeckDetail> => ipcRenderer.invoke('decks:duplicate', id),
+    delete: (id: string): Promise<void> => ipcRenderer.invoke('decks:delete', id),
+    importDeckstring: (text: string): Promise<DeckDetail> =>
+      ipcRenderer.invoke('decks:import-deckstring', text),
+    importJson: (text: string): Promise<DeckDetail> => ipcRenderer.invoke('decks:import-json', text),
+    exportDeckstring: (id: string): Promise<string> =>
+      ipcRenderer.invoke('decks:export-deckstring', id),
+    exportJson: (id: string): Promise<string> => ipcRenderer.invoke('decks:export-json', id),
+    saveFromLive: (input: LiveDeckSnapshotInput): Promise<DeckDetail> =>
+      ipcRenderer.invoke('decks:save-from-live', input),
+    setSortIndex: (id: string, sortIndex: number): Promise<void> =>
+      ipcRenderer.invoke('decks:set-sort-index', id, sortIndex),
   },
   hearthmirror: {
     isAlive: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isAlive'),

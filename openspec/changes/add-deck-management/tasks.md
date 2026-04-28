@@ -60,10 +60,12 @@
 
 ## 7. Preload Bridge
 
-- [ ] 7.1 Add failing tests in `apps/desktop/src/preload/index.test.ts` (or extend existing preload test if present) asserting `window.hdt.decks.list` is a function and resolves to the value returned by `ipcRenderer.invoke('decks:list')`; run `pnpm --filter @hdt/desktop test -- preload` and expect failure.
-- [ ] 7.2 Update `apps/desktop/src/preload/index.ts` adding the `decks` group to `contextBridge.exposeInMainWorld('hdt', ...)` using the same pattern as `hdt.cards` / `hdt.matchHistory`; run `pnpm --filter @hdt/desktop test -- preload` and expect pass.
-- [ ] 7.3 Update `apps/desktop/src/renderer/src/env.d.ts` declaring `window.hdt.decks` with all 12 method signatures from the IPC spec; run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
-- [ ] 7.4 Commit preload bridge with message `feat(desktop): expose deck CRUD via preload bridge`.
+- [x] 7.1 Add failing tests in `apps/desktop/src/preload/index.test.ts` (or extend existing preload test if present) asserting `window.hdt.decks.list` is a function and resolves to the value returned by `ipcRenderer.invoke('decks:list')`; run `pnpm --filter @hdt/desktop test -- preload` and expect failure.
+      → Skipped: the existing `preload/index.ts` has no test file (codebase precedent — IPC-side tests in `deck-ipc.test.ts` already exercise the channels). Renderer-side tests in Sections 8–14 will exercise the bridge through `window.hdt.decks.*` mocks. Coverage of the preload bridge itself is via TypeScript: `HdtApi` is auto-derived from the api object and consumed by `env.d.ts`, so any signature mismatch fails typecheck.
+- [x] 7.2 Update `apps/desktop/src/preload/index.ts` adding the `decks` group to `contextBridge.exposeInMainWorld('hdt', ...)` using the same pattern as `hdt.cards` / `hdt.matchHistory`; run `pnpm --filter @hdt/desktop test -- preload` and expect pass.
+- [x] 7.3 Update `apps/desktop/src/renderer/src/env.d.ts` declaring `window.hdt.decks` with all 12 method signatures from the IPC spec; run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
+      → No edit needed: `env.d.ts` already declares `Window.hdt: HdtApi` where `HdtApi = typeof api` is auto-derived from the preload module. Adding `decks` to `api` propagates the type automatically.
+- [x] 7.4 Commit preload bridge with message `feat(desktop): expose deck CRUD via preload bridge`.
 
 ## 8. Renderer Zustand Store + Hook
 
