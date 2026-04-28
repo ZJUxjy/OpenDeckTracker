@@ -1,5 +1,8 @@
 // @hdt/core — deck-tracker domain layer.
 
+// Deck domain (CRUD types, validity, diff, import/export).
+export * from './deck';
+
 // Game / Player / Entity state machine.
 export { Game } from './game/game';
 export { Player } from './game/player';
