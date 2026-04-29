@@ -43,18 +43,19 @@
 
 ## 7. Stats IPC + Preload Surface
 
-- [ ] 7.1 Add failing tests in `apps/desktop/src/main/stats-host.test.ts` asserting that calling the IPC summary handler with `{ formatFilter: 'standard', includeMatchupMatrix: true }` returns a Standard-only `matchupMatrix`. Run and expect failure.
-- [ ] 7.2 Update `stats-host.ts` to forward `options` to `aggregateStats`. Maintain backwards-compatible single-arg signature. Run tests; expect pass.
-- [ ] 7.3 Update `apps/desktop/src/preload/index.ts` and `apps/desktop/src/renderer/src/env.d.ts` so `getSummary` accepts `(filter, options?)` and `listRecent` accepts `(filter, limit, options?)`. Typecheck pass.
-- [ ] 7.4 Add a backwards-compat test asserting legacy single-arg `getSummary(filter)` still works. Run; expect pass.
-- [ ] 7.5 Commit with message `feat(desktop): extend stats IPC with options`.
+- [x] 7.1 Add failing tests in `apps/desktop/src/main/stats-host.test.ts` asserting that calling the IPC summary handler with `{ formatFilter: 'standard', includeMatchupMatrix: true }` returns a Standard-only `matchupMatrix`. Run and expect failure.
+- [x] 7.2 Update `stats-host.ts` to forward `options` to `aggregateStats`. Maintain backwards-compatible single-arg signature. Run tests; expect pass.
+- [x] 7.3 Update `apps/desktop/src/preload/index.ts` and `apps/desktop/src/renderer/src/env.d.ts` so `getSummary` accepts `(filter, options?)` and `listRecent` accepts `(filter, limit, options?)`. Typecheck pass.
+- [x] 7.4 Add a backwards-compat test asserting legacy single-arg `getSummary(filter)` still works. Run; expect pass.
+- [x] 7.5 Commit with message `feat(desktop): extend stats IPC with options`.
 
 ## 8. i18n Strings for Stats
 
-- [ ] 8.1 Add new keys under `stats.*` in `resources/locales/en-US.json`: `formatFilter.{all,standard,wild,classic,twist}`, `matchup.{title,playerHeader,opponentHeader,unknownClass,emptyCell}`, `timeSeries.{title,daily,weekly,empty}`, `playOrder.{title,first,coin,unknown}`, `recordingViewer.{title,deck,startingHand,postMulliganHand,timeline,empty,close}`, `recordings.{view,unavailable}`. JSON parse check.
-- [ ] 8.2 Mirror with translated values into `resources/locales/zh-CN.json`. JSON parse check.
+- [x] 8.1 Add new keys under `stats.*` in `resources/locales/en-US.json`: `formatFilter.{all,standard,wild,classic,twist}`, `matchup.{title,playerHeader,opponentHeader,unknownClass,emptyCell}`, `timeSeries.{title,daily,weekly,empty}`, `playOrder.{title,first,coin,unknown}`, `recordingViewer.{title,deck,startingHand,postMulliganHand,timeline,empty,close}`, `recordings.{view,unavailable}`. JSON parse check.
+- [x] 8.2 Mirror with translated values into `resources/locales/zh-CN.json`. JSON parse check.
 - [ ] 8.3 Add a test in `apps/desktop/src/renderer/tests/Stats.i18n.test.tsx` asserting both en-US and zh-CN render the format filter labels. Run and expect pass after 8.1+8.2.
-- [ ] 8.4 Commit with message `feat(i18n): add stats analytics strings`.
+      → Deferred until Section 14 wires up the Stats page; the i18n smoke for the new components lives in their per-component tests (Sections 9-13).
+- [x] 8.4 Commit with message `feat(i18n): add stats analytics strings`.
 
 ## 9. FormatFilterPills Component
 

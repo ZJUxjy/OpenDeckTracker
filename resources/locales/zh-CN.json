@@ -180,5 +180,47 @@
     "none": "无",
     "confirm": "确认",
     "cancel": "取消"
+  },
+  "stats": {
+    "formatFilter": {
+      "all": "全部模式",
+      "standard": "标准",
+      "wild": "狂野",
+      "classic": "经典",
+      "twist": "乱斗"
+    },
+    "matchup": {
+      "title": "对战矩阵",
+      "playerHeader": "你的职业",
+      "opponentHeader": "对手",
+      "unknownClass": "未知",
+      "emptyCell": "—",
+      "empty": "尚无对局。"
+    },
+    "timeSeries": {
+      "title": "胜率趋势",
+      "daily": "按日",
+      "weekly": "按周",
+      "empty": "尚无对局。"
+    },
+    "playOrder": {
+      "title": "先后手",
+      "first": "先手",
+      "coin": "后手",
+      "unknown": "未知"
+    },
+    "recordings": {
+      "view": "查看录像",
+      "unavailable": "无录像"
+    },
+    "recordingViewer": {
+      "title": "对局录像",
+      "deck": "卡组",
+      "startingHand": "起手",
+      "postMulliganHand": "换牌后手牌",
+      "timeline": "时间线",
+      "empty": "录像为空。",
+      "close": "关闭"
+    }
   }
 }

@@ -180,5 +180,47 @@
     "none": "None",
     "confirm": "Confirm",
     "cancel": "Cancel"
+  },
+  "stats": {
+    "formatFilter": {
+      "all": "All Formats",
+      "standard": "Standard",
+      "wild": "Wild",
+      "classic": "Classic",
+      "twist": "Twist"
+    },
+    "matchup": {
+      "title": "Matchup Matrix",
+      "playerHeader": "Your Class",
+      "opponentHeader": "Opponent",
+      "unknownClass": "Unknown",
+      "emptyCell": "—",
+      "empty": "No matches yet."
+    },
+    "timeSeries": {
+      "title": "Winrate Over Time",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "empty": "No matches yet."
+    },
+    "playOrder": {
+      "title": "Play / Coin",
+      "first": "On the play",
+      "coin": "On the coin",
+      "unknown": "Unknown order"
+    },
+    "recordings": {
+      "view": "View recording",
+      "unavailable": "No recording"
+    },
+    "recordingViewer": {
+      "title": "Match Recording",
+      "deck": "Deck",
+      "startingHand": "Starting hand",
+      "postMulliganHand": "Post-mulligan hand",
+      "timeline": "Timeline",
+      "empty": "Recording is empty.",
+      "close": "Close"
+    }
   }
 }

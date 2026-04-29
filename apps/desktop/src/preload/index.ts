@@ -6,9 +6,11 @@ import type {
   DeckTrackerSnapshot,
   DeckDetail,
   DeckSummary,
+  FormatFilter,
   MatchRecordingDetail,
   MatchRecordingSummary,
   MatchHistoryRecord,
+  StatsQueryOptions,
   StatsSummary,
   StatsTimeFilter,
   UpdateDeckPatch,
@@ -63,10 +65,16 @@ const api = {
       ipcRenderer.invoke('deck:decode', deckstring),
   },
   stats: {
-    getSummary: (filter: StatsTimeFilter): Promise<StatsSummary> =>
-      ipcRenderer.invoke('stats:get-summary', filter),
-    listRecent: (filter: StatsTimeFilter, limit: number): Promise<MatchHistoryRecord[]> =>
-      ipcRenderer.invoke('stats:list-recent', filter, limit),
+    getSummary: (
+      filter: StatsTimeFilter,
+      options?: Omit<StatsQueryOptions, 'filter' | 'now' | 'recentLimit'>,
+    ): Promise<StatsSummary> => ipcRenderer.invoke('stats:get-summary', filter, options),
+    listRecent: (
+      filter: StatsTimeFilter,
+      limit: number,
+      options?: { formatFilter?: FormatFilter },
+    ): Promise<MatchHistoryRecord[]> =>
+      ipcRenderer.invoke('stats:list-recent', filter, limit, options),
   },
   recordings: {
     list: (): Promise<MatchRecordingSummary[]> => ipcRenderer.invoke('recordings:list'),

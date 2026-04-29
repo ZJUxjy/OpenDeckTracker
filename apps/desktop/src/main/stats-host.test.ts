@@ -80,4 +80,55 @@ describe('stats-host', () => {
     expect(recent).toHaveLength(1);
     expect(recent[0]).toMatchObject({ id: 1 });
   });
+
+  it('summary handler accepts options with format filter and includeMatchupMatrix', async () => {
+    const { registerStatsIpc } = await import('./stats-host');
+    const store = makeStoreWithMatches([
+      makeRecord({ id: 1, formatType: 2, fingerprint: 'std' }),
+      makeRecord({ id: 2, formatType: 1, fingerprint: 'wild', playerClass: 'DRUID' }),
+    ]);
+    registerStatsIpc(store);
+
+    const handler = mocks.ipcMain.handle.mock.calls.find(
+      ([channel]) => channel === 'stats:get-summary',
+    )?.[1];
+    const summary = await handler({}, 'all-time', {
+      formatFilter: 'standard',
+      includeMatchupMatrix: true,
+    });
+
+    expect(summary.matchesPlayed).toBe(1);
+    expect(summary.matchupMatrix).toBeDefined();
+  });
+
+  it('list-recent handler accepts an options object with formatFilter', async () => {
+    const { registerStatsIpc } = await import('./stats-host');
+    const store = makeStoreWithMatches([
+      makeRecord({ id: 1, formatType: 2, fingerprint: 'std' }),
+      makeRecord({ id: 2, formatType: 1, fingerprint: 'wild' }),
+    ]);
+    registerStatsIpc(store);
+
+    const handler = mocks.ipcMain.handle.mock.calls.find(
+      ([channel]) => channel === 'stats:list-recent',
+    )?.[1];
+    const recent = await handler({}, 'all-time', 5, { formatFilter: 'wild' });
+
+    expect(recent).toHaveLength(1);
+    expect(recent[0].fingerprint).toBe('wild');
+  });
+
+  it('summary handler stays backwards-compatible with single-arg call', async () => {
+    const { registerStatsIpc } = await import('./stats-host');
+    const store = makeStoreWithMatches([makeRecord()]);
+    registerStatsIpc(store);
+
+    const handler = mocks.ipcMain.handle.mock.calls.find(
+      ([channel]) => channel === 'stats:get-summary',
+    )?.[1];
+    const summary = await handler({}, 'all-time');
+
+    expect(summary.matchupMatrix).toBeUndefined();
+    expect(summary.matchesPlayed).toBe(1);
+  });
 });

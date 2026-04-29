@@ -2,7 +2,10 @@ import { app, ipcMain } from 'electron';
 import { join } from 'node:path';
 import {
   aggregateStats,
+  filterMatchesByFormat,
+  type FormatFilter,
   type NormalizedCompletedMatch,
+  type StatsQueryOptions,
   type StatsSummary,
   type StatsTimeFilter,
   type MatchHistoryRecord,
@@ -40,15 +43,34 @@ export function recordCompletedMatch(
   store.record(match);
 }
 
+export type SummaryIpcOptions = Omit<StatsQueryOptions, 'filter' | 'now' | 'recentLimit'>;
+export interface ListRecentIpcOptions {
+  formatFilter?: FormatFilter;
+}
+
 export function registerStatsIpc(store: MatchHistoryStore = getMatchHistoryStore()): void {
-  ipcMain.handle('stats:get-summary', (_event, filter: StatsTimeFilter): StatsSummary => {
-    return aggregateStats(store.getAllForFilter({ filter }), { filter });
-  });
+  ipcMain.handle(
+    'stats:get-summary',
+    (_event, filter: StatsTimeFilter, options?: SummaryIpcOptions): StatsSummary => {
+      const merged: StatsQueryOptions = { filter, ...(options ?? {}) };
+      return aggregateStats(store.getAllForFilter({ filter }), merged);
+    },
+  );
 
   ipcMain.handle(
     'stats:list-recent',
-    (_event, filter: StatsTimeFilter, limit = 5): MatchHistoryRecord[] => {
-      return store.listRecent({ filter, limit });
+    (
+      _event,
+      filter: StatsTimeFilter,
+      limit = 5,
+      options?: ListRecentIpcOptions,
+    ): MatchHistoryRecord[] => {
+      const all = store.listRecent({ filter, limit: 10_000 });
+      const filtered =
+        options?.formatFilter && options.formatFilter !== 'all'
+          ? filterMatchesByFormat(all, options.formatFilter)
+          : all;
+      return filtered.slice(0, limit);
     },
   );
 }
