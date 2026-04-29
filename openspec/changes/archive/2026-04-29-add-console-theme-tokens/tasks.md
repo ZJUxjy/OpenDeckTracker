@@ -66,7 +66,7 @@
 
 ## 8. Manual Smoke + Archive
 
-- [ ] 8.1 Manual smoke: launch `pnpm dev`, verify cyan accent + slate background + JetBrains Mono numerics across Tracker, Decks (saved-decks list + editor + import/export dialogs), Stats (all four sections), Collection, Settings, Overlay tab. Toggle language to `zh-CN` and confirm fonts hold.
-- [ ] 8.2 Confirm draw-pop animation still works on LiveDeckPanel (the keyframe in `theme.css` references the orange — port to `var(--accent)` or to a Console-tinted highlight color before this step).
-- [ ] 8.3 Confirm `pnpm --filter @hdt/desktop test` is still green when `pnpm dev` is stopped.
-- [ ] 8.4 Archive change via `/opsx:archive add-console-theme-tokens`.
+- [x] 8.1 Manual smoke: launch `pnpm dev`, verify cyan accent + slate background + JetBrains Mono numerics across Tracker, Decks (saved-decks list + editor + import/export dialogs), Stats (all four sections), Collection, Settings, Overlay tab. Toggle language to `zh-CN` and confirm fonts hold.
+- [x] 8.2 Confirm draw-pop animation still works on LiveDeckPanel (the keyframe in `theme.css` references the orange — port to `var(--accent)` or to a Console-tinted highlight color before this step).
+- [x] 8.3 Confirm `pnpm --filter @hdt/desktop test` is still green when `pnpm dev` is stopped.
+- [x] 8.4 Archive change via `/opsx:archive add-console-theme-tokens`.

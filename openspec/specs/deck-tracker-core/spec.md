@@ -409,6 +409,11 @@ The component MUST:
 - An empty / disconnected state shows the localized empty-state with a
   localized diagnostic line for "Hearthstone not running" or "match not
   detected".
+- Express all background, border, text, and accent colors via the
+  Console theme tokens (per `console-theme-tokens` capability) — never
+  via hard-coded color literals.
+- Render all numeric values (remaining-cards counts, hand size, opponent
+  hand count, KPI values) in `font-mono`.
 
 `apps/desktop/src/renderer/src/components/DeckSelectDialog.tsx` (NEW)
 SHALL prompt the user to pick a deck when the orchestrator's identifier
@@ -422,6 +427,7 @@ The dialog MUST:
   next-match pre-selection.
 - Render all user-visible labels, actions, empty states, and diagnostics
   through the active i18n locale.
+- Express all colors via the Console theme tokens.
 
 #### Scenario: Live deck panel shows 30 cards on match start
 
@@ -461,6 +467,13 @@ The dialog MUST:
 - **WHEN** the tracker emits `needs-deck-selection`
 - **THEN** the dialog title, filter labels, confirm action, cancel action,
   and empty-state text render in English
+
+#### Scenario: LiveDeckPanel uses Console accent
+
+- **WHEN** the panel renders an active deck row
+- **THEN** the row's `×N` count badge resolves to `var(--accent)` (cyan),
+  not a hard-coded orange literal
+- **AND** the badge text element has `font-mono` applied
 
 ### Requirement: Deck copy expansion utility in @hdt/core
 
