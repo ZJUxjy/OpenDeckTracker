@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>OpenDeckTracker — UI v2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0a0a12; color: #e6edf3; font-family: 'Inter', system-ui, sans-serif; }
+  *, *::before, *::after { box-sizing: border-box; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(120,120,140,0.25); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(120,120,140,0.4); }
+  button { font-family: inherit; }
+  input { font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="direction-a-console.jsx"></script>
+<script type="text/babel" src="v2-console-extras.jsx"></script>
+<script type="text/babel" src="v2-deck-finder.jsx"></script>
+<script type="text/babel" src="v2-settings-appearance.jsx"></script>
+<script type="text/babel" src="v2-artboard.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+(function() {
+const DesignCanvas = window.DesignCanvas;
+const DCSection = window.DCSection;
+const DCArtboard = window.DCArtboard;
+const TweaksPanel = window.TweaksPanel;
+const useTweaks = window.useTweaks;
+const TweakSection = window.TweakSection;
+const TweakRadio = window.TweakRadio;
+const TweakSlider = window.TweakSlider;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "density": "medium",
+  "opacity": 0.92,
+  "darkMode": true
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const drawn = window.DRAWN_STATE;
+
+  return (
+    <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
+      <DesignCanvas
+        title="OpenDeckTracker — UI v2"
+        subtitle="Direction A locked. Separate player + opponent overlays, expansion-set collection, deck finder."
+      >
+        <DCSection id="app" title="Desktop app" subtitle="All five surfaces — Tracker, Decks (finder), Stats, Collection (by set), and Overlay preview.">
+          <DCArtboard id="console-app" label="Console — full app" width={1240} height={820}>
+            <window.ConsoleArtboardV2
+              density={tweaks.density}
+              opacity={tweaks.opacity}
+              drawn={drawn}
+              brand="OpenDeckTracker"
+            />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="overlays" title="In-game overlays" subtitle="Player overlay (cyan) and the new separate Opponent overlay (red). Both use dot-pip counts; ×N for >3 copies.">
+          <DCArtboard id="player-ov" label="Player overlay" width={340} height={620}>
+            <div style={{
+              width: "100%", height: "100%", position: "relative", overflow: "hidden",
+              background: `
+                radial-gradient(ellipse at 30% 30%, oklch(0.32 0.10 30 / 0.5), transparent 60%),
+                radial-gradient(ellipse at 70% 80%, oklch(0.22 0.08 240 / 0.4), transparent 60%),
+                #08080c`,
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+            }}>
+              <div style={{ position: "absolute", inset: 0,
+                backgroundImage: "repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 8px)" }} />
+              <div style={{ position: "absolute", top: 12, left: 14, fontSize: 9, color: "#5a5a75", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.16em" }}>
+                YOUR DECK · OVERLAY
+              </div>
+              <window.ConsoleOverlayV2 opacity={tweaks.opacity} drawn={drawn} />
+            </div>
+          </DCArtboard>
+
+          <DCArtboard id="opponent-ov" label="Opponent overlay (NEW)" width={340} height={620}>
+            <div style={{
+              width: "100%", height: "100%", position: "relative", overflow: "hidden",
+              background: `
+                radial-gradient(ellipse at 70% 30%, oklch(0.32 0.10 360 / 0.5), transparent 60%),
+                radial-gradient(ellipse at 30% 80%, oklch(0.22 0.06 280 / 0.4), transparent 60%),
+                #08080c`,
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+            }}>
+              <div style={{ position: "absolute", inset: 0,
+                backgroundImage: "repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 8px)" }} />
+              <div style={{ position: "absolute", top: 12, left: 14, fontSize: 9, color: "#5a5a75", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.16em" }}>
+                OPPONENT · OVERLAY
+              </div>
+              <window.ConsoleOpponentOverlay opacity={tweaks.opacity} />
+            </div>
+          </DCArtboard>
+
+          <DCArtboard id="both-ov" label="Both overlays · in-game preview" width={900} height={620}>
+            <div style={{
+              width: "100%", height: "100%", position: "relative", overflow: "hidden",
+              background: `
+                radial-gradient(ellipse at 30% 40%, oklch(0.25 0.10 30 / 0.5), transparent 60%),
+                radial-gradient(ellipse at 70% 70%, oklch(0.2 0.08 240 / 0.4), transparent 60%),
+                #0a0a0a`,
+            }}>
+              <div style={{ position: "absolute", inset: 0,
+                backgroundImage: "repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 8px)" }} />
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)",
+                width: "60%", height: "60%", borderRadius: "50%",
+                background: "radial-gradient(circle, oklch(0.3 0.08 60 / 0.4), transparent 70%)", filter: "blur(20px)" }} />
+              <div style={{ position: "absolute", top: 14, left: 14, fontSize: 10, color: "#5a5a75", fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.16em" }}>
+                LIVE GAME — BOTH OVERLAYS PINNED
+              </div>
+              <div style={{ position: "absolute", top: 50, left: 16 }}>
+                <window.ConsoleOverlayV2 opacity={tweaks.opacity} drawn={drawn} />
+              </div>
+              <div style={{ position: "absolute", top: 50, right: 16 }}>
+                <window.ConsoleOpponentOverlay opacity={tweaks.opacity} />
+              </div>
+            </div>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Card row density">
+          <TweakRadio
+            value={tweaks.density}
+            onChange={(v) => setTweak("density", v)}
+            options={[
+              { value: "tight",  label: "Tight"  },
+              { value: "medium", label: "Medium" },
+              { value: "loose",  label: "Loose"  },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="Overlay opacity" subtitle={`${Math.round(tweaks.opacity * 100)}%`}>
+          <TweakSlider
+            value={tweaks.opacity}
+            onChange={(v) => setTweak("opacity", v)}
+            min={0.5} max={1} step={0.02}
+          />
+        </TweakSection>
+        <TweakSection title="Theme" subtitle="Light is preview-only; dark is the default.">
+          <TweakRadio
+            value={tweaks.darkMode ? "dark" : "light"}
+            onChange={(v) => setTweak("darkMode", v === "dark")}
+            options={[
+              { value: "dark",  label: "Dark"  },
+              { value: "light", label: "Light" },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+
+      {!tweaks.darkMode && (
+        <div style={{
+          position: "fixed", inset: 0, pointerEvents: "none", zIndex: 5,
+          background: "rgba(245, 240, 235, 0.55)", mixBlendMode: "lighten",
+        }} />
+      )}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+})();
+</script>
+</body>
+</html>
