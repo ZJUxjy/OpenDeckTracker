@@ -21,7 +21,7 @@ describe('appearance store', () => {
     useAppearanceStore.getState().setAccent('violet');
 
     expect(localStorage.getItem(APPEARANCE_STORAGE_KEY)).toBe(
-      JSON.stringify({ density: 'compact', accent: 'violet', gameOverlay: false }),
+      JSON.stringify({ density: 'compact', accent: 'violet', gameOverlay: false, gameOverlayOpponent: false }),
     );
 
     // Fresh import hydrates from storage
@@ -96,5 +96,65 @@ describe('appearance store', () => {
     expect(setEnabled).toHaveBeenCalledWith(false);
 
     (window as any).hdt = undefined;
+  });
+
+  it('defaults gameOverlayOpponent to false when nothing is stored', async () => {
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(false);
+  });
+
+  it('round-trips gameOverlayOpponent through localStorage', async () => {
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    useAppearanceStore.getState().setGameOverlayOpponent(true);
+
+    const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
+    expect(stored.gameOverlayOpponent).toBe(true);
+
+    vi.resetModules();
+    const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
+    expect(fresh.getState().gameOverlayOpponent).toBe(true);
+  });
+
+  it('handles legacy payload without gameOverlayOpponent gracefully', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: true }),
+    );
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(false);
+    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
+  });
+
+  it('fires window.hdt.overlay.setEnabledOpponent when setGameOverlayOpponent is called', async () => {
+    const setEnabled = vi.fn();
+    const setEnabledOpponent = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled, setEnabledOpponent } };
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    useAppearanceStore.getState().setGameOverlayOpponent(true);
+    expect(setEnabledOpponent).toHaveBeenCalledWith(true);
+    expect(setEnabled).not.toHaveBeenCalled();
+
+    useAppearanceStore.getState().setGameOverlayOpponent(false);
+    expect(setEnabledOpponent).toHaveBeenCalledWith(false);
+
+    (window as any).hdt = undefined;
+  });
+
+  it('setGameOverlayOpponent does not mutate gameOverlay', async () => {
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    useAppearanceStore.getState().setGameOverlay(true);
+    useAppearanceStore.getState().setGameOverlayOpponent(true);
+
+    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(true);
+
+    useAppearanceStore.getState().setGameOverlayOpponent(false);
+    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(false);
   });
 });

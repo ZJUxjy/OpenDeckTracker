@@ -5,6 +5,7 @@ import { Stats } from './components/Stats';
 import { Collection } from './components/Collection';
 import { Settings } from './components/Settings';
 import { OverlayView } from './components/OverlayView';
+import { OpponentOverlayView } from './components/OpponentOverlayView';
 import { LiveDeckPanel } from './components/LiveDeckPanel';
 import { OpponentCardsPanel } from './components/OpponentCardsPanel';
 import { useDeckTrackerStore } from './stores/deck-tracker-store';
@@ -44,5 +45,6 @@ export const routes: RouteObject[] = [
   { path: 'collection', element: <Collection /> },
   { path: 'settings', element: <Settings /> },
   { path: 'overlay', element: <OverlayView /> },
+  { path: 'overlay-opponent', element: <OpponentOverlayView /> },
   { path: '*', element: <Navigate to="/tracker" replace /> },
 ];

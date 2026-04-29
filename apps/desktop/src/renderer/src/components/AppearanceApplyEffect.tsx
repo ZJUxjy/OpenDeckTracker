@@ -24,9 +24,12 @@ export function AppearanceApplyEffect() {
   useEffect(() => {
     if (bootOverlayFired.current) return;
     bootOverlayFired.current = true;
-    const { gameOverlay } = useAppearanceStore.getState();
+    const { gameOverlay, gameOverlayOpponent } = useAppearanceStore.getState();
     if (gameOverlay) {
       window.hdt?.overlay?.setEnabled?.(true);
+    }
+    if (gameOverlayOpponent) {
+      window.hdt?.overlay?.setEnabledOpponent?.(true);
     }
   }, []);
 

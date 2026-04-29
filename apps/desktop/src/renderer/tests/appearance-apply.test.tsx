@@ -113,4 +113,67 @@ describe('AppearanceApplyEffect', () => {
 
     (window as any).hdt = undefined;
   });
+
+  it('fires overlay:set-enabled-opponent on mount when gameOverlayOpponent is saved as true', async () => {
+    const setEnabled = vi.fn();
+    const setEnabledOpponent = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled, setEnabledOpponent } };
+
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: false, gameOverlayOpponent: true }),
+    );
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(setEnabledOpponent).toHaveBeenCalledTimes(1);
+    expect(setEnabledOpponent).toHaveBeenCalledWith(true);
+    expect(setEnabled).not.toHaveBeenCalled();
+
+    (window as any).hdt = undefined;
+  });
+
+  it('fires both player and opponent re-fires when both are saved as true', async () => {
+    const setEnabled = vi.fn();
+    const setEnabledOpponent = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled, setEnabledOpponent } };
+
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: true, gameOverlayOpponent: true }),
+    );
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(setEnabled).toHaveBeenCalledTimes(1);
+    expect(setEnabled).toHaveBeenCalledWith(true);
+    expect(setEnabledOpponent).toHaveBeenCalledTimes(1);
+    expect(setEnabledOpponent).toHaveBeenCalledWith(true);
+
+    (window as any).hdt = undefined;
+  });
+
+  it('does not fire opponent re-fire when gameOverlayOpponent is false', async () => {
+    const setEnabled = vi.fn();
+    const setEnabledOpponent = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled, setEnabledOpponent } };
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(setEnabledOpponent).not.toHaveBeenCalled();
+
+    (window as any).hdt = undefined;
+  });
 });

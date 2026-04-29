@@ -12,7 +12,7 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const isOverlay = location.pathname === '/overlay';
+  const isOverlay = location.pathname === '/overlay' || location.pathname === '/overlay-opponent';
   const { isAlive, battleTag } = useHearthMirrorStatus();
   // Subscribe the global deck-tracker store to main-process IPC pushes.
   // Mounted at App root so the subscription survives all route changes.
