@@ -27,6 +27,8 @@ export class OverlayManager {
 
   disable(): void {
     this.userEnabled = false;
+    this.gameRunning = false;
+    this.falseStreak = 0;
     this.syncVisibility();
     this.stopPolling();
   }
@@ -96,6 +98,7 @@ export class OverlayManager {
   private startPolling(): void {
     if (this.pollHandle !== null) return;
     this.falseStreak = 0;
+    void this.poll();
     this.pollHandle = setInterval(() => {
       void this.poll();
     }, 3000);

@@ -79,6 +79,7 @@ describe('OverlayManager', () => {
     expect(win._opts.skipTaskbar).toBe(true);
     expect(win._opts.focusable).toBe(false);
     expect(win._opts.show).toBe(false);
+    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
   });
 
   it('enable() loads URL with #/overlay hash', () => {
@@ -169,5 +170,31 @@ describe('OverlayManager', () => {
     mgr.dispose();
 
     expect(lastWindow().isDestroyed()).toBe(true);
+  });
+
+  it('enable() polls immediately so the window shows without a 3 s delay', async () => {
+    const mgr = makeManager(async () => true);
+    mgr.enable();
+
+    // Flush the microtask from the immediate poll
+    await Promise.resolve();
+    expect(lastWindow().show).toHaveBeenCalled();
+  });
+
+  it('disable() resets gameRunning so re-enable does not flash a stale visible window', async () => {
+    const mgr = makeManager(async () => true);
+    mgr.enable();
+    await Promise.resolve(); // flush immediate poll → gameRunning = true
+    expect(lastWindow().isVisible()).toBe(true);
+
+    mgr.disable();
+    expect(lastWindow().isVisible()).toBe(false);
+
+    mgr.enable();
+    // Window stays hidden until a fresh poll confirms HS is alive
+    expect(lastWindow().isVisible()).toBe(false);
+
+    await Promise.resolve(); // flush immediate poll → gameRunning = true again
+    expect(lastWindow().isVisible()).toBe(true);
   });
 });
