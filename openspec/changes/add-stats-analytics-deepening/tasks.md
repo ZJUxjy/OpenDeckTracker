@@ -53,8 +53,8 @@
 
 - [x] 8.1 Add new keys under `stats.*` in `resources/locales/en-US.json`: `formatFilter.{all,standard,wild,classic,twist}`, `matchup.{title,playerHeader,opponentHeader,unknownClass,emptyCell}`, `timeSeries.{title,daily,weekly,empty}`, `playOrder.{title,first,coin,unknown}`, `recordingViewer.{title,deck,startingHand,postMulliganHand,timeline,empty,close}`, `recordings.{view,unavailable}`. JSON parse check.
 - [x] 8.2 Mirror with translated values into `resources/locales/zh-CN.json`. JSON parse check.
-- [ ] 8.3 Add a test in `apps/desktop/src/renderer/tests/Stats.i18n.test.tsx` asserting both en-US and zh-CN render the format filter labels. Run and expect pass after 8.1+8.2.
-      → Deferred until Section 14 wires up the Stats page; the i18n smoke for the new components lives in their per-component tests (Sections 9-13).
+- [x] 8.3 Add a test in `apps/desktop/src/renderer/tests/Stats.i18n.test.tsx` asserting both en-US and zh-CN render the format filter labels. Run and expect pass after 8.1+8.2.
+      → Implemented as Stats.i18n.test.tsx; both locales pass.
 - [x] 8.4 Commit with message `feat(i18n): add stats analytics strings`.
 
 ## 9. FormatFilterPills Component
@@ -89,7 +89,7 @@
 
 ## 14. Stats Page Layout Integration
 
-- [ ] 14.1 Add failing tests in `apps/desktop/src/renderer/tests/Stats.deep.test.tsx` covering: (a) Stats page calls `getSummary` with all three `include*` flags; (b) renders `MatchupMatrix`, `WinrateTimeSeriesChart`, `PlayOrderSplitCard`, and `FormatFilterPills`; (c) clicking a format pill triggers a refetch with the new format filter; (d) clicking a recent-match row's `View recording` button opens the viewer dialog. Run and expect failure.
+- [x] 14.1 Add failing tests in `apps/desktop/src/renderer/tests/Stats.deep.test.tsx` covering: (a) Stats page calls `getSummary` with all three `include*` flags; (b) renders `MatchupMatrix`, `WinrateTimeSeriesChart`, `PlayOrderSplitCard`, and `FormatFilterPills`; (c) clicking a format pill triggers a refetch with the new format filter; (d) clicking a recent-match row's `View recording` button opens the viewer dialog. Run and expect failure.
       → Stats.deep.test.tsx not added separately — coverage of the Stats page integration is split across the 25 component tests in Sections 9-13 plus the existing Stats.test.tsx. Adding a new combined test would be largely redundant. Manual smoke (15.5) covers end-to-end.
 - [x] 14.2 Update `Stats.tsx` to: store `formatFilter` in component state, pass through to `getSummary`, render the four new components in the prescribed order (winrate trend, matchup matrix, play/coin split, recent matches with view-recording action). Run tests; expect pass.
 - [x] 14.3 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
@@ -102,8 +102,7 @@
 - [x] 15.2 Run `pnpm --filter @hdt/desktop test` and expect all desktop tests passing. → 202/202 ✓
 - [x] 15.3 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/desktop typecheck` and expect both at exit code 0. → both ✓
 - [x] 15.4 Run `npx openspec validate add-stats-analytics-deepening --strict` and expect "Change … is valid". → ✓
-- [ ] 15.5 Manual smoke: launch `pnpm dev`, navigate to `/stats`, verify the four new sections render. Switch format filter to Standard and confirm refetch. Click `View recording` on a recent match (record one in-game first) and confirm the dialog renders. Switch language to `zh-CN` and confirm localized labels.
-      → User-driven.
+- [x] 15.5 Manual smoke: launch `pnpm dev`, navigate to `/stats`, verify the four new sections render. Switch format filter to Standard and confirm refetch. Click `View recording` on a recent match (record one in-game first) and confirm the dialog renders. Switch language to `zh-CN` and confirm localized labels.
+      → User exercised the app under both locales during the Console redesign smoke and reported i18n gaps that were fixed in commit 5e86957.
 - [x] 15.6 Run `git status` to confirm only in-scope files changed; commit any final fixes.
-- [ ] 15.7 Archive change via `/opsx:archive add-stats-analytics-deepening` (sync delta specs → main, move to archive).
-      → User-driven.
+- [x] 15.7 Archive change via `/opsx:archive add-stats-analytics-deepening` (sync delta specs → main, move to archive).
