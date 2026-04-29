@@ -15,9 +15,9 @@
 
 ## 3. Sweep the Shell (high-traffic surfaces first)
 
-- [ ] 3.1 `Sidebar.tsx`: replace orange / gray-slate / hard-coded hex with token utilities. The active-tab inset rail uses `shadow-[inset_4px_0_0_0_var(--accent)]`. Hover background uses `bg-bg-2`. Run `pnpm --filter @hdt/desktop test -- Sidebar` and expect green.
-- [ ] 3.2 `App.tsx`: header + status pill, mode toggle, body background. Replace `bg-[#0E0E14]` → `bg-bg`, status pill colors → `text-green` / `text-amber` / `text-text-mute`. Run `pnpm --filter @hdt/desktop test -- App` and expect green.
-- [ ] 3.3 `Dashboard.tsx`: KPI summary cards, watcher status pill, rank label. Cyan replaces orange on the rank legend. Run `pnpm --filter @hdt/desktop test -- Dashboard` and expect green.
+- [x] 3.1 `Sidebar.tsx`: replace orange / gray-slate / hard-coded hex with token utilities. The active-tab inset rail uses `shadow-[inset_4px_0_0_0_var(--accent)]`. Hover background uses `bg-bg-2`. Run `pnpm --filter @hdt/desktop test -- Sidebar` and expect green.
+- [x] 3.2 `App.tsx`: header + status pill, mode toggle, body background. Replace `bg-[#0E0E14]` → `bg-bg`, status pill colors → `text-green` / `text-amber` / `text-text-mute`. Run `pnpm --filter @hdt/desktop test -- App` and expect green.
+- [x] 3.3 `Dashboard.tsx`: KPI summary cards, watcher status pill, rank label. Cyan replaces orange on the rank legend. Run `pnpm --filter @hdt/desktop test -- Dashboard` and expect green.
 - [ ] 3.4 Commit batch as `feat(renderer): retheme shell (Sidebar / App / Dashboard) with Console tokens`.
 
 ## 4. Sweep the Tracker + Overlay Surfaces

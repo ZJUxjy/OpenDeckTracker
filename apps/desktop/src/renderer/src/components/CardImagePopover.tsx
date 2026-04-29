@@ -56,14 +56,14 @@ export function CardImagePopover({
       style={placement === 'right' ? { top: `${top}px`, left: `${left}px` } : { top: `${top}px`, right: `${right}px` }}
       onMouseLeave={onClose}
     >
-      <div className="w-[256px] bg-[#1C1C24] rounded-lg shadow-2xl border border-[#2A2A35] overflow-hidden">
+      <div className="w-[256px] bg-bg-2 rounded-lg shadow-2xl border border-border overflow-hidden">
         {loading && (
-          <div className="h-[386px] flex items-center justify-center text-slate-400 text-xs">
+          <div className="h-[386px] flex items-center justify-center text-text-dim text-xs">
             {t('cardImage.loading')}
           </div>
         )}
         {error && (
-          <div className="h-[386px] flex items-center justify-center text-slate-400 text-xs">
+          <div className="h-[386px] flex items-center justify-center text-text-dim text-xs">
             {t('cardImage.unavailable')}
           </div>
         )}

@@ -17,10 +17,10 @@ export function Sidebar() {
   const isActive = (id: string) => location.pathname === `/${id}`;
 
   return (
-    <aside className="w-64 bg-[#14141A] border-r border-[#2A2A35] flex flex-col h-full text-slate-300">
-      <div className="p-6 flex items-center space-x-3 text-orange-500">
-        <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
-          <Crown size={20} className="text-orange-500" />
+    <aside className="w-64 bg-bg border-r border-border flex flex-col h-full text-text">
+      <div className="p-6 flex items-center space-x-3 text-accent">
+        <div className="w-8 h-8 rounded-lg bg-accent-dim flex items-center justify-center border border-accent/20">
+          <Crown size={20} className="text-accent" />
         </div>
         <span className="text-xl font-bold tracking-wide">OpenDeckTracker</span>
       </div>
@@ -34,31 +34,31 @@ export function Sidebar() {
             }}
             className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md transition-all duration-200 ${
               isActive(item.id)
-                ? 'bg-[#2A2A35] text-white shadow-[inset_4px_0_0_0_#F97316]'
-                : 'hover:bg-[#1C1C24] hover:text-white'
+                ? 'bg-bg-3 text-text shadow-[inset_4px_0_0_0_var(--accent)]'
+                : 'hover:bg-bg-2 hover:text-text'
             }`}
           >
             <item.icon
               size={18}
-              className={isActive(item.id) ? 'text-orange-500' : 'text-slate-500'}
+              className={isActive(item.id) ? 'text-accent' : 'text-text-mute'}
             />
             <span className="font-medium text-sm">{t(item.labelKey)}</span>
           </button>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-[#2A2A35]">
+      <div className="p-4 border-t border-border">
         <button
           onClick={() => {
             void navigate('/settings');
           }}
           className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
             isActive('settings')
-              ? 'bg-[#2A2A35] text-white shadow-[inset_4px_0_0_0_#F97316]'
-              : 'text-slate-400 hover:text-white hover:bg-[#1C1C24]'
+              ? 'bg-bg-3 text-text shadow-[inset_4px_0_0_0_var(--accent)]'
+              : 'text-text-dim hover:text-text hover:bg-bg-2'
           }`}
         >
-          <Settings size={18} className={isActive('settings') ? 'text-orange-500' : ''} />
+          <Settings size={18} className={isActive('settings') ? 'text-accent' : ''} />
           <span className="font-medium text-sm">{t('sidebar.settings')}</span>
         </button>
       </div>

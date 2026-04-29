@@ -3,7 +3,7 @@
 /* Deck tracker card exit animation */
 @keyframes deckExit {
   0%   { opacity: 1; transform: translateX(0); }
-  20%  { opacity: 1; transform: translateX(0); background: rgba(251,146,60,0.25); }
+  20%  { opacity: 1; transform: translateX(0); background: var(--accent-dim); }
   100% { opacity: 0; transform: translateX(40px); max-height: 0; padding: 0; border-width: 0; }
 }
 .animate-deck-exit {

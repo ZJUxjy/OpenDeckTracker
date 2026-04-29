@@ -94,18 +94,18 @@ export function DeckSelectDialog() {
       aria-modal="true"
       aria-labelledby="deck-select-title"
     >
-      <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-lg shadow-2xl w-[440px] max-h-[80vh] flex flex-col">
-        <div className="px-6 py-4 border-b border-[#2A2A35]">
-          <h2 id="deck-select-title" className="text-lg font-bold text-white">
+      <div className="bg-bg-2 border border-border rounded-lg shadow-2xl w-[440px] max-h-[80vh] flex flex-col">
+        <div className="px-6 py-4 border-b border-border">
+          <h2 id="deck-select-title" className="text-lg font-bold text-text">
             {t('deckSelect.title')}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-text-dim mt-1">
             {t('deckSelect.description')}
           </p>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
           {pendingSelection.decks.length === 0 && savedDecks.length === 0 ? (
-            <div className="text-slate-400 text-sm text-center py-8">
+            <div className="text-text-dim text-sm text-center py-8">
               {t('deckSelect.empty')}
             </div>
           ) : (
@@ -124,15 +124,15 @@ export function DeckSelectDialog() {
                           className={
                             'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
                             (active
-                              ? 'bg-orange-600 text-white'
-                              : 'bg-[#12121A] hover:bg-[#2A2A35] text-slate-200')
+                              ? 'bg-accent text-text'
+                              : 'bg-bg-2 hover:bg-bg-3 text-text')
                           }
                         >
                           <span className="font-medium truncate">
                             {deck.name || t('deckSelect.unnamedDeck')}
                           </span>
                           <span
-                            className="text-xs ml-2 shrink-0 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300"
+                            className="text-xs ml-2 shrink-0 px-1.5 py-0.5 rounded bg-green/20 text-green"
                             data-testid="saved-badge"
                           >
                             {t('decks.select.savedBadge')}
@@ -146,7 +146,7 @@ export function DeckSelectDialog() {
               {pendingSelection.decks.length > 0 && (
                 <>
                   {savedDecks.length > 0 && (
-                    <div className="text-xs text-slate-500 uppercase tracking-wider px-1 pb-1">
+                    <div className="text-xs text-text-mute uppercase tracking-wider px-1 pb-1">
                       {t('decks.select.detected')}
                     </div>
                   )}
@@ -163,8 +163,8 @@ export function DeckSelectDialog() {
                             className={
                               'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
                               (active
-                                ? 'bg-orange-600 text-white'
-                                : 'bg-[#12121A] hover:bg-[#2A2A35] text-slate-200')
+                                ? 'bg-accent text-text'
+                                : 'bg-bg-2 hover:bg-bg-3 text-text')
                             }
                           >
                             <span className="font-medium truncate">
@@ -181,11 +181,11 @@ export function DeckSelectDialog() {
             </>
           )}
         </div>
-        <div className="px-6 py-3 border-t border-[#2A2A35] flex justify-end gap-2">
+        <div className="px-6 py-3 border-t border-border flex justify-end gap-2">
           <button
             type="button"
             onClick={handleCancel}
-            className="px-4 py-2 text-slate-300 hover:text-white text-sm"
+            className="px-4 py-2 text-text hover:text-text text-sm"
           >
             {t('deckSelect.cancel')}
           </button>
@@ -193,7 +193,7 @@ export function DeckSelectDialog() {
             type="button"
             onClick={handleConfirm}
             disabled={chosen === null}
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded text-sm font-medium"
+            className="px-4 py-2 bg-accent hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed text-bg rounded text-sm font-medium"
           >
             {t('deckSelect.confirm')}
           </button>

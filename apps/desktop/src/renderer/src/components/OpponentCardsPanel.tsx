@@ -61,17 +61,17 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
   }, []);
 
   return (
-    <aside className="w-[260px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-[#1C1C24] p-3 border-b border-[#2A2A35]">
-        <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
+    <aside className="w-[260px] bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-bg-2 p-3 border-b border-border">
+        <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('opponent.title')}
         </div>
-        <div className="text-white font-bold text-sm">{t('opponent.revealed')}</div>
+        <div className="text-text font-bold text-sm">{t('opponent.revealed')}</div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-[#2A2A35] scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         {isEmpty ? (
-          <div className="h-full flex items-center justify-center text-slate-500 text-sm px-4 text-center">
+          <div className="h-full flex items-center justify-center text-text-mute text-sm px-4 text-center">
             {t('opponent.empty')}
           </div>
         ) : (
@@ -122,7 +122,7 @@ function OpponentCardSection({
 
   return (
     <section>
-      <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+      <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
         {title}
       </h3>
       <div className="space-y-1">
@@ -164,7 +164,7 @@ function OpponentCardRow({
     <div
       ref={ref}
       data-testid="opponent-card-row"
-      className="flex items-center px-2 py-1.5 rounded text-sm border-b border-[#1C1C24] last:border-b-0 transition-colors hover:bg-[#1C1C24]"
+      className="flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-2"
       onMouseEnter={() => ref.current && onMouseEnter(card.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
@@ -175,10 +175,10 @@ function OpponentCardRow({
         <div
           className={clsx(
             'truncate font-medium',
-            rarity === 'legendary' ? 'text-orange-300' : '',
+            rarity === 'legendary' ? 'text-accent' : '',
             rarity === 'epic' ? 'text-purple-300' : '',
             rarity === 'rare' ? 'text-blue-300' : '',
-            rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-slate-200' : '',
+            rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-text' : '',
           )}
           title={card.cardId}
         >
@@ -186,7 +186,7 @@ function OpponentCardRow({
         </div>
       </div>
       {card.count > 1 && (
-        <div className="text-xs text-slate-300 font-bold shrink-0">x{card.count}</div>
+        <div className="text-xs text-text font-bold shrink-0">x{card.count}</div>
       )}
     </div>
   );

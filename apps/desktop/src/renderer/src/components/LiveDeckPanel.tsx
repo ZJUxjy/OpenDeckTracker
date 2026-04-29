@@ -37,14 +37,14 @@ export function LiveDeckPanel() {
 function EmptyState({ message }: { message: string }) {
   const { t } = useTranslation();
   return (
-    <aside className="w-[260px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-[#1C1C24] p-3 border-b border-[#2A2A35]">
-        <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
+    <aside className="w-[260px] bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-bg-2 p-3 border-b border-border">
+        <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('deckTracker.deck')}
         </div>
-        <div className="text-white font-bold text-sm">{t('deckTracker.remainingCards')}</div>
+        <div className="text-text font-bold text-sm">{t('deckTracker.remainingCards')}</div>
       </div>
-      <div className="flex-1 flex items-center justify-center text-slate-500 text-sm px-4 text-center">
+      <div className="flex-1 flex items-center justify-center text-text-mute text-sm px-4 text-center">
         {message}
       </div>
     </aside>
@@ -173,24 +173,24 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   }, []);
 
   return (
-    <aside className="w-[260px] bg-[#12121A] border border-[#2A2A35] flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-[#1C1C24] p-3 border-b border-[#2A2A35]">
-        <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">
+    <aside className="w-[260px] bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-bg-2 p-3 border-b border-border">
+        <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('deckTracker.deck')}
         </div>
-        <div className="text-white font-bold text-sm flex justify-between items-center gap-3">
+        <div className="text-text font-bold text-sm flex justify-between items-center gap-3">
           <span className="truncate" title={deck.name || t('deckTracker.unnamedDeck')}>
             {deck.name || t('deckTracker.unnamedDeck')}
           </span>
-          <span className="text-orange-400 text-xs shrink-0">
+          <span className="text-accent text-xs shrink-0 font-mono tabular-nums">
             {totalRemaining} / {totalOriginal}
           </span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-[#2A2A35] scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         <section>
-          <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
             {t('deckTracker.remaining')}
           </h3>
           <div className="space-y-1">
@@ -225,7 +225,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
           </div>
         </section>
         {deck.extras.length > 0 && (
-          <div className="mt-3 px-2 py-1 text-xs text-blue-300/80 border-t border-[#2A2A35] pt-2">
+          <div className="mt-3 px-2 py-1 text-xs text-blue-300/80 border-t border-border pt-2">
             {t('deckTracker.extraCards', {
               count: deck.extras.reduce((s, c) => s + c.count, 0),
             })}
@@ -233,14 +233,14 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
         )}
       </div>
 
-      <div className="bg-[#1C1C24] p-3 border-t border-[#2A2A35] flex justify-between items-center text-xs text-slate-400">
+      <div className="bg-bg-2 p-3 border-t border-border flex justify-between items-center text-xs text-text-dim">
         <div>
           {t('deckTracker.handAndOpponent', {
             hand: snapshot.friendlyHand.length,
             opponent: snapshot.opposingHandCount,
           })}
         </div>
-        <div className="text-orange-500/80 font-medium">
+        <div className="text-accent/80 font-medium">
           {snapshot.error ? t('deckTracker.error') : t('deckTracker.live')}
         </div>
       </div>
@@ -337,7 +337,7 @@ function CardCopyRow({
       ref={ref}
       data-testid="card-copy-row"
       className={clsx(
-        'flex items-center px-2 py-1.5 rounded text-sm border-b border-[#1C1C24] last:border-b-0 transition-colors hover:bg-[#1C1C24]',
+        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-2',
         exiting ? 'animate-deck-exit' : '',
       )}
       style={exiting ? undefined : undefined}
@@ -352,10 +352,10 @@ function CardCopyRow({
         <div
           className={clsx(
             'truncate font-medium',
-            rarity === 'legendary' ? 'text-orange-300' : '',
+            rarity === 'legendary' ? 'text-accent' : '',
             rarity === 'epic' ? 'text-purple-300' : '',
             rarity === 'rare' ? 'text-blue-300' : '',
-            rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-slate-200' : '',
+            rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-text' : '',
           )}
           title={cardId}
         >
