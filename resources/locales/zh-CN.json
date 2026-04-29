@@ -106,6 +106,8 @@
     "overlayPanel": {
       "enableTitle": "显示游戏内覆盖层",
       "enableDescription": "在炉石传说对局期间，以透明置顶窗口显示记牌器。",
+      "enableOpponentTitle": "显示对手覆盖层",
+      "enableOpponentDescription": "在炉石传说对局期间，以独立透明置顶窗口显示对手已揭示的卡牌。",
       "runningHint": "仅在炉石传说运行时激活"
     },
     "notifications": "通知",

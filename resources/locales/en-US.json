@@ -106,6 +106,8 @@
     "overlayPanel": {
       "enableTitle": "Show in-game overlay",
       "enableDescription": "Display the deck tracker as a transparent always-on-top window during a Hearthstone match.",
+      "enableOpponentTitle": "Show opponent overlay",
+      "enableOpponentDescription": "Display the opponent's revealed cards as a separate transparent always-on-top window during a Hearthstone match.",
       "runningHint": "Active only while Hearthstone is running"
     },
     "notifications": "Notifications",
