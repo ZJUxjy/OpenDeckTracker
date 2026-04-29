@@ -38,8 +38,17 @@ describe('preload api', () => {
     await api.stats.getSummary('season');
     await api.stats.listRecent('season', 5);
 
-    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('stats:get-summary', 'season');
-    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('stats:list-recent', 'season', 5);
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith(
+      'stats:get-summary',
+      'season',
+      undefined,
+    );
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith(
+      'stats:list-recent',
+      'season',
+      5,
+      undefined,
+    );
   });
 
   it('exposes read-only match recording queries', async () => {

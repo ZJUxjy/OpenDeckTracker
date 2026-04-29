@@ -17,6 +17,10 @@ Object.defineProperty(window, 'hdt', {
       encode: async () => Promise.resolve(''),
       decode: async () => Promise.reject(new Error('not stubbed')),
     },
+    recordings: {
+      list: async () => Promise.resolve([]),
+      get: async () => Promise.resolve(null),
+    },
     decks: {
       list: async () => Promise.resolve([]),
       getById: async () => Promise.resolve(null),

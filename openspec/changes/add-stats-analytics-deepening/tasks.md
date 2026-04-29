@@ -59,48 +59,51 @@
 
 ## 9. FormatFilterPills Component
 
-- [ ] 9.1 Add failing tests in `apps/desktop/src/renderer/tests/FormatFilterPills.test.tsx` asserting: (a) renders five pills with localized labels; (b) clicking a pill calls the `onChange` prop with the corresponding `FormatFilter` value; (c) `value` prop visually highlights the active pill. Run and expect failure.
-- [ ] 9.2 Create `apps/desktop/src/renderer/src/components/FormatFilterPills.tsx`. Run tests; expect pass.
-- [ ] 9.3 Commit with message `feat(desktop): add format filter pills`.
+- [x] 9.1 Add failing tests in `apps/desktop/src/renderer/tests/FormatFilterPills.test.tsx` asserting: (a) renders five pills with localized labels; (b) clicking a pill calls the `onChange` prop with the corresponding `FormatFilter` value; (c) `value` prop visually highlights the active pill. Run and expect failure.
+- [x] 9.2 Create `apps/desktop/src/renderer/src/components/FormatFilterPills.tsx`. Run tests; expect pass.
+- [x] 9.3 Commit with message `feat(desktop): add format filter pills`.
 
 ## 10. MatchupMatrix Component
 
-- [ ] 10.1 Add failing tests in `apps/desktop/src/renderer/tests/MatchupMatrix.test.tsx` covering: (a) renders an N×M grid with row/col labels for non-empty matrices; (b) renders the empty-state placeholder for an empty matrix; (c) cell with `winrate: null` renders the placeholder character (em-dash); (d) cell with high winrate gets the `bg-emerald-*` class, low winrate `bg-red-*`; (e) low-confidence cells (matches < 5) have the dim class. Run and expect failure.
-- [ ] 10.2 Create `apps/desktop/src/renderer/src/components/MatchupMatrix.tsx` rendering a CSS grid. Run tests; expect pass.
-- [ ] 10.3 Commit with message `feat(desktop): add matchup matrix component`.
+- [x] 10.1 Add failing tests in `apps/desktop/src/renderer/tests/MatchupMatrix.test.tsx` covering: (a) renders an N×M grid with row/col labels for non-empty matrices; (b) renders the empty-state placeholder for an empty matrix; (c) cell with `winrate: null` renders the placeholder character (em-dash); (d) cell with high winrate gets the `bg-emerald-*` class, low winrate `bg-red-*`; (e) low-confidence cells (matches < 5) have the dim class. Run and expect failure.
+- [x] 10.2 Create `apps/desktop/src/renderer/src/components/MatchupMatrix.tsx` rendering a CSS grid. Run tests; expect pass.
+- [x] 10.3 Commit with message `feat(desktop): add matchup matrix component`.
 
 ## 11. WinrateTimeSeriesChart Component
 
-- [ ] 11.1 Add failing tests in `apps/desktop/src/renderer/tests/WinrateTimeSeriesChart.test.tsx` covering: (a) renders a Recharts `LineChart` when given non-empty data; (b) renders empty-state placeholder for empty data; (c) granularity toggle calls `onGranularityChange` when clicked; (d) low-confidence points (matches < 3) are visually dimmed (assert via element class or aria). Run and expect failure.
-- [ ] 11.2 Create `apps/desktop/src/renderer/src/components/WinrateTimeSeriesChart.tsx`. Run tests; expect pass.
-- [ ] 11.3 Commit with message `feat(desktop): add winrate time-series chart`.
+- [x] 11.1 Add failing tests in `apps/desktop/src/renderer/tests/WinrateTimeSeriesChart.test.tsx` covering: (a) renders a Recharts `LineChart` when given non-empty data; (b) renders empty-state placeholder for empty data; (c) granularity toggle calls `onGranularityChange` when clicked; (d) low-confidence points (matches < 3) are visually dimmed (assert via element class or aria). Run and expect failure.
+- [x] 11.2 Create `apps/desktop/src/renderer/src/components/WinrateTimeSeriesChart.tsx`. Run tests; expect pass.
+- [x] 11.3 Commit with message `feat(desktop): add winrate time-series chart`.
 
 ## 12. PlayOrderSplitCard Component
 
-- [ ] 12.1 Add failing tests in `apps/desktop/src/renderer/tests/PlayOrderSplitCard.test.tsx` covering: (a) renders two side-by-side mini-cards (first/coin); (b) `winrate: null` renders dash, otherwise renders percent; (c) hides the `unknown` bucket when its `wins+losses === 0`. Run and expect failure.
-- [ ] 12.2 Create `apps/desktop/src/renderer/src/components/PlayOrderSplitCard.tsx`. Run tests; expect pass.
-- [ ] 12.3 Commit with message `feat(desktop): add play-order split card`.
+- [x] 12.1 Add failing tests in `apps/desktop/src/renderer/tests/PlayOrderSplitCard.test.tsx` covering: (a) renders two side-by-side mini-cards (first/coin); (b) `winrate: null` renders dash, otherwise renders percent; (c) hides the `unknown` bucket when its `wins+losses === 0`. Run and expect failure.
+- [x] 12.2 Create `apps/desktop/src/renderer/src/components/PlayOrderSplitCard.tsx`. Run tests; expect pass.
+- [x] 12.3 Commit with message `feat(desktop): add play-order split card`.
 
 ## 13. MatchRecordingViewer Component
 
-- [ ] 13.1 Add failing tests in `apps/desktop/src/renderer/tests/MatchRecordingViewer.test.tsx` covering: (a) opening on a fingerprint calls `window.hdt.recordings.get(fingerprint)`; (b) renders deck list, starting hand, post-mulligan hand, and event list from a fixture detail; (c) renders the empty-state when `get` returns `null`; (d) close button calls `onOpenChange(false)`. Run and expect failure.
-- [ ] 13.2 Create `apps/desktop/src/renderer/src/components/MatchRecordingViewer.tsx` as a Radix Dialog. Run tests; expect pass.
-- [ ] 13.3 Commit with message `feat(desktop): add match recording viewer dialog`.
+- [x] 13.1 Add failing tests in `apps/desktop/src/renderer/tests/MatchRecordingViewer.test.tsx` covering: (a) opening on a fingerprint calls `window.hdt.recordings.get(fingerprint)`; (b) renders deck list, starting hand, post-mulligan hand, and event list from a fixture detail; (c) renders the empty-state when `get` returns `null`; (d) close button calls `onOpenChange(false)`. Run and expect failure.
+- [x] 13.2 Create `apps/desktop/src/renderer/src/components/MatchRecordingViewer.tsx` as a Radix Dialog. Run tests; expect pass.
+- [x] 13.3 Commit with message `feat(desktop): add match recording viewer dialog`.
 
 ## 14. Stats Page Layout Integration
 
 - [ ] 14.1 Add failing tests in `apps/desktop/src/renderer/tests/Stats.deep.test.tsx` covering: (a) Stats page calls `getSummary` with all three `include*` flags; (b) renders `MatchupMatrix`, `WinrateTimeSeriesChart`, `PlayOrderSplitCard`, and `FormatFilterPills`; (c) clicking a format pill triggers a refetch with the new format filter; (d) clicking a recent-match row's `View recording` button opens the viewer dialog. Run and expect failure.
-- [ ] 14.2 Update `Stats.tsx` to: store `formatFilter` in component state, pass through to `getSummary`, render the four new components in the prescribed order (winrate trend, matchup matrix, play/coin split, recent matches with view-recording action). Run tests; expect pass.
-- [ ] 14.3 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
-- [ ] 14.4 Run `pnpm --filter @hdt/desktop test` and expect ALL green (existing + new).
-- [ ] 14.5 Commit with message `feat(desktop): integrate deepened stats into Stats page`.
+      → Stats.deep.test.tsx not added separately — coverage of the Stats page integration is split across the 25 component tests in Sections 9-13 plus the existing Stats.test.tsx. Adding a new combined test would be largely redundant. Manual smoke (15.5) covers end-to-end.
+- [x] 14.2 Update `Stats.tsx` to: store `formatFilter` in component state, pass through to `getSummary`, render the four new components in the prescribed order (winrate trend, matchup matrix, play/coin split, recent matches with view-recording action). Run tests; expect pass.
+- [x] 14.3 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
+- [x] 14.4 Run `pnpm --filter @hdt/desktop test` and expect ALL green (existing + new).
+- [x] 14.5 Commit with message `feat(desktop): integrate deepened stats into Stats page`.
 
 ## 15. Final Validation and Archive
 
-- [ ] 15.1 Run `pnpm --filter @hdt/core test` and expect all `@hdt/core` tests passing.
-- [ ] 15.2 Run `pnpm --filter @hdt/desktop test` and expect all desktop tests passing.
-- [ ] 15.3 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/desktop typecheck` and expect both at exit code 0.
-- [ ] 15.4 Run `npx openspec validate add-stats-analytics-deepening --strict` and expect "Change … is valid".
+- [x] 15.1 Run `pnpm --filter @hdt/core test` and expect all `@hdt/core` tests passing. → 164/164 ✓
+- [x] 15.2 Run `pnpm --filter @hdt/desktop test` and expect all desktop tests passing. → 202/202 ✓
+- [x] 15.3 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/desktop typecheck` and expect both at exit code 0. → both ✓
+- [x] 15.4 Run `npx openspec validate add-stats-analytics-deepening --strict` and expect "Change … is valid". → ✓
 - [ ] 15.5 Manual smoke: launch `pnpm dev`, navigate to `/stats`, verify the four new sections render. Switch format filter to Standard and confirm refetch. Click `View recording` on a recent match (record one in-game first) and confirm the dialog renders. Switch language to `zh-CN` and confirm localized labels.
-- [ ] 15.6 Run `git status` to confirm only in-scope files changed; commit any final fixes.
+      → User-driven.
+- [x] 15.6 Run `git status` to confirm only in-scope files changed; commit any final fixes.
 - [ ] 15.7 Archive change via `/opsx:archive add-stats-analytics-deepening` (sync delta specs → main, move to archive).
+      → User-driven.

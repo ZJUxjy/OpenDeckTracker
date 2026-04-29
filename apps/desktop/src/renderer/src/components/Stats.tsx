@@ -1,7 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Swords, Trophy, Clock, Target } from 'lucide-react';
-import type { MatchHistoryRecord, StatsSummary, StatsTimeFilter } from '@hdt/core';
+import { Swords, Trophy, Clock, Target, Film } from 'lucide-react';
+import type {
+  FormatFilter,
+  MatchHistoryRecord,
+  MatchRecordingSummary,
+  StatsSummary,
+  StatsTimeFilter,
+  TimeSeriesGranularity,
+} from '@hdt/core';
+
+import { FormatFilterPills } from './FormatFilterPills';
+import { MatchupMatrix } from './MatchupMatrix';
+import { WinrateTimeSeriesChart } from './WinrateTimeSeriesChart';
+import { PlayOrderSplitCard } from './PlayOrderSplitCard';
+import { MatchRecordingViewer } from './MatchRecordingViewer';
+import { useTranslation } from '../i18n';
 
 const FILTERS: StatsTimeFilter[] = ['today', 'week', 'season', 'all-time'];
 const CLASS_STATS_KEY = 'class' + 'Winrates';
@@ -19,9 +33,14 @@ const emptySummary = {
 } as unknown as StatsSummary;
 
 export function Stats() {
+  const { t } = useTranslation();
   const [timeFilter, setTimeFilter] = useState<StatsTimeFilter>('season');
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
+  const [granularity, setGranularity] = useState<TimeSeriesGranularity>('daily');
   const [summary, setSummary] = useState<StatsSummary>(emptySummary);
   const [recentMatches, setRecentMatches] = useState<MatchHistoryRecord[]>([]);
+  const [recordings, setRecordings] = useState<MatchRecordingSummary[]>([]);
+  const [viewerRecordingId, setViewerRecordingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,13 +50,21 @@ export function Stats() {
     setError(null);
 
     void Promise.all([
-      window.hdt.stats.getSummary(timeFilter),
-      window.hdt.stats.listRecent(timeFilter, 5),
+      window.hdt.stats.getSummary(timeFilter, {
+        formatFilter,
+        includeMatchupMatrix: true,
+        includeTimeSeries: true,
+        includePlayOrderSplit: true,
+        timeSeriesGranularity: granularity,
+      }),
+      window.hdt.stats.listRecent(timeFilter, 5, { formatFilter }),
+      window.hdt.recordings.list().catch(() => [] as MatchRecordingSummary[]),
     ])
-      .then(([nextSummary, nextRecent]) => {
+      .then(([nextSummary, nextRecent, nextRecordings]) => {
         if (cancelled) return;
         setSummary(nextSummary);
         setRecentMatches(nextRecent);
+        setRecordings(nextRecordings);
       })
       .catch((err: unknown) => {
         if (cancelled) return;
@@ -52,7 +79,18 @@ export function Stats() {
     return () => {
       cancelled = true;
     };
-  }, [timeFilter]);
+  }, [timeFilter, formatFilter, granularity]);
+
+  // Build a quick lookup so each match row can find its recording (joined on
+  // `endedAt` since the recordings store doesn't carry the match fingerprint
+  // — see add-stats-analytics-deepening design D7 follow-up note).
+  const recordingByEndedAt = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const r of recordings) {
+      if (r.endedAt !== null) m.set(r.endedAt, r.recordingId);
+    }
+    return m;
+  }, [recordings]);
 
   const classChartData = (
     (summary as unknown as Record<string, { className: string; wins: number; losses: number }[]>)[
@@ -73,20 +111,23 @@ export function Stats() {
           <p className="text-slate-400 text-sm">Detailed breakdown of your ranked performance.</p>
         </div>
         
-        <div className="flex space-x-2">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setTimeFilter(filter)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                timeFilter === filter 
-                  ? 'bg-orange-500 text-white' 
-                  : 'bg-[#1C1C24] text-slate-400 hover:text-white hover:bg-[#2A2A35]'
-              }`}
-            >
-              {filter.charAt(0).toUpperCase() + filter.slice(1).replace('-', ' ')}
-            </button>
-          ))}
+        <div className="flex flex-col items-end space-y-2">
+          <div className="flex space-x-2">
+            {FILTERS.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setTimeFilter(filter)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  timeFilter === filter
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-[#1C1C24] text-slate-400 hover:text-white hover:bg-[#2A2A35]'
+                }`}
+              >
+                {filter.charAt(0).toUpperCase() + filter.slice(1).replace('-', ' ')}
+              </button>
+            ))}
+          </div>
+          <FormatFilterPills value={formatFilter} onChange={setFormatFilter} />
         </div>
       </div>
 
@@ -143,8 +184,28 @@ export function Stats() {
           </div>
         </div>
 
+        {/* Winrate Time Series + Play/Coin Split */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          
+          <div className="xl:col-span-2 bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
+            <WinrateTimeSeriesChart
+              points={summary.winrateTimeSeries ?? null}
+              granularity={granularity}
+              onGranularityChange={setGranularity}
+            />
+          </div>
+          <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
+            <PlayOrderSplitCard split={summary.playOrderSplit ?? null} />
+          </div>
+        </div>
+
+        {/* Matchup Matrix */}
+        <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
+          <h2 className="text-lg font-bold text-white mb-4">{t('stats.matchup.title')}</h2>
+          <MatchupMatrix matrix={summary.matchupMatrix ?? null} />
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
           {/* Class Winrate Chart */}
           <div className="xl:col-span-2 bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
             <h2 className="text-lg font-bold text-white mb-6 flex items-center">
@@ -190,34 +251,75 @@ export function Stats() {
                   No tracked matches yet.
                 </div>
               ) : (
-                recentMatches.map((match) => (
-                  <div key={match.id} className="bg-[#14141A] rounded-lg p-3 border border-[#2A2A35] hover:border-slate-600 transition-colors flex flex-col cursor-pointer">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-slate-400">{formatRelativeDate(match.endedAt)}</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                        match.result === 'win' ? 'bg-green-500/20 text-green-400' : match.result === 'loss' ? 'bg-red-500/20 text-red-400' : 'bg-slate-500/20 text-slate-300'
-                      }`}>
-                        {formatResult(match.result)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-white font-medium text-sm">{match.deckName ?? 'Unknown Deck'}</span>
-                        <span className="text-slate-500 text-xs mt-0.5">vs {match.opponentClass ?? match.opponentName ?? 'Unknown'}</span>
+                recentMatches.map((match) => {
+                  const recordingId = recordingByEndedAt.get(match.endedAt) ?? null;
+                  return (
+                    <div
+                      key={match.id}
+                      className="bg-[#14141A] rounded-lg p-3 border border-[#2A2A35] hover:border-slate-600 transition-colors flex flex-col"
+                      data-testid={`match-row-${match.id}`}
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs text-slate-400">{formatRelativeDate(match.endedAt)}</span>
+                        <span
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            match.result === 'win'
+                              ? 'bg-green-500/20 text-green-400'
+                              : match.result === 'loss'
+                                ? 'bg-red-500/20 text-red-400'
+                                : 'bg-slate-500/20 text-slate-300'
+                          }`}
+                        >
+                          {formatResult(match.result)}
+                        </span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-slate-300 text-sm font-medium">{formatDuration(match.durationSeconds)}</span>
-                        <div className="text-xs text-slate-500 mt-0.5">{formatPlayOrder(match.playOrder)}</div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-white font-medium text-sm">
+                            {match.deckName ?? 'Unknown Deck'}
+                          </span>
+                          <span className="text-slate-500 text-xs mt-0.5">
+                            vs {match.opponentClass ?? match.opponentName ?? 'Unknown'}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-slate-300 text-sm font-medium">
+                            {formatDuration(match.durationSeconds)}
+                          </span>
+                          <div className="text-xs text-slate-500 mt-0.5">
+                            {formatPlayOrder(match.playOrder)}
+                          </div>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => setViewerRecordingId(recordingId)}
+                        disabled={recordingId === null}
+                        data-testid={`view-recording-${match.id}`}
+                        className="mt-2 text-xs inline-flex items-center gap-1 text-slate-400 hover:text-orange-400 disabled:opacity-40 disabled:cursor-not-allowed self-start"
+                        aria-label={t('stats.recordings.view')}
+                      >
+                        <Film size={12} />
+                        {recordingId === null
+                          ? t('stats.recordings.unavailable')
+                          : t('stats.recordings.view')}
+                      </button>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
         </div>
 
       </div>
+
+      <MatchRecordingViewer
+        open={viewerRecordingId !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewerRecordingId(null);
+        }}
+        recordingId={viewerRecordingId}
+      />
     </div>
   );
 }
