@@ -1,9 +1,23 @@
 import type { MatchHistoryRecord, StatsTimeFilter } from './match-history';
+import { type FormatFilter, filterMatchesByFormat } from './format-filter';
+import { computeMatchupMatrix, type MatchupMatrix } from './matchup-matrix';
+import { computePlayOrderSplit, type PlayOrderSplit } from './play-order-split';
+import {
+  computeWinrateTimeSeries,
+  type TimeSeriesGranularity,
+  type WinrateTimeSeriesPoint,
+} from './winrate-time-series';
 
 export interface StatsQueryOptions {
   filter: StatsTimeFilter;
   now?: Date;
   recentLimit?: number;
+  formatFilter?: FormatFilter;
+  includeMatchupMatrix?: boolean;
+  includeTimeSeries?: boolean;
+  timeSeriesGranularity?: TimeSeriesGranularity;
+  timeSeriesLocale?: 'en-US' | 'zh-CN';
+  includePlayOrderSplit?: boolean;
 }
 
 export interface ClassWinrate {
@@ -34,19 +48,31 @@ export interface StatsSummary {
   bestDeck: BestDeckStats | null;
   classWinrates: ClassWinrate[];
   recentMatches: RecentMatchView[];
+  /** Populated when `options.includeMatchupMatrix === true`. */
+  matchupMatrix?: MatchupMatrix;
+  /** Populated when `options.includeTimeSeries === true`. */
+  winrateTimeSeries?: WinrateTimeSeriesPoint[];
+  /** Populated when `options.includePlayOrderSplit === true`. */
+  playOrderSplit?: PlayOrderSplit;
 }
 
 export function aggregateStats(
   records: readonly MatchHistoryRecord[],
   options: StatsQueryOptions,
 ): StatsSummary {
-  const filtered = filterMatchesByTime(records, options);
+  // Apply format filter BEFORE all other aggregations so every downstream
+  // metric reflects the same scope.
+  const formatFiltered =
+    options.formatFilter && options.formatFilter !== 'all'
+      ? filterMatchesByFormat([...records], options.formatFilter)
+      : [...records];
+  const filtered = filterMatchesByTime(formatFiltered, options);
   const wins = filtered.filter((record) => record.result === 'win').length;
   const losses = filtered.filter((record) => record.result === 'loss').length;
   const timePlayedSeconds = filtered.reduce((total, record) => total + record.durationSeconds, 0);
   const recentLimit = options.recentLimit ?? 5;
 
-  return {
+  const summary: StatsSummary = {
     matchesPlayed: filtered.length,
     wins,
     losses,
@@ -60,6 +86,22 @@ export function aggregateStats(
       .sort((a, b) => b.endedAt - a.endedAt)
       .slice(0, recentLimit),
   };
+
+  if (options.includeMatchupMatrix === true) {
+    summary.matchupMatrix = computeMatchupMatrix(filtered);
+  }
+  if (options.includeTimeSeries === true) {
+    summary.winrateTimeSeries = computeWinrateTimeSeries(
+      filtered,
+      options.timeSeriesGranularity ?? 'daily',
+      options.timeSeriesLocale ?? 'en-US',
+    );
+  }
+  if (options.includePlayOrderSplit === true) {
+    summary.playOrderSplit = computePlayOrderSplit(filtered);
+  }
+
+  return summary;
 }
 
 export function filterMatchesByTime(

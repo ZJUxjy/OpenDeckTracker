@@ -8,38 +8,38 @@
 
 ## 2. Format Filter Aggregation
 
-- [ ] 2.1 Add failing tests in `packages/core/src/stats/format-filter.test.ts` covering: standard/wild/classic/twist subsetting, `'all'` is identity, empty input returns empty, mixed records subset correctly. Run `pnpm --filter @hdt/core test -- format-filter` and expect failure.
-- [ ] 2.2 Create `packages/core/src/stats/format-filter.ts` exporting `type FormatFilter = 'standard' | 'wild' | 'classic' | 'twist' | 'all'` and `filterMatchesByFormat(matches, formatFilter): MatchHistoryRecord[]`. Mapping: standard→2, wild→1, classic→3, twist→4, all→identity. Run the tests; expect pass.
-- [ ] 2.3 Re-export `FormatFilter` and `filterMatchesByFormat` from `@hdt/core/stats/index.ts` and `@hdt/core/index.ts`. Typecheck pass.
-- [ ] 2.4 Commit with message `feat(core): add format filter for stats`.
+- [x] 2.1 Add failing tests in `packages/core/src/stats/format-filter.test.ts` covering: standard/wild/classic/twist subsetting, `'all'` is identity, empty input returns empty, mixed records subset correctly. Run `pnpm --filter @hdt/core test -- format-filter` and expect failure.
+- [x] 2.2 Create `packages/core/src/stats/format-filter.ts` exporting `type FormatFilter = 'standard' | 'wild' | 'classic' | 'twist' | 'all'` and `filterMatchesByFormat(matches, formatFilter): MatchHistoryRecord[]`. Mapping: standard→2, wild→1, classic→3, twist→4, all→identity. Run the tests; expect pass.
+- [x] 2.3 Re-export `FormatFilter` and `filterMatchesByFormat` from `@hdt/core/stats/index.ts` and `@hdt/core/index.ts`. Typecheck pass.
+- [x] 2.4 Commit with message `feat(core): add format filter for stats`.
 
 ## 3. Matchup Matrix Aggregation
 
-- [ ] 3.1 Add failing tests in `packages/core/src/stats/matchup-matrix.test.ts` covering: (a) single match populates the right cell with `winrate: 100`; (b) empty input returns an empty matrix; (c) null `playerClass` buckets under `'Unknown'` row; (d) null `opponentClass` buckets under `'Unknown'` column; (e) unknown-result match doesn't change cell winrate (still null when only unknowns present); (f) zero-match cell reports `winrate: null`, not 0. Run `pnpm --filter @hdt/core test -- matchup-matrix` and expect failure.
-- [ ] 3.2 Create `packages/core/src/stats/matchup-matrix.ts` exporting `MatchupCell { wins; losses; winrate: number | null }`, `MatchupMatrix { cells: Record<string, Record<string, MatchupCell>>, playerClasses: string[], opponentClasses: string[] }`, and `computeMatchupMatrix(matches): MatchupMatrix`. Iterate once over matches, bucket by (player, opp), compute winrate at the end. Run the tests; expect pass.
-- [ ] 3.3 Add re-exports from `@hdt/core/stats/index.ts`. Typecheck pass.
-- [ ] 3.4 Commit with message `feat(core): add matchup matrix aggregation`.
+- [x] 3.1 Add failing tests in `packages/core/src/stats/matchup-matrix.test.ts` covering: (a) single match populates the right cell with `winrate: 100`; (b) empty input returns an empty matrix; (c) null `playerClass` buckets under `'Unknown'` row; (d) null `opponentClass` buckets under `'Unknown'` column; (e) unknown-result match doesn't change cell winrate (still null when only unknowns present); (f) zero-match cell reports `winrate: null`, not 0. Run `pnpm --filter @hdt/core test -- matchup-matrix` and expect failure.
+- [x] 3.2 Create `packages/core/src/stats/matchup-matrix.ts` exporting `MatchupCell { wins; losses; winrate: number | null }`, `MatchupMatrix { cells: Record<string, Record<string, MatchupCell>>, playerClasses: string[], opponentClasses: string[] }`, and `computeMatchupMatrix(matches): MatchupMatrix`. Iterate once over matches, bucket by (player, opp), compute winrate at the end. Run the tests; expect pass.
+- [x] 3.3 Add re-exports from `@hdt/core/stats/index.ts`. Typecheck pass.
+- [x] 3.4 Commit with message `feat(core): add matchup matrix aggregation`.
 
 ## 4. Winrate Time Series Aggregation
 
-- [ ] 4.1 Add failing tests in `packages/core/src/stats/winrate-time-series.test.ts` covering: (a) two matches on same day → one daily point with `matches: 2`; (b) two matches across days → two points; (c) weekly granularity collapses Mon + Wed into one point; (d) empty input returns empty array; (e) sorted ascending by `bucketStart`; (f) unknown-result counted in `matches` but not in `wins`/`losses`. Use `Date.now()`-stable fixtures (UTC midnights). Run `pnpm --filter @hdt/core test -- winrate-time-series` and expect failure.
-- [ ] 4.2 Create `packages/core/src/stats/winrate-time-series.ts` exporting `WinrateTimeSeriesPoint { bucketStart: number; wins; losses; winrate: number | null; matches }` and `computeWinrateTimeSeries(matches, granularity: 'daily' | 'weekly', locale?: 'en-US' | 'zh-CN'): WinrateTimeSeriesPoint[]`. Daily bucket = floor to local midnight; weekly bucket = floor to first day of week (Monday for zh-CN, Sunday for en-US). Run tests; expect pass.
-- [ ] 4.3 Add re-exports. Typecheck pass.
-- [ ] 4.4 Commit with message `feat(core): add winrate time-series aggregation`.
+- [x] 4.1 Add failing tests in `packages/core/src/stats/winrate-time-series.test.ts` covering: (a) two matches on same day → one daily point with `matches: 2`; (b) two matches across days → two points; (c) weekly granularity collapses Mon + Wed into one point; (d) empty input returns empty array; (e) sorted ascending by `bucketStart`; (f) unknown-result counted in `matches` but not in `wins`/`losses`. Use `Date.now()`-stable fixtures (UTC midnights). Run `pnpm --filter @hdt/core test -- winrate-time-series` and expect failure.
+- [x] 4.2 Create `packages/core/src/stats/winrate-time-series.ts` exporting `WinrateTimeSeriesPoint { bucketStart: number; wins; losses; winrate: number | null; matches }` and `computeWinrateTimeSeries(matches, granularity: 'daily' | 'weekly', locale?: 'en-US' | 'zh-CN'): WinrateTimeSeriesPoint[]`. Daily bucket = floor to local midnight; weekly bucket = floor to first day of week (Monday for zh-CN, Sunday for en-US). Run tests; expect pass.
+- [x] 4.3 Add re-exports. Typecheck pass.
+- [x] 4.4 Commit with message `feat(core): add winrate time-series aggregation`.
 
 ## 5. Play-Order Split Aggregation
 
-- [ ] 5.1 Add failing tests in `packages/core/src/stats/play-order-split.test.ts` covering: (a) play/coin/unknown bucket separation; (b) empty input returns all-zero buckets with `winrate: null`; (c) unknown-result matches counted neither in `wins` nor `losses`. Run and expect failure.
-- [ ] 5.2 Create `packages/core/src/stats/play-order-split.ts` exporting `PlayOrderBucket { wins; losses; winrate: number | null }`, `PlayOrderSplit { first; coin; unknown }`, and `computePlayOrderSplit(matches): PlayOrderSplit`. Run tests; expect pass.
-- [ ] 5.3 Add re-exports. Typecheck pass.
-- [ ] 5.4 Commit with message `feat(core): add play-order split aggregation`.
+- [x] 5.1 Add failing tests in `packages/core/src/stats/play-order-split.test.ts` covering: (a) play/coin/unknown bucket separation; (b) empty input returns all-zero buckets with `winrate: null`; (c) unknown-result matches counted neither in `wins` nor `losses`. Run and expect failure.
+- [x] 5.2 Create `packages/core/src/stats/play-order-split.ts` exporting `PlayOrderBucket { wins; losses; winrate: number | null }`, `PlayOrderSplit { first; coin; unknown }`, and `computePlayOrderSplit(matches): PlayOrderSplit`. Run tests; expect pass.
+- [x] 5.3 Add re-exports. Typecheck pass.
+- [x] 5.4 Commit with message `feat(core): add play-order split aggregation`.
 
 ## 6. Wire Optional Aggregations into aggregateStats
 
-- [ ] 6.1 Add failing tests in `packages/core/src/stats/stats-aggregation.test.ts` (extend existing or add new file) covering: (a) `aggregateStats(matches, { filter: 'all-time' })` (no flags) returns the existing shape with no `matchupMatrix`/`winrateTimeSeries`/`playOrderSplit`; (b) with all `include*` flags, all three are present; (c) `formatFilter: 'standard'` narrows ALL aggregations including the existing summary fields. Run and expect failure.
-- [ ] 6.2 Update `packages/core/src/stats/stats-aggregation.ts`: extend `StatsQueryOptions` with `formatFilter?` and three `include*` flags. Apply format filter at the top of `aggregateStats`. Conditionally call the three new aggregations and attach to result. Run tests; expect pass.
-- [ ] 6.3 Update `StatsSummary` interface to include the three new optional fields. Re-export anything new.
-- [ ] 6.4 Commit with message `feat(core): plumb new aggregations through aggregateStats`.
+- [x] 6.1 Add failing tests in `packages/core/src/stats/stats-aggregation.test.ts` (extend existing or add new file) covering: (a) `aggregateStats(matches, { filter: 'all-time' })` (no flags) returns the existing shape with no `matchupMatrix`/`winrateTimeSeries`/`playOrderSplit`; (b) with all `include*` flags, all three are present; (c) `formatFilter: 'standard'` narrows ALL aggregations including the existing summary fields. Run and expect failure.
+- [x] 6.2 Update `packages/core/src/stats/stats-aggregation.ts`: extend `StatsQueryOptions` with `formatFilter?` and three `include*` flags. Apply format filter at the top of `aggregateStats`. Conditionally call the three new aggregations and attach to result. Run tests; expect pass.
+- [x] 6.3 Update `StatsSummary` interface to include the three new optional fields. Re-export anything new.
+- [x] 6.4 Commit with message `feat(core): plumb new aggregations through aggregateStats`.
 
 ## 7. Stats IPC + Preload Surface
 

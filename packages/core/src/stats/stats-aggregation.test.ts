@@ -91,4 +91,68 @@ describe('stats aggregation', () => {
     ]);
     expect(filterMatchesByTime([today, yesterday], { filter: 'all-time', now: fixedNow })).toHaveLength(2);
   });
+
+  it('does not include optional aggregations when no flags are set', () => {
+    const summary = aggregateStats([makeRecord()], { filter: 'all-time', now: fixedNow });
+    expect(summary.matchupMatrix).toBeUndefined();
+    expect(summary.winrateTimeSeries).toBeUndefined();
+    expect(summary.playOrderSplit).toBeUndefined();
+  });
+
+  it('populates matchupMatrix when includeMatchupMatrix is true', () => {
+    const r = makeRecord({ playerClass: 'DRUID', opponentClass: 'MAGE' });
+    const summary = aggregateStats([r], {
+      filter: 'all-time',
+      now: fixedNow,
+      includeMatchupMatrix: true,
+    });
+    expect(summary.matchupMatrix?.cells.DRUID?.MAGE).toEqual({
+      wins: 1,
+      losses: 0,
+      winrate: 100,
+    });
+  });
+
+  it('populates winrateTimeSeries when includeTimeSeries is true', () => {
+    const r = makeRecord();
+    const summary = aggregateStats([r], {
+      filter: 'all-time',
+      now: fixedNow,
+      includeTimeSeries: true,
+    });
+    expect(summary.winrateTimeSeries).toBeDefined();
+    expect(summary.winrateTimeSeries?.length).toBe(1);
+  });
+
+  it('populates playOrderSplit when includePlayOrderSplit is true', () => {
+    const a = makeRecord({ playOrder: 'first', result: 'win', fingerprint: 'a' });
+    const b = makeRecord({ playOrder: 'coin', result: 'loss', fingerprint: 'b' });
+    const summary = aggregateStats([a, b], {
+      filter: 'all-time',
+      now: fixedNow,
+      includePlayOrderSplit: true,
+    });
+    expect(summary.playOrderSplit?.first.wins).toBe(1);
+    expect(summary.playOrderSplit?.coin.losses).toBe(1);
+  });
+
+  it('formatFilter narrows ALL aggregations including summary', () => {
+    const standard = makeRecord({ id: 1, formatType: 2, fingerprint: 'std', result: 'win' });
+    const wild = makeRecord({ id: 2, formatType: 1, fingerprint: 'wild', result: 'loss' });
+    const summary = aggregateStats([standard, wild], {
+      filter: 'all-time',
+      now: fixedNow,
+      formatFilter: 'standard',
+      includeMatchupMatrix: true,
+      includePlayOrderSplit: true,
+    });
+    expect(summary.matchesPlayed).toBe(1);
+    expect(summary.wins).toBe(1);
+    expect(summary.losses).toBe(0);
+    expect(summary.recentMatches).toHaveLength(1);
+    expect(summary.recentMatches[0]?.fingerprint).toBe('std');
+    expect(Object.keys(summary.matchupMatrix?.cells ?? {}).length).toBe(1);
+    expect(summary.playOrderSplit?.first.wins).toBe(1);
+    expect(summary.playOrderSplit?.coin.losses).toBe(0);
+  });
 });

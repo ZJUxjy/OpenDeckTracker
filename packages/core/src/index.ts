@@ -66,6 +66,25 @@ export type {
   StatsQueryOptions,
   StatsSummary,
 } from './stats/stats-aggregation';
+export {
+  type FormatFilter,
+  filterMatchesByFormat,
+} from './stats/format-filter';
+export {
+  computeMatchupMatrix,
+  type MatchupCell,
+  type MatchupMatrix,
+} from './stats/matchup-matrix';
+export {
+  computeWinrateTimeSeries,
+  type TimeSeriesGranularity,
+  type WinrateTimeSeriesPoint,
+} from './stats/winrate-time-series';
+export {
+  computePlayOrderSplit,
+  type PlayOrderBucket,
+  type PlayOrderSplit,
+} from './stats/play-order-split';
 
 // Match recordings.
 export {
