@@ -2,18 +2,20 @@
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useHearthWatcherStore } from '../stores/hearthwatcher-store';
+import { useTranslation } from '../i18n';
 import type { HearthWatcherStatusKind } from '@hdt/hearthwatcher';
 
-function rankLabel(
+function useRankLabel(
   standard: {
     legendRank: number;
     starLevel: number;
   } | null | undefined,
 ): string {
-  if (!standard) return 'Unavailable';
-  if (standard.legendRank > 0) return `Legend ${standard.legendRank}`;
-  if (standard.starLevel > 0) return `Star ${standard.starLevel}`;
-  return 'Unranked';
+  const { t } = useTranslation();
+  if (!standard) return t('dashboard.rankUnavailable');
+  if (standard.legendRank > 0) return t('dashboard.rankLegend', { n: standard.legendRank });
+  if (standard.starLevel > 0) return t('dashboard.rankStar', { n: standard.starLevel });
+  return t('dashboard.rankUnranked');
 }
 
 const WATCHER_COLORS: Record<HearthWatcherStatusKind, string> = {
@@ -26,6 +28,7 @@ const WATCHER_COLORS: Record<HearthWatcherStatusKind, string> = {
 };
 
 export function Dashboard() {
+  const { t } = useTranslation();
   const snapshot = useDeckTrackerStore((s) => s.snapshot);
   const { medalInfo } = useHearthMirrorStatus();
   const watcherStatus = useHearthWatcherStore((s) => s.status);
@@ -33,6 +36,11 @@ export function Dashboard() {
   const totalOriginal = deck?.original.reduce((sum, card) => sum + card.count, 0) ?? 0;
   const totalRemaining = deck?.remaining.reduce((sum, card) => sum + card.count, 0) ?? 0;
   const phase = snapshot?.phase ?? 'IDLE';
+  const rankLabel = useRankLabel(medalInfo?.standard);
+
+  const watcherKindLabel = watcherStatus
+    ? t(`dashboard.watcherKind.${watcherStatus.kind}`)
+    : t('dashboard.watcherDisconnected');
 
   return (
     <div className="flex-1 bg-bg flex flex-col overflow-y-auto">
@@ -41,21 +49,21 @@ export function Dashboard() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="bg-accent-dim text-accent text-xs font-bold px-2 py-1 rounded border border-accent/20 uppercase tracking-widest">
-                Deck Tracker
+                {t('dashboard.badge')}
               </span>
-              <span className="text-text-dim text-sm">Phase: {phase}</span>
+              <span className="text-text-dim text-sm">{t('dashboard.phase', { phase })}</span>
             </div>
             <h1 className="text-4xl font-black text-text tracking-tight mb-3">
-              {deck ? deck.name || 'Unnamed Deck' : 'No Active Deck'}
+              {deck ? deck.name || t('dashboard.unnamedDeck') : t('dashboard.noActiveDeck')}
             </h1>
             <div className="flex items-center text-text-dim text-sm gap-4">
               <span className="flex items-center">
                 <Trophy size={14} className="mr-1 text-amber" />
-                Rank: {rankLabel(medalInfo?.standard)}
+                {t('dashboard.rank', { rank: rankLabel })}
               </span>
               <span className="flex items-center">
                 <Clock size={14} className="mr-1 text-text-dim" />
-                {snapshot ? new Date(snapshot.updatedAt).toLocaleTimeString() : 'Waiting for game'}
+                {snapshot ? new Date(snapshot.updatedAt).toLocaleTimeString() : t('dashboard.waitingForGame')}
               </span>
             </div>
           </div>
@@ -66,11 +74,11 @@ export function Dashboard() {
         <div className="bg-bg-2 p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between mb-3">
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              Cards Left
+              {t('dashboard.cardsLeft')}
             </span>
             <Layers size={18} className="text-accent" />
           </div>
-          <div className="text-3xl font-black text-text">
+          <div className="text-3xl font-black text-text font-mono tabular-nums">
             {totalRemaining}
             <span className="text-base text-text-mute font-semibold"> / {totalOriginal}</span>
           </div>
@@ -79,11 +87,11 @@ export function Dashboard() {
         <div className="bg-bg-2 p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between mb-3">
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              Hand
+              {t('dashboard.hand')}
             </span>
             <Hand size={18} className="text-text-dim" />
           </div>
-          <div className="text-3xl font-black text-text">
+          <div className="text-3xl font-black text-text font-mono tabular-nums">
             {snapshot?.friendlyHand.length ?? 0}
           </div>
         </div>
@@ -91,24 +99,24 @@ export function Dashboard() {
         <div className="bg-bg-2 p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between mb-3">
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              Status
+              {t('dashboard.status')}
             </span>
             <Activity size={18} className={deck ? 'text-green' : 'text-text-mute'} />
           </div>
           <div className="text-3xl font-black text-text">
-            {deck ? 'Live' : 'Idle'}
+            {deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')}
           </div>
         </div>
 
         <div className="bg-bg-2 p-5 rounded-xl border border-border">
           <div className="flex items-center justify-between mb-3">
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              Watcher
+              {t('dashboard.watcher')}
             </span>
             <Radio size={18} className={watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-mute' : 'text-text-mute'} />
           </div>
           <div className={`text-sm font-bold ${watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-mute' : 'text-text-mute'}`}>
-            {watcherStatus?.kind ?? 'disconnected'}
+            {watcherKindLabel}
           </div>
         </div>
       </div>

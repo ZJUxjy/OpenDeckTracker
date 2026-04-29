@@ -181,7 +181,103 @@
     "confirm": "确认",
     "cancel": "取消"
   },
+  "dashboard": {
+    "badge": "记牌器",
+    "phase": "状态：{phase}",
+    "unnamedDeck": "未命名卡组",
+    "noActiveDeck": "暂无活动卡组",
+    "rank": "段位：{rank}",
+    "rankUnavailable": "暂无",
+    "rankLegend": "传说 {n}",
+    "rankStar": "{n} 星",
+    "rankUnranked": "未排位",
+    "waitingForGame": "等待对局",
+    "cardsLeft": "剩余卡牌",
+    "hand": "手牌",
+    "status": "状态",
+    "statusLive": "进行中",
+    "statusIdle": "空闲",
+    "watcher": "监听器",
+    "watcherDisconnected": "已断开",
+    "watcherKind": {
+      "ready": "就绪",
+      "waiting-for-lines": "等待日志",
+      "missing-log": "日志缺失",
+      "parser-error": "解析错误",
+      "lag": "延迟",
+      "rotation-or-truncation": "日志切换"
+    }
+  },
+  "collection": {
+    "title": "我的收藏",
+    "subtitle": "追踪你的收集进度和缺失卡牌。",
+    "dbCards": "数据库",
+    "dust": "奥术之尘",
+    "format": {
+      "standard": "标准模式",
+      "wild": "狂野模式"
+    },
+    "search": {
+      "placeholder": "搜索卡牌或卡包…"
+    },
+    "overallProgress": "总进度",
+    "percentComplete": "完成 {percent}%",
+    "expansions": "扩展包",
+    "complete": "已完整",
+    "cardsCount": "{collected} / {total} 张",
+    "massDisenchant": {
+      "title": "可批量分解",
+      "body": "你有 {count} 张多余的卡可以安全分解。",
+      "action": "分解多余卡牌（+{dust} 奥术之尘）"
+    }
+  },
   "stats": {
+    "title": "实战统计",
+    "subtitle": "你的排位赛表现详细分析。",
+    "timeFilter": {
+      "today": "今天",
+      "week": "本周",
+      "season": "本赛季",
+      "all-time": "全部"
+    },
+    "kpi": {
+      "overallWinrate": "总胜率",
+      "winsLosses": "{wins} 胜 - {losses} 负",
+      "matchesPlayed": "对局数",
+      "matchesPlayedSubtitle": "已记录的实战对局",
+      "timePlayed": "游戏时长",
+      "noAverage": "暂无平均值",
+      "averageDuration": "约 {duration} 平均",
+      "bestDeck": "最佳卡组",
+      "bestDeckEmpty": "暂无已记录卡组",
+      "bestDeckPlaceholder": "记录对局后统计将显示",
+      "bestDeckLine": "{percent} · {wins}胜 - {losses}负"
+    },
+    "recent": {
+      "title": "最近对局",
+      "viewAll": "查看全部",
+      "loading": "加载对局历史中…",
+      "empty": "暂无已记录对局。",
+      "unknownDeck": "未知卡组",
+      "vsOpponent": "对阵 {opponent}",
+      "unknownOpponent": "未知"
+    },
+    "result": {
+      "win": "胜",
+      "loss": "负",
+      "unknown": "未知"
+    },
+    "playOrderShort": {
+      "first": "先手",
+      "coin": "后手",
+      "unknown": "未知"
+    },
+    "classChart": {
+      "title": "对各职业胜率",
+      "empty": "尚无职业对战统计。",
+      "wins": "胜",
+      "losses": "负"
+    },
     "formatFilter": {
       "all": "全部模式",
       "standard": "标准",

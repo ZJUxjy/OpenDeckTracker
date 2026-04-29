@@ -107,10 +107,10 @@ export function Stats() {
       {/* Header */}
       <div className="bg-bg border-b border-border p-6 flex items-center justify-between sticky top-0 z-10">
         <div>
-          <h1 className="text-2xl font-bold text-text mb-1">Constructed Stats</h1>
-          <p className="text-text-dim text-sm">Detailed breakdown of your ranked performance.</p>
+          <h1 className="text-2xl font-bold text-text mb-1">{t('stats.title')}</h1>
+          <p className="text-text-dim text-sm">{t('stats.subtitle')}</p>
         </div>
-        
+
         <div className="flex flex-col items-end space-y-2">
           <div className="flex space-x-2">
             {FILTERS.map((filter) => (
@@ -123,7 +123,7 @@ export function Stats() {
                     : 'bg-bg-2 text-text-dim hover:text-text hover:bg-bg-3'
                 }`}
               >
-                {filter.charAt(0).toUpperCase() + filter.slice(1).replace('-', ' ')}
+                {t(`stats.timeFilter.${filter}`)}
               </button>
             ))}
           </div>
@@ -139,10 +139,10 @@ export function Stats() {
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-accent group-hover:opacity-10 transition-opacity">
               <Trophy size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Overall Winrate</span>
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.overallWinrate')}</span>
             <div className="text-3xl font-black font-mono tabular-nums text-text">{formatPercent(summary.overallWinrate)}</div>
-            <div className="text-sm mt-2 text-text-dim">
-              <span className="font-mono tabular-nums">{summary.wins}</span> Wins - <span className="font-mono tabular-nums">{summary.losses}</span> Losses
+            <div className="text-sm mt-2 text-text-dim font-mono tabular-nums">
+              {t('stats.kpi.winsLosses', { wins: summary.wins, losses: summary.losses })}
             </div>
           </div>
 
@@ -150,21 +150,21 @@ export function Stats() {
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Matches Played</span>
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.matchesPlayed')}</span>
             <div className="text-3xl font-black font-mono tabular-nums text-text">{summary.matchesPlayed.toLocaleString()}</div>
-            <div className="text-sm mt-2 text-text-dim">Real tracked constructed matches</div>
+            <div className="text-sm mt-2 text-text-dim">{t('stats.kpi.matchesPlayedSubtitle')}</div>
           </div>
 
           <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Time Played</span>
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.timePlayed')}</span>
             <div className="text-3xl font-black font-mono tabular-nums text-text">{formatTimePlayed(summary.timePlayedSeconds)}</div>
-            <div className="text-sm mt-2 text-text-dim">
+            <div className="text-sm mt-2 text-text-dim font-mono tabular-nums">
               {summary.averageDurationSeconds === null
-                ? 'No average yet'
-                : <>~<span className="font-mono tabular-nums">{formatDuration(summary.averageDurationSeconds)}</span> average</>}
+                ? t('stats.kpi.noAverage')
+                : t('stats.kpi.averageDuration', { duration: formatDuration(summary.averageDurationSeconds) })}
             </div>
           </div>
 
@@ -172,14 +172,18 @@ export function Stats() {
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red group-hover:opacity-10 transition-opacity">
               <Target size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Best Deck</span>
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.bestDeck')}</span>
             <div className="text-xl font-bold text-accent truncate mt-1">
-              {summary.bestDeck?.deckName ?? 'No tracked deck'}
+              {summary.bestDeck?.deckName ?? t('stats.kpi.bestDeckEmpty')}
             </div>
-            <div className="text-sm mt-2 text-text-dim">
+            <div className="text-sm mt-2 text-text-dim font-mono tabular-nums">
               {summary.bestDeck === null
-                ? 'Stats will appear after tracked games'
-                : <><span className="font-mono tabular-nums">{formatPercent(summary.bestDeck.winrate)}</span> · <span className="font-mono tabular-nums">{summary.bestDeck.wins}</span>W - <span className="font-mono tabular-nums">{summary.bestDeck.losses}</span>L</>}
+                ? t('stats.kpi.bestDeckPlaceholder')
+                : t('stats.kpi.bestDeckLine', {
+                    percent: formatPercent(summary.bestDeck.winrate),
+                    wins: summary.bestDeck.wins,
+                    losses: summary.bestDeck.losses,
+                  })}
             </div>
           </div>
         </div>
@@ -209,12 +213,12 @@ export function Stats() {
           {/* Class Winrate Chart */}
           <div className="xl:col-span-2 bg-bg-2 border border-border rounded-xl p-5">
             <h2 className="text-lg font-bold text-text mb-6 flex items-center">
-              Winrate vs Classes
+              {t('stats.classChart.title')}
             </h2>
             <div className="h-[300px] w-full">
               {classChartData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-text-mute text-sm">
-                  No class matchup stats yet.
+                  {t('stats.classChart.empty')}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -222,12 +226,12 @@ export function Stats() {
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis dataKey="name" stroke="var(--text-mute)" axisLine={false} tickLine={false} />
                     <YAxis stroke="var(--text-mute)" axisLine={false} tickLine={false} />
-                    <Tooltip 
+                    <Tooltip
                       cursor={{ fill: 'var(--border)' }}
                       contentStyle={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
                     />
-                    <Bar dataKey="wins" name="Wins" stackId="a" fill="#10B981" radius={[0, 0, 4, 4]} />
-                    <Bar dataKey="losses" name="Losses" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="wins" name={t('stats.classChart.wins')} stackId="a" fill="#10B981" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="losses" name={t('stats.classChart.losses')} stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -237,18 +241,18 @@ export function Stats() {
           {/* Recent Matches */}
           <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-text">Recent Matches</h2>
-              <button className="text-accent text-sm font-medium hover:text-accent">View All</button>
+              <h2 className="text-lg font-bold text-text">{t('stats.recent.title')}</h2>
+              <button className="text-accent text-sm font-medium hover:text-accent">{t('stats.recent.viewAll')}</button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-border">
               {isLoading ? (
-                <div className="text-text-mute text-sm py-8 text-center">Loading match history...</div>
+                <div className="text-text-mute text-sm py-8 text-center">{t('stats.recent.loading')}</div>
               ) : error !== null ? (
                 <div className="text-red text-sm py-8 text-center">{error}</div>
               ) : recentMatches.length === 0 ? (
                 <div className="text-text-mute text-sm py-8 text-center">
-                  No tracked matches yet.
+                  {t('stats.recent.empty')}
                 </div>
               ) : (
                 recentMatches.map((match) => {
@@ -270,16 +274,21 @@ export function Stats() {
                                 : 'bg-bg-3/20 text-text'
                           }`}
                         >
-                          {formatResult(match.result)}
+                          {t(`stats.result.${match.result}`)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col">
                           <span className="text-text font-medium text-sm">
-                            {match.deckName ?? 'Unknown Deck'}
+                            {match.deckName ?? t('stats.recent.unknownDeck')}
                           </span>
                           <span className="text-text-mute text-xs mt-0.5">
-                            vs {match.opponentClass ?? match.opponentName ?? 'Unknown'}
+                            {t('stats.recent.vsOpponent', {
+                              opponent:
+                                match.opponentClass ??
+                                match.opponentName ??
+                                t('stats.recent.unknownOpponent'),
+                            })}
                           </span>
                         </div>
                         <div className="text-right">
@@ -287,7 +296,7 @@ export function Stats() {
                             {formatDuration(match.durationSeconds)}
                           </span>
                           <div className="text-xs text-text-mute mt-0.5">
-                            {formatPlayOrder(match.playOrder)}
+                            {t(`stats.playOrderShort.${match.playOrder}`)}
                           </div>
                         </div>
                       </div>
@@ -340,18 +349,6 @@ function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
-function formatResult(result: MatchHistoryRecord['result']): string {
-  if (result === 'win') return 'Win';
-  if (result === 'loss') return 'Loss';
-  return 'Unknown';
-}
-
-function formatPlayOrder(playOrder: MatchHistoryRecord['playOrder']): string {
-  if (playOrder === 'coin') return 'Coin';
-  if (playOrder === 'first') return 'First';
-  return 'Unknown';
 }
 
 function formatRelativeDate(endedAt: number): string {

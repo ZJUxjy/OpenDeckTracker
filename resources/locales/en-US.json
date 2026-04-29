@@ -181,7 +181,103 @@
     "confirm": "Confirm",
     "cancel": "Cancel"
   },
+  "dashboard": {
+    "badge": "Deck Tracker",
+    "phase": "Phase: {phase}",
+    "unnamedDeck": "Unnamed Deck",
+    "noActiveDeck": "No Active Deck",
+    "rank": "Rank: {rank}",
+    "rankUnavailable": "Unavailable",
+    "rankLegend": "Legend {n}",
+    "rankStar": "Star {n}",
+    "rankUnranked": "Unranked",
+    "waitingForGame": "Waiting for game",
+    "cardsLeft": "Cards Left",
+    "hand": "Hand",
+    "status": "Status",
+    "statusLive": "Live",
+    "statusIdle": "Idle",
+    "watcher": "Watcher",
+    "watcherDisconnected": "disconnected",
+    "watcherKind": {
+      "ready": "ready",
+      "waiting-for-lines": "waiting for lines",
+      "missing-log": "log missing",
+      "parser-error": "parser error",
+      "lag": "lag",
+      "rotation-or-truncation": "log rotated"
+    }
+  },
+  "collection": {
+    "title": "My Collection",
+    "subtitle": "Track your progress and missing cards.",
+    "dbCards": "DB Cards",
+    "dust": "Dust",
+    "format": {
+      "standard": "Standard Format",
+      "wild": "Wild Format"
+    },
+    "search": {
+      "placeholder": "Search cards or sets..."
+    },
+    "overallProgress": "Overall Progress",
+    "percentComplete": "{percent}% Complete",
+    "expansions": "Expansions",
+    "complete": "Complete",
+    "cardsCount": "{collected} / {total} cards",
+    "massDisenchant": {
+      "title": "Mass Disenchant Available",
+      "body": "You have {count} duplicate cards that can be safely disenchanted.",
+      "action": "Disenchant Extra Cards (+{dust} Dust)"
+    }
+  },
   "stats": {
+    "title": "Constructed Stats",
+    "subtitle": "Detailed breakdown of your ranked performance.",
+    "timeFilter": {
+      "today": "Today",
+      "week": "Week",
+      "season": "Season",
+      "all-time": "All Time"
+    },
+    "kpi": {
+      "overallWinrate": "Overall Winrate",
+      "winsLosses": "{wins} Wins - {losses} Losses",
+      "matchesPlayed": "Matches Played",
+      "matchesPlayedSubtitle": "Real tracked constructed matches",
+      "timePlayed": "Time Played",
+      "noAverage": "No average yet",
+      "averageDuration": "~{duration} average",
+      "bestDeck": "Best Deck",
+      "bestDeckEmpty": "No tracked deck",
+      "bestDeckPlaceholder": "Stats will appear after tracked games",
+      "bestDeckLine": "{percent} · {wins}W - {losses}L"
+    },
+    "recent": {
+      "title": "Recent Matches",
+      "viewAll": "View All",
+      "loading": "Loading match history...",
+      "empty": "No tracked matches yet.",
+      "unknownDeck": "Unknown Deck",
+      "vsOpponent": "vs {opponent}",
+      "unknownOpponent": "Unknown"
+    },
+    "result": {
+      "win": "Win",
+      "loss": "Loss",
+      "unknown": "Unknown"
+    },
+    "playOrderShort": {
+      "first": "First",
+      "coin": "Coin",
+      "unknown": "Unknown"
+    },
+    "classChart": {
+      "title": "Winrate vs Classes",
+      "empty": "No class matchup stats yet.",
+      "wins": "Wins",
+      "losses": "Losses"
+    },
     "formatFilter": {
       "all": "All Formats",
       "standard": "Standard",

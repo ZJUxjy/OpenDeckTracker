@@ -1,14 +1,18 @@
 ﻿import { useEffect, useState } from 'react';
 import { Search, Filter, BookOpen, AlertCircle, Sparkles, Database } from 'lucide-react';
 
+import { useTranslation } from '../i18n';
+
+// Set names + icons are content data (proper nouns / cultural references), not chrome —
+// they stay as-is. Format ids are localized via the translation table.
 const expansions = [
-  { id: 'standard', name: 'Standard Format', collected: 1450, total: 1800, sets: [
+  { id: 'standard', collected: 1450, total: 1800, sets: [
     { name: 'Festival of Legends', icon: '🎸', collected: 215, total: 245 },
     { name: 'TITANS', icon: '⚡', collected: 190, total: 245 },
     { name: 'Showdown in the Badlands', icon: '🤠', collected: 230, total: 245 },
     { name: 'Core', icon: '🐺', collected: 282, total: 282 },
   ]},
-  { id: 'wild', name: 'Wild Format', collected: 3200, total: 4500, sets: [
+  { id: 'wild', collected: 3200, total: 4500, sets: [
     { name: 'Murder at Castle Nathria', icon: '🏰', collected: 210, total: 245 },
     { name: 'Voyage to the Sunken City', icon: '🌊', collected: 198, total: 245 },
     { name: 'Forged in the Barrens', icon: '🌵', collected: 200, total: 245 },
@@ -17,6 +21,7 @@ const expansions = [
 ];
 
 export function Collection() {
+  const { t } = useTranslation();
   const [activeFormat, setActiveFormat] = useState('standard');
   const [searchQuery, setSearchQuery] = useState('');
   const [dbStats, setDbStats] = useState<{ total: number; sets: number } | null>(null);
@@ -50,25 +55,25 @@ export function Collection() {
         <div className="flex flex-col w-full sm:w-auto mb-4 sm:mb-0">
           <h1 className="text-2xl font-bold text-text mb-1 flex items-center">
             <BookOpen size={24} className="mr-3 text-accent" />
-            My Collection
+            {t('collection.title')}
           </h1>
-          <p className="text-text-dim text-sm">Track your progress and missing cards.</p>
+          <p className="text-text-dim text-sm">{t('collection.subtitle')}</p>
         </div>
-        
+
         <div className="flex space-x-4 w-full sm:w-auto">
           {dbStats && (
             <div className="bg-bg-2 p-3 rounded-lg border border-border flex items-center space-x-3 shadow-md">
               <div className="flex flex-col items-end">
-                <span className="text-xs text-text-dim font-bold uppercase tracking-wider">DB Cards</span>
-                <span className="text-green font-black text-lg">{dbStats.total.toLocaleString()}</span>
+                <span className="text-xs text-text-dim font-bold uppercase tracking-wider">{t('collection.dbCards')}</span>
+                <span className="text-green font-black text-lg font-mono tabular-nums">{dbStats.total.toLocaleString()}</span>
               </div>
               <Database size={24} className="text-green opacity-80" />
             </div>
           )}
           <div className="bg-bg-2 p-3 rounded-lg border border-border flex items-center space-x-3 shadow-md">
             <div className="flex flex-col items-end">
-              <span className="text-xs text-text-dim font-bold uppercase tracking-wider">Dust</span>
-              <span className="text-text-dim font-black text-lg">14,350</span>
+              <span className="text-xs text-text-dim font-bold uppercase tracking-wider">{t('collection.dust')}</span>
+              <span className="text-text-dim font-black text-lg font-mono tabular-nums">14,350</span>
             </div>
             <Sparkles size={24} className="text-text-dim opacity-80" />
           </div>
@@ -89,12 +94,12 @@ export function Collection() {
                     key={format.id}
                     onClick={() => setActiveFormat(format.id)}
                     className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${
-                      activeFormat === format.id 
-                        ? 'bg-accent text-bg shadow' 
+                      activeFormat === format.id
+                        ? 'bg-accent text-bg shadow'
                         : 'text-text-mute hover:text-text'
                     }`}
                   >
-                    {format.name}
+                    {t(`collection.format.${format.id}`)}
                   </button>
                 ))}
               </div>
@@ -102,9 +107,9 @@ export function Collection() {
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute" />
-                  <input 
-                    type="text" 
-                    placeholder="Search cards or sets..." 
+                  <input
+                    type="text"
+                    placeholder={t('collection.search.placeholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-64 bg-bg border border-border text-text text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-text-mute"
@@ -119,10 +124,10 @@ export function Collection() {
             {/* Overall Progress */}
             <div className="bg-bg-2 border border-border rounded-xl p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-text">Overall Progress</h2>
+                <h2 className="text-xl font-bold text-text">{t('collection.overallProgress')}</h2>
                 <div className="text-right">
-                  <span className="text-accent font-bold text-2xl">{activeData.collected}</span>
-                  <span className="text-text-mute font-medium"> / {activeData.total}</span>
+                  <span className="text-accent font-bold text-2xl font-mono tabular-nums">{activeData.collected}</span>
+                  <span className="text-text-mute font-medium font-mono tabular-nums"> / {activeData.total}</span>
                 </div>
               </div>
               
@@ -137,13 +142,13 @@ export function Collection() {
                   }} />
                 </div>
               </div>
-              <p className="text-text-dim text-sm font-medium">{percentage}% Complete</p>
+              <p className="text-text-dim text-sm font-medium">{t('collection.percentComplete', { percent: percentage })}</p>
             </div>
 
             {/* Expansions Grid */}
             <div>
               <h2 className="text-xl font-bold text-text mb-4 flex items-center">
-                Expansions
+                {t('collection.expansions')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeData.sets.map((set) => {
@@ -155,19 +160,19 @@ export function Collection() {
                       {isComplete && (
                         <div className="absolute top-0 right-0 w-16 h-16">
                           <div className="absolute top-4 right-[-16px] w-[100px] transform rotate-45 bg-accent text-bg text-[10px] font-bold text-center py-1 uppercase shadow-md">
-                            Complete
+                            {t('collection.complete')}
                           </div>
                         </div>
                       )}
-                      
+
                       <div className="flex items-center space-x-4 mb-4 relative z-10">
                         <div className="w-12 h-12 rounded-lg bg-bg border border-border flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
                           {set.icon}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="text-text font-bold truncate pr-4">{set.name}</h3>
-                          <p className="text-text-mute text-sm">
-                            {set.collected} <span className="text-text-mute">/ {set.total} cards</span>
+                          <p className="text-text-mute text-sm font-mono tabular-nums">
+                            {t('collection.cardsCount', { collected: set.collected, total: set.total })}
                           </p>
                         </div>
                       </div>
@@ -192,11 +197,11 @@ export function Collection() {
                 <AlertCircle size={20} className="text-text-dim" />
               </div>
               <div className="flex-1">
-                <h3 className="text-text font-bold text-lg mb-1">Mass Disenchant Available</h3>
-                <p className="text-text-dim text-sm mb-3">You have 124 duplicate cards that can be safely disenchanted.</p>
+                <h3 className="text-text font-bold text-lg mb-1">{t('collection.massDisenchant.title')}</h3>
+                <p className="text-text-dim text-sm mb-3">{t('collection.massDisenchant.body', { count: 124 })}</p>
                 <button className="bg-accent hover:bg-accent/90 text-bg font-bold py-2 px-4 rounded-lg shadow-md transition-colors text-sm flex items-center">
                   <Sparkles size={16} className="mr-2" />
-                  Disenchant Extra Cards (+3,420 Dust)
+                  {t('collection.massDisenchant.action', { dust: '3,420' })}
                 </button>
               </div>
             </div>
