@@ -20,8 +20,10 @@ export function Settings() {
   const setLanguagePreference = useI18nStore((state) => state.setLanguagePreference);
   const density = useAppearanceStore((state) => state.density);
   const accent = useAppearanceStore((state) => state.accent);
+  const gameOverlay = useAppearanceStore((state) => state.gameOverlay);
   const setDensity = useAppearanceStore((state) => state.setDensity);
   const setAccent = useAppearanceStore((state) => state.setAccent);
+  const setGameOverlay = useAppearanceStore((state) => state.setGameOverlay);
   const [activeCategory, setActiveCategory] = useState('general');
   const [settings, setSettings] = useState({
     autoStart: true,
@@ -266,8 +268,32 @@ export function Settings() {
               </div>
             )}
 
+            {activeCategory === 'overlay' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="border-b border-border pb-4 mb-6">
+                  <h2 className="text-xl font-bold text-text">{t('settings.overlay')}</h2>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                    <div>
+                      <h3 className="text-text font-medium">{t('settings.overlayPanel.enableTitle')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.overlayPanel.enableDescription')}</p>
+                      <p className="text-text-mute text-xs mt-1">{t('settings.overlayPanel.runningHint')}</p>
+                    </div>
+                    <button
+                      onClick={() => setGameOverlay(!gameOverlay)}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlay ? 'bg-accent' : 'bg-bg-3'}`}
+                    >
+                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${gameOverlay ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Placeholder for other categories */}
-            {['overlay', 'notifications', 'data', 'audio'].includes(activeCategory) && (
+            {['notifications', 'data', 'audio'].includes(activeCategory) && (
               <div className="flex flex-col items-center justify-center h-64 text-center animate-in fade-in duration-300">
                 <div className="w-16 h-16 bg-bg-2 rounded-full flex items-center justify-center mb-4 border border-border">
                   <HardDrive size={32} className="text-text-mute" />
