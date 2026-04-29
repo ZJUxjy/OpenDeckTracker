@@ -21,9 +21,11 @@ export function Settings() {
   const density = useAppearanceStore((state) => state.density);
   const accent = useAppearanceStore((state) => state.accent);
   const gameOverlay = useAppearanceStore((state) => state.gameOverlay);
+  const gameOverlayOpponent = useAppearanceStore((state) => state.gameOverlayOpponent);
   const setDensity = useAppearanceStore((state) => state.setDensity);
   const setAccent = useAppearanceStore((state) => state.setAccent);
   const setGameOverlay = useAppearanceStore((state) => state.setGameOverlay);
+  const setGameOverlayOpponent = useAppearanceStore((state) => state.setGameOverlayOpponent);
   const [activeCategory, setActiveCategory] = useState('general');
   const [settings, setSettings] = useState({
     autoStart: true,
@@ -279,7 +281,6 @@ export function Settings() {
                     <div>
                       <h3 className="text-text font-medium">{t('settings.overlayPanel.enableTitle')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.overlayPanel.enableDescription')}</p>
-                      <p className="text-text-mute text-xs mt-1">{t('settings.overlayPanel.runningHint')}</p>
                     </div>
                     <button
                       onClick={() => setGameOverlay(!gameOverlay)}
@@ -288,6 +289,21 @@ export function Settings() {
                       <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${gameOverlay ? 'left-7' : 'left-1'}`} />
                     </button>
                   </div>
+
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                    <div>
+                      <h3 className="text-text font-medium">{t('settings.overlayPanel.enableOpponentTitle')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.overlayPanel.enableOpponentDescription')}</p>
+                    </div>
+                    <button
+                      onClick={() => setGameOverlayOpponent(!gameOverlayOpponent)}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlayOpponent ? 'bg-accent' : 'bg-bg-3'}`}
+                    >
+                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${gameOverlayOpponent ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+
+                  <p className="text-text-mute text-xs px-4">{t('settings.overlayPanel.runningHint')}</p>
                 </div>
               </div>
             )}
