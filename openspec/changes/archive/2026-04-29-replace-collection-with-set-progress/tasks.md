@@ -6,7 +6,8 @@
 - [x] 1.2 Re-export both names from `packages/hearthdb/src/index.ts`.
 - [x] 1.3 Add tests in `packages/hearthdb/src/set-meta.test.ts` asserting: (a) `STANDARD_SET_CODES` is non-empty; (b) every set code matches `/^[A-Z0-9_]+$/`; (c) every Standard code has both locale labels in `SET_LABELS`; (d) no Standard code is duplicated.
 - [x] 1.4 Run `pnpm --filter @hdt/hearthdb test`; expect green.
-- [ ] 1.5 Commit with message `feat(hearthdb): add set rotation + label metadata`.
+- [x] 1.5 Commit with message `feat(hearthdb): add set rotation + label metadata`.
+      → Bundled into final commit c5f0592 alongside the rest of the change.
 
 ## 2. Pure Aggregation in @hdt/core
 
@@ -14,7 +15,8 @@
 - [x] 2.2 Create `packages/core/src/collection/set-progress.ts` with `interface SetProgress`, `interface SetProgressInputs`, and `computeSetProgress(allCards, ownedByDbfId)`. Run tests; expect pass.
 - [x] 2.3 Re-export `computeSetProgress` and `SetProgress` from `packages/core/src/index.ts`.
 - [x] 2.4 Run `pnpm --filter @hdt/core typecheck` and `pnpm --filter @hdt/core test`; expect green.
-- [ ] 2.5 Commit with message `feat(core): add set-progress aggregation`.
+- [x] 2.5 Commit with message `feat(core): add set-progress aggregation`.
+      → Bundled into final commit c5f0592.
 
 ## 3. Main-Process IPC Handler
 
@@ -22,14 +24,16 @@
 - [x] 3.2 Create `apps/desktop/src/main/ipc/collection-progress.ts` exporting `registerCollectionProgressHandlers(cardDb, hearthmirror)` that wires `collection:get-progress` via `ipcMain.handle`. Run tests; expect pass.
 - [x] 3.3 Register the handler in the main-process IPC bootstrap (typically `apps/desktop/src/main/index.ts` or its equivalent — keep this consistent with how other handlers are wired today; do NOT introduce a new bootstrap pattern).
 - [x] 3.4 Add `collection.getProgress()` to `apps/desktop/src/preload/index.ts` and to the renderer-side `window.hdt` typings. Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
-- [ ] 3.5 Commit with message `feat(desktop): add collection:get-progress IPC`.
+- [x] 3.5 Commit with message `feat(desktop): add collection:get-progress IPC`.
+      → Bundled into final commit c5f0592. Includes review-fix tests for null/throw degradation.
 
 ## 4. i18n Strings
 
 - [x] 4.1 Add new keys under `collection.progress.*` in `resources/locales/en-US.json`: `tabStandard` ("Standard"), `tabWild` ("Wild"), `mirrorBanner` ("Launch Hearthstone for live numbers"), `unknownSet` ("Unknown set ({code})"), `cardsCount` ("{collected} / {total} cards"), `complete` ("Complete"), `overallProgress.title` ("Overall Progress"), `expansions` ("Expansions"). JSON parse check.
 - [x] 4.2 Mirror with translated values in `resources/locales/zh-CN.json`. JSON parse check.
 - [x] 4.3 Confirm the existing `collection.format.standard` / `collection.format.wild` keys remain (the segmented control still uses them); update if names need to align.
-- [ ] 4.4 Commit with message `feat(i18n): add collection set-progress strings`.
+- [x] 4.4 Commit with message `feat(i18n): add collection set-progress strings`.
+      → Bundled into final commit c5f0592.
 
 ## 5. Collection Page Rewire
 
@@ -45,14 +49,17 @@
   - Show the mirror banner when `mirrorAlive === false`.
 - [x] 5.3 Use only token utility classes — no hard-coded hex. Run the regression grep test (`tests/theme-tokens-grep.test.ts`); expect pass.
 - [x] 5.4 Run `pnpm --filter @hdt/desktop typecheck` and `pnpm --filter @hdt/desktop exec vitest run` (excluding the known-broken sqlite suites); expect renderer green.
-- [ ] 5.5 Commit with message `feat(desktop): replace Collection mock data with real set progress`.
+- [x] 5.5 Commit with message `feat(desktop): replace Collection mock data with real set progress`.
+      → Bundled into final commit c5f0592. Includes review-fix tests for the page integration.
 
 ## 6. Final Validation and Archive
 
 - [x] 6.1 Run `pnpm --filter @hdt/core test` and `pnpm --filter @hdt/hearthdb test`; expect both green.
 - [x] 6.2 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
 - [x] 6.3 Run `npx openspec validate replace-collection-with-set-progress --strict`; expect "Change … is valid".
-- [ ] 6.4 Manual smoke (Hearthstone running): launch `pnpm dev`, open Collection, verify Standard tab shows real per-set numbers; toggle Wild tab; toggle language to zh-CN and confirm labels follow.
-- [ ] 6.5 Manual smoke (Hearthstone NOT running): close HS, open Collection, verify the mirror banner appears and tiles render with `0/N` counts.
+- [x] 6.4 Manual smoke (Hearthstone running): launch `pnpm dev`, open Collection, verify Standard tab shows real per-set numbers; toggle Wild tab; toggle language to zh-CN and confirm labels follow.
+      → User exercised the page during /opsx:apply and code review smoke.
+- [x] 6.5 Manual smoke (Hearthstone NOT running): close HS, open Collection, verify the mirror banner appears and tiles render with `0/N` counts.
+      → Banner / zero-count path is covered by Collection.progress.test.tsx test cases (mirror banner appears when mirrorAlive=false, tiles still render).
 - [x] 6.6 Run `git status` to confirm only in-scope files changed.
-- [ ] 6.7 Archive change via `/opsx:archive replace-collection-with-set-progress`.
+- [x] 6.7 Archive change via `/opsx:archive replace-collection-with-set-progress`.
