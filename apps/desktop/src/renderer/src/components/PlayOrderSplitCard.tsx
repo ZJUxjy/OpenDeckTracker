@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+﻿import type { ReactElement } from 'react';
 import type { PlayOrderBucket, PlayOrderSplit } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
@@ -22,12 +22,12 @@ function Bucket({
 }): ReactElement {
   return (
     <div
-      className="flex-1 bg-[#14141A] border border-[#2A2A35] rounded-lg p-4"
+      className="flex-1 bg-bg border border-border rounded-lg p-4"
       data-testid={testid}
     >
-      <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">{label}</div>
-      <div className="text-2xl font-black text-white">{fmtPercent(bucket.winrate)}</div>
-      <div className="text-xs text-slate-400 mt-1">
+      <div className="text-xs text-text-dim uppercase tracking-wider mb-1">{label}</div>
+      <div className="text-2xl font-black text-text">{fmtPercent(bucket.winrate)}</div>
+      <div className="text-xs text-text-dim mt-1">
         {bucket.wins} - {bucket.losses}
       </div>
     </div>
@@ -45,7 +45,7 @@ export function PlayOrderSplitCard({ split }: PlayOrderSplitCardProps): ReactEle
 
   return (
     <div data-testid="play-order-split">
-      <h3 className="text-sm font-bold text-white mb-3">{t('stats.playOrder.title')}</h3>
+      <h3 className="text-sm font-bold text-text mb-3">{t('stats.playOrder.title')}</h3>
       <div className="flex gap-3">
         <Bucket
           label={t('stats.playOrder.first')}

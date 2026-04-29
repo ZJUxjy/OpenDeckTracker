@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Search, Filter, BookOpen, AlertCircle, Sparkles, Database } from 'lucide-react';
 
 const expansions = [
@@ -43,31 +43,31 @@ export function Collection() {
   const percentage = Math.round((activeData.collected / activeData.total) * 100);
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0E0E14] overflow-hidden">
+    <div className="flex-1 flex flex-col bg-bg overflow-hidden">
       
       {/* Top Header */}
-      <div className="bg-[#14141A] border-b border-[#2A2A35] p-6 flex flex-col sm:flex-row items-center justify-between shrink-0 sticky top-0 z-10">
+      <div className="bg-bg border-b border-border p-6 flex flex-col sm:flex-row items-center justify-between shrink-0 sticky top-0 z-10">
         <div className="flex flex-col w-full sm:w-auto mb-4 sm:mb-0">
-          <h1 className="text-2xl font-bold text-white mb-1 flex items-center">
-            <BookOpen size={24} className="mr-3 text-orange-500" />
+          <h1 className="text-2xl font-bold text-text mb-1 flex items-center">
+            <BookOpen size={24} className="mr-3 text-accent" />
             My Collection
           </h1>
-          <p className="text-slate-400 text-sm">Track your progress and missing cards.</p>
+          <p className="text-text-dim text-sm">Track your progress and missing cards.</p>
         </div>
         
         <div className="flex space-x-4 w-full sm:w-auto">
           {dbStats && (
-            <div className="bg-[#1C1C24] p-3 rounded-lg border border-[#2A2A35] flex items-center space-x-3 shadow-md">
+            <div className="bg-bg-2 p-3 rounded-lg border border-border flex items-center space-x-3 shadow-md">
               <div className="flex flex-col items-end">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">DB Cards</span>
-                <span className="text-emerald-400 font-black text-lg">{dbStats.total.toLocaleString()}</span>
+                <span className="text-xs text-text-dim font-bold uppercase tracking-wider">DB Cards</span>
+                <span className="text-green font-black text-lg">{dbStats.total.toLocaleString()}</span>
               </div>
-              <Database size={24} className="text-emerald-400 opacity-80" />
+              <Database size={24} className="text-green opacity-80" />
             </div>
           )}
-          <div className="bg-[#1C1C24] p-3 rounded-lg border border-[#2A2A35] flex items-center space-x-3 shadow-md">
+          <div className="bg-bg-2 p-3 rounded-lg border border-border flex items-center space-x-3 shadow-md">
             <div className="flex flex-col items-end">
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Dust</span>
+              <span className="text-xs text-text-dim font-bold uppercase tracking-wider">Dust</span>
               <span className="text-blue-400 font-black text-lg">14,350</span>
             </div>
             <Sparkles size={24} className="text-blue-400 opacity-80" />
@@ -82,16 +82,16 @@ export function Collection() {
           <div className="max-w-4xl mx-auto space-y-8">
             
             {/* Format Switcher & Search */}
-            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 bg-[#1C1C24] p-4 rounded-xl border border-[#2A2A35] shadow-sm">
-              <div className="flex bg-[#0E0E14] rounded-md p-1 border border-[#2A2A35]">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 bg-bg-2 p-4 rounded-xl border border-border shadow-sm">
+              <div className="flex bg-bg rounded-md p-1 border border-border">
                 {expansions.map((format) => (
                   <button
                     key={format.id}
                     onClick={() => setActiveFormat(format.id)}
                     className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${
                       activeFormat === format.id 
-                        ? 'bg-orange-500 text-white shadow' 
-                        : 'text-slate-500 hover:text-white'
+                        ? 'bg-accent text-text shadow' 
+                        : 'text-text-mute hover:text-text'
                     }`}
                   >
                     {format.name}
@@ -101,34 +101,34 @@ export function Collection() {
 
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-mute" />
                   <input 
                     type="text" 
                     placeholder="Search cards or sets..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-64 bg-[#0E0E14] border border-[#2A2A35] text-white text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all placeholder:text-slate-600"
+                    className="w-64 bg-bg border border-border text-text text-sm rounded-lg pl-9 pr-4 py-2 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-text-mute"
                   />
                 </div>
-                <button className="bg-[#0E0E14] border border-[#2A2A35] p-2 rounded-lg text-slate-400 hover:text-white hover:border-slate-500 transition-colors">
+                <button className="bg-bg border border-border p-2 rounded-lg text-text-dim hover:text-text hover:border-border-hi transition-colors">
                   <Filter size={18} />
                 </button>
               </div>
             </div>
 
             {/* Overall Progress */}
-            <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-6">
+            <div className="bg-bg-2 border border-border rounded-xl p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-white">Overall Progress</h2>
+                <h2 className="text-xl font-bold text-text">Overall Progress</h2>
                 <div className="text-right">
-                  <span className="text-orange-400 font-bold text-2xl">{activeData.collected}</span>
-                  <span className="text-slate-500 font-medium"> / {activeData.total}</span>
+                  <span className="text-accent font-bold text-2xl">{activeData.collected}</span>
+                  <span className="text-text-mute font-medium"> / {activeData.total}</span>
                 </div>
               </div>
               
-              <div className="w-full bg-[#0E0E14] rounded-full h-4 mb-2 border border-[#2A2A35] overflow-hidden shadow-inner">
+              <div className="w-full bg-bg rounded-full h-4 mb-2 border border-border overflow-hidden shadow-inner">
                 <div 
-                  className="bg-gradient-to-r from-orange-600 to-orange-400 h-4 rounded-full transition-all duration-1000 ease-out relative" 
+                  className="bg-gradient-to-r from-accent to-accent h-4 rounded-full transition-all duration-1000 ease-out relative" 
                   style={{ width: `${percentage}%` }}
                 >
                   <div className="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]" style={{
@@ -137,12 +137,12 @@ export function Collection() {
                   }} />
                 </div>
               </div>
-              <p className="text-slate-400 text-sm font-medium">{percentage}% Complete</p>
+              <p className="text-text-dim text-sm font-medium">{percentage}% Complete</p>
             </div>
 
             {/* Expansions Grid */}
             <div>
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+              <h2 className="text-xl font-bold text-text mb-4 flex items-center">
                 Expansions
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -151,31 +151,31 @@ export function Collection() {
                   const isComplete = setPercentage === 100;
 
                   return (
-                    <div key={set.name} className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 hover:border-[#3A3A45] transition-colors group cursor-pointer relative overflow-hidden">
+                    <div key={set.name} className="bg-bg-2 border border-border rounded-xl p-5 hover:border-border-hi transition-colors group cursor-pointer relative overflow-hidden">
                       {isComplete && (
                         <div className="absolute top-0 right-0 w-16 h-16">
-                          <div className="absolute top-4 right-[-16px] w-[100px] transform rotate-45 bg-orange-500 text-white text-[10px] font-bold text-center py-1 uppercase shadow-md">
+                          <div className="absolute top-4 right-[-16px] w-[100px] transform rotate-45 bg-accent text-text text-[10px] font-bold text-center py-1 uppercase shadow-md">
                             Complete
                           </div>
                         </div>
                       )}
                       
                       <div className="flex items-center space-x-4 mb-4 relative z-10">
-                        <div className="w-12 h-12 rounded-lg bg-[#0E0E14] border border-[#2A2A35] flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-lg bg-bg border border-border flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform">
                           {set.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-white font-bold truncate pr-4">{set.name}</h3>
-                          <p className="text-slate-500 text-sm">
-                            {set.collected} <span className="text-slate-600">/ {set.total} cards</span>
+                          <h3 className="text-text font-bold truncate pr-4">{set.name}</h3>
+                          <p className="text-text-mute text-sm">
+                            {set.collected} <span className="text-text-mute">/ {set.total} cards</span>
                           </p>
                         </div>
                       </div>
 
-                      <div className="w-full bg-[#0E0E14] rounded-full h-2.5 border border-[#2A2A35] overflow-hidden relative z-10">
+                      <div className="w-full bg-bg rounded-full h-2.5 border border-border overflow-hidden relative z-10">
                         <div 
                           className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${
-                            isComplete ? 'bg-orange-500 shadow-[0_0_10px_#f97316]' : 'bg-slate-500'
+                            isComplete ? 'bg-accent shadow-[0_0_10px_#f97316]' : 'bg-bg-3'
                           }`}
                           style={{ width: `${setPercentage}%` }}
                         ></div>
@@ -187,14 +187,14 @@ export function Collection() {
             </div>
 
             {/* Duplicate & Extra Section */}
-            <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex items-start space-x-4 shadow-sm">
+            <div className="bg-bg-2 border border-border rounded-xl p-5 flex items-start space-x-4 shadow-sm">
               <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5">
                 <AlertCircle size={20} className="text-blue-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-bold text-lg mb-1">Mass Disenchant Available</h3>
-                <p className="text-slate-400 text-sm mb-3">You have 124 duplicate cards that can be safely disenchanted.</p>
-                <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors text-sm flex items-center">
+                <h3 className="text-text font-bold text-lg mb-1">Mass Disenchant Available</h3>
+                <p className="text-text-dim text-sm mb-3">You have 124 duplicate cards that can be safely disenchanted.</p>
+                <button className="bg-blue-600 hover:bg-blue-500 text-text font-bold py-2 px-4 rounded-lg shadow-md transition-colors text-sm flex items-center">
                   <Sparkles size={16} className="mr-2" />
                   Disenchant Extra Cards (+3,420 Dust)
                 </button>

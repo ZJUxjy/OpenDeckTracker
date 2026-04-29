@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react';
+﻿import { useState, type ReactElement } from 'react';
 import { Save } from 'lucide-react';
 import type { DeckCard, Format, HeroClass } from '@hdt/core';
 
@@ -59,7 +59,7 @@ export function SaveLiveDeckButton({ liveDeck }: SaveLiveDeckButtonProps): React
   if (savedJustNow) {
     return (
       <span
-        className="text-xs text-emerald-300 inline-flex items-center gap-1"
+        className="text-xs text-green inline-flex items-center gap-1"
         data-testid="save-live-saved"
       >
         {t('decks.saveLive.saved')}
@@ -73,7 +73,7 @@ export function SaveLiveDeckButton({ liveDeck }: SaveLiveDeckButtonProps): React
         onClick={() => void onSave()}
         disabled={busy}
         aria-label={t('decks.saveLive.button')}
-        className="px-3 py-1 text-xs bg-[#2A2A35] hover:bg-[#3A3A45] text-slate-200 rounded inline-flex items-center gap-1.5 disabled:opacity-50"
+        className="px-3 py-1 text-xs bg-bg-3 hover:bg-bg-3 text-text rounded inline-flex items-center gap-1.5 disabled:opacity-50"
         data-testid="save-live-button"
       >
         <Save size={12} />

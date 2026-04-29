@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+﻿import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Plus, Trash2, X } from 'lucide-react';
 import type {
@@ -210,16 +210,16 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[800px] max-w-[95vw] max-h-[90vh] bg-[#14141A] border border-[#2A2A35] rounded-md text-slate-200 flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b border-[#2A2A35]">
-            <Dialog.Title className="text-lg font-bold text-white">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[800px] max-w-[95vw] max-h-[90vh] bg-bg border border-border rounded-md text-text flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <Dialog.Title className="text-lg font-bold text-text">
               {t('decks.editor.title')}
             </Dialog.Title>
             <Dialog.Description className="sr-only">
               {t('decks.editor.title')}
             </Dialog.Description>
             <Dialog.Close asChild>
-              <button aria-label={t('decks.editor.cancel')} className="p-1 hover:bg-[#2A2A35] rounded">
+              <button aria-label={t('decks.editor.cancel')} className="p-1 hover:bg-bg-3 rounded">
                 <X size={18} />
               </button>
             </Dialog.Close>
@@ -229,7 +229,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
             {/* Left column: metadata */}
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-slate-400 uppercase">{t('decks.editor.name')}</label>
+                <label className="text-xs text-text-dim uppercase">{t('decks.editor.name')}</label>
                 <input
                   type="text"
                   value={name}
@@ -238,19 +238,19 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                     queueSave({ name: e.target.value });
                   }}
                   placeholder={t('decks.editor.namePlaceholder')}
-                  className="w-full mt-1 px-3 py-2 bg-[#1a1a24] border border-[#2A2A35] rounded text-white"
+                  className="w-full mt-1 px-3 py-2 bg-bg-2 border border-border rounded text-text"
                 />
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs text-slate-400 uppercase">{t('decks.editor.class')}</label>
+                  <label className="text-xs text-text-dim uppercase">{t('decks.editor.class')}</label>
                   <select
                     value={heroClass}
                     onChange={(e) => {
                       setHeroClass(e.target.value as HeroClass);
                       queueSave({ class: e.target.value as HeroClass });
                     }}
-                    className="w-full mt-1 px-3 py-2 bg-[#1a1a24] border border-[#2A2A35] rounded text-white"
+                    className="w-full mt-1 px-3 py-2 bg-bg-2 border border-border rounded text-text"
                   >
                     {CLASSES.map((c) => (
                       <option key={c} value={c}>
@@ -260,14 +260,14 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                   </select>
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-slate-400 uppercase">{t('decks.editor.format')}</label>
+                  <label className="text-xs text-text-dim uppercase">{t('decks.editor.format')}</label>
                   <select
                     value={format}
                     onChange={(e) => {
                       setFormat(e.target.value as Format);
                       queueSave({ format: e.target.value as Format });
                     }}
-                    className="w-full mt-1 px-3 py-2 bg-[#1a1a24] border border-[#2A2A35] rounded text-white"
+                    className="w-full mt-1 px-3 py-2 bg-bg-2 border border-border rounded text-text"
                   >
                     {FORMATS.map((f) => (
                       <option key={f} value={f}>
@@ -278,7 +278,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                 </div>
               </div>
               <div>
-                <label className="text-xs text-slate-400 uppercase">{t('decks.editor.notes')}</label>
+                <label className="text-xs text-text-dim uppercase">{t('decks.editor.notes')}</label>
                 <textarea
                   value={notes}
                   onChange={(e) => {
@@ -286,11 +286,11 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                     queueSave({ notes: e.target.value });
                   }}
                   rows={4}
-                  className="w-full mt-1 px-3 py-2 bg-[#1a1a24] border border-[#2A2A35] rounded text-white text-sm"
+                  className="w-full mt-1 px-3 py-2 bg-bg-2 border border-border rounded text-text text-sm"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-400 uppercase">{t('decks.editor.tags')}</label>
+                <label className="text-xs text-text-dim uppercase">{t('decks.editor.tags')}</label>
                 <input
                   type="text"
                   value={tagsInput}
@@ -303,7 +303,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                         .filter(Boolean),
                     });
                   }}
-                  className="w-full mt-1 px-3 py-2 bg-[#1a1a24] border border-[#2A2A35] rounded text-white text-sm"
+                  className="w-full mt-1 px-3 py-2 bg-bg-2 border border-border rounded text-text text-sm"
                 />
               </div>
             </div>
@@ -311,7 +311,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
             {/* Right column: card list editor */}
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-slate-400 uppercase">
+                <span className="text-xs text-text-dim uppercase">
                   {t('decks.list.row.cardCount', { count: totalCount })}
                 </span>
               </div>
@@ -321,12 +321,12 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                 onChange={(e) => onSearchChange(e.target.value)}
                 onKeyDown={onSearchKeyDown}
                 placeholder={t('decks.editor.search.placeholder')}
-                className="w-full px-3 py-2 bg-[#1a1a24] border border-[#2A2A35] rounded text-white text-sm"
+                className="w-full px-3 py-2 bg-bg-2 border border-border rounded text-text text-sm"
                 data-testid="card-search-input"
               />
               {results.length > 0 && (
                 <div
-                  className="mt-1 bg-[#1a1a24] border border-[#2A2A35] rounded max-h-48 overflow-y-auto"
+                  className="mt-1 bg-bg-2 border border-border rounded max-h-48 overflow-y-auto"
                   role="listbox"
                   data-testid="card-search-results"
                 >
@@ -336,10 +336,10 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                       role="option"
                       aria-selected={false}
                       onClick={() => addCard(r.id)}
-                      className="w-full text-left px-3 py-1.5 text-sm hover:bg-[#2A2A35] flex justify-between"
+                      className="w-full text-left px-3 py-1.5 text-sm hover:bg-bg-3 flex justify-between"
                     >
                       <span>{r.name}</span>
-                      <span className="text-slate-400">{r.cost} mana</span>
+                      <span className="text-text-dim">{r.cost} mana</span>
                     </button>
                   ))}
                 </div>
@@ -350,21 +350,21 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                   return (
                     <div
                       key={c.cardId}
-                      className="flex items-center gap-2 px-2 py-1 bg-[#1a1a24] rounded text-sm"
+                      className="flex items-center gap-2 px-2 py-1 bg-bg-2 rounded text-sm"
                     >
-                      <span className="text-slate-400 w-6">{hit?.cost ?? '?'}</span>
+                      <span className="text-text-dim w-6">{hit?.cost ?? '?'}</span>
                       <span className="flex-1 truncate">{hit?.name ?? c.cardId}</span>
-                      <span className="text-orange-400 font-bold">×{c.count}</span>
+                      <span className="text-accent font-bold">×{c.count}</span>
                       <button
                         onClick={() => addCard(c.cardId)}
-                        className="p-1 hover:bg-[#2A2A35] rounded text-slate-400"
+                        className="p-1 hover:bg-bg-3 rounded text-text-dim"
                         aria-label={`add ${c.cardId}`}
                       >
                         <Plus size={14} />
                       </button>
                       <button
                         onClick={() => removeCard(c.cardId)}
-                        className="p-1 hover:bg-[#2A2A35] rounded text-slate-400"
+                        className="p-1 hover:bg-bg-3 rounded text-text-dim"
                         aria-label={`remove ${c.cardId}`}
                       >
                         <Trash2 size={14} />
@@ -377,11 +377,11 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
           </div>
 
           {/* Validity panel */}
-          <div className="px-4 py-2 border-t border-[#2A2A35] text-xs" data-testid="validity-panel">
+          <div className="px-4 py-2 border-t border-border text-xs" data-testid="validity-panel">
             {validity.ok ? (
-              <span className="text-emerald-400">{t('decks.editor.validity.ok')}</span>
+              <span className="text-green">{t('decks.editor.validity.ok')}</span>
             ) : (
-              <ul className="text-amber-300 space-y-0.5">
+              <ul className="text-amber space-y-0.5">
                 {validity.issues.map((issue, i) => (
                   <li key={i}>{localizeIssue(issue, t)}</li>
                 ))}
@@ -389,9 +389,9 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
             )}
           </div>
 
-          <div className="flex justify-end gap-2 p-4 border-t border-[#2A2A35]">
+          <div className="flex justify-end gap-2 p-4 border-t border-border">
             <Dialog.Close asChild>
-              <button className="px-4 py-2 rounded text-sm hover:bg-[#2A2A35]">
+              <button className="px-4 py-2 rounded text-sm hover:bg-bg-3">
                 {t('decks.editor.cancel')}
               </button>
             </Dialog.Close>
@@ -400,7 +400,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                 await flushSave();
                 onOpenChange(false);
               }}
-              className="px-4 py-2 rounded text-sm bg-orange-500 hover:bg-orange-600 text-white"
+              className="px-4 py-2 rounded text-sm bg-accent hover:bg-accent text-text"
             >
               {t('decks.editor.save')}
             </button>

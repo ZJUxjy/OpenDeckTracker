@@ -73,7 +73,7 @@ describe('MatchupMatrix', () => {
     };
     renderMatrix(matrix);
     const cell = screen.getByTestId('matchup-cell-DRUID-MAGE');
-    expect(cell.className).toContain('emerald');
+    expect(cell.className).toContain('green');
   });
 
   it('renders Unknown row label when player class is Unknown', () => {

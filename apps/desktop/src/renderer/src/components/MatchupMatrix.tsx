@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+﻿import type { ReactElement } from 'react';
 import type { MatchupMatrix as MatchupMatrixData } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
@@ -10,9 +10,9 @@ export interface MatchupMatrixProps {
 const LOW_CONFIDENCE_THRESHOLD = 5;
 
 function cellColor(winrate: number | null): string {
-  if (winrate === null) return 'bg-[#1a1a24] text-slate-500';
-  if (winrate >= 60) return 'bg-emerald-500/30 text-emerald-200';
-  if (winrate >= 50) return 'bg-emerald-500/15 text-emerald-300';
+  if (winrate === null) return 'bg-bg-2 text-text-mute';
+  if (winrate >= 60) return 'bg-green/30 text-green';
+  if (winrate >= 50) return 'bg-green/15 text-green';
   if (winrate >= 40) return 'bg-red-500/15 text-red-300';
   return 'bg-red-500/30 text-red-200';
 }
@@ -23,7 +23,7 @@ export function MatchupMatrix({ matrix }: MatchupMatrixProps): ReactElement {
   if (!matrix || matrix.playerClasses.length === 0) {
     return (
       <div
-        className="flex items-center justify-center h-48 text-slate-500 text-sm"
+        className="flex items-center justify-center h-48 text-text-mute text-sm"
         data-testid="matchup-matrix-empty"
       >
         {t('stats.matchup.empty')}
@@ -36,9 +36,9 @@ export function MatchupMatrix({ matrix }: MatchupMatrixProps): ReactElement {
       <table className="text-xs border-collapse">
         <thead>
           <tr>
-            <th className="px-2 py-1 text-slate-400 text-left">{t('stats.matchup.playerHeader')}</th>
+            <th className="px-2 py-1 text-text-dim text-left">{t('stats.matchup.playerHeader')}</th>
             {matrix.opponentClasses.map((oc) => (
-              <th key={oc} className="px-2 py-1 text-slate-400 font-medium">
+              <th key={oc} className="px-2 py-1 text-text-dim font-medium">
                 {oc === 'Unknown' ? t('stats.matchup.unknownClass') : oc}
               </th>
             ))}
@@ -47,7 +47,7 @@ export function MatchupMatrix({ matrix }: MatchupMatrixProps): ReactElement {
         <tbody>
           {matrix.playerClasses.map((pc) => (
             <tr key={pc} data-testid={`matchup-row-${pc}`}>
-              <td className="px-2 py-1 text-slate-300 font-medium whitespace-nowrap">
+              <td className="px-2 py-1 text-text font-medium whitespace-nowrap">
                 {pc === 'Unknown' ? t('stats.matchup.unknownClass') : pc}
               </td>
               {matrix.opponentClasses.map((oc) => {
@@ -67,11 +67,11 @@ export function MatchupMatrix({ matrix }: MatchupMatrixProps): ReactElement {
                     title={`${wins} - ${losses}`}
                   >
                     {winrate === null ? (
-                      <span className="text-slate-500">{t('stats.matchup.emptyCell')}</span>
+                      <span className="text-text-mute">{t('stats.matchup.emptyCell')}</span>
                     ) : (
                       <>
                         <div className="font-bold">{Math.round(winrate)}%</div>
-                        <div className="text-[10px] text-slate-400">
+                        <div className="text-[10px] text-text-dim">
                           {wins}-{losses}
                         </div>
                       </>

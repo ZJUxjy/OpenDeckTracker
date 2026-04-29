@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+﻿import type { ReactElement } from 'react';
 import {
   CartesianGrid,
   Line,
@@ -30,7 +30,7 @@ export function WinrateTimeSeriesChart({
   return (
     <div data-testid="winrate-time-series">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold text-white">{t('stats.timeSeries.title')}</h3>
+        <h3 className="text-sm font-bold text-text">{t('stats.timeSeries.title')}</h3>
         <div className="flex space-x-1">
           {(['daily', 'weekly'] as const).map((g) => (
             <button
@@ -40,8 +40,8 @@ export function WinrateTimeSeriesChart({
               aria-pressed={granularity === g}
               className={`px-2 py-1 text-xs rounded ${
                 granularity === g
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-[#1C1C24] text-slate-400 hover:text-white'
+                  ? 'bg-accent text-text'
+                  : 'bg-bg-2 text-text-dim hover:text-text'
               }`}
             >
               {t(`stats.timeSeries.${g}`)}
@@ -61,7 +61,7 @@ export function WinrateTimeSeriesChart({
               }))}
               margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="x" stroke="#64748B" axisLine={false} tickLine={false} />
               <YAxis
                 stroke="#64748B"
@@ -71,16 +71,16 @@ export function WinrateTimeSeriesChart({
                 tickFormatter={(v: number) => `${v}%`}
               />
               <Tooltip
-                cursor={{ fill: '#2A2A35' }}
-                contentStyle={{ backgroundColor: '#14141A', borderColor: '#2A2A35', color: '#fff' }}
+                cursor={{ fill: 'var(--border)' }}
+                contentStyle={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
               />
-              <Line type="monotone" dataKey="winrate" stroke="#F97316" strokeWidth={2} dot />
+              <Line type="monotone" dataKey="winrate" stroke="var(--accent)" strokeWidth={2} dot />
             </LineChart>
           </ResponsiveContainer>
         </div>
       ) : (
         <div
-          className="flex items-center justify-center h-32 text-slate-500 text-sm"
+          className="flex items-center justify-center h-32 text-text-mute text-sm"
           data-testid="winrate-time-series-empty"
         >
           {t('stats.timeSeries.empty')}

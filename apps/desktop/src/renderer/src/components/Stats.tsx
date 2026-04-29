@@ -103,12 +103,12 @@ export function Stats() {
   }));
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0E0E14] overflow-y-auto">
+    <div className="flex-1 flex flex-col bg-bg overflow-y-auto">
       {/* Header */}
-      <div className="bg-[#14141A] border-b border-[#2A2A35] p-6 flex items-center justify-between sticky top-0 z-10">
+      <div className="bg-bg border-b border-border p-6 flex items-center justify-between sticky top-0 z-10">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Constructed Stats</h1>
-          <p className="text-slate-400 text-sm">Detailed breakdown of your ranked performance.</p>
+          <h1 className="text-2xl font-bold text-text mb-1">Constructed Stats</h1>
+          <p className="text-text-dim text-sm">Detailed breakdown of your ranked performance.</p>
         </div>
         
         <div className="flex flex-col items-end space-y-2">
@@ -119,8 +119,8 @@ export function Stats() {
                 onClick={() => setTimeFilter(filter)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   timeFilter === filter
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-[#1C1C24] text-slate-400 hover:text-white hover:bg-[#2A2A35]'
+                    ? 'bg-accent text-text'
+                    : 'bg-bg-2 text-text-dim hover:text-text hover:bg-bg-3'
                 }`}
               >
                 {filter.charAt(0).toUpperCase() + filter.slice(1).replace('-', ' ')}
@@ -135,48 +135,48 @@ export function Stats() {
         
         {/* Top Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex flex-col relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-orange-500 group-hover:opacity-10 transition-opacity">
+          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
+            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-accent group-hover:opacity-10 transition-opacity">
               <Trophy size={100} />
             </div>
-            <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Overall Winrate</span>
-            <div className="text-3xl font-black text-white">{formatPercent(summary.overallWinrate)}</div>
-            <div className="text-sm mt-2 text-slate-400">
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Overall Winrate</span>
+            <div className="text-3xl font-black text-text">{formatPercent(summary.overallWinrate)}</div>
+            <div className="text-sm mt-2 text-text-dim">
               {summary.wins} Wins - {summary.losses} Losses
             </div>
           </div>
           
-          <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-blue-500 group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
-            <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Matches Played</span>
-            <div className="text-3xl font-black text-white">{summary.matchesPlayed.toLocaleString()}</div>
-            <div className="text-sm mt-2 text-slate-400">Real tracked constructed matches</div>
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Matches Played</span>
+            <div className="text-3xl font-black text-text">{summary.matchesPlayed.toLocaleString()}</div>
+            <div className="text-sm mt-2 text-text-dim">Real tracked constructed matches</div>
           </div>
           
-          <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-purple-500 group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
-            <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Time Played</span>
-            <div className="text-3xl font-black text-white">{formatTimePlayed(summary.timePlayedSeconds)}</div>
-            <div className="text-sm mt-2 text-slate-400">
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Time Played</span>
+            <div className="text-3xl font-black text-text">{formatTimePlayed(summary.timePlayedSeconds)}</div>
+            <div className="text-sm mt-2 text-text-dim">
               {summary.averageDurationSeconds === null
                 ? 'No average yet'
                 : `~${formatDuration(summary.averageDurationSeconds)} average`}
             </div>
           </div>
 
-          <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red-500 group-hover:opacity-10 transition-opacity">
               <Target size={100} />
             </div>
-            <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Best Deck</span>
-            <div className="text-xl font-bold text-orange-400 truncate mt-1">
+            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Best Deck</span>
+            <div className="text-xl font-bold text-accent truncate mt-1">
               {summary.bestDeck?.deckName ?? 'No tracked deck'}
             </div>
-            <div className="text-sm mt-2 text-slate-400">
+            <div className="text-sm mt-2 text-text-dim">
               {summary.bestDeck === null
                 ? 'Stats will appear after tracked games'
                 : `${formatPercent(summary.bestDeck.winrate)} · ${summary.bestDeck.wins}W - ${summary.bestDeck.losses}L`}
@@ -186,45 +186,45 @@ export function Stats() {
 
         {/* Winrate Time Series + Play/Coin Split */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
+          <div className="xl:col-span-2 bg-bg-2 border border-border rounded-xl p-5">
             <WinrateTimeSeriesChart
               points={summary.winrateTimeSeries ?? null}
               granularity={granularity}
               onGranularityChange={setGranularity}
             />
           </div>
-          <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
+          <div className="bg-bg-2 border border-border rounded-xl p-5">
             <PlayOrderSplitCard split={summary.playOrderSplit ?? null} />
           </div>
         </div>
 
         {/* Matchup Matrix */}
-        <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
-          <h2 className="text-lg font-bold text-white mb-4">{t('stats.matchup.title')}</h2>
+        <div className="bg-bg-2 border border-border rounded-xl p-5">
+          <h2 className="text-lg font-bold text-text mb-4">{t('stats.matchup.title')}</h2>
           <MatchupMatrix matrix={summary.matchupMatrix ?? null} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
           {/* Class Winrate Chart */}
-          <div className="xl:col-span-2 bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5">
-            <h2 className="text-lg font-bold text-white mb-6 flex items-center">
+          <div className="xl:col-span-2 bg-bg-2 border border-border rounded-xl p-5">
+            <h2 className="text-lg font-bold text-text mb-6 flex items-center">
               Winrate vs Classes
             </h2>
             <div className="h-[300px] w-full">
               {classChartData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-slate-500 text-sm">
+                <div className="h-full flex items-center justify-center text-text-mute text-sm">
                   No class matchup stats yet.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={classChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2A2A35" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis dataKey="name" stroke="#64748B" axisLine={false} tickLine={false} />
                     <YAxis stroke="#64748B" axisLine={false} tickLine={false} />
                     <Tooltip 
-                      cursor={{ fill: '#2A2A35' }}
-                      contentStyle={{ backgroundColor: '#14141A', borderColor: '#2A2A35', color: '#fff' }}
+                      cursor={{ fill: 'var(--border)' }}
+                      contentStyle={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
                     />
                     <Bar dataKey="wins" name="Wins" stackId="a" fill="#10B981" radius={[0, 0, 4, 4]} />
                     <Bar dataKey="losses" name="Losses" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
@@ -235,19 +235,19 @@ export function Stats() {
           </div>
 
           {/* Recent Matches */}
-          <div className="bg-[#1C1C24] border border-[#2A2A35] rounded-xl p-5 flex flex-col">
+          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-white">Recent Matches</h2>
-              <button className="text-orange-500 text-sm font-medium hover:text-orange-400">View All</button>
+              <h2 className="text-lg font-bold text-text">Recent Matches</h2>
+              <button className="text-accent text-sm font-medium hover:text-accent">View All</button>
             </div>
             
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-[#2A2A35]">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-border">
               {isLoading ? (
-                <div className="text-slate-500 text-sm py-8 text-center">Loading match history...</div>
+                <div className="text-text-mute text-sm py-8 text-center">Loading match history...</div>
               ) : error !== null ? (
                 <div className="text-red-400 text-sm py-8 text-center">{error}</div>
               ) : recentMatches.length === 0 ? (
-                <div className="text-slate-500 text-sm py-8 text-center">
+                <div className="text-text-mute text-sm py-8 text-center">
                   No tracked matches yet.
                 </div>
               ) : (
@@ -256,18 +256,18 @@ export function Stats() {
                   return (
                     <div
                       key={match.id}
-                      className="bg-[#14141A] rounded-lg p-3 border border-[#2A2A35] hover:border-slate-600 transition-colors flex flex-col"
+                      className="bg-bg rounded-lg p-3 border border-border hover:border-border-hi transition-colors flex flex-col"
                       data-testid={`match-row-${match.id}`}
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-slate-400">{formatRelativeDate(match.endedAt)}</span>
+                        <span className="text-xs text-text-dim">{formatRelativeDate(match.endedAt)}</span>
                         <span
                           className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                             match.result === 'win'
                               ? 'bg-green-500/20 text-green-400'
                               : match.result === 'loss'
                                 ? 'bg-red-500/20 text-red-400'
-                                : 'bg-slate-500/20 text-slate-300'
+                                : 'bg-bg-3/20 text-text'
                           }`}
                         >
                           {formatResult(match.result)}
@@ -275,18 +275,18 @@ export function Stats() {
                       </div>
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col">
-                          <span className="text-white font-medium text-sm">
+                          <span className="text-text font-medium text-sm">
                             {match.deckName ?? 'Unknown Deck'}
                           </span>
-                          <span className="text-slate-500 text-xs mt-0.5">
+                          <span className="text-text-mute text-xs mt-0.5">
                             vs {match.opponentClass ?? match.opponentName ?? 'Unknown'}
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-slate-300 text-sm font-medium">
+                          <span className="text-text text-sm font-medium">
                             {formatDuration(match.durationSeconds)}
                           </span>
-                          <div className="text-xs text-slate-500 mt-0.5">
+                          <div className="text-xs text-text-mute mt-0.5">
                             {formatPlayOrder(match.playOrder)}
                           </div>
                         </div>
@@ -295,7 +295,7 @@ export function Stats() {
                         onClick={() => setViewerRecordingId(recordingId)}
                         disabled={recordingId === null}
                         data-testid={`view-recording-${match.id}`}
-                        className="mt-2 text-xs inline-flex items-center gap-1 text-slate-400 hover:text-orange-400 disabled:opacity-40 disabled:cursor-not-allowed self-start"
+                        className="mt-2 text-xs inline-flex items-center gap-1 text-text-dim hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed self-start"
                         aria-label={t('stats.recordings.view')}
                       >
                         <Film size={12} />

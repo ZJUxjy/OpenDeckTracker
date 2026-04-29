@@ -22,8 +22,8 @@ export function FormatFilterPills({ value, onChange }: FormatFilterPillsProps): 
           aria-pressed={value === fmt}
           className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
             value === fmt
-              ? 'bg-orange-500 text-white'
-              : 'bg-[#1C1C24] text-slate-400 hover:text-white hover:bg-[#2A2A35]'
+              ? 'bg-accent text-text'
+              : 'bg-bg-2 text-text-dim hover:text-text hover:bg-bg-3'
           }`}
         >
           {t(`stats.formatFilter.${fmt}`)}
