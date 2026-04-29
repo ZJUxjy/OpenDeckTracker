@@ -1,10 +1,10 @@
 ## 1. Player-class Schema Migration
 
-- [ ] 1.1 Add failing tests in `apps/desktop/src/main/match-history-store.test.ts` covering: (a) opening a fresh DB exposes a `player_class` column; (b) opening a pre-migration DB (insert one row directly via `db.exec` without `player_class`, close, reopen via `createMatchHistoryStore`) returns the row with `player_class === null`; (c) `record(match)` with `playerClass: 'DRUID'` persists `player_class === 'DRUID'`. Run `pnpm --filter @hdt/desktop test -- match-history-store` and expect failure.
-- [ ] 1.2 Extend `match-history-store.ts` schema bootstrap to add `player_class TEXT` via `ALTER TABLE match_history ADD COLUMN IF NOT EXISTS player_class TEXT` (or equivalent — sqlite supports the simpler `ALTER TABLE ... ADD COLUMN` and we guard idempotency by reading `pragma table_info`). Update `MatchHistoryRow` interface and `INSERT` statement. Run the failing tests; expect pass.
-- [ ] 1.3 Extend `NormalizedCompletedMatch` (or pass through tracker host) with optional `playerClass?: string`. Wire the deck-tracker's match-end summary to populate it from `snapshot.deck.class` (fallback `null`). Add a `@hdt/core` test asserting `normalizeCompletedMatch` round-trips `playerClass` and a `match-recording-recorder.test.ts` test asserting the field flows from snapshot to summary.
-- [ ] 1.4 Run `pnpm --filter @hdt/core test` + `pnpm --filter @hdt/desktop test -- match-history-store` and expect all green.
-- [ ] 1.5 Commit with message `feat(stats): persist player_class on match history records`.
+- [x] 1.1 Add failing tests in `apps/desktop/src/main/match-history-store.test.ts` covering: (a) opening a fresh DB exposes a `player_class` column; (b) opening a pre-migration DB (insert one row directly via `db.exec` without `player_class`, close, reopen via `createMatchHistoryStore`) returns the row with `player_class === null`; (c) `record(match)` with `playerClass: 'DRUID'` persists `player_class === 'DRUID'`. Run `pnpm --filter @hdt/desktop test -- match-history-store` and expect failure.
+- [x] 1.2 Extend `match-history-store.ts` schema bootstrap to add `player_class TEXT` via `ALTER TABLE match_history ADD COLUMN IF NOT EXISTS player_class TEXT` (or equivalent — sqlite supports the simpler `ALTER TABLE ... ADD COLUMN` and we guard idempotency by reading `pragma table_info`). Update `MatchHistoryRow` interface and `INSERT` statement. Run the failing tests; expect pass.
+- [x] 1.3 Extend `NormalizedCompletedMatch` (or pass through tracker host) with optional `playerClass?: string`. Wire the deck-tracker's match-end summary to populate it from `snapshot.deck.class` (fallback `null`). Add a `@hdt/core` test asserting `normalizeCompletedMatch` round-trips `playerClass` and a `match-recording-recorder.test.ts` test asserting the field flows from snapshot to summary.
+- [x] 1.4 Run `pnpm --filter @hdt/core test` + `pnpm --filter @hdt/desktop test -- match-history-store` and expect all green.
+- [x] 1.5 Commit with message `feat(stats): persist player_class on match history records`.
 
 ## 2. Format Filter Aggregation
 

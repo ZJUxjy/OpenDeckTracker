@@ -21,6 +21,13 @@ export interface IdentifiedDeck {
   name: string;
   /** Snapshot of the original 30-card list, ready to consume by `computeRemaining`. */
   originalDeck: DeckSnapshot;
+  /**
+   * Hero class (e.g. `'DRUID'`, `'MAGE'`) when known. Optional because the
+   * live `Deck` shape from hearthmirror only carries `hero` (a hero card id
+   * like `'HERO_06'`); callers that want matchup-matrix attribution should
+   * resolve the class from the card database before constructing this object.
+   */
+  heroClass?: string;
 }
 
 /**

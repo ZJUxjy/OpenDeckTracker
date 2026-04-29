@@ -116,7 +116,7 @@ export class DeckTracker {
   private previousFriendlyHandSize = 0;
   private opponentRecordOrder = 0;
   private readonly opponentEntityOrders = new Map<number, number>();
-  private identifiedDeck: { id: number; name: string } | null = null;
+  private identifiedDeck: { id: number; name: string; heroClass: string | null } | null = null;
   /**
    * App-managed saved-deck attribution. Set via `selectSavedDeck` when the
    * user picks a saved deck through the renderer's `DeckSelectDialog`.
@@ -564,7 +564,11 @@ export class DeckTracker {
 
   private applyIdentifiedDeck(identified: IdentifiedDeck): void {
     this.game.localPlayer.originalDeck = identified.originalDeck;
-    this.identifiedDeck = { id: identified.deckId, name: identified.name };
+    this.identifiedDeck = {
+      id: identified.deckId,
+      name: identified.name,
+      heroClass: identified.heroClass ?? null,
+    };
   }
 
   private resetOpponentRecords(): void {
@@ -618,6 +622,7 @@ export class DeckTracker {
       playOrder: 'unknown',
       deckId: this.identifiedDeck?.id ?? null,
       deckName: this.identifiedDeck?.name ?? null,
+      playerClass: this.identifiedDeck?.heroClass ?? null,
       ...(this.savedDeckAttribution !== null
         ? {
             savedDeckId: this.savedDeckAttribution.savedDeckId,

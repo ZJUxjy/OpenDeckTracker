@@ -28,6 +28,13 @@ export interface CompletedMatchSummary extends MatchClassification {
   savedDeckVersion?: number;
   opponentName: string | null;
   opponentClass: string | null;
+  /**
+   * Player's hero class for this match (e.g. `'DRUID'`, `'MAGE'`). Sourced
+   * from the live deck-tracker snapshot's `deck.class` at match end.
+   * `null` when no deck was identified. Used by the matchup-matrix
+   * aggregation in `add-stats-analytics-deepening`.
+   */
+  playerClass?: string | null;
   source: MatchHistorySource;
 }
 

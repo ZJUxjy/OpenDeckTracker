@@ -36,6 +36,7 @@ interface MatchHistoryRow {
   opponent_class: string | null;
   game_type: number;
   format_type: number;
+  player_class: string | null;
   source: MatchHistoryRecord['source'];
 }
 
@@ -61,6 +62,7 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
           opponent_class,
           game_type,
           format_type,
+          player_class,
           source
         ) VALUES (
           @fingerprint,
@@ -75,9 +77,10 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
           @opponentClass,
           @gameType,
           @formatType,
+          @playerClass,
           @source
         )
-      `).run(match);
+      `).run({ ...match, playerClass: match.playerClass ?? null });
     },
 
     listRecent(query) {
@@ -118,6 +121,15 @@ function initializeSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_match_history_ended_at
       ON match_history (ended_at DESC);
   `);
+
+  // Idempotent additive migrations. SQLite's `ALTER TABLE ... ADD COLUMN`
+  // doesn't support `IF NOT EXISTS`; we guard via `pragma table_info`.
+  const existingCols = (db.pragma('table_info(match_history)') as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!existingCols.includes('player_class')) {
+    db.exec('ALTER TABLE match_history ADD COLUMN player_class TEXT');
+  }
 }
 
 function readAll(db: Database.Database): MatchHistoryRecord[] {
@@ -126,7 +138,7 @@ function readAll(db: Database.Database): MatchHistoryRecord[] {
 }
 
 function rowToRecord(row: MatchHistoryRow): MatchHistoryRecord {
-  return {
+  const record: MatchHistoryRecord = {
     id: row.id,
     fingerprint: row.fingerprint,
     startedAt: row.started_at,
@@ -142,4 +154,8 @@ function rowToRecord(row: MatchHistoryRow): MatchHistoryRecord {
     formatType: row.format_type,
     source: row.source,
   };
+  if (row.player_class !== undefined) {
+    record.playerClass = row.player_class;
+  }
+  return record;
 }
