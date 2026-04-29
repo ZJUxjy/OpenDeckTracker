@@ -4,6 +4,7 @@ import { useCardDef } from '../hooks/use-card-def';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
 import { clsx } from 'clsx';
 import { CardImagePopover } from './CardImagePopover';
+import { CardPips } from './CardPips';
 import { useLocale, useTranslation } from '../i18n';
 
 /**
@@ -17,7 +18,7 @@ import { useLocale, useTranslation } from '../i18n';
  *   - IN_MATCH with originalDeck    → per-copy rows with draw animations
  *   - error                          → small error banner above list
  */
-export function LiveDeckPanel() {
+export function LiveDeckPanel({ compact = false }: { compact?: boolean } = {}) {
   const { t } = useTranslation();
   const snapshot = useDeckTrackerStore((s) => s.snapshot);
 
@@ -31,7 +32,7 @@ export function LiveDeckPanel() {
     return <EmptyState message={t('deckTracker.deckNotDetected')} />;
   }
 
-  return <DeckPanelInner snapshot={snapshot} />;
+  return <DeckPanelInner snapshot={snapshot} compact={compact} />;
 }
 
 function EmptyState({ message }: { message: string }) {
@@ -53,6 +54,7 @@ function EmptyState({ message }: { message: string }) {
 
 interface DeckPanelInnerProps {
   snapshot: NonNullable<ReturnType<typeof useDeckTrackerStore.getState>['snapshot']>;
+  compact: boolean;
 }
 
 /** Sort comparator: cost ↑, name ↑, cardId ↑. Missing cost displays as 0. */
@@ -73,7 +75,25 @@ function compareDeckCopies(
   return a.cardId < b.cardId ? -1 : a.cardId > b.cardId ? 1 : a.ordinal - b.ordinal;
 }
 
-function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
+/** Sort comparator for remaining entries: cost ↑, name ↑, cardId ↑. */
+function compareRemainingEntries(
+  a: { cardId: string; count: number },
+  b: { cardId: string; count: number },
+  defs: Map<string, { name: string; cost?: number }>,
+): number {
+  const defA = defs.get(a.cardId);
+  const defB = defs.get(b.cardId);
+  const costA = defA?.cost ?? 0;
+  const costB = defB?.cost ?? 0;
+  if (costA !== costB) return costA - costB;
+  const nameA = defA?.name ?? a.cardId;
+  const nameB = defB?.name ?? b.cardId;
+  if (nameA < nameB) return -1;
+  if (nameA > nameB) return 1;
+  return a.cardId < b.cardId ? -1 : a.cardId > b.cardId ? 1 : 0;
+}
+
+function DeckPanelInner({ snapshot, compact }: DeckPanelInnerProps) {
   const { t } = useTranslation();
   const deck = snapshot.deck!;
 
@@ -102,6 +122,29 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     visible.sort((a, b) => compareDeckCopies(a, b, cardDefs));
     return visible;
   }, [deck.remaining, cardDefs]);
+
+  // Compact variant: original copy count per cardId and sorted remaining entries.
+  const originalCountMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of deck.original) m.set(e.cardId, e.count);
+    return m;
+  }, [deck.original]);
+
+  const compactEntries = useMemo(() => {
+    if (!compact) return [];
+    // Include entries from original that are no longer in remaining (count=0)
+    const remainingMap = new Map<string, number>();
+    for (const e of deck.remaining) remainingMap.set(e.cardId, e.count);
+    const allCardIds = new Set<string>();
+    for (const e of deck.original) allCardIds.add(e.cardId);
+    for (const e of deck.remaining) allCardIds.add(e.cardId);
+    const entries = [...allCardIds].map((cardId) => ({
+      cardId,
+      count: remainingMap.get(cardId) ?? 0,
+    }));
+    entries.sort((a, b) => compareRemainingEntries(a, b, cardDefs));
+    return entries;
+  }, [compact, deck.original, deck.remaining, cardDefs]);
 
   // Track exiting copy keys for draw animation.
   // IMPORTANT: compare against previous map keys so cards that drop to 0
@@ -194,34 +237,45 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
             {t('deckTracker.remaining')}
           </h3>
           <div className="space-y-1">
-            {copies.map((copy) => (
-              <CardCopyRow
-                key={copy.copyKey}
-                copyKey={copy.copyKey}
-                cardId={copy.cardId}
-                exiting={exitingCopyKeys.has(copy.copyKey)}
-                onAnimationEnd={handleAnimationEnd}
-                onMouseEnter={handleRowMouseEnter}
-                onMouseLeave={handleRowMouseLeave}
-              />
-            ))}
-            {/* Render exiting rows (with animation class, invisible to copies list) */}
-            {[...exitingCopyKeys]
-              .filter((key) => !copies.some((c) => c.copyKey === key))
-              .map((copyKey) => {
-                const cardId = copyKey.split('#')[0]!;
-                return (
+            {compact
+              ? compactEntries.map((entry) => (
+                  <CompactCardRow
+                    key={entry.cardId}
+                    cardId={entry.cardId}
+                    remaining={entry.count}
+                    max={originalCountMap.get(entry.cardId) ?? entry.count}
+                    onMouseEnter={handleRowMouseEnter}
+                    onMouseLeave={handleRowMouseLeave}
+                  />
+                ))
+              : copies.map((copy) => (
                   <CardCopyRow
-                    key={copyKey}
-                    copyKey={copyKey}
-                    cardId={cardId}
-                    exiting={true}
+                    key={copy.copyKey}
+                    copyKey={copy.copyKey}
+                    cardId={copy.cardId}
+                    exiting={exitingCopyKeys.has(copy.copyKey)}
                     onAnimationEnd={handleAnimationEnd}
                     onMouseEnter={handleRowMouseEnter}
                     onMouseLeave={handleRowMouseLeave}
                   />
-                );
-              })}
+                ))}
+            {!compact &&
+              [...exitingCopyKeys]
+                .filter((key) => !copies.some((c) => c.copyKey === key))
+                .map((copyKey) => {
+                  const cardId = copyKey.split('#')[0]!;
+                  return (
+                    <CardCopyRow
+                      key={copyKey}
+                      copyKey={copyKey}
+                      cardId={cardId}
+                      exiting={true}
+                      onAnimationEnd={handleAnimationEnd}
+                      onMouseEnter={handleRowMouseEnter}
+                      onMouseLeave={handleRowMouseLeave}
+                    />
+                  );
+                })}
           </div>
         </section>
         {deck.extras.length > 0 && (
@@ -362,6 +416,51 @@ function CardCopyRow({
           {name}
         </div>
       </div>
+    </div>
+  );
+}
+
+interface CompactCardRowProps {
+  cardId: string;
+  remaining: number;
+  max: number;
+  onMouseEnter: (cardId: string, el: HTMLDivElement) => void;
+  onMouseLeave: () => void;
+}
+
+function CompactCardRow({
+  cardId,
+  remaining,
+  max,
+  onMouseEnter,
+  onMouseLeave,
+}: CompactCardRowProps) {
+  const def = useCardDef(cardId);
+  const cost = def?.cost ?? 0;
+  const name = def?.name ?? cardId;
+  const ref = useRef<HTMLDivElement>(null);
+  const spent = remaining === 0;
+
+  return (
+    <div
+      ref={ref}
+      data-testid="card-compact-row"
+      className={clsx(
+        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-2',
+        spent ? 'opacity-40' : '',
+      )}
+      onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="w-7 h-7 rounded bg-blue-700/40 flex items-center justify-center text-blue-100 font-bold text-xs shrink-0">
+        {cost}
+      </div>
+      <div className="flex-1 min-w-0 px-2">
+        <div className="truncate font-medium text-text" title={cardId}>
+          {name}
+        </div>
+      </div>
+      <CardPips remaining={remaining} max={Math.max(max, remaining)} />
     </div>
   );
 }
