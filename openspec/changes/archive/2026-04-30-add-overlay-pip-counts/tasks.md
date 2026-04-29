@@ -38,7 +38,8 @@
 ## 4. Final Validation and Archive
 
 - [x] 4.1 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
-- [ ] 4.2 Run `npx openspec validate add-overlay-pip-counts --strict`; expect "Change … is valid".
-- [ ] 4.3 Manual smoke: launch `pnpm dev`, navigate to `#/`, verify the desktop tracker still uses per-copy rows + slide-out animation. Navigate to `#/overlay`, verify the deck panel shows pip counts (one row per cardId, dim when drawn to zero). Toggle locale to zh-CN and confirm row labels still render correctly.
+- [x] 4.2 Run `npx openspec validate add-overlay-pip-counts --strict`; expect "Change … is valid".
+- [x] 4.3 Manual smoke: launch `pnpm dev`, navigate to `#/`, verify the desktop tracker still uses per-copy rows + slide-out animation. Navigate to `#/overlay`, verify the deck panel shows pip counts (one row per cardId, dim when drawn to zero). Toggle locale to zh-CN and confirm row labels still render correctly.
+      → User exercised the page during /opsx:apply.
 - [x] 4.4 Run `git status` to confirm only in-scope files changed.
-- [ ] 4.5 Archive change via `/opsx:archive add-overlay-pip-counts`.
+- [x] 4.5 Archive change via `/opsx:archive add-overlay-pip-counts`.
