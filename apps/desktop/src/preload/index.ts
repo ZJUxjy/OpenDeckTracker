@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
-import type { SetProgress } from '@hdt/core';
+import type { PopularDeckEnriched, SetProgress } from '@hdt/core';
 import type {
   CreateDeckInput,
   DeckTrackerEvent,
@@ -184,6 +184,9 @@ const api = {
       ipcRenderer.invoke('overlay:set-enabled', enabled),
     setEnabledOpponent: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke('overlay:set-enabled-opponent', enabled),
+  },
+  popularDecks: {
+    list: (): Promise<PopularDeckEnriched[]> => ipcRenderer.invoke('popular-decks:list'),
   },
 };
 

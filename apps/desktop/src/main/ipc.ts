@@ -23,6 +23,7 @@ import { createDeckStore } from './deck-store';
 import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
+import { registerPopularDecksIpc } from './popular-decks-ipc';
 export interface OverlayControllers {
   enablePlayerOverlay: () => void;
   disablePlayerOverlay: () => void;
@@ -150,6 +151,12 @@ export function registerIpc(overlay?: OverlayControllers): void {
   registerMatchRecordingsIpc();
   registerStatsIpc();
 
+  // Popular decks (Deck Finder data source). The handler reads from a
+  // module-level lazy reference to the active CardDb so it can serve
+  // requests both before and after the CardDb finishes loading.
+  let popularDecksCardDb: import('@hdt/hearthdb').CardDb | null = null;
+  registerPopularDecksIpc(() => popularDecksCardDb);
+
   // Saved deck management (deck CRUD + deckstring import/export).
   const deckStore = createDeckStore(join(app.getPath('userData'), 'decks.db'));
   registerDeckIpc({
@@ -172,6 +179,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
       cardDb: db,
       getCollection: () => hm().getCollection(),
     });
+    popularDecksCardDb = db;
   });
 }
 
