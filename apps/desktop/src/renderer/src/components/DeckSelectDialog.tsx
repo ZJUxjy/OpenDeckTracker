@@ -38,26 +38,30 @@ export function DeckSelectDialog() {
     }
   }, []);
 
-  // Pre-select last-used live deck if available in this set; otherwise first
-  // saved deck (if any), otherwise first live deck.
+  // Pre-select default ONLY on first open or when nothing is chosen yet.
+  // After the user clicks, `chosen` becomes non-null and subsequent runs of
+  // this effect (which fire every snapshot tick — the store re-emits
+  // `pendingSelection` as a fresh reference each poll) short-circuit
+  // without clobbering the user's selection. Reset everything when the
+  // dialog closes (`pendingSelection` becomes null).
   useEffect(() => {
     if (!pendingSelection) {
       setChosen(null);
       return;
     }
-    if (lastPickedId !== null && pendingSelection.decks.some((d) => d.id === lastPickedId)) {
-      setChosen({ kind: 'live', id: lastPickedId });
-      return;
-    }
-    if (savedDecks.length > 0 && savedDecks[0]) {
-      setChosen({ kind: 'saved', id: savedDecks[0].id, version: savedDecks[0].version });
-      return;
-    }
-    if (pendingSelection.decks[0]) {
-      setChosen({ kind: 'live', id: pendingSelection.decks[0].id });
-      return;
-    }
-    setChosen(null);
+    setChosen((prev) => {
+      if (prev !== null) return prev;
+      if (lastPickedId !== null && pendingSelection.decks.some((d) => d.id === lastPickedId)) {
+        return { kind: 'live', id: lastPickedId };
+      }
+      if (savedDecks.length > 0 && savedDecks[0]) {
+        return { kind: 'saved', id: savedDecks[0].id, version: savedDecks[0].version };
+      }
+      if (pendingSelection.decks[0]) {
+        return { kind: 'live', id: pendingSelection.decks[0].id };
+      }
+      return null;
+    });
   }, [pendingSelection, lastPickedId, savedDecks]);
 
   if (!pendingSelection) return null;

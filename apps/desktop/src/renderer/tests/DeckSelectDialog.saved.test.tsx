@@ -93,6 +93,51 @@ describe('DeckSelectDialog with saved decks', () => {
     expect(selectDeck).not.toHaveBeenCalled();
   });
 
+  it("user's click is sticky across snapshot re-emits (regression: pre-selection clobber)", async () => {
+    const selectSavedDeck = vi.fn().mockResolvedValue(undefined);
+    const selectDeck = vi.fn().mockResolvedValue(undefined);
+    (window as { hdt: typeof window.hdt }).hdt = {
+      ...saved,
+      deckTracker: { ...saved.deckTracker, selectSavedDeck, selectDeck },
+    };
+
+    await act(async () => {
+      renderDialog();
+    });
+
+    // User clicks the live deck (overriding the default first-saved-deck pre-selection).
+    fireEvent.click(screen.getByTestId('live-deck-row-1001'));
+
+    // Simulate the deck-tracker store pushing a fresh-reference pendingSelection
+    // (which happens every poll tick — 500 ms).
+    act(() => {
+      useDeckTrackerStore.setState({
+        snapshot: null,
+        pendingSelection: {
+          decks: [
+            { id: 1001, name: 'Live Mage', hero: 'HERO_08' },
+            { id: 1002, name: 'Live Hunter', hero: 'HERO_05' },
+          ],
+        },
+        dialogDismissed: false,
+        setSnapshot: () => undefined,
+        applyEvent: () => undefined,
+        clearPendingSelection: () => undefined,
+        markDialogDismissed: () => undefined,
+      });
+    });
+
+    // Confirm — the user's chosen live deck should be forwarded, not the
+    // saved deck that was the initial default.
+    await act(async () => {
+      fireEvent.click(screen.getByText('Confirm Selection'));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(selectDeck).toHaveBeenCalledWith(1001));
+    expect(selectSavedDeck).not.toHaveBeenCalled();
+  });
+
   it('clicking a live deck and confirming preserves the legacy selectDeck call', async () => {
     const selectSavedDeck = vi.fn().mockResolvedValue(undefined);
     const selectDeck = vi.fn().mockResolvedValue(undefined);
