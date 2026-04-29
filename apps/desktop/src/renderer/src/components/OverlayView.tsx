@@ -14,7 +14,7 @@ export function OverlayView() {
         />
       </div>
       <div className="absolute top-10 right-10 h-[calc(100%-5rem)] pointer-events-auto">
-        <LiveDeckPanel />
+        <LiveDeckPanel compact />
       </div>
     </div>
   );
