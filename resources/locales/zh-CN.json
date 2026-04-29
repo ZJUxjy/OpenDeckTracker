@@ -128,7 +128,23 @@
     "secretsHelper": "奥秘助手",
     "secretsHelperDescription": "对手打出奥秘时显示可能的奥秘",
     "underConstruction": "功能建设中",
-    "underConstructionDescription": "这些设置会在后续更新中提供。请稍后再查看。"
+    "underConstructionDescription": "这些设置会在后续更新中提供。请稍后再查看。",
+    "appearance": {
+      "categoryLabel": "外观",
+      "density": {
+        "title": "密度",
+        "description": "控制界面的紧凑程度。",
+        "comfortable": "舒适",
+        "compact": "紧凑"
+      },
+      "accent": {
+        "title": "主题色",
+        "description": "选择高亮使用的主题色。",
+        "cyan": "青色",
+        "teal": "蓝绿色",
+        "violet": "紫色"
+      }
+    }
   },
   "deckTracker": {
     "deck": "卡组",

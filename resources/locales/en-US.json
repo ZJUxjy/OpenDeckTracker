@@ -128,7 +128,23 @@
     "secretsHelper": "Secrets Helper",
     "secretsHelperDescription": "Display possible secrets when opponent plays one",
     "underConstruction": "Section Under Construction",
-    "underConstructionDescription": "These settings will be available in the next update. Please check back later."
+    "underConstructionDescription": "These settings will be available in the next update. Please check back later.",
+    "appearance": {
+      "categoryLabel": "Appearance",
+      "density": {
+        "title": "Density",
+        "description": "Control the compactness of the UI.",
+        "comfortable": "Comfortable",
+        "compact": "Compact"
+      },
+      "accent": {
+        "title": "Accent",
+        "description": "Choose the accent color for highlights.",
+        "cyan": "Cyan",
+        "teal": "Teal",
+        "violet": "Violet"
+      }
+    }
   },
   "deckTracker": {
     "deck": "Deck",

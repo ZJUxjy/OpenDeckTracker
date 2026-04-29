@@ -1,10 +1,12 @@
 ﻿import { useState } from 'react';
-import { Monitor, Bell, HardDrive, Gamepad2, Volume2, Shield } from 'lucide-react';
+import { Monitor, Bell, HardDrive, Gamepad2, Volume2, Shield, Palette } from 'lucide-react';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
+import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density } from '../stores/appearance-store';
 
 const categories = [
   { id: 'general', labelKey: 'settings.general', icon: Shield },
+  { id: 'appearance', labelKey: 'settings.appearance.categoryLabel', icon: Palette },
   { id: 'tracker', labelKey: 'settings.tracker', icon: Gamepad2 },
   { id: 'overlay', labelKey: 'settings.overlay', icon: Monitor },
   { id: 'notifications', labelKey: 'settings.notifications', icon: Bell },
@@ -16,6 +18,10 @@ export function Settings() {
   const { t } = useTranslation();
   const languagePreference = useI18nStore((state) => state.languagePreference);
   const setLanguagePreference = useI18nStore((state) => state.setLanguagePreference);
+  const density = useAppearanceStore((state) => state.density);
+  const accent = useAppearanceStore((state) => state.accent);
+  const setDensity = useAppearanceStore((state) => state.setDensity);
+  const setAccent = useAppearanceStore((state) => state.setAccent);
   const [activeCategory, setActiveCategory] = useState('general');
   const [settings, setSettings] = useState({
     autoStart: true,
@@ -82,7 +88,57 @@ export function Settings() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                    <div>
+                      <h3 className="text-text font-medium">{t('settings.autoStart')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.autoStartDescription')}</p>
+                    </div>
+                    <button 
+                      onClick={() => toggleSetting('autoStart')}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.autoStart ? 'bg-accent' : 'bg-bg-3'}`}
+                    >
+                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.autoStart ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                    <div>
+                      <h3 className="text-text font-medium">{t('settings.minimizeToTray')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.minimizeToTrayDescription')}</p>
+                    </div>
+                    <button 
+                      onClick={() => toggleSetting('minimizeToTray')}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.minimizeToTray ? 'bg-accent' : 'bg-bg-3'}`}
+                    >
+                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.minimizeToTray ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                    <div>
+                      <h3 className="text-text font-medium">{t('settings.hardwareAcceleration')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.hardwareAccelerationDescription')}</p>
+                    </div>
+                    <button 
+                      onClick={() => toggleSetting('hardwareAcceleration')}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.hardwareAcceleration ? 'bg-accent' : 'bg-bg-3'}`}
+                    >
+                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.hardwareAcceleration ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeCategory === 'appearance' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="border-b border-border pb-4 mb-6">
+                  <h2 className="text-xl font-bold text-text">{t('settings.appearance.categoryLabel')}</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Language */}
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.language')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.languageDescription')}</p>
@@ -105,43 +161,56 @@ export function Settings() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                  {/* Density */}
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
                     <div>
-                      <h3 className="text-text font-medium">{t('settings.autoStart')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.autoStartDescription')}</p>
+                      <h3 className="text-text font-medium">{t('settings.appearance.density.title')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.density.description')}</p>
                     </div>
-                    <button 
-                      onClick={() => toggleSetting('autoStart')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.autoStart ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.autoStart ? 'left-7' : 'left-1'}`} />
-                    </button>
+                    <div className="flex rounded-md border border-border bg-bg-2 p-1">
+                      {(['comfortable', 'compact'] as Density[]).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setDensity(opt)}
+                          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                            density === opt
+                              ? 'bg-accent text-bg'
+                              : 'text-text-dim hover:text-text'
+                          }`}
+                        >
+                          {t(`settings.appearance.density.${opt}`)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                  {/* Accent */}
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
                     <div>
-                      <h3 className="text-text font-medium">{t('settings.minimizeToTray')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.minimizeToTrayDescription')}</p>
+                      <h3 className="text-text font-medium">{t('settings.appearance.accent.title')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.accent.description')}</p>
                     </div>
-                    <button 
-                      onClick={() => toggleSetting('minimizeToTray')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.minimizeToTray ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.minimizeToTray ? 'left-7' : 'left-1'}`} />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
-                    <div>
-                      <h3 className="text-text font-medium">{t('settings.hardwareAcceleration')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.hardwareAccelerationDescription')}</p>
+                    <div className="flex gap-2">
+                      {(['cyan', 'teal', 'violet'] as Accent[]).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setAccent(opt)}
+                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                            accent === opt
+                              ? 'border-text ring-2 ring-text/30'
+                              : 'border-border hover:border-border-hi'
+                          }`}
+                          style={{ backgroundColor: ACCENT_PALETTE[opt].accent }}
+                          aria-label={t(`settings.appearance.accent.${opt}`)}
+                        >
+                          {accent === opt && (
+                            <span className="flex items-center justify-center w-full h-full text-bg text-xs font-bold">&#10003;</span>
+                          )}
+                        </button>
+                      ))}
                     </div>
-                    <button 
-                      onClick={() => toggleSetting('hardwareAcceleration')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.hardwareAcceleration ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.hardwareAcceleration ? 'left-7' : 'left-1'}`} />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -155,7 +224,7 @@ export function Settings() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.showPlayerTracker')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.showPlayerTrackerDescription')}</p>
@@ -168,7 +237,7 @@ export function Settings() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.showOpponentTracker')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.showOpponentTrackerDescription')}</p>
@@ -181,7 +250,7 @@ export function Settings() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.secretsHelper')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.secretsHelperDescription')}</p>

@@ -135,7 +135,7 @@ export function Stats() {
         
         {/* Top Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-accent group-hover:opacity-10 transition-opacity">
               <Trophy size={100} />
             </div>
@@ -146,7 +146,7 @@ export function Stats() {
             </div>
           </div>
 
-          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
@@ -155,7 +155,7 @@ export function Stats() {
             <div className="text-sm mt-2 text-text-dim">{t('stats.kpi.matchesPlayedSubtitle')}</div>
           </div>
 
-          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
@@ -168,7 +168,7 @@ export function Stats() {
             </div>
           </div>
 
-          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red group-hover:opacity-10 transition-opacity">
               <Target size={100} />
             </div>
@@ -260,7 +260,7 @@ export function Stats() {
                   return (
                     <div
                       key={match.id}
-                      className="bg-bg rounded-lg p-3 border border-border hover:border-border-hi transition-colors flex flex-col"
+                      className="recent-match-row bg-bg rounded-lg p-3 border border-border hover:border-border-hi transition-colors flex flex-col"
                       data-testid={`match-row-${match.id}`}
                     >
                       <div className="flex justify-between items-center mb-2">

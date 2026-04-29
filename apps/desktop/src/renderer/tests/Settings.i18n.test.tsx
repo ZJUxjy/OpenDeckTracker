@@ -20,10 +20,13 @@ describe('Settings i18n', () => {
       </I18nProvider>,
     );
 
+    // Navigate to Appearance section where the language picker now lives
+    await user.click(screen.getByText('Appearance'));
+
     await user.click(screen.getByRole('button', { name: 'Simplified Chinese' }));
 
     expect(localStorage.getItem(LANGUAGE_PREFERENCE_STORAGE_KEY)).toBe('zh-CN');
     expect(screen.getByText('设置')).toBeInTheDocument();
-    expect(screen.getByText('应用行为')).toBeInTheDocument();
+    expect(screen.getByText('通用')).toBeInTheDocument();
   });
 });
