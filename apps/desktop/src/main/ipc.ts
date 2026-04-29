@@ -23,7 +23,12 @@ import { createDeckStore } from './deck-store';
 import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
-import type { OverlayManager } from './overlay-window';
+export interface OverlayControllers {
+  enablePlayerOverlay: () => void;
+  disablePlayerOverlay: () => void;
+  enableOpponentOverlay: () => void;
+  disableOpponentOverlay: () => void;
+}
 
 let cardImageProtocolRegistered = false;
 
@@ -31,16 +36,17 @@ function toHearthstoneLocale(appLocale?: string): 'enUS' | 'zhCN' {
   return appLocale === 'zh-CN' ? 'zhCN' : 'enUS';
 }
 
-export function registerIpc(overlayManager?: OverlayManager): void {
+export function registerIpc(overlay?: OverlayControllers): void {
   ipcMain.handle('app:getVersion', () => app.getVersion());
 
-  if (overlayManager) {
+  if (overlay) {
     ipcMain.handle('overlay:set-enabled', (_, enabled: boolean) => {
-      if (enabled) {
-        overlayManager.enable();
-      } else {
-        overlayManager.disable();
-      }
+      if (enabled) overlay.enablePlayerOverlay();
+      else overlay.disablePlayerOverlay();
+    });
+    ipcMain.handle('overlay:set-enabled-opponent', (_, enabled: boolean) => {
+      if (enabled) overlay.enableOpponentOverlay();
+      else overlay.disableOpponentOverlay();
     });
   }
   const cardImageRoot = defaultCardImageCacheRoot(app.getPath('userData'));

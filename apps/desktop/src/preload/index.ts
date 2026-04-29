@@ -182,6 +182,8 @@ const api = {
   overlay: {
     setEnabled: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke('overlay:set-enabled', enabled),
+    setEnabledOpponent: (enabled: boolean): Promise<void> =>
+      ipcRenderer.invoke('overlay:set-enabled-opponent', enabled),
   },
 };
 
