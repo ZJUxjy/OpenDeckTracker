@@ -1,100 +1,60 @@
-import { useEffect, useState, type ReactElement } from 'react';
-import type { DeckDetail } from '@hdt/core';
+import { useState, type ReactElement } from 'react';
+import * as Tabs from '@radix-ui/react-tabs';
 
-import { DeckEditor } from './DeckEditor';
-import { DeckExportDialog } from './DeckExportDialog';
-import { DeckImportDialog } from './DeckImportDialog';
-import { SavedDecksList } from './Decklist';
-import { useDecksStore } from '../stores/decks-store';
+import { useTranslation } from '../i18n';
+import { SavedDecksTab } from './SavedDecksTab';
+import { DeckFinderTab } from './DeckFinderTab';
+
+type ActiveTab = 'saved' | 'finder';
 
 /**
- * Container for the `/decks` route. Owns the open/close state of the
- * editor / import / export dialogs and wires `SavedDecksList`'s callbacks
- * to them. Without this layer, the list's row actions and empty-state
- * CTAs are no-ops (each component is self-contained but they don't know
- * about each other).
+ * Container for the `/decks` route. Hosts a Saved / Finder tab strip per
+ * the OpenDeckTracker UI v2 design. The Saved tab keeps the existing
+ * deck-management surface; the Finder tab is the popular-deck browser.
  */
 export function DecksPage(): ReactElement {
-  const refresh = useDecksStore((s) => s.refresh);
-  const [editingDeck, setEditingDeck] = useState<DeckDetail | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
-  const [exportingDeckId, setExportingDeckId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { t } = useTranslation();
+  const [active, setActive] = useState<ActiveTab>('saved');
+  const [openEditorForDeckId, setOpenEditorForDeckId] = useState<string | null>(null);
 
-  const onCreate = async (): Promise<void> => {
-    if (busy) return;
-    setBusy(true);
-    try {
-      const created = await window.hdt.decks.create({
-        name: '',
-        class: 'DRUID',
-        format: 'Standard',
-      });
-      await refresh();
-      setEditingDeck(created);
-    } finally {
-      setBusy(false);
-    }
+  const onImportedFromFinder = (deckId: string): void => {
+    setOpenEditorForDeckId(deckId);
+    setActive('saved');
   };
-
-  const onImport = (): void => setImportOpen(true);
-
-  const onEdit = async (id: string): Promise<void> => {
-    const detail = await window.hdt.decks.getById(id);
-    if (detail !== null) setEditingDeck(detail);
-  };
-
-  const onExport = (id: string): void => setExportingDeckId(id);
-
-  // Save handler for the editor: forward the patch to IPC and refresh.
-  const onEditorSave = async (id: string, patch: unknown): Promise<void> => {
-    await window.hdt.decks.update(id, patch as Parameters<typeof window.hdt.decks.update>[1]);
-    await refresh();
-  };
-
-  // Refresh the list when the editor closes so the row reflects the latest
-  // version / card count / name.
-  useEffect(() => {
-    if (editingDeck === null) {
-      void refresh();
-    }
-  }, [editingDeck, refresh]);
 
   return (
-    <div className="flex-1 h-full overflow-hidden">
-      <SavedDecksList
-        onCreate={() => {
-          void onCreate();
-        }}
-        onImport={onImport}
-        onEdit={(id) => {
-          void onEdit(id);
-        }}
-        onExport={onExport}
-      />
+    <Tabs.Root
+      value={active}
+      onValueChange={(v) => setActive(v as ActiveTab)}
+      className="flex-1 flex flex-col h-full overflow-hidden"
+    >
+      <Tabs.List
+        aria-label={t('decks.tabs.ariaLabel')}
+        className="flex shrink-0 border-b border-border bg-bg px-6"
+      >
+        <Tabs.Trigger
+          value="saved"
+          className="px-4 py-3 text-sm font-medium text-text-dim data-[state=active]:text-accent data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text transition-colors"
+        >
+          {t('decks.tabs.saved')}
+        </Tabs.Trigger>
+        <Tabs.Trigger
+          value="finder"
+          className="px-4 py-3 text-sm font-medium text-text-dim data-[state=active]:text-accent data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text transition-colors"
+        >
+          {t('decks.tabs.finder')}
+        </Tabs.Trigger>
+      </Tabs.List>
 
-      {editingDeck !== null && (
-        <DeckEditor
-          open
-          onOpenChange={(next) => {
-            if (!next) setEditingDeck(null);
-          }}
-          deck={editingDeck}
-          onSave={onEditorSave}
+      <Tabs.Content value="saved" className="flex-1 overflow-hidden focus:outline-none">
+        <SavedDecksTab
+          openEditorForDeckId={openEditorForDeckId}
+          onEditorOpened={() => setOpenEditorForDeckId(null)}
         />
-      )}
-
-      <DeckImportDialog open={importOpen} onOpenChange={setImportOpen} />
-
-      {exportingDeckId !== null && (
-        <DeckExportDialog
-          open
-          onOpenChange={(next) => {
-            if (!next) setExportingDeckId(null);
-          }}
-          deckId={exportingDeckId}
-        />
-      )}
-    </div>
+      </Tabs.Content>
+      <Tabs.Content value="finder" className="flex-1 overflow-hidden focus:outline-none">
+        <DeckFinderTab onImported={onImportedFromFinder} />
+      </Tabs.Content>
+    </Tabs.Root>
   );
 }
