@@ -57,40 +57,32 @@ interface DeckPanelInnerProps {
   compact: boolean;
 }
 
-/** Sort comparator: cost ↑, name ↑, cardId ↑. Missing cost displays as 0. */
+/** Compare two cardIds by (cost ↑, name ↑, cardId ↑). Returns 0 on full tie. */
+function compareByCardDef(
+  aCardId: string,
+  bCardId: string,
+  defs: Map<string, { name: string; cost?: number }>,
+): number {
+  const defA = defs.get(aCardId);
+  const defB = defs.get(bCardId);
+  const costA = defA?.cost ?? 0;
+  const costB = defB?.cost ?? 0;
+  if (costA !== costB) return costA - costB;
+  const nameA = defA?.name ?? aCardId;
+  const nameB = defB?.name ?? bCardId;
+  if (nameA < nameB) return -1;
+  if (nameA > nameB) return 1;
+  return aCardId < bCardId ? -1 : aCardId > bCardId ? 1 : 0;
+}
+
+/** Sort comparator: cost ↑, name ↑, cardId ↑, ordinal ↑ (stable per-copy ordering). */
 function compareDeckCopies(
   a: DeckCopy,
   b: DeckCopy,
   defs: Map<string, { name: string; cost?: number }>,
 ): number {
-  const defA = defs.get(a.cardId);
-  const defB = defs.get(b.cardId);
-  const costA = defA?.cost ?? 0;
-  const costB = defB?.cost ?? 0;
-  if (costA !== costB) return costA - costB;
-  const nameA = defA?.name ?? a.cardId;
-  const nameB = defB?.name ?? b.cardId;
-  if (nameA < nameB) return -1;
-  if (nameA > nameB) return 1;
-  return a.cardId < b.cardId ? -1 : a.cardId > b.cardId ? 1 : a.ordinal - b.ordinal;
-}
-
-/** Sort comparator for remaining entries: cost ↑, name ↑, cardId ↑. */
-function compareRemainingEntries(
-  a: { cardId: string; count: number },
-  b: { cardId: string; count: number },
-  defs: Map<string, { name: string; cost?: number }>,
-): number {
-  const defA = defs.get(a.cardId);
-  const defB = defs.get(b.cardId);
-  const costA = defA?.cost ?? 0;
-  const costB = defB?.cost ?? 0;
-  if (costA !== costB) return costA - costB;
-  const nameA = defA?.name ?? a.cardId;
-  const nameB = defB?.name ?? b.cardId;
-  if (nameA < nameB) return -1;
-  if (nameA > nameB) return 1;
-  return a.cardId < b.cardId ? -1 : a.cardId > b.cardId ? 1 : 0;
+  const cmp = compareByCardDef(a.cardId, b.cardId, defs);
+  return cmp !== 0 ? cmp : a.ordinal - b.ordinal;
 }
 
 function DeckPanelInner({ snapshot, compact }: DeckPanelInnerProps) {
@@ -142,7 +134,7 @@ function DeckPanelInner({ snapshot, compact }: DeckPanelInnerProps) {
       cardId,
       count: remainingMap.get(cardId) ?? 0,
     }));
-    entries.sort((a, b) => compareRemainingEntries(a, b, cardDefs));
+    entries.sort((a, b) => compareByCardDef(a.cardId, b.cardId, cardDefs));
     return entries;
   }, [compact, deck.original, deck.remaining, cardDefs]);
 
@@ -243,7 +235,7 @@ function DeckPanelInner({ snapshot, compact }: DeckPanelInnerProps) {
                     key={entry.cardId}
                     cardId={entry.cardId}
                     remaining={entry.count}
-                    max={originalCountMap.get(entry.cardId) ?? entry.count}
+                    max={Math.max(originalCountMap.get(entry.cardId) ?? 0, entry.count)}
                     onMouseEnter={handleRowMouseEnter}
                     onMouseLeave={handleRowMouseLeave}
                   />
@@ -460,7 +452,7 @@ function CompactCardRow({
           {name}
         </div>
       </div>
-      <CardPips remaining={remaining} max={Math.max(max, remaining)} />
+      <CardPips remaining={remaining} max={max} />
     </div>
   );
 }
