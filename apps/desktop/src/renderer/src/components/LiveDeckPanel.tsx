@@ -225,7 +225,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
           </div>
         </section>
         {deck.extras.length > 0 && (
-          <div className="mt-3 px-2 py-1 text-xs text-blue-300/80 border-t border-border pt-2">
+          <div className="mt-3 px-2 py-1 text-xs text-text-dim border-t border-border pt-2">
             {t('deckTracker.extraCards', {
               count: deck.extras.reduce((s, c) => s + c.count, 0),
             })}

@@ -81,6 +81,9 @@ describe('Stats', () => {
 
     expect(await screen.findAllByText('Recorded Real Deck')).toHaveLength(2);
     expect(screen.getByText(/vs Mage/i)).toBeInTheDocument();
-    expect(screen.getByText('100%')).toBeInTheDocument();
+    // "100%" appears in both the Overall Winrate KPI and the Best Deck card
+    // after Section 6 wraps each numeric in its own font-mono span; assert
+    // at least one match instead of pinning to a single occurrence.
+    expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1);
   });
 });

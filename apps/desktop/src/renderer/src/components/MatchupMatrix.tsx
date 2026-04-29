@@ -13,8 +13,8 @@ function cellColor(winrate: number | null): string {
   if (winrate === null) return 'bg-bg-2 text-text-mute';
   if (winrate >= 60) return 'bg-green/30 text-green';
   if (winrate >= 50) return 'bg-green/15 text-green';
-  if (winrate >= 40) return 'bg-red-500/15 text-red-300';
-  return 'bg-red-500/30 text-red-200';
+  if (winrate >= 40) return 'bg-red/15 text-red';
+  return 'bg-red/30 text-red';
 }
 
 export function MatchupMatrix({ matrix }: MatchupMatrixProps): ReactElement {

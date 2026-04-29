@@ -152,7 +152,7 @@ function DeckRow({
               <AlertDialog.Action asChild>
                 <button
                   onClick={() => onDelete(deck.id)}
-                  className="px-4 py-2 rounded text-sm bg-red-500 hover:bg-red-600 text-text"
+                  className="px-4 py-2 rounded text-sm bg-red hover:bg-red/90 text-bg"
                 >
                   {t('decks.list.row.deleteConfirm.confirm')}
                 </button>

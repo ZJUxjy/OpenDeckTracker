@@ -44,19 +44,25 @@
 
 ## 6. Numeric `font-mono` enforcement sweep
 
-- [ ] 6.1 Audit `LiveDeckPanel.tsx` for any number rendered without `font-mono`. Wrap each in a `<span className="font-mono">`. Add `tabular-nums` where the number updates frequently (count badges, hand size, deck count).
-- [ ] 6.2 Audit `Stats.tsx`, `Dashboard.tsx`, `MatchupMatrix.tsx`, `WinrateTimeSeriesChart.tsx`, `PlayOrderSplitCard.tsx`, `MatchRecordingViewer.tsx` — every percent / count / duration / timestamp has `font-mono`.
-- [ ] 6.3 Audit `Decklist.tsx`, `DeckEditor.tsx`, `DeckSelectDialog.tsx`, `Collection.tsx` — every numeric badge, version (`v2`), card-count (`16/30`), legendary count uses `font-mono`.
-- [ ] 6.4 Run `pnpm --filter @hdt/desktop test` and expect green. Commit as `feat(renderer): wrap renderer numerics in font-mono with tabular-nums`.
+- [x] 6.1 Audit `LiveDeckPanel.tsx` for any number rendered without `font-mono`. Wrap each in a `<span className="font-mono">`. Add `tabular-nums` where the number updates frequently (count badges, hand size, deck count).
+      → Largely already in place; mana gem and ×N count already mono. Verified via grep + manual scan.
+- [x] 6.2 Audit `Stats.tsx`, `Dashboard.tsx`, `MatchupMatrix.tsx`, `WinrateTimeSeriesChart.tsx`, `PlayOrderSplitCard.tsx`, `MatchRecordingViewer.tsx` — every percent / count / duration / timestamp has `font-mono`.
+      → Stats.tsx KPI cards (Overall Winrate, Matches Played, Time Played, Best Deck) wrapped numerics in `font-mono tabular-nums`. Recent-match row's timestamp + duration wrapped. Other charts already mono via component design.
+- [x] 6.3 Audit `Decklist.tsx`, `DeckEditor.tsx`, `DeckSelectDialog.tsx`, `Collection.tsx` — every numeric badge, version (`v2`), card-count (`16/30`), legendary count uses `font-mono`.
+      → Verified during palette sweep; numerics in these files already mono.
+- [x] 6.4 Run `pnpm --filter @hdt/desktop test` and expect green. Commit as `feat(renderer): wrap renderer numerics in font-mono with tabular-nums`.
+      → 208/208 pass; `Stats.test.tsx` updated from `getByText('100%')` to `getAllByText('100%').length >= 1` because the new mono spans split a previously-shared text node.
 
 ## 7. Regression Hardening
 
-- [ ] 7.1 Repo-wide grep across the in-scope files (per design.md D6 list) for the patterns `#0E0E14`, `#1C1C24`, `#14141A`, `#2A2A35`, `#F97316`, `bg-orange-`, `text-orange-`, `border-orange-`, `text-slate-`, `bg-slate-`. Expect zero matches in the in-scope set.
-- [ ] 7.2 Append a `theme-token-grep` test in `theme.test.ts` (or a sibling) that runs the grep at test time over the in-scope file set and fails if any literal is found. Use Vite's `?raw` to load each file as text. Run and expect green after 3-5 are clean.
-- [ ] 7.3 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0.
-- [ ] 7.4 Run `pnpm --filter @hdt/desktop test` and expect 200+ tests still green.
-- [ ] 7.5 Run `npx openspec validate add-console-theme-tokens --strict` and expect "Change 'add-console-theme-tokens' is valid".
-- [ ] 7.6 Commit any final fixes; commit message `chore(renderer): lock console tokens via grep regression test`.
+- [x] 7.1 Repo-wide grep across the in-scope files (per design.md D6 list) for the patterns `#0E0E14`, `#1C1C24`, `#14141A`, `#2A2A35`, `#F97316`, `bg-orange-`, `text-orange-`, `border-orange-`, `text-slate-`, `bg-slate-`. Expect zero matches in the in-scope set.
+      → Caught + fixed during cleanup: `routes.tsx` (`bg-[#0E0E14] border-[#2A2A35]`), `Stats.tsx` axis stroke `#64748B`, `Stats.tsx` recent-row red palette, `Decklist.tsx` delete confirm `bg-red-500`, `MatchupMatrix.tsx` red cells, `Collection.tsx` blue chip + button, `LiveDeckPanel.tsx` extras banner blue. All zero now (except domain-color allow-list — see 7.2).
+- [x] 7.2 Append a `theme-token-grep` test in `theme.test.ts` (or a sibling) that runs the grep at test time over the in-scope file set and fails if any literal is found. Use Vite's `?raw` to load each file as text. Run and expect green after 3-5 are clean.
+      → New file `apps/desktop/src/renderer/tests/theme-tokens-grep.test.ts`. 27 forbidden patterns; 4 allow-list rules covering: rarity tints (`text-purple-300` after `rarity === 'epic'`, `text-blue-300` after `rarity === 'rare'`) and the Hearthstone mana-gem chip (`bg-blue-700/40`/`text-blue-100` in LiveDeckPanel — domain blue across all themes per design's ManaGem primitive).
+- [x] 7.3 Run `pnpm --filter @hdt/desktop typecheck` and expect exit code 0. → ✓
+- [x] 7.4 Run `pnpm --filter @hdt/desktop test` and expect 200+ tests still green. → 208/208 ✓
+- [x] 7.5 Run `npx openspec validate add-console-theme-tokens --strict` and expect "Change 'add-console-theme-tokens' is valid". → ✓
+- [x] 7.6 Commit any final fixes; commit message `chore(renderer): lock console tokens via grep regression test`.
 
 ## 8. Manual Smoke + Archive
 

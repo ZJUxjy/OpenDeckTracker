@@ -188,13 +188,13 @@ export function Collection() {
 
             {/* Duplicate & Extra Section */}
             <div className="bg-bg-2 border border-border rounded-xl p-5 flex items-start space-x-4 shadow-sm">
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-10 h-10 rounded-full bg-accent-dim border border-accent/30 flex items-center justify-center shrink-0 mt-0.5">
                 <AlertCircle size={20} className="text-text-dim" />
               </div>
               <div className="flex-1">
                 <h3 className="text-text font-bold text-lg mb-1">Mass Disenchant Available</h3>
                 <p className="text-text-dim text-sm mb-3">You have 124 duplicate cards that can be safely disenchanted.</p>
-                <button className="bg-blue-600 hover:bg-blue-500 text-text font-bold py-2 px-4 rounded-lg shadow-md transition-colors text-sm flex items-center">
+                <button className="bg-accent hover:bg-accent/90 text-bg font-bold py-2 px-4 rounded-lg shadow-md transition-colors text-sm flex items-center">
                   <Sparkles size={16} className="mr-2" />
                   Disenchant Extra Cards (+3,420 Dust)
                 </button>

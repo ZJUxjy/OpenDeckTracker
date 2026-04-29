@@ -140,31 +140,31 @@ export function Stats() {
               <Trophy size={100} />
             </div>
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Overall Winrate</span>
-            <div className="text-3xl font-black text-text">{formatPercent(summary.overallWinrate)}</div>
+            <div className="text-3xl font-black font-mono tabular-nums text-text">{formatPercent(summary.overallWinrate)}</div>
             <div className="text-sm mt-2 text-text-dim">
-              {summary.wins} Wins - {summary.losses} Losses
+              <span className="font-mono tabular-nums">{summary.wins}</span> Wins - <span className="font-mono tabular-nums">{summary.losses}</span> Losses
             </div>
           </div>
-          
+
           <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Matches Played</span>
-            <div className="text-3xl font-black text-text">{summary.matchesPlayed.toLocaleString()}</div>
+            <div className="text-3xl font-black font-mono tabular-nums text-text">{summary.matchesPlayed.toLocaleString()}</div>
             <div className="text-sm mt-2 text-text-dim">Real tracked constructed matches</div>
           </div>
-          
+
           <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Time Played</span>
-            <div className="text-3xl font-black text-text">{formatTimePlayed(summary.timePlayedSeconds)}</div>
+            <div className="text-3xl font-black font-mono tabular-nums text-text">{formatTimePlayed(summary.timePlayedSeconds)}</div>
             <div className="text-sm mt-2 text-text-dim">
               {summary.averageDurationSeconds === null
                 ? 'No average yet'
-                : `~${formatDuration(summary.averageDurationSeconds)} average`}
+                : <>~<span className="font-mono tabular-nums">{formatDuration(summary.averageDurationSeconds)}</span> average</>}
             </div>
           </div>
 
@@ -179,7 +179,7 @@ export function Stats() {
             <div className="text-sm mt-2 text-text-dim">
               {summary.bestDeck === null
                 ? 'Stats will appear after tracked games'
-                : `${formatPercent(summary.bestDeck.winrate)} · ${summary.bestDeck.wins}W - ${summary.bestDeck.losses}L`}
+                : <><span className="font-mono tabular-nums">{formatPercent(summary.bestDeck.winrate)}</span> · <span className="font-mono tabular-nums">{summary.bestDeck.wins}</span>W - <span className="font-mono tabular-nums">{summary.bestDeck.losses}</span>L</>}
             </div>
           </div>
         </div>
@@ -260,11 +260,11 @@ export function Stats() {
                       data-testid={`match-row-${match.id}`}
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs text-text-dim">{formatRelativeDate(match.endedAt)}</span>
+                        <span className="text-xs text-text-dim font-mono tabular-nums">{formatRelativeDate(match.endedAt)}</span>
                         <span
                           className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                             match.result === 'win'
-                              ? 'bg-green-500/20 text-green-400'
+                              ? 'bg-green/20 text-green'
                               : match.result === 'loss'
                                 ? 'bg-red/20 text-red'
                                 : 'bg-bg-3/20 text-text'
@@ -283,7 +283,7 @@ export function Stats() {
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-text text-sm font-medium">
+                          <span className="text-text text-sm font-medium font-mono tabular-nums">
                             {formatDuration(match.durationSeconds)}
                           </span>
                           <div className="text-xs text-text-mute mt-0.5">

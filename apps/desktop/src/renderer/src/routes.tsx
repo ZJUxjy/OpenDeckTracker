@@ -29,7 +29,7 @@ function TrackerRoute() {
   return (
     <>
       <Dashboard />
-      <div className="hidden lg:block h-full bg-[#0E0E14] p-6 border-l border-[#2A2A35]">
+      <div className="hidden lg:block h-full bg-bg p-6 border-l border-border">
         <RightPanel />
       </div>
     </>
