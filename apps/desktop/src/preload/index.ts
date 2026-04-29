@@ -179,6 +179,10 @@ const api = {
       mirrorAlive: boolean;
     }> => ipcRenderer.invoke('collection:get-progress'),
   },
+  overlay: {
+    setEnabled: (enabled: boolean): Promise<void> =>
+      ipcRenderer.invoke('overlay:set-enabled', enabled),
+  },
 };
 
 contextBridge.exposeInMainWorld('hdt', api);

@@ -13,6 +13,7 @@ export const ACCENT_PALETTE: Record<Accent, { accent: string; accentDim: string 
 
 const DEFAULT_DENSITY: Density = 'comfortable';
 const DEFAULT_ACCENT: Accent = 'cyan';
+const DEFAULT_GAME_OVERLAY = false;
 
 const VALID_DENSITIES = new Set<string>(['comfortable', 'compact']);
 const VALID_ACCENTS = new Set<string>(['cyan', 'teal', 'violet']);
@@ -20,30 +21,33 @@ const VALID_ACCENTS = new Set<string>(['cyan', 'teal', 'violet']);
 interface AppearanceState {
   density: Density;
   accent: Accent;
+  gameOverlay: boolean;
   setDensity: (next: Density) => void;
   setAccent: (next: Accent) => void;
+  setGameOverlay: (next: boolean) => void;
 }
 
-function readStored(): { density: Density; accent: Accent } {
-  if (typeof localStorage === 'undefined') return { density: DEFAULT_DENSITY, accent: DEFAULT_ACCENT };
+function readStored(): { density: Density; accent: Accent; gameOverlay: boolean } {
+  if (typeof localStorage === 'undefined') return { density: DEFAULT_DENSITY, accent: DEFAULT_ACCENT, gameOverlay: DEFAULT_GAME_OVERLAY };
 
   try {
     const raw = localStorage.getItem(APPEARANCE_STORAGE_KEY);
-    if (!raw) return { density: DEFAULT_DENSITY, accent: DEFAULT_ACCENT };
+    if (!raw) return { density: DEFAULT_DENSITY, accent: DEFAULT_ACCENT, gameOverlay: DEFAULT_GAME_OVERLAY };
     const parsed = JSON.parse(raw);
     const density = VALID_DENSITIES.has(parsed?.density) ? parsed.density : DEFAULT_DENSITY;
     const accent = VALID_ACCENTS.has(parsed?.accent) ? parsed.accent : DEFAULT_ACCENT;
-    return { density, accent };
+    const gameOverlay = typeof parsed?.gameOverlay === 'boolean' ? parsed.gameOverlay : DEFAULT_GAME_OVERLAY;
+    return { density, accent, gameOverlay };
   } catch {
-    return { density: DEFAULT_DENSITY, accent: DEFAULT_ACCENT };
+    return { density: DEFAULT_DENSITY, accent: DEFAULT_ACCENT, gameOverlay: DEFAULT_GAME_OVERLAY };
   }
 }
 
-function writeStored(density: Density, accent: Accent): void {
+function writeStored(density: Density, accent: Accent, gameOverlay: boolean): void {
   if (typeof localStorage === 'undefined') return;
 
   try {
-    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density, accent }));
+    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density, accent, gameOverlay }));
   } catch {
     // Ignore storage errors; the in-memory setting still updates for this session.
   }
@@ -54,12 +58,21 @@ const initial = readStored();
 export const useAppearanceStore = create<AppearanceState>((set) => ({
   density: initial.density,
   accent: initial.accent,
+  gameOverlay: initial.gameOverlay,
   setDensity: (next) => {
-    writeStored(next, useAppearanceStore.getState().accent);
+    const s = useAppearanceStore.getState();
+    writeStored(next, s.accent, s.gameOverlay);
     set({ density: next });
   },
   setAccent: (next) => {
-    writeStored(useAppearanceStore.getState().density, next);
+    const s = useAppearanceStore.getState();
+    writeStored(s.density, next, s.gameOverlay);
     set({ accent: next });
+  },
+  setGameOverlay: (next) => {
+    const s = useAppearanceStore.getState();
+    writeStored(s.density, s.accent, next);
+    set({ gameOverlay: next });
+    window.hdt?.overlay?.setEnabled?.(next);
   },
 }));
