@@ -534,7 +534,11 @@ export class DeckTracker {
       opposingHandCount: handState?.opposingHandCount ?? 0,
       opponent: this.buildOpponentRecords(),
       friendlyDeckCount: deckState?.friendlyDeck.length ?? 0,
-      error: this.currentSnapshot.error,
+      // A successful tick clears any previous error; `onError` sets it
+      // again on the next snapshot if a tick throws. Without this clear,
+      // a single transient error would stay visible in the UI's "Error"
+      // status pill forever.
+      error: null,
       updatedAt: Date.now(),
     };
   }
@@ -553,6 +557,13 @@ export class DeckTracker {
 
   private onError(err: unknown): void {
     const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    // Surface the actual error in the host's stderr so devs running
+    // `pnpm dev` can see what failed. The renderer's bottom-bar "Error"
+    // pill only reflects that *some* tick failed; without this log the
+    // operator has no way to see which line threw.
+    // eslint-disable-next-line no-console
+    console.error('[deck-tracker] tick error:', message, stack ?? '');
     const errorSnapshot: DeckTrackerSnapshot = {
       ...this.currentSnapshot,
       error: message,
