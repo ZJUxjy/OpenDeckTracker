@@ -15,6 +15,7 @@
 }
 
 :root {
+  /* ── Legacy shadcn-style variables (unused, kept for compat) ── */
   --font-size: 16px;
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);
@@ -53,6 +54,23 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* ── Console theme tokens (active source of truth; declared after shadcn to win conflicts) ── */
+  --bg:         #0b0f14;
+  --bg-2:       #11161d;
+  --bg-3:       #161c25;
+  --border:     #1f2731;
+  --border-hi:  #2a3543;
+  --text:       #e6edf3;
+  --text-dim:   #8b96a3;
+  --text-mute:  #5b6573;
+  --accent:     #22d3ee;
+  --accent-dim: rgba(34,211,238,0.15);
+  --green:      #34d399;
+  --red:        #f87171;
+  --amber:      #fbbf24;
+  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 .dark {
@@ -140,6 +158,9 @@
 
   body {
     @apply bg-background text-foreground;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
   }
 
   /**
