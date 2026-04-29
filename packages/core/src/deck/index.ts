@@ -9,6 +9,10 @@ export {
   type DeckVersion,
   type Format,
   type HeroClass,
+  type PopularDeck,
+  type PopularDeckArchetype,
+  type PopularDeckEnriched,
+  type PopularDeckKeyCard,
   type UpdateDeckPatch,
   type ValidityIssue,
   type ValidityIssueKind,
@@ -22,6 +26,15 @@ export {
 } from './validity';
 
 export { areCardListsEqual, canonicalCardListHash } from './deck-diff';
+
+export { POPULAR_DECKS_SEED } from './popular-decks-seed';
+
+export {
+  filterPopularDecks,
+  sortPopularDecks,
+  type PopularDeckFilterCriteria,
+  type PopularDeckSort,
+} from './popular-deck-search';
 
 // NOTE: deckstring/JSON import-export functions live in
 // `apps/desktop/src/main/deck-codec.ts` (not in @hdt/core), because they

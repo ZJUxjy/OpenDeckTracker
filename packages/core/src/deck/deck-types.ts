@@ -26,6 +26,45 @@ export type HeroClass =
 
 export type Format = 'Standard' | 'Wild' | 'Classic' | 'Twist';
 
+export type PopularDeckArchetype =
+  | 'Aggro'
+  | 'Midrange'
+  | 'Control'
+  | 'Combo'
+  | 'Tempo'
+  | 'Ramp';
+
+export interface PopularDeck {
+  id: string;
+  name: string;
+  class: HeroClass;
+  format: Format;
+  archetype: PopularDeckArchetype;
+  deckstring: string;
+  winratePercent: number;
+  gamesCount: number;
+  dustCost: number;
+  author: string;
+  updatedAt: string;
+}
+
+export interface PopularDeckKeyCard {
+  name: string;
+  count: number;
+  cost: number;
+}
+
+export interface PopularDeckEnriched extends PopularDeck {
+  manaCurve: readonly number[];
+  keyCards: readonly PopularDeckKeyCard[];
+  /**
+   * All distinct card names in the deck, used for renderer-side
+   * `includesCardName` / `excludesCardName` filtering. Separate from
+   * `keyCards` (which is capped at 12 for UI display).
+   */
+  cardNames: readonly string[];
+}
+
 export interface DeckCard {
   cardId: string;
   count: number;
