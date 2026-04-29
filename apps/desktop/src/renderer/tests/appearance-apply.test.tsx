@@ -77,4 +77,40 @@ describe('AppearanceApplyEffect', () => {
     // Properties should persist after unmount
     expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.teal.accent);
   });
+
+  it('fires overlay:set-enabled on mount when gameOverlay is saved as true', async () => {
+    const setEnabled = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled } };
+
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: true }),
+    );
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(setEnabled).toHaveBeenCalledTimes(1);
+    expect(setEnabled).toHaveBeenCalledWith(true);
+
+    (window as any).hdt = undefined;
+  });
+
+  it('does not fire overlay:set-enabled on mount when gameOverlay is false', async () => {
+    const setEnabled = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled } };
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(setEnabled).not.toHaveBeenCalled();
+
+    (window as any).hdt = undefined;
+  });
 });

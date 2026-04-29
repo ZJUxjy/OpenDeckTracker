@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAppearanceStore, ACCENT_PALETTE } from '../stores/appearance-store';
 
 function applyAppearance() {
@@ -15,10 +15,20 @@ function applyAppearance() {
 export function AppearanceApplyEffect() {
   const density = useAppearanceStore((s) => s.density);
   const accent = useAppearanceStore((s) => s.accent);
+  const bootOverlayFired = useRef(false);
 
   useEffect(() => {
     applyAppearance();
   }, [density, accent]);
+
+  useEffect(() => {
+    if (bootOverlayFired.current) return;
+    bootOverlayFired.current = true;
+    const { gameOverlay } = useAppearanceStore.getState();
+    if (gameOverlay) {
+      window.hdt?.overlay?.setEnabled?.(true);
+    }
+  }, []);
 
   return null;
 }
