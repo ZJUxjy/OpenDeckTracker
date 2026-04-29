@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
+import type { SetProgress } from '@hdt/core';
 import type {
   CreateDeckInput,
   DeckTrackerEvent,
@@ -170,6 +171,13 @@ const api = {
       ipcRenderer.on('hearthwatcher:event', handler);
       return () => ipcRenderer.removeListener('hearthwatcher:event', handler);
     },
+  },
+  collection: {
+    getProgress: (): Promise<{
+      standard: SetProgress[];
+      wild: SetProgress[];
+      mirrorAlive: boolean;
+    }> => ipcRenderer.invoke('collection:get-progress'),
   },
 };
 

@@ -86,6 +86,10 @@ export {
   type PlayOrderSplit,
 } from './stats/play-order-split';
 
+// Collection set-progress aggregation.
+export { computeSetProgress } from './collection/set-progress';
+export type { SetProgress } from './collection/set-progress';
+
 // Match recordings.
 export {
   buildMatchRecordingSummary,

@@ -245,6 +245,12 @@
       "title": "Mass Disenchant Available",
       "body": "You have {count} duplicate cards that can be safely disenchanted.",
       "action": "Disenchant Extra Cards (+{dust} Dust)"
+    },
+    "progress": {
+      "tabStandard": "Standard",
+      "tabWild": "Wild",
+      "mirrorBanner": "Launch Hearthstone for live numbers",
+      "unknownSet": "Unknown set ({code})"
     }
   },
   "stats": {

@@ -245,6 +245,12 @@
       "title": "可批量分解",
       "body": "你有 {count} 张多余的卡可以安全分解。",
       "action": "分解多余卡牌（+{dust} 奥术之尘）"
+    },
+    "progress": {
+      "tabStandard": "标准",
+      "tabWild": "狂野",
+      "mirrorBanner": "启动炉石传说获取实时数据",
+      "unknownSet": "未知系列（{code}）"
     }
   },
   "stats": {

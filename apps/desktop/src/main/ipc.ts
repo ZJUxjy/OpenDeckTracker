@@ -22,6 +22,7 @@ import { join } from 'node:path';
 import { createDeckStore } from './deck-store';
 import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
+import { registerCollectionProgressIpc } from './collection-progress';
 
 let cardImageProtocolRegistered = false;
 
@@ -149,6 +150,10 @@ export function registerIpc(): void {
       store: deckStore,
       codecLookup: () => makeDeckCodecLookup(db),
       collectibleLookup: () => makeCollectibleLookup(db),
+    });
+    registerCollectionProgressIpc({
+      cardDb: db,
+      getCollection: () => hm().getCollection(),
     });
   });
 }
