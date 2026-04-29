@@ -90,7 +90,7 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
             </button>
             {error !== null && (
               <div
-                className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-2 rounded"
+                className="text-sm text-red bg-red/10 border border-red/30 px-3 py-2 rounded"
                 data-testid="import-error"
               >
                 {error}
@@ -106,7 +106,7 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
             <button
               disabled={importing || text.trim() === ''}
               onClick={() => void onImport()}
-              className="px-4 py-2 rounded text-sm bg-accent hover:bg-accent text-text disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded text-sm bg-accent hover:bg-accent/90 text-bg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('decks.import.confirm')}
             </button>

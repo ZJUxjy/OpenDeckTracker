@@ -40,7 +40,7 @@ export function WinrateTimeSeriesChart({
               aria-pressed={granularity === g}
               className={`px-2 py-1 text-xs rounded ${
                 granularity === g
-                  ? 'bg-accent text-text'
+                  ? 'bg-accent text-bg'
                   : 'bg-bg-2 text-text-dim hover:text-text'
               }`}
             >
@@ -62,9 +62,9 @@ export function WinrateTimeSeriesChart({
               margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="x" stroke="#64748B" axisLine={false} tickLine={false} />
+              <XAxis dataKey="x" stroke="var(--text-mute)" axisLine={false} tickLine={false} />
               <YAxis
-                stroke="#64748B"
+                stroke="var(--text-mute)"
                 axisLine={false}
                 tickLine={false}
                 domain={[0, 100]}

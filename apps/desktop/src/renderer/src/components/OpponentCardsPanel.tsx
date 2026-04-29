@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
@@ -168,7 +168,7 @@ function OpponentCardRow({
       onMouseEnter={() => ref.current && onMouseEnter(card.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
-      <div className="w-7 h-7 rounded bg-red-900/40 flex items-center justify-center text-red-100 font-bold text-xs shrink-0">
+      <div className="w-7 h-7 rounded bg-red/15 flex items-center justify-center text-red font-bold text-xs shrink-0">
         {def?.cost ?? 0}
       </div>
       <div className="flex-1 min-w-0 px-2">

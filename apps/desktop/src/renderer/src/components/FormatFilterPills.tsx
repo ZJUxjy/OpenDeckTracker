@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+﻿import type { ReactElement } from 'react';
 import type { FormatFilter } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
@@ -22,7 +22,7 @@ export function FormatFilterPills({ value, onChange }: FormatFilterPillsProps): 
           aria-pressed={value === fmt}
           className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
             value === fmt
-              ? 'bg-accent text-text'
+              ? 'bg-accent text-bg'
               : 'bg-bg-2 text-text-dim hover:text-text hover:bg-bg-3'
           }`}
         >

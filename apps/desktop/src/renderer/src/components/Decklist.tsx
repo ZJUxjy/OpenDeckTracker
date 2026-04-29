@@ -40,7 +40,7 @@ const CLASS_LABELS: Record<HeroClass, string> = {
 function ClassIcon({ heroClass }: { heroClass: HeroClass }): ReactElement {
   return (
     <div
-      className="w-8 h-8 rounded-full bg-[#225B8D] flex items-center justify-center text-text text-xs font-bold border border-border-hi"
+      className="w-8 h-8 rounded-full bg-bg-3 flex items-center justify-center text-text text-xs font-bold border border-border-hi"
       aria-hidden="true"
     >
       {heroClass.slice(0, 2)}
@@ -125,7 +125,7 @@ function DeckRow({
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={() => setConfirmOpen(true)}
-              className="px-3 py-1.5 hover:bg-bg-3 outline-none cursor-pointer text-red-400"
+              className="px-3 py-1.5 hover:bg-bg-3 outline-none cursor-pointer text-red"
             >
               {t('decks.list.row.delete')}
             </DropdownMenu.Item>
@@ -210,7 +210,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
           <button
             onClick={() => props.onCreate?.()}
             aria-label={t('decks.list.empty.create')}
-            className="px-4 py-2 bg-accent hover:bg-accent text-text text-sm font-medium rounded inline-flex items-center gap-2"
+            className="px-4 py-2 bg-accent hover:bg-accent/90 text-bg text-sm font-medium rounded inline-flex items-center gap-2"
           >
             <Plus size={16} />
             {t('decks.list.empty.create')}
@@ -218,7 +218,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
           <button
             onClick={() => props.onImport?.()}
             aria-label={t('decks.list.empty.import')}
-            className="px-4 py-2 bg-bg-3 hover:bg-bg-3 text-text text-sm font-medium rounded inline-flex items-center gap-2"
+            className="px-4 py-2 bg-bg-3 hover:bg-border-hi text-text text-sm font-medium rounded inline-flex items-center gap-2"
           >
             <Upload size={16} />
             {t('decks.list.empty.import')}

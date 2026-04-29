@@ -400,7 +400,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                 await flushSave();
                 onOpenChange(false);
               }}
-              className="px-4 py-2 rounded text-sm bg-accent hover:bg-accent text-text"
+              className="px-4 py-2 rounded text-sm bg-accent hover:bg-accent/90 text-bg"
             >
               {t('decks.editor.save')}
             </button>

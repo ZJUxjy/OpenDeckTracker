@@ -95,7 +95,7 @@ export function Settings() {
                           onClick={() => setLanguagePreference(option.value)}
                           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                             languagePreference === option.value
-                              ? 'bg-accent text-text'
+                              ? 'bg-accent text-bg'
                               : 'text-text-dim hover:text-text'
                           }`}
                         >

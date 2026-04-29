@@ -1,4 +1,4 @@
-import { Activity, Clock, Hand, Layers, Radio, Trophy } from 'lucide-react';
+﻿import { Activity, Clock, Hand, Layers, Radio, Trophy } from 'lucide-react';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useHearthWatcherStore } from '../stores/hearthwatcher-store';
@@ -22,7 +22,7 @@ const WATCHER_COLORS: Record<HearthWatcherStatusKind, string> = {
   'missing-log': 'text-red',
   'parser-error': 'text-red',
   lag: 'text-amber',
-  'rotation-or-truncation': 'text-purple-400',
+  'rotation-or-truncation': 'text-text-dim',
 };
 
 export function Dashboard() {
@@ -54,7 +54,7 @@ export function Dashboard() {
                 Rank: {rankLabel(medalInfo?.standard)}
               </span>
               <span className="flex items-center">
-                <Clock size={14} className="mr-1 text-blue-500" />
+                <Clock size={14} className="mr-1 text-text-dim" />
                 {snapshot ? new Date(snapshot.updatedAt).toLocaleTimeString() : 'Waiting for game'}
               </span>
             </div>
@@ -81,7 +81,7 @@ export function Dashboard() {
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
               Hand
             </span>
-            <Hand size={18} className="text-blue-400" />
+            <Hand size={18} className="text-text-dim" />
           </div>
           <div className="text-3xl font-black text-text">
             {snapshot?.friendlyHand.length ?? 0}

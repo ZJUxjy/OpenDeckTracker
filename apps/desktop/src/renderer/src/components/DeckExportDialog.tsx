@@ -86,7 +86,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
             <Tabs.Content value="deckstring" className="space-y-3" data-testid="tab-deckstring">
               {deckstringError !== null ? (
                 <div
-                  className="text-sm text-amber bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded"
+                  className="text-sm text-amber bg-amber/10 border border-amber/30 px-3 py-2 rounded"
                   data-testid="deckstring-illegal"
                 >
                   {deckstringError}
@@ -102,7 +102,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
               <button
                 onClick={() => deckstring && copy('deckstring', deckstring)}
                 disabled={deckstring === null}
-                className="px-3 py-1.5 text-sm bg-bg-3 hover:bg-bg-3 rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-sm bg-bg-3 hover:bg-border-hi rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="copy-deckstring"
               >
                 <Copy size={14} />
@@ -120,7 +120,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
               <button
                 onClick={() => copy('json', json)}
                 disabled={json === ''}
-                className="px-3 py-1.5 text-sm bg-bg-3 hover:bg-bg-3 rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-sm bg-bg-3 hover:bg-border-hi rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Copy size={14} />
                 {copyAck === 'json' ? t('decks.export.copied') : t('decks.export.copy')}

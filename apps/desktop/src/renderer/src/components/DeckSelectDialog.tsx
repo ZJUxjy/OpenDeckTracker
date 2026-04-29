@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useDecks } from '../hooks/use-decks';
 import { useTranslation } from '../i18n';
@@ -124,7 +124,7 @@ export function DeckSelectDialog() {
                           className={
                             'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
                             (active
-                              ? 'bg-accent text-text'
+                              ? 'bg-accent text-bg'
                               : 'bg-bg-2 hover:bg-bg-3 text-text')
                           }
                         >
@@ -163,7 +163,7 @@ export function DeckSelectDialog() {
                             className={
                               'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
                               (active
-                                ? 'bg-accent text-text'
+                                ? 'bg-accent text-bg'
                                 : 'bg-bg-2 hover:bg-bg-3 text-text')
                             }
                           >

@@ -68,9 +68,9 @@ export function Collection() {
           <div className="bg-bg-2 p-3 rounded-lg border border-border flex items-center space-x-3 shadow-md">
             <div className="flex flex-col items-end">
               <span className="text-xs text-text-dim font-bold uppercase tracking-wider">Dust</span>
-              <span className="text-blue-400 font-black text-lg">14,350</span>
+              <span className="text-text-dim font-black text-lg">14,350</span>
             </div>
-            <Sparkles size={24} className="text-blue-400 opacity-80" />
+            <Sparkles size={24} className="text-text-dim opacity-80" />
           </div>
         </div>
       </div>
@@ -90,7 +90,7 @@ export function Collection() {
                     onClick={() => setActiveFormat(format.id)}
                     className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${
                       activeFormat === format.id 
-                        ? 'bg-accent text-text shadow' 
+                        ? 'bg-accent text-bg shadow' 
                         : 'text-text-mute hover:text-text'
                     }`}
                   >
@@ -154,7 +154,7 @@ export function Collection() {
                     <div key={set.name} className="bg-bg-2 border border-border rounded-xl p-5 hover:border-border-hi transition-colors group cursor-pointer relative overflow-hidden">
                       {isComplete && (
                         <div className="absolute top-0 right-0 w-16 h-16">
-                          <div className="absolute top-4 right-[-16px] w-[100px] transform rotate-45 bg-accent text-text text-[10px] font-bold text-center py-1 uppercase shadow-md">
+                          <div className="absolute top-4 right-[-16px] w-[100px] transform rotate-45 bg-accent text-bg text-[10px] font-bold text-center py-1 uppercase shadow-md">
                             Complete
                           </div>
                         </div>
@@ -189,7 +189,7 @@ export function Collection() {
             {/* Duplicate & Extra Section */}
             <div className="bg-bg-2 border border-border rounded-xl p-5 flex items-start space-x-4 shadow-sm">
               <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 mt-0.5">
-                <AlertCircle size={20} className="text-blue-400" />
+                <AlertCircle size={20} className="text-text-dim" />
               </div>
               <div className="flex-1">
                 <h3 className="text-text font-bold text-lg mb-1">Mass Disenchant Available</h3>

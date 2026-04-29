@@ -28,7 +28,7 @@ describe('App header three-state status', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(100); });
 
     expect(screen.getByText('Game Not Running')).toBeInTheDocument();
-    const monitor = document.querySelector('.text-zinc-500');
+    const monitor = document.querySelector('.text-text-mute');
     expect(monitor).toBeTruthy();
   });
 
@@ -41,7 +41,7 @@ describe('App header three-state status', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(100); });
 
     expect(screen.getByText('Not Logged In')).toBeInTheDocument();
-    const monitor = document.querySelector('.text-amber-500');
+    const monitor = document.querySelector('.text-amber');
     expect(monitor).toBeTruthy();
   });
 
@@ -55,7 +55,7 @@ describe('App header three-state status', () => {
 
     expect(screen.getByText('Game Running')).toBeInTheDocument();
     expect(screen.getByText('Player#1234')).toBeInTheDocument();
-    const monitor = document.querySelector('.text-emerald-500');
+    const monitor = document.querySelector('.text-green');
     expect(monitor).toBeTruthy();
   });
 });

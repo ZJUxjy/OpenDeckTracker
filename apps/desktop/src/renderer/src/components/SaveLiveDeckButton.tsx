@@ -73,7 +73,7 @@ export function SaveLiveDeckButton({ liveDeck }: SaveLiveDeckButtonProps): React
         onClick={() => void onSave()}
         disabled={busy}
         aria-label={t('decks.saveLive.button')}
-        className="px-3 py-1 text-xs bg-bg-3 hover:bg-bg-3 text-text rounded inline-flex items-center gap-1.5 disabled:opacity-50"
+        className="px-3 py-1 text-xs bg-bg-3 hover:bg-border-hi text-text rounded inline-flex items-center gap-1.5 disabled:opacity-50"
         data-testid="save-live-button"
       >
         <Save size={12} />
@@ -81,7 +81,7 @@ export function SaveLiveDeckButton({ liveDeck }: SaveLiveDeckButtonProps): React
       </button>
       {error !== null && (
         <span
-          className="text-xs text-red-400 max-w-[280px]"
+          className="text-xs text-red max-w-[280px]"
           data-testid="save-live-error"
         >
           {error}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Swords, Trophy, Clock, Target, Film } from 'lucide-react';
 import type {
@@ -119,7 +119,7 @@ export function Stats() {
                 onClick={() => setTimeFilter(filter)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   timeFilter === filter
-                    ? 'bg-accent text-text'
+                    ? 'bg-accent text-bg'
                     : 'bg-bg-2 text-text-dim hover:text-text hover:bg-bg-3'
                 }`}
               >
@@ -147,7 +147,7 @@ export function Stats() {
           </div>
           
           <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-blue-500 group-hover:opacity-10 transition-opacity">
+            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Matches Played</span>
@@ -156,7 +156,7 @@ export function Stats() {
           </div>
           
           <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-purple-500 group-hover:opacity-10 transition-opacity">
+            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Time Played</span>
@@ -169,7 +169,7 @@ export function Stats() {
           </div>
 
           <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red-500 group-hover:opacity-10 transition-opacity">
+            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red group-hover:opacity-10 transition-opacity">
               <Target size={100} />
             </div>
             <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">Best Deck</span>
@@ -220,8 +220,8 @@ export function Stats() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={classChartData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                    <XAxis dataKey="name" stroke="#64748B" axisLine={false} tickLine={false} />
-                    <YAxis stroke="#64748B" axisLine={false} tickLine={false} />
+                    <XAxis dataKey="name" stroke="var(--text-mute)" axisLine={false} tickLine={false} />
+                    <YAxis stroke="var(--text-mute)" axisLine={false} tickLine={false} />
                     <Tooltip 
                       cursor={{ fill: 'var(--border)' }}
                       contentStyle={{ backgroundColor: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
@@ -245,7 +245,7 @@ export function Stats() {
               {isLoading ? (
                 <div className="text-text-mute text-sm py-8 text-center">Loading match history...</div>
               ) : error !== null ? (
-                <div className="text-red-400 text-sm py-8 text-center">{error}</div>
+                <div className="text-red text-sm py-8 text-center">{error}</div>
               ) : recentMatches.length === 0 ? (
                 <div className="text-text-mute text-sm py-8 text-center">
                   No tracked matches yet.
@@ -266,7 +266,7 @@ export function Stats() {
                             match.result === 'win'
                               ? 'bg-green-500/20 text-green-400'
                               : match.result === 'loss'
-                                ? 'bg-red-500/20 text-red-400'
+                                ? 'bg-red/20 text-red'
                                 : 'bg-bg-3/20 text-text'
                           }`}
                         >

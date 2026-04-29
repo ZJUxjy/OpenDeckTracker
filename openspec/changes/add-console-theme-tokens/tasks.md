@@ -18,29 +18,29 @@
 - [x] 3.1 `Sidebar.tsx`: replace orange / gray-slate / hard-coded hex with token utilities. The active-tab inset rail uses `shadow-[inset_4px_0_0_0_var(--accent)]`. Hover background uses `bg-bg-2`. Run `pnpm --filter @hdt/desktop test -- Sidebar` and expect green.
 - [x] 3.2 `App.tsx`: header + status pill, mode toggle, body background. Replace `bg-[#0E0E14]` → `bg-bg`, status pill colors → `text-green` / `text-amber` / `text-text-mute`. Run `pnpm --filter @hdt/desktop test -- App` and expect green.
 - [x] 3.3 `Dashboard.tsx`: KPI summary cards, watcher status pill, rank label. Cyan replaces orange on the rank legend. Run `pnpm --filter @hdt/desktop test -- Dashboard` and expect green.
-- [ ] 3.4 Commit batch as `feat(renderer): retheme shell (Sidebar / App / Dashboard) with Console tokens`.
+- [x] 3.4 Commit batch as `feat(renderer): retheme shell (Sidebar / App / Dashboard) with Console tokens`.
 
 ## 4. Sweep the Tracker + Overlay Surfaces
 
-- [ ] 4.1 `LiveDeckPanel.tsx`: replace card panel chrome (`bg-[#1a1a24]`, etc.) with `bg-bg-2`, accent on remaining-card counts becomes `text-accent`, draw-pop animation keyframe still references the literal orange in `theme.css` — port that to `var(--accent)`. Wrap every numeric (mana cost, ×N count, hand size in footer) in `font-mono`. Run `pnpm --filter @hdt/desktop test -- LiveDeckPanel` and expect green.
-- [ ] 4.2 `OpponentCardsPanel.tsx`: same sweep. Cyan accent for revealed-card counts.
-- [ ] 4.3 `OverlayView.tsx`: same sweep. Background uses `bg-bg`, panel border uses `var(--accent)` for the player overlay's outline.
-- [ ] 4.4 `CardImagePopover.tsx`: token sweep, no behavior change.
-- [ ] 4.5 `DeckSelectDialog.tsx`: pill/highlight states use `bg-accent-dim` + `border-accent` for the selected deck. Saved-deck "Saved" badge uses `bg-green/20` + `text-green`.
-- [ ] 4.6 Run `pnpm --filter @hdt/desktop test` (full suite) and expect green. Commit as `feat(renderer): retheme tracker + overlay + dialog surfaces with Console tokens`.
+- [x] 4.1 `LiveDeckPanel.tsx`: replace card panel chrome (`bg-[#1a1a24]`, etc.) with `bg-bg-2`, accent on remaining-card counts becomes `text-accent`, draw-pop animation keyframe still references the literal orange in `theme.css` — port that to `var(--accent)`. Wrap every numeric (mana cost, ×N count, hand size in footer) in `font-mono`. Run `pnpm --filter @hdt/desktop test -- LiveDeckPanel` and expect green.
+- [x] 4.2 `OpponentCardsPanel.tsx`: same sweep. Cyan accent for revealed-card counts.
+- [x] 4.3 `OverlayView.tsx`: same sweep. Background uses `bg-bg`, panel border uses `var(--accent)` for the player overlay's outline.
+- [x] 4.4 `CardImagePopover.tsx`: token sweep, no behavior change.
+- [x] 4.5 `DeckSelectDialog.tsx`: pill/highlight states use `bg-accent-dim` + `border-accent` for the selected deck. Saved-deck "Saved" badge uses `bg-green/20` + `text-green`.
+- [x] 4.6 Run `pnpm --filter @hdt/desktop test` (full suite) and expect green. Commit as `feat(renderer): retheme tracker + overlay + dialog surfaces with Console tokens`.
 
 ## 5. Sweep the Stats + Decks + Collection Surfaces
 
-- [ ] 5.1 `Stats.tsx`: time/format pills, summary cards, recent-match rows. Orange-amber-emerald palette → `text-accent` / `text-amber` / `text-green`. KPI numbers wrapped in `font-mono` (most already are).
-- [ ] 5.2 `FormatFilterPills.tsx`: active pill uses `bg-accent`, inactive uses `bg-bg-2`.
-- [ ] 5.3 `MatchupMatrix.tsx`: cell background colormap stays semantic (green/red/amber for high/low winrate) but uses token colors. Win-percentage text in `font-mono`.
-- [ ] 5.4 `WinrateTimeSeriesChart.tsx`: line color = `var(--accent)`, axis labels = `text-text-mute`.
-- [ ] 5.5 `PlayOrderSplitCard.tsx`: card backgrounds → `bg-bg-2`, percentages in `font-mono`.
-- [ ] 5.6 `MatchRecordingViewer.tsx`: list rows + close button use tokens.
-- [ ] 5.7 `Decklist.tsx` + `DecksPage.tsx` + `DeckEditor.tsx` + `DeckImportDialog.tsx` + `DeckExportDialog.tsx` + `SaveLiveDeckButton.tsx`: orange CTAs → `bg-accent text-bg`, card-count badges → `text-green` for legal, `text-amber` for incomplete.
-- [ ] 5.8 `Collection.tsx`: card grid borders + accent stay; orange CTA → cyan.
-- [ ] 5.9 `Settings.tsx`: language radio, toggles, headers — all token-driven.
-- [ ] 5.10 Run `pnpm --filter @hdt/desktop test` (full suite) and expect green. Commit as `feat(renderer): retheme stats + decks + collection + settings with Console tokens`.
+- [x] 5.1 `Stats.tsx`: time/format pills, summary cards, recent-match rows. Orange-amber-emerald palette → `text-accent` / `text-amber` / `text-green`. KPI numbers wrapped in `font-mono` (most already are).
+- [x] 5.2 `FormatFilterPills.tsx`: active pill uses `bg-accent`, inactive uses `bg-bg-2`.
+- [x] 5.3 `MatchupMatrix.tsx`: cell background colormap stays semantic (green/red/amber for high/low winrate) but uses token colors. Win-percentage text in `font-mono`.
+- [x] 5.4 `WinrateTimeSeriesChart.tsx`: line color = `var(--accent)`, axis labels = `text-text-mute`.
+- [x] 5.5 `PlayOrderSplitCard.tsx`: card backgrounds → `bg-bg-2`, percentages in `font-mono`.
+- [x] 5.6 `MatchRecordingViewer.tsx`: list rows + close button use tokens.
+- [x] 5.7 `Decklist.tsx` + `DecksPage.tsx` + `DeckEditor.tsx` + `DeckImportDialog.tsx` + `DeckExportDialog.tsx` + `SaveLiveDeckButton.tsx`: orange CTAs → `bg-accent text-bg`, card-count badges → `text-green` for legal, `text-amber` for incomplete.
+- [x] 5.8 `Collection.tsx`: card grid borders + accent stay; orange CTA → cyan.
+- [x] 5.9 `Settings.tsx`: language radio, toggles, headers — all token-driven.
+- [x] 5.10 Run `pnpm --filter @hdt/desktop test` (full suite) and expect green. Commit as `feat(renderer): retheme stats + decks + collection + settings with Console tokens`.
 
 ## 6. Numeric `font-mono` enforcement sweep
 
