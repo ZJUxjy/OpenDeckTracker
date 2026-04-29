@@ -3,44 +3,39 @@ import { BrowserWindow, screen } from 'electron';
 export interface OverlayManagerOptions {
   rendererUrl: string;
   preloadPath: string;
-  isAlive: () => Promise<boolean>;
+  routeHash?: string;
 }
 
 export class OverlayManager {
   private win: BrowserWindow | null = null;
   private userEnabled = false;
   private gameRunning = false;
-  private falseStreak = 0;
-  private pollHandle: ReturnType<typeof setInterval> | null = null;
   private readonly opts: OverlayManagerOptions;
+  private readonly routeHash: string;
 
   constructor(opts: OverlayManagerOptions) {
     this.opts = opts;
+    this.routeHash = opts.routeHash ?? '/overlay';
   }
 
   enable(): void {
     this.userEnabled = true;
     if (!this.win) this.createWindow();
     this.syncVisibility();
-    this.startPolling();
   }
 
   disable(): void {
     this.userEnabled = false;
     this.gameRunning = false;
-    this.falseStreak = 0;
     this.syncVisibility();
-    this.stopPolling();
   }
 
   setRunning(running: boolean): void {
     this.gameRunning = running;
-    this.falseStreak = 0;
     this.syncVisibility();
   }
 
   dispose(): void {
-    this.stopPolling();
     if (this.win && !this.win.isDestroyed()) {
       this.win.destroy();
     }
@@ -79,9 +74,9 @@ export class OverlayManager {
 
     const devUrl = process.env['ELECTRON_RENDERER_URL'];
     if (devUrl) {
-      void this.win.loadURL(`${devUrl}#/overlay`);
+      void this.win.loadURL(`${devUrl}#${this.routeHash}`);
     } else {
-      void this.win.loadFile(this.opts.rendererUrl, { hash: '/overlay' });
+      void this.win.loadFile(this.opts.rendererUrl, { hash: this.routeHash });
     }
   }
 
@@ -92,45 +87,6 @@ export class OverlayManager {
       this.win.show();
     } else {
       this.win.hide();
-    }
-  }
-
-  private startPolling(): void {
-    if (this.pollHandle !== null) return;
-    this.falseStreak = 0;
-    void this.poll();
-    this.pollHandle = setInterval(() => {
-      void this.poll();
-    }, 3000);
-  }
-
-  private stopPolling(): void {
-    if (this.pollHandle !== null) {
-      clearInterval(this.pollHandle);
-      this.pollHandle = null;
-    }
-  }
-
-  private async poll(): Promise<void> {
-    let alive: boolean;
-    try {
-      alive = await this.opts.isAlive();
-    } catch {
-      alive = false;
-    }
-
-    if (alive) {
-      this.falseStreak = 0;
-      if (!this.gameRunning) {
-        this.gameRunning = true;
-        this.syncVisibility();
-      }
-    } else {
-      this.falseStreak++;
-      if (this.falseStreak >= 3 && this.gameRunning) {
-        this.gameRunning = false;
-        this.syncVisibility();
-      }
     }
   }
 }
