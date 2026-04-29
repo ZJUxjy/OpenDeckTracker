@@ -23,6 +23,7 @@ import { createDeckStore } from './deck-store';
 import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
+import type { OverlayManager } from './overlay-window';
 
 let cardImageProtocolRegistered = false;
 
@@ -30,8 +31,18 @@ function toHearthstoneLocale(appLocale?: string): 'enUS' | 'zhCN' {
   return appLocale === 'zh-CN' ? 'zhCN' : 'enUS';
 }
 
-export function registerIpc(): void {
+export function registerIpc(overlayManager?: OverlayManager): void {
   ipcMain.handle('app:getVersion', () => app.getVersion());
+
+  if (overlayManager) {
+    ipcMain.handle('overlay:set-enabled', (_, enabled: boolean) => {
+      if (enabled) {
+        overlayManager.enable();
+      } else {
+        overlayManager.disable();
+      }
+    });
+  }
   const cardImageRoot = defaultCardImageCacheRoot(app.getPath('userData'));
   registerCardImageProtocol(cardImageRoot);
 
