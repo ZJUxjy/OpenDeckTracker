@@ -41,13 +41,13 @@
 
 ## 5. Settings Overlay Panel
 
-- [ ] 5.1 Add failing tests in `apps/desktop/src/renderer/tests/Settings.overlay.test.tsx` covering: (a) opening the Overlay category shows a row with `settings.overlay.enableTitle`; (b) the "Section Under Construction" placeholder is gone from the Overlay panel; (c) clicking the toggle flips `useAppearanceStore.getState().gameOverlay` and invokes the IPC mock; (d) the toggle reflects the current store state on render; (e) zh-CN locale renders Chinese labels.
-- [ ] 5.2 Modify `apps/desktop/src/renderer/src/components/Settings.tsx`:
+- [x] 5.1 Add failing tests in `apps/desktop/src/renderer/tests/Settings.overlay.test.tsx` covering: (a) opening the Overlay category shows a row with `settings.overlay.enableTitle`; (b) the "Section Under Construction" placeholder is gone from the Overlay panel; (c) clicking the toggle flips `useAppearanceStore.getState().gameOverlay` and invokes the IPC mock; (d) the toggle reflects the current store state on render; (e) zh-CN locale renders Chinese labels.
+- [x] 5.2 Modify `apps/desktop/src/renderer/src/components/Settings.tsx`:
   - Replace the Overlay branch (currently caught by the catch-all `['overlay', 'notifications', 'data', 'audio'].includes(activeCategory)` block) with a dedicated branch.
   - Render one `settings-row` styled toggle row using the same toggle pattern as the existing General toggles (autoStart etc.).
   - The "Section Under Construction" catch-all stays for `['notifications', 'data', 'audio']` only.
-- [ ] 5.3 Run the regression token grep test (`tests/theme-tokens-grep.test.ts`); expect pass.
-- [ ] 5.4 Commit with message `feat(desktop): add Overlay toggle to Settings`.
+- [x] 5.3 Run the regression token grep test (`tests/theme-tokens-grep.test.ts`); expect pass.
+- [x] 5.4 Commit with message `feat(desktop): add Overlay toggle to Settings`.
 
 ## 6. i18n Strings
 
@@ -57,10 +57,10 @@
 
 ## 7. Final Validation and Archive
 
-- [ ] 7.1 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
-- [ ] 7.2 Run the full renderer + main test suite (excluding the pre-existing sqlite-ABI failures); expect green.
+- [x] 7.1 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
+- [x] 7.2 Run the full renderer + main test suite (excluding the pre-existing sqlite-ABI failures); expect green.
 - [ ] 7.3 Run `npx openspec validate add-opponent-overlay-window --strict`; expect "Change … is valid".
 - [ ] 7.4 Manual smoke (Hearthstone running): launch `pnpm dev`, open Settings → Overlay, toggle on; the transparent overlay window should appear above Hearthstone with the same layout as the `#/overlay` route inside the main window. Toggle off; the overlay window hides.
 - [ ] 7.5 Manual smoke (Hearthstone not running): toggle on with HS closed; overlay window does NOT appear. Launch HS; within ~3 s the overlay appears. Close HS; within ~9 s the overlay hides (the throttle suppresses single-tick mirror jitter).
-- [ ] 7.6 Run `git status` to confirm only in-scope files changed.
+- [x] 7.6 Run `git status` to confirm only in-scope files changed.
 - [ ] 7.7 Archive change via `/opsx:archive add-opponent-overlay-window`.
