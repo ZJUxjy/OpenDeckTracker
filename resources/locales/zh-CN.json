@@ -103,6 +103,11 @@
     "general": "通用",
     "tracker": "记牌器",
     "overlay": "游戏内覆盖层",
+    "overlayPanel": {
+      "enableTitle": "显示游戏内覆盖层",
+      "enableDescription": "在炉石传说对局期间，以透明置顶窗口显示记牌器。",
+      "runningHint": "仅在炉石传说运行时激活"
+    },
     "notifications": "通知",
     "data": "数据与同步",
     "audio": "音频",

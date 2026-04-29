@@ -103,6 +103,11 @@
     "general": "General",
     "tracker": "Deck Tracker",
     "overlay": "In-Game Overlay",
+    "overlayPanel": {
+      "enableTitle": "Show in-game overlay",
+      "enableDescription": "Display the deck tracker as a transparent always-on-top window during a Hearthstone match.",
+      "runningHint": "Active only while Hearthstone is running"
+    },
     "notifications": "Notifications",
     "data": "Data & Sync",
     "audio": "Audio",
