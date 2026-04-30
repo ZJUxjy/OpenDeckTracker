@@ -134,18 +134,20 @@ describe('OverlayManager', () => {
     expect(lastWindow().isVisible()).toBe(false);
   });
 
-  it('setVisibleOnScreen(true) after enable() shows the window', () => {
+  it('setVisibleOnScreen(true) + setInActiveMatch(true) after enable() shows the window', () => {
     const mgr = makeManager();
     mgr.enable();
+    mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
 
     expect(lastWindow().show).toHaveBeenCalled();
     expect(lastWindow().isVisible()).toBe(true);
   });
 
-  it('setVisibleOnScreen(false) after enable() hides the window', () => {
+  it('setVisibleOnScreen(false) after showing hides the window', () => {
     const mgr = makeManager();
     mgr.enable();
+    mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     expect(lastWindow().isVisible()).toBe(true);
 
@@ -154,9 +156,21 @@ describe('OverlayManager', () => {
     expect(lastWindow().isVisible()).toBe(false);
   });
 
+  it('setInActiveMatch(false) hides the window even if visibleOnScreen is true', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    expect(lastWindow().isVisible()).toBe(true);
+
+    mgr.setInActiveMatch(false);
+    expect(lastWindow().isVisible()).toBe(false);
+  });
+
   it('disable() hides without destroying', () => {
     const mgr = makeManager();
     mgr.enable();
+    mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     mgr.disable();
 
@@ -167,6 +181,7 @@ describe('OverlayManager', () => {
   it('disable() resets visibleOnScreen so re-enable does not flash a stale visible window', () => {
     const mgr = makeManager();
     mgr.enable();
+    mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     expect(lastWindow().isVisible()).toBe(true);
 

@@ -21,6 +21,14 @@ export class OverlayManager {
   private win: BrowserWindow | null = null;
   private userEnabled = false;
   private visibleOnScreen = false;
+  /**
+   * Whether the player is currently in an active match (PRE_MATCH /
+   * IN_MATCH). Driven by the deck-tracker phase. Combined with
+   * userEnabled and visibleOnScreen to compute final visibility —
+   * the overlay should NOT appear on the main menu, deck picker, or
+   * collection screens.
+   */
+  private inActiveMatch = false;
   private pendingBounds: BoundsRect | null = null;
   private lastAppliedBounds: BoundsRect | null = null;
   private readonly opts: OverlayManagerOptions;
@@ -48,6 +56,13 @@ export class OverlayManager {
   setVisibleOnScreen(visible: boolean): void {
     this.visibleOnScreen = visible;
     console.log(`[overlay-mgr ${this.routeHash}] setVisibleOnScreen(${visible})`);
+    this.syncVisibility();
+  }
+
+  setInActiveMatch(active: boolean): void {
+    if (this.inActiveMatch === active) return;
+    this.inActiveMatch = active;
+    console.log(`[overlay-mgr ${this.routeHash}] setInActiveMatch(${active})`);
     this.syncVisibility();
   }
 
@@ -122,9 +137,9 @@ export class OverlayManager {
       console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
       return;
     }
-    const shouldShow = this.userEnabled && this.visibleOnScreen;
+    const shouldShow = this.userEnabled && this.visibleOnScreen && this.inActiveMatch;
     console.log(
-      `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} → ${shouldShow ? 'show' : 'hide'}`,
+      `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} inActiveMatch=${this.inActiveMatch} → ${shouldShow ? 'show' : 'hide'}`,
     );
     if (shouldShow) {
       this.win.show();
