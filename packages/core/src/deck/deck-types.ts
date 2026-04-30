@@ -43,7 +43,6 @@ export interface PopularDeck {
   deckstring: string;
   winratePercent: number;
   gamesCount: number;
-  dustCost: number;
   author: string;
   updatedAt: string;
 }
@@ -63,6 +62,12 @@ export interface PopularDeckEnriched extends PopularDeck {
    * `keyCards` (which is capped at 12 for UI display).
    */
   cardNames: readonly string[];
+  /**
+   * Crafting cost in dust, computed at IPC time from the deckstring's
+   * card rarities against the current CardDb. Not baked into the seed
+   * because it's deterministic from the deckstring.
+   */
+  dustCost: number;
 }
 
 export interface DeckCard {

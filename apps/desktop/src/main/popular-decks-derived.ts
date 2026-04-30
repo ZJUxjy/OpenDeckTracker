@@ -44,6 +44,35 @@ export function computeCardNames(deckstring: string, cardLookup: CardLookup): st
   return names;
 }
 
+const DUST_BY_RARITY: Record<string, number> = {
+  COMMON: 40,
+  RARE: 100,
+  EPIC: 400,
+  LEGENDARY: 1600,
+};
+
+/**
+ * Crafting cost in dust, summed across all card copies. FREE rarity and
+ * unknown rarities contribute 0. Cards the lookup can't resolve also
+ * contribute 0 (graceful degradation, not error).
+ */
+export function computeDustCost(deckstring: string, cardLookup: CardLookup): number {
+  let blueprint;
+  try {
+    blueprint = decodeDeck(deckstring);
+  } catch {
+    return 0;
+  }
+  let total = 0;
+  for (const entry of blueprint.cards) {
+    const card = cardLookup(entry.dbfId);
+    if (!card) continue;
+    const perCard = DUST_BY_RARITY[card.rarity ?? ''] ?? 0;
+    total += perCard * entry.count;
+  }
+  return total;
+}
+
 /**
  * Distinct cards in the deck sorted by in-deck count desc, then cost asc.
  * Capped at 12 entries. Cards with no resolvable name are skipped.

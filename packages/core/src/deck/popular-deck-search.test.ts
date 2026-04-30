@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { PopularDeck } from './deck-types';
+import type { PopularDeckEnriched } from './deck-types';
 import { filterPopularDecks, sortPopularDecks } from './popular-deck-search';
 
-const D = (over: Partial<PopularDeck>): PopularDeck => ({
+const D = (over: Partial<PopularDeckEnriched>): PopularDeckEnriched => ({
   id: over.id ?? 'd1',
   name: over.name ?? 'Test',
   class: over.class ?? 'MAGE',
@@ -14,9 +14,12 @@ const D = (over: Partial<PopularDeck>): PopularDeck => ({
   dustCost: over.dustCost ?? 5000,
   author: over.author ?? 'tester',
   updatedAt: over.updatedAt ?? '2026-04-20',
+  manaCurve: over.manaCurve ?? [0, 0, 0, 0, 0, 0, 0, 0],
+  keyCards: over.keyCards ?? [],
+  cardNames: over.cardNames ?? [],
 });
 
-const SEED: PopularDeck[] = [
+const SEED: PopularDeckEnriched[] = [
   D({ id: 'mage1',     class: 'MAGE',     archetype: 'Aggro',    dustCost: 4800, winratePercent: 58, gamesCount: 12000, updatedAt: '2026-04-25' }),
   D({ id: 'warrior1',  class: 'WARRIOR',  archetype: 'Control',  dustCost: 11200, winratePercent: 54, gamesCount: 8000, updatedAt: '2026-04-22' }),
   D({ id: 'hunter1',   class: 'HUNTER',   archetype: 'Midrange', dustCost: 6400, winratePercent: 56, gamesCount: 9000, updatedAt: '2026-04-26' }),

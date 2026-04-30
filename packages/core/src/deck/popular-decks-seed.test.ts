@@ -39,12 +39,10 @@ describe('POPULAR_DECKS_SEED', () => {
     }
   });
 
-  it('gamesCount and dustCost are non-negative integers', () => {
+  it('gamesCount is a non-negative integer', () => {
     for (const e of POPULAR_DECKS_SEED) {
       expect(Number.isInteger(e.gamesCount)).toBe(true);
       expect(e.gamesCount).toBeGreaterThanOrEqual(0);
-      expect(Number.isInteger(e.dustCost)).toBe(true);
-      expect(e.dustCost).toBeGreaterThanOrEqual(0);
     }
   });
 

@@ -3,6 +3,7 @@ import type {
   HeroClass,
   PopularDeck,
   PopularDeckArchetype,
+  PopularDeckEnriched,
 } from './deck-types';
 
 export type PopularDeckSort = 'popular' | 'winrate' | 'updated' | 'cheapest';
@@ -22,7 +23,7 @@ export interface PopularDeckFilterCriteria {
   cardNamesByDeckId?: Record<string, readonly string[]>;
 }
 
-export function filterPopularDecks<T extends PopularDeck>(
+export function filterPopularDecks<T extends PopularDeckEnriched>(
   list: readonly T[],
   criteria: PopularDeckFilterCriteria,
 ): T[] {
@@ -46,7 +47,7 @@ export function filterPopularDecks<T extends PopularDeck>(
   });
 }
 
-export function sortPopularDecks<T extends PopularDeck>(
+export function sortPopularDecks<T extends PopularDeckEnriched>(
   list: readonly T[],
   sort: PopularDeckSort,
 ): T[] {

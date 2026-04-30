@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { encodeDeck, DeckFormat, type CardDef } from '@hdt/hearthdb';
-import { computeKeyCards, computeManaCurve } from './popular-decks-derived';
+import { computeDustCost, computeKeyCards, computeManaCurve } from './popular-decks-derived';
 
 function fakeCard(over: Partial<CardDef> & { id: string; name: string }): CardDef {
   return {
@@ -94,5 +94,47 @@ describe('computeKeyCards', () => {
 
   it('returns [] on garbage deckstring', () => {
     expect(computeKeyCards('xxx', lookup)).toEqual([]);
+  });
+});
+
+describe('computeDustCost', () => {
+  const lookupRarity = (dbfId: number) => {
+    const map: Record<number, CardDef> = {
+      300: fakeCard({ id: 'C300', name: 'Common', cost: 1, rarity: 'COMMON' }),
+      301: fakeCard({ id: 'C301', name: 'Rare', cost: 2, rarity: 'RARE' }),
+      302: fakeCard({ id: 'C302', name: 'Epic', cost: 3, rarity: 'EPIC' }),
+      303: fakeCard({ id: 'C303', name: 'Legendary', cost: 4, rarity: 'LEGENDARY' }),
+    };
+    return map[dbfId] ?? null;
+  };
+
+  it('sums by rarity (40/100/400/1600 per copy)', () => {
+    const ds = encodeDeck({
+      format: DeckFormat.Standard,
+      heroes: [7],
+      cards: [
+        { dbfId: 300, count: 2 }, // 2 commons = 80
+        { dbfId: 301, count: 2 }, // 2 rares = 200
+        { dbfId: 302, count: 1 }, // 1 epic = 400
+        { dbfId: 303, count: 1 }, // 1 legendary = 1600
+      ],
+    });
+    expect(computeDustCost(ds, lookupRarity)).toBe(2280);
+  });
+
+  it('skips unknown cards (counted as 0 dust)', () => {
+    const ds = encodeDeck({
+      format: DeckFormat.Standard,
+      heroes: [7],
+      cards: [
+        { dbfId: 300, count: 2 },   // 80
+        { dbfId: 99999, count: 2 }, // unresolved → 0
+      ],
+    });
+    expect(computeDustCost(ds, lookupRarity)).toBe(80);
+  });
+
+  it('returns 0 on garbage deckstring', () => {
+    expect(computeDustCost('xxx', lookupRarity)).toBe(0);
   });
 });
