@@ -187,9 +187,28 @@ const api = {
       ipcRenderer.invoke('overlay:set-enabled', enabled),
     setEnabledOpponent: (enabled: boolean): Promise<void> =>
       ipcRenderer.invoke('overlay:set-enabled-opponent', enabled),
+    closeFromWindow: (which: 'player' | 'opponent'): Promise<void> =>
+      ipcRenderer.invoke('overlay:close-from-window', which),
+    onDisabledByWindow: (cb: (which: 'player' | 'opponent') => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, which: 'player' | 'opponent'): void => cb(which);
+      ipcRenderer.on('overlay:disabled-by-window', handler);
+      return () => ipcRenderer.removeListener('overlay:disabled-by-window', handler);
+    },
   },
   popularDecks: {
     list: (): Promise<PopularDeckEnriched[]> => ipcRenderer.invoke('popular-decks:list'),
+  },
+  cardPreview: {
+    show: (
+      cardId: string,
+      anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
+    ): Promise<void> => ipcRenderer.invoke('card-preview:show', cardId, anchor),
+    hide: (): Promise<void> => ipcRenderer.invoke('card-preview:hide'),
+    onSetCard: (cb: (cardId: string) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, cardId: string): void => cb(cardId);
+      ipcRenderer.on('card-preview:set-card', handler);
+      return () => ipcRenderer.removeListener('card-preview:set-card', handler);
+    },
   },
 };
 

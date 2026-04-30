@@ -24,11 +24,14 @@ import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
 import { registerPopularDecksIpc } from './popular-decks-ipc';
+import type { CardPreviewWindow, PreviewAnchor } from './card-preview-window';
+
 export interface OverlayControllers {
   enablePlayerOverlay: () => void;
   disablePlayerOverlay: () => void;
   enableOpponentOverlay: () => void;
   disableOpponentOverlay: () => void;
+  cardPreview?: CardPreviewWindow;
 }
 
 let cardImageProtocolRegistered = false;
@@ -48,6 +51,30 @@ export function registerIpc(overlay?: OverlayControllers): void {
     ipcMain.handle('overlay:set-enabled-opponent', (_, enabled: boolean) => {
       if (enabled) overlay.enableOpponentOverlay();
       else overlay.disableOpponentOverlay();
+    });
+    if (overlay.cardPreview) {
+      const cp = overlay.cardPreview;
+      ipcMain.handle('card-preview:show', (_, cardId: string, anchor: PreviewAnchor) => {
+        cp.show(cardId, anchor);
+      });
+      ipcMain.handle('card-preview:hide', () => {
+        cp.hide();
+      });
+    }
+    // Close-from-window: the overlay route's close button calls this.
+    // We disable the overlay via the same path the Settings toggle uses,
+    // then broadcast `overlay:disabled-by-window` so every renderer
+    // (including the main window's Settings page) can update its
+    // appearance store without firing a redundant IPC back.
+    ipcMain.handle('overlay:close-from-window', (_, which: 'player' | 'opponent') => {
+      if (which === 'player') overlay.disablePlayerOverlay();
+      else if (which === 'opponent') overlay.disableOpponentOverlay();
+      const { BrowserWindow: BW } = require('electron') as typeof import('electron');
+      for (const win of BW.getAllWindows()) {
+        if (!win.isDestroyed()) {
+          win.webContents.send('overlay:disabled-by-window', which);
+        }
+      }
     });
   }
   const cardImageRoot = defaultCardImageCacheRoot(app.getPath('userData'));

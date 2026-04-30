@@ -3,10 +3,11 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createMainWindow } from './window';
 import { registerIpc } from './ipc';
-import { startDeckTracker } from './deck-tracker';
+import { startDeckTracker, onDeckTrackerPhase } from './deck-tracker';
 import { startHearthWatcher } from './hearthwatcher-host';
 import { OverlayManager } from './overlay-window';
 import { createHearthstoneWindowTracker } from './hearthstone-window-tracker';
+import { CardPreviewWindow } from './card-preview-window';
 import { getHearthMirror } from './hearthmirror';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -127,20 +128,43 @@ if (!gotLock) {
       tracker.removeClient();
     };
 
+    const cardPreview = new CardPreviewWindow({ rendererUrl, preloadPath });
+
     registerIpc({
       enablePlayerOverlay,
       disablePlayerOverlay,
       enableOpponentOverlay,
       disableOpponentOverlay,
+      cardPreview,
     });
     startDeckTracker();
     startHearthWatcher();
-    createMainWindow();
+
+    // Gate overlay visibility on the deck-tracker phase: only show the
+    // panels when cards have actually been dealt (IN_MATCH). PRE_MATCH
+    // is too loose — it fires when the deck-picker / queueing screen
+    // populates matchInfo, before any deck-tracker data is meaningful.
+    onDeckTrackerPhase((phase) => {
+      const active = phase === 'IN_MATCH';
+      playerOverlay.setInActiveMatch(active);
+      opponentOverlay.setInActiveMatch(active);
+    });
+
+    const mainWindow = createMainWindow();
+
+    // Closing the main window quits the whole app (including the
+    // overlay BrowserWindows). Otherwise the overlays + tracker poll
+    // keep running headless forever — there's no UI to re-enable
+    // them since the main window with the Settings page is gone.
+    mainWindow.on('closed', () => {
+      app.quit();
+    });
 
     app.on('before-quit', () => {
       tracker.stop();
       playerOverlay.dispose();
       opponentOverlay.dispose();
+      cardPreview.dispose();
     });
 
     app.on('activate', () => {

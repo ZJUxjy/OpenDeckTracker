@@ -5,7 +5,7 @@ import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
 import { clsx } from 'clsx';
-import { CardImagePopover } from './CardImagePopover';
+import { useCardPreview } from '../hooks/use-card-preview';
 import { CardPips } from './CardPips';
 import { useLocale, useTranslation } from '../i18n';
 
@@ -179,35 +179,13 @@ function DeckPanelInner({ snapshot, compact }: DeckPanelInnerProps) {
     });
   }, []);
 
-  // Hover state for card image popover
-  const [popover, setPopover] = useState<{
-    cardId: string;
-    anchorRect: DOMRect;
-  } | null>(null);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  // Hover handlers for the floating card-preview tooltip window.
+  const { onRowEnter, onRowLeave } = useCardPreview();
   const handleRowMouseEnter = useCallback(
-    (cardId: string, el: HTMLDivElement) => {
-      hoverTimerRef.current = setTimeout(() => {
-        setPopover({ cardId, anchorRect: el.getBoundingClientRect() });
-      }, 300);
-    },
-    [],
+    (cardId: string, el: HTMLDivElement) => onRowEnter(cardId, el),
+    [onRowEnter],
   );
-  const handleRowMouseLeave = useCallback(() => {
-    if (hoverTimerRef.current !== null) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    setPopover(null);
-  }, []);
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current !== null) {
-        clearTimeout(hoverTimerRef.current);
-      }
-    };
-  }, []);
+  const handleRowMouseLeave = useCallback(() => onRowLeave(), [onRowLeave]);
 
   return (
     <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
@@ -293,13 +271,6 @@ function DeckPanelInner({ snapshot, compact }: DeckPanelInnerProps) {
         </div>
       </div>
 
-      {popover && (
-        <CardImagePopover
-          cardId={popover.cardId}
-          anchorRect={popover.anchorRect}
-          onClose={handleRowMouseLeave}
-        />
-      )}
     </aside>
   );
 }
@@ -385,7 +356,7 @@ function CardCopyRow({
       ref={ref}
       data-testid="card-copy-row"
       className={clsx(
-        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-2',
+        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]',
         exiting ? 'animate-deck-exit' : '',
       )}
       style={exiting ? undefined : undefined}
@@ -440,7 +411,7 @@ function CompactCardRow({
       ref={ref}
       data-testid="card-compact-row"
       className={clsx(
-        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-2',
+        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]',
         spent ? 'opacity-40' : '',
       )}
       onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}

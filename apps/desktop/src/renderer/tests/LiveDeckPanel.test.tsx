@@ -431,6 +431,10 @@ describe('LiveDeckPanel draw animation', () => {
 });
 
 describe('LiveDeckPanel hover', () => {
+  let savedHdt: typeof window.hdt;
+  let cardPreviewShow: ReturnType<typeof vi.fn>;
+  let cardPreviewHide: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.useFakeTimers();
     useDeckTrackerStore.setState({
@@ -438,13 +442,25 @@ describe('LiveDeckPanel hover', () => {
       pendingSelection: null,
       dialogDismissed: false,
     });
+    savedHdt = window.hdt;
+    cardPreviewShow = vi.fn();
+    cardPreviewHide = vi.fn();
+    (window as { hdt: typeof window.hdt }).hdt = {
+      ...savedHdt,
+      cardPreview: {
+        show: cardPreviewShow,
+        hide: cardPreviewHide,
+        onSetCard: vi.fn(() => () => {}),
+      },
+    };
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    (window as { hdt: typeof window.hdt }).hdt = savedHdt;
   });
 
-  it('shows card image popover after 300ms hover delay', () => {
+  it('invokes cardPreview.show after the hover-delay threshold', () => {
     const snap = makeSnapshot({
       original: [{ cardId: 'CS2_029', count: 1 }],
     });
@@ -454,18 +470,17 @@ describe('LiveDeckPanel hover', () => {
     const row = screen.getAllByTestId('card-copy-row')[0]!;
     expect(row).toBeTruthy();
 
-    // Hover — popover should not appear immediately
     fireEvent.mouseEnter(row);
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(cardPreviewShow).not.toHaveBeenCalled();
 
-    // After 300ms, popover should appear
     act(() => { vi.advanceTimersByTime(300); });
-    const popoverImg = screen.queryByRole('img');
-    expect(popoverImg).toBeInTheDocument();
-    expect(popoverImg?.getAttribute('src')).toContain('CS2_029');
+    expect(cardPreviewShow).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShow.mock.calls[0]![0]).toBe('CS2_029');
+    const anchor = cardPreviewShow.mock.calls[0]![1] as { side: 'left' | 'right' };
+    expect(anchor.side === 'left' || anchor.side === 'right').toBe(true);
   });
 
-  it('hides popover on mouse leave before threshold', () => {
+  it('does not invoke cardPreview.show when mouse leaves before threshold', () => {
     const snap = makeSnapshot({
       original: [{ cardId: 'CS2_029', count: 1 }],
     });
@@ -474,13 +489,13 @@ describe('LiveDeckPanel hover', () => {
     render(<LiveDeckPanel />);
     const row = screen.getAllByTestId('card-copy-row')[0]!;
 
-    // Hover, then leave before 300ms
     fireEvent.mouseEnter(row);
     act(() => { vi.advanceTimersByTime(100); });
     fireEvent.mouseLeave(row);
     act(() => { vi.advanceTimersByTime(300); });
 
-    // Popover should NOT appear
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    // Mouse leave still fires hide() (cheap idempotent call).
+    expect(cardPreviewHide).toHaveBeenCalled();
   });
 });

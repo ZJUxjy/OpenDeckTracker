@@ -96,27 +96,43 @@ describe('OpponentCardsPanel', () => {
     });
   });
 
-  it('shows card image popover after hovering an opponent card row', async () => {
-    render(
-      <OpponentCardsPanel
-        revealed={[record({ entityId: 20, cardId: 'CS2_029' })]}
-        graveyard={[]}
-      />,
-    );
+  it('invokes cardPreview.show after hovering an opponent card row past threshold', async () => {
+    const cardPreviewShow = vi.fn();
+    const cardPreviewHide = vi.fn();
+    const savedHdt = window.hdt;
+    (window as { hdt: typeof window.hdt }).hdt = {
+      ...savedHdt,
+      cardPreview: {
+        show: cardPreviewShow,
+        hide: cardPreviewHide,
+        onSetCard: vi.fn(() => () => {}),
+      },
+    };
+    try {
+      render(
+        <OpponentCardsPanel
+          revealed={[record({ entityId: 20, cardId: 'CS2_029' })]}
+          graveyard={[]}
+        />,
+      );
 
-    await waitFor(() => {
-      expect(screen.getByText('Fireball')).toBeInTheDocument();
-    });
+      await waitFor(() => {
+        expect(screen.getByText('Fireball')).toBeInTheDocument();
+      });
 
-    vi.useFakeTimers();
-    fireEvent.mouseEnter(screen.getByTestId('opponent-card-row'));
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+      vi.useFakeTimers();
+      fireEvent.mouseEnter(screen.getByTestId('opponent-card-row'));
+      expect(cardPreviewShow).not.toHaveBeenCalled();
 
-    act(() => {
-      vi.advanceTimersByTime(300);
-    });
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
 
-    const popoverImg = screen.getByRole('img');
-    expect(popoverImg).toHaveAttribute('src', expect.stringContaining('CS2_029'));
+      expect(cardPreviewShow).toHaveBeenCalledTimes(1);
+      expect(cardPreviewShow.mock.calls[0]![0]).toBe('CS2_029');
+    } finally {
+      vi.useRealTimers();
+      (window as { hdt: typeof window.hdt }).hdt = savedHdt;
+    }
   });
 });

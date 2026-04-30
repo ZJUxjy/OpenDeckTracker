@@ -2,7 +2,7 @@
 import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
-import { CardImagePopover } from './CardImagePopover';
+import { useCardPreview } from '../hooks/use-card-preview';
 import { useLocale, useTranslation } from '../i18n';
 
 interface OpponentCardsPanelProps {
@@ -32,33 +32,12 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
   const revealedGroups = useMemo(() => groupRecords(revealed), [revealed]);
   const graveyardGroups = useMemo(() => groupRecords(graveyard), [graveyard]);
   const isEmpty = revealedGroups.length === 0 && graveyardGroups.length === 0;
-  const [popover, setPopover] = useState<{
-    cardId: string;
-    anchorRect: DOMRect;
-  } | null>(null);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleRowMouseEnter = useCallback((cardId: string, el: HTMLDivElement) => {
-    hoverTimerRef.current = setTimeout(() => {
-      setPopover({ cardId, anchorRect: el.getBoundingClientRect() });
-    }, 300);
-  }, []);
-
-  const handleRowMouseLeave = useCallback(() => {
-    if (hoverTimerRef.current !== null) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    setPopover(null);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (hoverTimerRef.current !== null) {
-        clearTimeout(hoverTimerRef.current);
-      }
-    };
-  }, []);
+  const { onRowEnter, onRowLeave } = useCardPreview();
+  const handleRowMouseEnter = useCallback(
+    (cardId: string, el: HTMLDivElement) => onRowEnter(cardId, el),
+    [onRowEnter],
+  );
+  const handleRowMouseLeave = useCallback(() => onRowLeave(), [onRowLeave]);
 
   return (
     <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
@@ -96,14 +75,6 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
           </div>
         )}
       </div>
-      {popover && (
-        <CardImagePopover
-          cardId={popover.cardId}
-          anchorRect={popover.anchorRect}
-          onClose={handleRowMouseLeave}
-          placement="right"
-        />
-      )}
     </aside>
   );
 }
@@ -167,7 +138,7 @@ function OpponentCardRow({
     <div
       ref={ref}
       data-testid="opponent-card-row"
-      className="flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-2"
+      className="flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]"
       onMouseEnter={() => ref.current && onMouseEnter(card.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
