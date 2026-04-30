@@ -1,11 +1,14 @@
 import { LiveDeckPanel } from './LiveDeckPanel';
 
+/**
+ * Player overlay route. The hosting BrowserWindow is sized to the panel,
+ * pinned to the left edge of the Hearthstone window — so the panel fills
+ * its window entirely, with no fullscreen-transparent wrapper.
+ */
 export function OverlayView() {
   return (
-    <div className="flex-1 relative w-full h-full bg-transparent overflow-hidden select-none pointer-events-none">
-      <div className="absolute top-10 left-10 h-[calc(100%-5rem)] pointer-events-auto">
-        <LiveDeckPanel compact />
-      </div>
+    <div className="w-full h-full">
+      <LiveDeckPanel compact />
     </div>
   );
 }

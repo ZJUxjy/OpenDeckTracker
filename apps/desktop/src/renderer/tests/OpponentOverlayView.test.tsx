@@ -104,7 +104,11 @@ describe('OpponentOverlayView', () => {
 
     const { container } = render(<OpponentOverlayView />);
 
-    // The view wraps the panel in a pointer-events: none root + auto island.
-    expect(container.querySelector('.pointer-events-none')).not.toBeNull();
+    // The hosting BrowserWindow is now sized to the panel itself, so the
+    // view is just a w-full h-full wrapper around OpponentCardsPanel.
+    const root = container.firstChild as HTMLElement | null;
+    expect(root).not.toBeNull();
+    expect(root?.className ?? '').toMatch(/w-full/);
+    expect(root?.className ?? '').toMatch(/h-full/);
   });
 });

@@ -45,15 +45,30 @@ export function CardImagePopover({
     setError(false);
   }, [cardId, locale, src]);
 
-  // Default position: left of the local deck panel. Opponent panel can request right side.
-  const top = Math.max(8, Math.min(anchorRect.top - 80, window.innerHeight - 420));
-  const right = window.innerWidth - anchorRect.left + 8;
-  const left = anchorRect.right + 8;
+  // Position the 256×386 popover so it stays inside the hosting window's
+  // pixel bounds. In an in-game overlay the host window is only ~320 px
+  // wide, so a popover beside the panel would clip — clamp to fit.
+  const POP_W = 256;
+  const POP_H = 386;
+  const winW = window.innerWidth;
+  const winH = window.innerHeight;
+  const spaceRight = winW - anchorRect.right;
+  const spaceLeft = anchorRect.left;
+  const preferRight = placement === 'right' || spaceRight >= spaceLeft;
+  let left: number;
+  if (preferRight) {
+    left = Math.min(anchorRect.right + 8, winW - POP_W - 4);
+  } else {
+    left = Math.max(4, anchorRect.left - POP_W - 8);
+  }
+  // Final safety clamp: never let the popover extend outside the window.
+  left = Math.min(Math.max(4, left), Math.max(4, winW - POP_W - 4));
+  const top = Math.max(8, Math.min(anchorRect.top - 60, winH - POP_H - 8));
 
   return (
     <div
       className="fixed z-50"
-      style={placement === 'right' ? { top: `${top}px`, left: `${left}px` } : { top: `${top}px`, right: `${right}px` }}
+      style={{ top: `${top}px`, left: `${left}px` }}
       onMouseLeave={onClose}
     >
       <div className="w-[256px] bg-bg-2 rounded-lg shadow-2xl border border-border overflow-hidden">

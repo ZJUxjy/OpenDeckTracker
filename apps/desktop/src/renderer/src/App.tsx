@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Bell, ChevronDown, Ghost, LayoutTemplate, Monitor, User } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { Sidebar } from './components/Sidebar';
@@ -19,6 +20,36 @@ export default function App() {
   useDeckTracker();
   // Activate hearthwatcher diagnostics subscription (status displayed in Dashboard).
   useHearthWatcherStatus();
+
+  // Make html/body transparent on overlay routes so the BrowserWindow's
+  // `transparent: true` actually shows through. Both index.html (body
+  // class) and theme.css (body { background }) paint a solid background
+  // by default, which would otherwise cover the Hearthstone game window.
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    if (isOverlay) {
+      html.style.background = 'transparent';
+      body.style.background = 'transparent';
+      body.classList.add('overlay-route');
+    } else {
+      html.style.background = '';
+      body.style.background = '';
+      body.classList.remove('overlay-route');
+    }
+  }, [isOverlay]);
+
+  // Overlay routes are hosted in dedicated transparent BrowserWindows.
+  // They MUST NOT render the desktop shell (sidebar + header + opaque bg)
+  // — the shell would paint the entire transparent window opaque, covering
+  // the Hearthstone game underneath.
+  if (isOverlay) {
+    return (
+      <div className="w-screen h-screen bg-transparent overflow-hidden text-text font-sans select-none">
+        <Outlet />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-bg text-text font-sans overflow-hidden">

@@ -1,17 +1,19 @@
 import { OpponentCardsPanel } from './OpponentCardsPanel';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 
+/**
+ * Opponent overlay route. The hosting BrowserWindow is sized to the panel,
+ * pinned to the right edge of the Hearthstone window.
+ */
 export function OpponentOverlayView() {
   const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
 
   return (
-    <div className="flex-1 relative w-full h-full bg-transparent overflow-hidden select-none pointer-events-none">
-      <div className="absolute top-10 right-10 h-[calc(100%-5rem)] pointer-events-auto">
-        <OpponentCardsPanel
-          revealed={opponent?.revealed ?? []}
-          graveyard={opponent?.graveyard ?? []}
-        />
-      </div>
+    <div className="w-full h-full">
+      <OpponentCardsPanel
+        revealed={opponent?.revealed ?? []}
+        graveyard={opponent?.graveyard ?? []}
+      />
     </div>
   );
 }

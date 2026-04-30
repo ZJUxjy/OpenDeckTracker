@@ -1,4 +1,6 @@
-import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { useMemo, useRef, useState, useCallback, useEffect, type CSSProperties } from 'react';
+
+const DRAG_HEADER_STYLE = { WebkitAppRegion: 'drag' } as CSSProperties;
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
@@ -38,8 +40,8 @@ export function LiveDeckPanel({ compact = false }: { compact?: boolean } = {}) {
 function EmptyState({ message }: { message: string }) {
   const { t } = useTranslation();
   return (
-    <aside className="w-[260px] bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-bg-2 p-3 border-b border-border">
+    <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-bg-2 p-3 border-b border-border cursor-move" style={DRAG_HEADER_STYLE}>
         <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('deckTracker.deck')}
         </div>
@@ -208,8 +210,8 @@ function DeckPanelInner({ snapshot, compact }: DeckPanelInnerProps) {
   }, []);
 
   return (
-    <aside className="w-[260px] bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-bg-2 p-3 border-b border-border">
+    <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-bg-2 p-3 border-b border-border cursor-move" style={DRAG_HEADER_STYLE}>
         <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('deckTracker.deck')}
         </div>

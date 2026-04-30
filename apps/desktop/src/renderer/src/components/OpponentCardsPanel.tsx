@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
@@ -61,8 +61,11 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
   }, []);
 
   return (
-    <aside className="w-[260px] bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-bg-2 p-3 border-b border-border">
+    <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div
+        className="bg-bg-2 p-3 border-b border-border cursor-move"
+        style={{ WebkitAppRegion: 'drag' } as CSSProperties}
+      >
         <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('opponent.title')}
         </div>
