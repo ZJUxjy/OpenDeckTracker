@@ -5,6 +5,12 @@ use windows::Win32::System::Threading::{
     PROCESS_VM_READ,
 };
 
+/// `SYNCHRONIZE` standard access right (0x00100000). Required for
+/// `WaitForSingleObject` on a process handle. Hard-coded here because the
+/// `windows` crate exposes it only via the `Storage`/`Security` features
+/// we don't otherwise need.
+const SYNCHRONIZE: u32 = 0x0010_0000;
+
 /// RAII wrapper for a Win32 process HANDLE.
 ///
 /// Guarantees `CloseHandle` is called exactly once when the value is dropped.
@@ -14,8 +20,13 @@ pub struct OwnedProcessHandle {
 }
 
 impl OwnedProcessHandle {
+    // SYNCHRONIZE is required for `WaitForSingleObject(handle, 0)` —
+    // without it, the wait returns WAIT_FAILED and the staleness check
+    // in runtime.rs treats every healthy runtime as "process gone,"
+    // causing an infinite invalidate→reinit loop and spamming the offset
+    // prober warnings on every reinit.
     const ACCESS: PROCESS_ACCESS_RIGHTS = PROCESS_ACCESS_RIGHTS(
-        PROCESS_QUERY_INFORMATION.0 | PROCESS_VM_READ.0,
+        PROCESS_QUERY_INFORMATION.0 | PROCESS_VM_READ.0 | SYNCHRONIZE,
     );
 
     /// Open a target process by PID with read + query rights.
