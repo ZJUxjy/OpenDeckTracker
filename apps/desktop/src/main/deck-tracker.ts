@@ -52,13 +52,28 @@ export function startDeckTracker(): void {
   const mirror = getHearthMirror();
   tracker = new DeckTracker({ mirror });
 
+  let lastPhaseLogged: string | null = null;
+  let lastDeckIdLogged: number | string | null = null;
   tracker.on('state-change', (event: DeckTrackerEvent) => {
+    const s = event.snapshot;
+    const phase = s?.phase ?? 'NULL';
+    const deckId = s?.deck?.id ?? null;
+    if (phase !== lastPhaseLogged || deckId !== lastDeckIdLogged) {
+      console.log(
+        `[deck-tracker] state phase=${phase} deck=${deckId === null ? 'null' : `${deckId} (${s?.deck?.name ?? '?'})`} remaining=${s?.deck?.remaining?.length ?? 0} oppRevealed=${s?.opponent?.revealed?.length ?? 0}`,
+      );
+      lastPhaseLogged = phase;
+      lastDeckIdLogged = deckId;
+    }
+    fanoutPhase(phase);
     broadcast('deck-tracker:state', event.snapshot);
   });
   tracker.on('match-started', (event: DeckTrackerEvent) => {
+    console.log(`[deck-tracker] match-started deck=${event.snapshot?.deck?.id ?? 'null'}`);
     broadcast('deck-tracker:event', { type: event.type, snapshot: event.snapshot });
   });
   tracker.on('match-ended', (event: DeckTrackerEvent) => {
+    console.log(`[deck-tracker] match-ended completed=${event.completedMatch !== undefined}`);
     if (event.completedMatch !== undefined) {
       recordCompletedMatch(event.completedMatch);
     }
@@ -69,6 +84,7 @@ export function startDeckTracker(): void {
     });
   });
   tracker.on('error', (event: DeckTrackerEvent) => {
+    console.error('[deck-tracker] error:', event.error);
     broadcast('deck-tracker:event', {
       type: event.type,
       snapshot: event.snapshot,
@@ -76,6 +92,7 @@ export function startDeckTracker(): void {
     });
   });
   tracker.on('needs-deck-selection', (event: DeckTrackerEvent) => {
+    console.log(`[deck-tracker] needs-deck-selection candidates=${event.decks?.length ?? 0}`);
     broadcast('deck-tracker:event', {
       type: event.type,
       snapshot: event.snapshot,
@@ -93,6 +110,37 @@ export function startDeckTracker(): void {
 
 export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {
   return tracker?.getSnapshot() ?? null;
+}
+
+/**
+ * Subscribe to deck-tracker phase transitions. Used by the overlay
+ * bootstrap to gate window visibility on whether the player is
+ * actively in a match (PRE_MATCH or IN_MATCH) — we don't want the
+ * overlay panels showing on the main menu / deck-picker.
+ *
+ * Returns an unsubscribe function. The callback fires once
+ * immediately with the current phase if a tracker is already running.
+ */
+type PhaseListener = (phase: string) => void;
+const phaseListeners = new Set<PhaseListener>();
+let lastBroadcastPhase: string | null = null;
+
+export function onDeckTrackerPhase(cb: PhaseListener): () => void {
+  phaseListeners.add(cb);
+  // Replay the most recent phase so a new subscriber lines up
+  // with the rest of the system without waiting for the next tick.
+  if (lastBroadcastPhase !== null) cb(lastBroadcastPhase);
+  return () => {
+    phaseListeners.delete(cb);
+  };
+}
+
+function fanoutPhase(phase: string): void {
+  if (phase === lastBroadcastPhase) return;
+  lastBroadcastPhase = phase;
+  for (const cb of phaseListeners) {
+    try { cb(phase); } catch { /* keep loop healthy */ }
+  }
 }
 
 export function registerDeckTrackerIpc(): void {
