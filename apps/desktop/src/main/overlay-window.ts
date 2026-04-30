@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron';
+import { BrowserWindow } from 'electron';
 
 export interface OverlayManagerOptions {
   rendererUrl: string;
@@ -6,10 +6,23 @@ export interface OverlayManagerOptions {
   routeHash?: string;
 }
 
+export interface BoundsRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+function boundsEqual(a: BoundsRect, b: BoundsRect): boolean {
+  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+}
+
 export class OverlayManager {
   private win: BrowserWindow | null = null;
   private userEnabled = false;
-  private gameRunning = false;
+  private visibleOnScreen = false;
+  private pendingBounds: BoundsRect | null = null;
+  private lastAppliedBounds: BoundsRect | null = null;
   private readonly opts: OverlayManagerOptions;
   private readonly routeHash: string;
 
@@ -26,13 +39,26 @@ export class OverlayManager {
 
   disable(): void {
     this.userEnabled = false;
-    this.gameRunning = false;
+    this.visibleOnScreen = false;
     this.syncVisibility();
   }
 
-  setRunning(running: boolean): void {
-    this.gameRunning = running;
+  setVisibleOnScreen(visible: boolean): void {
+    this.visibleOnScreen = visible;
     this.syncVisibility();
+  }
+
+  setBounds(rect: BoundsRect): void {
+    if (!this.win || this.win.isDestroyed()) {
+      // Window not yet created — remember the bounds and apply on createWindow().
+      this.pendingBounds = { ...rect };
+      return;
+    }
+    if (this.lastAppliedBounds && boundsEqual(this.lastAppliedBounds, rect)) {
+      return;
+    }
+    this.win.setBounds(rect);
+    this.lastAppliedBounds = { ...rect };
   }
 
   dispose(): void {
@@ -43,9 +69,6 @@ export class OverlayManager {
   }
 
   private createWindow(): void {
-    const display = screen.getPrimaryDisplay();
-    const { x, y, width, height } = display.workArea;
-
     this.win = new BrowserWindow({
       transparent: true,
       frame: false,
@@ -57,10 +80,10 @@ export class OverlayManager {
       fullscreenable: false,
       hasShadow: false,
       show: false,
-      x,
-      y,
-      width,
-      height,
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
       webPreferences: {
         preload: this.opts.preloadPath,
         contextIsolation: true,
@@ -72,6 +95,12 @@ export class OverlayManager {
 
     this.win.setAlwaysOnTop(true, 'screen-saver');
 
+    if (this.pendingBounds) {
+      this.win.setBounds(this.pendingBounds);
+      this.lastAppliedBounds = this.pendingBounds;
+      this.pendingBounds = null;
+    }
+
     const devUrl = process.env['ELECTRON_RENDERER_URL'];
     if (devUrl) {
       void this.win.loadURL(`${devUrl}#${this.routeHash}`);
@@ -82,7 +111,7 @@ export class OverlayManager {
 
   private syncVisibility(): void {
     if (!this.win || this.win.isDestroyed()) return;
-    const shouldShow = this.userEnabled && this.gameRunning;
+    const shouldShow = this.userEnabled && this.visibleOnScreen;
     if (shouldShow) {
       this.win.show();
     } else {

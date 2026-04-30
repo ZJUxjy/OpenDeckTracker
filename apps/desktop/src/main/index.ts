@@ -6,7 +6,7 @@ import { registerIpc } from './ipc';
 import { startDeckTracker } from './deck-tracker';
 import { startHearthWatcher } from './hearthwatcher-host';
 import { OverlayManager } from './overlay-window';
-import { createOverlayPoller } from './overlay-poller';
+import { createHearthstoneWindowTracker } from './hearthstone-window-tracker';
 import { getHearthMirror } from './hearthmirror';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -51,12 +51,17 @@ if (!gotLock) {
       routeHash: '/overlay-opponent',
     });
 
-    const overlayPoller = createOverlayPoller({
-      isAlive: () => getHearthMirror().isAlive(),
-      onRunningChange: (running) => {
-        playerOverlay.setRunning(running);
-        opponentOverlay.setRunning(running);
-      },
+    const tracker = createHearthstoneWindowTracker({
+      getWindow: () => getHearthMirror().getHearthstoneWindow(),
+    });
+    tracker.subscribe((event) => {
+      if (event.kind === 'bounds') {
+        playerOverlay.setBounds(event.bounds);
+        opponentOverlay.setBounds(event.bounds);
+      } else {
+        playerOverlay.setVisibleOnScreen(event.visible);
+        opponentOverlay.setVisibleOnScreen(event.visible);
+      }
     });
 
     let playerOn = false;
@@ -65,25 +70,25 @@ if (!gotLock) {
       if (playerOn) return;
       playerOn = true;
       playerOverlay.enable();
-      overlayPoller.addClient();
+      tracker.addClient();
     };
     const disablePlayerOverlay = (): void => {
       if (!playerOn) return;
       playerOn = false;
       playerOverlay.disable();
-      overlayPoller.removeClient();
+      tracker.removeClient();
     };
     const enableOpponentOverlay = (): void => {
       if (opponentOn) return;
       opponentOn = true;
       opponentOverlay.enable();
-      overlayPoller.addClient();
+      tracker.addClient();
     };
     const disableOpponentOverlay = (): void => {
       if (!opponentOn) return;
       opponentOn = false;
       opponentOverlay.disable();
-      overlayPoller.removeClient();
+      tracker.removeClient();
     };
 
     registerIpc({
@@ -97,7 +102,7 @@ if (!gotLock) {
     createMainWindow();
 
     app.on('before-quit', () => {
-      overlayPoller.stop();
+      tracker.stop();
       playerOverlay.dispose();
       opponentOverlay.dispose();
     });

@@ -7,10 +7,17 @@ const mocks = vi.hoisted(() => {
     _visible = false;
     _destroyed = false;
     _opts: Record<string, unknown>;
+    _currentBounds: { x: number; y: number; width: number; height: number };
     webContents = { on: vi.fn() };
 
     constructor(opts: Record<string, unknown>) {
       this._opts = opts;
+      this._currentBounds = {
+        x: (opts['x'] as number) ?? 0,
+        y: (opts['y'] as number) ?? 0,
+        width: (opts['width'] as number) ?? 0,
+        height: (opts['height'] as number) ?? 0,
+      };
       windows.push(this);
     }
     show = vi.fn(() => { this._visible = true; });
@@ -21,6 +28,9 @@ const mocks = vi.hoisted(() => {
     setAlwaysOnTop = vi.fn();
     loadURL = vi.fn(() => Promise.resolve());
     loadFile = vi.fn(() => Promise.resolve());
+    setBounds = vi.fn((rect: { x: number; y: number; width: number; height: number }) => {
+      this._currentBounds = { ...rect };
+    });
   }
 
   return {
@@ -28,18 +38,11 @@ const mocks = vi.hoisted(() => {
     MockWindow,
     BrowserWindow: vi.fn((opts: Record<string, unknown>) => new MockWindow(opts)),
     setInterval: vi.spyOn(globalThis, 'setInterval'),
-    screen: {
-      getPrimaryDisplay: () => ({
-        workAreaSize: { width: 1920, height: 1080 },
-        workArea: { x: 0, y: 0, width: 1920, height: 1080 },
-      }),
-    },
   };
 });
 
 vi.mock('electron', () => ({
   BrowserWindow: mocks.BrowserWindow,
-  screen: mocks.screen,
 }));
 
 import { OverlayManager, type OverlayManagerOptions } from './overlay-window';
@@ -83,6 +86,16 @@ describe('OverlayManager', () => {
     expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
   });
 
+  it('initial bounds are 1×1 at origin (no static workArea sizing)', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+    expect(win._opts.x).toBe(0);
+    expect(win._opts.y).toBe(0);
+    expect(win._opts.width).toBe(1);
+    expect(win._opts.height).toBe(1);
+  });
+
   it('enable() loads URL with default #/overlay hash', () => {
     const mgr = makeManager();
     mgr.enable();
@@ -107,35 +120,35 @@ describe('OverlayManager', () => {
     }
   });
 
-  it('enable() does not start an internal poll timer (the bootstrap layer owns polling)', () => {
+  it('enable() does not start an internal poll timer', () => {
     const mgr = makeManager();
     const before = mocks.setInterval.mock.calls.length;
     mgr.enable();
     expect(mocks.setInterval.mock.calls.length).toBe(before);
   });
 
-  it('enable() with gameRunning=false keeps the window hidden', () => {
+  it('enable() with visibleOnScreen=false keeps the window hidden', () => {
     const mgr = makeManager();
     mgr.enable();
     expect(lastWindow().isVisible()).toBe(false);
   });
 
-  it('setRunning(true) after enable() shows the window', () => {
+  it('setVisibleOnScreen(true) after enable() shows the window', () => {
     const mgr = makeManager();
     mgr.enable();
-    mgr.setRunning(true);
+    mgr.setVisibleOnScreen(true);
 
     expect(lastWindow().show).toHaveBeenCalled();
     expect(lastWindow().isVisible()).toBe(true);
   });
 
-  it('setRunning(false) after enable() hides the window', () => {
+  it('setVisibleOnScreen(false) after enable() hides the window', () => {
     const mgr = makeManager();
     mgr.enable();
-    mgr.setRunning(true);
+    mgr.setVisibleOnScreen(true);
     expect(lastWindow().isVisible()).toBe(true);
 
-    mgr.setRunning(false);
+    mgr.setVisibleOnScreen(false);
     expect(lastWindow().hide).toHaveBeenCalled();
     expect(lastWindow().isVisible()).toBe(false);
   });
@@ -143,24 +156,23 @@ describe('OverlayManager', () => {
   it('disable() hides without destroying', () => {
     const mgr = makeManager();
     mgr.enable();
-    mgr.setRunning(true);
+    mgr.setVisibleOnScreen(true);
     mgr.disable();
 
     expect(lastWindow().isVisible()).toBe(false);
     expect(lastWindow().isDestroyed()).toBe(false);
   });
 
-  it('disable() resets gameRunning so re-enable does not flash a stale visible window', () => {
+  it('disable() resets visibleOnScreen so re-enable does not flash a stale visible window', () => {
     const mgr = makeManager();
     mgr.enable();
-    mgr.setRunning(true);
+    mgr.setVisibleOnScreen(true);
     expect(lastWindow().isVisible()).toBe(true);
 
     mgr.disable();
     expect(lastWindow().isVisible()).toBe(false);
 
     mgr.enable();
-    // gameRunning was reset by disable(); window stays hidden until setRunning(true) fires again
     expect(lastWindow().isVisible()).toBe(false);
   });
 
@@ -170,5 +182,49 @@ describe('OverlayManager', () => {
     mgr.dispose();
 
     expect(lastWindow().isDestroyed()).toBe(true);
+  });
+
+  it('setBounds() before enable() is remembered and applied at create time', () => {
+    const mgr = makeManager();
+    mgr.setBounds({ x: 100, y: 200, width: 1280, height: 720 });
+    mgr.enable();
+    const win = lastWindow();
+    expect(win.setBounds).toHaveBeenCalledWith({ x: 100, y: 200, width: 1280, height: 720 });
+    expect(win._currentBounds).toEqual({ x: 100, y: 200, width: 1280, height: 720 });
+  });
+
+  it('setBounds() after enable() calls BrowserWindow.setBounds', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+    win.setBounds.mockClear();
+
+    mgr.setBounds({ x: 50, y: 50, width: 1280, height: 720 });
+    expect(win.setBounds).toHaveBeenCalledTimes(1);
+    expect(win.setBounds).toHaveBeenCalledWith({ x: 50, y: 50, width: 1280, height: 720 });
+  });
+
+  it('setBounds() with the same rect twice in a row is suppressed', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+    win.setBounds.mockClear();
+
+    const rect = { x: 50, y: 50, width: 1280, height: 720 };
+    mgr.setBounds(rect);
+    mgr.setBounds(rect);
+    mgr.setBounds(rect);
+    expect(win.setBounds).toHaveBeenCalledTimes(1);
+  });
+
+  it('setBounds() with a different rect after a prior call does fire', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+    win.setBounds.mockClear();
+
+    mgr.setBounds({ x: 0, y: 0, width: 1920, height: 1080 });
+    mgr.setBounds({ x: 100, y: 100, width: 1280, height: 720 });
+    expect(win.setBounds).toHaveBeenCalledTimes(2);
   });
 });
