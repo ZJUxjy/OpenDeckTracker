@@ -81,7 +81,8 @@ describe('OverlayManager', () => {
     expect(win._opts.frame).toBe(false);
     expect(win._opts.alwaysOnTop).toBe(true);
     expect(win._opts.skipTaskbar).toBe(true);
-    expect(win._opts.focusable).toBe(false);
+    // focusable=true since v2 (drag region requires it on Windows).
+    expect(win._opts.focusable).toBe(true);
     expect(win._opts.show).toBe(false);
     expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
   });

@@ -46,12 +46,25 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
     for (const cb of subscribers) cb(event);
   }
 
+  let pollCount = 0;
   async function poll(): Promise<void> {
+    pollCount++;
     let result: HearthstoneWindow | null;
+    let threw = false;
     try {
       result = await opts.getWindow();
-    } catch {
+    } catch (e) {
+      threw = true;
       result = null;
+      if (pollCount <= 3 || pollCount % 25 === 0) {
+        console.error('[overlay-tracker] getWindow threw:', (e as Error).message);
+      }
+    }
+
+    if (pollCount === 1 || pollCount % 25 === 0) {
+      console.log(
+        `[overlay-tracker] poll #${pollCount}: result=${result === null ? 'null' : `{${result.x},${result.y} ${result.width}×${result.height} vis=${result.visible} min=${result.minimized}}`}${threw ? ' (threw)' : ''}`,
+      );
     }
 
     const isPresent = result !== null && result.visible && !result.minimized;
@@ -62,21 +75,22 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
       const next: BoundsRect = {
         x: result.x, y: result.y, width: result.width, height: result.height,
       };
-      // Bounds change: emit BEFORE visibility on the appearance edge so
-      // subscribers can position before showing.
       const boundsChanged = !lastBounds || !boundsEqual(lastBounds, next);
       if (boundsChanged) {
         lastBounds = next;
+        console.log(`[overlay-tracker] emit bounds: ${next.x},${next.y} ${next.width}×${next.height}`);
         emit({ kind: 'bounds', bounds: next });
       }
       if (!lastVisible) {
         lastVisible = true;
+        console.log('[overlay-tracker] emit visibility: true');
         emit({ kind: 'visibility', visible: true });
       }
     } else {
       falseStreak++;
       if (falseStreak >= falseStreakThreshold && lastVisible) {
         lastVisible = false;
+        console.log(`[overlay-tracker] emit visibility: false (streak=${falseStreak})`);
         emit({ kind: 'visibility', visible: false });
       }
     }
@@ -102,12 +116,20 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
   return {
     addClient(): void {
       clientCount++;
-      if (clientCount === 1) start();
+      console.log(`[overlay-tracker] addClient → count=${clientCount}`);
+      if (clientCount === 1) {
+        console.log('[overlay-tracker] start polling');
+        start();
+      }
     },
     removeClient(): void {
       if (clientCount === 0) return;
       clientCount--;
-      if (clientCount === 0) stop();
+      console.log(`[overlay-tracker] removeClient → count=${clientCount}`);
+      if (clientCount === 0) {
+        console.log('[overlay-tracker] stop polling');
+        stop();
+      }
     },
     subscribe(cb): () => void {
       subscribers.push(cb);

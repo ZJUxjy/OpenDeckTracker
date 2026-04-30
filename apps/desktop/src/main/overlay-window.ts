@@ -33,6 +33,7 @@ export class OverlayManager {
 
   enable(): void {
     this.userEnabled = true;
+    console.log(`[overlay-mgr ${this.routeHash}] enable() userEnabled=true`);
     if (!this.win) this.createWindow();
     this.syncVisibility();
   }
@@ -40,11 +41,13 @@ export class OverlayManager {
   disable(): void {
     this.userEnabled = false;
     this.visibleOnScreen = false;
+    console.log(`[overlay-mgr ${this.routeHash}] disable()`);
     this.syncVisibility();
   }
 
   setVisibleOnScreen(visible: boolean): void {
     this.visibleOnScreen = visible;
+    console.log(`[overlay-mgr ${this.routeHash}] setVisibleOnScreen(${visible})`);
     this.syncVisibility();
   }
 
@@ -52,11 +55,13 @@ export class OverlayManager {
     if (!this.win || this.win.isDestroyed()) {
       // Window not yet created — remember the bounds and apply on createWindow().
       this.pendingBounds = { ...rect };
+      console.log(`[overlay-mgr ${this.routeHash}] setBounds before window — buffered`);
       return;
     }
     if (this.lastAppliedBounds && boundsEqual(this.lastAppliedBounds, rect)) {
       return;
     }
+    console.log(`[overlay-mgr ${this.routeHash}] setBounds → ${rect.x},${rect.y} ${rect.width}×${rect.height}`);
     this.win.setBounds(rect);
     this.lastAppliedBounds = { ...rect };
   }
@@ -72,11 +77,14 @@ export class OverlayManager {
     this.win = new BrowserWindow({
       transparent: true,
       frame: false,
-      resizable: false,
-      movable: false,
+      resizable: true,
+      movable: true,
       skipTaskbar: true,
       alwaysOnTop: true,
-      focusable: false,
+      // focusable=true so the user can click into the panel to interact
+      // (drag, scroll, hover). With focusable=false, drag regions don't
+      // respond on Windows.
+      focusable: true,
       fullscreenable: false,
       hasShadow: false,
       show: false,
@@ -110,8 +118,14 @@ export class OverlayManager {
   }
 
   private syncVisibility(): void {
-    if (!this.win || this.win.isDestroyed()) return;
+    if (!this.win || this.win.isDestroyed()) {
+      console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
+      return;
+    }
     const shouldShow = this.userEnabled && this.visibleOnScreen;
+    console.log(
+      `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} → ${shouldShow ? 'show' : 'hide'}`,
+    );
     if (shouldShow) {
       this.win.show();
     } else {
