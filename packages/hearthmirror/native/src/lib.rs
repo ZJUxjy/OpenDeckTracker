@@ -17,6 +17,7 @@ pub mod service_locator;
 pub mod reflection;
 pub mod disasm;
 pub mod runtime_slot;
+pub mod window;
 
 use error::ScryError;
 use napi_derive::napi;
@@ -147,6 +148,28 @@ pub async fn is_alive() -> napi::Result<bool> {
     drop_if_stale(&mut guard);
     guard.ensure_runtime_with(Instant::now(), back_off_duration(), try_init);
     Ok(guard.runtime.is_some())
+}
+
+#[napi(object)]
+pub struct HearthstoneWindowResult {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+    pub minimized: bool,
+    pub visible: bool,
+}
+
+#[napi]
+pub async fn get_hearthstone_window() -> napi::Result<Option<HearthstoneWindowResult>> {
+    Ok(window::get_hearthstone_window().map(|w| HearthstoneWindowResult {
+        x: w.x,
+        y: w.y,
+        width: w.width,
+        height: w.height,
+        minimized: w.minimized,
+        visible: w.visible,
+    }))
 }
 
 /// Diagnostic: number of times the slot has populated a fresh runtime.

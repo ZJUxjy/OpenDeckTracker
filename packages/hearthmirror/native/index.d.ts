@@ -118,6 +118,9 @@ export declare function getBattleTag(): Promise<BattleTagResult | null>
 
 export declare function getBoardState(): Promise<BoardStateResult | null>
 
+/** Diagnostic: PID the current cached runtime is bound to, or `0` if none. */
+export declare function getBoundPid(): Promise<number>
+
 export declare function getChoices(): Promise<ChoicesResult | null>
 
 export declare function getCollection(): Promise<Array<CardResult> | null>
@@ -132,11 +135,20 @@ export declare function getGameType(): Promise<GameTypeResult | null>
 
 export declare function getHandState(): Promise<HandStateResult | null>
 
+export declare function getHearthstoneWindow(): Promise<HearthstoneWindowResult | null>
+
 export declare function getMatchInfo(): Promise<MatchInfoResult | null>
 
 export declare function getMedalInfo(): Promise<MedalInfoResult | null>
 
 export declare function getOpponentSecrets(): Promise<OpponentSecretsResult | null>
+
+/**
+ * Diagnostic: number of times the slot has populated a fresh runtime.
+ * Resets to 0 on Electron process restart. Surfaced via napi for the
+ * `dump_reflection` example and any future debug overlay.
+ */
+export declare function getReinitCount(): Promise<number>
 
 export declare function getSelectedDeckId(): Promise<SelectedDeckResult | null>
 
@@ -151,6 +163,15 @@ export interface HandCard {
 export interface HandStateResult {
   friendlyHand: Array<HandCard>
   opposingHandCount: number
+}
+
+export interface HearthstoneWindowResult {
+  x: number
+  y: number
+  width: number
+  height: number
+  minimized: boolean
+  visible: boolean
 }
 
 export interface InMatchDeckCard {
