@@ -11,6 +11,22 @@ export interface BattleTag {
   fullBattleTag: string;
 }
 
+/**
+ * Hearthstone game-window bounds, in virtual-screen pixel coordinates.
+ * Mirrors the Win32 `RECT` shape returned by `GetWindowRect`. Returned by
+ * `HearthMirror.getHearthstoneWindow()`.
+ */
+export interface HearthstoneWindow {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** True when the window is iconified (minimized to taskbar). */
+  minimized: boolean;
+  /** True when the window is `IsWindowVisible`. */
+  visible: boolean;
+}
+
 export interface AccountId {
   hi: bigint;
   lo: bigint;

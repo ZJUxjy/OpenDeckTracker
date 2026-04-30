@@ -18,6 +18,7 @@ import type {
   GameType,
   HandCard,
   HandState,
+  HearthstoneWindow,
   InMatchDeckCard,
   IsMulligan,
   MatchInfo,
@@ -59,6 +60,28 @@ export class HearthMirror {
     const alive = await native.isAlive();
     this._connected = alive;
     return alive;
+  }
+
+  /**
+   * Locate the Hearthstone window and read its bounds + visibility flags.
+   * Resolves to `null` when no window is found or when the native call
+   * throws — callers can't distinguish those two cases (and shouldn't need to).
+   */
+  async getHearthstoneWindow(): Promise<HearthstoneWindow | null> {
+    try {
+      const r = await native.getHearthstoneWindow();
+      if (!r) return null;
+      return {
+        x: r.x,
+        y: r.y,
+        width: r.width,
+        height: r.height,
+        minimized: r.minimized,
+        visible: r.visible,
+      };
+    } catch {
+      return null;
+    }
   }
 
   async getBattleTag(): Promise<BattleTag | null> {

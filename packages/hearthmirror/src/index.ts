@@ -18,6 +18,7 @@ export type {
   GameType,
   HandCard,
   HandState,
+  HearthstoneWindow,
   InMatchDeckCard,
   IsMulligan,
   MatchInfo,

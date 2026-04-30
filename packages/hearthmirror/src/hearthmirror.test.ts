@@ -21,6 +21,7 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getDeckState: vi.fn(),
   getOpponentSecrets: vi.fn(),
   getChoices: vi.fn(),
+  getHearthstoneWindow: vi.fn(),
 }));
 
 import * as native from '@hdt/hearthmirror-native';
@@ -357,6 +358,49 @@ describe('HearthMirror', () => {
     it('returns null when native returns null', async () => {
       mocked(native.getServerInfo).mockResolvedValue(null);
       expect(await mirror.getServerInfo()).toBeNull();
+    });
+  });
+
+  describe('getHearthstoneWindow', () => {
+    it('returns the native object verbatim when native returns one', async () => {
+      mocked(native.getHearthstoneWindow).mockResolvedValue({
+        x: 100,
+        y: 200,
+        width: 1280,
+        height: 720,
+        minimized: false,
+        visible: true,
+      });
+      const result = await mirror.getHearthstoneWindow();
+      expect(result).toEqual({
+        x: 100,
+        y: 200,
+        width: 1280,
+        height: 720,
+        minimized: false,
+        visible: true,
+      });
+    });
+
+    it('returns null when native returns null', async () => {
+      mocked(native.getHearthstoneWindow).mockResolvedValue(null);
+      expect(await mirror.getHearthstoneWindow()).toBeNull();
+    });
+
+    it('returns null when native throws', async () => {
+      mocked(native.getHearthstoneWindow).mockRejectedValue(new Error('mirror down'));
+      expect(await mirror.getHearthstoneWindow()).toBeNull();
+    });
+
+    it('preserves minimized=true flag', async () => {
+      mocked(native.getHearthstoneWindow).mockResolvedValue({
+        x: 0, y: 0, width: 0, height: 0,
+        minimized: true,
+        visible: false,
+      });
+      const result = await mirror.getHearthstoneWindow();
+      expect(result?.minimized).toBe(true);
+      expect(result?.visible).toBe(false);
     });
   });
 });
