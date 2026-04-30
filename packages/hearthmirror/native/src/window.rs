@@ -14,9 +14,9 @@ use std::cell::Cell;
 
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{BOOL, CloseHandle, HWND, LPARAM, MAX_PATH, RECT};
-use windows::Win32::System::ProcessStatus::GetModuleBaseNameW;
 use windows::Win32::System::Threading::{
-    OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
+    OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT,
+    PROCESS_QUERY_LIMITED_INFORMATION,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     EnumWindows, GetClassNameW, GetWindowRect, GetWindowThreadProcessId, IsIconic,
@@ -57,19 +57,31 @@ fn process_name(hwnd: HWND) -> Option<String> {
     if pid == 0 {
         return None;
     }
-    // SAFETY: PROCESS_QUERY_LIMITED_INFORMATION is sufficient for module-name
-    // queries. The handle is dropped at end of scope (CloseHandle via Drop on
-    // the windows-rs OwnedHandle).
+    // SAFETY: PROCESS_QUERY_LIMITED_INFORMATION grants access for cross-bitness
+    // process queries. We close the handle before returning. We use
+    // QueryFullProcessImageNameW (not GetModuleBaseNameW) because the latter
+    // fails when a 64-bit caller queries a 32-bit target — and Hearthstone
+    // is shipped as a 32-bit process.
     let handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) }.ok()?;
     let mut buf = [0u16; MAX_PATH as usize];
-    // SAFETY: handle is open here; we close it before returning.
-    let len = unsafe { GetModuleBaseNameW(handle, None, &mut buf) };
-    // SAFETY: handle was just opened; closing it once is correct.
+    let mut size = buf.len() as u32;
+    // SAFETY: handle is owned for this scope; buffer + size pointers are valid.
+    let result = unsafe {
+        QueryFullProcessImageNameW(handle, PROCESS_NAME_FORMAT(0), windows::core::PWSTR(buf.as_mut_ptr()), &mut size)
+    };
     let _ = unsafe { CloseHandle(handle) };
-    if len == 0 {
+    if result.is_err() || size == 0 {
         return None;
     }
-    Some(String::from_utf16_lossy(&buf[..len as usize]))
+    let full_path = String::from_utf16_lossy(&buf[..size as usize]);
+    // QueryFullProcessImageNameW returns the FULL path (e.g.
+    // "C:\\Program Files\\Hearthstone\\Hearthstone.exe"). Take the basename.
+    let basename = full_path
+        .rsplit(['\\', '/'])
+        .next()
+        .unwrap_or(&full_path)
+        .to_owned();
+    Some(basename)
 }
 
 extern "system" fn enum_proc(hwnd: HWND, _lparam: LPARAM) -> BOOL {
