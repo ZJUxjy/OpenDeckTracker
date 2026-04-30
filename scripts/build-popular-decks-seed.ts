@@ -111,20 +111,28 @@ lines.push("import type { PopularDeck } from './deck-types';");
 lines.push('');
 lines.push('export const POPULAR_DECKS_SEED: readonly PopularDeck[] = [');
 
-// Take the most-played variant per archetype.
+// Take ALL variants per archetype (the spike caps at 5 per archetype),
+// sorted by games desc within each archetype, archetypes themselves
+// in popularity order (input order).
 let kept = 0;
 const skipped: string[] = [];
+const classCounts: Record<string, number> = {};
 for (const a of ds.archetypes) {
   const cls = classFromArchetype(a.archetype);
   if (!cls) { skipped.push(`${a.archetype}: no class match`); continue; }
   if (a.variants.length === 0) { skipped.push(`${a.archetype}: no variants`); continue; }
-  const top = [...a.variants].sort((x, y) => y.games - x.games)[0]!;
-  const id = kebabCase(`${a.archetype}-${top.deckId}`);
   const archetype = archetypeBucket(a.archetype);
-  // updatedAt is the snapshot date; HSGuru doesn't surface per-deck timestamps.
   const updatedAt = ds.fetchedAt.slice(0, 10);
-  lines.push(`  { id: '${id}', name: '${escapeForString(a.archetype)}', class: '${cls}', format: 'Standard', archetype: '${archetype}', deckstring: '${top.code}', winratePercent: ${Math.round(top.winrate * 10) / 10}, gamesCount: ${top.games}, author: 'hsguru', updatedAt: '${updatedAt}' },`);
-  kept++;
+  const ranked = [...a.variants].sort((x, y) => y.games - x.games);
+  ranked.forEach((v, i) => {
+    const id = kebabCase(`${a.archetype}-${v.deckId}`);
+    // Suffix all but the most-played variant so the list shows distinct
+    // names (cards do differ, just less popular tunings).
+    const name = i === 0 ? a.archetype : `${a.archetype} v${i + 1}`;
+    lines.push(`  { id: '${id}', name: '${escapeForString(name)}', class: '${cls}', format: 'Standard', archetype: '${archetype}', deckstring: '${v.code}', winratePercent: ${Math.round(v.winrate * 10) / 10}, gamesCount: ${v.games}, author: 'hsguru', updatedAt: '${updatedAt}' },`);
+    kept++;
+    classCounts[cls] = (classCounts[cls] ?? 0) + 1;
+  });
 }
 
 lines.push('];');
@@ -134,6 +142,11 @@ const OUT_PATH = join(__dirname, '..', 'packages', 'core', 'src', 'deck', 'popul
 writeFileSync(OUT_PATH, lines.join('\n'));
 
 console.log(`Wrote ${kept} entries to ${OUT_PATH}`);
+console.log('Per-class counts:');
+for (const [cls, n] of Object.entries(classCounts).sort((a, b) => b[1] - a[1])) {
+  const flag = n < 5 ? ' ← BELOW 5' : '';
+  console.log(`  ${cls.padEnd(15)} ${n}${flag}`);
+}
 if (skipped.length > 0) {
   console.log(`Skipped ${skipped.length}:`);
   for (const s of skipped) console.log(`  - ${s}`);

@@ -41,9 +41,10 @@
 ### Requirement: Vendored popular-deck seed list
 
 `@hdt/core/deck/popular-decks-seed.ts` SHALL export a constant
-`POPULAR_DECKS_SEED: readonly PopularDeck[]` containing 12 to 20
-hand-curated entries spanning multiple classes, formats, and
-archetypes.
+`POPULAR_DECKS_SEED: readonly PopularDeck[]` containing 50 to 200
+entries sourced from the HSGuru spike snapshot (multi-variant: up to
+5 variants per archetype). Every represented hero class MUST have at
+least 5 entries.
 
 Every entry's `deckstring` MUST decode cleanly via the existing
 `@hdt/hearthdb` `decodeDeck`, and the decoded blueprint's `format`
@@ -78,8 +79,9 @@ cadence the maintainer follows.
 #### Scenario: Seed list has reasonable diversity
 
 - **WHEN** the seed list is grouped by `class`
-- **THEN** at least 6 distinct hero classes are represented
-- **AND** at least 3 distinct archetypes are represented
+- **THEN** at least 10 distinct hero classes are represented
+- **AND** at least 4 distinct archetypes are represented
+- **AND** every represented class has at least 5 entries
 
 #### Scenario: Seed entries have unique ids
 

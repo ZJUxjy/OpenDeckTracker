@@ -3,9 +3,19 @@ import { decodeDeck, DeckFormat } from '@hdt/hearthdb';
 import { POPULAR_DECKS_SEED } from './popular-decks-seed';
 
 describe('POPULAR_DECKS_SEED', () => {
-  it('contains 12-20 entries', () => {
-    expect(POPULAR_DECKS_SEED.length).toBeGreaterThanOrEqual(12);
-    expect(POPULAR_DECKS_SEED.length).toBeLessThanOrEqual(20);
+  it('contains 50-200 entries (multi-variant; ≥5 per class)', () => {
+    expect(POPULAR_DECKS_SEED.length).toBeGreaterThanOrEqual(50);
+    expect(POPULAR_DECKS_SEED.length).toBeLessThanOrEqual(200);
+  });
+
+  it('every represented class has at least 5 entries', () => {
+    const counts: Record<string, number> = {};
+    for (const d of POPULAR_DECKS_SEED) {
+      counts[d.class] = (counts[d.class] ?? 0) + 1;
+    }
+    for (const [cls, n] of Object.entries(counts)) {
+      expect(n, `class ${cls}`).toBeGreaterThanOrEqual(5);
+    }
   });
 
   it('every deckstring decodes cleanly', () => {
@@ -46,10 +56,10 @@ describe('POPULAR_DECKS_SEED', () => {
     }
   });
 
-  it('represents at least 6 distinct classes and 3 distinct archetypes', () => {
+  it('represents at least 10 distinct classes and 4 distinct archetypes', () => {
     const classes = new Set(POPULAR_DECKS_SEED.map((d) => d.class));
     const archetypes = new Set(POPULAR_DECKS_SEED.map((d) => d.archetype));
-    expect(classes.size).toBeGreaterThanOrEqual(6);
-    expect(archetypes.size).toBeGreaterThanOrEqual(3);
+    expect(classes.size).toBeGreaterThanOrEqual(10);
+    expect(archetypes.size).toBeGreaterThanOrEqual(4);
   });
 });
