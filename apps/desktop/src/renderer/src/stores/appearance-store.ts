@@ -31,6 +31,15 @@ interface AppearanceState extends StoredShape {
   setAccent: (next: Accent) => void;
   setGameOverlay: (next: boolean) => void;
   setGameOverlayOpponent: (next: boolean) => void;
+  /**
+   * Silent setter — updates the in-memory store + localStorage
+   * WITHOUT firing the `window.hdt.overlay.setEnabled*` IPC. Used by
+   * the cross-window sync path (when the main process tells us another
+   * window's close button disabled an overlay), so we don't echo the
+   * disable back to main and create a feedback loop.
+   */
+  silentSetGameOverlay: (next: boolean) => void;
+  silentSetGameOverlayOpponent: (next: boolean) => void;
 }
 
 const DEFAULTS: StoredShape = {
@@ -96,5 +105,15 @@ export const useAppearanceStore = create<AppearanceState>((set) => ({
     writeStored({ density: s.density, accent: s.accent, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
     set({ gameOverlayOpponent: next });
     window.hdt?.overlay?.setEnabledOpponent?.(next);
+  },
+  silentSetGameOverlay: (next) => {
+    const s = useAppearanceStore.getState();
+    writeStored({ density: s.density, accent: s.accent, gameOverlay: next, gameOverlayOpponent: s.gameOverlayOpponent });
+    set({ gameOverlay: next });
+  },
+  silentSetGameOverlayOpponent: (next) => {
+    const s = useAppearanceStore.getState();
+    writeStored({ density: s.density, accent: s.accent, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
+    set({ gameOverlayOpponent: next });
   },
 }));

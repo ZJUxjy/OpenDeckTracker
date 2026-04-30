@@ -1,25 +1,44 @@
 import { useEffect } from 'react';
-import { Bell, ChevronDown, Ghost, LayoutTemplate, Monitor, User } from 'lucide-react';
-import { Outlet, useLocation, useNavigate } from 'react-router';
+import { Bell, ChevronDown, Monitor, User } from 'lucide-react';
+import { Outlet, useLocation } from 'react-router';
 import { Sidebar } from './components/Sidebar';
 import { DeckSelectDialog } from './components/DeckSelectDialog';
 import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
 import { useTranslation } from './i18n';
+import { useAppearanceStore } from './stores/appearance-store';
 
 import { useHearthWatcherStatus } from './hooks/use-hearthwatcher-status';
 
 export default function App() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const isOverlay = location.pathname === '/overlay' || location.pathname === '/overlay-opponent';
+  const isOverlay =
+    location.pathname === '/overlay' ||
+    location.pathname === '/overlay-opponent' ||
+    location.pathname === '/card-preview';
   const { isAlive, battleTag } = useHearthMirrorStatus();
   // Subscribe the global deck-tracker store to main-process IPC pushes.
   // Mounted at App root so the subscription survives all route changes.
   useDeckTracker();
   // Activate hearthwatcher diagnostics subscription (status displayed in Dashboard).
   useHearthWatcherStatus();
+
+  // Cross-window sync: when an overlay window's close button disables
+  // the overlay, every renderer (including the main window's Settings
+  // page and the OTHER overlay window) gets a broadcast so its
+  // appearance store reflects the new state. We use the silent setter
+  // to avoid echoing the disable back to the main process.
+  useEffect(() => {
+    const off = window.hdt?.overlay?.onDisabledByWindow?.((which) => {
+      const s = useAppearanceStore.getState();
+      if (which === 'player') s.silentSetGameOverlay(false);
+      else s.silentSetGameOverlayOpponent(false);
+    });
+    return () => {
+      off?.();
+    };
+  }, []);
 
   // Make html/body transparent on overlay routes so the BrowserWindow's
   // `transparent: true` actually shows through. Both index.html (body
@@ -64,36 +83,6 @@ export default function App() {
                 ? (battleTag ? t('app.status.gameRunning') : t('app.status.notLoggedIn'))
                 : t('app.status.gameNotRunning')}
             </span>
-            <div className="h-6 w-px bg-border mx-2" />
-
-            <div className="flex bg-bg rounded-md p-1 border border-border">
-              <button
-                onClick={() => {
-                  void navigate('/tracker');
-                }}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  !isOverlay
-                    ? 'bg-bg-3 text-text shadow'
-                    : 'text-text-mute hover:text-text'
-                }`}
-              >
-                <LayoutTemplate size={14} />
-                <span>{t('app.mode.desktop')}</span>
-              </button>
-              <button
-                onClick={() => {
-                  void navigate('/overlay');
-                }}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  isOverlay
-                    ? 'bg-bg-3 text-accent shadow'
-                    : 'text-text-mute hover:text-text'
-                }`}
-              >
-                <Ghost size={14} />
-                <span>{t('app.mode.overlay')}</span>
-              </button>
-            </div>
           </div>
 
           <div className="flex items-center space-x-4">
