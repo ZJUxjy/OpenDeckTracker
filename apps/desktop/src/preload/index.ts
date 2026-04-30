@@ -31,6 +31,7 @@ import type {
   GameServerInfo,
   GameType,
   HandState,
+  HearthstoneWindow,
   IsMulligan,
   MatchInfo,
   MedalInfo,
@@ -103,6 +104,8 @@ const api = {
   },
   hearthmirror: {
     isAlive: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isAlive'),
+    getWindow: (): Promise<HearthstoneWindow | null> =>
+      ipcRenderer.invoke('hearthmirror:get-window'),
     getBattleTag: (): Promise<BattleTag | null> => ipcRenderer.invoke('hearthmirror:getBattleTag'),
     getAccountId: (): Promise<AccountId | null> => ipcRenderer.invoke('hearthmirror:getAccountId'),
     getGameType: (): Promise<GameType | null> => ipcRenderer.invoke('hearthmirror:getGameType'),

@@ -110,6 +110,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
   };
 
   ipcMain.handle('hearthmirror:isAlive', () => swallow('isAlive', () => hm().isAlive(), false));
+  ipcMain.handle('hearthmirror:get-window', () => swallow('getHearthstoneWindow', () => hm().getHearthstoneWindow(), null));
   ipcMain.handle('hearthmirror:getBattleTag', () => swallow('getBattleTag', () => hm().getBattleTag(), null));
   ipcMain.handle('hearthmirror:getAccountId', () => swallow('getAccountId', () => hm().getAccountId(), null));
   // getGameType now returns a composite { gameType, formatType, missionId } | null
