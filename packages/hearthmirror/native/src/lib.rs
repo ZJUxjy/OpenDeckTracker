@@ -60,6 +60,15 @@ fn is_assembly_csharp_not_found(err: &ScryError) -> bool {
     )
 }
 
+/// Returns true if `err` looks like a transient Win32 read failure —
+/// most commonly `ERROR_PARTIAL_COPY (0x8007012B)` raised when the
+/// target process moves an object during GC, or when our cached
+/// pointer offsets fall behind a Hearthstone patch. Both conditions
+/// recover after re-attaching the Mono runtime fresh.
+fn is_recoverable_memory_error(err: &ScryError) -> bool {
+    matches!(err, ScryError::MemoryAccess { .. })
+}
+
 /// Run an operation against the cached MonoRuntime; returns Ok(None) if mono
 /// can't be initialized (i.e., Hearthstone not running or starting up).
 ///
@@ -98,6 +107,24 @@ fn with_runtime<T>(
             };
             f(runtime).map_err(napi::Error::from)
         }
+        Err(e) if is_recoverable_memory_error(&e) => {
+            // Single retry: a memory read straddled an unmapped page (most
+            // commonly during a GC move, or because cached offsets fell
+            // behind an HS patch). Drop the runtime and replay once with a
+            // fresh attach. If the second attempt still fails the caller
+            // sees the original error and the next tick will probe again.
+            let prev_pid = runtime.pid();
+            eprintln!(
+                "[hearthmirror] MonoRuntime: invalidated (reason=memory-access-failed pid_was={} err={})",
+                prev_pid, e
+            );
+            guard.invalidate();
+            guard.ensure_runtime_with(Instant::now(), back_off_duration(), try_init);
+            let Some(runtime) = guard.runtime.as_ref() else {
+                return Ok(None);
+            };
+            f(runtime).map_err(napi::Error::from)
+        }
         Err(e) => Err(napi::Error::from(e)),
     }
 }
@@ -128,6 +155,19 @@ fn with_runtime_or<T>(
             eprintln!(
                 "[hearthmirror] MonoRuntime: invalidated (reason=assembly-csharp-not-found pid_was={} pid_now=-)",
                 prev_pid
+            );
+            guard.invalidate();
+            guard.ensure_runtime_with(Instant::now(), back_off_duration(), try_init);
+            let Some(runtime) = guard.runtime.as_ref() else {
+                return Ok(default());
+            };
+            f(runtime).map_err(napi::Error::from)
+        }
+        Err(e) if is_recoverable_memory_error(&e) => {
+            let prev_pid = runtime.pid();
+            eprintln!(
+                "[hearthmirror] MonoRuntime: invalidated (reason=memory-access-failed pid_was={} err={})",
+                prev_pid, e
             );
             guard.invalidate();
             guard.ensure_runtime_with(Instant::now(), back_off_duration(), try_init);
