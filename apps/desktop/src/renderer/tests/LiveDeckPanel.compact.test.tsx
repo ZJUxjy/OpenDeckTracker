@@ -192,6 +192,60 @@ describe('LiveDeckPanel compact variant', () => {
     }
   });
 
+  it('tints compact row cost cells by rarity', () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'EX1_001', count: 1 }, // LEGENDARY → bg-rarity-legendary
+        { cardId: 'ALBATROSS', count: 1 }, // RARE → bg-rarity-rare
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel compact />);
+
+    const rows = screen.getAllByTestId('card-compact-row');
+    const alex = rows.find((r) => r.textContent?.includes('Alexstrasza'))!;
+    const albatross = rows.find((r) => r.textContent?.includes('Bad Luck Albatross'))!;
+    expect(alex.innerHTML).toContain('bg-rarity-legendary');
+    expect(albatross.innerHTML).toContain('bg-rarity-rare');
+  });
+
+  it('renders one card-row-art img per compact row', () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'CS2_029', count: 2 },
+        { cardId: 'EX1_001', count: 1 },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel compact />);
+
+    const rows = screen.getAllByTestId('card-compact-row');
+    const arts = screen.getAllByTestId('card-row-art');
+    expect(rows).toHaveLength(2);
+    expect(arts).toHaveLength(2);
+  });
+
+  it('keeps the portrait img on spent rows under the opacity-40 wrapper', () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'CS2_029', count: 2 },
+      ],
+      remaining: [
+        { cardId: 'CS2_029', count: 0 },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel compact />);
+
+    const row = screen.getAllByTestId('card-compact-row')[0]!;
+    expect(row.className).toContain('opacity-40');
+    const art = row.querySelector('[data-testid="card-row-art"]');
+    expect(art).toBeTruthy();
+  });
+
   it('desktop variant still renders per-copy rows on the same fixture', () => {
     const snap = makeSnapshot({
       original: [

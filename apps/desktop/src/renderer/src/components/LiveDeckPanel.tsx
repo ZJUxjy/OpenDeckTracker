@@ -431,6 +431,8 @@ function CompactCardRow({
   const def = useCardDef(cardId);
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
+  const rarity = def?.rarity as Rarity | undefined;
+  const { primary, fallback } = useCardImageUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
   const spent = remaining === 0;
 
@@ -439,21 +441,47 @@ function CompactCardRow({
       ref={ref}
       data-testid="card-compact-row"
       className={clsx(
-        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]',
+        'relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]',
         spent ? 'opacity-40' : '',
       )}
       onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
-      <div className="w-7 h-7 rounded bg-blue-700/40 flex items-center justify-center text-blue-100 font-bold text-xs shrink-0">
-        {cost}
-      </div>
-      <div className="flex-1 min-w-0 px-2">
-        <div className="truncate font-medium text-text" title={cardId}>
-          {name}
+      <img
+        src={primary}
+        onError={(e) => {
+          const el = e.currentTarget as HTMLImageElement;
+          if (el.src !== fallback) el.src = fallback;
+        }}
+        data-testid="card-row-art"
+        alt=""
+        aria-hidden
+        className="absolute right-0 top-0 h-full w-3/5 object-cover object-right pointer-events-none select-none z-0"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-r from-bg-2 from-35% to-transparent to-75% pointer-events-none z-[1]"
+      />
+      <div className="relative z-10 flex items-center px-2 py-1.5 w-full">
+        <div
+          className={clsx(
+            'w-7 h-7 rounded flex items-center justify-center font-bold text-xs shrink-0',
+            getRarityCostBg(rarity),
+          )}
+        >
+          {cost}
         </div>
+        <div className="flex-1 min-w-0 px-2">
+          <div
+            className="truncate font-medium text-text"
+            style={NAME_TEXT_SHADOW}
+            title={cardId}
+          >
+            {name}
+          </div>
+        </div>
+        <CardPips remaining={remaining} max={max} />
       </div>
-      <CardPips remaining={remaining} max={max} />
     </div>
   );
 }

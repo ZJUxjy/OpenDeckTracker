@@ -107,12 +107,12 @@
 
 ## 4. CompactCardRow (overlay variant): rarity tint + portrait + pip layering
 
-- [ ] 4.1 Open `apps/desktop/src/renderer/tests/LiveDeckPanel.compact.test.tsx`. Add failing assertions:
+- [x] 4.1 Open `apps/desktop/src/renderer/tests/LiveDeckPanel.compact.test.tsx`. Add failing assertions:
   - Given a fixture compact row whose card def has `rarity === 'EPIC'`, find the cost cell of that row and assert its className contains `bg-rarity-epic`.
   - Assert `screen.queryAllByTestId('card-row-art').length` equals the number of compact rows.
   - Add a spent-row case: a row with `remaining === 0` MUST still render its `<img data-testid="card-row-art">` (it's just visually faded by the parent's `opacity-40`). Assert the row container has `opacity-40` and contains the portrait img.
   Run; expect failure.
-- [ ] 4.2 Update `CompactCardRow` in `apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx`:
+- [x] 4.2 Update `CompactCardRow` in `apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx`:
   - Same imports as step 3.2 (`getRarityCostBg`, `useCardImageUrl`).
   - Add `const rarity = def?.rarity;` and `const { primary, fallback } = useCardImageUrl(cardId);`.
   - Make the row container `relative overflow-hidden` (in addition to the existing classes).
@@ -120,10 +120,10 @@
   - Wrap the cost cell + name + `<CardPips>` in a `<div className="relative z-10 flex items-center w-full">`.
   - Replace the cost cell's `bg-blue-700/40 ... text-blue-100` classes with `getRarityCostBg(rarity)`. Spent rows (`spent === true`) MUST keep using the rarity tint (the wrapper's `opacity-40` already softens it; the rarity-tint-disabled rule from the spec is satisfied by the visual fade, not by class removal).
   - Apply the text shadow on the name `<div>` (same as step 3.2).
-- [ ] 4.3 Confirm `<CardPips>` already sits inside the wrapper that gets `z-10` — pips MUST render above the gradient. (CardPips.tsx itself does not need changes.)
-- [ ] 4.4 Run `pnpm --filter @hdt/desktop test LiveDeckPanel.compact`; expect green.
-- [ ] 4.5 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
-- [ ] 4.6 Commit: `feat(desktop): tint CompactCardRow cost cell by rarity + bleed-in portrait art`.
+- [x] 4.3 Confirm `<CardPips>` already sits inside the wrapper that gets `z-10` — pips MUST render above the gradient. (CardPips.tsx itself does not need changes.)
+- [x] 4.4 Run `pnpm --filter @hdt/desktop test LiveDeckPanel.compact`; expect green.
+- [x] 4.5 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
+- [x] 4.6 Commit: `feat(desktop): tint CompactCardRow cost cell by rarity + bleed-in portrait art`.
 
 ## 5. Final validation and archive
 
