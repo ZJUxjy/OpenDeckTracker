@@ -77,8 +77,8 @@
 
 ## 3. CardCopyRow (desktop variant): rarity tint + portrait
 
-- [ ] 3.1 Open `apps/desktop/src/renderer/tests/LiveDeckPanel.test.tsx`. Add failing assertions inside the existing in-match render test (or a new test if cleaner): given a fixture row whose card def has `rarity === 'LEGENDARY'`, find the cost cell via `[data-testid="card-copy-row"] > div:first-child` and assert its className contains `bg-rarity-legendary`. Then assert `screen.queryAllByTestId('card-row-art').length` equals the number of expected rows (one `<img data-testid="card-row-art">` per row). Run; expect failure.
-- [ ] 3.2 Open `apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx`. In `CardCopyRow`:
+- [x] 3.1 Open `apps/desktop/src/renderer/tests/LiveDeckPanel.test.tsx`. Add failing assertions inside the existing in-match render test (or a new test if cleaner): given a fixture row whose card def has `rarity === 'LEGENDARY'`, find the cost cell via `[data-testid="card-copy-row"] > div:first-child` and assert its className contains `bg-rarity-legendary`. Then assert `screen.queryAllByTestId('card-row-art').length` equals the number of expected rows (one `<img data-testid="card-row-art">` per row). Run; expect failure.
+- [x] 3.2 Open `apps/desktop/src/renderer/src/components/LiveDeckPanel.tsx`. In `CardCopyRow`:
   - Import: add `import { getRarityCostBg } from '../lib/rarity';` and `import { useCardImageUrl } from '../hooks/use-card-image-url';` near the existing imports.
   - Inside the component, after `const rarity = ...`, replace it with `const rarity = def?.rarity;` (typed `Rarity | undefined`); also call `const { primary, fallback } = useCardImageUrl(cardId);`.
   - Change the row container to be `relative overflow-hidden` (so the absolute-positioned portrait clips inside the row).
@@ -101,9 +101,9 @@
     ```
   - Apply a text shadow to the row's name `<div>` by adding `style={{ textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}` (since Tailwind v4 has no `text-shadow-*` utility).
   - Update the rarity-color text classes on the name `<div>` to use the new tokens (`text-rarity-legendary`, `text-rarity-epic`, `text-rarity-rare`) instead of `text-accent` / `text-purple-300` / `text-blue-300`.
-- [ ] 3.3 Run `pnpm --filter @hdt/desktop test LiveDeckPanel.test`; expect green.
-- [ ] 3.4 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
-- [ ] 3.5 Commit: `feat(desktop): tint CardCopyRow cost cell by rarity + bleed-in portrait art`.
+- [x] 3.3 Run `pnpm --filter @hdt/desktop test LiveDeckPanel.test`; expect green.
+- [x] 3.4 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
+- [x] 3.5 Commit: `feat(desktop): tint CardCopyRow cost cell by rarity + bleed-in portrait art`.
 
 ## 4. CompactCardRow (overlay variant): rarity tint + portrait + pip layering
 

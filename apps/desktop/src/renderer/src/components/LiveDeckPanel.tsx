@@ -3,11 +3,16 @@ import { useMemo, useRef, useState, useCallback, useEffect, type CSSProperties }
 const DRAG_HEADER_STYLE = { WebkitAppRegion: 'drag' } as CSSProperties;
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
+import { useCardImageUrl } from '../hooks/use-card-image-url';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
 import { CardPips } from './CardPips';
+import { getRarityCostBg } from '../lib/rarity';
+import type { Rarity } from '@hdt/hearthdb';
 import { useLocale, useTranslation } from '../i18n';
+
+const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
 
 /**
  * Live "remaining cards in deck" panel — replaces the mock Decklist
@@ -348,7 +353,8 @@ function CardCopyRow({
   const def = useCardDef(cardId);
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
-  const rarity = (def?.rarity ?? '').toLowerCase();
+  const rarity = def?.rarity as Rarity | undefined;
+  const { primary, fallback } = useCardImageUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
 
   return (
@@ -356,29 +362,51 @@ function CardCopyRow({
       ref={ref}
       data-testid="card-copy-row"
       className={clsx(
-        'flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]',
+        'relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]',
         exiting ? 'animate-deck-exit' : '',
       )}
-      style={exiting ? undefined : undefined}
       onAnimationEnd={() => onAnimationEnd(copyKey)}
       onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
-      <div className="w-7 h-7 rounded bg-blue-700/40 flex items-center justify-center text-blue-100 font-bold text-xs shrink-0">
-        {cost}
-      </div>
-      <div className="flex-1 min-w-0 px-2">
+      <img
+        src={primary}
+        onError={(e) => {
+          const el = e.currentTarget as HTMLImageElement;
+          if (el.src !== fallback) el.src = fallback;
+        }}
+        data-testid="card-row-art"
+        alt=""
+        aria-hidden
+        className="absolute right-0 top-0 h-full w-3/5 object-cover object-right pointer-events-none select-none z-0"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-r from-bg-2 from-35% to-transparent to-75% pointer-events-none z-[1]"
+      />
+      <div className="relative z-10 flex items-center px-2 py-1.5 w-full">
         <div
           className={clsx(
-            'truncate font-medium',
-            rarity === 'legendary' ? 'text-accent' : '',
-            rarity === 'epic' ? 'text-purple-300' : '',
-            rarity === 'rare' ? 'text-blue-300' : '',
-            rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-text' : '',
+            'w-7 h-7 rounded flex items-center justify-center font-bold text-xs shrink-0',
+            getRarityCostBg(rarity),
           )}
-          title={cardId}
         >
-          {name}
+          {cost}
+        </div>
+        <div className="flex-1 min-w-0 px-2">
+          <div
+            className={clsx(
+              'truncate font-medium',
+              rarity === 'LEGENDARY' ? 'text-rarity-legendary' : '',
+              rarity === 'EPIC' ? 'text-rarity-epic' : '',
+              rarity === 'RARE' ? 'text-rarity-rare' : '',
+              !rarity || rarity === 'COMMON' || rarity === 'FREE' ? 'text-text' : '',
+            )}
+            style={NAME_TEXT_SHADOW}
+            title={cardId}
+          >
+            {name}
+          </div>
         </div>
       </div>
     </div>

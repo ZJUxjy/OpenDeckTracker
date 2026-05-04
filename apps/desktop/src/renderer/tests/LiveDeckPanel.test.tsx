@@ -57,6 +57,7 @@ const CARD_DEFS: Record<string, { name: string; cost?: number; rarity?: string }
   GAME_005: { name: 'The Coin', cost: 0, rarity: 'FREE' },
   HERO_01: { name: 'Fireblast', rarity: 'FREE' }, // no cost — hero power
   ALBATROSS: { name: 'Bad Luck Albatross', cost: 3, rarity: 'RARE' },
+  ALEX: { name: 'Alexstrasza', cost: 9, rarity: 'LEGENDARY' },
 };
 
 // Mock useCardDef to return stubs from CARD_DEFS.
@@ -248,6 +249,83 @@ describe('LiveDeckPanel sorting', () => {
       const rows = screen.getAllByTestId('card-copy-row');
       expect(rows).toHaveLength(3);
       expect(rows.some((row) => row.textContent?.includes('Bad Luck Albatross'))).toBe(true);
+    });
+  });
+});
+
+describe('LiveDeckPanel row rarity + portrait', () => {
+  beforeEach(() => {
+    (window as unknown as { hdt: unknown }).hdt = {
+      cards: {
+        findById: vi.fn(async (cardId: string) => {
+          const def = CARD_DEFS[cardId];
+          if (!def) return null;
+          return {
+            id: cardId,
+            dbfId: 0,
+            name: def.name,
+            ...(def.cost !== undefined ? { cost: def.cost } : {}),
+            cardClass: 'MAGE',
+            ...(def.rarity ? { rarity: def.rarity } : {}),
+            set: 'TEST',
+            type: 'SPELL',
+            collectible: true,
+          };
+        }),
+      },
+    };
+    useDeckTrackerStore.setState({
+      snapshot: null,
+      pendingSelection: null,
+      dialogDismissed: false,
+    });
+  });
+
+  afterEach(() => {
+    (window as unknown as { hdt?: unknown }).hdt = undefined;
+  });
+
+  it('tints the cost cell of a legendary row with bg-rarity-legendary', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'ALEX', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    await waitFor(() => {
+      const row = screen.getAllByTestId('card-copy-row')[0]!;
+      expect(row.innerHTML).toContain('bg-rarity-legendary');
+    });
+  });
+
+  it('falls back to bg-rarity-common when rarity is unknown', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    await waitFor(() => {
+      const row = screen.getAllByTestId('card-copy-row')[0]!;
+      expect(row.innerHTML).toContain('bg-rarity-common');
+    });
+  });
+
+  it('renders one card-row-art img per row', async () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'CS2_029', count: 2 },
+        { cardId: 'ALEX', count: 1 },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    await waitFor(() => {
+      const rows = screen.getAllByTestId('card-copy-row');
+      const arts = screen.getAllByTestId('card-row-art');
+      expect(rows).toHaveLength(3);
+      expect(arts).toHaveLength(3);
     });
   });
 });
