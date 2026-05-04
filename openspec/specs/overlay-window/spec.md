@@ -22,7 +22,10 @@ The overlay window MUST be created with these options:
 - `focusable: false`
 - `hasShadow: false`
 - `show: false` until the renderer signals ready
-- bounds covering the full work area of the primary display
+- bounds initially `{ x: 0, y: 0, width: 1, height: 1 }` so the
+  window exists but is effectively invisible until the
+  `HearthstoneWindowTracker` calls `setBounds(...)` with the
+  Hearthstone window's actual rect.
 - the same `preload`, `contextIsolation`, `sandbox`, and
   `nodeIntegration` settings as the main window
 - `backgroundThrottling: false` so the in-match deck-tracker stays
@@ -35,17 +38,19 @@ the hash route set to the manager's `routeHash` (default
 The `OverlayManager` MUST expose a public surface:
 
 - `enable(): void` — creates the window if absent and shows it
-  (subject to the running-game gate below). Idempotent.
+  (subject to the visibleOnScreen gate below). Idempotent.
 - `disable(): void` — hides the window if present. Does not destroy.
-- `setRunning(running: boolean): void` — fed by the bootstrap-level
-  Hearthstone-running fan-out; used together with the user toggle
-  to compute final visibility. The class itself MUST NOT own a
-  poll timer (the bootstrap layer does).
+- `setBounds(bounds): void` — repositions / resizes the window.
+- `setVisibleOnScreen(visible: boolean): void` — fed by the
+  `HearthstoneWindowTracker`; combined with `userEnabled` to
+  compute final visibility. The class itself MUST NOT own a poll
+  timer.
 - `dispose(): void` — destroys the window and clears any internal
   resources. Called on `app.before-quit`.
 
-Final visibility is `userEnabled AND gameRunning`. When either flips
-to `false`, the window is hidden; when both are `true`, it is shown.
+Final visibility is `userEnabled AND visibleOnScreen`. When either
+flips to `false`, the window is hidden; when both are `true`, it
+is shown.
 
 #### Scenario: Window is not created at app start
 
@@ -56,7 +61,7 @@ to `false`, the window is hidden; when both are `true`, it is shown.
 #### Scenario: enable() spawns a window with the prescribed options
 
 - **WHEN** `OverlayManager.enable()` is called for the first time
-  with `gameRunning === true` on a manager whose `routeHash` is
+  with `visibleOnScreen === true` on a manager whose `routeHash` is
   `'/overlay'`
 - **THEN** a new BrowserWindow exists with `transparent: true`,
   `frame: false`, `alwaysOnTop: true`, `skipTaskbar: true`,
@@ -70,19 +75,11 @@ to `false`, the window is hidden; when both are `true`, it is shown.
 - **THEN** the spawned window's loaded URL or file ends with
   `#/overlay-opponent`
 
-#### Scenario: enable() with game not running keeps the window hidden
+#### Scenario: enable() with not-on-screen keeps the window hidden
 
-- **GIVEN** `OverlayManager.setRunning(false)` was called
+- **GIVEN** `OverlayManager.setVisibleOnScreen(false)` was called
 - **WHEN** `OverlayManager.enable()` runs
 - **THEN** the window is created but `isVisible()` returns `false`
-
-#### Scenario: setRunning(true) shows a previously enabled window
-
-- **GIVEN** `enable()` was called and `gameRunning` was `false`
-  (window hidden)
-- **WHEN** `setRunning(true)` is called
-- **THEN** the window's `show()` is called and `isVisible()` returns
-  `true`
 
 #### Scenario: disable() hides without destroying
 
@@ -95,40 +92,6 @@ to `false`, the window is hidden; when both are `true`, it is shown.
 
 - **WHEN** `dispose()` is called (e.g. via `app.before-quit`)
 - **THEN** the overlay window's `isDestroyed()` returns `true`
-
-### Requirement: Hearthstone-running signal drives visibility
-
-The main process SHALL drive each `OverlayManager.setRunning(...)`
-from a bootstrap-level poller of `hearthmirror.isAlive()`, polled
-every 3 seconds. The poller fans the result out to BOTH managers.
-
-The poll loop MUST:
-
-- Start when EITHER manager is first enabled and stop when BOTH
-  managers are disabled.
-- Throttle the `false` transition: a `false` reading must persist
-  across 3 consecutive polls (≈ 9 s) before `setRunning(false)` is
-  called. A `true` reading flips to `setRunning(true)` immediately.
-- Survive `hearthmirror.isAlive()` rejecting; a thrown reading is
-  treated the same as `false`.
-
-The throttle state lives in the bootstrap layer, not inside the
-`OverlayManager` class.
-
-#### Scenario: Brief mirror jitter does not flicker the overlay
-
-- **GIVEN** at least one overlay is enabled and visible
-- **WHEN** `hearthmirror.isAlive()` returns `false` once and then
-  `true` on the next poll
-- **THEN** the overlay window is not hidden (the throttle suppresses
-  the single-tick `false`)
-
-#### Scenario: Hearthstone genuinely closes hides the overlay
-
-- **GIVEN** at least one overlay is enabled and visible
-- **WHEN** `hearthmirror.isAlive()` returns `false` for 3 consecutive
-  polls
-- **THEN** the overlay window's `isVisible()` returns `false`
 
 ### Requirement: Renderer toggles overlay enablement via IPC
 
@@ -396,4 +359,129 @@ The existing player toggle, its description, and the
 - **GIVEN** the active locale is `zh-CN`
 - **WHEN** the Overlay panel renders
 - **THEN** the opponent title and description render in Chinese
+
+### Requirement: OverlayManager.setBounds repositions the window
+
+The `OverlayManager` SHALL expose `setBounds(bounds: { x: number; y:
+number; width: number; height: number }): void`, which calls
+`BrowserWindow.setBounds(bounds)` if the window exists. If no window
+has been created yet (the manager has never been `enable`d), the
+call MUST be remembered and applied to the next-created window.
+
+`setBounds` MUST be idempotent — passing the same bounds twice in
+a row results in at most one `BrowserWindow.setBounds` call (the
+second is suppressed).
+
+#### Scenario: setBounds before enable is remembered
+
+- **GIVEN** an `OverlayManager` that has not been enabled
+- **WHEN** `setBounds({ x: 100, y: 200, width: 1280, height: 720 })`
+  is called, then `enable()` is called
+- **THEN** the spawned BrowserWindow's bounds equal the previously-
+  set rect
+
+#### Scenario: setBounds after enable resizes immediately
+
+- **GIVEN** an enabled `OverlayManager` whose window currently has
+  bounds `{ x: 0, y: 0, width: 1920, height: 1080 }`
+- **WHEN** `setBounds({ x: 50, y: 50, width: 1280, height: 720 })`
+  is called
+- **THEN** the BrowserWindow's `setBounds` is invoked once with the
+  new rect
+
+#### Scenario: setBounds with same value is suppressed
+
+- **GIVEN** an enabled manager whose last applied bounds were
+  `{ x: 50, y: 50, width: 1280, height: 720 }`
+- **WHEN** `setBounds` is called again with the same rect
+- **THEN** `BrowserWindow.setBounds` is NOT invoked a second time
+
+### Requirement: OverlayManager.setVisibleOnScreen replaces setRunning
+
+The `OverlayManager` SHALL expose
+`setVisibleOnScreen(visible: boolean): void`. This input replaces
+the previous `setRunning(running: boolean)` method.
+
+Final visibility becomes `userEnabled AND visibleOnScreen`. When
+either flips to `false`, the window is hidden; when both are
+`true`, it is shown.
+
+The `setRunning` method SHALL be removed from `OverlayManager`.
+The bootstrap-level fan-out responsibility moves entirely to the
+new `HearthstoneWindowTracker`.
+
+#### Scenario: setVisibleOnScreen(true) shows a previously-hidden window
+
+- **GIVEN** an enabled manager with `visibleOnScreen === false`
+  (window hidden)
+- **WHEN** `setVisibleOnScreen(true)` is called
+- **THEN** the BrowserWindow's `show()` is invoked and the window
+  is visible
+
+#### Scenario: setVisibleOnScreen(false) hides a visible window
+
+- **GIVEN** an enabled manager with `visibleOnScreen === true`
+- **WHEN** `setVisibleOnScreen(false)` is called
+- **THEN** the BrowserWindow's `hide()` is invoked and the window
+  is hidden
+
+#### Scenario: setRunning is no longer part of the public surface
+
+- **WHEN** TypeScript code attempts to call
+  `OverlayManager.prototype.setRunning`
+- **THEN** the type system rejects the call (the method does not
+  exist)
+
+### Requirement: Hearthstone-window tracker drives visibility and bounds
+
+The main process SHALL drive each `OverlayManager`'s
+`setVisibleOnScreen(...)` and `setBounds(...)` from a single
+`HearthstoneWindowTracker` instance (the bootstrap-level
+`createOverlayPoller` factory is removed in this change).
+
+The tracker is started/stopped via its own `addClient` / `removeClient`
+ref count. The bootstrap MUST `addClient` when an overlay is enabled
+and `removeClient` when an overlay is disabled. The tracker MUST stop
+polling when the last client is removed.
+
+The bootstrap subscribes to the tracker once and fans both event
+kinds (bounds-change, visibility-change) out to BOTH overlay
+managers identically — the two windows occupy the SAME bounds, so
+their CSS-level positioning of panels on opposite sides keeps them
+visually distinct.
+
+The throttle that prevents brief HS minimize / restore from
+flickering the overlay lives inside the tracker (5 consecutive
+false polls at the 200 ms cadence, see
+`hearthstone-window-tracker` spec). The bootstrap layer no longer
+contains throttle state.
+
+#### Scenario: Bounds change fans out to both managers
+
+- **GIVEN** both overlay managers are enabled
+- **WHEN** the tracker emits a bounds event with
+  `{ x: 100, y: 100, width: 1280, height: 720 }`
+- **THEN** `setBounds` is called once on each manager with the
+  same rect
+
+#### Scenario: Brief mirror jitter does not flicker the overlay
+
+- **GIVEN** at least one overlay is enabled and visible
+- **WHEN** the underlying native call returns `null` once and then
+  a visible window on the next poll
+- **THEN** the overlay window is not hidden (the tracker's
+  throttle suppresses the single-tick `false`)
+
+#### Scenario: Hearthstone genuinely closes hides the overlay
+
+- **GIVEN** at least one overlay is enabled and visible
+- **WHEN** the underlying native call returns `null` for 5
+  consecutive polls
+- **THEN** the overlay window's `isVisible()` returns `false`
+
+#### Scenario: Disabling both stops the tracker
+
+- **GIVEN** both managers were enabled (tracker running)
+- **WHEN** both have been `disable`d
+- **THEN** the tracker has stopped polling
 

@@ -72,6 +72,59 @@ new `HearthstoneWindowTracker`.
 - **THEN** the type system rejects the call (the method does not
   exist)
 
+### Requirement: Hearthstone-window tracker drives visibility and bounds
+
+The main process SHALL drive each `OverlayManager`'s
+`setVisibleOnScreen(...)` and `setBounds(...)` from a single
+`HearthstoneWindowTracker` instance (the bootstrap-level
+`createOverlayPoller` factory is removed in this change).
+
+The tracker is started/stopped via its own `addClient` / `removeClient`
+ref count. The bootstrap MUST `addClient` when an overlay is enabled
+and `removeClient` when an overlay is disabled. The tracker MUST stop
+polling when the last client is removed.
+
+The bootstrap subscribes to the tracker once and fans both event
+kinds (bounds-change, visibility-change) out to BOTH overlay
+managers identically — the two windows occupy the SAME bounds, so
+their CSS-level positioning of panels on opposite sides keeps them
+visually distinct.
+
+The throttle that prevents brief HS minimize / restore from
+flickering the overlay lives inside the tracker (5 consecutive
+false polls at the 200 ms cadence, see
+`hearthstone-window-tracker` spec). The bootstrap layer no longer
+contains throttle state.
+
+#### Scenario: Bounds change fans out to both managers
+
+- **GIVEN** both overlay managers are enabled
+- **WHEN** the tracker emits a bounds event with
+  `{ x: 100, y: 100, width: 1280, height: 720 }`
+- **THEN** `setBounds` is called once on each manager with the
+  same rect
+
+#### Scenario: Brief mirror jitter does not flicker the overlay
+
+- **GIVEN** at least one overlay is enabled and visible
+- **WHEN** the underlying native call returns `null` once and then
+  a visible window on the next poll
+- **THEN** the overlay window is not hidden (the tracker's
+  throttle suppresses the single-tick `false`)
+
+#### Scenario: Hearthstone genuinely closes hides the overlay
+
+- **GIVEN** at least one overlay is enabled and visible
+- **WHEN** the underlying native call returns `null` for 5
+  consecutive polls
+- **THEN** the overlay window's `isVisible()` returns `false`
+
+#### Scenario: Disabling both stops the tracker
+
+- **GIVEN** both managers were enabled (tracker running)
+- **WHEN** both have been `disable`d
+- **THEN** the tracker has stopped polling
+
 ## MODIFIED Requirements
 
 ### Requirement: Main process spawns a transparent overlay BrowserWindow
@@ -164,59 +217,6 @@ is shown.
 
 - **WHEN** `dispose()` is called (e.g. via `app.before-quit`)
 - **THEN** the overlay window's `isDestroyed()` returns `true`
-
-### Requirement: Hearthstone-window tracker drives visibility and bounds
-
-The main process SHALL drive each `OverlayManager`'s
-`setVisibleOnScreen(...)` and `setBounds(...)` from a single
-`HearthstoneWindowTracker` instance (the bootstrap-level
-`createOverlayPoller` factory is removed in this change).
-
-The tracker is started/stopped via its own `addClient` / `removeClient`
-ref count. The bootstrap MUST `addClient` when an overlay is enabled
-and `removeClient` when an overlay is disabled. The tracker MUST stop
-polling when the last client is removed.
-
-The bootstrap subscribes to the tracker once and fans both event
-kinds (bounds-change, visibility-change) out to BOTH overlay
-managers identically — the two windows occupy the SAME bounds, so
-their CSS-level positioning of panels on opposite sides keeps them
-visually distinct.
-
-The throttle that prevents brief HS minimize / restore from
-flickering the overlay lives inside the tracker (5 consecutive
-false polls at the 200 ms cadence, see
-`hearthstone-window-tracker` spec). The bootstrap layer no longer
-contains throttle state.
-
-#### Scenario: Bounds change fans out to both managers
-
-- **GIVEN** both overlay managers are enabled
-- **WHEN** the tracker emits a bounds event with
-  `{ x: 100, y: 100, width: 1280, height: 720 }`
-- **THEN** `setBounds` is called once on each manager with the
-  same rect
-
-#### Scenario: Brief mirror jitter does not flicker the overlay
-
-- **GIVEN** at least one overlay is enabled and visible
-- **WHEN** the underlying native call returns `null` once and then
-  a visible window on the next poll
-- **THEN** the overlay window is not hidden (the tracker's
-  throttle suppresses the single-tick `false`)
-
-#### Scenario: Hearthstone genuinely closes hides the overlay
-
-- **GIVEN** at least one overlay is enabled and visible
-- **WHEN** the underlying native call returns `null` for 5
-  consecutive polls
-- **THEN** the overlay window's `isVisible()` returns `false`
-
-#### Scenario: Disabling both stops the tracker
-
-- **GIVEN** both managers were enabled (tracker running)
-- **WHEN** both have been `disable`d
-- **THEN** the tracker has stopped polling
 
 ## REMOVED Requirements
 
