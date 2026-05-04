@@ -127,9 +127,9 @@
 
 ## 5. Final validation and archive
 
-- [ ] 5.1 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
-- [ ] 5.2 Run the full renderer test suite: `pnpm --filter @hdt/desktop test`; expect green (excluding any pre-existing failures the repo currently tolerates — confirm new failures are zero).
-- [ ] 5.3 Run `npx openspec validate add-deck-row-rarity-and-art --strict`; expect "Change ... is valid".
+- [x] 5.1 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
+- [x] 5.2 Run the full renderer test suite: `pnpm --filter @hdt/desktop test`; expect green (excluding any pre-existing failures the repo currently tolerates — confirm new failures are zero).
+- [x] 5.3 Run `npx openspec validate add-deck-row-rarity-and-art --strict`; expect "Change ... is valid".
 - [ ] 5.4 Manual smoke (Hearthstone running, in match): launch `pnpm dev`, enter a real match. Confirm: (a) each desktop tracker row's cost cell is tinted by rarity (a quick visual scan should see grey/white/blue/purple/orange); (b) the card portrait bleeds in from the right, name remains readable; (c) the same applies to the in-game overlay (compact variant) with pips remaining clearly visible above the artwork; (d) drawing a card still triggers the slide-out animation on the desktop variant; (e) spent rows in the compact variant fade portrait + tint together.
 - [ ] 5.5 Manual smoke (no card image cache hit): clear `resources/card-images/` (or temporarily move it aside), launch the app, enter a match. Confirm rows still render legibly (URL fallback to fallback locale; no broken-image icons visible). Restore the cache.
 - [ ] 5.6 `git status` shows only in-scope files: `theme.css`, `tailwind.css`, `lib/rarity.ts`, `tests/rarity.test.ts`, `LiveDeckPanel.tsx`, `tests/LiveDeckPanel.test.tsx`, `tests/LiveDeckPanel.compact.test.tsx`, plus the openspec change folder.
