@@ -328,6 +328,20 @@ describe('LiveDeckPanel row rarity + portrait', () => {
       expect(arts).toHaveLength(3);
     });
   });
+
+  it('uses the locale-free tile URL (not the full-frame render URL)', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    await waitFor(() => {
+      const art = screen.getAllByTestId('card-row-art')[0]! as HTMLImageElement;
+      expect(art.src).toBe('https://art.hearthstonejson.com/v1/tiles/CS2_029.png');
+      expect(art.src).not.toContain('/render/');
+    });
+  });
 });
 
 describe('LiveDeckPanel draw animation', () => {

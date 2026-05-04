@@ -5,6 +5,17 @@ const FALLBACK_LOCALE = 'enUS';
 const DEFAULT_APP_LOCALE_FOR_CARD_IMAGES: AppLocale = 'zh-CN';
 const SIZE = '256x';
 const BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
+const TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/tiles';
+
+/**
+ * Returns the URL of a card's *tile* — a locale-independent, frame-less
+ * artwork strip used for the inline portrait sliver on each deck row.
+ * Distinct from `useCardImageUrl` which returns the full rendered card
+ * (frame + mana gem + name banner) for hover popovers.
+ */
+export function getCardTileUrl(cardId: string): string {
+  return `${TILE_BASE_URL}/${cardId}.png`;
+}
 
 /**
  * In-flight dedup cache: prevents concurrent fetches for the same cardId

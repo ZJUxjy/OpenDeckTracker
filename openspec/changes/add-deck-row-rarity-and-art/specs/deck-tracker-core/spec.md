@@ -54,7 +54,7 @@ The component MUST:
   hover ends.
 - Show the header remaining count from `snapshot.deck.remaining`; the count MAY exceed the original deck total when known cards have been shuffled into the deck.
 - Tint each row's cost cell by the card's rarity using `getRarityCostBg(def?.rarity)` (from `lib/rarity.ts`). Cards without a known rarity MUST use the `--rarity-common` tint.
-- Render the card portrait as an inline `<img>` element on the right side of each row, sourced from `useCardImageUrl(cardId)`. The portrait element MUST carry `data-testid="card-row-art"` for testability.
+- Render the card portrait as an inline `<img>` element on the right side of each row, sourced from `getCardTileUrl(cardId)` (a locale-independent tile URL — frame-less artwork strip from `art.hearthstonejson.com/v1/tiles/`). The portrait MUST NOT use the full-frame render URL (`/v1/render/...`) — that endpoint serves the full card with frame, mana gem, and name banner, which competes visually with the row's own cost cell + name. The portrait element MUST carry `data-testid="card-row-art"` for testability.
 - Overlay a left-to-right gradient (e.g. `linear-gradient(to right, var(--bg-2) 35%, transparent 75%)`) above the portrait so the card name remains legible. The portrait z-index MUST be below the gradient and the row's foreground content (cost cell + name).
 - Apply a text shadow on the row's name text so it stays legible over busy artwork (the exact shadow value MAY be tuned but MUST be present).
 
@@ -108,7 +108,8 @@ The component MUST:
 
 - **GIVEN** a row with a known cardId
 - **WHEN** the row renders
-- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` resolves to the URL returned by `useCardImageUrl(cardId)`
+- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` is `https://art.hearthstonejson.com/v1/tiles/<cardId>.png`
+- **AND** the `src` MUST NOT contain `/render/` (the full-frame card URL is reserved for the hover popover, not the inline row)
 
 ### Requirement: LiveDeckPanel exposes a compact pip-count variant for overlay use
 
@@ -137,7 +138,8 @@ The compact branch MUST:
 - Tint the cost cell of each non-spent row by rarity using
   `getRarityCostBg(def?.rarity)` (same helper as the desktop variant).
 - Render the card portrait as an inline `<img>` element on the right
-  side of each row, sourced from `useCardImageUrl(cardId)`, carrying
+  side of each row, sourced from `getCardTileUrl(cardId)` (the same
+  locale-independent tile URL the desktop variant uses), carrying
   `data-testid="card-row-art"`. The pip widget MUST visually sit
   above the portrait + gradient layer so its filled/hollow dots stay
   readable.
@@ -185,7 +187,8 @@ the existing per-copy expansion + slide-out behavior).
 
 - **GIVEN** a compact-variant row with cardId `EX1_277`
 - **WHEN** the row renders
-- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` resolves to the URL returned by `useCardImageUrl('EX1_277')`
+- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` is `https://art.hearthstonejson.com/v1/tiles/EX1_277.png`
+- **AND** the `src` MUST NOT contain `/render/`
 
 #### Scenario: Spent compact row keeps the portrait but is faded
 

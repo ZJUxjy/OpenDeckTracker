@@ -135,10 +135,7 @@ c. Use the existing `CardImagePopover` rendering inline.
 
 **Choice: (b).** Reasons:
 
-- We need the `onError` handler to fall back to the `enUS`
-  primary URL (the existing `useCardImageUrl` returns
-  `{ primary, fallback }`).
-- A real `<img>` plays nicely with the renderer's image cache and
+- A real `<img>` plays nicely with the browser's image cache and
   with React's lazy-loading semantics; CSS `background-image`
   fights both.
 - We can position-absolute the `<img>` clipped to the right ~60%
@@ -148,6 +145,41 @@ c. Use the existing `CardImagePopover` rendering inline.
 
 (c) brings popover-styled chrome we don't want for the inline
 sliver.
+
+### D5b. Image source: tile URL (frame-less art), not full-frame render
+
+**Context:** HearthstoneJSON CDN serves two URL families:
+
+- `/v1/render/latest/{locale}/256x/{id}.png` — full card render
+  with frame, mana gem, name banner, set watermark. Locale-specific.
+  ~80 KB.
+- `/v1/tiles/{id}.png` — pre-cropped horizontal art strip
+  (~256×64), frame-less, locale-independent. ~5 KB.
+
+**Options:**
+
+a. Reuse the existing `useCardImageUrl(cardId)` (which returns the
+   render URL with locale primary + enUS fallback).
+b. Add a separate `getCardTileUrl(cardId): string` helper for the
+   inline row art and keep `useCardImageUrl` for the hover popover
+   (which DOES want the full card).
+
+**Choice: (b).** Reasons:
+
+- The full render is visually wrong inside a row — the card frame,
+  mana gem, and name banner duplicate the row's own cost cell and
+  name. Firestone (the visual reference) uses tiles for this
+  reason.
+- Tiles are 1/16th the size, so the row stays cheap to load even
+  before the image cache kicks in.
+- Tiles are locale-independent, so we drop the `onError → fallback`
+  fork — one URL per cardId, simple `<img src>`.
+- The popover keeps the render URL because hover *does* want the
+  full card (frame is informative there).
+
+The cache layer (`apps/desktop/src/main/card-image-cache.ts`) keeps
+caching renders only — tiles are tiny enough to fetch directly from
+the CDN with normal browser caching.
 
 ### D6. Compact variant keeps pip widget visible above the portrait
 

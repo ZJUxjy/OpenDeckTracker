@@ -227,6 +227,19 @@ describe('LiveDeckPanel compact variant', () => {
     expect(arts).toHaveLength(2);
   });
 
+  it('uses the locale-free tile URL (not the full-frame render URL)', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel compact />);
+
+    const art = screen.getAllByTestId('card-row-art')[0]! as HTMLImageElement;
+    expect(art.src).toBe('https://art.hearthstonejson.com/v1/tiles/CS2_029.png');
+    expect(art.src).not.toContain('/render/');
+  });
+
   it('keeps the portrait img on spent rows under the opacity-40 wrapper', () => {
     const snap = makeSnapshot({
       original: [

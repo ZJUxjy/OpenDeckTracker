@@ -3,7 +3,7 @@ import { useMemo, useRef, useState, useCallback, useEffect, type CSSProperties }
 const DRAG_HEADER_STYLE = { WebkitAppRegion: 'drag' } as CSSProperties;
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
-import { useCardImageUrl } from '../hooks/use-card-image-url';
+import { getCardTileUrl } from '../hooks/use-card-image-url';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
@@ -354,7 +354,7 @@ function CardCopyRow({
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
   const rarity = def?.rarity as Rarity | undefined;
-  const { primary, fallback } = useCardImageUrl(cardId);
+  const tileUrl = getCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
 
   return (
@@ -370,11 +370,7 @@ function CardCopyRow({
       onMouseLeave={onMouseLeave}
     >
       <img
-        src={primary}
-        onError={(e) => {
-          const el = e.currentTarget as HTMLImageElement;
-          if (el.src !== fallback) el.src = fallback;
-        }}
+        src={tileUrl}
         data-testid="card-row-art"
         alt=""
         aria-hidden
@@ -432,7 +428,7 @@ function CompactCardRow({
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
   const rarity = def?.rarity as Rarity | undefined;
-  const { primary, fallback } = useCardImageUrl(cardId);
+  const tileUrl = getCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
   const spent = remaining === 0;
 
@@ -448,11 +444,7 @@ function CompactCardRow({
       onMouseLeave={onMouseLeave}
     >
       <img
-        src={primary}
-        onError={(e) => {
-          const el = e.currentTarget as HTMLImageElement;
-          if (el.src !== fallback) el.src = fallback;
-        }}
+        src={tileUrl}
         data-testid="card-row-art"
         alt=""
         aria-hidden
