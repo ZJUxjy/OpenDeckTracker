@@ -46,4 +46,12 @@ describe('Console theme tokens', () => {
       expect(themeCss).toMatch(token);
     }
   });
+
+  it('declares all rarity color tokens', () => {
+    expect(themeCss).toMatch(/--rarity-free:\s*#5b6573;/);
+    expect(themeCss).toMatch(/--rarity-common:\s*#cdd5e0;/);
+    expect(themeCss).toMatch(/--rarity-rare:\s*#3b82f6;/);
+    expect(themeCss).toMatch(/--rarity-epic:\s*#a855f7;/);
+    expect(themeCss).toMatch(/--rarity-legendary:\s*#f59e0b;/);
+  });
 });

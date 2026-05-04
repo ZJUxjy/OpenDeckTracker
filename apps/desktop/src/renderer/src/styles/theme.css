@@ -69,6 +69,11 @@
   --green:      #34d399;
   --red:        #f87171;
   --amber:      #fbbf24;
+  --rarity-free:        #5b6573;
+  --rarity-common:      #cdd5e0;
+  --rarity-rare:        #3b82f6;
+  --rarity-epic:        #a855f7;
+  --rarity-legendary:   #f59e0b;
   --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
   --font-mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
