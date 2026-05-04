@@ -10,7 +10,7 @@
 
 ## 2. lib/rarity.ts helper module
 
-- [ ] 2.1 Create `apps/desktop/src/renderer/tests/rarity.test.ts` with failing tests:
+- [x] 2.1 Create `apps/desktop/src/renderer/tests/rarity.test.ts` with failing tests:
   ```ts
   import { describe, it, expect } from 'vitest';
   import { getRarityToken, getRarityCostBg } from '../src/lib/rarity';
@@ -43,7 +43,7 @@
   });
   ```
   Run `pnpm --filter @hdt/desktop test rarity`; expect failure (module missing).
-- [ ] 2.2 Create `apps/desktop/src/renderer/src/lib/rarity.ts`:
+- [x] 2.2 Create `apps/desktop/src/renderer/src/lib/rarity.ts`:
   ```ts
   import type { Rarity } from '@hdt/hearthdb';
 
@@ -72,8 +72,8 @@
   }
   ```
   Run `pnpm --filter @hdt/desktop test rarity`; expect green.
-- [ ] 2.3 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
-- [ ] 2.4 Commit: `feat(renderer): add lib/rarity.ts with getRarityToken + getRarityCostBg`.
+- [x] 2.3 Run `pnpm --filter @hdt/desktop typecheck`; expect exit 0.
+- [x] 2.4 Commit: `feat(renderer): add lib/rarity.ts with getRarityToken + getRarityCostBg`.
 
 ## 3. CardCopyRow (desktop variant): rarity tint + portrait
 
