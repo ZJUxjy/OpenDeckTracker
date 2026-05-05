@@ -2,6 +2,7 @@ import { mkdtemp, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { PNG } from 'pngjs';
 import {
   cardImageCachePath,
   cardImageCachePathFromUrl,
@@ -9,6 +10,7 @@ import {
   cardTileCacheUrl,
   ensureCardImageCached,
   ensureCardTileCached,
+  trimWhiteBorders,
 } from './card-image-cache';
 
 const tempRoots: string[] = [];
@@ -148,4 +150,106 @@ describe('card tile cache', () => {
       'https://art.hearthstonejson.com/v1/orig/CS2_029.png',
     );
   });
+
+  it('trims the white border from downloaded tiles before saving', async () => {
+    const root = await createTempRoot();
+    // 100x100 PNG: 20px white border on left+right, colored center.
+    const png = makeBorderedPng(100, 100, { left: 20, right: 20, top: 0, bottom: 0 });
+    const fetchMock = vi.fn(async () => new Response(new Uint8Array(png), {
+      status: 200,
+      headers: { 'content-type': 'image/png' },
+    }));
+
+    await ensureCardTileCached('CS2_029', {
+      root,
+      fetchImpl: fetchMock as typeof fetch,
+    });
+
+    const tilePath = cardTileCachePath({ root, cardId: 'CS2_029' });
+    const fs = await import('node:fs/promises');
+    const cachedBytes = await fs.readFile(tilePath);
+    const cachedPng = PNG.sync.read(cachedBytes);
+    expect(cachedPng.width).toBe(60); // 100 - 20 - 20
+    expect(cachedPng.height).toBe(100);
+  });
 });
+
+describe('trimWhiteBorders', () => {
+  it('strips left + right white borders precisely', () => {
+    const input = makeBorderedPng(100, 100, { left: 25, right: 15, top: 0, bottom: 0 });
+    const output = trimWhiteBorders(input);
+    const png = PNG.sync.read(output);
+    expect(png.width).toBe(60); // 100 - 25 - 15
+    expect(png.height).toBe(100);
+  });
+
+  it('strips top + bottom white borders precisely', () => {
+    const input = makeBorderedPng(100, 100, { left: 0, right: 0, top: 12, bottom: 8 });
+    const output = trimWhiteBorders(input);
+    const png = PNG.sync.read(output);
+    expect(png.width).toBe(100);
+    expect(png.height).toBe(80); // 100 - 12 - 8
+  });
+
+  it('returns the input unchanged when there is no border', () => {
+    const input = makeBorderedPng(100, 100, { left: 0, right: 0, top: 0, bottom: 0 });
+    const output = trimWhiteBorders(input);
+    // Re-encoding a no-border PNG should produce identical decoded dimensions.
+    const png = PNG.sync.read(output);
+    expect(png.width).toBe(100);
+    expect(png.height).toBe(100);
+  });
+
+  it('falls back to the original buffer when the input is not a valid PNG', () => {
+    const garbage = Buffer.from([0x00, 0x01, 0x02, 0x03]);
+    const output = trimWhiteBorders(garbage);
+    expect(output).toBe(garbage);
+  });
+
+  it('does not crop when the would-be result is below half the original dimension', () => {
+    // 100x100 PNG with a 60-pixel-wide white block in the middle but real
+    // content on the left and right edges — naive trim would not be
+    // triggered (no edge is fully white), so this test mainly verifies
+    // a far edgier case: a 100x100 image with white on >50% of left side.
+    const input = makeBorderedPng(100, 100, { left: 60, right: 0, top: 0, bottom: 0 });
+    const output = trimWhiteBorders(input);
+    const png = PNG.sync.read(output);
+    // 100 - 60 = 40 < 50 (half) → fallback to original
+    expect(png.width).toBe(100);
+    expect(png.height).toBe(100);
+  });
+});
+
+/**
+ * Build a PNG with all-white borders on the requested sides and a solid
+ * non-white color in the centered remainder. Returns a PNG-encoded buffer.
+ */
+function makeBorderedPng(
+  width: number,
+  height: number,
+  border: { left: number; right: number; top: number; bottom: number },
+): Buffer {
+  const png = new PNG({ width, height });
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const inBorder =
+        x < border.left ||
+        x >= width - border.right ||
+        y < border.top ||
+        y >= height - border.bottom;
+      if (inBorder) {
+        png.data[idx] = 255;
+        png.data[idx + 1] = 255;
+        png.data[idx + 2] = 255;
+      } else {
+        // Solid red center — clearly non-white, well below threshold.
+        png.data[idx] = 200;
+        png.data[idx + 1] = 50;
+        png.data[idx + 2] = 50;
+      }
+      png.data[idx + 3] = 255;
+    }
+  }
+  return PNG.sync.write(png);
+}

@@ -1,5 +1,6 @@
 import { mkdir, rename, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { PNG } from 'pngjs';
 
 export const CARD_IMAGE_PRIMARY_LOCALE = 'zhCN';
 export const CARD_IMAGE_FALLBACK_LOCALE = 'enUS';
@@ -192,9 +193,87 @@ export async function ensureCardTileCached(
   if (!response.ok) {
     throw new Error(`failed to download card tile ${cardId}: ${response.status}`);
   }
-  await writeResponse(tilePath, response);
+  const raw = Buffer.from(await response.arrayBuffer());
+  const trimmed = trimWhiteBorders(raw);
+  await writeBufferAtomic(tilePath, trimmed);
 
   return { cardId, path: tilePath, url: tileUrl };
+}
+
+/**
+ * Strip the white compositing border that HearthstoneJSON's `/v1/orig/`
+ * tiles ship — they pad non-square original artwork to 512x512 by adding
+ * pure-white bleed regions on either left+right (portrait sources) or
+ * top+bottom (landscape sources). Empirical worst case across the active
+ * card pool is ~15% per side; this function detects each card's actual
+ * border thickness and crops it precisely, preserving the centered
+ * character / scene composition exactly.
+ *
+ * Falls back to the original buffer (no crop) if:
+ * - the buffer doesn't decode as a PNG (e.g. test stubs),
+ * - the image is entirely near-white (would crop to 0×0),
+ * - or a sanity check fails (cropped dims < 50% of original on any axis,
+ *   which would indicate a malformed scan rather than a legitimate trim).
+ */
+export function trimWhiteBorders(buffer: Buffer): Buffer {
+  let png: PNG;
+  try {
+    png = PNG.sync.read(buffer);
+  } catch {
+    return buffer;
+  }
+
+  const { width, height, data } = png;
+  const isWhite = (x: number, y: number): boolean => {
+    const idx = (y * width + x) * 4;
+    return (
+      (data[idx] ?? 0) >= WHITE_THRESHOLD &&
+      (data[idx + 1] ?? 0) >= WHITE_THRESHOLD &&
+      (data[idx + 2] ?? 0) >= WHITE_THRESHOLD
+    );
+  };
+  const rowAllWhite = (y: number): boolean => {
+    for (let x = 0; x < width; x++) if (!isWhite(x, y)) return false;
+    return true;
+  };
+  const colAllWhite = (x: number): boolean => {
+    for (let y = 0; y < height; y++) if (!isWhite(x, y)) return false;
+    return true;
+  };
+
+  let top = 0;
+  while (top < height && rowAllWhite(top)) top++;
+  if (top === height) return buffer; // entirely white — bail
+
+  let bottom = height - 1;
+  while (bottom > top && rowAllWhite(bottom)) bottom--;
+
+  let left = 0;
+  while (left < width && colAllWhite(left)) left++;
+
+  let right = width - 1;
+  while (right > left && colAllWhite(right)) right--;
+
+  const newW = right - left + 1;
+  const newH = bottom - top + 1;
+
+  if (newW < width / 2 || newH < height / 2) return buffer;
+  if (top === 0 && left === 0 && bottom === height - 1 && right === width - 1) {
+    return buffer;
+  }
+
+  const cropped = new PNG({ width: newW, height: newH });
+  PNG.bitblt(png, cropped, left, top, newW, newH, 0, 0);
+  return PNG.sync.write(cropped);
+}
+
+const WHITE_THRESHOLD = 245;
+
+async function writeBufferAtomic(filePath: string, bytes: Buffer): Promise<void> {
+  await mkdir(path.dirname(filePath), { recursive: true });
+  const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  await writeFile(tempPath, bytes);
+  await rename(tempPath, filePath);
 }
 
 export async function ensureCardImageCached(
