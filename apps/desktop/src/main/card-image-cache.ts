@@ -6,7 +6,13 @@ export const CARD_IMAGE_FALLBACK_LOCALE = 'enUS';
 export const CARD_IMAGE_SIZE = '256x';
 export const CARD_IMAGE_PROTOCOL = 'hdt-card-image';
 export const CARD_IMAGE_BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
-export const CARD_TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/tiles';
+// Frame-less, fade-less card portrait art used for the inline row sliver.
+// We use /v1/256x/<id>.jpg, NOT /v1/tiles/<id>.png — tiles ship a baked-in
+// left-side fade designed to bleed into Hearthstone's own UI, which produces
+// a visible white edge in our rows. /v1/256x/ is the raw rectangular
+// portrait artwork (no frame, no fade).
+export const CARD_TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/256x';
+export const CARD_TILE_EXTENSION = 'jpg';
 
 const CARD_ID_RE = /^[A-Za-z0-9_]+$/;
 const SEGMENT_RE = /^[A-Za-z0-9_-]+$/;
@@ -94,17 +100,18 @@ export function cardImageCachePathFromUrl(url: string, root: string): string {
     throw new Error('invalid card image cache URL');
   }
 
-  // Tile URL: hdt-card-image://tile/<cardId>.png
+  // Tile URL: hdt-card-image://tile/<cardId>.<ext>
   if (parsed.hostname === 'tile') {
     const parts = parsed.pathname.split('/').filter(Boolean).map(decodeURIComponent);
     if (parts.length !== 1) {
       throw new Error('invalid card tile cache URL');
     }
     const fileName = parts[0]!;
-    if (!fileName.endsWith('.png')) {
+    const expectedSuffix = `.${CARD_TILE_EXTENSION}`;
+    if (!fileName.endsWith(expectedSuffix)) {
       throw new Error('invalid card tile cache URL');
     }
-    const cardId = fileName.slice(0, -'.png'.length);
+    const cardId = fileName.slice(0, -expectedSuffix.length);
     return cardTileCachePath({ root, cardId });
   }
 
@@ -148,7 +155,7 @@ export function cardTileCachePath({ root, cardId }: CardTileCachePathOptions): s
   assertValidCardId(cardId);
 
   const rootPath = path.resolve(root);
-  const resolved = path.resolve(rootPath, 'tiles', `${cardId}.png`);
+  const resolved = path.resolve(rootPath, 'tiles', `${cardId}.${CARD_TILE_EXTENSION}`);
   const relative = path.relative(rootPath, resolved);
   if (relative.startsWith('..') || path.isAbsolute(relative)) {
     throw new Error('invalid cache path outside card image root');
@@ -158,12 +165,12 @@ export function cardTileCachePath({ root, cardId }: CardTileCachePathOptions): s
 
 export function cardTileCacheUrl({ cardId }: { cardId: string }): string {
   assertValidCardId(cardId);
-  return `${CARD_IMAGE_PROTOCOL}://tile/${cardId}.png`;
+  return `${CARD_IMAGE_PROTOCOL}://tile/${cardId}.${CARD_TILE_EXTENSION}`;
 }
 
 export function buildRemoteCardTileUrl(cardId: string): string {
   assertValidCardId(cardId);
-  return `${CARD_TILE_BASE_URL}/${cardId}.png`;
+  return `${CARD_TILE_BASE_URL}/${cardId}.${CARD_TILE_EXTENSION}`;
 }
 
 export async function ensureCardTileCached(

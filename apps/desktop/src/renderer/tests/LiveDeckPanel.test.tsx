@@ -329,7 +329,7 @@ describe('LiveDeckPanel row rarity + portrait', () => {
     });
   });
 
-  it('uses the locale-free tile URL (not the full-frame render URL)', async () => {
+  it('uses the frame-less art URL (not the full-frame render URL nor the faded /tiles/ URL)', async () => {
     const snap = makeSnapshot({
       original: [{ cardId: 'CS2_029', count: 1 }],
     });
@@ -338,8 +338,9 @@ describe('LiveDeckPanel row rarity + portrait', () => {
     render(<LiveDeckPanel />);
     await waitFor(() => {
       const art = screen.getAllByTestId('card-row-art')[0]! as HTMLImageElement;
-      expect(art.src).toBe('https://art.hearthstonejson.com/v1/tiles/CS2_029.png');
+      expect(art.src).toBe('https://art.hearthstonejson.com/v1/256x/CS2_029.jpg');
       expect(art.src).not.toContain('/render/');
+      expect(art.src).not.toContain('/tiles/');
     });
   });
 });

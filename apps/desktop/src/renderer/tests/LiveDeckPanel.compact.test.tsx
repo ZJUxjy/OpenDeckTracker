@@ -227,7 +227,7 @@ describe('LiveDeckPanel compact variant', () => {
     expect(arts).toHaveLength(2);
   });
 
-  it('uses the locale-free tile URL (not the full-frame render URL)', () => {
+  it('uses the frame-less art URL (not the full-frame render URL nor the faded /tiles/ URL)', () => {
     const snap = makeSnapshot({
       original: [{ cardId: 'CS2_029', count: 1 }],
     });
@@ -236,8 +236,9 @@ describe('LiveDeckPanel compact variant', () => {
     render(<LiveDeckPanel compact />);
 
     const art = screen.getAllByTestId('card-row-art')[0]! as HTMLImageElement;
-    expect(art.src).toBe('https://art.hearthstonejson.com/v1/tiles/CS2_029.png');
+    expect(art.src).toBe('https://art.hearthstonejson.com/v1/256x/CS2_029.jpg');
     expect(art.src).not.toContain('/render/');
+    expect(art.src).not.toContain('/tiles/');
   });
 
   it('keeps the portrait img on spent rows under the opacity-40 wrapper', () => {

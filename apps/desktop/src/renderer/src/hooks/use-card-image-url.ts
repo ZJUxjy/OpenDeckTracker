@@ -5,7 +5,10 @@ const FALLBACK_LOCALE = 'enUS';
 const DEFAULT_APP_LOCALE_FOR_CARD_IMAGES: AppLocale = 'zh-CN';
 const SIZE = '256x';
 const BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
-const TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/tiles';
+// Frame-less art portrait — see CARD_TILE_BASE_URL in main/card-image-cache.ts
+// for why /v1/256x/ rather than /v1/tiles/.
+const TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/256x';
+const TILE_EXTENSION = 'jpg';
 
 /**
  * Returns the CDN URL of a card's *tile* — a locale-independent, frame-less
@@ -17,7 +20,7 @@ const TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/tiles';
  * and for code paths where the cache layer is unavailable.
  */
 export function getCardTileUrl(cardId: string): string {
-  return `${TILE_BASE_URL}/${cardId}.png`;
+  return `${TILE_BASE_URL}/${cardId}.${TILE_EXTENSION}`;
 }
 
 const cachedTileUrls = new Map<string, string>();
