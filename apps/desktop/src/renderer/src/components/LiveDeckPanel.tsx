@@ -16,9 +16,17 @@ const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)
 
 // Mask the tile's left edge into transparency so it blends smoothly with
 // the row's background — no hard gradient seam visible against bright art.
+//
+// `transform: scale(1.12)` crops ~6% from each edge of the source PNG
+// (transform-origin defaults to center, so the enlarged image overflows
+// the row's overflow-hidden container symmetrically). HearthstoneJSON
+// `/v1/orig/` artwork ships a 5-8% white border around each portrait
+// (compositing bleed area for the HS card frame); the scale hides it
+// without visibly cropping the character / scene content.
 const ART_MASK_STYLE: CSSProperties = {
   maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
   WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
+  transform: 'scale(1.12)',
 };
 
 /**

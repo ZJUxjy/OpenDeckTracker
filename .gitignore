@@ -51,6 +51,9 @@ data/cards/generated/*.json
 packages/hearthmirror/native/diag_*.txt
 packages/hearthmirror/native/dump_reflection_*.jsonl
 
+# Local tile-art preview output (one-off cropping previews; not source of truth)
+.tile-preview/
+
 # Temporary git commit message scratchpads
 .commitmsg.tmp
 .github
