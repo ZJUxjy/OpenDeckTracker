@@ -20,7 +20,8 @@
     "package": "pnpm --filter @hdt/desktop package",
     "cards:convert": "tsx scripts/convert-hsdata-cards.ts",
     "cards:download": "tsx scripts/download-cards.ts",
-    "cards:images": "tsx scripts/download-card-images.ts"
+    "cards:images": "tsx scripts/download-card-images.ts",
+    "notices": "node scripts/generate-third-party-notices.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

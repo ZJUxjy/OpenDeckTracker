@@ -1,0 +1,89 @@
+OpenDeckTracker End-User License Agreement (EULA)
+
+Copyright (c) 2026 OpenDeckTracker. All rights reserved.
+
+This software product, including its source code, compiled binaries,
+documentation, configuration files, and all associated assets
+(collectively, the "Software"), is the proprietary property of the
+copyright holder named above.
+
+Subject to the terms below, the copyright holder grants the end user
+a limited, non-transferable, non-exclusive, revocable license to
+install and use the Software on devices the end user owns or
+controls, solely for the end user's personal use.
+
+The end user may NOT, without the prior written permission of the
+copyright holder:
+
+1. Redistribute, sublicense, sell, lease, rent, lend, or otherwise
+   transfer the Software or any portion of it to any third party.
+
+2. Modify, adapt, translate, decompile, reverse engineer,
+   disassemble, or attempt to derive the source code of the
+   Software, except to the extent such activity is expressly
+   permitted by applicable law notwithstanding this restriction.
+
+3. Remove, obscure, or alter any proprietary notices, trademarks,
+   copyright marks, or attribution statements on or in the
+   Software.
+
+4. Use the Software in any manner that violates the terms of
+   service of any third-party platform with which the Software
+   interacts (including, without limitation, the terms of service
+   of game publishers).
+
+5. Use the Software to develop, distribute, or operate a
+   competing product.
+
+The Software incorporates open-source components, each of which is
+licensed under its own terms. A complete list of these components
+and their license terms is provided in the file
+`THIRD_PARTY_NOTICES.txt` distributed with the Software. The
+end user's use of those components is governed by their respective
+licenses, which take precedence over the restrictions in this EULA
+to the extent the open-source license terms require.
+
+The Software is provided "AS IS" without warranty of any kind,
+express or implied, including without limitation any warranty of
+merchantability, fitness for a particular purpose, title, or
+non-infringement. The end user assumes the entire risk as to the
+quality and performance of the Software.
+
+To the maximum extent permitted by applicable law, in no event
+shall the copyright holder be liable for any direct, indirect,
+incidental, special, consequential, or exemplary damages arising
+from or related to the end user's use of, or inability to use, the
+Software — including, without limitation, damages for lost profits,
+lost data, loss of goodwill, business interruption, or any other
+commercial damages or losses, even if the copyright holder has
+been advised of the possibility of such damages.
+
+The Software is a third-party tool that is not affiliated with,
+endorsed by, sponsored by, or otherwise associated with the
+publisher of any game with which it interacts. All trademarks,
+service marks, trade names, and logos referenced in the Software
+or its documentation are the property of their respective owners.
+The end user acknowledges that use of the Software in conjunction
+with such games may be subject to those games' terms of service,
+and that the end user assumes all risk associated with such use,
+including the risk of account action by the game publisher.
+
+This EULA is governed by the laws of the People's Republic of
+China, without regard to its conflict-of-laws principles. The end
+user agrees that any dispute arising under or related to this
+EULA shall be resolved exclusively in the courts located in
+Hangzhou, Zhejiang.
+
+If the end user does not agree to the terms of this EULA, the end
+user must not install or use the Software, and must promptly
+remove any copy of the Software from the end user's device.
+
+# ========================================================================
+# TODO before public commercial release:
+#   1. Replace "OpenDeckTracker" / 2026 / Hangzhou with the actual legal
+#      entity, year of first publication, and chosen jurisdiction.
+#   2. Have a qualified attorney review and tailor this EULA to local
+#      law (zh-CN consumer-protection requirements, cooling-off periods,
+#      e-commerce regulations).
+#   3. Decide whether you need a separate Privacy Policy (recommended).
+# ========================================================================

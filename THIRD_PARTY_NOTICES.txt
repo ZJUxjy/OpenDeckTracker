@@ -1,0 +1,2125 @@
+# THIRD-PARTY NOTICES
+
+OpenDeckTracker incorporates the following open-source software
+components. Each component is licensed under its own terms,
+available at the linked repository. The end user's use of these
+components is governed by their respective licenses.
+
+Generated: 2026-05-05
+Total entries: 538
+
+
+=========================================================================
+License: (BSD-2-Clause OR MIT OR Apache-2.0)
+=========================================================================
+
+  rc@1.2.8
+    Author:   Dominic Tarr
+    Homepage: https://github.com/dominictarr/rc#readme
+
+
+=========================================================================
+License: (MIT OR CC0-1.0)
+=========================================================================
+
+  type-fest@0.13.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/type-fest#readme
+
+
+=========================================================================
+License: (MIT OR WTFPL)
+=========================================================================
+
+  expand-template@2.0.3
+    Author:   LM
+    Homepage: https://github.com/ralphtheninja/expand-template
+
+
+=========================================================================
+License: (WTFPL OR MIT)
+=========================================================================
+
+  utf8-byte-length@1.0.5
+    Author:   Carl Xiong
+    Homepage: https://github.com/parshap/utf8-byte-length#readme
+
+
+=========================================================================
+License: 0BSD
+=========================================================================
+
+  tslib@2.8.1
+    Author:   Microsoft Corp.
+    Homepage: https://www.typescriptlang.org/
+
+
+=========================================================================
+License: Apache-2.0
+=========================================================================
+
+  @malept/cross-spawn-promise@2.0.0
+    Author:   Mark Lee
+    Homepage: https://github.com/malept/cross-spawn-promise#readme
+
+  baseline-browser-mapping@2.10.20
+    Homepage: https://github.com/web-platform-dx/baseline-browser-mapping#readme
+
+  class-variance-authority@0.7.1
+    Author:   Joe Bell
+    Homepage: https://github.com/joe-bell/cva#readme
+
+  crc-32@1.2.2
+    Author:   sheetjs
+    Homepage: https://sheetjs.com/
+
+  detect-libc@2.1.2
+    Author:   Lovell Fuller
+    Homepage: https://github.com/lovell/detect-libc#readme
+
+  ejs@3.1.10
+    Author:   Matthew Eernisse
+    Homepage: https://github.com/mde/ejs
+
+  exponential-backoff@3.1.3
+    Author:   Sami Sayegh
+    Homepage: https://github.com/coveooss/exponential-backoff#readme
+
+  filelist@1.0.6
+    Author:   Matthew Eernisse
+    Homepage: https://github.com/mde/filelist
+
+  jake@10.9.4
+    Author:   Matthew Eernisse
+    Homepage: https://github.com/jakejs/jake#readme
+
+  readdir-glob@1.1.3
+    Author:   Yann Armelin
+    Homepage: https://github.com/Yqnn/node-readdir-glob
+
+  sumchecker@3.0.1
+    Author:   Mark Lee
+    Homepage: https://github.com/malept/sumchecker#readme
+
+  tunnel-agent@0.6.0
+    Author:   Mikeal Rogers
+    Homepage: https://github.com/mikeal/tunnel-agent#readme
+
+  typescript@5.9.3
+    Author:   Microsoft Corp.
+    Homepage: https://www.typescriptlang.org/
+
+
+=========================================================================
+License: BlueOak-1.0.0
+=========================================================================
+
+  jackspeak@3.4.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/jackspeak#readme
+
+  minimatch@10.2.5
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minimatch#readme
+
+  minipass@7.1.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minipass#readme
+
+  minipass-flush@1.0.7
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minipass-flush#readme
+
+  package-json-from-dist@1.0.1
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/package-json-from-dist#readme
+
+  path-scurry@1.11.1
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/path-scurry#readme
+
+  sax@1.6.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/sax-js#readme
+
+
+=========================================================================
+License: BSD-2-Clause
+=========================================================================
+
+  @electron/osx-sign@1.3.1
+    Author:   electron
+    Homepage: https://github.com/electron/osx-sign
+
+  dotenv@16.6.1
+    Homepage: https://github.com/motdotla/dotenv#readme
+
+  dotenv-expand@11.0.7
+    Author:   motdotla
+    Homepage: https://github.com/motdotla/dotenv-expand#readme
+
+  extract-zip@2.0.1
+    Author:   max ogden
+    Homepage: https://github.com/maxogden/extract-zip#readme
+
+  http-cache-semantics@4.2.0
+    Author:   Kornel Lesiński
+    Homepage: https://github.com/kornelski/http-cache-semantics#readme
+
+  uri-js@4.4.1
+    Author:   Gary Court
+    Homepage: https://github.com/garycourt/uri-js
+
+
+=========================================================================
+License: BSD-3-Clause
+=========================================================================
+
+  d3-ease@3.0.1
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-ease/
+
+  global-agent@3.0.0
+    Author:   Gajus Kuizinas
+    Homepage: https://github.com/gajus/global-agent#readme
+
+  ieee754@1.2.1
+    Author:   Feross Aboukhadijeh
+    Homepage: https://github.com/feross/ieee754#readme
+
+  roarr@2.15.4
+    Author:   Gajus Kuizinas
+    Homepage: https://github.com/gajus/roarr#readme
+
+  source-map@0.6.1
+    Author:   Nick Fitzgerald
+    Homepage: https://github.com/mozilla/source-map
+
+  source-map-js@1.2.1
+    Author:   Valentin 7rulnik Semirulnik
+    Homepage: https://github.com/7rulnik/source-map-js
+
+  sprintf-js@1.1.3
+    Author:   Alexandru Mărășteanu
+    Homepage: https://github.com/alexei/sprintf.js#readme
+
+
+=========================================================================
+License: CC-BY-4.0
+=========================================================================
+
+  caniuse-lite@1.0.30001788
+    Author:   Ben Briggs
+    Homepage: https://github.com/browserslist/caniuse-lite#readme
+
+
+=========================================================================
+License: ISC
+=========================================================================
+
+  @isaacs/cliui@8.0.2
+    Author:   Ben Coe
+    Homepage: https://github.com/yargs/cliui#readme
+
+  @npmcli/fs@2.1.2
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/fs#readme
+
+  abbrev@1.1.1
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/abbrev-js#readme
+
+  aproba@2.1.0
+    Author:   Rebecca Turner
+    Homepage: https://github.com/iarna/aproba
+
+  are-we-there-yet@3.0.1
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/are-we-there-yet
+
+  at-least-node@1.0.0
+    Author:   Ryan Zimmerman
+    Homepage: https://github.com/RyanZim/at-least-node#readme
+
+  cacache@16.1.3
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/cacache#readme
+
+  chownr@1.1.4
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/chownr#readme
+
+  chownr@2.0.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/chownr#readme
+
+  cliui@8.0.1
+    Author:   Ben Coe
+    Homepage: https://github.com/yargs/cliui#readme
+
+  color-support@1.1.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/color-support#readme
+
+  console-control-strings@1.1.0
+    Author:   Rebecca Turner
+    Homepage: https://github.com/iarna/console-control-strings#readme
+
+  d3-array@3.2.4
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-array/
+
+  d3-color@3.1.0
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-color/
+
+  d3-format@3.1.2
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-format/
+
+  d3-interpolate@3.0.1
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-interpolate/
+
+  d3-path@3.1.0
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-path/
+
+  d3-scale@4.0.2
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-scale/
+
+  d3-shape@3.2.0
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-shape/
+
+  d3-time@3.1.0
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-time/
+
+  d3-time-format@4.1.0
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-time-format/
+
+  d3-timer@3.0.1
+    Author:   Mike Bostock
+    Homepage: https://d3js.org/d3-timer/
+
+  electron-to-chromium@1.5.340
+    Author:   Kilian Valkhof
+    Homepage: https://github.com/Kilian/electron-to-chromium#readme
+
+  foreground-child@3.3.1
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/tapjs/foreground-child#readme
+
+  fs-minipass@2.1.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/npm/fs-minipass#readme
+
+  fs.realpath@1.0.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/fs.realpath#readme
+
+  gauge@4.0.4
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/gauge
+
+  get-caller-file@2.0.5
+    Author:   Stefan Penner
+    Homepage: https://github.com/stefanpenner/get-caller-file#readme
+
+  glob@10.4.5
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-glob#readme
+
+  glob@7.2.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-glob#readme
+
+  glob@8.1.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-glob#readme
+
+  graceful-fs@4.2.11
+    Homepage: https://github.com/isaacs/node-graceful-fs#readme
+
+  has-unicode@2.0.1
+    Author:   Rebecca Turner
+    Homepage: https://github.com/iarna/has-unicode
+
+  hosted-git-info@4.1.0
+    Author:   Rebecca Turner
+    Homepage: https://github.com/npm/hosted-git-info
+
+  infer-owner@1.0.4
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/npm/infer-owner#readme
+
+  inflight@1.0.6
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/inflight
+
+  inherits@2.0.4
+    Homepage: https://github.com/isaacs/inherits#readme
+
+  ini@1.3.8
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/ini#readme
+
+  internmap@2.0.3
+    Author:   Mike Bostock
+    Homepage: https://github.com/mbostock/internmap/
+
+  isexe@2.0.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/isexe#readme
+
+  json-stringify-safe@5.0.1
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/json-stringify-safe
+
+  lru-cache@10.4.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-lru-cache#readme
+
+  lru-cache@5.1.1
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-lru-cache#readme
+
+  lru-cache@6.0.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-lru-cache#readme
+
+  lru-cache@7.18.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-lru-cache#readme
+
+  lucide-react@1.8.0
+    Author:   Eric Fennis
+    Homepage: https://lucide.dev
+
+  make-fetch-happen@10.2.1
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/make-fetch-happen#readme
+
+  minimatch@3.1.5
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minimatch#readme
+
+  minimatch@5.1.9
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minimatch#readme
+
+  minimatch@9.0.9
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minimatch#readme
+
+  minipass@3.3.6
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minipass#readme
+
+  minipass@5.0.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minipass#readme
+
+  minipass-collect@1.0.2
+    Author:   Isaac Z. Schlueter
+
+  minipass-pipeline@1.2.4
+    Author:   Isaac Z. Schlueter
+
+  minipass-sized@1.0.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minipass-sized#readme
+
+  nopt@6.0.0
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/nopt#readme
+
+  npmlog@6.0.2
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/npmlog#readme
+
+  once@1.4.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/once#readme
+
+  picocolors@1.1.1
+    Author:   Alexey Raspopov
+    Homepage: https://github.com/alexeyraspopov/picocolors#readme
+
+  promise-inflight@1.0.1
+    Author:   Rebecca Turner
+    Homepage: https://github.com/iarna/promise-inflight#readme
+
+  rimraf@3.0.2
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/rimraf#readme
+
+  semver@6.3.1
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/node-semver#readme
+
+  semver@7.7.4
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/node-semver#readme
+
+  set-blocking@2.0.0
+    Author:   Ben Coe
+    Homepage: https://github.com/yargs/set-blocking#readme
+
+  signal-exit@3.0.7
+    Author:   Ben Coe
+    Homepage: https://github.com/tapjs/signal-exit#readme
+
+  signal-exit@4.1.0
+    Author:   Ben Coe
+    Homepage: https://github.com/tapjs/signal-exit#readme
+
+  ssri@9.0.1
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/ssri#readme
+
+  tar@6.2.1
+    Author:   GitHub Inc.
+    Homepage: https://github.com/isaacs/node-tar#readme
+
+  unique-filename@2.0.1
+    Author:   GitHub Inc.
+    Homepage: https://github.com/iarna/unique-filename
+
+  unique-slug@3.0.0
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/unique-slug#readme
+
+  which@2.0.2
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/node-which#readme
+
+  wide-align@1.1.5
+    Author:   Rebecca Turner
+    Homepage: https://github.com/iarna/wide-align#readme
+
+  wrappy@1.0.2
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/npm/wrappy
+
+  y18n@5.0.8
+    Author:   Ben Coe
+    Homepage: https://github.com/yargs/y18n
+
+  yallist@3.1.1
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/yallist#readme
+
+  yallist@4.0.0
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/yallist#readme
+
+  yargs-parser@21.1.1
+    Author:   Ben Coe
+    Homepage: https://github.com/yargs/yargs-parser#readme
+
+
+=========================================================================
+License: MIT
+=========================================================================
+
+  @babel/code-frame@7.29.0
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-code-frame
+
+  @babel/compat-data@7.29.0
+    Author:   The Babel Team
+    Homepage: https://github.com/babel/babel#readme
+
+  @babel/core@7.29.0
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-core
+
+  @babel/generator@7.29.1
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-generator
+
+  @babel/helper-compilation-targets@7.28.6
+    Author:   The Babel Team
+    Homepage: https://github.com/babel/babel#readme
+
+  @babel/helper-globals@7.28.0
+    Author:   The Babel Team
+    Homepage: https://github.com/babel/babel#readme
+
+  @babel/helper-module-imports@7.28.6
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-helper-module-imports
+
+  @babel/helper-module-transforms@7.28.6
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-helper-module-transforms
+
+  @babel/helper-plugin-utils@7.28.6
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-helper-plugin-utils
+
+  @babel/helper-string-parser@7.27.1
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-helper-string-parser
+
+  @babel/helper-validator-identifier@7.28.5
+    Author:   The Babel Team
+    Homepage: https://github.com/babel/babel#readme
+
+  @babel/helper-validator-option@7.27.1
+    Author:   The Babel Team
+    Homepage: https://github.com/babel/babel#readme
+
+  @babel/helpers@7.29.2
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-helpers
+
+  @babel/parser@7.29.2
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-parser
+
+  @babel/plugin-transform-arrow-functions@7.27.1
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-plugin-transform-arrow-functions
+
+  @babel/plugin-transform-react-jsx-self@7.27.1
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-plugin-transform-react-jsx-self
+
+  @babel/plugin-transform-react-jsx-source@7.27.1
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-plugin-transform-react-jsx-source
+
+  @babel/template@7.28.6
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-template
+
+  @babel/traverse@7.29.0
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-traverse
+
+  @babel/types@7.29.0
+    Author:   The Babel Team
+    Homepage: https://babel.dev/docs/en/next/babel-types
+
+  @develar/schema-utils@2.6.5
+    Author:   webpack Contrib
+    Homepage: https://github.com/webpack/schema-utils
+
+  @electron/asar@3.4.1
+    Homepage: https://github.com/electron/asar
+
+  @electron/get@2.0.3
+    Author:   Samuel Attard
+    Homepage: https://github.com/electron/get#readme
+
+  @electron/notarize@2.5.0
+    Author:   Samuel Attard
+    Homepage: https://github.com/electron/notarize#readme
+
+  @electron/rebuild@3.6.1
+    Author:   Paul Betts
+    Homepage: https://github.com/electron/rebuild
+
+  @electron/universal@2.0.1
+    Author:   Samuel Attard
+    Homepage: https://github.com/electron/universal#readme
+
+  @esbuild/win32-x64@0.25.12
+    Homepage: https://github.com/evanw/esbuild#readme
+
+  @esbuild/win32-x64@0.27.7
+    Homepage: https://github.com/evanw/esbuild#readme
+
+  @floating-ui/core@1.7.5
+    Author:   atomiks
+    Homepage: https://floating-ui.com
+
+  @floating-ui/dom@1.7.6
+    Author:   atomiks
+    Homepage: https://floating-ui.com
+
+  @floating-ui/react-dom@2.1.8
+    Author:   atomiks
+    Homepage: https://floating-ui.com/docs/react-dom
+
+  @floating-ui/utils@0.2.11
+    Author:   atomiks
+    Homepage: https://floating-ui.com
+
+  @gar/promisify@1.1.3
+    Author:   Gar
+    Homepage: https://github.com/wraithgar/gar-promisify#readme
+
+  @jridgewell/gen-mapping@0.3.13
+    Author:   Justin Ridgewell
+    Homepage: https://github.com/jridgewell/sourcemaps/tree/main/packages/gen-mapping
+
+  @jridgewell/remapping@2.3.5
+    Author:   Justin Ridgewell
+    Homepage: https://github.com/jridgewell/sourcemaps/tree/main/packages/remapping
+
+  @jridgewell/resolve-uri@3.1.2
+    Author:   Justin Ridgewell
+    Homepage: https://github.com/jridgewell/resolve-uri#readme
+
+  @jridgewell/sourcemap-codec@1.5.5
+    Author:   Justin Ridgewell
+    Homepage: https://github.com/jridgewell/sourcemaps/tree/main/packages/sourcemap-codec
+
+  @jridgewell/trace-mapping@0.3.31
+    Author:   Justin Ridgewell
+    Homepage: https://github.com/jridgewell/sourcemaps/tree/main/packages/trace-mapping
+
+  @malept/flatpak-bundler@0.4.0
+    Author:   Matt Watson
+    Homepage: https://github.com/malept/flatpak-bundler#readme
+
+  @npmcli/move-file@2.0.1
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/move-file#readme
+
+  @pkgjs/parseargs@0.11.0
+    Homepage: https://github.com/pkgjs/parseargs#readme
+
+  @radix-ui/primitive@1.1.3
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-alert-dialog@1.1.15
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-arrow@1.1.7
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-collection@1.1.7
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-compose-refs@1.1.2
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-context@1.1.2
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-dialog@1.1.15
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-direction@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-dismissable-layer@1.1.11
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-dropdown-menu@2.1.16
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-focus-guards@1.1.3
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-focus-scope@1.1.7
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-hover-card@1.1.15
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-id@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-menu@2.1.16
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-popper@1.2.8
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-portal@1.1.9
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-presence@1.1.5
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-primitive@2.1.3
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-roving-focus@1.1.11
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-slot@1.2.3
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-tabs@1.1.13
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-use-callback-ref@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-use-controllable-state@1.2.2
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-use-effect-event@0.0.2
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-use-escape-keydown@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-use-layout-effect@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-use-rect@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/react-use-size@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @radix-ui/rect@1.1.1
+    Homepage: https://radix-ui.com/primitives
+
+  @reduxjs/toolkit@2.11.2
+    Author:   Mark Erikson
+    Homepage: https://redux-toolkit.js.org
+
+  @rolldown/pluginutils@1.0.0-beta.27
+    Homepage: https://github.com/rolldown/rolldown#readme
+
+  @rollup/rollup-win32-x64-gnu@4.60.2
+    Author:   Lukas Taegert-Atkinson
+    Homepage: https://rollupjs.org/
+
+  @rollup/rollup-win32-x64-msvc@4.60.2
+    Author:   Lukas Taegert-Atkinson
+    Homepage: https://rollupjs.org/
+
+  @sindresorhus/is@4.6.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/is#readme
+
+  @standard-schema/spec@1.1.0
+    Author:   Colin McDonnell
+    Homepage: https://standardschema.dev
+
+  @standard-schema/utils@0.3.0
+    Author:   Fabian Hiller
+    Homepage: https://github.com/standard-schema/standard-schema#readme
+
+  @szmarczak/http-timer@4.0.6
+    Author:   Szymon Marczak
+    Homepage: https://github.com/szmarczak/http-timer#readme
+
+  @tailwindcss/node@4.2.2
+    Homepage: https://tailwindcss.com
+
+  @tailwindcss/oxide@4.2.2
+    Homepage: https://github.com/tailwindlabs/tailwindcss#readme
+
+  @tailwindcss/oxide-win32-x64-msvc@4.2.2
+    Homepage: https://github.com/tailwindlabs/tailwindcss#readme
+
+  @tailwindcss/vite@4.2.2
+    Homepage: https://tailwindcss.com
+
+  @tootallnate/once@2.0.0
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/once#readme
+
+  @types/babel__core@7.20.5
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/babel__core
+
+  @types/babel__generator@7.27.0
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/babel__generator
+
+  @types/babel__template@7.4.4
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/babel__template
+
+  @types/babel__traverse@7.28.0
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/babel__traverse
+
+  @types/cacheable-request@6.0.3
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/cacheable-request
+
+  @types/d3-array@3.2.2
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-array
+
+  @types/d3-color@3.1.3
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-color
+
+  @types/d3-ease@3.0.2
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-ease
+
+  @types/d3-interpolate@3.0.4
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-interpolate
+
+  @types/d3-path@3.1.1
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-path
+
+  @types/d3-scale@4.0.9
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-scale
+
+  @types/d3-shape@3.1.8
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-shape
+
+  @types/d3-time@3.0.4
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-time
+
+  @types/d3-timer@3.0.2
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/d3-timer
+
+  @types/debug@4.1.13
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/debug
+
+  @types/estree@1.0.8
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/estree
+
+  @types/fs-extra@9.0.13
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/fs-extra
+
+  @types/http-cache-semantics@4.2.0
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/http-cache-semantics
+
+  @types/keyv@3.1.4
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/keyv
+
+  @types/ms@2.1.0
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/ms
+
+  @types/node@20.19.39
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node
+
+  @types/node@25.6.0
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node
+
+  @types/pngjs@6.0.5
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/pngjs
+
+  @types/react@19.2.14
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react
+
+  @types/react-dom@19.2.3
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react-dom
+
+  @types/responselike@1.0.3
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/responselike
+
+  @types/use-sync-external-store@0.0.6
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/use-sync-external-store
+
+  @types/yauzl@2.10.3
+    Homepage: https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/yauzl
+
+  @vitejs/plugin-react@4.7.0
+    Author:   Evan You
+    Homepage: https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#readme
+
+  @xmldom/xmldom@0.8.13
+    Homepage: https://github.com/xmldom/xmldom
+
+  7zip-bin@5.2.0
+    Homepage: https://github.com/develar/7zip-bin#readme
+
+  agent-base@6.0.2
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/proxy-agents#readme
+
+  agent-base@7.1.4
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/proxy-agents#readme
+
+  agentkeepalive@4.6.0
+    Author:   fengmk2
+    Homepage: https://github.com/node-modules/agentkeepalive#readme
+
+  aggregate-error@3.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/aggregate-error#readme
+
+  ajv@6.14.0
+    Author:   Evgeny Poberezkin
+    Homepage: https://github.com/ajv-validator/ajv
+
+  ajv-keywords@3.5.2
+    Author:   Evgeny Poberezkin
+    Homepage: https://github.com/epoberezkin/ajv-keywords#readme
+
+  ansi-regex@5.0.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/ansi-regex#readme
+
+  ansi-regex@6.2.2
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/ansi-regex#readme
+
+  ansi-styles@4.3.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/ansi-styles#readme
+
+  ansi-styles@6.2.3
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/ansi-styles#readme
+
+  app-builder-bin@5.0.0-alpha.10
+    Homepage: https://github.com/develar/app-builder#readme
+
+  app-builder-lib@25.1.8
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/electron-userland/electron-builder
+
+  archiver@5.3.2
+    Author:   Chris Talkington
+    Homepage: https://github.com/archiverjs/node-archiver
+
+  archiver-utils@2.1.0
+    Author:   Chris Talkington
+    Homepage: https://github.com/archiverjs/archiver-utils#readme
+
+  archiver-utils@3.0.4
+    Author:   Chris Talkington
+    Homepage: https://github.com/archiverjs/archiver-utils#readme
+
+  aria-hidden@1.2.6
+    Author:   Anton Korzunov
+    Homepage: https://github.com/theKashey/aria-hidden#readme
+
+  async@3.2.6
+    Author:   Caolan McMahon
+    Homepage: https://caolan.github.io/async/
+
+  async-exit-hook@2.0.1
+    Author:   Tapani Moilanen
+    Homepage: https://github.com/tapppi/async-exit-hook#readme
+
+  asynckit@0.4.0
+    Author:   Alex Indigo
+    Homepage: https://github.com/alexindigo/asynckit#readme
+
+  balanced-match@1.0.2
+    Homepage: https://github.com/juliangruber/balanced-match#readme
+
+  balanced-match@4.0.4
+    Homepage: https://github.com/juliangruber/balanced-match#readme
+
+  base64-js@1.5.1
+    Author:   T. Jameson Little
+    Homepage: https://github.com/beatgammit/base64-js
+
+  better-sqlite3@12.9.0
+    Author:   Joshua Wise
+    Homepage: http://github.com/WiseLibs/better-sqlite3
+
+  bindings@1.5.0
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/node-bindings
+
+  bl@4.1.0
+    Homepage: https://github.com/rvagg/bl
+
+  bluebird@3.7.2
+    Author:   Petka Antonov
+    Homepage: https://github.com/petkaantonov/bluebird
+
+  bluebird-lst@1.0.9
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/develar/fs-extra-p
+
+  boolean@3.2.0
+    Homepage: https://github.com/thenativeweb/boolean#readme
+
+  brace-expansion@1.1.14
+    Homepage: https://github.com/juliangruber/brace-expansion#readme
+
+  brace-expansion@2.1.0
+    Homepage: https://github.com/juliangruber/brace-expansion#readme
+
+  brace-expansion@5.0.5
+    Homepage: https://github.com/juliangruber/brace-expansion#readme
+
+  browserslist@4.28.2
+    Author:   Andrey Sitnik
+    Homepage: https://github.com/browserslist/browserslist#readme
+
+  buffer@5.7.1
+    Author:   Feross Aboukhadijeh
+    Homepage: https://github.com/feross/buffer
+
+  buffer-crc32@0.2.13
+    Author:   Brian J. Brennan
+    Homepage: https://github.com/brianloveswords/buffer-crc32
+
+  buffer-from@1.1.2
+    Homepage: https://github.com/LinusU/buffer-from#readme
+
+  builder-util@25.1.7
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/electron-userland/electron-builder
+
+  builder-util-runtime@9.2.10
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/electron-userland/electron-builder
+
+  cac@6.7.14
+    Author:   egoist
+    Homepage: https://github.com/egoist/cac#readme
+
+  cacheable-lookup@5.0.4
+    Author:   Szymon Marczak
+    Homepage: https://github.com/szmarczak/cacheable-lookup#readme
+
+  cacheable-request@7.0.4
+    Author:   Luke Childs
+    Homepage: https://github.com/lukechilds/cacheable-request#readme
+
+  call-bind-apply-helpers@1.0.2
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/call-bind-apply-helpers#readme
+
+  chalk@4.1.2
+    Homepage: https://github.com/chalk/chalk#readme
+
+  chromium-pickle-js@0.2.0
+    Homepage: https://github.com/electron/node-chromium-pickle-js#readme
+
+  ci-info@3.9.0
+    Author:   Thomas Watson Steen
+    Homepage: https://github.com/watson/ci-info
+
+  clean-stack@2.2.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/clean-stack#readme
+
+  cli-cursor@3.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/cli-cursor#readme
+
+  cli-spinners@2.9.2
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/cli-spinners#readme
+
+  clone@1.0.4
+    Author:   Paul Vorbach
+    Homepage: https://github.com/pvorb/node-clone#readme
+
+  clone-response@1.0.3
+    Author:   Luke Childs
+    Homepage: https://github.com/sindresorhus/clone-response#readme
+
+  clsx@2.1.1
+    Author:   Luke Edwards
+    Homepage: https://github.com/lukeed/clsx#readme
+
+  color-convert@2.0.1
+    Author:   Heather Arthur
+    Homepage: https://github.com/Qix-/color-convert#readme
+
+  color-name@1.1.4
+    Author:   DY
+    Homepage: https://github.com/colorjs/color-name
+
+  combined-stream@1.0.8
+    Author:   Felix Geisendörfer
+    Homepage: https://github.com/felixge/node-combined-stream
+
+  commander@5.1.0
+    Author:   TJ Holowaychuk
+    Homepage: https://github.com/tj/commander.js#readme
+
+  compare-version@0.1.2
+    Author:   Kevin Mårtensson
+    Homepage: https://github.com/kevva/compare-version#readme
+
+  compress-commons@4.1.2
+    Author:   Chris Talkington
+    Homepage: https://github.com/archiverjs/node-compress-commons
+
+  concat-map@0.0.1
+    Author:   James Halliday
+    Homepage: https://github.com/substack/node-concat-map#readme
+
+  config-file-ts@0.2.8-rc1
+    Author:   lee mighdoll
+    Homepage: https://github.com/mighdoll/config-file-ts#readme
+
+  convert-source-map@2.0.0
+    Author:   Thorsten Lorenz
+    Homepage: https://github.com/thlorenz/convert-source-map
+
+  cookie@1.1.1
+    Author:   Roman Shtylman
+    Homepage: https://github.com/jshttp/cookie#readme
+
+  core-util-is@1.0.3
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/core-util-is#readme
+
+  crc32-stream@4.0.3
+    Author:   Chris Talkington
+    Homepage: https://github.com/archiverjs/node-crc32-stream
+
+  cross-spawn@7.0.6
+    Author:   André Cruz
+    Homepage: https://github.com/moxystudio/node-cross-spawn
+
+  csstype@3.2.3
+    Author:   Fredrik Nicol
+    Homepage: https://github.com/frenic/csstype#readme
+
+  debug@4.4.3
+    Author:   Josh Junon
+    Homepage: https://github.com/debug-js/debug#readme
+
+  decimal.js-light@2.5.1
+    Author:   Michael Mclaughlin
+    Homepage: https://github.com/MikeMcl/decimal.js-light#readme
+
+  decompress-response@6.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/decompress-response#readme
+
+  deep-extend@0.6.0
+    Author:   Viacheslav Lotsmanov
+    Homepage: https://github.com/unclechu/node-deep-extend
+
+  defaults@1.0.4
+    Author:   Elijah Insua
+    Homepage: https://github.com/sindresorhus/node-defaults#readme
+
+  defer-to-connect@2.0.1
+    Author:   Szymon Marczak
+    Homepage: https://github.com/szmarczak/defer-to-connect#readme
+
+  define-data-property@1.1.4
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/define-data-property#readme
+
+  define-properties@1.2.1
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/define-properties#readme
+
+  delayed-stream@1.0.0
+    Author:   Felix Geisendörfer
+    Homepage: https://github.com/felixge/node-delayed-stream
+
+  delegates@1.0.0
+    Homepage: https://github.com/visionmedia/node-delegates#readme
+
+  detect-node@2.1.0
+    Author:   Ilya Kantor
+    Homepage: https://github.com/iliakan/detect-node
+
+  detect-node-es@1.1.0
+    Author:   Ilya Kantor
+    Homepage: https://github.com/thekashey/detect-node
+
+  dir-compare@4.2.0
+    Author:   Liviu Grigorescu
+    Homepage: https://github.com/gliviu/dir-compare#readme
+
+  dmg-builder@25.1.8
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/electron-userland/electron-builder
+
+  dunder-proto@1.0.1
+    Author:   Jordan Harband
+    Homepage: https://github.com/es-shims/dunder-proto#readme
+
+  eastasianwidth@0.2.0
+    Author:   Masaki Komagata
+    Homepage: https://github.com/komagata/eastasianwidth#readme
+
+  electron@33.4.11
+    Author:   Electron Community
+    Homepage: https://github.com/electron/electron#readme
+
+  electron-builder@25.1.8
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/electron-userland/electron-builder
+
+  electron-builder-squirrel-windows@25.1.8
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/electron-userland/electron-builder
+
+  electron-publish@25.1.7
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/electron-userland/electron-builder
+
+  electron-vite@5.0.0
+    Author:   Alex Wei
+    Homepage: https://electron-vite.org
+
+  emoji-regex@8.0.0
+    Author:   Mathias Bynens
+    Homepage: https://mths.be/emoji-regex
+
+  emoji-regex@9.2.2
+    Author:   Mathias Bynens
+    Homepage: https://mths.be/emoji-regex
+
+  encoding@0.1.13
+    Author:   Andris Reinman
+    Homepage: https://github.com/andris9/encoding#readme
+
+  end-of-stream@1.4.5
+    Author:   Mathias Buus
+    Homepage: https://github.com/mafintosh/end-of-stream
+
+  enhanced-resolve@5.20.1
+    Author:   Tobias Koppers @sokra
+    Homepage: http://github.com/webpack/enhanced-resolve
+
+  env-paths@2.2.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/env-paths#readme
+
+  err-code@2.0.3
+    Author:   IndigoUnited
+    Homepage: https://github.com/IndigoUnited/js-err-code#readme
+
+  es-define-property@1.0.1
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/es-define-property#readme
+
+  es-errors@1.3.0
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/es-errors#readme
+
+  es-object-atoms@1.1.1
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/es-object-atoms#readme
+
+  es-set-tostringtag@2.1.0
+    Author:   Jordan Harband
+    Homepage: https://github.com/es-shims/es-set-tostringtag#readme
+
+  es-toolkit@1.45.1
+    Homepage: https://es-toolkit.dev
+
+  es6-error@4.1.1
+    Author:   Ben Youngblood
+    Homepage: https://github.com/bjyoungblood/es6-error
+
+  esbuild@0.25.12
+    Homepage: https://github.com/evanw/esbuild#readme
+
+  esbuild@0.27.7
+    Homepage: https://github.com/evanw/esbuild#readme
+
+  escalade@3.2.0
+    Author:   Luke Edwards
+    Homepage: https://github.com/lukeed/escalade#readme
+
+  escape-string-regexp@4.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/escape-string-regexp#readme
+
+  eventemitter3@5.0.4
+    Author:   Arnout Kazemier
+    Homepage: https://github.com/primus/eventemitter3#readme
+
+  fast-deep-equal@3.1.3
+    Author:   Evgeny Poberezkin
+    Homepage: https://github.com/epoberezkin/fast-deep-equal#readme
+
+  fast-json-stable-stringify@2.1.0
+    Author:   James Halliday
+    Homepage: https://github.com/epoberezkin/fast-json-stable-stringify
+
+  fd-slicer@1.1.0
+    Author:   Andrew Kelley
+    Homepage: https://github.com/andrewrk/node-fd-slicer#readme
+
+  fdir@6.5.0
+    Author:   thecodrr
+    Homepage: https://github.com/thecodrr/fdir#readme
+
+  file-uri-to-path@1.0.0
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/file-uri-to-path
+
+  form-data@4.0.5
+    Author:   Felix Geisendörfer
+    Homepage: https://github.com/form-data/form-data#readme
+
+  framer-motion@12.38.0
+    Author:   Matt Perry
+    Homepage: https://github.com/motiondivision/motion#readme
+
+  fs-constants@1.0.0
+    Author:   Mathias Buus
+    Homepage: https://github.com/mafintosh/fs-constants
+
+  fs-extra@10.1.0
+    Author:   JP Richardson
+    Homepage: https://github.com/jprichardson/node-fs-extra
+
+  fs-extra@11.3.4
+    Author:   JP Richardson
+    Homepage: https://github.com/jprichardson/node-fs-extra
+
+  fs-extra@8.1.0
+    Author:   JP Richardson
+    Homepage: https://github.com/jprichardson/node-fs-extra
+
+  fs-extra@9.1.0
+    Author:   JP Richardson
+    Homepage: https://github.com/jprichardson/node-fs-extra
+
+  function-bind@1.1.2
+    Author:   Raynos
+    Homepage: https://github.com/Raynos/function-bind
+
+  gensync@1.0.0-beta.2
+    Author:   Logan Smyth
+    Homepage: https://github.com/loganfsmyth/gensync
+
+  get-intrinsic@1.3.0
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/get-intrinsic#readme
+
+  get-nonce@1.0.1
+    Author:   Anton Korzunov
+    Homepage: https://github.com/theKashey/get-nonce
+
+  get-proto@1.0.1
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/get-proto#readme
+
+  get-stream@5.2.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/get-stream#readme
+
+  get-tsconfig@4.14.0
+    Author:   Hiroki Osame
+    Homepage: https://github.com/privatenumber/get-tsconfig#readme
+
+  github-from-package@0.0.0
+    Author:   James Halliday
+    Homepage: https://github.com/substack/github-from-package
+
+  globalthis@1.0.4
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/System.global#readme
+
+  gopd@1.2.0
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/gopd#readme
+
+  got@11.8.6
+    Homepage: https://github.com/sindresorhus/got#readme
+
+  has-flag@4.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/has-flag#readme
+
+  has-property-descriptors@1.0.2
+    Author:   Jordan Harband
+    Homepage: https://github.com/inspect-js/has-property-descriptors#readme
+
+  has-symbols@1.1.0
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/has-symbols#readme
+
+  has-tostringtag@1.0.2
+    Author:   Jordan Harband
+    Homepage: https://github.com/inspect-js/has-tostringtag#readme
+
+  hasown@2.0.3
+    Author:   Jordan Harband
+    Homepage: https://github.com/inspect-js/hasOwn#readme
+
+  http-proxy-agent@5.0.0
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/proxy-agents#readme
+
+  http-proxy-agent@7.0.2
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/proxy-agents#readme
+
+  http2-wrapper@1.0.3
+    Author:   Szymon Marczak
+    Homepage: https://github.com/szmarczak/http2-wrapper#readme
+
+  https-proxy-agent@5.0.1
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/proxy-agents#readme
+
+  https-proxy-agent@7.0.6
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/proxy-agents#readme
+
+  humanize-ms@1.2.1
+    Author:   dead-horse
+    Homepage: https://github.com/node-modules/humanize-ms#readme
+
+  iconv-lite@0.6.3
+    Author:   Alexander Shtuchkin
+    Homepage: https://github.com/ashtuchkin/iconv-lite
+
+  immer@10.2.0
+    Author:   Michel Weststrate
+    Homepage: https://github.com/immerjs/immer#readme
+
+  immer@11.1.4
+    Author:   Michel Weststrate
+    Homepage: https://github.com/immerjs/immer#readme
+
+  imurmurhash@0.1.4
+    Author:   Jens Taylor
+    Homepage: https://github.com/jensyt/imurmurhash-js
+
+  indent-string@4.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/indent-string#readme
+
+  ip-address@10.1.0
+    Author:   Beau Gunderson
+    Homepage: https://github.com/beaugunderson/ip-address#readme
+
+  is-ci@3.0.1
+    Author:   Thomas Watson Steen
+    Homepage: https://github.com/watson/is-ci
+
+  is-fullwidth-code-point@3.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/is-fullwidth-code-point#readme
+
+  is-interactive@1.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/is-interactive#readme
+
+  is-lambda@1.0.1
+    Author:   Thomas Watson Steen
+    Homepage: https://github.com/watson/is-lambda
+
+  is-unicode-supported@0.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/is-unicode-supported#readme
+
+  isarray@1.0.0
+    Author:   Julian Gruber
+    Homepage: https://github.com/juliangruber/isarray
+
+  isbinaryfile@4.0.10
+    Homepage: https://github.com/gjtorikian/isBinaryFile#readme
+
+  isbinaryfile@5.0.7
+    Homepage: https://github.com/gjtorikian/isBinaryFile#readme
+
+  jiti@2.6.1
+    Homepage: https://github.com/unjs/jiti#readme
+
+  js-tokens@4.0.0
+    Author:   Simon Lydell
+    Homepage: https://github.com/lydell/js-tokens#readme
+
+  js-yaml@4.1.1
+    Author:   Vladimir Zapparov
+    Homepage: https://github.com/nodeca/js-yaml#readme
+
+  jsesc@3.1.0
+    Author:   Mathias Bynens
+    Homepage: https://mths.be/jsesc
+
+  json-buffer@3.0.1
+    Author:   Dominic Tarr
+    Homepage: https://github.com/dominictarr/json-buffer
+
+  json-schema-traverse@0.4.1
+    Author:   Evgeny Poberezkin
+    Homepage: https://github.com/epoberezkin/json-schema-traverse#readme
+
+  json5@2.2.3
+    Author:   Aseem Kishore
+    Homepage: http://json5.org/
+
+  jsonfile@4.0.0
+    Author:   JP Richardson
+    Homepage: https://github.com/jprichardson/node-jsonfile#readme
+
+  jsonfile@6.2.0
+    Author:   JP Richardson
+    Homepage: https://github.com/jprichardson/node-jsonfile#readme
+
+  keyv@4.5.4
+    Author:   Jared Wray
+    Homepage: https://github.com/jaredwray/keyv
+
+  lazy-val@1.0.5
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/develar/lazy-val
+
+  lazystream@1.0.1
+    Author:   Jonas Pommerening
+    Homepage: https://github.com/jpommerening/node-lazystream
+
+  lodash@4.18.1
+    Author:   John-David Dalton
+    Homepage: https://lodash.com/
+
+  lodash.defaults@4.2.0
+    Author:   John-David Dalton
+    Homepage: https://lodash.com/
+
+  lodash.difference@4.5.0
+    Author:   John-David Dalton
+    Homepage: https://lodash.com/
+
+  lodash.flatten@4.4.0
+    Author:   John-David Dalton
+    Homepage: https://lodash.com/
+
+  lodash.isplainobject@4.0.6
+    Author:   John-David Dalton
+    Homepage: https://lodash.com/
+
+  lodash.union@4.6.0
+    Author:   John-David Dalton
+    Homepage: https://lodash.com/
+
+  log-symbols@4.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/log-symbols#readme
+
+  loose-envify@1.4.0
+    Author:   Andres Suarez
+    Homepage: https://github.com/zertosh/loose-envify
+
+  lowercase-keys@2.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/lowercase-keys#readme
+
+  magic-string@0.30.21
+    Author:   Rich Harris
+    Homepage: https://github.com/Rich-Harris/magic-string#readme
+
+  matcher@3.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/matcher#readme
+
+  math-intrinsics@1.1.0
+    Author:   Jordan Harband
+    Homepage: https://github.com/es-shims/math-intrinsics#readme
+
+  mime@2.6.0
+    Author:   Robert Kieffer
+    Homepage: https://github.com/broofa/mime#readme
+
+  mime-db@1.52.0
+    Homepage: https://github.com/jshttp/mime-db#readme
+
+  mime-types@2.1.35
+    Homepage: https://github.com/jshttp/mime-types#readme
+
+  mimic-fn@2.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/mimic-fn#readme
+
+  mimic-response@1.0.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/mimic-response#readme
+
+  mimic-response@3.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/mimic-response#readme
+
+  minimist@1.2.8
+    Author:   James Halliday
+    Homepage: https://github.com/minimistjs/minimist
+
+  minipass-fetch@2.1.2
+    Author:   GitHub Inc.
+    Homepage: https://github.com/npm/minipass-fetch#readme
+
+  minizlib@2.1.2
+    Author:   Isaac Z. Schlueter
+    Homepage: https://github.com/isaacs/minizlib#readme
+
+  mkdirp@1.0.4
+    Homepage: https://github.com/isaacs/node-mkdirp#readme
+
+  mkdirp-classic@0.5.3
+    Author:   Mathias Buus
+    Homepage: https://github.com/mafintosh/mkdirp-classic
+
+  motion@12.38.0
+    Author:   Matt Perry
+    Homepage: https://github.com/motiondivision/motion#readme
+
+  motion-dom@12.38.0
+    Author:   Matt Perry
+    Homepage: https://github.com/motiondivision/motion#readme
+
+  motion-utils@12.36.0
+    Author:   Matt Perry
+    Homepage: https://github.com/motiondivision/motion#readme
+
+  ms@2.1.3
+    Homepage: https://github.com/vercel/ms#readme
+
+  nanoid@3.3.11
+    Author:   Andrey Sitnik
+    Homepage: https://github.com/ai/nanoid#readme
+
+  napi-build-utils@2.0.0
+    Author:   Jim Schlight
+    Homepage: https://github.com/inspiredware/napi-build-utils#readme
+
+  negotiator@0.6.4
+    Homepage: https://github.com/jshttp/negotiator#readme
+
+  node-abi@3.89.0
+    Author:   Lukas Geiger
+    Homepage: https://github.com/electron/node-abi#readme
+
+  node-api-version@0.2.1
+    Author:   Tim Fish
+    Homepage: https://github.com/timfish/node-api-version#readme
+
+  node-gyp@9.4.1
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/nodejs/node-gyp#readme
+
+  node-releases@2.0.37
+    Author:   Sergey Rubanov
+    Homepage: https://github.com/chicoxyzzy/node-releases#readme
+
+  normalize-path@3.0.0
+    Author:   Jon Schlinkert
+    Homepage: https://github.com/jonschlinkert/normalize-path
+
+  normalize-url@6.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/normalize-url#readme
+
+  object-keys@1.1.1
+    Author:   Jordan Harband
+    Homepage: https://github.com/ljharb/object-keys#readme
+
+  onetime@5.1.2
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/onetime#readme
+
+  ora@5.4.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/ora#readme
+
+  p-cancelable@2.1.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/p-cancelable#readme
+
+  p-limit@3.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/p-limit#readme
+
+  p-map@4.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/p-map#readme
+
+  path-is-absolute@1.0.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/path-is-absolute#readme
+
+  path-key@3.1.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/path-key#readme
+
+  pe-library@0.4.1
+    Author:   jet
+    Homepage: https://github.com/jet2jet/pe-library-js
+
+  pend@1.2.0
+    Author:   Andrew Kelley
+    Homepage: https://github.com/andrewrk/node-pend#readme
+
+  picomatch@4.0.4
+    Author:   Jon Schlinkert
+    Homepage: https://github.com/micromatch/picomatch
+
+  plist@3.1.0
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/node-plist#readme
+
+  pngjs@7.0.0
+    Homepage: https://github.com/lukeapage/pngjs
+
+  postcss@8.5.10
+    Author:   Andrey Sitnik
+    Homepage: https://postcss.org/
+
+  prebuild-install@7.1.3
+    Author:   Mathias Buus
+    Homepage: https://github.com/prebuild/prebuild-install
+
+  process-nextick-args@2.0.1
+    Homepage: https://github.com/calvinmetcalf/process-nextick-args
+
+  progress@2.0.3
+    Author:   TJ Holowaychuk
+    Homepage: https://github.com/visionmedia/node-progress#readme
+
+  promise-retry@2.0.1
+    Author:   IndigoUnited
+    Homepage: https://github.com/IndigoUnited/node-promise-retry#readme
+
+  pump@3.0.4
+    Author:   Mathias Buus Madsen
+    Homepage: https://github.com/mafintosh/pump#readme
+
+  punycode@2.3.1
+    Author:   Mathias Bynens
+    Homepage: https://mths.be/punycode
+
+  quick-lru@5.1.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/quick-lru#readme
+
+  react@18.3.1
+    Homepage: https://reactjs.org/
+
+  react-dom@18.3.1
+    Homepage: https://reactjs.org/
+
+  react-is@17.0.2
+    Homepage: https://reactjs.org/
+
+  react-redux@9.2.0
+    Author:   Dan Abramov
+    Homepage: https://github.com/reduxjs/react-redux
+
+  react-refresh@0.17.0
+    Homepage: https://react.dev/
+
+  react-remove-scroll@2.7.2
+    Author:   Anton Korzunov
+    Homepage: https://github.com/theKashey/react-remove-scroll#readme
+
+  react-remove-scroll-bar@2.3.8
+    Author:   Anton Korzunov
+    Homepage: https://github.com/theKashey/react-remove-scroll-bar#readme
+
+  react-router@7.14.1
+    Author:   Remix Software
+    Homepage: https://github.com/remix-run/react-router#readme
+
+  react-style-singleton@2.2.3
+    Author:   Anton Korzunov
+    Homepage: https://github.com/theKashey/react-style-singleton#readme
+
+  read-binary-file-arch@1.0.6
+    Author:   Samuel Maddock
+    Homepage: https://github.com/samuelmaddock/read-binary-file-arch#readme
+
+  readable-stream@2.3.8
+    Homepage: https://github.com/nodejs/readable-stream#readme
+
+  readable-stream@3.6.2
+    Homepage: https://github.com/nodejs/readable-stream#readme
+
+  recharts@3.8.1
+    Author:   recharts group
+    Homepage: https://github.com/recharts/recharts
+
+  redux@5.0.1
+    Homepage: http://redux.js.org
+
+  redux-thunk@3.1.0
+    Author:   Dan Abramov
+    Homepage: https://github.com/reduxjs/redux-thunk
+
+  require-directory@2.1.1
+    Author:   Troy Goode
+    Homepage: https://github.com/troygoode/node-require-directory/
+
+  resedit@1.7.2
+    Author:   jet
+    Homepage: https://github.com/jet2jet/resedit-js
+
+  reselect@5.1.1
+    Homepage: https://github.com/reduxjs/reselect#readme
+
+  resolve-alpn@1.2.1
+    Author:   Szymon Marczak
+    Homepage: https://github.com/szmarczak/resolve-alpn#readme
+
+  resolve-pkg-maps@1.0.0
+    Author:   Hiroki Osame
+    Homepage: https://github.com/privatenumber/resolve-pkg-maps#readme
+
+  responselike@2.0.1
+    Author:   lukechilds
+    Homepage: https://github.com/sindresorhus/responselike#readme
+
+  restore-cursor@3.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/restore-cursor#readme
+
+  retry@0.12.0
+    Author:   Tim Koschützki
+    Homepage: https://github.com/tim-kos/node-retry
+
+  rollup@4.60.2
+    Author:   Rich Harris
+    Homepage: https://rollupjs.org/
+
+  safe-buffer@5.1.2
+    Author:   Feross Aboukhadijeh
+    Homepage: https://github.com/feross/safe-buffer
+
+  safe-buffer@5.2.1
+    Author:   Feross Aboukhadijeh
+    Homepage: https://github.com/feross/safe-buffer
+
+  safer-buffer@2.1.2
+    Author:   Nikita Skovoroda
+    Homepage: https://github.com/ChALkeR/safer-buffer#readme
+
+  scheduler@0.23.2
+    Homepage: https://reactjs.org/
+
+  semver-compare@1.0.0
+    Author:   James Halliday
+    Homepage: https://github.com/substack/semver-compare
+
+  serialize-error@7.0.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/serialize-error#readme
+
+  set-cookie-parser@2.7.2
+    Author:   Nathan Friedly
+    Homepage: https://github.com/nfriedly/set-cookie-parser
+
+  shebang-command@2.0.0
+    Author:   Kevin Mårtensson
+    Homepage: https://github.com/kevva/shebang-command#readme
+
+  shebang-regex@3.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/shebang-regex#readme
+
+  simple-concat@1.0.1
+    Author:   Feross Aboukhadijeh
+    Homepage: https://github.com/feross/simple-concat
+
+  simple-get@4.0.1
+    Author:   Feross Aboukhadijeh
+    Homepage: https://github.com/feross/simple-get
+
+  simple-update-notifier@2.0.0
+    Author:   alexbrazier
+    Homepage: https://github.com/alexbrazier/simple-update-notifier.git
+
+  smart-buffer@4.2.0
+    Author:   Josh Glazebrook
+    Homepage: https://github.com/JoshGlazebrook/smart-buffer/
+
+  socks@2.8.7
+    Author:   Josh Glazebrook
+    Homepage: https://github.com/JoshGlazebrook/socks/
+
+  socks-proxy-agent@7.0.0
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/node-socks-proxy-agent#readme
+
+  sonner@2.0.7
+    Author:   Emil Kowalski
+    Homepage: https://sonner.emilkowal.ski/
+
+  source-map-support@0.5.21
+    Homepage: https://github.com/evanw/node-source-map-support#readme
+
+  stat-mode@1.0.0
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/stat-mode
+
+  string_decoder@1.1.1
+    Homepage: https://github.com/nodejs/string_decoder
+
+  string_decoder@1.3.0
+    Homepage: https://github.com/nodejs/string_decoder
+
+  string-width@4.2.3
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/string-width#readme
+
+  string-width@5.1.2
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/string-width#readme
+
+  strip-ansi@6.0.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/strip-ansi#readme
+
+  strip-ansi@7.2.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/strip-ansi#readme
+
+  strip-json-comments@2.0.1
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/strip-json-comments#readme
+
+  supports-color@7.2.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/supports-color#readme
+
+  tailwind-merge@3.5.0
+    Author:   Dany Castillo
+    Homepage: https://github.com/dcastil/tailwind-merge
+
+  tailwindcss@4.2.2
+    Homepage: https://tailwindcss.com
+
+  tapable@2.3.2
+    Author:   Tobias Koppers @sokra
+    Homepage: https://github.com/webpack/tapable
+
+  tar-fs@2.1.4
+    Author:   Mathias Buus
+    Homepage: https://github.com/mafintosh/tar-fs
+
+  tar-stream@2.2.0
+    Author:   Mathias Buus
+    Homepage: https://github.com/mafintosh/tar-stream
+
+  temp-file@3.4.0
+    Author:   Vladimir Krivosheev
+    Homepage: https://github.com/develar/temp-file
+
+  tiny-invariant@1.3.3
+    Author:   Alex Reardon
+    Homepage: https://github.com/alexreardon/tiny-invariant#readme
+
+  tinyglobby@0.2.16
+    Author:   Superchupu
+    Homepage: https://superchupu.dev/tinyglobby
+
+  tmp@0.2.5
+    Author:   KARASZI István
+    Homepage: http://github.com/raszi/node-tmp
+
+  tmp-promise@3.0.3
+    Author:   Benjamin Gruenbaum and Collaborators.
+    Homepage: https://github.com/benjamingr/tmp-promise#readme
+
+  tsx@4.21.0
+    Author:   Hiroki Osame
+    Homepage: https://tsx.is
+
+  tw-animate-css@1.4.0
+    Author:   Luca Bosin
+    Homepage: https://github.com/Wombosvideo/tw-animate-css#readme
+
+  undici-types@6.21.0
+    Homepage: https://undici.nodejs.org
+
+  undici-types@7.19.2
+    Homepage: https://undici.nodejs.org
+
+  universalify@0.1.2
+    Author:   Ryan Zimmerman
+    Homepage: https://github.com/RyanZim/universalify#readme
+
+  universalify@2.0.1
+    Author:   Ryan Zimmerman
+    Homepage: https://github.com/RyanZim/universalify#readme
+
+  update-browserslist-db@1.2.3
+    Author:   Andrey Sitnik
+    Homepage: https://github.com/browserslist/update-db#readme
+
+  use-callback-ref@1.3.3
+    Author:   theKashey
+    Homepage: https://github.com/theKashey/use-callback-ref#readme
+
+  use-sidecar@1.1.3
+    Author:   theKashey
+    Homepage: https://github.com/theKashey/use-sidecar
+
+  use-sync-external-store@1.6.0
+    Homepage: https://github.com/facebook/react#readme
+
+  util-deprecate@1.0.2
+    Author:   Nathan Rajlich
+    Homepage: https://github.com/TooTallNate/util-deprecate
+
+  vite@6.4.2
+    Author:   Evan You
+    Homepage: https://vite.dev
+
+  wcwidth@1.0.1
+    Author:   Tim Oxley
+    Homepage: https://github.com/timoxley/wcwidth#readme
+
+  wrap-ansi@7.0.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/wrap-ansi#readme
+
+  wrap-ansi@8.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/chalk/wrap-ansi#readme
+
+  xmlbuilder@15.1.1
+    Author:   Ozgur Ozcitak
+    Homepage: http://github.com/oozcitak/xmlbuilder-js
+
+  yargs@17.7.2
+    Homepage: https://yargs.js.org/
+
+  yauzl@2.10.0
+    Author:   Josh Wolfe
+    Homepage: https://github.com/thejoshwolfe/yauzl
+
+  yocto-queue@0.1.0
+    Author:   Sindre Sorhus
+    Homepage: https://github.com/sindresorhus/yocto-queue#readme
+
+  zip-stream@4.1.1
+    Author:   Chris Talkington
+    Homepage: https://github.com/archiverjs/node-zip-stream
+
+  zustand@5.0.12
+    Author:   Paul Henschel
+    Homepage: https://github.com/pmndrs/zustand
+
+
+=========================================================================
+License: MIT AND ISC
+=========================================================================
+
+  victory-vendor@37.3.6
+    Author:   Formidable
+    Homepage: https://commerce.nearform.com/open-source/victory
+
+
+=========================================================================
+License: MPL-2.0
+=========================================================================
+
+  lightningcss@1.32.0
+    Homepage: https://github.com/parcel-bundler/lightningcss#readme
+
+  lightningcss-win32-x64-msvc@1.32.0
+    Homepage: https://github.com/parcel-bundler/lightningcss#readme
+
+
+=========================================================================
+License: Python-2.0
+=========================================================================
+
+  argparse@2.0.1
+    Homepage: https://github.com/nodeca/argparse#readme
+
+
+=========================================================================
+License: WTFPL
+=========================================================================
+
+  truncate-utf8-bytes@1.0.2
+    Author:   Carl Xiong
+    Homepage: https://github.com/parshap/truncate-utf8-bytes#readme
+
+
+=========================================================================
+License: WTFPL OR ISC
+=========================================================================
+
+  sanitize-filename@1.6.4
+    Author:   Parsha Pourkhomami
+    Homepage: https://github.com/parshap/node-sanitize-filename#readme
