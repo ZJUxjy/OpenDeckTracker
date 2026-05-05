@@ -79,6 +79,32 @@ describe('OpponentCardsPanel', () => {
     expect(screen.getByText('No opponent cards revealed')).toBeInTheDocument();
   });
 
+  it('renders a card-row-art portrait img per opponent row using the frame-less art URL', async () => {
+    render(
+      <OpponentCardsPanel
+        revealed={[
+          record({ entityId: 20, cardId: 'CS2_029' }),
+          record({ entityId: 21, cardId: 'CS2_024' }),
+        ]}
+        graveyard={[]}
+      />,
+    );
+
+    await waitFor(() => {
+      const arts = screen.getAllByTestId('card-row-art');
+      expect(arts).toHaveLength(2);
+      const urls = arts.map((el) => (el as HTMLImageElement).src);
+      // First-paint URLs are the CDN tile URLs; once cached they swap to
+      // hdt-card-image://tile/... Either form is acceptable here as long
+      // as we never use the framed render or the legacy /tiles/ endpoint.
+      for (const url of urls) {
+        expect(url).not.toContain('/render/');
+        expect(url).not.toContain('/tiles/');
+        expect(url).toMatch(/\/v1\/orig\/|^hdt-card-image:\/\/tile\//);
+      }
+    });
+  });
+
   it('groups duplicate opponent records by cardId', async () => {
     render(
       <OpponentCardsPanel

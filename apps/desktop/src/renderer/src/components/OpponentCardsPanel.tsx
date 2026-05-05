@@ -3,7 +3,19 @@ import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
+import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useLocale, useTranslation } from '../i18n';
+
+const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
+
+// Mask the portrait's left edge into transparency so it blends smoothly
+// with the row background. White compositing borders are stripped at
+// cache time (see trimWhiteBorders in main/card-image-cache.ts) — no
+// scale-transform needed here.
+const ART_MASK_STYLE: CSSProperties = {
+  maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
+  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
+};
 
 interface OpponentCardsPanelProps {
   revealed: OpponentCardRecord[];
@@ -133,35 +145,47 @@ function OpponentCardRow({
   onMouseLeave: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const tileUrl = useCardTileUrl(card.cardId);
 
   return (
     <div
       ref={ref}
       data-testid="opponent-card-row"
-      className="flex items-center px-2 py-1.5 rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]"
+      className="relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]"
       onMouseEnter={() => ref.current && onMouseEnter(card.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
-      <div className="w-7 h-7 rounded bg-red/15 flex items-center justify-center text-red font-bold text-xs shrink-0">
-        {def?.cost ?? 0}
-      </div>
-      <div className="flex-1 min-w-0 px-2">
-        <div
-          className={clsx(
-            'truncate font-medium',
-            rarity === 'legendary' ? 'text-accent' : '',
-            rarity === 'epic' ? 'text-purple-300' : '',
-            rarity === 'rare' ? 'text-blue-300' : '',
-            rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-text' : '',
-          )}
-          title={card.cardId}
-        >
-          {def?.name ?? card.cardId}
+      <img
+        src={tileUrl}
+        data-testid="card-row-art"
+        alt=""
+        aria-hidden
+        style={ART_MASK_STYLE}
+        className="absolute right-0 top-0 h-full w-3/5 object-cover object-right pointer-events-none select-none z-0"
+      />
+      <div className="relative z-10 flex items-center px-2 py-1.5 w-full">
+        <div className="w-7 h-7 rounded bg-red/15 flex items-center justify-center text-red font-bold text-xs shrink-0">
+          {def?.cost ?? 0}
         </div>
+        <div className="flex-1 min-w-0 px-2">
+          <div
+            className={clsx(
+              'truncate font-medium',
+              rarity === 'legendary' ? 'text-rarity-legendary' : '',
+              rarity === 'epic' ? 'text-rarity-epic' : '',
+              rarity === 'rare' ? 'text-rarity-rare' : '',
+              rarity === 'common' || rarity === 'free' || rarity === '' ? 'text-text' : '',
+            )}
+            style={NAME_TEXT_SHADOW}
+            title={card.cardId}
+          >
+            {def?.name ?? card.cardId}
+          </div>
+        </div>
+        {card.count > 1 && (
+          <div className="text-xs text-text font-bold shrink-0">x{card.count}</div>
+        )}
       </div>
-      {card.count > 1 && (
-        <div className="text-xs text-text font-bold shrink-0">x{card.count}</div>
-      )}
     </div>
   );
 }
