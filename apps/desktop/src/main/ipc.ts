@@ -10,6 +10,7 @@ import { ensureCardDb } from './cards';
 import {
   CARD_IMAGE_PROTOCOL,
   cardImageCachePathFromUrl,
+  cleanLegacyTileCacheDirs,
   defaultCardImageCacheRoot,
   ensureCardImageCached,
   ensureCardTileCached,
@@ -80,6 +81,19 @@ export function registerIpc(overlay?: OverlayControllers): void {
   }
   const cardImageRoot = defaultCardImageCacheRoot(app.getPath('userData'));
   registerCardImageProtocol(cardImageRoot);
+
+  // One-shot cleanup of older tile-cache directory versions (pre-trim
+  // baseline + any past versioned dirs). Fire-and-forget: cache reads
+  // don't depend on completion, and failures just leave orphaned dirs.
+  void cleanLegacyTileCacheDirs(cardImageRoot)
+    .then((removed) => {
+      if (removed.length > 0) {
+        console.log(`[card-image-cache] cleaned legacy tile dirs: ${removed.join(', ')}`);
+      }
+    })
+    .catch((e) => {
+      console.error('[card-image-cache] failed to clean legacy tile dirs', e);
+    });
 
   ipcMain.handle('cards:findByDbfId', async (_, dbfId: number, appLocale?: string) => {
     try {

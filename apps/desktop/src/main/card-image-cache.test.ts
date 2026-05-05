@@ -3,11 +3,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PNG } from 'pngjs';
+import { mkdir, writeFile, readdir } from 'node:fs/promises';
 import {
   cardImageCachePath,
   cardImageCachePathFromUrl,
   cardTileCachePath,
   cardTileCacheUrl,
+  cleanLegacyTileCacheDirs,
   ensureCardImageCached,
   ensureCardTileCached,
   trimWhiteBorders,
@@ -97,7 +99,7 @@ describe('card tile cache', () => {
 
     const resolved = cardTileCachePath({ root, cardId: 'CS2_029' });
 
-    expect(path.relative(root, resolved)).toBe(path.join('tiles', 'CS2_029.png'));
+    expect(path.relative(root, resolved)).toBe(path.join('tiles-v2', 'CS2_029.png'));
     expect(path.resolve(resolved).startsWith(path.resolve(root))).toBe(true);
   });
 
@@ -110,11 +112,11 @@ describe('card tile cache', () => {
     expect(cardTileCacheUrl({ cardId: 'CS2_029' })).toBe('hdt-card-image://tile/CS2_029.png');
   });
 
-  it('cardImageCachePathFromUrl resolves tile URLs to the tiles/ subdirectory', async () => {
+  it('cardImageCachePathFromUrl resolves tile URLs to the versioned tiles-v2/ subdirectory', async () => {
     const root = await createTempRoot();
     const url = cardTileCacheUrl({ cardId: 'CS2_029' });
     const resolved = cardImageCachePathFromUrl(url, root);
-    expect(path.relative(root, resolved)).toBe(path.join('tiles', 'CS2_029.png'));
+    expect(path.relative(root, resolved)).toBe(path.join('tiles-v2', 'CS2_029.png'));
   });
 
   it('downloads a tile once and returns the cached local URL on later requests', async () => {
@@ -171,6 +173,51 @@ describe('card tile cache', () => {
     const cachedPng = PNG.sync.read(cachedBytes);
     expect(cachedPng.width).toBe(60); // 100 - 20 - 20
     expect(cachedPng.height).toBe(100);
+  });
+});
+
+describe('cleanLegacyTileCacheDirs', () => {
+  it('removes the unversioned tiles/ baseline directory', async () => {
+    const root = await createTempRoot();
+    await mkdir(path.join(root, 'tiles'), { recursive: true });
+    await writeFile(path.join(root, 'tiles', 'CS2_029.png'), Buffer.from([1, 2, 3]));
+
+    const removed = await cleanLegacyTileCacheDirs(root);
+
+    expect(removed).toContain('tiles');
+    const remaining = (await readdir(root)).sort();
+    expect(remaining).not.toContain('tiles');
+  });
+
+  it('removes older tiles-v1/ versioned directories', async () => {
+    const root = await createTempRoot();
+    await mkdir(path.join(root, 'tiles-v1'), { recursive: true });
+    await writeFile(path.join(root, 'tiles-v1', 'CS2_029.png'), Buffer.from([1, 2, 3]));
+
+    const removed = await cleanLegacyTileCacheDirs(root);
+
+    expect(removed).toContain('tiles-v1');
+  });
+
+  it('preserves the current tiles-v2/ directory and unrelated siblings', async () => {
+    const root = await createTempRoot();
+    await mkdir(path.join(root, 'tiles-v2'), { recursive: true });
+    await writeFile(path.join(root, 'tiles-v2', 'CS2_029.png'), Buffer.from([1, 2, 3]));
+    await mkdir(path.join(root, 'zhCN'), { recursive: true }); // render cache lives here
+    await writeFile(path.join(root, 'zhCN', 'placeholder'), Buffer.from([0]));
+
+    const removed = await cleanLegacyTileCacheDirs(root);
+
+    expect(removed).not.toContain('tiles-v2');
+    expect(removed).not.toContain('zhCN');
+    const remaining = (await readdir(root)).sort();
+    expect(remaining).toContain('tiles-v2');
+    expect(remaining).toContain('zhCN');
+  });
+
+  it('returns an empty list when the root does not exist yet', async () => {
+    const removed = await cleanLegacyTileCacheDirs(path.join('does', 'not', 'exist'));
+    expect(removed).toEqual([]);
   });
 });
 

@@ -1,6 +1,17 @@
-import { mkdir, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { PNG } from 'pngjs';
+
+/**
+ * Disk-cache version for the trimmed-tile pipeline. Bump whenever the
+ * trim algorithm changes in a way that requires re-processing existing
+ * caches (e.g. threshold tuning, new bleed-detection logic). Old
+ * `tiles-v{N-1}/` directories are wiped at startup by
+ * `cleanLegacyTileCacheDirs` so users automatically pick up the new
+ * pipeline without manual intervention.
+ */
+export const CARD_TILE_CACHE_VERSION = 'v2';
+const CARD_TILE_CACHE_DIR = `tiles-${CARD_TILE_CACHE_VERSION}`;
 
 export const CARD_IMAGE_PRIMARY_LOCALE = 'zhCN';
 export const CARD_IMAGE_FALLBACK_LOCALE = 'enUS';
@@ -157,12 +168,48 @@ export function cardTileCachePath({ root, cardId }: CardTileCachePathOptions): s
   assertValidCardId(cardId);
 
   const rootPath = path.resolve(root);
-  const resolved = path.resolve(rootPath, 'tiles', `${cardId}.${CARD_TILE_EXTENSION}`);
+  const resolved = path.resolve(rootPath, CARD_TILE_CACHE_DIR, `${cardId}.${CARD_TILE_EXTENSION}`);
   const relative = path.relative(rootPath, resolved);
   if (relative.startsWith('..') || path.isAbsolute(relative)) {
     throw new Error('invalid cache path outside card image root');
   }
   return resolved;
+}
+
+/**
+ * Best-effort one-shot cleanup of legacy or older-versioned tile cache
+ * directories. Removes:
+ *   - the unversioned `tiles/` directory (pre-versioning baseline), and
+ *   - any `tiles-vN/` directory whose suffix differs from the current
+ *     `CARD_TILE_CACHE_VERSION`.
+ *
+ * Designed to be fired-and-forgotten at app startup. Failures are
+ * logged by the caller and do not block tile cache reads / writes.
+ */
+export async function cleanLegacyTileCacheDirs(root: string): Promise<string[]> {
+  const removed: string[] = [];
+  let entries: import('node:fs').Dirent[];
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch {
+    return removed;
+  }
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const name = entry.name;
+    const isLegacyUnversioned = name === 'tiles';
+    const isOlderVersion = name.startsWith('tiles-v') && name !== CARD_TILE_CACHE_DIR;
+    if (!isLegacyUnversioned && !isOlderVersion) continue;
+
+    try {
+      await rm(path.join(root, name), { recursive: true, force: true });
+      removed.push(name);
+    } catch {
+      // Ignore individual failures — cache will simply remain orphaned.
+    }
+  }
+  return removed;
 }
 
 export function cardTileCacheUrl({ cardId }: { cardId: string }): string {
