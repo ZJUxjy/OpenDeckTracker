@@ -1,17 +1,17 @@
 ﻿import { useState } from 'react';
-import { Monitor, Bell, HardDrive, Gamepad2, Volume2, Shield, Palette } from 'lucide-react';
+import { Monitor, Palette } from 'lucide-react';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
 import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density } from '../stores/appearance-store';
 
+// Only categories whose panels are wired to real preferences are exposed.
+// "general" / "tracker" / "notifications" / "data" / "audio" panels were
+// non-functional placeholders (toggles only mutated local React state with
+// no IPC / store wiring) and are hidden until they ship behind real
+// preferences.
 const categories = [
-  { id: 'general', labelKey: 'settings.general', icon: Shield },
   { id: 'appearance', labelKey: 'settings.appearance.categoryLabel', icon: Palette },
-  { id: 'tracker', labelKey: 'settings.tracker', icon: Gamepad2 },
   { id: 'overlay', labelKey: 'settings.overlay', icon: Monitor },
-  { id: 'notifications', labelKey: 'settings.notifications', icon: Bell },
-  { id: 'data', labelKey: 'settings.data', icon: HardDrive },
-  { id: 'audio', labelKey: 'settings.audio', icon: Volume2 },
 ];
 
 export function Settings() {
@@ -26,22 +26,7 @@ export function Settings() {
   const setAccent = useAppearanceStore((state) => state.setAccent);
   const setGameOverlay = useAppearanceStore((state) => state.setGameOverlay);
   const setGameOverlayOpponent = useAppearanceStore((state) => state.setGameOverlayOpponent);
-  const [activeCategory, setActiveCategory] = useState('general');
-  const [settings, setSettings] = useState({
-    autoStart: true,
-    minimizeToTray: true,
-    darkMode: true,
-    hardwareAcceleration: true,
-    showOpponentTracker: true,
-    showPlayerTracker: true,
-    showSecretsHelper: true,
-    overlayOpacity: 85,
-    overlayScale: 100,
-  });
-
-  const toggleSetting = (key: keyof typeof settings) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const [activeCategory, setActiveCategory] = useState('appearance');
 
   const languageOptions: { value: LanguagePreference; label: string }[] = [
     { value: 'system', label: t('settings.languageSystem') },
@@ -84,56 +69,6 @@ export function Settings() {
         <div className="flex-1 overflow-y-auto p-8 bg-bg">
           <div className="max-w-3xl space-y-8">
             
-            {activeCategory === 'general' && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="border-b border-border pb-4 mb-6">
-                  <h2 className="text-xl font-bold text-text">{t('settings.appBehavior')}</h2>
-                  <p className="text-text-dim text-sm mt-1">{t('settings.appBehaviorDescription')}</p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
-                    <div>
-                      <h3 className="text-text font-medium">{t('settings.autoStart')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.autoStartDescription')}</p>
-                    </div>
-                    <button 
-                      onClick={() => toggleSetting('autoStart')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.autoStart ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.autoStart ? 'left-7' : 'left-1'}`} />
-                    </button>
-                  </div>
-
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
-                    <div>
-                      <h3 className="text-text font-medium">{t('settings.minimizeToTray')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.minimizeToTrayDescription')}</p>
-                    </div>
-                    <button 
-                      onClick={() => toggleSetting('minimizeToTray')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.minimizeToTray ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.minimizeToTray ? 'left-7' : 'left-1'}`} />
-                    </button>
-                  </div>
-
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
-                    <div>
-                      <h3 className="text-text font-medium">{t('settings.hardwareAcceleration')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.hardwareAccelerationDescription')}</p>
-                    </div>
-                    <button 
-                      onClick={() => toggleSetting('hardwareAcceleration')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.hardwareAcceleration ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.hardwareAcceleration ? 'left-7' : 'left-1'}`} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {activeCategory === 'appearance' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="border-b border-border pb-4 mb-6">
@@ -220,56 +155,6 @@ export function Settings() {
               </div>
             )}
 
-            {activeCategory === 'tracker' && (
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="border-b border-border pb-4 mb-6">
-                  <h2 className="text-xl font-bold text-text">{t('settings.deckTrackerTitle')}</h2>
-                  <p className="text-text-dim text-sm mt-1">{t('settings.deckTrackerDescription')}</p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
-                    <div>
-                      <h3 className="text-text font-medium">{t('settings.showPlayerTracker')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.showPlayerTrackerDescription')}</p>
-                    </div>
-                    <button 
-                      onClick={() => toggleSetting('showPlayerTracker')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.showPlayerTracker ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.showPlayerTracker ? 'left-7' : 'left-1'}`} />
-                    </button>
-                  </div>
-
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
-                    <div>
-                      <h3 className="text-text font-medium">{t('settings.showOpponentTracker')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.showOpponentTrackerDescription')}</p>
-                    </div>
-                    <button 
-                      onClick={() => toggleSetting('showOpponentTracker')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.showOpponentTracker ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.showOpponentTracker ? 'left-7' : 'left-1'}`} />
-                    </button>
-                  </div>
-
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
-                    <div>
-                      <h3 className="text-text font-medium">{t('settings.secretsHelper')}</h3>
-                      <p className="text-text-mute text-sm mt-0.5">{t('settings.secretsHelperDescription')}</p>
-                    </div>
-                    <button 
-                      onClick={() => toggleSetting('showSecretsHelper')}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${settings.showSecretsHelper ? 'bg-accent' : 'bg-bg-3'}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${settings.showSecretsHelper ? 'left-7' : 'left-1'}`} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {activeCategory === 'overlay' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="border-b border-border pb-4 mb-6">
@@ -305,19 +190,6 @@ export function Settings() {
 
                   <p className="text-text-mute text-xs px-4">{t('settings.overlayPanel.runningHint')}</p>
                 </div>
-              </div>
-            )}
-
-            {/* Placeholder for other categories */}
-            {['notifications', 'data', 'audio'].includes(activeCategory) && (
-              <div className="flex flex-col items-center justify-center h-64 text-center animate-in fade-in duration-300">
-                <div className="w-16 h-16 bg-bg-2 rounded-full flex items-center justify-center mb-4 border border-border">
-                  <HardDrive size={32} className="text-text-mute" />
-                </div>
-                <h2 className="text-xl font-bold text-text mb-2">{t('settings.underConstruction')}</h2>
-                <p className="text-text-mute max-w-sm">
-                  {t('settings.underConstructionDescription')}
-                </p>
               </div>
             )}
 

@@ -30,30 +30,17 @@ describe('CardImagePopover', () => {
     window.hdt.cardImages.get = vi.fn().mockResolvedValue(null);
   });
 
-  it('renders with zhCN image URL', () => {
+  it('renders an empty src and shows the loading state until the cache resolves', () => {
+    // CSP blocks direct CDN fetches — the popover never falls back to a
+    // CDN URL. Until window.hdt.cardImages.get resolves with a cached URL
+    // (mock returns null in beforeEach), the <img src> is empty and the
+    // loading text is visible.
     renderZhCN(
       <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
     );
     const img = screen.getByRole('img');
-    expect(img).toHaveAttribute('src', expect.stringContaining('/zhCN/'));
-    expect(img).toHaveAttribute('src', expect.stringContaining('EX1_277'));
-  });
-
-  it('falls back to enUS on error', async () => {
-    renderZhCN(
-      <CardImagePopover cardId="EX1_277" anchorRect={getMockRect()} onClose={vi.fn()} />,
-    );
-    const img = screen.getByRole('img');
-
-    // Simulate first error (zhCN → enUS fallback)
-    fireEvent.error(img);
-    expect(img).toHaveAttribute('src', expect.stringContaining('/enUS/'));
-
-    // Simulate second error (enUS → error state)
-    fireEvent.error(img);
-    await waitFor(() => {
-      expect(screen.getByText('卡牌图片不可用')).toBeInTheDocument();
-    });
+    expect(img).toHaveAttribute('src', '');
+    expect(screen.getByText('正在加载卡牌图片...')).toBeInTheDocument();
   });
 
   it('calls onClose on mouse leave', () => {

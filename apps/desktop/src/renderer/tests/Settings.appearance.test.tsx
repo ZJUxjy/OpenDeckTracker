@@ -17,22 +17,31 @@ describe('Settings — Appearance category', () => {
     vi.resetModules();
   });
 
-  it('lists Appearance between General and Tracker in the sidebar', () => {
+  it('exposes only Appearance and Overlay in the sidebar (placeholder categories hidden)', () => {
+    // The General / Tracker / Notifications / Data / Audio sidebar entries
+    // were removed as part of the commercial-release Settings cleanup —
+    // their panels were non-functional placeholders. Only categories with
+    // real wired controls remain.
     renderSettings();
 
     const sidebarButtons = screen.getAllByRole('button');
     const sidebarLabels = sidebarButtons
       .map((b) => b.textContent?.trim())
-      .filter((label) => label && ['General', 'Appearance', 'Deck Tracker'].includes(label));
+      .filter((label) =>
+        label &&
+        ['General', 'Appearance', 'Deck Tracker', 'In-Game Overlay', 'Notifications', 'Data', 'Audio'].includes(label),
+      );
 
-    expect(sidebarLabels).toEqual(['General', 'Appearance', 'Deck Tracker']);
+    expect(sidebarLabels).toEqual(['Appearance', 'In-Game Overlay']);
   });
 
   it('shows language picker, density control, and accent swatches under Appearance', () => {
     renderSettings();
 
-    // Click Appearance category
-    fireEvent.click(screen.getByText('Appearance'));
+    // Appearance is the default active category, so its content is
+    // visible without a sidebar click. (After the cleanup the heading
+    // text "Appearance" also appears inside the panel, so getByText
+    // alone is ambiguous — we just skip the click.)
 
     // Language picker should be present
     expect(screen.getByText('System')).toBeInTheDocument();
@@ -48,17 +57,9 @@ describe('Settings — Appearance category', () => {
     expect(screen.getByRole('button', { name: 'Violet' })).toBeInTheDocument();
   });
 
-  it('does NOT show language picker under General', () => {
-    renderSettings();
-
-    // General is the default active category
-    expect(screen.queryByText('Language')).not.toBeInTheDocument();
-  });
-
   it('clicking Violet swatch updates the appearance store', async () => {
     renderSettings();
 
-    fireEvent.click(screen.getByText('Appearance'));
     fireEvent.click(screen.getByRole('button', { name: 'Violet' }));
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
@@ -67,9 +68,6 @@ describe('Settings — Appearance category', () => {
 
   it('renders Chinese labels under zh-CN locale', () => {
     renderSettings('zh-CN');
-
-    // Click 外观 (Appearance) in sidebar
-    fireEvent.click(screen.getByText('外观'));
 
     expect(screen.getByText('舒适')).toBeInTheDocument();
     expect(screen.getByText('紧凑')).toBeInTheDocument();

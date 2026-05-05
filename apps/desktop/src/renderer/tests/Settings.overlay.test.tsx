@@ -32,11 +32,12 @@ describe('Settings — Overlay category', () => {
     expect(screen.queryByText('Section Under Construction')).not.toBeInTheDocument();
   });
 
-  it('still shows "Section Under Construction" for notifications', () => {
+  it('does not surface a Notifications sidebar entry (placeholder category was removed)', () => {
+    // Notifications/Data/Audio panels were placeholder-only; their sidebar
+    // entries were removed as part of the commercial-release Settings cleanup.
     renderSettings();
-    fireEvent.click(screen.getByText('Notifications'));
 
-    expect(screen.getByText('Section Under Construction')).toBeInTheDocument();
+    expect(screen.queryByText('Notifications')).not.toBeInTheDocument();
   });
 
   it('toggling the overlay switch updates the appearance store', async () => {

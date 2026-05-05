@@ -24,6 +24,9 @@ describe('OpponentCardsPanel', () => {
     Object.defineProperty(window, 'innerWidth', { value: 1024, configurable: true });
     Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true });
     window.hdt.cardImages.get = vi.fn().mockResolvedValue(null);
+    window.hdt.cardImages.getTile = vi.fn(async (cardId: string) => ({
+      url: `hdt-card-image://tile/${cardId}.png`,
+    }));
     window.hdt.cards.findById = vi.fn(async (cardId: string) => {
       const def = CARD_DEFS[cardId];
       if (!def) return null;
@@ -79,7 +82,7 @@ describe('OpponentCardsPanel', () => {
     expect(screen.getByText('No opponent cards revealed')).toBeInTheDocument();
   });
 
-  it('renders a card-row-art portrait img per opponent row using the frame-less art URL', async () => {
+  it('routes opponent row art through the local cache protocol (never a CDN URL)', async () => {
     render(
       <OpponentCardsPanel
         revealed={[
@@ -93,14 +96,10 @@ describe('OpponentCardsPanel', () => {
     await waitFor(() => {
       const arts = screen.getAllByTestId('card-row-art');
       expect(arts).toHaveLength(2);
-      const urls = arts.map((el) => (el as HTMLImageElement).src);
-      // First-paint URLs are the CDN tile URLs; once cached they swap to
-      // hdt-card-image://tile/... Either form is acceptable here as long
-      // as we never use the framed render or the legacy /tiles/ endpoint.
-      for (const url of urls) {
-        expect(url).not.toContain('/render/');
-        expect(url).not.toContain('/tiles/');
-        expect(url).toMatch(/\/v1\/orig\/|^hdt-card-image:\/\/tile\//);
+      for (const el of arts) {
+        const url = (el as HTMLImageElement).src;
+        expect(url).toMatch(/^hdt-card-image:\/\/tile\//);
+        expect(url).not.toContain('art.hearthstonejson.com');
       }
     });
   });

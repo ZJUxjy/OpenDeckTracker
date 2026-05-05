@@ -20,13 +20,15 @@ describe('Settings i18n', () => {
       </I18nProvider>,
     );
 
-    // Navigate to Appearance section where the language picker now lives
-    await user.click(screen.getByText('Appearance'));
-
+    // Appearance is the default active category and hosts the language
+    // picker — no sidebar click needed.
     await user.click(screen.getByRole('button', { name: 'Simplified Chinese' }));
 
     expect(localStorage.getItem(LANGUAGE_PREFERENCE_STORAGE_KEY)).toBe('zh-CN');
     expect(screen.getByText('设置')).toBeInTheDocument();
-    expect(screen.getByText('通用')).toBeInTheDocument();
+    // Sidebar entry for Appearance now reads in Chinese as "外观"; appears
+    // both in the sidebar button and the panel heading, so just confirm
+    // it's present (multiple matches are expected).
+    expect(screen.getAllByText('外观').length).toBeGreaterThanOrEqual(1);
   });
 });

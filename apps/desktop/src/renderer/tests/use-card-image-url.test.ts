@@ -4,7 +4,6 @@ import { createElement, type ReactNode } from 'react';
 import {
   useCardImageUrl,
   getCardImageUrl,
-  markFallback,
 } from '../src/hooks/use-card-image-url';
 import { I18nProvider } from '../src/i18n';
 
@@ -19,26 +18,20 @@ describe('useCardImageUrl', () => {
     window.hdt.cardImages.get = vi.fn().mockResolvedValue(null);
   });
 
-  it('returns zhCN primary URL', () => {
+  it('returns empty URLs while the cache lookup is pending or unavailable', () => {
+    // No CDN fallback — renderer CSP blocks art.hearthstonejson.com,
+    // so the hook returns empty strings until the main-process cache
+    // resolves. Components handle the empty state via their own
+    // loading / placeholder UI.
     const { result } = renderHook(() => useCardImageUrl('EX1_277'), { wrapper: zhCNWrapper });
-    expect(result.current.primary).toContain('/zhCN/');
-    expect(result.current.primary).toContain('EX1_277.png');
+    expect(result.current.primary).toBe('');
+    expect(result.current.fallback).toBe('');
   });
 
-  it('returns enUS fallback URL', () => {
-    const { result } = renderHook(() => useCardImageUrl('EX1_277'), { wrapper: zhCNWrapper });
-    expect(result.current.fallback).toContain('/enUS/');
-    expect(result.current.fallback).toContain('EX1_277.png');
-  });
-
-  it('uses cached fallback after markFallback', () => {
-    markFallback('EX1_277');
-    const { result } = renderHook(() => useCardImageUrl('EX1_277'), { wrapper: zhCNWrapper });
-    // After fallback was marked, primary should also be fallback
-    expect(result.current.primary).toContain('/enUS/');
-  });
-
-  it('getCardImageUrl returns correct URLs', () => {
+  it('getCardImageUrl still encodes the upstream CDN pattern (test/internal use only)', () => {
+    // Helper exposed for the main-process cache layer to download from.
+    // Renderer CSP disallows the CDN host, so an <img> src using this
+    // URL would fail — it MUST NOT be used directly by components.
     const urls = getCardImageUrl('CS2_029');
     expect(urls.primary).toBe(
       'https://art.hearthstonejson.com/v1/render/latest/zhCN/256x/CS2_029.png',
@@ -48,7 +41,7 @@ describe('useCardImageUrl', () => {
     );
   });
 
-  it('uses cached URL when preload API resolves', async () => {
+  it('uses the cached URL once the preload API resolves', async () => {
     window.hdt.cardImages.get = vi.fn().mockResolvedValue({
       url: 'hdt-card-image://cache/zhCN/256x/EX1_277.png',
       locale: 'zhCN',

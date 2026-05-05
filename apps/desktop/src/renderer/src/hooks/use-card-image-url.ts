@@ -11,13 +11,15 @@ const TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/orig';
 const TILE_EXTENSION = 'png';
 
 /**
- * Returns the CDN URL of a card's *tile* — a locale-independent, frame-less
- * artwork strip used for the inline portrait sliver on each deck row.
+ * Returns the upstream CDN URL of a card tile. **Internal — do not use from
+ * components.** Renderer code MUST go through `useCardTileUrl` so the
+ * `hdt-card-image://tile/...` cache layer is the only image source the
+ * `<img>` element ever sees. Exported only so the main-process cache
+ * helpers and unit tests can reference the URL pattern.
  *
- * Prefer `useCardTileUrl` for renderer use: it returns the locally-cached
- * `hdt-card-image://tile/...` URL once the cache populates, falling back
- * to this CDN URL on first render. This raw helper is exported for tests
- * and for code paths where the cache layer is unavailable.
+ * The renderer's CSP intentionally does NOT whitelist
+ * `art.hearthstonejson.com` — passing this URL to an `<img src>` will
+ * fail the CSP check and render no image.
  */
 export function getCardTileUrl(cardId: string): string {
   return `${TILE_BASE_URL}/${cardId}.${TILE_EXTENSION}`;
@@ -26,11 +28,13 @@ export function getCardTileUrl(cardId: string): string {
 const cachedTileUrls = new Map<string, string>();
 
 /**
- * Hook that returns the locally-cached tile URL for a cardId. Returns the
- * CDN URL synchronously on first render, then swaps to the cached
- * `hdt-card-image://tile/<id>.png` URL once the main process finishes
- * downloading + persisting the tile. Subsequent calls for the same cardId
- * resolve to the cached URL immediately via a module-level memo.
+ * Hook that returns the locally-cached tile URL for a cardId. Returns
+ * empty string until the main process finishes downloading + trimming +
+ * persisting the tile, then swaps to `hdt-card-image://tile/<id>.png`.
+ * Subsequent calls for the same cardId resolve to the cached URL
+ * synchronously via a module-level memo. The renderer CSP blocks any
+ * direct CDN fetches, so the empty-string interim state is required —
+ * the cache is the only allowed image source.
  */
 export function useCardTileUrl(cardId: string): string {
   const [cachedUrl, setCachedUrl] = useState(() => cachedTileUrls.get(cardId) ?? null);
@@ -69,7 +73,7 @@ export function useCardTileUrl(cardId: string): string {
     };
   }, [cardId]);
 
-  return cachedUrl ?? getCardTileUrl(cardId);
+  return cachedUrl ?? '';
 }
 
 /**
@@ -159,20 +163,10 @@ export function useCardImageUrl(cardId: string): {
         fallback: cachedUrl,
       };
     }
-
-    // Check cache first
-    const cached = resolvedUrls.get(key);
-    if (cached) {
-      // If we know the fallback works, use it
-      if (cached === 'fallback') {
-        return {
-          primary: buildUrl(cardId, FALLBACK_LOCALE),
-          fallback: buildUrl(cardId, FALLBACK_LOCALE),
-        };
-      }
-    }
-    return getCardImageUrl(cardId, appLocale);
-  }, [appLocale, cardId, cachedUrl, key]);
+    // No CDN fallback — renderer CSP blocks art.hearthstonejson.com
+    // outright. Empty src renders nothing until the cache resolves.
+    return { primary: '', fallback: '' };
+  }, [cachedUrl]);
 }
 
 /**
