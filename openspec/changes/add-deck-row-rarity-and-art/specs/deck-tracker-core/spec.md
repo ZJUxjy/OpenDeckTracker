@@ -54,7 +54,7 @@ The component MUST:
   hover ends.
 - Show the header remaining count from `snapshot.deck.remaining`; the count MAY exceed the original deck total when known cards have been shuffled into the deck.
 - Tint each row's cost cell by the card's rarity using `getRarityCostBg(def?.rarity)` (from `lib/rarity.ts`). Cards without a known rarity MUST use the `--rarity-common` tint.
-- Render the card portrait as an inline `<img>` element on the right side of each row, sourced from `getCardTileUrl(cardId)` (a locale-independent tile URL — frame-less artwork strip from `art.hearthstonejson.com/v1/tiles/`). The portrait MUST NOT use the full-frame render URL (`/v1/render/...`) — that endpoint serves the full card with frame, mana gem, and name banner, which competes visually with the row's own cost cell + name. The portrait element MUST carry `data-testid="card-row-art"` for testability.
+- Render the card portrait as an inline `<img>` element on the right side of each row, sourced from `useCardTileUrl(cardId)` (a hook that returns the locally-cached `hdt-card-image://tile/<cardId>.png` URL once the main-process tile cache populates, falling back to the CDN URL `https://art.hearthstonejson.com/v1/tiles/<cardId>.png` only on first paint). The portrait MUST NOT use the full-frame render URL (`/v1/render/...`) — that endpoint serves the full card with frame, mana gem, and name banner, which competes visually with the row's own cost cell + name. The portrait element MUST carry `data-testid="card-row-art"` for testability. Bare CDN tile URLs MUST NOT remain in steady state — once the cache resolves, the rendered `<img src>` MUST be a `hdt-card-image://tile/...` URL.
 - Apply a CSS `mask-image: linear-gradient(to right, transparent 0%, black 55%, black 100%)` (with `-webkit-mask-image` fallback) to the portrait `<img>` so the image's own left edge fades into transparency, blending smoothly with the row's background. A separate `<div>` gradient overlay MUST NOT be used — it produces a visible hard seam against bright artwork.
 - Apply a text shadow on the row's name text so it stays legible over busy artwork (the exact shadow value MAY be tuned but MUST be present).
 
@@ -138,8 +138,8 @@ The compact branch MUST:
 - Tint the cost cell of each non-spent row by rarity using
   `getRarityCostBg(def?.rarity)` (same helper as the desktop variant).
 - Render the card portrait as an inline `<img>` element on the right
-  side of each row, sourced from `getCardTileUrl(cardId)` (the same
-  locale-independent tile URL the desktop variant uses), carrying
+  side of each row, sourced from `useCardTileUrl(cardId)` (the same
+  cache-first tile hook the desktop variant uses), carrying
   `data-testid="card-row-art"`. The pip widget MUST visually sit
   above the portrait + gradient layer so its filled/hollow dots stay
   readable.

@@ -59,6 +59,8 @@ const api = {
       locale?: AppLocale,
     ): Promise<{ url: string; locale: string; size: string } | null> =>
       ipcRenderer.invoke('card-images:get', cardId, locale),
+    getTile: (cardId: string): Promise<{ url: string } | null> =>
+      ipcRenderer.invoke('card-images:getTile', cardId),
   },
   deck: {
     encode: (blueprint: DeckBlueprint): Promise<string> =>

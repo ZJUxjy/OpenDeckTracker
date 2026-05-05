@@ -8,13 +8,65 @@ const BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
 const TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/tiles';
 
 /**
- * Returns the URL of a card's *tile* — a locale-independent, frame-less
+ * Returns the CDN URL of a card's *tile* — a locale-independent, frame-less
  * artwork strip used for the inline portrait sliver on each deck row.
- * Distinct from `useCardImageUrl` which returns the full rendered card
- * (frame + mana gem + name banner) for hover popovers.
+ *
+ * Prefer `useCardTileUrl` for renderer use: it returns the locally-cached
+ * `hdt-card-image://tile/...` URL once the cache populates, falling back
+ * to this CDN URL on first render. This raw helper is exported for tests
+ * and for code paths where the cache layer is unavailable.
  */
 export function getCardTileUrl(cardId: string): string {
   return `${TILE_BASE_URL}/${cardId}.png`;
+}
+
+const cachedTileUrls = new Map<string, string>();
+
+/**
+ * Hook that returns the locally-cached tile URL for a cardId. Returns the
+ * CDN URL synchronously on first render, then swaps to the cached
+ * `hdt-card-image://tile/<id>.png` URL once the main process finishes
+ * downloading + persisting the tile. Subsequent calls for the same cardId
+ * resolve to the cached URL immediately via a module-level memo.
+ */
+export function useCardTileUrl(cardId: string): string {
+  const [cachedUrl, setCachedUrl] = useState(() => cachedTileUrls.get(cardId) ?? null);
+
+  useEffect(() => {
+    let alive = true;
+    const existing = cachedTileUrls.get(cardId);
+    if (existing) {
+      setCachedUrl(existing);
+      return () => {
+        alive = false;
+      };
+    }
+
+    const cardImagesApi = window.hdt?.cardImages;
+    if (!cardImagesApi?.getTile) {
+      setCachedUrl(null);
+      return () => {
+        alive = false;
+      };
+    }
+
+    setCachedUrl(null);
+    void cardImagesApi.getTile(cardId)
+      .then((cached) => {
+        if (!alive || !cached?.url) return;
+        cachedTileUrls.set(cardId, cached.url);
+        setCachedUrl(cached.url);
+      })
+      .catch(() => {
+        if (alive) setCachedUrl(null);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [cardId]);
+
+  return cachedUrl ?? getCardTileUrl(cardId);
 }
 
 /**

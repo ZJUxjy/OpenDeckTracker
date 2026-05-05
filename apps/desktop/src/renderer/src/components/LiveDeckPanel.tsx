@@ -3,7 +3,7 @@ import { useMemo, useRef, useState, useCallback, useEffect, type CSSProperties }
 const DRAG_HEADER_STYLE = { WebkitAppRegion: 'drag' } as CSSProperties;
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
-import { getCardTileUrl } from '../hooks/use-card-image-url';
+import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
@@ -361,7 +361,7 @@ function CardCopyRow({
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
   const rarity = def?.rarity as Rarity | undefined;
-  const tileUrl = getCardTileUrl(cardId);
+  const tileUrl = useCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
 
   return (
@@ -432,7 +432,7 @@ function CompactCardRow({
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
   const rarity = def?.rarity as Rarity | undefined;
-  const tileUrl = getCardTileUrl(cardId);
+  const tileUrl = useCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
   const spent = remaining === 0;
 

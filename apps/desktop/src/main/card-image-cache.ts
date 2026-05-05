@@ -6,6 +6,7 @@ export const CARD_IMAGE_FALLBACK_LOCALE = 'enUS';
 export const CARD_IMAGE_SIZE = '256x';
 export const CARD_IMAGE_PROTOCOL = 'hdt-card-image';
 export const CARD_IMAGE_BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
+export const CARD_TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/tiles';
 
 const CARD_ID_RE = /^[A-Za-z0-9_]+$/;
 const SEGMENT_RE = /^[A-Za-z0-9_-]+$/;
@@ -89,7 +90,26 @@ export function cardImageCacheUrl({
 
 export function cardImageCachePathFromUrl(url: string, root: string): string {
   const parsed = new URL(url);
-  if (parsed.protocol !== `${CARD_IMAGE_PROTOCOL}:` || parsed.hostname !== 'cache') {
+  if (parsed.protocol !== `${CARD_IMAGE_PROTOCOL}:`) {
+    throw new Error('invalid card image cache URL');
+  }
+
+  // Tile URL: hdt-card-image://tile/<cardId>.png
+  if (parsed.hostname === 'tile') {
+    const parts = parsed.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+    if (parts.length !== 1) {
+      throw new Error('invalid card tile cache URL');
+    }
+    const fileName = parts[0]!;
+    if (!fileName.endsWith('.png')) {
+      throw new Error('invalid card tile cache URL');
+    }
+    const cardId = fileName.slice(0, -'.png'.length);
+    return cardTileCachePath({ root, cardId });
+  }
+
+  // Render URL: hdt-card-image://cache/<locale>/<size>/<cardId>.png
+  if (parsed.hostname !== 'cache') {
     throw new Error('invalid card image cache URL');
   }
 
@@ -105,6 +125,68 @@ export function cardImageCachePathFromUrl(url: string, root: string): string {
 
   const cardId = fileName.slice(0, -'.png'.length);
   return cardImageCachePath({ root, locale, size, cardId });
+}
+
+export interface CardTileCachePathOptions {
+  root: string;
+  cardId: string;
+}
+
+export interface EnsureCardTileCachedOptions {
+  root: string;
+  force?: boolean;
+  fetchImpl?: typeof fetch;
+}
+
+export interface CachedCardTile {
+  cardId: string;
+  path: string;
+  url: string;
+}
+
+export function cardTileCachePath({ root, cardId }: CardTileCachePathOptions): string {
+  assertValidCardId(cardId);
+
+  const rootPath = path.resolve(root);
+  const resolved = path.resolve(rootPath, 'tiles', `${cardId}.png`);
+  const relative = path.relative(rootPath, resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('invalid cache path outside card image root');
+  }
+  return resolved;
+}
+
+export function cardTileCacheUrl({ cardId }: { cardId: string }): string {
+  assertValidCardId(cardId);
+  return `${CARD_IMAGE_PROTOCOL}://tile/${cardId}.png`;
+}
+
+export function buildRemoteCardTileUrl(cardId: string): string {
+  assertValidCardId(cardId);
+  return `${CARD_TILE_BASE_URL}/${cardId}.png`;
+}
+
+export async function ensureCardTileCached(
+  cardId: string,
+  options: EnsureCardTileCachedOptions,
+): Promise<CachedCardTile> {
+  assertValidCardId(cardId);
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
+
+  const tilePath = cardTileCachePath({ root: options.root, cardId });
+  const tileUrl = cardTileCacheUrl({ cardId });
+
+  if (!options.force && await fileExists(tilePath)) {
+    return { cardId, path: tilePath, url: tileUrl };
+  }
+
+  const response = await fetchImpl(buildRemoteCardTileUrl(cardId));
+  if (!response.ok) {
+    throw new Error(`failed to download card tile ${cardId}: ${response.status}`);
+  }
+  await writeResponse(tilePath, response);
+
+  return { cardId, path: tilePath, url: tileUrl };
 }
 
 export async function ensureCardImageCached(

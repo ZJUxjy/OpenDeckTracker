@@ -12,6 +12,7 @@ import {
   cardImageCachePathFromUrl,
   defaultCardImageCacheRoot,
   ensureCardImageCached,
+  ensureCardTileCached,
 } from './card-image-cache';
 import { getHearthMirror } from './hearthmirror';
 import { registerDeckTrackerIpc } from './deck-tracker';
@@ -123,6 +124,18 @@ export function registerIpc(overlay?: OverlayControllers): void {
       };
     } catch (e) {
       console.error('[ipc card-images:get]', (e as Error).message);
+      return null;
+    }
+  });
+
+  ipcMain.handle('card-images:getTile', async (_, cardId: string) => {
+    try {
+      const cached = await ensureCardTileCached(cardId, {
+        root: cardImageRoot,
+      });
+      return { url: cached.url };
+    } catch (e) {
+      console.error('[ipc card-images:getTile]', (e as Error).message);
       return null;
     }
   });
