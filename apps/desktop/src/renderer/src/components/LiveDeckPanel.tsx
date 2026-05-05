@@ -17,16 +17,19 @@ const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)
 // Mask the tile's left edge into transparency so it blends smoothly with
 // the row's background — no hard gradient seam visible against bright art.
 //
-// `transform: scale(1.12)` crops ~6% from each edge of the source PNG
+// `transform: scale(1.32)` crops ~16% from each edge of the source PNG
 // (transform-origin defaults to center, so the enlarged image overflows
 // the row's overflow-hidden container symmetrically). HearthstoneJSON
-// `/v1/orig/` artwork ships a 5-8% white border around each portrait
-// (compositing bleed area for the HS card frame); the scale hides it
-// without visibly cropping the character / scene content.
+// `/v1/orig/` artwork pads non-square sources to 512×512 by adding white
+// bleed regions on either left+right (12-15% each, when the source was
+// portrait-oriented) or top+bottom (~10% each, when landscape). Empirical
+// scan of 21 sample tiles found 14.8% as the worst-case border thickness;
+// 16% covers it with a small safety margin. HS character art is centered
+// in the source, so a uniform 16% trim preserves the subject on all cards.
 const ART_MASK_STYLE: CSSProperties = {
   maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
   WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
-  transform: 'scale(1.12)',
+  transform: 'scale(1.32)',
 };
 
 /**
