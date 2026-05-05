@@ -55,7 +55,7 @@ The component MUST:
 - Show the header remaining count from `snapshot.deck.remaining`; the count MAY exceed the original deck total when known cards have been shuffled into the deck.
 - Tint each row's cost cell by the card's rarity using `getRarityCostBg(def?.rarity)` (from `lib/rarity.ts`). Cards without a known rarity MUST use the `--rarity-common` tint.
 - Render the card portrait as an inline `<img>` element on the right side of each row, sourced from `getCardTileUrl(cardId)` (a locale-independent tile URL — frame-less artwork strip from `art.hearthstonejson.com/v1/tiles/`). The portrait MUST NOT use the full-frame render URL (`/v1/render/...`) — that endpoint serves the full card with frame, mana gem, and name banner, which competes visually with the row's own cost cell + name. The portrait element MUST carry `data-testid="card-row-art"` for testability.
-- Overlay a left-to-right gradient (e.g. `linear-gradient(to right, var(--bg-2) 35%, transparent 75%)`) above the portrait so the card name remains legible. The portrait z-index MUST be below the gradient and the row's foreground content (cost cell + name).
+- Apply a CSS `mask-image: linear-gradient(to right, transparent 0%, black 55%, black 100%)` (with `-webkit-mask-image` fallback) to the portrait `<img>` so the image's own left edge fades into transparency, blending smoothly with the row's background. A separate `<div>` gradient overlay MUST NOT be used — it produces a visible hard seam against bright artwork.
 - Apply a text shadow on the row's name text so it stays legible over busy artwork (the exact shadow value MAY be tuned but MUST be present).
 
 #### Scenario: Initial match render shows 30 physical rows
@@ -143,8 +143,10 @@ The compact branch MUST:
   `data-testid="card-row-art"`. The pip widget MUST visually sit
   above the portrait + gradient layer so its filled/hollow dots stay
   readable.
-- Overlay the same left-to-right gradient on top of the portrait so
-  the card name stays legible.
+- Apply the same CSS `mask-image` left-edge fade as the desktop
+  variant (transparent at 0% → opaque at 55%) so the portrait
+  blends smoothly into the row background. A separate gradient
+  `<div>` overlay MUST NOT be used.
 - For spent rows (`remaining === 0`), the row's existing
   reduced-opacity treatment MUST visually fade the portrait alongside
   the rest of the row (no separate portrait fade is required).

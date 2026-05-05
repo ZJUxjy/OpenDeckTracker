@@ -14,6 +14,13 @@ import { useLocale, useTranslation } from '../i18n';
 
 const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
 
+// Mask the tile's left edge into transparency so it blends smoothly with
+// the row's background — no hard gradient seam visible against bright art.
+const ART_MASK_STYLE: CSSProperties = {
+  maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
+  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
+};
+
 /**
  * Live "remaining cards in deck" panel — replaces the mock Decklist
  * during an active match. Driven by the `useDeckTrackerStore`
@@ -374,11 +381,8 @@ function CardCopyRow({
         data-testid="card-row-art"
         alt=""
         aria-hidden
+        style={ART_MASK_STYLE}
         className="absolute right-0 top-0 h-full w-3/5 object-cover object-right pointer-events-none select-none z-0"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-r from-bg-2 from-35% to-transparent to-75% pointer-events-none z-[1]"
       />
       <div className="relative z-10 flex items-center px-2 py-1.5 w-full">
         <div
@@ -448,11 +452,8 @@ function CompactCardRow({
         data-testid="card-row-art"
         alt=""
         aria-hidden
+        style={ART_MASK_STYLE}
         className="absolute right-0 top-0 h-full w-3/5 object-cover object-right pointer-events-none select-none z-0"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-r from-bg-2 from-35% to-transparent to-75% pointer-events-none z-[1]"
       />
       <div className="relative z-10 flex items-center px-2 py-1.5 w-full">
         <div
