@@ -7,12 +7,13 @@ export const CARD_IMAGE_SIZE = '256x';
 export const CARD_IMAGE_PROTOCOL = 'hdt-card-image';
 export const CARD_IMAGE_BASE_URL = 'https://art.hearthstonejson.com/v1/render/latest';
 // Frame-less, fade-less card portrait art used for the inline row sliver.
-// We use /v1/256x/<id>.jpg, NOT /v1/tiles/<id>.png — tiles ship a baked-in
-// left-side fade designed to bleed into Hearthstone's own UI, which produces
-// a visible white edge in our rows. /v1/256x/ is the raw rectangular
-// portrait artwork (no frame, no fade).
-export const CARD_TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/256x';
-export const CARD_TILE_EXTENSION = 'jpg';
+// We use /v1/orig/<id>.png — the original, lossless artwork. Trade-off:
+// files are larger (~200-800 KB) but the disk cache makes that a one-time
+// cost per cardId. /v1/tiles/<id>.png ships a baked-in left fade designed
+// for HS's own UI and produced visible white edges; /v1/256x/<id>.jpg is
+// down-sampled and slightly soft on HiDPI displays.
+export const CARD_TILE_BASE_URL = 'https://art.hearthstonejson.com/v1/orig';
+export const CARD_TILE_EXTENSION = 'png';
 
 const CARD_ID_RE = /^[A-Za-z0-9_]+$/;
 const SEGMENT_RE = /^[A-Za-z0-9_-]+$/;

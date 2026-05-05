@@ -95,7 +95,7 @@ describe('card tile cache', () => {
 
     const resolved = cardTileCachePath({ root, cardId: 'CS2_029' });
 
-    expect(path.relative(root, resolved)).toBe(path.join('tiles', 'CS2_029.jpg'));
+    expect(path.relative(root, resolved)).toBe(path.join('tiles', 'CS2_029.png'));
     expect(path.resolve(resolved).startsWith(path.resolve(root))).toBe(true);
   });
 
@@ -105,14 +105,14 @@ describe('card tile cache', () => {
   });
 
   it('cardTileCacheUrl returns a tile-protocol URL', () => {
-    expect(cardTileCacheUrl({ cardId: 'CS2_029' })).toBe('hdt-card-image://tile/CS2_029.jpg');
+    expect(cardTileCacheUrl({ cardId: 'CS2_029' })).toBe('hdt-card-image://tile/CS2_029.png');
   });
 
   it('cardImageCachePathFromUrl resolves tile URLs to the tiles/ subdirectory', async () => {
     const root = await createTempRoot();
     const url = cardTileCacheUrl({ cardId: 'CS2_029' });
     const resolved = cardImageCachePathFromUrl(url, root);
-    expect(path.relative(root, resolved)).toBe(path.join('tiles', 'CS2_029.jpg'));
+    expect(path.relative(root, resolved)).toBe(path.join('tiles', 'CS2_029.png'));
   });
 
   it('downloads a tile once and returns the cached local URL on later requests', async () => {
@@ -124,7 +124,7 @@ describe('card tile cache', () => {
     const second = await ensureCardTileCached('CS2_029', { root });
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(first.url).toBe('hdt-card-image://tile/CS2_029.jpg');
+    expect(first.url).toBe('hdt-card-image://tile/CS2_029.png');
     expect(second.url).toBe(first.url);
     await expect(stat(first.path)).resolves.toMatchObject({ isFile: expect.any(Function) });
   });
@@ -145,7 +145,7 @@ describe('card tile cache', () => {
     await ensureCardTileCached('CS2_029', { root, fetchImpl: fetchMock as typeof fetch });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://art.hearthstonejson.com/v1/256x/CS2_029.jpg',
+      'https://art.hearthstonejson.com/v1/orig/CS2_029.png',
     );
   });
 });

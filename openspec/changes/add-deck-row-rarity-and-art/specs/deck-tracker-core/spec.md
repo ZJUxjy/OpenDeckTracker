@@ -54,7 +54,7 @@ The component MUST:
   hover ends.
 - Show the header remaining count from `snapshot.deck.remaining`; the count MAY exceed the original deck total when known cards have been shuffled into the deck.
 - Tint each row's cost cell by the card's rarity using `getRarityCostBg(def?.rarity)` (from `lib/rarity.ts`). Cards without a known rarity MUST use the `--rarity-common` tint.
-- Render the card portrait as an inline `<img>` element on the right side of each row, sourced from `useCardTileUrl(cardId)` (a hook that returns the locally-cached `hdt-card-image://tile/<cardId>.jpg` URL once the main-process tile cache populates, falling back to the CDN URL `https://art.hearthstonejson.com/v1/256x/<cardId>.jpg` only on first paint). The portrait MUST source from the frame-less `/v1/256x/` endpoint — NOT `/v1/render/...` (full card with frame / gem / banner) and NOT `/v1/tiles/...` (which ships a baked-in left-side fade designed for HS's UI and produces a visible white edge in our rows). The portrait element MUST carry `data-testid="card-row-art"` for testability. Bare CDN URLs MUST NOT remain in steady state — once the cache resolves, the rendered `<img src>` MUST be a `hdt-card-image://tile/...` URL.
+- Render the card portrait as an inline `<img>` element on the right side of each row, sourced from `useCardTileUrl(cardId)` (a hook that returns the locally-cached `hdt-card-image://tile/<cardId>.png` URL once the main-process tile cache populates, falling back to the CDN URL `https://art.hearthstonejson.com/v1/orig/<cardId>.png` only on first paint). The portrait MUST source from the frame-less `/v1/orig/` endpoint — NOT `/v1/render/...` (full card with frame / gem / banner) and NOT `/v1/tiles/...` (which ships a baked-in left-side fade designed for HS's UI and produces a visible white edge in our rows). `/v1/256x/` is acceptable as a smaller alternative; `/v1/orig/` is preferred for HiDPI / 4K visual fidelity since the disk cache amortizes the larger file size. The portrait element MUST carry `data-testid="card-row-art"` for testability. Bare CDN URLs MUST NOT remain in steady state — once the cache resolves, the rendered `<img src>` MUST be a `hdt-card-image://tile/...` URL.
 - Apply a CSS `mask-image: linear-gradient(to right, transparent 0%, black 55%, black 100%)` (with `-webkit-mask-image` fallback) to the portrait `<img>` so the image's own left edge fades into transparency, blending smoothly with the row's background. A separate `<div>` gradient overlay MUST NOT be used — it produces a visible hard seam against bright artwork.
 - Apply a text shadow on the row's name text so it stays legible over busy artwork (the exact shadow value MAY be tuned but MUST be present).
 
@@ -108,7 +108,7 @@ The component MUST:
 
 - **GIVEN** a row with a known cardId
 - **WHEN** the row renders
-- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` is either `https://art.hearthstonejson.com/v1/256x/<cardId>.jpg` (first paint) or `hdt-card-image://tile/<cardId>.jpg` (cache resolved)
+- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` is either `https://art.hearthstonejson.com/v1/orig/<cardId>.png` (first paint) or `hdt-card-image://tile/<cardId>.png` (cache resolved)
 - **AND** the `src` MUST NOT contain `/render/` (full-frame is reserved for the hover popover) nor `/tiles/` (baked-in left fade)
 
 ### Requirement: LiveDeckPanel exposes a compact pip-count variant for overlay use
@@ -189,7 +189,7 @@ the existing per-copy expansion + slide-out behavior).
 
 - **GIVEN** a compact-variant row with cardId `EX1_277`
 - **WHEN** the row renders
-- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` is either `https://art.hearthstonejson.com/v1/256x/EX1_277.jpg` (first paint) or `hdt-card-image://tile/EX1_277.jpg` (cache resolved)
+- **THEN** the row contains an `<img>` element with `data-testid="card-row-art"` whose `src` is either `https://art.hearthstonejson.com/v1/orig/EX1_277.png` (first paint) or `hdt-card-image://tile/EX1_277.png` (cache resolved)
 - **AND** the `src` MUST NOT contain `/render/` nor `/tiles/`
 
 #### Scenario: Spent compact row keeps the portrait but is faded
