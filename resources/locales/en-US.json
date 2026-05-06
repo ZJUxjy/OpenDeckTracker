@@ -196,6 +196,22 @@
         "teal": "Teal",
         "violet": "Violet"
       }
+    },
+    "about": {
+      "categoryLabel": "About",
+      "title": "About OpenDeckTracker",
+      "version": "Version {version}",
+      "copyright": "Copyright © 2026 OpenDeckTracker. All rights reserved.",
+      "checkForUpdates": "Check for updates",
+      "checking": "Checking…",
+      "upToDate": "You're on the latest version.",
+      "updateAvailable": "Update available: {version} (downloading in background, will install on quit).",
+      "updateError": "Update check failed: {message}",
+      "updateUnsupported": "Auto-update is only available in packaged builds.",
+      "viewLicense": "View License",
+      "viewThirdPartyNotices": "Third-Party Notices",
+      "openFailed": "Failed to open the file. It may be missing or inaccessible.",
+      "disclaimer": "OpenDeckTracker is an independent third-party tool. It is not affiliated with, endorsed by, or sponsored by Blizzard Entertainment, Inc. Hearthstone is a trademark of Blizzard Entertainment, Inc. Use of this software in conjunction with Hearthstone may be subject to Blizzard's terms of service; the user assumes all associated risks."
     }
   },
   "deckTracker": {

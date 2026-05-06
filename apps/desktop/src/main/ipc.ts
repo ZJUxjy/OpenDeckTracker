@@ -17,6 +17,7 @@ import {
   ensureCardImageCached,
   ensureCardTileCached,
 } from './card-image-cache';
+import { registerAboutIpc } from './about';
 import { getHearthMirror } from './hearthmirror';
 import { registerDeckTrackerIpc } from './deck-tracker';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
@@ -224,6 +225,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
   registerHearthWatcherIpc();
   registerMatchRecordingsIpc();
   registerStatsIpc();
+  registerAboutIpc();
 
   // Popular decks (Deck Finder data source). The handler reads from a
   // module-level lazy reference to the active CardDb so it can serve

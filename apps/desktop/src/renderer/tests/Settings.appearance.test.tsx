@@ -17,11 +17,11 @@ describe('Settings — Appearance category', () => {
     vi.resetModules();
   });
 
-  it('exposes only Appearance and Overlay in the sidebar (placeholder categories hidden)', () => {
+  it('exposes Appearance, Overlay, and About in the sidebar (placeholder categories hidden)', () => {
     // The General / Tracker / Notifications / Data / Audio sidebar entries
     // were removed as part of the commercial-release Settings cleanup —
     // their panels were non-functional placeholders. Only categories with
-    // real wired controls remain.
+    // real wired controls (plus the About panel) remain.
     renderSettings();
 
     const sidebarButtons = screen.getAllByRole('button');
@@ -29,10 +29,10 @@ describe('Settings — Appearance category', () => {
       .map((b) => b.textContent?.trim())
       .filter((label) =>
         label &&
-        ['General', 'Appearance', 'Deck Tracker', 'In-Game Overlay', 'Notifications', 'Data', 'Audio'].includes(label),
+        ['General', 'Appearance', 'Deck Tracker', 'In-Game Overlay', 'Notifications', 'Data', 'Audio', 'About'].includes(label),
       );
 
-    expect(sidebarLabels).toEqual(['Appearance', 'In-Game Overlay']);
+    expect(sidebarLabels).toEqual(['Appearance', 'In-Game Overlay', 'About']);
   });
 
   it('shows language picker, density control, and accent swatches under Appearance', () => {

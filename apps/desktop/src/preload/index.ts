@@ -41,9 +41,22 @@ import type {
 
 type AppLocale = 'en-US' | 'zh-CN';
 
+type UpdateCheckResult =
+  | { state: 'unsupported' }
+  | { state: 'up-to-date' }
+  | { state: 'update-available'; version: string }
+  | { state: 'error'; message: string };
+
 const api = {
   app: {
     getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
+  },
+  about: {
+    checkForUpdates: (): Promise<UpdateCheckResult> =>
+      ipcRenderer.invoke('about:check-for-updates'),
+    openLicense: (): Promise<boolean> => ipcRenderer.invoke('about:open-license'),
+    openThirdPartyNotices: (): Promise<boolean> =>
+      ipcRenderer.invoke('about:open-third-party-notices'),
   },
   cards: {
     findByDbfId: (dbfId: number, locale?: AppLocale): Promise<CardDef | null> =>

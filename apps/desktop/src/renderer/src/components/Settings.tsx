@@ -1,5 +1,5 @@
-﻿import { useState } from 'react';
-import { Monitor, Palette } from 'lucide-react';
+﻿import { useEffect, useState } from 'react';
+import { Info, Monitor, Palette } from 'lucide-react';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
 import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density } from '../stores/appearance-store';
@@ -12,7 +12,16 @@ import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density } from '.
 const categories = [
   { id: 'appearance', labelKey: 'settings.appearance.categoryLabel', icon: Palette },
   { id: 'overlay', labelKey: 'settings.overlay', icon: Monitor },
+  { id: 'about', labelKey: 'settings.about.categoryLabel', icon: Info },
 ];
+
+type UpdateState =
+  | { kind: 'idle' }
+  | { kind: 'checking' }
+  | { kind: 'up-to-date' }
+  | { kind: 'update-available'; version: string }
+  | { kind: 'unsupported' }
+  | { kind: 'error'; message: string };
 
 export function Settings() {
   const { t } = useTranslation();
@@ -155,6 +164,8 @@ export function Settings() {
               </div>
             )}
 
+            {activeCategory === 'about' && <AboutPanel />}
+
             {activeCategory === 'overlay' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="border-b border-border pb-4 mb-6">
@@ -198,4 +209,144 @@ export function Settings() {
       </div>
     </div>
   );
+}
+
+function AboutPanel() {
+  const { t } = useTranslation();
+  const [version, setVersion] = useState<string>('');
+  const [updateState, setUpdateState] = useState<UpdateState>({ kind: 'idle' });
+  const [openError, setOpenError] = useState<boolean>(false);
+
+  useEffect(() => {
+    let alive = true;
+    void window.hdt?.app?.getVersion().then((v) => {
+      if (alive) setVersion(v);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const handleCheckForUpdates = async () => {
+    if (updateState.kind === 'checking') return;
+    setUpdateState({ kind: 'checking' });
+    setOpenError(false);
+    const api = window.hdt?.about;
+    if (!api) {
+      setUpdateState({ kind: 'unsupported' });
+      return;
+    }
+    const result = await api.checkForUpdates();
+    switch (result.state) {
+      case 'unsupported':
+        setUpdateState({ kind: 'unsupported' });
+        break;
+      case 'up-to-date':
+        setUpdateState({ kind: 'up-to-date' });
+        break;
+      case 'update-available':
+        setUpdateState({ kind: 'update-available', version: result.version });
+        break;
+      case 'error':
+        setUpdateState({ kind: 'error', message: result.message });
+        break;
+    }
+  };
+
+  const handleOpenLicense = async () => {
+    setOpenError(false);
+    const ok = (await window.hdt?.about?.openLicense()) ?? false;
+    if (!ok) setOpenError(true);
+  };
+
+  const handleOpenNotices = async () => {
+    setOpenError(false);
+    const ok = (await window.hdt?.about?.openThirdPartyNotices()) ?? false;
+    if (!ok) setOpenError(true);
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="border-b border-border pb-4 mb-6">
+        <h2 className="text-xl font-bold text-text">{t('settings.about.title')}</h2>
+        <p className="text-text-dim text-sm mt-1 font-mono tabular-nums">
+          {t('settings.about.version', { version: version || '—' })}
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-text font-medium">{t('settings.about.checkForUpdates')}</h3>
+            <p className="text-text-mute text-sm mt-0.5">
+              {renderUpdateMessage(t, updateState)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleCheckForUpdates}
+            disabled={updateState.kind === 'checking'}
+            className="px-4 py-2 rounded bg-accent text-bg font-medium text-sm hover:bg-accent/90 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {updateState.kind === 'checking'
+              ? t('settings.about.checking')
+              : t('settings.about.checkForUpdates')}
+          </button>
+        </div>
+
+        <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-text font-medium">{t('settings.about.viewLicense')}</h3>
+            <p className="text-text-mute text-sm mt-0.5">{t('settings.about.copyright')}</p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleOpenLicense}
+              className="px-3 py-2 rounded border border-border text-text-dim hover:text-text hover:border-border-hi text-sm"
+            >
+              {t('settings.about.viewLicense')}
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenNotices}
+              className="px-3 py-2 rounded border border-border text-text-dim hover:text-text hover:border-border-hi text-sm"
+            >
+              {t('settings.about.viewThirdPartyNotices')}
+            </button>
+          </div>
+        </div>
+
+        {openError && (
+          <p className="text-red text-xs px-4">{t('settings.about.openFailed')}</p>
+        )}
+
+        <div className="p-4 bg-bg-2 rounded-xl border border-border">
+          <p className="text-text-mute text-xs leading-relaxed">
+            {t('settings.about.disclaimer')}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function renderUpdateMessage(
+  t: (key: string, values?: Record<string, string | number | boolean>) => string,
+  state: UpdateState,
+): string {
+  switch (state.kind) {
+    case 'idle':
+      return '';
+    case 'checking':
+      return t('settings.about.checking');
+    case 'up-to-date':
+      return t('settings.about.upToDate');
+    case 'update-available':
+      return t('settings.about.updateAvailable', { version: state.version });
+    case 'unsupported':
+      return t('settings.about.updateUnsupported');
+    case 'error':
+      return t('settings.about.updateError', { message: state.message });
+  }
 }
