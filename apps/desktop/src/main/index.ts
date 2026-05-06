@@ -9,6 +9,7 @@ import { OverlayManager } from './overlay-window';
 import { createHearthstoneWindowTracker } from './hearthstone-window-tracker';
 import { CardPreviewWindow } from './card-preview-window';
 import { getHearthMirror } from './hearthmirror';
+import { initAutoUpdate } from './auto-update';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -151,6 +152,11 @@ if (!gotLock) {
     });
 
     const mainWindow = createMainWindow();
+
+    // Wire electron-updater. No-ops in dev / unpackaged builds; in
+    // packaged signed builds, checks for updates on launch and again
+    // every 6 hours.
+    initAutoUpdate();
 
     // Closing the main window quits the whole app (including the
     // overlay BrowserWindows). Otherwise the overlays + tracker poll
