@@ -13,6 +13,15 @@ import { PNG } from 'pngjs';
 export const CARD_TILE_CACHE_VERSION = 'v2';
 const CARD_TILE_CACHE_DIR = `tiles-${CARD_TILE_CACHE_VERSION}`;
 
+/**
+ * Default soft ceiling on the on-disk card-image cache (renders + tiles
+ * combined). Ballpark: 30 cards/match × ~250 KB per orig PNG × every
+ * unique deck a user encounters, plus the much larger render PNGs for
+ * popovers; without a cap this can drift past 1 GB. 500 MB is generous
+ * for 6+ months of casual play and trims itself transparently.
+ */
+export const DEFAULT_CARD_IMAGE_CACHE_CAP_BYTES = 500 * 1024 * 1024;
+
 export const CARD_IMAGE_PRIMARY_LOCALE = 'zhCN';
 export const CARD_IMAGE_FALLBACK_LOCALE = 'enUS';
 export const CARD_IMAGE_SIZE = '256x';
@@ -174,6 +183,93 @@ export function cardTileCachePath({ root, cardId }: CardTileCachePathOptions): s
     throw new Error('invalid cache path outside card image root');
   }
   return resolved;
+}
+
+/**
+ * Walk the entire card-image cache root and evict the least-recently-used
+ * image files until the total disk footprint sits at or below `capBytes`.
+ *
+ * Both the trimmed-tile cache (`tiles-v2/`) and the per-locale render
+ * cache (`zhCN/256x/`, `enUS/256x/`) are included — every file with a
+ * `.png` / `.jpg` / `.jpeg` extension under the root counts toward the
+ * cap. Eviction order is oldest mtime first, regardless of which
+ * sub-cache the file came from. The protocol handler streams from disk
+ * on every read, so deletion is safe at any time — a subsequent request
+ * for a deleted card simply triggers a re-download via
+ * `ensureCardImageCached` / `ensureCardTileCached`.
+ *
+ * Designed to be fired-and-forgotten at app startup. Returns the bytes
+ * freed and the number of files removed; failures on individual files
+ * are swallowed so a single unreadable file doesn't abort the sweep.
+ */
+export async function enforceCardImageCacheCap(
+  root: string,
+  capBytes: number,
+): Promise<{ freedBytes: number; removedCount: number }> {
+  let entries: { path: string; size: number; mtimeMs: number }[];
+  try {
+    entries = await collectCacheEntries(root);
+  } catch {
+    return { freedBytes: 0, removedCount: 0 };
+  }
+
+  const totalBytes = entries.reduce((sum, e) => sum + e.size, 0);
+  if (totalBytes <= capBytes) {
+    return { freedBytes: 0, removedCount: 0 };
+  }
+
+  // LRU: oldest-touched files go first.
+  entries.sort((a, b) => a.mtimeMs - b.mtimeMs);
+
+  let freedBytes = 0;
+  let removedCount = 0;
+  let runningTotal = totalBytes;
+
+  for (const entry of entries) {
+    if (runningTotal <= capBytes) break;
+    try {
+      await rm(entry.path, { force: true });
+      freedBytes += entry.size;
+      runningTotal -= entry.size;
+      removedCount++;
+    } catch {
+      // Skip — file may already have been removed or be locked. The
+      // sweep continues; the cap is best-effort.
+    }
+  }
+  return { freedBytes, removedCount };
+}
+
+const IMAGE_FILE_RE = /\.(png|jpe?g)$/i;
+
+async function collectCacheEntries(
+  root: string,
+): Promise<{ path: string; size: number; mtimeMs: number }[]> {
+  const out: { path: string; size: number; mtimeMs: number }[] = [];
+  const stack = [root];
+  while (stack.length > 0) {
+    const dir = stack.pop()!;
+    let dirents: import('node:fs').Dirent[];
+    try {
+      dirents = await readdir(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const dirent of dirents) {
+      const full = path.join(dir, dirent.name);
+      if (dirent.isDirectory()) {
+        stack.push(full);
+      } else if (dirent.isFile() && IMAGE_FILE_RE.test(dirent.name)) {
+        try {
+          const info = await stat(full);
+          out.push({ path: full, size: info.size, mtimeMs: info.mtimeMs });
+        } catch {
+          // Ignore.
+        }
+      }
+    }
+  }
+  return out;
 }
 
 /**

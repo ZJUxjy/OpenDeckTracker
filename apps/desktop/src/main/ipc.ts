@@ -9,9 +9,11 @@ import {
 import { ensureCardDb } from './cards';
 import {
   CARD_IMAGE_PROTOCOL,
+  DEFAULT_CARD_IMAGE_CACHE_CAP_BYTES,
   cardImageCachePathFromUrl,
   cleanLegacyTileCacheDirs,
   defaultCardImageCacheRoot,
+  enforceCardImageCacheCap,
   ensureCardImageCached,
   ensureCardTileCached,
 } from './card-image-cache';
@@ -93,6 +95,23 @@ export function registerIpc(overlay?: OverlayControllers): void {
     })
     .catch((e) => {
       console.error('[card-image-cache] failed to clean legacy tile dirs', e);
+    });
+
+  // LRU sweep against the disk-cache cap. Runs once at startup; the
+  // cache is bounded by user playtime per session, so a startup-only
+  // pass is sufficient — long sessions can be handled by adding a
+  // periodic timer later if telemetry shows it matters.
+  void enforceCardImageCacheCap(cardImageRoot, DEFAULT_CARD_IMAGE_CACHE_CAP_BYTES)
+    .then(({ freedBytes, removedCount }) => {
+      if (removedCount > 0) {
+        const mb = (freedBytes / (1024 * 1024)).toFixed(1);
+        console.log(
+          `[card-image-cache] LRU sweep removed ${removedCount} files, freed ${mb} MB`,
+        );
+      }
+    })
+    .catch((e) => {
+      console.error('[card-image-cache] LRU sweep failed', e);
     });
 
   ipcMain.handle('cards:findByDbfId', async (_, dbfId: number, appLocale?: string) => {

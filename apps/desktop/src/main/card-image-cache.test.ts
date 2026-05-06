@@ -10,6 +10,7 @@ import {
   cardTileCachePath,
   cardTileCacheUrl,
   cleanLegacyTileCacheDirs,
+  enforceCardImageCacheCap,
   ensureCardImageCached,
   ensureCardTileCached,
   trimWhiteBorders,
@@ -218,6 +219,79 @@ describe('cleanLegacyTileCacheDirs', () => {
   it('returns an empty list when the root does not exist yet', async () => {
     const removed = await cleanLegacyTileCacheDirs(path.join('does', 'not', 'exist'));
     expect(removed).toEqual([]);
+  });
+});
+
+describe('enforceCardImageCacheCap', () => {
+  async function writeImage(filePath: string, bytes: number, mtimeMs: number): Promise<void> {
+    const fs = await import('node:fs/promises');
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, Buffer.alloc(bytes, 'x'));
+    await fs.utimes(filePath, new Date(mtimeMs), new Date(mtimeMs));
+  }
+
+  it('returns 0/0 when total cache size is below the cap', async () => {
+    const root = await createTempRoot();
+    await writeImage(path.join(root, 'tiles-v2', 'A.png'), 1000, Date.now());
+
+    const result = await enforceCardImageCacheCap(root, 10_000);
+    expect(result).toEqual({ freedBytes: 0, removedCount: 0 });
+  });
+
+  it('evicts oldest files first until total drops at or below the cap', async () => {
+    const root = await createTempRoot();
+    const now = Date.now();
+    // Three files: oldest A (5000B, mtime 1000), middle B (3000B, mtime 2000),
+    // newest C (4000B, mtime 3000). Total = 12000. Cap = 8000.
+    // Expected: evict A (oldest) → remaining = 7000 ≤ cap.
+    await writeImage(path.join(root, 'tiles-v2', 'A.png'), 5000, now - 3000);
+    await writeImage(path.join(root, 'tiles-v2', 'B.png'), 3000, now - 2000);
+    await writeImage(path.join(root, 'tiles-v2', 'C.png'), 4000, now - 1000);
+
+    const result = await enforceCardImageCacheCap(root, 8000);
+    expect(result.removedCount).toBe(1);
+    expect(result.freedBytes).toBe(5000);
+
+    const fs = await import('node:fs/promises');
+    await expect(fs.stat(path.join(root, 'tiles-v2', 'A.png'))).rejects.toThrow();
+    await expect(fs.stat(path.join(root, 'tiles-v2', 'B.png'))).resolves.toBeDefined();
+    await expect(fs.stat(path.join(root, 'tiles-v2', 'C.png'))).resolves.toBeDefined();
+  });
+
+  it('walks both tiles-v2/ and per-locale render subdirs', async () => {
+    const root = await createTempRoot();
+    const now = Date.now();
+    // 1 tile + 1 render. Both should count toward the cap.
+    await writeImage(path.join(root, 'tiles-v2', 'tile.png'), 6000, now - 2000);
+    await writeImage(path.join(root, 'zhCN', '256x', 'render.png'), 6000, now - 1000);
+    // Cap = 8000. Total = 12000. Oldest = tile.png. Evict it.
+    const result = await enforceCardImageCacheCap(root, 8000);
+    expect(result.removedCount).toBe(1);
+
+    const fs = await import('node:fs/promises');
+    await expect(fs.stat(path.join(root, 'tiles-v2', 'tile.png'))).rejects.toThrow();
+    await expect(fs.stat(path.join(root, 'zhCN', '256x', 'render.png'))).resolves.toBeDefined();
+  });
+
+  it('ignores non-image files (does not delete the .openspec scratch or stray .json)', async () => {
+    const root = await createTempRoot();
+    const fs = await import('node:fs/promises');
+    await fs.mkdir(path.join(root, 'tiles-v2'), { recursive: true });
+    await fs.writeFile(path.join(root, 'tiles-v2', 'index.json'), 'meta');
+    await writeImage(path.join(root, 'tiles-v2', 'big.png'), 100_000, Date.now() - 1000);
+
+    const result = await enforceCardImageCacheCap(root, 50_000);
+
+    expect(result.removedCount).toBe(1);
+    await expect(fs.stat(path.join(root, 'tiles-v2', 'index.json'))).resolves.toBeDefined();
+  });
+
+  it('returns 0/0 when the cache root does not exist', async () => {
+    const result = await enforceCardImageCacheCap(
+      path.join('does', 'not', 'exist'),
+      1000,
+    );
+    expect(result).toEqual({ freedBytes: 0, removedCount: 0 });
   });
 });
 
