@@ -42,6 +42,15 @@ export function GlobalEffectRow({ effect }: GlobalEffectRowProps) {
           <div className="text-text font-semibold text-sm flex-1 min-w-0 truncate">
             {title}
           </div>
+          {effect.pending === true ? (
+            <span
+              data-testid="global-effect-pending"
+              title={t('globalEffects.pendingTooltip')}
+              className="shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded-full border border-amber/50 text-amber text-[10px] font-medium uppercase tracking-wider"
+            >
+              {t('globalEffects.pendingBadge')}
+            </span>
+          ) : null}
           {effect.triggerCount > 1 ? (
             <span
               data-testid="global-effect-stack-count"

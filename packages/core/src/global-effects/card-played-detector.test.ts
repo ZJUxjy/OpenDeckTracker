@@ -86,4 +86,40 @@ describe('CardPlayedDetector', () => {
     expect(emit).toHaveBeenCalledTimes(1);
     expect(emit.mock.calls[0]?.[0]).toMatchObject({ cardId: 'CATA_216' });
   });
+
+  it('does not double-fire on PLAY→PLAY tag refreshes', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle(fullEntity(64, 'CATA_216', 1));
+    det.handle(tagChange(64, 'ZONE', 'PLAY'));
+    det.handle(tagChange(64, 'ZONE', 'PLAY')); // redundant
+    expect(emit).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits twice when an entity is bounced and replayed (PLAY→HAND→PLAY)', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle(fullEntity(64, 'CATA_216', 1));
+    det.handle(tagChange(64, 'ZONE', 'PLAY'));
+    det.handle(tagChange(64, 'ZONE', 'HAND'));
+    det.handle(tagChange(64, 'ZONE', 'PLAY'));
+    expect(emit).toHaveBeenCalledTimes(2);
+  });
+
+  it('entityIdOf prefers a word-boundary `id=` over substring `playerid=`', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    // FULL_ENTITY first to register entity 64
+    det.handle(fullEntity(64, 'CATA_216', 1));
+    // Use a string ref that contains both `playerid=` (decoy) and `id=64`.
+    det.handle({
+      type: 'tag-change',
+      entity: '[playerid=2 id=64 cardId=CATA_216]',
+      tag: 'ZONE',
+      value: 'PLAY',
+      ...empty,
+    });
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toMatchObject({ cardId: 'CATA_216' });
+  });
 });

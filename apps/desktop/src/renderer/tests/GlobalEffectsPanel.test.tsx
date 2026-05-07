@@ -54,6 +54,19 @@ describe('GlobalEffectsPanel', () => {
     expect(badge.textContent).toBe('×3');
   });
 
+  it('shows a pending badge for conditional effects', () => {
+    wrap([
+      {
+        id: 'photon-cannon',
+        sourceCardId: 'SC_753',
+        triggeredAt: 1000,
+        triggerCount: 1,
+        pending: true,
+      },
+    ]);
+    expect(screen.getByTestId('global-effect-pending')).toBeInTheDocument();
+  });
+
   it('renders Tame Pet with the beast pool when params are present', async () => {
     wrap([
       {

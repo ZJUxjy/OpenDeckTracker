@@ -4,6 +4,14 @@ import type { CardPlayedEvent } from './types';
 interface KnownEntity {
   cardId: string;
   controllerId: number;
+  /**
+   * Last observed ZONE value (HearthMirror string form). The detector
+   * uses this to gate `cardPlayed` emits to actual transitions INTO
+   * PLAY — without it, redundant TAG_CHANGE refreshes (or PLAY→PLAY
+   * no-ops) would over-emit. Stays `null` until we see the first ZONE
+   * tag for the entity.
+   */
+  zone: string | null;
 }
 
 /**
@@ -67,9 +75,19 @@ export class CardPlayedDetector {
       }
       if (event.tag !== 'ZONE') return;
       const value = String(event.value);
-      if (value !== 'PLAY' && value !== '1') return;
+      const isPlayTransition = value === 'PLAY' || value === '1';
       const known = this.entities.get(id);
-      if (!known || known.cardId === '' || known.controllerId === 0) return;
+      if (!known) return;
+      // Update tracked zone regardless — stale zone state is worse
+      // than over-fire; we still gate emits below.
+      const previousZone = known.zone;
+      known.zone = value;
+      if (!isPlayTransition) return;
+      // Suppress PLAY→PLAY no-ops. The first time we see an entity we
+      // genuinely don't know its prior zone; allow the emit then so
+      // a renderer that joined mid-game still sees plays.
+      if (previousZone === 'PLAY' || previousZone === '1') return;
+      if (known.cardId === '' || known.controllerId === 0) return;
       this.emit({
         cardId: known.cardId,
         controllerId: known.controllerId,
@@ -85,22 +103,34 @@ export class CardPlayedDetector {
   ): void {
     const ctrlRaw = tags['CONTROLLER'];
     const controllerId = numberOf(ctrlRaw) ?? 0;
+    const zone = readTagString(tags['ZONE']);
     const existing = this.entities.get(entityId);
     if (existing) {
       if (cardId !== '') existing.cardId = cardId;
       if (controllerId !== 0) existing.controllerId = controllerId;
+      if (zone !== null) existing.zone = zone;
       return;
     }
-    this.entities.set(entityId, { cardId, controllerId });
+    this.entities.set(entityId, { cardId, controllerId, zone });
   }
 }
 
 function entityIdOf(ref: number | string | null | undefined): number | null {
   if (typeof ref === 'number') return ref;
   if (typeof ref === 'string') {
-    const match = /id=(\d+)/i.exec(ref);
+    // Word-boundary anchored — the parsed ref strings carry richer
+    // descriptions like `[entityName=X id=12 zone=HAND ... player=2]`,
+    // and we want the entity id specifically (not e.g. an upstream
+    // `playerid=N`).
+    const match = /\bid=(\d+)/i.exec(ref);
     if (match) return Number(match[1]);
   }
+  return null;
+}
+
+function readTagString(v: unknown): string | null {
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number') return String(v);
   return null;
 }
 

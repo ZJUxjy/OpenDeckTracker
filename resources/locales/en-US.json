@@ -244,6 +244,8 @@
     "emptyTitle": "No active global effects",
     "emptyBodyPlayer": "Match-wide modifiers you trigger will appear here.",
     "emptyBodyOpponent": "Match-wide modifiers your opponent triggers will appear here.",
+    "pendingBadge": "Pending",
+    "pendingTooltip": "This effect was cast, but its buff only goes live after a follow-up condition (e.g. losing Divine Shield, killing a minion).",
     "artanis": {
       "title": "Artanis",
       "body": "The caster's Protoss minions cost (2) less for the rest of the match. Stacks with Photon Cannon and Sentry."

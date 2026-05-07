@@ -89,6 +89,13 @@ export interface EffectDef<P = unknown> {
   ) => Promise<P | null>;
   /** Reserved for future expiry rules; M1 does not instantiate any. */
   readonly expiresOn?: ExpireRule;
+  /**
+   * Mark effects whose buff is gated by a post-cast condition (loses
+   * Divine Shield, kills with damage, etc.). The registry surfaces
+   * the entry immediately so the user sees the threat / opportunity,
+   * but the row renders with a "pending / conditional" indicator.
+   */
+  readonly pending?: boolean;
 }
 
 /**
@@ -108,6 +115,17 @@ export interface ActiveEffect<P = unknown> {
    * can show "×N" — the body string alone hides the actual magnitude.
    */
   triggerCount: number;
+  /**
+   * `true` when the registry recorded the effect on cast but the
+   * actual buff is gated by a follow-up condition (e.g. Resilient
+   * Savior must lose Divine Shield, Photon Cannon must kill its
+   * target). The renderer shows a "pending / conditional" marker so
+   * users don't assume the buff is live.
+   *
+   * Catalog entries declare this via `EffectDef.pending = true`; the
+   * registry copies it onto every active instance.
+   */
+  pending?: boolean;
   /** Extracted params; absent when the extractor wasn't declared OR returned null. */
   params?: P;
 }

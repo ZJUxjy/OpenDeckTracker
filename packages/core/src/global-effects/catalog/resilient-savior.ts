@@ -6,16 +6,17 @@ import type { EffectDef } from '../types';
  * "Divine Shield. After this loses Divine Shield, give your Silver
  * Hand Recruits +1 Health this game."
  *
- * Triggers on losing Divine Shield, not on play. Detected on play as
- * a placeholder — the buff is shown as live once the minion has
- * resolved its trigger (a future iteration could refine this with a
- * tag-change watch on TAG=DIVINE_SHIELD value=0).
+ * Triggers on *losing Divine Shield*, not on play. Marked `pending`
+ * so the renderer shows a "conditional" badge — the buff isn't live
+ * until the shield breaks. A future iteration can watch the
+ * TAG_CHANGE DIVINE_SHIELD=0 event and clear `pending`.
  */
 const resilientSavior: EffectDef = {
   id: 'resilient-savior',
   sourceCardId: 'MEND_801',
   side: 'caster',
   mode: 'STANDARD',
+  pending: true,
 };
 
 export default resilientSavior;

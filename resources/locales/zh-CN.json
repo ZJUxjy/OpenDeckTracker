@@ -244,6 +244,8 @@
     "emptyTitle": "本局尚未触发全局效果",
     "emptyBodyPlayer": "你打出的全局修正会显示在这里。",
     "emptyBodyOpponent": "对手打出的全局修正会显示在这里。",
+    "pendingBadge": "待生效",
+    "pendingTooltip": "该牌已打出，但效果需要后续条件触发后才生效（例如失去圣盾、消灭随从）。",
     "artanis": {
       "title": "阿塔尼斯",
       "body": "本场剩余时间内，打出该牌一方的星灵随从减少 (2) 点法力消耗。可与光子炮台、机械哨兵叠加。"

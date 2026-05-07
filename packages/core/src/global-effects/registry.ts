@@ -77,6 +77,7 @@ export class GlobalEffectsRegistry {
           sourceCardId: def.sourceCardId,
           triggeredAt: ts,
           triggerCount: 1,
+          ...(def.pending === true ? { pending: true } : {}),
         };
     map.set(def.id, active);
 
@@ -133,6 +134,7 @@ export class GlobalEffectsRegistry {
         sourceCardId: e.sourceCardId,
         triggeredAt: e.triggeredAt,
         triggerCount: e.triggerCount,
+        ...(e.pending === true ? { pending: true } : {}),
         ...(e.params !== undefined ? { params: e.params } : {}),
       }))
       .sort((a, b) => a.triggeredAt - b.triggeredAt);
