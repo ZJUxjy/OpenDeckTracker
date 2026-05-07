@@ -13,6 +13,7 @@ import type { BoardState, MatchInfo } from '@hdt/hearthmirror';
 import {
   HearthWatcherGameState,
   reducePowerEvent,
+  type EventPhase,
   type PowerEvent,
 } from '@hdt/hearthwatcher';
 import { getHearthMirror } from './hearthmirror';
@@ -266,13 +267,34 @@ export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {
  * global-effects detector. Called from the watcher host alongside
  * the existing match-recorder + recording-recorder dispatches.
  */
-export function forwardPowerEventToDeckTracker(event: PowerEvent): void {
+export function forwardPowerEventToDeckTracker(
+  event: PowerEvent,
+  phase: EventPhase = 'live',
+): void {
+  // Both replay and live events feed the same downstream state — the
+  // global-effects registry needs the historical card-played stream
+  // to backfill cost stacking and pool data after a mid-match
+  // restart, and the tag-overlay reducer wants both as well so the
+  // board-attack filter is accurate from the first snapshot.
   pushPowerEvent(event);
-  cardPlayedDetector?.handle(event);
+  // Reset registry + tag overlay BEFORE feeding the create-game event
+  // anywhere else: a new match starts here, and any leftover state
+  // from a prior match (or from a previous watcher session that's
+  // about to be replayed in full) must not survive into the new
+  // window. Doing this on the event (rather than on tick-driven
+  // phase transitions) avoids races when the watcher's replay pass
+  // populates state before the deck-tracker's first tick fires.
   if (event.type === 'create-game') {
     resetBoardAttackState();
+    tracker?.resetGlobalEffects();
   }
+  cardPlayedDetector?.handle(event);
   reducePowerEvent(boardAttackState, event);
+  // Phase is currently informational — every consumer above wants
+  // both replay and live. Recorders that should NOT receive replay
+  // (match-recording-recorder, power-match-recorder) are gated
+  // upstream in `hearthwatcher-host.ts`.
+  void phase;
 }
 
 /**

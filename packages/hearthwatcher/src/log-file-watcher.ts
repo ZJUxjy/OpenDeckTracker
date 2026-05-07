@@ -7,6 +7,12 @@ export type LogFileReadMode = 'end' | 'beginning';
 export interface LogFileWatcherOptions {
   path: string;
   readFrom?: LogFileReadMode;
+  /**
+   * Explicit byte offset to start tailing from. When provided, takes
+   * precedence over `readFrom`. Used by the live tailer after a
+   * mid-match replay so we resume exactly where the replay left off.
+   */
+  startOffset?: number;
   pollIntervalMs?: number;
   maxBytesPerTick?: number;
   maxBufferedLines?: number;
@@ -18,6 +24,7 @@ type DiagnosticHandler = (diagnostic: HearthWatcherDiagnostic) => void;
 export class LogFileWatcher {
   private readonly path: string;
   private readonly readFrom: LogFileReadMode;
+  private readonly explicitStartOffset: number | null;
   private readonly pollIntervalMs: number;
   private readonly maxBytesPerTick: number;
   private readonly maxBufferedLines: number;
@@ -32,6 +39,7 @@ export class LogFileWatcher {
   constructor(options: LogFileWatcherOptions) {
     this.path = options.path;
     this.readFrom = options.readFrom ?? 'end';
+    this.explicitStartOffset = options.startOffset ?? null;
     this.pollIntervalMs = options.pollIntervalMs ?? 250;
     this.maxBytesPerTick = options.maxBytesPerTick ?? 256 * 1024;
     this.maxBufferedLines = options.maxBufferedLines ?? 5_000;
@@ -52,7 +60,11 @@ export class LogFileWatcher {
     this.started = true;
     try {
       const info = await stat(this.path);
-      this.offset = this.readFrom === 'end' ? info.size : 0;
+      if (this.explicitStartOffset !== null) {
+        this.offset = Math.min(this.explicitStartOffset, info.size);
+      } else {
+        this.offset = this.readFrom === 'end' ? info.size : 0;
+      }
       this.emitDiagnostic({
         kind: info.size === this.offset ? 'waiting-for-lines' : 'ready',
         message: `Watching ${this.path}`,

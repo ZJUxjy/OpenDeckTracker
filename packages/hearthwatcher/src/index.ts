@@ -1,9 +1,10 @@
 export { createHearthWatcher, HearthWatcher } from './log-watcher';
-export type { HearthWatcherOptions } from './log-watcher';
+export type { EventPhase, HearthWatcherOptions } from './log-watcher';
 export { LogFileWatcher } from './log-file-watcher';
 export type { LogFileReadMode, LogFileWatcherOptions } from './log-file-watcher';
 export { discoverPowerLog, standardPowerLogPaths } from './log-paths';
 export type { LogDiscoveryOptions, LogDiscoveryResult } from './log-paths';
+export { findCurrentMatchStartOffset } from './log/match-boundary';
 export { parseLogLine } from './log-line';
 export type { LogLine } from './log-line';
 export { parsePowerLine, parseEntityRef } from './parsers/power-parser';

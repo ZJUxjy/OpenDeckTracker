@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import {
   createHearthWatcher,
+  type EventPhase,
   type HearthWatcherDiagnostic,
   type PowerEvent,
 } from '@hdt/hearthwatcher';
@@ -42,11 +43,21 @@ export function startHearthWatcher(): void {
     latestStatus = status;
     broadcast('hearthwatcher:status', status);
   });
-  watcher.onEvent((event: PowerEvent) => {
-    matchRecorder.handleEvent(event);
-    recordingRecorder.handleEvent(event);
-    forwardPowerEventToDeckTracker(event);
-    broadcast('hearthwatcher:event', event);
+  watcher.onEvent((event: PowerEvent, phase: EventPhase) => {
+    // Replay events come from a one-shot read of the file at startup
+    // when Hearthstone was already mid-match. They feed downstream
+    // state (global-effects detector, board-attack tag overlay) so
+    // the snapshot reflects what's actually in play, but they MUST
+    // NOT trigger recorders that write durable artifacts — that
+    // would double-record the match every time the tracker restarts.
+    if (phase === 'live') {
+      matchRecorder.handleEvent(event);
+      recordingRecorder.handleEvent(event);
+    }
+    forwardPowerEventToDeckTracker(event, phase);
+    if (phase === 'live') {
+      broadcast('hearthwatcher:event', event);
+    }
   });
 
   void watcher.start().catch((error: unknown) => {

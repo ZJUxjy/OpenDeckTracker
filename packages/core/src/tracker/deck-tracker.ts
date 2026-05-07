@@ -389,7 +389,13 @@ export class DeckTracker {
     if (previousPhase === 'IDLE' && target === 'PRE_MATCH') {
       this.game.reset();
       this.resetOpponentRecords();
-      this.registry.reset();
+      // NOTE: registry.reset() is intentionally NOT called here. The
+      // global-effects registry is reset on the `create-game`
+      // PowerEvent (driven by the host on watcher's replay or live
+      // tail). Resetting on this phase transition would race with
+      // mid-match replay: replay events populate the registry first,
+      // then the tracker's first tick fires this transition and
+      // wipes them. See `forwardPowerEventToDeckTracker`.
       this.game.transitionTo('PRE_MATCH');
       this.applyMatchInfo(matchInfo);
     }

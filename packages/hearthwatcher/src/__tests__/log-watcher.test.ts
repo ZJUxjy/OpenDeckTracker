@@ -2,7 +2,12 @@ import { appendFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createHearthWatcher, type HearthWatcherDiagnostic, type PowerEvent } from '..';
+import {
+  createHearthWatcher,
+  type EventPhase,
+  type HearthWatcherDiagnostic,
+  type PowerEvent,
+} from '..';
 
 let dir: string;
 
@@ -111,6 +116,70 @@ describe('HearthWatcher', () => {
         path,
       }),
     );
+    watcher.stop();
+  });
+
+  it('replays events from an active match before live tail starts', async () => {
+    // Compose a Power.log that already contains a CREATE_GAME and
+    // a few in-match events. The watcher should fire those as
+    // phase='replay', then switch to phase='live' for anything
+    // appended after start.
+    const path = join(dir, 'Power.log');
+    const preamble =
+      'D 18:30:00.0000000 GameState.DebugPrintPower() - some prior log noise\n';
+    const createGame =
+      'D 18:42:00.0000000 GameState.DebugPrintPower() - CREATE_GAME\n';
+    const replayedTagChange =
+      'D 18:42:01.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=64 tag=ZONE value=HAND\n';
+    await writeFile(path, preamble + createGame + replayedTagChange);
+
+    const events: Array<{ event: PowerEvent; phase: EventPhase }> = [];
+    const watcher = createHearthWatcher({ powerLogPath: path, pollIntervalMs: 10 });
+    watcher.onEvent((event, phase) => events.push({ event, phase }));
+
+    await watcher.start();
+    // Live event after replay completes.
+    await appendFile(
+      path,
+      'D 18:42:02.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=65 tag=ZONE value=DECK\n',
+    );
+    await new Promise((resolve) => setTimeout(resolve, 40));
+
+    const replayed = events.filter((e) => e.phase === 'replay').map((e) => e.event);
+    const live = events.filter((e) => e.phase === 'live').map((e) => e.event);
+
+    expect(replayed).toContainEqual(
+      expect.objectContaining({ type: 'create-game' }),
+    );
+    expect(replayed).toContainEqual(
+      expect.objectContaining({ type: 'tag-change', entity: 64, tag: 'ZONE', value: 'HAND' }),
+    );
+    expect(live).toContainEqual(
+      expect.objectContaining({ type: 'tag-change', entity: 65, tag: 'ZONE', value: 'DECK' }),
+    );
+    // Replayed events must NOT also be re-emitted as live.
+    expect(live).not.toContainEqual(
+      expect.objectContaining({ type: 'tag-change', entity: 64, tag: 'ZONE', value: 'HAND' }),
+    );
+    watcher.stop();
+  });
+
+  it('does not replay when the latest match has already completed', async () => {
+    const path = join(dir, 'Power.log');
+    const content =
+      'D 18:42:00.0000000 GameState.DebugPrintPower() - CREATE_GAME\n' +
+      'D 18:42:01.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=64 tag=ZONE value=HAND\n' +
+      'D 18:48:42.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=GameEntity tag=STATE value=COMPLETE\n';
+    await writeFile(path, content);
+
+    const events: Array<{ event: PowerEvent; phase: EventPhase }> = [];
+    const watcher = createHearthWatcher({ powerLogPath: path, pollIntervalMs: 10 });
+    watcher.onEvent((event, phase) => events.push({ event, phase }));
+
+    await watcher.start();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    expect(events.filter((e) => e.phase === 'replay')).toHaveLength(0);
     watcher.stop();
   });
 

@@ -1,11 +1,22 @@
+import { open, stat } from 'node:fs/promises';
 import { LogFileWatcher, type LogFileWatcherOptions } from './log-file-watcher';
+import { findCurrentMatchStartOffset } from './log/match-boundary';
 import { discoverPowerLog, type LogDiscoveryOptions } from './log-paths';
 import { parsePowerLine } from './parsers/power-parser';
 import type { HearthWatcherDiagnostic } from './types/diagnostics';
 import { createParserDiagnostics } from './types/diagnostics';
 import type { PowerEvent } from './types/power-events';
 
-type EventHandler = (event: PowerEvent) => void;
+/**
+ * `'replay'` events were read from the file in a one-shot pass at
+ * watcher startup so the consumers can backfill state for a match
+ * that was already in progress when we connected. `'live'` events
+ * stream from the tail as Hearthstone writes them. Phase is the
+ * second arg on `EventHandler` so existing handlers (which only
+ * declare one parameter) continue to work unchanged.
+ */
+export type EventPhase = 'replay' | 'live';
+type EventHandler = (event: PowerEvent, phase: EventPhase) => void;
 type StatusHandler = (status: HearthWatcherDiagnostic) => void;
 
 export interface HearthWatcherOptions {
@@ -92,14 +103,79 @@ export class HearthWatcher {
     }
 
     this.currentPowerLogPath = discovery.powerLogPath;
-    this.tailer = this.buildTailer(discovery.powerLogPath);
+
+    // If Hearthstone is mid-match when we start (or restart) the
+    // watcher, re-emit everything from this match's CREATE_GAME up
+    // to current EOF so downstream consumers can backfill their
+    // state. Events from this pass are tagged `phase='replay'` so
+    // recorders that should not double-write (match-recording,
+    // power-match) can skip them while the global-effects detector
+    // and tag-overlay reducer still see them.
+    let liveStartOffset: number | undefined;
+    try {
+      const replayStart = await findCurrentMatchStartOffset(discovery.powerLogPath);
+      if (replayStart !== null) {
+        const replayEnd = (await stat(discovery.powerLogPath)).size;
+        if (replayEnd > replayStart) {
+          await this.replayMatchHistory(discovery.powerLogPath, replayStart, replayEnd);
+        }
+        liveStartOffset = replayEnd;
+      }
+    } catch (err) {
+      // Locating / replaying history is best-effort; if it fails we
+      // just fall through to a normal end-of-file tail and lose the
+      // backfill rather than blocking the live path entirely.
+      this.emitStatus({
+        kind: 'parser-error',
+        message: `Failed to replay active match history: ${err instanceof Error ? err.message : String(err)}`,
+        path: discovery.powerLogPath,
+        timestamp: Date.now(),
+      });
+    }
+
+    this.tailer = this.buildTailer(discovery.powerLogPath, liveStartOffset);
     await this.tailer.start();
     this.scheduleLatestLogCheck();
   }
 
-  private buildTailer(powerLogPath: string): LogFileWatcher {
+  private async replayMatchHistory(
+    path: string,
+    start: number,
+    end: number,
+  ): Promise<void> {
+    const length = end - start;
+    if (length <= 0) return;
+    const handle = await open(path, 'r');
+    let buffer: Buffer;
+    try {
+      buffer = Buffer.alloc(length);
+      await handle.read(buffer, 0, length, start);
+    } finally {
+      await handle.close();
+    }
+    const text = buffer.toString('utf8').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const lines = text.split('\n').filter((l) => l.length > 0);
+    const diagnostics = createParserDiagnostics();
+    let replayedEvents = 0;
+    for (const line of lines) {
+      const event = parsePowerLine(line, { diagnostics });
+      if (event !== null) {
+        this.emitEvent(event, 'replay');
+        replayedEvents += 1;
+      }
+    }
+    this.emitStatus({
+      kind: 'ready',
+      message: `Replayed ${replayedEvents} events from active match history`,
+      path,
+      timestamp: Date.now(),
+    });
+  }
+
+  private buildTailer(powerLogPath: string, startOffset?: number): LogFileWatcher {
     const diagnostics = createParserDiagnostics();
     const tailerOptions: LogFileWatcherOptions = { path: powerLogPath };
+    if (startOffset !== undefined) tailerOptions.startOffset = startOffset;
     if (this.options.readFrom !== undefined) tailerOptions.readFrom = this.options.readFrom;
     if (this.options.pollIntervalMs !== undefined) {
       tailerOptions.pollIntervalMs = this.options.pollIntervalMs;
@@ -128,7 +204,7 @@ export class HearthWatcher {
             timestamp: Date.now(),
           });
         }
-        this.emitEvent(event);
+        this.emitEvent(event, 'live');
       } else if (diagnostics.malformedRecords > before) {
         const recordType = inferPowerRecordType(line);
         const status: HearthWatcherDiagnostic = {
@@ -191,8 +267,8 @@ export class HearthWatcher {
     }
   }
 
-  private emitEvent(event: PowerEvent): void {
-    for (const handler of this.eventHandlers) handler(event);
+  private emitEvent(event: PowerEvent, phase: EventPhase): void {
+    for (const handler of this.eventHandlers) handler(event, phase);
   }
 
   private emitStatus(status: HearthWatcherDiagnostic): void {

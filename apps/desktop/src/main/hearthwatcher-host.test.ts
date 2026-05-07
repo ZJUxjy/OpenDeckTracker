@@ -130,12 +130,12 @@ describe('hearthwatcher-host', () => {
     );
   });
 
-  it('routes Power.log events through the match recorder before broadcasting', async () => {
+  it('routes live Power.log events through the match recorder before broadcasting', async () => {
     const { startHearthWatcher } = await import('./hearthwatcher-host');
     startHearthWatcher();
 
     const event: PowerEvent = { type: 'create-game', raw: '', content: '' };
-    mocks.eventHandlers[0]?.(event);
+    mocks.eventHandlers[0]?.(event, 'live');
 
     expect(mocks.createPowerMatchRecorder).toHaveBeenCalledWith({
       getSnapshot: mocks.getLatestDeckTrackerSnapshot,
@@ -151,6 +151,21 @@ describe('hearthwatcher-host', () => {
     expect(mocks.powerRecorder.handleEvent).toHaveBeenCalledWith(event);
     expect(mocks.matchRecordingRecorder.handleEvent).toHaveBeenCalledWith(event);
     expect(mocks.send).toHaveBeenCalledWith('hearthwatcher:event', event);
+  });
+
+  it('skips recorders and broadcast for replay events', async () => {
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const event: PowerEvent = { type: 'create-game', raw: '', content: '' };
+    mocks.eventHandlers[0]?.(event, 'replay');
+
+    // Replay must not trigger durable-write recorders or push to the
+    // renderer event channel (renderers see resulting state via the
+    // separate `deck-tracker:state` snapshot push instead).
+    expect(mocks.powerRecorder.handleEvent).not.toHaveBeenCalled();
+    expect(mocks.matchRecordingRecorder.handleEvent).not.toHaveBeenCalled();
+    expect(mocks.send).not.toHaveBeenCalledWith('hearthwatcher:event', event);
   });
 
   it('registers IPC handler for latest status', async () => {
