@@ -12,8 +12,8 @@ app.
 
 Current local dump:
 
-- Hearthstone version: `35.2.2.240818`
-- Build: `240818`
+- Hearthstone version: `35.4.0.241170`
+- Build: `241170`
 
 The `hsdata/` directory is ignored by git because it is a local source checkout
 or dump. Update it from your local hsdata source, then regenerate runtime JSON:
