@@ -129,3 +129,13 @@ export type {
 export { PollingLoop } from './tracker/polling-loop';
 export { nextPhase } from './tracker/phase-machine';
 export type { PhaseSignals } from './tracker/phase-machine';
+
+// Global-effects domain.
+export type {
+  ActiveEffect,
+  CardPlayedEvent,
+  EffectDef,
+  ExpireRule,
+  ExtractCtx,
+  GameMode as GlobalEffectsGameMode,
+} from './global-effects';

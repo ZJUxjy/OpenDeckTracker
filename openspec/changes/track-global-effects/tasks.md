@@ -1,9 +1,9 @@
 ## 1. Core domain types & scaffold
 
-- [ ] 1.1 Create directory `packages/core/src/global-effects/` and add an empty placeholder `index.ts` exporting nothing yet — verify with `ls packages/core/src/global-effects` returning the new file.
-- [ ] 1.2 Add `packages/core/src/global-effects/types.ts` declaring `GameMode`, `ExpireRule`, `EffectDef<P>`, `ActiveEffect<P>`, `CardPlayedEvent`, `ExtractCtx` per `design.md` §D8 + `specs/global-effects-tracker/spec.md` §"Global effects domain types". Verify with `pnpm --filter @hdt/core typecheck` exiting 0.
-- [ ] 1.3 Re-export the four public types from `packages/core/src/global-effects/index.ts` and from `packages/core/src/index.ts` (top-level barrel). Verify with a one-line vitest in `packages/core/src/global-effects/types.test.ts` that imports `EffectDef`, `ActiveEffect`, `GameMode`, `ExpireRule` from `@hdt/core` and asserts `true` — runs green via `pnpm --filter @hdt/core test types`.
-- [ ] 1.4 Commit: `feat(core): scaffold global-effects domain types`.
+- [x] 1.1 Create directory `packages/core/src/global-effects/` and add an empty placeholder `index.ts` exporting nothing yet — verify with `ls packages/core/src/global-effects` returning the new file.
+- [x] 1.2 Add `packages/core/src/global-effects/types.ts` declaring `GameMode`, `ExpireRule`, `EffectDef<P>`, `ActiveEffect<P>`, `CardPlayedEvent`, `ExtractCtx` per `design.md` §D8 + `specs/global-effects-tracker/spec.md` §"Global effects domain types". Verify with `pnpm --filter @hdt/core typecheck` exiting 0.
+- [x] 1.3 Re-export the four public types from `packages/core/src/global-effects/index.ts` and from `packages/core/src/index.ts` (top-level barrel). Verify with a one-line vitest in `packages/core/src/global-effects/types.test.ts` that imports `EffectDef`, `ActiveEffect`, `GameMode`, `ExpireRule` from `@hdt/core` and asserts `true` — runs green via `pnpm --filter @hdt/core test types`.
+- [x] 1.4 Commit: `feat(core): scaffold global-effects domain types`.
 
 ## 2. Catalog barrel + Cleansing Cleric (paramless effect)
 
