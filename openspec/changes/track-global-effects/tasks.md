@@ -61,11 +61,11 @@
 
 ## 8. i18n keys
 
-- [ ] 8.1 Add `globalEffects.tabDeck`, `globalEffects.tabEffects`, `globalEffects.emptyTitle`, `globalEffects.emptyBody` to `resources/locales/en-US.json` and `zh-CN.json`. Pick concise wording (en: "Deck" / "Effects" / "No active global effects" / "Match-wide modifiers triggered by either player will appear here."; zh: "牌库" / "全局效果" / "本局尚未触发全局效果" / "对局中由任意一方打出的全局修正会显示在这里。").
-- [ ] 8.2 Add `globalEffects.cleansing-cleric.title` (en: "Cleansing Cleric"; zh: 待确认中文卡名 — 通过 hearthdb `findById(id, 'zh-CN').name`) and `.body` (en: "Healing dealt by the caster's side gains +2 for the rest of the match."; zh equivalent).
-- [ ] 8.3 Add `globalEffects.tame-pet.title` and `.body` (zh body: "Animal Companion 召唤池被替换为本场打出 Tame Pet 时随机抽取的 3 张更高费用野兽。" plus en equivalent).
-- [ ] 8.4 Add failing test `apps/desktop/src/renderer/tests/locales.global-effects.test.ts`: assert (a) en-US and zh-CN have the same `globalEffects.*` key set; (b) every `EFFECT_CATALOG[i].id` resolves to a non-empty `<id>.title` and `<id>.body` in both locales. Run → expect PASS (since we just added all keys).
-- [ ] 8.5 Commit: `feat(renderer): i18n keys for globalEffects namespace`.
+- [x] 8.1 Add `globalEffects.tabDeck`, `globalEffects.tabEffects`, `globalEffects.emptyTitle`, `globalEffects.emptyBody` to `resources/locales/en-US.json` and `zh-CN.json`.
+- [x] 8.2 Add `globalEffects.cleansing-cleric.title` and `.body` in both locales.
+- [x] 8.3 Add `globalEffects.tame-pet.title` and `.body` in both locales.
+- [x] 8.4 Add failing test `apps/desktop/src/renderer/tests/locales.global-effects.test.ts`: assert key parity + non-empty title/body for every catalog entry. Run → PASS.
+- [x] 8.5 Commit: `feat(renderer): i18n keys for globalEffects namespace`.
 
 ## 9. TrackerPanelTabs container
 

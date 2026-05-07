@@ -238,6 +238,20 @@
     "bannerInMatchTitle": "对局进行中",
     "bannerInMatchBody": "记牌器已激活。可拖动游戏内浮窗以调整位置，下次启动时位置会被记住。"
   },
+  "globalEffects": {
+    "tabDeck": "牌库",
+    "tabEffects": "全局效果",
+    "emptyTitle": "本局尚未触发全局效果",
+    "emptyBody": "对局中由任意一方打出的全局修正会显示在这里。",
+    "cleansing-cleric": {
+      "title": "净化牧师",
+      "body": "本场剩余时间内，打出该牌一方的所有治疗效果额外恢复 2 点生命值。"
+    },
+    "tame-pet": {
+      "title": "驯服野兽",
+      "body": "本场打出 Tame Pet 时随机抽取 3 张更高费用的野兽；之后该方再召唤 Animal Companion 时，从这 3 张牌中随机选一个登场。"
+    }
+  },
   "deckSelect": {
     "title": "选择当前对局使用的卡组",
     "description": "未能自动识别。请从下方挑选你正在使用的卡组。",

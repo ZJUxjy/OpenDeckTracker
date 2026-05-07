@@ -238,6 +238,20 @@
     "bannerInMatchTitle": "Match in progress",
     "bannerInMatchBody": "Tracking active. Drag the in-game overlays to reposition them; they remember their last placement."
   },
+  "globalEffects": {
+    "tabDeck": "Deck",
+    "tabEffects": "Effects",
+    "emptyTitle": "No active global effects",
+    "emptyBody": "Match-wide modifiers triggered by either player will appear here.",
+    "cleansing-cleric": {
+      "title": "Cleansing Cleric",
+      "body": "Healing dealt by the caster's side restores 2 more Health for the rest of the match."
+    },
+    "tame-pet": {
+      "title": "Tame Pet",
+      "body": "The caster's future Animal Companions are summoned from 3 random Beasts that cost (1) more, locked in when Tame Pet was played."
+    }
+  },
   "deckSelect": {
     "title": "Select the deck for this match",
     "description": "Automatic detection failed. Choose the deck you are currently using.",
