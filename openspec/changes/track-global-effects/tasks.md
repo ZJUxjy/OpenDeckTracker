@@ -54,10 +54,10 @@
 
 ## 7. Renderer Zustand selectors
 
-- [ ] 7.1 Failing test `apps/desktop/src/renderer/tests/deck-tracker-store.effects.test.ts` covering "Selectors return empty arrays for legacy snapshots" and "Selectors are referentially stable" scenarios from `specs/deck-tracker-core/spec.md`. Run → FAIL.
-- [ ] 7.2 Edit `apps/desktop/src/renderer/src/stores/deck-tracker-store.ts`: add `useFriendlyEffects` and `useOpposingEffects` hooks using `shallow` equality / a memo over the snapshot reference.
-- [ ] 7.3 Re-run 7.1 — expect PASS.
-- [ ] 7.4 Commit: `feat(renderer): expose friendly/opposing effects selectors`.
+- [x] 7.1 Failing test `apps/desktop/src/renderer/tests/deck-tracker-store.effects.test.ts` covering "Selectors return empty arrays for legacy snapshots" and "Selectors are referentially stable" scenarios from `specs/deck-tracker-core/spec.md`. Run → FAIL.
+- [x] 7.2 Edit `apps/desktop/src/renderer/src/stores/deck-tracker-store.ts`: add `useFriendlyEffects` and `useOpposingEffects` hooks using `shallow` equality / a memo over the snapshot reference.
+- [x] 7.3 Re-run 7.1 — expect PASS.
+- [x] 7.4 Commit: `feat(renderer): expose friendly/opposing effects selectors`.
 
 ## 8. i18n keys
 

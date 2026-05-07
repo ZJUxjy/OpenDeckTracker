@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import type { DeckTrackerEvent, DeckTrackerSnapshot } from '@hdt/core';
+import type {
+  ActiveEffect,
+  DeckTrackerEvent,
+  DeckTrackerSnapshot,
+} from '@hdt/core';
+
+const EMPTY_EFFECTS: readonly ActiveEffect[] = Object.freeze([]);
 
 export interface PendingDeckSelection {
   decks: { id: number; name: string; hero: string }[];
@@ -64,3 +70,22 @@ export const useDeckTrackerStore = create<DeckTrackerStoreState>((set, get) => (
   clearPendingSelection: () => set({ pendingSelection: null }),
   markDialogDismissed: () => set({ pendingSelection: null, dialogDismissed: true }),
 }));
+
+/**
+ * Returns the local player's active global effects, or an empty
+ * frozen array when the snapshot is missing or hasn't been migrated
+ * with the new fields. The frozen array is shared across calls so
+ * downstream React diffs short-circuit on `Object.is`.
+ */
+export function useFriendlyEffects(): readonly ActiveEffect[] {
+  return useDeckTrackerStore(
+    (s) => s.snapshot?.friendlyEffects ?? EMPTY_EFFECTS,
+  );
+}
+
+/** Same shape as `useFriendlyEffects` for the opposing player. */
+export function useOpposingEffects(): readonly ActiveEffect[] {
+  return useDeckTrackerStore(
+    (s) => s.snapshot?.opposingEffects ?? EMPTY_EFFECTS,
+  );
+}
