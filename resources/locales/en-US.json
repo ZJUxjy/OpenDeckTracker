@@ -243,6 +243,10 @@
     "tabEffects": "Effects",
     "emptyTitle": "No active global effects",
     "emptyBody": "Match-wide modifiers triggered by either player will appear here.",
+    "artanis": {
+      "title": "Artanis",
+      "body": "The caster's Protoss minions cost (2) less for the rest of the match. Stacks with Photon Cannon and Sentry."
+    },
     "brash-battlemaster": {
       "title": "Brash Battlemaster",
       "body": "After this minion dies, the caster's Silver Hand Recruits gain +1 Attack for the rest of the match."
@@ -255,6 +259,26 @@
       "title": "Emboldening Blade",
       "body": "The caster's Silver Hand Recruits gain +1/+1 for the rest of the match. Stacks with other Recruit buffs."
     },
+    "foreboding-flame": {
+      "title": "Foreboding Flame",
+      "body": "Demons that didn't start in the caster's deck cost (1) less for the rest of the match."
+    },
+    "interstellar-starslicer": {
+      "title": "Interstellar Starslicer",
+      "body": "Each battlecry and deathrattle reduces the cost of the caster's Librams by (1). Stacks with Interstellar Wayfarer."
+    },
+    "interstellar-wayfarer": {
+      "title": "Interstellar Wayfarer",
+      "body": "Each battlecry and deathrattle reduces the cost of the caster's Librams by (1). Stacks per copy played."
+    },
+    "inzah": {
+      "title": "Inzah",
+      "body": "The caster's Overload cards cost (1) less for the rest of the match."
+    },
+    "photon-cannon": {
+      "title": "Photon Cannon",
+      "body": "If Photon Cannon's damage killed a minion, the caster's Protoss minions cost (1) less for the rest of the match."
+    },
     "pursuit-of-justice": {
       "title": "Pursuit of Justice",
       "body": "Silver Hand Recruits the caster summons gain +1 Attack for the rest of the match."
@@ -266,6 +290,10 @@
     "roam-free": {
       "title": "Roam Free",
       "body": "The caster's future Animal Companions are summoned from 3 random Beasts that cost (2) more, locked in when Roam Free was played."
+    },
+    "sentry": {
+      "title": "Sentry",
+      "body": "After Sentry dies, the caster's Protoss minions cost (1) less for the rest of the match."
     },
     "talya-earthstrider": {
       "title": "Talya Earthstrider",
