@@ -66,4 +66,68 @@ describe('Game.applyLogDerivedEntityUpdate', () => {
       info: { hidden: false },
     });
   });
+
+  it('classifies hidden deck entities as original deck candidates', () => {
+    const game = new Game();
+    game.applyLogDerivedEntityUpdate({
+      entityId: 7,
+      cardId: '',
+      zone: 'DECK',
+      controllerId: 1,
+    });
+
+    expect(game.entities.get(7)?.info).toEqual({
+      originalController: 1,
+      originalZone: 'DECK',
+    });
+  });
+
+  it('preserves original deck metadata when the same entity is later revealed', () => {
+    const game = new Game();
+    game.applyLogDerivedEntityUpdate({
+      entityId: 7,
+      cardId: '',
+      zone: 'DECK',
+      controllerId: 1,
+    });
+    game.applyLogDerivedEntityUpdate({
+      entityId: 7,
+      cardId: 'CS2_029',
+      zone: 'HAND',
+    });
+
+    expect(game.entities.get(7)).toMatchObject({
+      cardId: 'CS2_029',
+      zone: 'HAND',
+      info: {
+        originalController: 1,
+        originalZone: 'DECK',
+      },
+    });
+    expect(game.entities.get(7)?.info.created).toBeUndefined();
+  });
+
+  it('classifies newly visible deck entities as created shuffle candidates', () => {
+    const game = new Game();
+    game.applyLogDerivedEntityUpdate({
+      entityId: 99,
+      cardId: 'CS2_029',
+      zone: 'DECK',
+      controllerId: 1,
+    });
+
+    expect(game.entities.get(99)?.info).toEqual({ created: true });
+  });
+
+  it('does not mark newly visible hand cards as created without stronger provenance', () => {
+    const game = new Game();
+    game.applyLogDerivedEntityUpdate({
+      entityId: 42,
+      cardId: 'CS2_029',
+      zone: 'HAND',
+      controllerId: 1,
+    });
+
+    expect(game.entities.get(42)?.info.created).toBeUndefined();
+  });
 });

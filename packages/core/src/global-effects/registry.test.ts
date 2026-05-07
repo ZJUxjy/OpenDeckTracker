@@ -23,6 +23,15 @@ function makeCatalog(...defs: EffectDef[]): Map<string, EffectDef> {
   return new Map(defs.map((d) => [d.sourceCardId, d]));
 }
 
+function play(
+  cardId: string,
+  controllerId: number,
+  timestamp: number,
+  entityId = timestamp,
+): CardPlayedEvent {
+  return { cardId, controllerId, timestamp, entityId };
+}
+
 describe('GlobalEffectsRegistry', () => {
   it('ignores unknown card plays', () => {
     const reg = new GlobalEffectsRegistry({
@@ -30,7 +39,7 @@ describe('GlobalEffectsRegistry', () => {
       now: () => 1000,
       getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
-    reg.handleCardPlayed({ cardId: 'EX1_001', controllerId: 1, timestamp: 1000 });
+    reg.handleCardPlayed(play('EX1_001', 1, 1000));
     const snap = reg.snapshot();
     expect(snap.local).toEqual([]);
     expect(snap.opposing).toEqual([]);
@@ -42,22 +51,14 @@ describe('GlobalEffectsRegistry', () => {
       now: () => 1234,
       getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
-    reg.handleCardPlayed({
-      cardId: 'CATA_216',
-      controllerId: 1,
-      timestamp: 1234,
-    });
+    reg.handleCardPlayed(play('CATA_216', 1, 1234));
     const localOnly = reg.snapshot();
     expect(localOnly.local).toHaveLength(1);
     expect(localOnly.local[0]?.id).toBe('cleansing-cleric');
     expect(localOnly.local[0]?.triggerCount).toBe(1);
     expect(localOnly.opposing).toEqual([]);
 
-    reg.handleCardPlayed({
-      cardId: 'CATA_216',
-      controllerId: 2,
-      timestamp: 5678,
-    });
+    reg.handleCardPlayed(play('CATA_216', 2, 5678));
     const both = reg.snapshot();
     expect(both.local).toHaveLength(1);
     expect(both.opposing).toHaveLength(1);
@@ -70,8 +71,8 @@ describe('GlobalEffectsRegistry', () => {
       now: () => 100,
       getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
-    reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 100 });
-    reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 2, timestamp: 100 });
+    reg.handleCardPlayed(play('CATA_216', 1, 100));
+    reg.handleCardPlayed(play('CATA_216', 2, 100));
     expect(reg.snapshot().local).toHaveLength(1);
     expect(reg.snapshot().opposing).toHaveLength(1);
     reg.reset();
@@ -85,23 +86,55 @@ describe('GlobalEffectsRegistry', () => {
       now: () => now,
       getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
-    reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 100 });
+    reg.handleCardPlayed(play('CATA_216', 1, 100));
     let snap = reg.snapshot();
     expect(snap.local).toHaveLength(1);
     expect(snap.local[0]?.triggeredAt).toBe(100);
     expect(snap.local[0]?.triggerCount).toBe(1);
 
     now = 500;
-    reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 500 });
+    reg.handleCardPlayed(play('CATA_216', 1, 500));
     snap = reg.snapshot();
     expect(snap.local).toHaveLength(1);
     expect(snap.local[0]?.triggeredAt).toBe(500);
     expect(snap.local[0]?.triggerCount).toBe(2);
 
     now = 700;
-    reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 700 });
+    reg.handleCardPlayed(play('CATA_216', 1, 700));
     snap = reg.snapshot();
     expect(snap.local[0]?.triggerCount).toBe(3);
+  });
+
+  it('re-attributes controller-keyed effects when local/opposing ids become known late', () => {
+    let ids = { local: 1, opposing: 2 };
+    const reg = new GlobalEffectsRegistry({
+      catalogIndex: makeCatalog(TAME_PET_DEFERRED as EffectDef),
+      now: () => 1000,
+      getControllerIds: () => ids,
+    });
+
+    // Startup replay can arrive before HearthMirror reports that the
+    // local player is controller 2. Store by controller id so this
+    // early trigger is not stranded on the old "opposing" side.
+    reg.handleCardPlayed({
+      cardId: 'MEND_300',
+      controllerId: 2,
+      entityId: 50,
+      timestamp: 1000,
+    });
+    ids = { local: 2, opposing: 1 };
+    reg.handleCardPlayed({
+      cardId: 'MEND_300',
+      controllerId: 2,
+      entityId: 90,
+      timestamp: 2000,
+    });
+
+    const snap = reg.snapshot();
+    expect(snap.local).toHaveLength(1);
+    expect(snap.local[0]?.id).toBe('tame-pet');
+    expect(snap.local[0]?.triggerCount).toBe(2);
+    expect(snap.opposing).toEqual([]);
   });
 
   it('snapshot is JSON-safe and stable on tie', () => {
@@ -111,8 +144,8 @@ describe('GlobalEffectsRegistry', () => {
       getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     const events: CardPlayedEvent[] = [
-      { cardId: 'CATA_216', controllerId: 1, timestamp: 1000 },
-      { cardId: 'MEND_300', controllerId: 1, timestamp: 1000 },
+      play('CATA_216', 1, 1000, 1),
+      play('MEND_300', 1, 1000, 2),
     ];
     for (const e of events) reg.handleCardPlayed(e);
 
@@ -141,7 +174,7 @@ describe('GlobalEffectsRegistry', () => {
       getControllerIds: () => ({ local: 1, opposing: 2 }),
       extractCtx: () => ({ recentEvents: [], waitForMoreEvents: () => Promise.resolve([]) }),
     });
-    reg.handleCardPlayed({ cardId: 'PARAM_001', controllerId: 1, timestamp: 1000 });
+    reg.handleCardPlayed(play('PARAM_001', 1, 1000));
 
     // Synchronously: params undefined.
     const before = reg.snapshot();
@@ -165,9 +198,9 @@ describe('GlobalEffectsRegistry', () => {
       getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     now = 500;
-    reg.handleCardPlayed({ cardId: 'OTHER_001', controllerId: 1, timestamp: 500 });
+    reg.handleCardPlayed(play('OTHER_001', 1, 500));
     now = 200;
-    reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 200 });
+    reg.handleCardPlayed(play('CATA_216', 1, 200));
     const snap = reg.snapshot();
     expect(snap.local.map((e) => e.triggeredAt)).toEqual([200, 500]);
   });

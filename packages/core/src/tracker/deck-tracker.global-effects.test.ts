@@ -36,6 +36,7 @@ describe('DeckTrackerSnapshot global-effects fields', () => {
     tracker.recordCardPlayed({
       cardId: 'CATA_216',
       controllerId: tracker.getGame().localPlayer.controllerId,
+      entityId: 1,
       timestamp: 5000,
     });
     const snap = tracker.getSnapshot();
@@ -49,6 +50,7 @@ describe('DeckTrackerSnapshot global-effects fields', () => {
     tracker.recordCardPlayed({
       cardId: 'CATA_216',
       controllerId: 1,
+      entityId: 1,
       timestamp: 1000,
     });
     expect(tracker.getSnapshot().friendlyEffects).toHaveLength(1);

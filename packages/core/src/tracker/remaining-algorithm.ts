@@ -5,10 +5,11 @@ import type { Entity } from '../game/entity';
  * Compute the displayable "remaining cards in deck" multiset using the
  * memory-only algorithm:
  *
- *   baseRemaining   = originalDeck − seenCards
- *   knownDeck       = known friendly cards currently in DECK
+ *   baseRemaining    = originalDeck − seenCards
+ *   knownDeck        = known non-created friendly cards currently in DECK
  *   shuffledIntoDeck = knownDeck − baseRemaining
- *   remaining       = baseRemaining + shuffledIntoDeck
+ *   createdInDeck    = created friendly cards currently in DECK
+ *   remaining        = baseRemaining + shuffledIntoDeck + createdInDeck
  *   extras          = seenCards − originalDeck
  *
  * where `seenCards` is the multiset of cardIds we've revealed leaving
@@ -21,10 +22,10 @@ import type { Entity } from '../game/entity';
  *   - controllerId must match `localControllerId` (we're not tracking
  *     the opponent in M2; this guards against accidentally leaking
  *     opposing entities into the friendly tally).
- *   - `info.created !== true` — created cards are surfaced via `extras`,
- *     not subtracted from the original deck. In M2 `info.created` is
- *     always `undefined`, so this filter is currently a no-op; M3
- *     (log stream) will populate the flag and start using it.
+ *   - `info.created !== true` for seen cards — created cards do not
+ *     subtract from the original deck. Created cards currently in DECK
+ *     are counted separately so same-card shuffle effects do not get
+ *     hidden behind unknown original deck copies.
  *
  * The function is pure — same inputs always produce the same outputs
  * with no side effects.
@@ -49,9 +50,14 @@ export function computeRemaining(args: {
   }
 
   const deckCardIds: string[] = [];
+  const createdDeckCardIds: string[] = [];
   for (const e of deckEntities) {
     if (e.cardId === '') continue;
     if (e.controllerId !== localControllerId) continue;
+    if (e.info.created === true) {
+      createdDeckCardIds.push(e.cardId);
+      continue;
+    }
     deckCardIds.push(e.cardId);
   }
 
@@ -59,8 +65,9 @@ export function computeRemaining(args: {
   const baseRemaining = originalDeck.subtract(seenSnapshot);
   const knownDeckSnapshot = DeckSnapshot.fromCardIds(deckCardIds);
   const shuffledIntoDeck = baseRemaining.extras(knownDeckSnapshot);
+  const createdInDeck = DeckSnapshot.fromCardIds(createdDeckCardIds);
   return {
-    remaining: baseRemaining.add(shuffledIntoDeck),
+    remaining: baseRemaining.add(shuffledIntoDeck).add(createdInDeck),
     extras: originalDeck.extras(seenSnapshot),
   };
 }

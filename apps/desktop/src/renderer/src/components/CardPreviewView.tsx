@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { markFallback, markSuccess, useCardImageUrl } from '../hooks/use-card-image-url';
+import { useCardDef } from '../hooks/use-card-def';
 import { useLocale } from '../i18n';
 
 /**
@@ -43,9 +44,9 @@ export function CardPreviewView() {
           {pool.map((id, i) => (
             <div
               key={`${id}-${i}`}
-              className="flex-1 min-w-0 h-full flex items-center justify-center"
+              className="flex-1 min-w-0 h-full flex items-stretch justify-center"
             >
-              <CardImage cardId={id} />
+              <PoolCardPreview cardId={id} />
             </div>
           ))}
         </div>
@@ -60,6 +61,27 @@ export function CardPreviewView() {
   return (
     <div className="w-screen h-screen flex items-center justify-center bg-transparent select-none">
       <CardImage cardId={cardId} />
+    </div>
+  );
+}
+
+function PoolCardPreview({ cardId }: { cardId: string }) {
+  const def = useCardDef(cardId);
+  const name = def?.name ?? cardId;
+
+  return (
+    <div className="min-w-0 h-full w-full flex flex-col items-center gap-2">
+      <div className="min-h-0 flex-1 w-full flex items-center justify-center">
+        <CardImage cardId={cardId} />
+      </div>
+      <div
+        className="h-9 w-full px-2 flex items-center justify-center rounded-md border border-border/70 bg-bg/90 text-center text-[13px] leading-tight font-semibold text-fg shadow-[0_4px_16px_rgba(0,0,0,0.35)]"
+        title={name}
+      >
+        <span className="overflow-hidden break-words [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
+          {name}
+        </span>
+      </div>
     </div>
   );
 }

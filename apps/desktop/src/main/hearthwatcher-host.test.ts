@@ -1,15 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
+import type { EventPhase, HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 
 const mocks = vi.hoisted(() => {
   const statusHandlers: ((status: HearthWatcherDiagnostic) => void)[] = [];
-  const eventHandlers: ((event: unknown) => void)[] = [];
+  const eventHandlers: ((event: unknown, phase: EventPhase) => void)[] = [];
   const watcher = {
     onStatus: vi.fn((handler: (status: HearthWatcherDiagnostic) => void) => {
       statusHandlers.push(handler);
       return () => undefined;
     }),
-    onEvent: vi.fn((handler: (event: unknown) => void) => {
+    onEvent: vi.fn((handler: (event: unknown, phase: EventPhase) => void) => {
       eventHandlers.push(handler);
       return () => undefined;
     }),

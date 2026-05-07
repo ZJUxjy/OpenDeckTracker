@@ -41,8 +41,7 @@ export class GlobalEffectsRegistry {
   private readonly now: () => number;
   private readonly getControllerIds: () => { local: number; opposing: number };
   private readonly extractCtx?: () => ExtractCtx;
-  private localEffects = new Map<string, ActiveEffect>();
-  private opposingEffects = new Map<string, ActiveEffect>();
+  private effectsByController = new Map<number, Map<string, ActiveEffect>>();
 
   constructor(args: GlobalEffectsRegistryArgs) {
     this.catalogIndex = args.catalogIndex;
@@ -61,23 +60,12 @@ export class GlobalEffectsRegistry {
     const def = this.catalogIndex.get(event.cardId);
     if (!def) return;
 
-    const map = this.mapForController(event.controllerId);
-    if (!map) {
-      // Diagnostic: this fires when controllerId doesn't match either
-      // local or opposing — usually means Game.setPlayers hasn't been
-      // called yet (matchInfo not received) when the card was played.
-      // eslint-disable-next-line no-console
-      console.log(
-        `[global-effects] registry skipped: id=${def.id} controllerId=${event.controllerId} (not local/opposing)`,
-      );
-      return;
-    }
-
     // eslint-disable-next-line no-console
     console.log(
       `[global-effects] registry recorded: id=${def.id} controllerId=${event.controllerId}`,
     );
 
+    const map = this.mapForController(event.controllerId);
     const ts = event.timestamp || this.now();
     const existing = map.get(def.id);
     const active: ActiveEffect = existing
@@ -117,8 +105,7 @@ export class GlobalEffectsRegistry {
 
   /** Drop both sides; called on match boundaries. */
   reset(): void {
-    this.localEffects = new Map();
-    this.opposingEffects = new Map();
+    this.effectsByController = new Map();
   }
 
   /**
@@ -126,19 +113,22 @@ export class GlobalEffectsRegistry {
    * ascending (stable on tie via insertion order).
    */
   snapshot(): RegistrySnapshot {
+    const ids = this.getControllerIds();
     return {
-      local: this.serializeSide(this.localEffects),
-      opposing: this.serializeSide(this.opposingEffects),
+      local: this.serializeSide(this.effectsByController.get(ids.local) ?? new Map()),
+      opposing: this.serializeSide(this.effectsByController.get(ids.opposing) ?? new Map()),
     };
   }
 
   private mapForController(
     controllerId: number,
-  ): Map<string, ActiveEffect> | null {
-    const ids = this.getControllerIds();
-    if (controllerId === ids.local) return this.localEffects;
-    if (controllerId === ids.opposing) return this.opposingEffects;
-    return null;
+  ): Map<string, ActiveEffect> {
+    let map = this.effectsByController.get(controllerId);
+    if (!map) {
+      map = new Map();
+      this.effectsByController.set(controllerId, map);
+    }
+    return map;
   }
 
   private serializeSide(map: Map<string, ActiveEffect>): ActiveEffect[] {

@@ -25,6 +25,7 @@ export interface PreviewAnchor {
 
 const PREVIEW_WIDTH = 280;
 const PREVIEW_HEIGHT = 400;
+const POOL_PREVIEW_HEIGHT = 440;
 const POOL_GAP = 8;
 
 export class CardPreviewWindow {
@@ -78,8 +79,8 @@ export class CardPreviewWindow {
     const x = anchor.side === 'left'
       ? Math.max(0, anchor.x - totalWidth - 8)
       : anchor.x + anchor.width + 8;
-    const y = Math.max(0, anchor.y + Math.round(anchor.height / 2) - Math.round(PREVIEW_HEIGHT / 2));
-    this.win.setBounds({ x, y, width: totalWidth, height: PREVIEW_HEIGHT });
+    const y = Math.max(0, anchor.y + Math.round(anchor.height / 2) - Math.round(POOL_PREVIEW_HEIGHT / 2));
+    this.win.setBounds({ x, y, width: totalWidth, height: POOL_PREVIEW_HEIGHT });
 
     const key = `pool:${cardIds.join(',')}`;
     if (key !== this.currentKey) {

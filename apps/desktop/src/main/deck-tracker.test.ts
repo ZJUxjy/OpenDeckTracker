@@ -11,13 +11,20 @@ const mocks = vi.hoisted(() => {
     start: vi.fn(),
     stop: vi.fn(),
     getSnapshot: vi.fn(() => null),
+    applyLogDerivedEntityUpdates: vi.fn(),
+    resetGlobalEffects: vi.fn(),
     selectDeckById: vi.fn(async () => undefined),
     cancelDeckSelection: vi.fn(),
+  };
+  const cardPlayedDetector = {
+    handle: vi.fn(),
+    reset: vi.fn(),
   };
 
   return {
     handlers,
     tracker,
+    cardPlayedDetector,
     DeckTracker: vi.fn(() => tracker),
     getHearthMirror: vi.fn(() => ({ })),
     recordCompletedMatch: vi.fn(),
@@ -29,10 +36,9 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@hdt/core', () => ({
   DeckTracker: mocks.DeckTracker,
-  CardPlayedDetector: vi.fn().mockImplementation(() => ({
-    handle: vi.fn(),
-    reset: vi.fn(),
-  })),
+  CardPlayedDetector: vi.fn().mockImplementation(() => mocks.cardPlayedDetector),
+  zoneFromNumber: (value: number) =>
+    ({ 0: 'INVALID', 1: 'PLAY', 2: 'DECK', 3: 'HAND', 4: 'GRAVEYARD', 5: 'REMOVEDFROMGAME', 6: 'SETASIDE', 7: 'SECRET' })[value] ?? 'INVALID',
 }));
 
 vi.mock('./hearthmirror', () => ({
@@ -109,5 +115,48 @@ describe('deck-tracker main host', () => {
       'deck-tracker:select-deck',
       expect.any(Function),
     );
+  });
+
+  it('forwards Power.log entity updates into the core tracker state', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker();
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 42,
+        cardId: 'MEND_300',
+        tags: { ZONE: 'HAND', PLAYER_ID: 2 },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    expect(mocks.tracker.applyLogDerivedEntityUpdates).toHaveBeenCalledWith([
+      { entityId: 42, cardId: 'MEND_300', zone: 'HAND', controllerId: 2 },
+    ]);
+  });
+
+  it('backfills card id and controller from TAG_CHANGE entity refs', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker();
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'tag-change',
+        entity: 42,
+        tag: 'ZONE',
+        value: 'GRAVEYARD',
+        raw: '',
+        content:
+          'TAG_CHANGE Entity=[entityName=驯服宠物 id=42 zone=PLAY zonePos=0 cardId=MEND_300 player=1] tag=ZONE value=GRAVEYARD',
+      },
+      'replay',
+    );
+
+    expect(mocks.tracker.applyLogDerivedEntityUpdates).toHaveBeenCalledWith([
+      { entityId: 42, cardId: 'MEND_300', zone: 'GRAVEYARD', controllerId: 1 },
+    ]);
   });
 });

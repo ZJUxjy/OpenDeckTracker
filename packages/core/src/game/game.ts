@@ -189,6 +189,7 @@ export class Game {
       if (update.zone !== undefined) existing.zone = update.zone;
       if (update.controllerId !== undefined) existing.controllerId = update.controllerId;
       if (update.info !== undefined) existing.info = { ...existing.info, ...update.info };
+      classifyLogDerivedEntity(existing);
       return;
     }
 
@@ -199,12 +200,38 @@ export class Game {
       controllerId: update.controllerId ?? 0,
     };
     if (update.info !== undefined) entityArgs.info = update.info;
-    this.entities.set(update.entityId, new Entity(entityArgs));
+    const entity = new Entity(entityArgs);
+    classifyLogDerivedEntity(entity);
+    this.entities.set(update.entityId, entity);
   }
 
   applyLogDerivedEntityUpdates(updates: Iterable<LogDerivedEntityUpdate>): void {
     for (const update of updates) {
       this.applyLogDerivedEntityUpdate(update);
     }
+  }
+}
+
+function classifyLogDerivedEntity(entity: Entity): void {
+  if (entity.controllerId === 0) return;
+
+  if (
+    entity.info.originalController === undefined &&
+    entity.info.created !== true &&
+    entity.cardId === '' &&
+    entity.zone === 'DECK'
+  ) {
+    entity.info.originalController = entity.controllerId;
+    entity.info.originalZone = 'DECK';
+    return;
+  }
+
+  if (
+    entity.info.originalController === undefined &&
+    entity.info.created !== true &&
+    entity.cardId !== '' &&
+    (entity.zone === 'DECK' || entity.zone === 'SETASIDE' || entity.zone === 'REMOVEDFROMGAME')
+  ) {
+    entity.info.created = true;
   }
 }

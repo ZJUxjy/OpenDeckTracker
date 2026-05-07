@@ -9,6 +9,7 @@ import type {
 } from '@hdt/hearthmirror';
 import { DeckTracker, type DeckTrackerEvent, type DeckTrackerEventName } from './deck-tracker';
 import { CallbackDeckIdentifier, ChainedDeckIdentifier } from './deck-identifier';
+import { DeckSnapshot } from '../game/deck-snapshot';
 
 /** Minimal stub HearthMirror that returns whatever's pushed into `state`. */
 function makeMirror(): {
@@ -340,6 +341,120 @@ describe('DeckTracker', () => {
       cardId: 'ALBATROSS',
       count: 1,
     });
+    tracker.stop();
+  });
+
+  it('uses log-derived graveyard and deck entities to backfill mid-match remaining state', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.setOriginalDeck({
+      deckId: 1,
+      name: 'Replay Deck',
+      originalDeck: DeckSnapshot.fromCardIds(['A', 'A', 'B']),
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 10, cardId: 'A', zone: 'GRAVEYARD', controllerId: 1 },
+      { entityId: 11, cardId: '', zone: 'DECK', controllerId: 1 },
+      { entityId: 11, cardId: 'B' },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.deck?.remaining).toEqual([
+      { cardId: 'A', count: 1 },
+      { cardId: 'B', count: 1 },
+    ]);
+    expect(snapshot.friendlyDeckCount).toBe(1);
+  });
+
+  it('uses log-derived origin metadata to keep same-card shuffled copies in the deck', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.setOriginalDeck({
+      deckId: 1,
+      name: 'Replay Deck',
+      originalDeck: DeckSnapshot.fromCardIds(['A', 'A']),
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 10, cardId: '', zone: 'DECK', controllerId: 1 },
+      { entityId: 10, cardId: 'A', zone: 'HAND' },
+      { entityId: 99, cardId: 'A', zone: 'DECK', controllerId: 1 },
+    ]);
+
+    expect(tracker.getSnapshot().deck?.remaining).toEqual([{ cardId: 'A', count: 2 }]);
+
+    tracker.applyLogDerivedEntityUpdates([{ entityId: 99, zone: 'HAND' }]);
+
+    expect(tracker.getSnapshot().deck?.remaining).toEqual([{ cardId: 'A', count: 1 }]);
+  });
+
+  it('prefers authoritative friendly deck card ids from HearthMirror for remaining cards', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'A', [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [
+        { entityId: 100, cardId: 'A' },
+        { entityId: 101, cardId: 'B' },
+      ],
+      opposingDeckCount: 0,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().deck?.remaining).toEqual([
+      { cardId: 'A', count: 1 },
+      { cardId: 'B', count: 1 },
+    ]);
+    expect(tracker.getSnapshot().friendlyDeckCount).toBe(2);
+    tracker.stop();
+  });
+
+  it('caps remaining cards to HearthMirror deck count when deck card ids are hidden', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'A', [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [
+        { entityId: 100, cardId: '' },
+        { entityId: 101, cardId: '' },
+      ],
+      opposingDeckCount: 0,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    const remaining = tracker.getSnapshot().deck?.remaining ?? [];
+    expect(remaining.reduce((sum, card) => sum + card.count, 0)).toBe(2);
+    expect(remaining).toEqual([
+      { cardId: 'A', count: 1 },
+      { cardId: 'B', count: 1 },
+    ]);
     tracker.stop();
   });
 

@@ -7,7 +7,7 @@ import type {
   MatchInfo,
 } from '@hdt/hearthmirror';
 import { DeckSnapshot } from '../game/deck-snapshot';
-import { Game } from '../game/game';
+import { Game, type LogDerivedEntityUpdate } from '../game/game';
 import type { MatchPhase, Zone } from '../game/types';
 import { zoneFromNumber } from '../game/types';
 import {
@@ -240,6 +240,18 @@ export class DeckTracker {
    */
   recordCardPlayed(event: CardPlayedEvent): void {
     this.registry.handleCardPlayed(event);
+    this.currentSnapshot = this.buildSnapshot();
+  }
+
+  /**
+   * Feed entity state reconstructed from Power.log into the same Game
+   * model used by mirror snapshots. This is additive and intentionally
+   * does not emit on its own: startup replay may send hundreds of
+   * events before the next mirror tick, and the tick will publish one
+   * coherent snapshot after the backfill has settled.
+   */
+  applyLogDerivedEntityUpdates(updates: readonly LogDerivedEntityUpdate[]): void {
+    this.game.applyLogDerivedEntityUpdates(updates);
     this.currentSnapshot = this.buildSnapshot();
   }
 
@@ -606,11 +618,17 @@ export class DeckTracker {
         deckEntities: this.game.localPlayer.deck,
         localControllerId: this.game.localPlayer.controllerId,
       });
+      const authoritativeRemaining = authoritativeRemainingFromDeckState(deckState);
+      const remaining = capRemainingToDeckStateCount(
+        authoritativeRemaining ?? result.remaining,
+        this.game.localPlayer.deck,
+        deckState,
+      );
       deck = {
         id: this.identifiedDeck?.id ?? 0,
         name: this.identifiedDeck?.name ?? this.game.localPlayer.name ?? '',
         original: original.entries(),
-        remaining: result.remaining.entries(),
+        remaining: remaining.entries(),
         extras: result.extras,
       };
     }
@@ -642,7 +660,7 @@ export class DeckTracker {
       friendlyHand,
       opposingHandCount: handState?.opposingHandCount ?? 0,
       opponent: this.buildOpponentRecords(),
-      friendlyDeckCount: deckState?.friendlyDeck.length ?? 0,
+      friendlyDeckCount: deckState?.friendlyDeck.length ?? this.game.localPlayer.deck.length,
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
       boardAttack,
@@ -872,6 +890,55 @@ function sumCounts(counts: Map<string, number>): number {
   let total = 0;
   for (const count of counts.values()) total += count;
   return total;
+}
+
+function authoritativeRemainingFromDeckState(deckState: DeckState | null): DeckSnapshot | null {
+  if (deckState === null || deckState.friendlyDeck.length === 0) return null;
+  const cardIds = deckState.friendlyDeck.map((card) => card.cardId);
+  if (cardIds.some((cardId) => cardId === '')) return null;
+  return DeckSnapshot.fromCardIds(cardIds);
+}
+
+function capRemainingToDeckStateCount(
+  remaining: DeckSnapshot,
+  knownDeckEntities: readonly { cardId: string }[],
+  deckState: DeckState | null,
+): DeckSnapshot {
+  if (deckState === null) return remaining;
+  const target = deckState.friendlyDeck.length;
+  if (target === 0) return remaining;
+  const total = remaining.total();
+  if (total <= target) return remaining;
+
+  const counts = new Map(remaining.entries().map((card) => [card.cardId, card.count] as const));
+  const protectedCounts = DeckSnapshot.fromCardIds(
+    knownDeckEntities.map((entity) => entity.cardId).filter((cardId) => cardId !== ''),
+  );
+  let overflow = total - target;
+
+  const trim = (respectProtected: boolean): void => {
+    const candidates = [...counts.entries()]
+      .map(([cardId, count]) => ({
+        cardId,
+        count,
+        removable: Math.max(0, count - (respectProtected ? protectedCounts.countOf(cardId) : 0)),
+      }))
+      .filter((card) => card.removable > 0)
+      .sort((a, b) => b.removable - a.removable || b.cardId.localeCompare(a.cardId));
+
+    for (const candidate of candidates) {
+      if (overflow <= 0) return;
+      const remove = Math.min(candidate.removable, overflow);
+      const next = (counts.get(candidate.cardId) ?? 0) - remove;
+      if (next > 0) counts.set(candidate.cardId, next);
+      else counts.delete(candidate.cardId);
+      overflow -= remove;
+    }
+  };
+
+  trim(true);
+  trim(false);
+  return new DeckSnapshot(counts);
 }
 
 function blankSnapshot(): DeckTrackerSnapshot {

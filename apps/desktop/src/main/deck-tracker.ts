@@ -6,8 +6,11 @@ import {
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
   type ExtractCtx,
+  type LogDerivedEntityUpdate,
   type MinionTags,
+  type Zone,
   type WeaponState,
+  zoneFromNumber,
 } from '@hdt/core';
 import type { BoardState, MatchInfo } from '@hdt/hearthmirror';
 import {
@@ -148,6 +151,14 @@ const recentPowerEvents: PowerEvent[] = [];
 type EventWaiter = (events: readonly PowerEvent[]) => void;
 const eventWaiters = new Set<EventWaiter>();
 
+function resetPowerEventBuffer(): void {
+  recentPowerEvents.length = 0;
+  if (eventWaiters.size > 0) {
+    for (const w of eventWaiters) w([]);
+    eventWaiters.clear();
+  }
+}
+
 function pushPowerEvent(event: PowerEvent): void {
   recentPowerEvents.push(event);
   if (recentPowerEvents.length > MAX_EVENT_BUFFER) {
@@ -208,8 +219,9 @@ export function startDeckTracker(): void {
     const phase = s?.phase ?? 'NULL';
     const deckId = s?.deck?.id ?? null;
     if (phase !== lastPhaseLogged || deckId !== lastDeckIdLogged) {
+      const remainingTotal = s?.deck?.remaining.reduce((sum, card) => sum + card.count, 0) ?? 0;
       console.log(
-        `[deck-tracker] state phase=${phase} deck=${deckId === null ? 'null' : `${deckId} (${s?.deck?.name ?? '?'})`} remaining=${s?.deck?.remaining?.length ?? 0} oppRevealed=${s?.opponent?.revealed?.length ?? 0}`,
+        `[deck-tracker] state phase=${phase} deck=${deckId === null ? 'null' : `${deckId} (${s?.deck?.name ?? '?'})`} remainingEntries=${s?.deck?.remaining?.length ?? 0} remainingTotal=${remainingTotal} friendlyDeckCount=${s?.friendlyDeckCount ?? 0} oppRevealed=${s?.opponent?.revealed?.length ?? 0}`,
       );
       lastPhaseLogged = phase;
       lastDeckIdLogged = deckId;
@@ -276,7 +288,6 @@ export function forwardPowerEventToDeckTracker(
   // to backfill cost stacking and pool data after a mid-match
   // restart, and the tag-overlay reducer wants both as well so the
   // board-attack filter is accurate from the first snapshot.
-  pushPowerEvent(event);
   // Reset registry + tag overlay BEFORE feeding the create-game event
   // anywhere else: a new match starts here, and any leftover state
   // from a prior match (or from a previous watcher session that's
@@ -285,8 +296,15 @@ export function forwardPowerEventToDeckTracker(
   // phase transitions) avoids races when the watcher's replay pass
   // populates state before the deck-tracker's first tick fires.
   if (event.type === 'create-game') {
+    resetPowerEventBuffer();
     resetBoardAttackState();
+    cardPlayedDetector?.reset();
     tracker?.resetGlobalEffects();
+  }
+  pushPowerEvent(event);
+  const logUpdates = logUpdatesFromPowerEvent(event);
+  if (logUpdates.length > 0) {
+    tracker?.applyLogDerivedEntityUpdates(logUpdates);
   }
   cardPlayedDetector?.handle(event);
   reducePowerEvent(boardAttackState, event);
@@ -295,6 +313,145 @@ export function forwardPowerEventToDeckTracker(
   // (match-recording-recorder, power-match-recorder) are gated
   // upstream in `hearthwatcher-host.ts`.
   void phase;
+}
+
+function logUpdatesFromPowerEvent(event: PowerEvent): LogDerivedEntityUpdate[] {
+  switch (event.type) {
+    case 'full-entity': {
+      const update = baseEntityUpdate(event.entityId, event.tags, event.content);
+      update.cardId = event.cardId;
+      return [update];
+    }
+    case 'show-entity':
+    case 'change-entity': {
+      const entityId = numericEntityRef(event.entity);
+      if (entityId === null) return [];
+      const update = baseEntityUpdate(entityId, event.tags, event.content);
+      update.cardId = event.cardId;
+      update.info = { ...update.info, hidden: false };
+      return [update];
+    }
+    case 'hide-entity': {
+      const entityId = numericEntityRef(event.entity);
+      if (entityId === null) return [];
+      const update = baseEntityUpdate(entityId, event.tags, event.content);
+      update.info = { ...update.info, hidden: true };
+      return [update];
+    }
+    case 'tag-change': {
+      const entityId = numericEntityRef(event.entity);
+      if (entityId === null) return [];
+      const update = baseEntityUpdate(entityId, {}, event.content, { useRefZone: false });
+      if (event.tag === 'ZONE') {
+        const zone = zoneFromPowerTag(event.value);
+        if (zone !== undefined) update.zone = zone;
+        return [update];
+      }
+      if (event.tag === 'CONTROLLER' || event.tag === 'PLAYER_ID') {
+        const controllerId = numericTag(event.value);
+        if (controllerId !== undefined) update.controllerId = controllerId;
+        return [update];
+      }
+      if (event.tag === 'MULLIGAN_STATE') {
+        update.info = { ...update.info, mulliganed: String(event.value) !== 'INPUT' };
+        return [update];
+      }
+      return hasEntityUpdatePayload(update) ? [update] : [];
+    }
+    case 'block-start': {
+      const entityId = numericEntityRef(event.entity);
+      if (entityId === null) return [];
+      const update = baseEntityUpdate(entityId, {}, event.content);
+      return hasEntityUpdatePayload(update) ? [update] : [];
+    }
+    case 'create-game':
+    case 'block-end':
+    case 'shuffle-deck':
+      return [];
+  }
+}
+
+function baseEntityUpdate(
+  entityId: number,
+  tags: Readonly<Record<string, unknown>>,
+  content?: string,
+  options: { useRefZone?: boolean } = {},
+): LogDerivedEntityUpdate {
+  const update: LogDerivedEntityUpdate = { entityId };
+  const ref = content === undefined ? {} : entityRefFieldsFromContent(content);
+  const zone = zoneFromPowerTag(tags['ZONE']) ?? (options.useRefZone === false ? undefined : ref.zone);
+  const controllerId =
+    numericTag(tags['CONTROLLER']) ?? numericTag(tags['PLAYER_ID']) ?? ref.controllerId;
+  const cardId = ref.cardId;
+  if (zone !== undefined) update.zone = zone;
+  if (controllerId !== undefined) update.controllerId = controllerId;
+  if (cardId !== undefined) update.cardId = cardId;
+  return update;
+}
+
+function numericEntityRef(ref: unknown): number | null {
+  if (typeof ref === 'number') return ref;
+  if (typeof ref === 'string') {
+    const match = /\bid=(\d+)/i.exec(ref);
+    return match ? Number(match[1]) : null;
+  }
+  return null;
+}
+
+function zoneFromPowerTag(value: unknown): Zone | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value === 'number') return zoneFromNumber(value);
+  const normalized = String(value).toUpperCase();
+  switch (normalized) {
+    case 'INVALID':
+      return 'INVALID';
+    case 'PLAY':
+      return 'PLAY';
+    case 'DECK':
+      return 'DECK';
+    case 'HAND':
+      return 'HAND';
+    case 'GRAVEYARD':
+      return 'GRAVEYARD';
+    case 'REMOVEDFROMGAME':
+      return 'REMOVEDFROMGAME';
+    case 'SETASIDE':
+      return 'SETASIDE';
+    case 'SECRET':
+      return 'SECRET';
+    default:
+      return undefined;
+  }
+}
+
+function entityRefFieldsFromContent(content: string): {
+  cardId?: string;
+  controllerId?: number;
+  zone?: Zone;
+} {
+  const match = /\bEntity=\[[^\]]*\]/.exec(content);
+  if (!match) return {};
+  const ref = match[0];
+  const cardIdMatch = /\bcardId=([^\s\]]*)/.exec(ref);
+  const playerMatch = /\bplayer=(\d+)/i.exec(ref);
+  const zoneMatch = /\bzone=([A-Z]+)/i.exec(ref);
+  const fields: { cardId?: string; controllerId?: number; zone?: Zone } = {};
+  if (cardIdMatch?.[1]) fields.cardId = cardIdMatch[1];
+  if (playerMatch?.[1]) fields.controllerId = Number(playerMatch[1]);
+  if (zoneMatch?.[1]) {
+    const zone = zoneFromPowerTag(zoneMatch[1]);
+    if (zone !== undefined) fields.zone = zone;
+  }
+  return fields;
+}
+
+function hasEntityUpdatePayload(update: LogDerivedEntityUpdate): boolean {
+  return (
+    update.cardId !== undefined ||
+    update.zone !== undefined ||
+    update.controllerId !== undefined ||
+    update.info !== undefined
+  );
 }
 
 /**

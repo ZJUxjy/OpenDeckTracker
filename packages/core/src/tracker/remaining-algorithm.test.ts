@@ -143,6 +143,58 @@ describe('computeRemaining', () => {
     expect(result.remaining.countOf('Fireball')).toBe(3);
   });
 
+  it('counts created same-card deck entities even when original copies are unknown', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const drawnOriginal = new Entity({
+      entityId: 1,
+      cardId: 'Fireball',
+      zone: 'HAND',
+      controllerId: 1,
+      info: { originalController: 1, originalZone: 'DECK' },
+    });
+    const shuffledCopy = new Entity({
+      entityId: 99,
+      cardId: 'Fireball',
+      zone: 'DECK',
+      controllerId: 1,
+      info: { created: true },
+    });
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [drawnOriginal],
+      deckEntities: [shuffledCopy],
+      localControllerId: 1,
+    });
+
+    expect(result.remaining.entries()).toEqual([{ cardId: 'Fireball', count: 2 }]);
+  });
+
+  it('created same-card copies stop contributing after leaving the deck', () => {
+    const original = DeckSnapshot.fromDeckCards([{ cardId: 'Fireball', count: 2 }]);
+    const drawnOriginal = new Entity({
+      entityId: 1,
+      cardId: 'Fireball',
+      zone: 'HAND',
+      controllerId: 1,
+      info: { originalController: 1, originalZone: 'DECK' },
+    });
+    const drawnCreatedCopy = new Entity({
+      entityId: 99,
+      cardId: 'Fireball',
+      zone: 'HAND',
+      controllerId: 1,
+      info: { created: true },
+    });
+    const result = computeRemaining({
+      originalDeck: original,
+      seenEntities: [drawnOriginal, drawnCreatedCopy],
+      deckEntities: [],
+      localControllerId: 1,
+    });
+
+    expect(result.remaining.entries()).toEqual([{ cardId: 'Fireball', count: 1 }]);
+  });
+
   it('multiple copies tracked independently', () => {
     const original = DeckSnapshot.fromDeckCards([{ cardId: 'A', count: 2 }, { cardId: 'B', count: 1 }]);
     const result = computeRemaining({
