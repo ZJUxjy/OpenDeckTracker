@@ -47,10 +47,10 @@
 
 ## 6. Main-process tracker host wiring
 
-- [ ] 6.1 Failing integration test `apps/desktop/src/main/deck-tracker.global-effects.test.ts` (vitest, mocked `HearthWatcher`): emit a `card:played` for Cleansing Cleric, assert the next snapshot's `friendlyEffects.length === 1` with `id === 'cleansing-cleric'`. Run → FAIL.
-- [ ] 6.2 Edit `apps/desktop/src/main/deck-tracker.ts` to forward HearthWatcher's `card:played` events to the tracker's registry. Confirm the existing deck multiset flow is untouched.
-- [ ] 6.3 Re-run 6.1 — expect PASS.
-- [ ] 6.4 Commit: `feat(desktop): forward card:played to GlobalEffectsRegistry`.
+- [x] 6.1 Failing integration test `apps/desktop/src/main/deck-tracker.global-effects.test.ts` (vitest, mocked `HearthWatcher`): emit a `card:played` for Cleansing Cleric, assert the next snapshot's `friendlyEffects.length === 1` with `id === 'cleansing-cleric'`. Run → FAIL.
+- [x] 6.2 Edit `apps/desktop/src/main/deck-tracker.ts` to forward HearthWatcher's `card:played` events to the tracker's registry. Confirm the existing deck multiset flow is untouched. → New `CardPlayedDetector` in core + `forwardPowerEventToDeckTracker` exported from main host; `hearthwatcher-host.ts` calls it alongside existing match recorders.
+- [x] 6.3 Re-run 6.1 — expect PASS.
+- [x] 6.4 Commit: `feat(desktop): forward card:played to GlobalEffectsRegistry`.
 
 ## 7. Renderer Zustand selectors
 

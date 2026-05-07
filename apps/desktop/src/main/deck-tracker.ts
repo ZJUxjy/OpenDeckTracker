@@ -1,9 +1,11 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import {
+  CardPlayedDetector,
   DeckTracker,
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
 } from '@hdt/core';
+import type { PowerEvent } from '@hdt/hearthwatcher';
 import { getHearthMirror } from './hearthmirror';
 import { recordCompletedMatch } from './stats-host';
 
@@ -38,6 +40,7 @@ import { recordCompletedMatch } from './stats-host';
  */
 
 let tracker: DeckTracker | null = null;
+let cardPlayedDetector: CardPlayedDetector | null = null;
 
 function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -51,6 +54,11 @@ export function startDeckTracker(): void {
   if (tracker !== null) return;
   const mirror = getHearthMirror();
   tracker = new DeckTracker({ mirror });
+  // Live detector that turns the upstream PowerEvent stream into
+  // `card:played` calls on the tracker's global-effects registry.
+  cardPlayedDetector = new CardPlayedDetector({
+    emit: (event) => tracker?.recordCardPlayed(event),
+  });
 
   let lastPhaseLogged: string | null = null;
   let lastDeckIdLogged: number | string | null = null;
@@ -105,11 +113,21 @@ export function startDeckTracker(): void {
   app.on('before-quit', () => {
     tracker?.stop();
     tracker = null;
+    cardPlayedDetector = null;
   });
 }
 
 export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {
   return tracker?.getSnapshot() ?? null;
+}
+
+/**
+ * Forward a HearthWatcher PowerEvent to the deck-tracker's
+ * global-effects detector. Called from the watcher host alongside
+ * the existing match-recorder + recording-recorder dispatches.
+ */
+export function forwardPowerEventToDeckTracker(event: PowerEvent): void {
+  cardPlayedDetector?.handle(event);
 }
 
 /**

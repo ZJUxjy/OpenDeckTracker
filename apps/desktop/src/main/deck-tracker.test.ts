@@ -29,6 +29,10 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@hdt/core', () => ({
   DeckTracker: mocks.DeckTracker,
+  CardPlayedDetector: vi.fn().mockImplementation(() => ({
+    handle: vi.fn(),
+    reset: vi.fn(),
+  })),
 }));
 
 vi.mock('./hearthmirror', () => ({

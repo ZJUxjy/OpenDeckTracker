@@ -139,5 +139,5 @@ export type {
   ExtractCtx,
   GameMode as GlobalEffectsGameMode,
 } from './global-effects';
-export { EFFECT_CATALOG, GlobalEffectsRegistry } from './global-effects';
+export { EFFECT_CATALOG, GlobalEffectsRegistry, CardPlayedDetector } from './global-effects';
 export type { GlobalEffectsRegistryArgs } from './global-effects';

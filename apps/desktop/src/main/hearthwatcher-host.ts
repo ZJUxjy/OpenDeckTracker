@@ -4,7 +4,10 @@ import {
   type HearthWatcherDiagnostic,
   type PowerEvent,
 } from '@hdt/hearthwatcher';
-import { getLatestDeckTrackerSnapshot } from './deck-tracker';
+import {
+  forwardPowerEventToDeckTracker,
+  getLatestDeckTrackerSnapshot,
+} from './deck-tracker';
 import {
   createDefaultMatchRecordingStore,
   createMatchRecordingRecorder,
@@ -42,6 +45,7 @@ export function startHearthWatcher(): void {
   watcher.onEvent((event: PowerEvent) => {
     matchRecorder.handleEvent(event);
     recordingRecorder.handleEvent(event);
+    forwardPowerEventToDeckTracker(event);
     broadcast('hearthwatcher:event', event);
   });
 
