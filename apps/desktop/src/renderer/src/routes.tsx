@@ -10,20 +10,44 @@ import { CardPreviewView } from './components/CardPreviewView';
 import { LiveDeckPanel } from './components/LiveDeckPanel';
 import { OpponentCardsPanel } from './components/OpponentCardsPanel';
 import { TrackerStatusBanner } from './components/TrackerStatusBanner';
-import { useDeckTrackerStore } from './stores/deck-tracker-store';
+import { TrackerPanelTabs } from './components/TrackerPanelTabs';
+import { GlobalEffectsPanel } from './components/GlobalEffectsPanel';
+import {
+  useDeckTrackerStore,
+  useFriendlyEffects,
+  useOpposingEffects,
+} from './stores/deck-tracker-store';
 
 function RightPanel() {
   const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
+  const friendlyEffects = useFriendlyEffects();
+  const opposingEffects = useOpposingEffects();
 
   return (
     <div className="flex h-full gap-4">
       <div className="hidden xl:block h-full">
-        <OpponentCardsPanel
-          revealed={opponent?.revealed ?? []}
-          graveyard={opponent?.graveyard ?? []}
+        <TrackerPanelTabs
+          side="opponent"
+          effectsCount={opposingEffects.length}
+          deckSlot={
+            <OpponentCardsPanel
+              revealed={opponent?.revealed ?? []}
+              graveyard={opponent?.graveyard ?? []}
+            />
+          }
+          effectsSlot={
+            <GlobalEffectsPanel side="opponent" effects={opposingEffects} />
+          }
         />
       </div>
-      <LiveDeckPanel />
+      <TrackerPanelTabs
+        side="player"
+        effectsCount={friendlyEffects.length}
+        deckSlot={<LiveDeckPanel />}
+        effectsSlot={
+          <GlobalEffectsPanel side="player" effects={friendlyEffects} />
+        }
+      />
     </div>
   );
 }

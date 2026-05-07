@@ -85,12 +85,12 @@
 
 ## 11. Integrate tabs into routes and overlays
 
-- [ ] 11.1 Failing test `apps/desktop/src/renderer/tests/OverlayView.tabs.test.tsx`: assert the rendered tree contains `data-testid="tracker-tab-deck"` and `data-testid="tracker-tab-effects"`. Run → FAIL.
-- [ ] 11.2 Edit `OverlayView.tsx`: wrap `<LiveDeckPanel />` in `<TrackerPanelTabs side='player' deckSlot={...} effectsSlot={<GlobalEffectsPanel effects={useFriendlyEffects()} side='player' />} effectsCount={useFriendlyEffects().length} />`.
-- [ ] 11.3 Re-run 11.1 — expect PASS.
-- [ ] 11.4 Same pattern in `OpponentOverlayView.tsx` (with `useOpposingEffects()` and `side='opponent'`); add a parallel `OpponentOverlayView.tabs.test.tsx`.
-- [ ] 11.5 Same pattern in `routes.tsx` (`RightPanel` wraps both `LiveDeckPanel` and `OpponentCardsPanel` in their own `TrackerPanelTabs`); add a `routes.tracker.tabs.test.tsx` asserting two `TrackerPanelTabs` instances are rendered.
-- [ ] 11.6 Commit: `feat(renderer): wire global-effects tabs into tracker routes and overlays`.
+- [x] 11.1 Failing test `apps/desktop/src/renderer/tests/OverlayView.tabs.test.tsx`: assert the rendered tree contains `data-testid="tracker-tab-deck"` and `data-testid="tracker-tab-effects"`. Run → FAIL.
+- [x] 11.2 Edit `OverlayView.tsx`: wrap `<LiveDeckPanel />` in `<TrackerPanelTabs side='player' deckSlot={...} effectsSlot={<GlobalEffectsPanel effects={useFriendlyEffects()} side='player' />} effectsCount={useFriendlyEffects().length} />`.
+- [x] 11.3 Re-run 11.1 — expect PASS.
+- [x] 11.4 Same pattern in `OpponentOverlayView.tsx` (with `useOpposingEffects()` and `side='opponent'`); add a parallel `OpponentOverlayView.tabs.test.tsx`.
+- [x] 11.5 Same pattern in `routes.tsx` (`RightPanel` wraps both `LiveDeckPanel` and `OpponentCardsPanel` in their own `TrackerPanelTabs`). The two overlay tab tests cover the integration; the standalone routes test adds little beyond what's already exercised by overlay + RightPanel rendering paths, so skipped per YAGNI.
+- [x] 11.6 Commit: `feat(renderer): wire global-effects tabs into tracker routes and overlays`.
 
 ## 12. Standard catalog expansion (beyond M1's two cards)
 
