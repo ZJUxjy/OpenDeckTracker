@@ -17,11 +17,11 @@
 
 ## 3. GlobalEffectsRegistry lifecycle
 
-- [ ] 3.1 Create failing test `packages/core/src/global-effects/registry.test.ts` covering all five "Registry lifecycle" scenarios from `specs/global-effects-tracker/spec.md` (ignore unknown card, attribute to caster's side, reset, re-trigger refreshes triggeredAt, snapshot is sorted/JSON-safe). Use a fake `Game`-like object exposing only `localPlayer.controllerId` / `opposingPlayer.controllerId`. Run → FAIL.
-- [ ] 3.2 Implement `packages/core/src/global-effects/registry.ts` exporting `class GlobalEffectsRegistry` with fields `private localEffects: Map<string, ActiveEffect>`, `opposingEffects: Map<string, ActiveEffect>`, methods `handleCardPlayed(event)`, `reset()`, `snapshot(): { local: ActiveEffect[]; opposing: ActiveEffect[] }`. Take a `catalogIndex: Map<cardId, EffectDef>` and a `now: () => number` clock as constructor args.
-- [ ] 3.3 Re-run 3.1 — expect PASS for all five scenarios.
-- [ ] 3.4 Re-export `GlobalEffectsRegistry` from `global-effects/index.ts` and the top-level `@hdt/core` barrel.
-- [ ] 3.5 Commit: `feat(core): GlobalEffectsRegistry with per-side handle/reset/snapshot`.
+- [x] 3.1 Create failing test `packages/core/src/global-effects/registry.test.ts` covering all five "Registry lifecycle" scenarios from `specs/global-effects-tracker/spec.md` (ignore unknown card, attribute to caster's side, reset, re-trigger refreshes triggeredAt, snapshot is sorted/JSON-safe). Use a fake `Game`-like object exposing only `localPlayer.controllerId` / `opposingPlayer.controllerId`. Run → FAIL.
+- [x] 3.2 Implement `packages/core/src/global-effects/registry.ts` exporting `class GlobalEffectsRegistry` with fields `private localEffects: Map<string, ActiveEffect>`, `opposingEffects: Map<string, ActiveEffect>`, methods `handleCardPlayed(event)`, `reset()`, `snapshot(): { local: ActiveEffect[]; opposing: ActiveEffect[] }`. Take a `catalogIndex: Map<cardId, EffectDef>` and a `now: () => number` clock as constructor args.
+- [x] 3.3 Re-run 3.1 — expect PASS for all five scenarios.
+- [x] 3.4 Re-export `GlobalEffectsRegistry` from `global-effects/index.ts` and the top-level `@hdt/core` barrel.
+- [x] 3.5 Commit: `feat(core): GlobalEffectsRegistry with per-side handle/reset/snapshot`.
 
 ## 4. Tame Pet effect (parameterized, with extractor)
 
