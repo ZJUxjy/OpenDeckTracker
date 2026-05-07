@@ -28,13 +28,19 @@ const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
 } else {
+  // Track the main window explicitly. `BrowserWindow.getAllWindows()[0]`
+  // would happily return an overlay or the card-preview window — neither
+  // is what the user expects when they double-click the desktop icon a
+  // second time, and overlay windows have `skipTaskbar` so focusing one
+  // is effectively a no-op.
+  let mainWindowRef: BrowserWindow | null = null;
   app.on('second-instance', () => {
-    const wins = BrowserWindow.getAllWindows();
-    const win = wins[0];
-    if (win) {
-      if (win.isMinimized()) win.restore();
-      win.focus();
-    }
+    const win =
+      mainWindowRef && !mainWindowRef.isDestroyed() ? mainWindowRef : null;
+    if (!win) return;
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
   });
 
   void app.whenReady().then(() => {
@@ -152,6 +158,10 @@ if (!gotLock) {
     });
 
     const mainWindow = createMainWindow();
+    mainWindowRef = mainWindow;
+    mainWindow.on('closed', () => {
+      if (mainWindowRef === mainWindow) mainWindowRef = null;
+    });
 
     // Wire electron-updater. No-ops in dev / unpackaged builds; in
     // packaged signed builds, checks for updates on launch and again
@@ -174,7 +184,13 @@ if (!gotLock) {
     });
 
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+      if (BrowserWindow.getAllWindows().length === 0) {
+        const recreated = createMainWindow();
+        mainWindowRef = recreated;
+        recreated.on('closed', () => {
+          if (mainWindowRef === recreated) mainWindowRef = null;
+        });
+      }
     });
   });
 

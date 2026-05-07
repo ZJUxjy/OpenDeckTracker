@@ -18,16 +18,31 @@ export function useHearthMirrorStatus(): HearthMirrorStatus {
     let cancelled = false;
 
     async function poll(): Promise<void> {
-      const alive = await window.hdt.hearthmirror.isAlive().catch(() => false);
+      // Defensive: `window.hdt` is provided by the preload bridge and
+      // is undefined in unit tests / when the preload script fails to
+      // load. Without this guard the first poll throws synchronously
+      // before the `.catch`, which surfaces as an Unhandled Rejection.
+      const api = window.hdt?.hearthmirror;
+      if (!api) {
+        if (!cancelled) {
+          setIsAlive(false);
+          setBattleTag(null);
+          setMedalInfo(null);
+          setLastUpdatedAt(Date.now());
+        }
+        return;
+      }
+
+      const alive = await api.isAlive().catch(() => false);
       if (cancelled) return;
       setIsAlive(alive);
 
       if (alive) {
-        const tag = await window.hdt.hearthmirror.getBattleTag().catch(() => null);
+        const tag = await api.getBattleTag().catch(() => null);
         if (cancelled) return;
         setBattleTag(tag);
 
-        const medal = await window.hdt.hearthmirror.getMedalInfo().catch(() => null);
+        const medal = await api.getMedalInfo().catch(() => null);
         if (cancelled) return;
         setMedalInfo(medal);
       } else {

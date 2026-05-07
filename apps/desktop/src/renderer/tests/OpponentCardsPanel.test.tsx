@@ -77,9 +77,13 @@ describe('OpponentCardsPanel', () => {
   });
 
   it('renders an empty state when no opponent cards are revealed', () => {
+    // setup.ts mocks `isAlive` → false, so the panel surfaces the
+    // "Hearthstone not running" copy rather than the generic
+    // "no opponent cards" string. Both are valid empty states; this
+    // assertion mirrors the default test environment.
     render(<OpponentCardsPanel revealed={[]} graveyard={[]} />);
 
-    expect(screen.getByText('No opponent cards revealed')).toBeInTheDocument();
+    expect(screen.getByText('Hearthstone not running')).toBeInTheDocument();
   });
 
   it('routes opponent row art through the local cache protocol (never a CDN URL)', async () => {

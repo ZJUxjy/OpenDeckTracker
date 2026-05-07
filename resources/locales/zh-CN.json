@@ -227,7 +227,16 @@
     "error": "错误",
     "live": "LIVE",
     "hearthstoneNotRunning": "炉石传说未运行",
+    "hearthstoneNotRunningHint": "启动游戏即可开始实时记牌。",
     "matchNotDetected": "未识别到对局"
+  },
+  "onboarding": {
+    "bannerHsNotRunningTitle": "炉石传说尚未运行",
+    "bannerHsNotRunningBody": "游戏启动后将自动开启实时记牌器与游戏内浮窗。牌组管理、统计数据与热门卡组库可离线使用。",
+    "bannerWaitingTitle": "等待对局开始",
+    "bannerWaitingBody": "炉石已连接。进入对局后，牌组与对手面板会自动加载。",
+    "bannerInMatchTitle": "对局进行中",
+    "bannerInMatchBody": "记牌器已激活。可拖动游戏内浮窗以调整位置，下次启动时位置会被记住。"
   },
   "deckSelect": {
     "title": "选择当前对局使用的卡组",

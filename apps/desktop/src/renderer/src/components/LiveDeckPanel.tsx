@@ -4,6 +4,7 @@ const DRAG_HEADER_STYLE = { WebkitAppRegion: 'drag' } as CSSProperties;
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
+import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
@@ -38,6 +39,20 @@ const ART_MASK_STYLE: CSSProperties = {
 export function LiveDeckPanel({ compact = false }: { compact?: boolean } = {}) {
   const { t } = useTranslation();
   const snapshot = useDeckTrackerStore((s) => s.snapshot);
+  const { isAlive } = useHearthMirrorStatus();
+
+  // Distinguish "Hearthstone not running" (user has to launch the game)
+  // from "match not started" (game is connected, waiting for queue) so
+  // first-time users aren't left staring at an opaque "waiting" string
+  // when there's no game running at all.
+  if (!isAlive && (!snapshot || snapshot.phase === 'IDLE')) {
+    return (
+      <EmptyState
+        message={t('deckTracker.hearthstoneNotRunning')}
+        hint={t('deckTracker.hearthstoneNotRunningHint')}
+      />
+    );
+  }
 
   if (!snapshot || snapshot.phase === 'IDLE') {
     return <EmptyState message={t('deckTracker.waitingForMatch')} />;
@@ -52,7 +67,7 @@ export function LiveDeckPanel({ compact = false }: { compact?: boolean } = {}) {
   return <DeckPanelInner snapshot={snapshot} compact={compact} />;
 }
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState({ message, hint }: { message: string; hint?: string }) {
   const { t } = useTranslation();
   return (
     <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
@@ -62,8 +77,9 @@ function EmptyState({ message }: { message: string }) {
         </div>
         <div className="text-text font-bold text-sm">{t('deckTracker.remainingCards')}</div>
       </div>
-      <div className="flex-1 flex items-center justify-center text-text-mute text-sm px-4 text-center">
-        {message}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 text-center gap-1">
+        <div className="text-text-dim text-sm">{message}</div>
+        {hint ? <div className="text-text-mute text-xs leading-relaxed">{hint}</div> : null}
       </div>
     </aside>
   );

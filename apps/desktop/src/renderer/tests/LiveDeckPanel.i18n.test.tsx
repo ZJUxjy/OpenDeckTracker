@@ -4,6 +4,9 @@ import { I18nProvider } from '../src/i18n';
 import { LiveDeckPanel } from '../src/components/LiveDeckPanel';
 import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
 
+// `setup.ts` mocks `window.hdt.hearthmirror.isAlive` → false, which is
+// the realistic boot state (no game open). LiveDeckPanel surfaces a
+// dedicated "Hearthstone not running" copy in that state.
 describe('LiveDeckPanel i18n', () => {
   beforeEach(() => {
     useDeckTrackerStore.setState({
@@ -20,7 +23,7 @@ describe('LiveDeckPanel i18n', () => {
       </I18nProvider>,
     );
 
-    expect(screen.getByText('等待对局开始...')).toBeInTheDocument();
+    expect(screen.getByText('炉石传说未运行')).toBeInTheDocument();
     expect(screen.getByText('剩余卡牌')).toBeInTheDocument();
   });
 
@@ -31,7 +34,7 @@ describe('LiveDeckPanel i18n', () => {
       </I18nProvider>,
     );
 
-    expect(screen.getByText('Waiting for match to start...')).toBeInTheDocument();
+    expect(screen.getByText('Hearthstone not running')).toBeInTheDocument();
     expect(screen.getByText('Remaining Cards')).toBeInTheDocument();
   });
 });

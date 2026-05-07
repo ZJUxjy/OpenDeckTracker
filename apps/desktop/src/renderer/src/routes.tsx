@@ -9,6 +9,7 @@ import { OpponentOverlayView } from './components/OpponentOverlayView';
 import { CardPreviewView } from './components/CardPreviewView';
 import { LiveDeckPanel } from './components/LiveDeckPanel';
 import { OpponentCardsPanel } from './components/OpponentCardsPanel';
+import { TrackerStatusBanner } from './components/TrackerStatusBanner';
 import { useDeckTrackerStore } from './stores/deck-tracker-store';
 
 function RightPanel() {
@@ -30,7 +31,12 @@ function RightPanel() {
 function TrackerRoute() {
   return (
     <>
-      <Dashboard />
+      <div className="flex-1 flex flex-col overflow-hidden bg-bg">
+        <TrackerStatusBanner />
+        <div className="flex-1 flex overflow-hidden">
+          <Dashboard />
+        </div>
+      </div>
       <div className="hidden lg:block h-full bg-bg p-6 border-l border-border">
         <RightPanel />
       </div>

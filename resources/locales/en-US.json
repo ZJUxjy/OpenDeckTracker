@@ -227,7 +227,16 @@
     "error": "Error",
     "live": "LIVE",
     "hearthstoneNotRunning": "Hearthstone not running",
+    "hearthstoneNotRunningHint": "Start the game to begin live deck tracking.",
     "matchNotDetected": "Match not detected"
+  },
+  "onboarding": {
+    "bannerHsNotRunningTitle": "Hearthstone is not running",
+    "bannerHsNotRunningBody": "Live deck tracking and overlays activate automatically once the game is open. Decks, statistics, and the popular-deck library remain available offline.",
+    "bannerWaitingTitle": "Waiting for a match",
+    "bannerWaitingBody": "Hearthstone is connected. Your deck and opponent panels will populate when a match begins.",
+    "bannerInMatchTitle": "Match in progress",
+    "bannerInMatchBody": "Tracking active. Drag the in-game overlays to reposition them; they remember their last placement."
   },
   "deckSelect": {
     "title": "Select the deck for this match",

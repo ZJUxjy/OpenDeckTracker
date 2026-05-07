@@ -4,6 +4,7 @@ import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
+import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useLocale, useTranslation } from '../i18n';
 
 const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
@@ -44,6 +45,15 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
   const revealedGroups = useMemo(() => groupRecords(revealed), [revealed]);
   const graveyardGroups = useMemo(() => groupRecords(graveyard), [graveyard]);
   const isEmpty = revealedGroups.length === 0 && graveyardGroups.length === 0;
+  const { isAlive } = useHearthMirrorStatus();
+  // Mirror the LiveDeckPanel behaviour: if the game isn't running and
+  // there's nothing to show, surface that explicitly so the panel
+  // doesn't look broken on a fresh launch with no game.
+  const emptyMessage = isEmpty
+    ? isAlive
+      ? t('opponent.empty')
+      : t('deckTracker.hearthstoneNotRunning')
+    : '';
   const { onRowEnter, onRowLeave } = useCardPreview();
   const handleRowMouseEnter = useCallback(
     (cardId: string, el: HTMLDivElement) => onRowEnter(cardId, el),
@@ -66,7 +76,7 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         {isEmpty ? (
           <div className="h-full flex items-center justify-center text-text-mute text-sm px-4 text-center">
-            {t('opponent.empty')}
+            {emptyMessage}
           </div>
         ) : (
           <div className="space-y-3">
