@@ -1,5 +1,5 @@
 import { type CSSProperties } from 'react';
-import type { ActiveEffect, AnimalCompanionPoolParams } from '@hdt/core';
+import type { ActiveEffect } from '@hdt/core';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useTranslation } from '../i18n';
 
@@ -13,10 +13,14 @@ interface GlobalEffectRowProps {
 }
 
 /**
- * Single row in the GlobalEffectsPanel. Source-card portrait sliver
- * on the right (same masked treatment as the deck-list rows), title
- * and short body description on the left, optional params region for
- * effects that carry data (e.g. Tame Pet's 3 random beasts).
+ * Single row in the GlobalEffectsPanel for a generic effect: source-
+ * card portrait sliver on the right, title + body on the left, with
+ * optional pending and stack-count badges.
+ *
+ * Animal Companion pool effects (Tame Pet / Roam Free / Migrating
+ * Elekk / Talya Earthstrider) are NOT routed through this component —
+ * the parent panel collapses them into a single `AnimalCompanionPoolRow`
+ * keyed on the current pool state.
  */
 export function GlobalEffectRow({ effect }: GlobalEffectRowProps) {
   const { t } = useTranslation();
@@ -63,61 +67,7 @@ export function GlobalEffectRow({ effect }: GlobalEffectRowProps) {
         <p className="text-text-dim text-xs mt-1 leading-relaxed pr-12">
           {body}
         </p>
-        {hasAnimalCompanionPool(effect) ? (
-          <AnimalCompanionPool pool={effect.params.pool} />
-        ) : null}
       </div>
     </li>
   );
-}
-
-interface AnimalCompanionPoolProps {
-  pool: string[];
-}
-
-function AnimalCompanionPool({ pool }: AnimalCompanionPoolProps) {
-  return (
-    <div
-      data-testid="global-effect-params"
-      className="mt-2 grid grid-cols-3 gap-1.5"
-    >
-      {pool.map((cardId, i) => (
-        <BeastTile key={`${cardId}-${i}`} cardId={cardId} />
-      ))}
-    </div>
-  );
-}
-
-function BeastTile({ cardId }: { cardId: string }) {
-  const tileUrl = useCardTileUrl(cardId);
-  return (
-    <div className="relative h-10 rounded overflow-hidden border border-border bg-bg-3">
-      <img
-        src={tileUrl}
-        data-testid="card-row-art"
-        alt=""
-        aria-hidden
-        className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
-      />
-    </div>
-  );
-}
-
-type AnimalCompanionEffectId = 'tame-pet' | 'roam-free' | 'migrating-elekk';
-
-interface AnimalCompanionEffect extends ActiveEffect<AnimalCompanionPoolParams> {
-  id: AnimalCompanionEffectId;
-  params: AnimalCompanionPoolParams;
-}
-
-const ANIMAL_COMPANION_EFFECT_IDS = new Set<string>([
-  'tame-pet',
-  'roam-free',
-  'migrating-elekk',
-]);
-
-function hasAnimalCompanionPool(effect: ActiveEffect): effect is AnimalCompanionEffect {
-  if (!ANIMAL_COMPANION_EFFECT_IDS.has(effect.id)) return false;
-  const params = effect.params as { pool?: unknown } | undefined;
-  return Array.isArray(params?.pool) && (params!.pool as unknown[]).length > 0;
 }

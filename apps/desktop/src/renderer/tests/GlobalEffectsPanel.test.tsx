@@ -67,7 +67,7 @@ describe('GlobalEffectsPanel', () => {
     expect(screen.getByTestId('global-effect-pending')).toBeInTheDocument();
   });
 
-  it('renders Tame Pet with the beast pool when params are present', async () => {
+  it('aggregates Tame Pet into a single Animal Companion pool row (4-cost)', async () => {
     wrap([
       {
         id: 'tame-pet',
@@ -77,12 +77,18 @@ describe('GlobalEffectsPanel', () => {
         params: { pool: ['CS3_022', 'CS3_023', 'CS3_024'] },
       },
     ]);
-    const params = await screen.findByTestId('global-effect-params');
-    expect(params).toBeInTheDocument();
+    expect(screen.getByTestId('animal-companion-pool-row')).toBeInTheDocument();
+    // No per-source-card row for the AC cluster.
+    expect(screen.queryByText('Tame Pet')).toBeNull();
+    expect(screen.getByText(/4-cost Beasts/i)).toBeInTheDocument();
+
+    // Pool detail is in the DOM but visually hidden by default; on
+    // hover it becomes visible. Asserting the 3 tiles exist regardless.
+    const detail = screen.getByTestId('animal-companion-pool-detail');
     await waitFor(() => {
-      const arts = screen.getAllByTestId('card-row-art');
+      const arts = detail.querySelectorAll('[data-testid="card-row-art"]');
       expect(arts).toHaveLength(3);
-      const urls = arts.map((el) => (el as HTMLImageElement).src);
+      const urls = Array.from(arts, (el) => (el as HTMLImageElement).src);
       expect(urls).toEqual([
         'hdt-card-image://tile/CS3_022.png',
         'hdt-card-image://tile/CS3_023.png',
@@ -91,20 +97,7 @@ describe('GlobalEffectsPanel', () => {
     });
   });
 
-  it('renders Tame Pet without params region when params are missing', () => {
-    wrap([
-      {
-        id: 'tame-pet',
-        sourceCardId: 'MEND_300',
-        triggeredAt: 2000,
-        triggerCount: 1,
-      },
-    ]);
-    expect(screen.getByText('Tame Pet')).toBeInTheDocument();
-    expect(screen.queryByTestId('global-effect-params')).toBeNull();
-  });
-
-  it('renders Roam Free with the same pool treatment as Tame Pet', async () => {
+  it('aggregates Roam Free as a 5-cost pool', () => {
     wrap([
       {
         id: 'roam-free',
@@ -114,17 +107,100 @@ describe('GlobalEffectsPanel', () => {
         params: { pool: ['BEAST_A', 'BEAST_B', 'BEAST_C'] },
       },
     ]);
-    const params = await screen.findByTestId('global-effect-params');
-    expect(params).toBeInTheDocument();
+    expect(screen.getByText(/5-cost Beasts/i)).toBeInTheDocument();
+  });
+
+  it('aggregates Migrating Elekk as a 4-cost pool', () => {
+    wrap([
+      {
+        id: 'migrating-elekk',
+        sourceCardId: 'MEND_303',
+        triggeredAt: 2000,
+        triggerCount: 1,
+        params: { pool: ['ELEKK_A', 'ELEKK_B', 'ELEKK_C'] },
+      },
+    ]);
+    expect(screen.getByText(/4-cost Beasts/i)).toBeInTheDocument();
+    const detail = screen.getByTestId('animal-companion-pool-detail');
+    expect(detail.querySelectorAll('[data-testid="card-row-art"]')).toHaveLength(3);
+  });
+
+  it('latest pool replacement wins when multiple AC pool effects are active', async () => {
+    wrap([
+      {
+        id: 'tame-pet',
+        sourceCardId: 'MEND_300',
+        triggeredAt: 1000,
+        triggerCount: 1,
+        params: { pool: ['OLD_1', 'OLD_2', 'OLD_3'] },
+      },
+      {
+        id: 'roam-free',
+        sourceCardId: 'MEND_307',
+        triggeredAt: 5000,
+        triggerCount: 1,
+        params: { pool: ['NEW_1', 'NEW_2', 'NEW_3'] },
+      },
+    ]);
+    // Roam Free (later) wins → 5-cost.
+    expect(screen.getByText(/5-cost Beasts/i)).toBeInTheDocument();
+    const detail = screen.getByTestId('animal-companion-pool-detail');
     await waitFor(() => {
-      const arts = screen.getAllByTestId('card-row-art');
-      expect(arts).toHaveLength(3);
-      const urls = arts.map((el) => (el as HTMLImageElement).src);
+      const arts = detail.querySelectorAll('[data-testid="card-row-art"]');
+      const urls = Array.from(arts, (el) => (el as HTMLImageElement).src);
       expect(urls).toEqual([
-        'hdt-card-image://tile/BEAST_A.png',
-        'hdt-card-image://tile/BEAST_B.png',
-        'hdt-card-image://tile/BEAST_C.png',
+        'hdt-card-image://tile/NEW_1.png',
+        'hdt-card-image://tile/NEW_2.png',
+        'hdt-card-image://tile/NEW_3.png',
       ]);
     });
+  });
+
+  it('Talya Earthstrider alone shows extra-summon body (no pool tile)', () => {
+    wrap([
+      {
+        id: 'talya-earthstrider',
+        sourceCardId: 'MEND_304',
+        triggeredAt: 2000,
+        triggerCount: 2,
+      },
+    ]);
+    expect(screen.getByTestId('animal-companion-pool-row')).toBeInTheDocument();
+    expect(screen.getByText(/\+2 extra/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('animal-companion-pool-detail')).toBeNull();
+  });
+
+  it('combines Tame Pet + Talya into a single row with both effects mentioned', () => {
+    wrap([
+      {
+        id: 'tame-pet',
+        sourceCardId: 'MEND_300',
+        triggeredAt: 2000,
+        triggerCount: 1,
+        params: { pool: ['B1', 'B2', 'B3'] },
+      },
+      {
+        id: 'talya-earthstrider',
+        sourceCardId: 'MEND_304',
+        triggeredAt: 3000,
+        triggerCount: 1,
+      },
+    ]);
+    expect(screen.getAllByTestId('animal-companion-pool-row')).toHaveLength(1);
+    expect(screen.getByText(/4-cost Beasts.*\+1 extra/i)).toBeInTheDocument();
+  });
+
+  it('AC pool row shows generic title when params not yet extracted', () => {
+    wrap([
+      {
+        id: 'tame-pet',
+        sourceCardId: 'MEND_300',
+        triggeredAt: 2000,
+        triggerCount: 1,
+      },
+    ]);
+    // Cost still known (from EffectDef id), pool tiles absent.
+    expect(screen.getByText(/4-cost Beasts/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('animal-companion-pool-detail')).toBeNull();
   });
 });

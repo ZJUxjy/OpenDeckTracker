@@ -1,5 +1,7 @@
 import type { ActiveEffect } from '@hdt/core';
 import { GlobalEffectRow } from './GlobalEffectRow';
+import { AnimalCompanionPoolRow } from './AnimalCompanionPoolRow';
+import { partitionAnimalCompanionEffects } from '../lib/animal-companion-effects';
 import { useTranslation } from '../i18n';
 
 interface GlobalEffectsPanelProps {
@@ -9,9 +11,10 @@ interface GlobalEffectsPanelProps {
 
 /**
  * One side's active global-effects list. Empty-state copy when no
- * effects are live; otherwise a vertical list of GlobalEffectRow
- * sorted by triggeredAt ascending (oldest first — first-played
- * effects sit at the top, matching the order they affect the match).
+ * effects are live; otherwise a vertical list. The Animal Companion
+ * cluster (Tame Pet / Roam Free / Migrating Elekk / Talya
+ * Earthstrider) is collapsed into a single semantic "pool" row — the
+ * user cares about the CURRENT pool, not which cards modified it.
  */
 export function GlobalEffectsPanel({ side, effects }: GlobalEffectsPanelProps) {
   const { t } = useTranslation();
@@ -35,16 +38,40 @@ export function GlobalEffectsPanel({ side, effects }: GlobalEffectsPanelProps) {
     );
   }
 
-  // The registry already returns entries sorted by triggeredAt
-  // ascending; no need to re-sort here.
+  const { summary, others } = partitionAnimalCompanionEffects(effects);
+
+  // Sort merged list by the synthetic / per-effect triggeredAt so the
+  // earliest-played effect appears first regardless of which cluster
+  // it belongs to. The registry already returns the per-effect array
+  // sorted ascending; we just need to splice the synthesized AC row in
+  // at the right spot.
+  type Row =
+    | { kind: 'ac'; triggeredAt: number }
+    | { kind: 'effect'; effect: ActiveEffect; triggeredAt: number };
+  const rows: Row[] = [];
+  if (summary !== null) rows.push({ kind: 'ac', triggeredAt: summary.triggeredAt });
+  for (const e of others) rows.push({ kind: 'effect', effect: e, triggeredAt: e.triggeredAt });
+  rows.sort((a, b) => a.triggeredAt - b.triggeredAt);
+
   return (
     <ul
       data-tracker-side={side}
       className="w-full h-full overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent list-none bg-bg-2 border border-border rounded-lg shadow-xl"
     >
-      {effects.map((effect) => (
-        <GlobalEffectRow key={`${effect.id}-${effect.triggeredAt}`} effect={effect} />
-      ))}
+      {rows.map((row, idx) =>
+        row.kind === 'ac' ? (
+          <AnimalCompanionPoolRow
+            key={`ac-summary-${idx}`}
+            summary={summary!}
+            side={side}
+          />
+        ) : (
+          <GlobalEffectRow
+            key={`${row.effect.id}-${row.effect.triggeredAt}`}
+            effect={row.effect}
+          />
+        ),
+      )}
     </ul>
   );
 }
