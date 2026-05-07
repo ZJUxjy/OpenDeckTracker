@@ -10,10 +10,13 @@ export interface GlobalEffectsRegistryArgs {
   catalogIndex: ReadonlyMap<string, EffectDef>;
   /** Wall-clock provider; injected for tests. */
   now: () => number;
-  /** Local-player controller id (matches `Game.localPlayer.controllerId`). */
-  localControllerId: number;
-  /** Opposing-player controller id. */
-  opposingControllerId: number;
+  /**
+   * Live getter for both controller ids. Reads happen on every event;
+   * the registry survives across matches (the orchestrator calls
+   * `reset()` between matches but does not re-instantiate), and
+   * `Game.setPlayers` may flip ids mid-session.
+   */
+  getControllerIds: () => { local: number; opposing: number };
   /**
    * Optional context provider for parameterized effects. The registry
    * calls this lazily when an effect with `parameterExtractor` fires.
@@ -36,8 +39,7 @@ interface RegistrySnapshot {
 export class GlobalEffectsRegistry {
   private readonly catalogIndex: ReadonlyMap<string, EffectDef>;
   private readonly now: () => number;
-  private readonly localControllerId: number;
-  private readonly opposingControllerId: number;
+  private readonly getControllerIds: () => { local: number; opposing: number };
   private readonly extractCtx?: () => ExtractCtx;
   private localEffects = new Map<string, ActiveEffect>();
   private opposingEffects = new Map<string, ActiveEffect>();
@@ -45,8 +47,7 @@ export class GlobalEffectsRegistry {
   constructor(args: GlobalEffectsRegistryArgs) {
     this.catalogIndex = args.catalogIndex;
     this.now = args.now;
-    this.localControllerId = args.localControllerId;
-    this.opposingControllerId = args.opposingControllerId;
+    this.getControllerIds = args.getControllerIds;
     if (args.extractCtx !== undefined) this.extractCtx = args.extractCtx;
   }
 
@@ -107,8 +108,9 @@ export class GlobalEffectsRegistry {
   private mapForController(
     controllerId: number,
   ): Map<string, ActiveEffect> | null {
-    if (controllerId === this.localControllerId) return this.localEffects;
-    if (controllerId === this.opposingControllerId) return this.opposingEffects;
+    const ids = this.getControllerIds();
+    if (controllerId === ids.local) return this.localEffects;
+    if (controllerId === ids.opposing) return this.opposingEffects;
     return null;
   }
 

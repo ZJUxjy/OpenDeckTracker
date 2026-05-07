@@ -38,12 +38,12 @@
 
 ## 5. Snapshot integration in DeckTrackerSnapshot
 
-- [ ] 5.1 Failing test `packages/core/src/tracker/deck-tracker.global-effects.test.ts` covering the 3 "DeckTrackerSnapshot conveys per-side global effects" scenarios from `specs/deck-tracker-core/spec.md` (empty arrays in IDLE, propagation during match, drain on IDLE return). Run → FAIL.
-- [ ] 5.2 Edit `packages/core/src/tracker/deck-tracker.ts`: add `friendlyEffects: ActiveEffect[]` and `opposingEffects: ActiveEffect[]` to `DeckTrackerSnapshot`; add `private registry: GlobalEffectsRegistry` field; instantiate it in the constructor.
-- [ ] 5.3 In `buildSnapshot` (or equivalent assembly site), call `registry.snapshot()` and assign `local` → `friendlyEffects`, `opposing` → `opposingEffects`. Make `blankSnapshot()` set both to `[]`.
-- [ ] 5.4 Wire registry.reset to the existing PRE_MATCH→IDLE / fresh-match guards in `DeckTracker`.
-- [ ] 5.5 Re-run 5.1 — expect PASS.
-- [ ] 5.6 Commit: `feat(core): wire GlobalEffectsRegistry into DeckTracker snapshot`.
+- [x] 5.1 Failing test `packages/core/src/tracker/deck-tracker.global-effects.test.ts` covering the 3 "DeckTrackerSnapshot conveys per-side global effects" scenarios from `specs/deck-tracker-core/spec.md` (empty arrays in IDLE, propagation during match, drain on IDLE return). Run → FAIL.
+- [x] 5.2 Edit `packages/core/src/tracker/deck-tracker.ts`: add `friendlyEffects: ActiveEffect[]` and `opposingEffects: ActiveEffect[]` to `DeckTrackerSnapshot`; add `private registry: GlobalEffectsRegistry` field; instantiate it in the constructor.
+- [x] 5.3 In `buildSnapshot` (or equivalent assembly site), call `registry.snapshot()` and assign `local` → `friendlyEffects`, `opposing` → `opposingEffects`. Make `blankSnapshot()` set both to `[]`.
+- [x] 5.4 Wire registry.reset to the existing PRE_MATCH→IDLE / fresh-match guards in `DeckTracker`.
+- [x] 5.5 Re-run 5.1 — expect PASS.
+- [x] 5.6 Commit: `feat(core): wire GlobalEffectsRegistry into DeckTracker snapshot`.
 
 ## 6. Main-process tracker host wiring
 

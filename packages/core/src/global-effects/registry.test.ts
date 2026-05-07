@@ -28,8 +28,7 @@ describe('GlobalEffectsRegistry', () => {
     const reg = new GlobalEffectsRegistry({
       catalogIndex: makeCatalog(CLEANSING_CLERIC),
       now: () => 1000,
-      localControllerId: 1,
-      opposingControllerId: 2,
+      getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     reg.handleCardPlayed({ cardId: 'EX1_001', controllerId: 1, timestamp: 1000 });
     const snap = reg.snapshot();
@@ -41,8 +40,7 @@ describe('GlobalEffectsRegistry', () => {
     const reg = new GlobalEffectsRegistry({
       catalogIndex: makeCatalog(CLEANSING_CLERIC),
       now: () => 1234,
-      localControllerId: 1,
-      opposingControllerId: 2,
+      getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     reg.handleCardPlayed({
       cardId: 'CATA_216',
@@ -69,8 +67,7 @@ describe('GlobalEffectsRegistry', () => {
     const reg = new GlobalEffectsRegistry({
       catalogIndex: makeCatalog(CLEANSING_CLERIC),
       now: () => 100,
-      localControllerId: 1,
-      opposingControllerId: 2,
+      getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 100 });
     reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 2, timestamp: 100 });
@@ -85,8 +82,7 @@ describe('GlobalEffectsRegistry', () => {
     const reg = new GlobalEffectsRegistry({
       catalogIndex: makeCatalog(CLEANSING_CLERIC),
       now: () => now,
-      localControllerId: 1,
-      opposingControllerId: 2,
+      getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 100 });
     expect(reg.snapshot().local).toHaveLength(1);
@@ -103,8 +99,7 @@ describe('GlobalEffectsRegistry', () => {
     const reg = new GlobalEffectsRegistry({
       catalogIndex: makeCatalog(CLEANSING_CLERIC, TAME_PET_DEFERRED as EffectDef),
       now: () => 1000,
-      localControllerId: 1,
-      opposingControllerId: 2,
+      getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     const events: CardPlayedEvent[] = [
       { cardId: 'CATA_216', controllerId: 1, timestamp: 1000 },
@@ -134,8 +129,7 @@ describe('GlobalEffectsRegistry', () => {
     const reg = new GlobalEffectsRegistry({
       catalogIndex: makeCatalog(def as EffectDef),
       now: () => 1000,
-      localControllerId: 1,
-      opposingControllerId: 2,
+      getControllerIds: () => ({ local: 1, opposing: 2 }),
       extractCtx: () => ({ recentEvents: [], waitForMoreEvents: () => Promise.resolve([]) }),
     });
     reg.handleCardPlayed({ cardId: 'PARAM_001', controllerId: 1, timestamp: 1000 });
@@ -159,8 +153,7 @@ describe('GlobalEffectsRegistry', () => {
         sourceCardId: 'OTHER_001',
       }),
       now: () => now,
-      localControllerId: 1,
-      opposingControllerId: 2,
+      getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     now = 500;
     reg.handleCardPlayed({ cardId: 'OTHER_001', controllerId: 1, timestamp: 500 });

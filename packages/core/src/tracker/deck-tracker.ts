@@ -24,6 +24,13 @@ import {
 import { computeRemaining, gatherSeenEntities } from './remaining-algorithm';
 import { nextPhase } from './phase-machine';
 import { PollingLoop } from './polling-loop';
+import { GlobalEffectsRegistry } from '../global-effects/registry';
+import { EFFECT_CATALOG } from '../global-effects/catalog';
+import type {
+  ActiveEffect,
+  CardPlayedEvent,
+  ExtractCtx,
+} from '../global-effects/types';
 
 // ── Polling intervals (per design D6) ────────────────────────────────
 const INTERVAL_IDLE_MS = 2_000;
@@ -79,6 +86,10 @@ export interface DeckTrackerSnapshot {
   };
   /** Friendly remaining deck count (for header summary). */
   friendlyDeckCount: number;
+  /** Global effects whose caster is the local player (per-match scope). */
+  friendlyEffects: ActiveEffect[];
+  /** Global effects whose caster is the opposing player (per-match scope). */
+  opposingEffects: ActiveEffect[];
   /** Last error from the poll loop (null when healthy). */
   error: string | null;
   /** Wall-clock timestamp of the last successful poll. */
@@ -111,6 +122,7 @@ export class DeckTracker {
   private readonly identifier: IDeckIdentifier;
   private readonly loop: PollingLoop;
   private readonly handlers = new Map<DeckTrackerEventName, Set<Handler>>();
+  private readonly registry: GlobalEffectsRegistry;
   private game: Game;
   private currentSnapshot: DeckTrackerSnapshot;
   private previousFriendlyHandSize = 0;
@@ -151,6 +163,8 @@ export class DeckTracker {
   constructor(args: {
     mirror: HearthMirror;
     identifier?: IDeckIdentifier;
+    /** Optional context provider for parameterized global effects. */
+    extractCtx?: () => ExtractCtx;
   }) {
     this.mirror = args.mirror;
     // In-game memory-field identifier ONLY. The dialog fallback flow
@@ -162,7 +176,45 @@ export class DeckTracker {
     this.identifier = args.identifier ?? new InGameDeckIdentifier(args.mirror);
     this.loop = new PollingLoop();
     this.game = new Game();
+    const catalogIndex = new Map(
+      EFFECT_CATALOG.map((def) => [def.sourceCardId, def] as const),
+    );
+    this.registry = new GlobalEffectsRegistry({
+      catalogIndex,
+      now: () => Date.now(),
+      getControllerIds: () => ({
+        local: this.game.localPlayer.controllerId,
+        opposing: this.game.opposingPlayer.controllerId,
+      }),
+      ...(args.extractCtx !== undefined ? { extractCtx: args.extractCtx } : {}),
+    });
     this.currentSnapshot = blankSnapshot();
+  }
+
+  /** Test-only escape hatch — game getter for assertions. */
+  getGame(): Game {
+    return this.game;
+  }
+
+  /**
+   * Forward a played-card event from the host (e.g. main-process
+   * dispatcher consuming HearthWatcher's PowerEvent stream). Drives
+   * the global-effects registry; safe to call any phase, but most
+   * effects only matter mid-match.
+   */
+  recordCardPlayed(event: CardPlayedEvent): void {
+    this.registry.handleCardPlayed(event);
+    this.currentSnapshot = this.buildSnapshot();
+  }
+
+  /**
+   * Drop all active global effects. Called automatically on
+   * IDLE → PRE_MATCH and POST_MATCH → IDLE transitions; exposed
+   * publicly for tests + manual reset paths.
+   */
+  resetGlobalEffects(): void {
+    this.registry.reset();
+    this.currentSnapshot = this.buildSnapshot();
   }
 
   /** Read-only access to the latest snapshot (for IPC `get-snapshot` requests). */
@@ -301,6 +353,7 @@ export class DeckTracker {
     if (previousPhase === 'IDLE' && target === 'PRE_MATCH') {
       this.game.reset();
       this.resetOpponentRecords();
+      this.registry.reset();
       this.game.transitionTo('PRE_MATCH');
       this.applyMatchInfo(matchInfo);
     }
@@ -318,6 +371,7 @@ export class DeckTracker {
       this.game.reset();
       this.previousFriendlyHandSize = 0;
       this.resetOpponentRecords();
+      this.registry.reset();
       this.awaitingDeckSelection = false;
       this.lastKnownSelectedDeckId = null;
       this.identifiedDeck = null;
@@ -525,6 +579,8 @@ export class DeckTracker {
         }
       : null;
 
+    const effects = this.registry.snapshot();
+
     return {
       phase: this.game.phase,
       matchInfo,
@@ -534,6 +590,8 @@ export class DeckTracker {
       opposingHandCount: handState?.opposingHandCount ?? 0,
       opponent: this.buildOpponentRecords(),
       friendlyDeckCount: deckState?.friendlyDeck.length ?? 0,
+      friendlyEffects: effects.local,
+      opposingEffects: effects.opposing,
       // A successful tick clears any previous error; `onError` sets it
       // again on the next snapshot if a tick throws. Without this clear,
       // a single transient error would stay visible in the UI's "Error"
@@ -775,6 +833,8 @@ function blankSnapshot(): DeckTrackerSnapshot {
       graveyard: [],
     },
     friendlyDeckCount: 0,
+    friendlyEffects: [],
+    opposingEffects: [],
     error: null,
     updatedAt: 0,
   };
