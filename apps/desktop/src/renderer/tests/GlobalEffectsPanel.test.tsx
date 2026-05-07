@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActiveEffect } from '@hdt/core';
 import { I18nProvider } from '../src/i18n';
@@ -77,13 +77,19 @@ describe('GlobalEffectsPanel', () => {
         params: { pool: ['CS3_022', 'CS3_023', 'CS3_024'] },
       },
     ]);
-    expect(screen.getByTestId('animal-companion-pool-row')).toBeInTheDocument();
+    const row = screen.getByTestId('animal-companion-pool-row');
+    expect(row).toBeInTheDocument();
     // No per-source-card row for the AC cluster.
     expect(screen.queryByText('Tame Pet')).toBeNull();
     expect(screen.getByText(/4-cost Beasts/i)).toBeInTheDocument();
 
-    // Pool detail is in the DOM but visually hidden by default; on
-    // hover it becomes visible. Asserting the 3 tiles exist regardless.
+    // Detail is hidden until hover.
+    expect(screen.queryByTestId('animal-companion-pool-detail')).toBeNull();
+    expect(row.getAttribute('data-hovered')).toBe('false');
+
+    fireEvent.mouseEnter(row);
+    expect(row.getAttribute('data-hovered')).toBe('true');
+
     const detail = screen.getByTestId('animal-companion-pool-detail');
     await waitFor(() => {
       const arts = detail.querySelectorAll('[data-testid="card-row-art"]');
@@ -95,6 +101,9 @@ describe('GlobalEffectsPanel', () => {
         'hdt-card-image://tile/CS3_024.png',
       ]);
     });
+
+    fireEvent.mouseLeave(row);
+    expect(screen.queryByTestId('animal-companion-pool-detail')).toBeNull();
   });
 
   it('aggregates Roam Free as a 5-cost pool', () => {
@@ -121,6 +130,8 @@ describe('GlobalEffectsPanel', () => {
       },
     ]);
     expect(screen.getByText(/4-cost Beasts/i)).toBeInTheDocument();
+    const row = screen.getByTestId('animal-companion-pool-row');
+    fireEvent.mouseEnter(row);
     const detail = screen.getByTestId('animal-companion-pool-detail');
     expect(detail.querySelectorAll('[data-testid="card-row-art"]')).toHaveLength(3);
   });
@@ -144,6 +155,7 @@ describe('GlobalEffectsPanel', () => {
     ]);
     // Roam Free (later) wins → 5-cost.
     expect(screen.getByText(/5-cost Beasts/i)).toBeInTheDocument();
+    fireEvent.mouseEnter(screen.getByTestId('animal-companion-pool-row'));
     const detail = screen.getByTestId('animal-companion-pool-detail');
     await waitFor(() => {
       const arts = detail.querySelectorAll('[data-testid="card-row-art"]');
@@ -156,7 +168,7 @@ describe('GlobalEffectsPanel', () => {
     });
   });
 
-  it('Talya Earthstrider alone shows extra-summon body (no pool tile)', () => {
+  it('Talya Earthstrider alone shows extra-summon body (no pool tile, no hover affordance)', () => {
     wrap([
       {
         id: 'talya-earthstrider',
@@ -165,8 +177,12 @@ describe('GlobalEffectsPanel', () => {
         triggerCount: 2,
       },
     ]);
-    expect(screen.getByTestId('animal-companion-pool-row')).toBeInTheDocument();
+    const row = screen.getByTestId('animal-companion-pool-row');
+    expect(row).toBeInTheDocument();
     expect(screen.getByText(/\+2 extra/i)).toBeInTheDocument();
+    // No pool → no hover hint, no detail even on mouseenter.
+    expect(screen.queryByTestId('animal-companion-pool-hint')).toBeNull();
+    fireEvent.mouseEnter(row);
     expect(screen.queryByTestId('animal-companion-pool-detail')).toBeNull();
   });
 

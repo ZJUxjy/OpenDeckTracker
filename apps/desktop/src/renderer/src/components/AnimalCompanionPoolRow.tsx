@@ -1,4 +1,6 @@
-import { type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { clsx } from 'clsx';
 import { useCardDef } from '../hooks/use-card-def';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useTranslation } from '../i18n';
@@ -37,8 +39,12 @@ export interface AnimalCompanionSummary {
  * Earthstrider — what the user actually wants to know is the CURRENT
  * pool, not which cards modified it.
  *
- * Default: a single concise row with the pool's mana cost and any
- * extra-summon stacking. Hovering reveals the 3-beast pool detail.
+ * Hover reveals the 3-beast pool detail. Implementation uses React
+ * state + conditional render rather than CSS `group-hover:` because
+ * Tailwind v4's arbitrary-value compilation for `grid-template-rows`
+ * isn't reliable. The hover state also drives clear visual affordances
+ * (accent border, chevron rotation, cursor) so the user can tell the
+ * row is interactive.
  */
 export function AnimalCompanionPoolRow({
   summary,
@@ -49,6 +55,7 @@ export function AnimalCompanionPoolRow({
 }) {
   const { t } = useTranslation();
   const { poolReplacement, extraSummons } = summary;
+  const [hovered, setHovered] = useState(false);
 
   const cost =
     poolReplacement !== null
@@ -77,12 +84,24 @@ export function AnimalCompanionPoolRow({
   const tileUrl = useCardTileUrl(sourceArtCardId ?? '');
   const pool = poolReplacement?.pool ?? [];
   const hasPool = pool.length > 0;
+  const expanded = hasPool && hovered;
 
   return (
     <li
       data-testid="animal-companion-pool-row"
       data-tracker-side={side}
-      className="relative rounded-md border border-border bg-bg-2 mb-2 last:mb-0 group"
+      data-hovered={hovered ? 'true' : 'false'}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={clsx(
+        'relative rounded-md border bg-bg-2 mb-2 last:mb-0 transition-colors',
+        hasPool ? 'cursor-help' : '',
+        expanded
+          ? 'border-accent shadow-[0_0_0_1px_var(--accent)]'
+          : hasPool
+            ? 'border-border hover:border-accent/50'
+            : 'border-border',
+      )}
     >
       <div className="relative">
         {sourceArtCardId !== null ? (
@@ -103,9 +122,19 @@ export function AnimalCompanionPoolRow({
             {hasPool ? (
               <span
                 data-testid="animal-companion-pool-hint"
-                className="shrink-0 text-text-mute text-[10px] uppercase tracking-wider"
+                className={clsx(
+                  'shrink-0 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider transition-colors',
+                  expanded ? 'text-accent' : 'text-text-mute',
+                )}
               >
                 {t('globalEffects.animalCompanionPool.hoverHint')}
+                <ChevronDown
+                  size={12}
+                  className={clsx(
+                    'transition-transform duration-200',
+                    expanded ? 'rotate-180' : '',
+                  )}
+                />
               </span>
             ) : null}
           </div>
@@ -115,23 +144,14 @@ export function AnimalCompanionPoolRow({
         </div>
       </div>
 
-      {hasPool ? (
-        // Inline expand on hover. The container is part of the <li>'s
-        // own bounding box (no absolute positioning), so the parent
-        // <ul>'s overflow-y-auto can't clip it; the row simply grows
-        // taller while hovered. max-h transition makes the reveal feel
-        // animated rather than snappy.
+      {expanded ? (
         <div
           data-testid="animal-companion-pool-detail"
-          className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-200 ease-out"
+          className="px-3 pb-2 pt-2 border-t border-border/50 grid grid-cols-3 gap-2"
         >
-          <div className="overflow-hidden">
-            <div className="px-3 pb-2 pt-1 border-t border-border/50 grid grid-cols-3 gap-2">
-              {pool.map((cardId, i) => (
-                <BeastDetail key={`${cardId}-${i}`} cardId={cardId} />
-              ))}
-            </div>
-          </div>
+          {pool.map((cardId, i) => (
+            <BeastDetail key={`${cardId}-${i}`} cardId={cardId} />
+          ))}
         </div>
       ) : null}
     </li>
