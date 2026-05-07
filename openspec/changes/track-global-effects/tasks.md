@@ -76,12 +76,12 @@
 
 ## 10. GlobalEffectsPanel + GlobalEffectRow
 
-- [ ] 10.1 Failing component test `apps/desktop/src/renderer/tests/GlobalEffectsPanel.test.tsx` covering all 4 GlobalEffectsPanel scenarios from `specs/global-effects-ui/spec.md` (empty state, Cleansing Cleric without params, Tame Pet with pool, Tame Pet without params). Mock `useCardTileUrl` and `useCardDef` with the same shape used in existing tests (see `OpponentCardsPanel.test.tsx` for pattern). Run → FAIL.
-- [ ] 10.2 Implement `apps/desktop/src/renderer/src/components/GlobalEffectRow.tsx` (single row: tile art + title + body + optional params region).
-- [ ] 10.3 Implement `apps/desktop/src/renderer/src/components/GlobalEffectsPanel.tsx` (list + empty state + dispatch to GlobalEffectRow). Use `data-testid="global-effect-row"` on each row.
-- [ ] 10.4 For Tame Pet's params region: render a horizontal strip of three `<img data-testid="card-row-art">` elements via `useCardTileUrl` for each `params.pool[i]`.
-- [ ] 10.5 Re-run 10.1 — expect PASS.
-- [ ] 10.6 Commit: `feat(renderer): GlobalEffectsPanel + GlobalEffectRow components`.
+- [x] 10.1 Failing component test `apps/desktop/src/renderer/tests/GlobalEffectsPanel.test.tsx` covering all 4 GlobalEffectsPanel scenarios from `specs/global-effects-ui/spec.md` (empty state, Cleansing Cleric without params, Tame Pet with pool, Tame Pet without params). Mock `useCardTileUrl` and `useCardDef` with the same shape used in existing tests (see `OpponentCardsPanel.test.tsx` for pattern). Run → FAIL.
+- [x] 10.2 Implement `apps/desktop/src/renderer/src/components/GlobalEffectRow.tsx` (single row: tile art + title + body + optional params region).
+- [x] 10.3 Implement `apps/desktop/src/renderer/src/components/GlobalEffectsPanel.tsx` (list + empty state + dispatch to GlobalEffectRow). Use `data-testid="global-effect-row"` on each row.
+- [x] 10.4 For Tame Pet's params region: render a horizontal strip of three `<img data-testid="card-row-art">` elements via `useCardTileUrl` for each `params.pool[i]`.
+- [x] 10.5 Re-run 10.1 — expect PASS.
+- [x] 10.6 Commit: `feat(renderer): GlobalEffectsPanel + GlobalEffectRow components`.
 
 ## 11. Integrate tabs into routes and overlays
 
