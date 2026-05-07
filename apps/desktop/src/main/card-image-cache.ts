@@ -332,7 +332,7 @@ export async function ensureCardTileCached(
     return { cardId, path: tilePath, url: tileUrl };
   }
 
-  const response = await fetchImpl(buildRemoteCardTileUrl(cardId));
+  const response = await fetchWithRetry(buildRemoteCardTileUrl(cardId), fetchImpl);
   if (!response.ok) {
     throw new Error(`failed to download card tile ${cardId}: ${response.status}`);
   }
@@ -341,6 +341,56 @@ export async function ensureCardTileCached(
   await writeBufferAtomic(tilePath, trimmed);
 
   return { cardId, path: tilePath, url: tileUrl };
+}
+
+/**
+ * Fetch with a small retry loop for transient failures. Without this a
+ * single network blip leaves the in-game overlay tile blank for the rest
+ * of the session: the renderer hook only retries when the component
+ * remounts, but the overlay BrowserWindow stays mounted across matches.
+ *
+ * Retries on:
+ *  - thrown errors (DNS/connection failures)
+ *  - HTTP 5xx (CDN-side hiccups)
+ *  - HTTP 408 / 429 (timeout / rate-limit)
+ *
+ * Does NOT retry on other 4xx — those mean the resource genuinely isn't
+ * there (e.g. a cardId the CDN doesn't ship), so retrying just delays
+ * the caller's normal fallback path.
+ */
+async function fetchWithRetry(
+  url: string,
+  fetchImpl: typeof fetch,
+  attempts = 3,
+  baseDelayMs = 250,
+): Promise<Response> {
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    let response: Response | null = null;
+    try {
+      response = await fetchImpl(url);
+    } catch (e) {
+      lastError = e;
+    }
+    if (response) {
+      if (response.ok) return response;
+      if (!isRetryableStatus(response.status)) return response;
+      lastError = new Error(`HTTP ${response.status}`);
+    }
+    if (attempt < attempts - 1) {
+      await delay(baseDelayMs * (1 << attempt));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+function isRetryableStatus(status: number): boolean {
+  if (status >= 500) return true;
+  return status === 408 || status === 429;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -435,13 +485,19 @@ export async function ensureCardImageCached(
   const fallback = cacheEntry(options.root, fallbackLocale, size, cardId);
   if (!options.force && await fileExists(fallback.path)) return fallback;
 
-  const primaryResponse = await fetchImpl(buildRemoteCardImageUrl(cardId, primaryLocale, size));
+  const primaryResponse = await fetchWithRetry(
+    buildRemoteCardImageUrl(cardId, primaryLocale, size),
+    fetchImpl,
+  );
   if (primaryResponse.ok) {
     await writeResponse(primary.path, primaryResponse);
     return primary;
   }
 
-  const fallbackResponse = await fetchImpl(buildRemoteCardImageUrl(cardId, fallbackLocale, size));
+  const fallbackResponse = await fetchWithRetry(
+    buildRemoteCardImageUrl(cardId, fallbackLocale, size),
+    fetchImpl,
+  );
   if (fallbackResponse.ok) {
     await writeResponse(fallback.path, fallbackResponse);
     return fallback;

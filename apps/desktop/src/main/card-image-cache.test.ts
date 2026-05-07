@@ -134,12 +134,43 @@ describe('card tile cache', () => {
     await expect(stat(first.path)).resolves.toMatchObject({ isFile: expect.any(Function) });
   });
 
-  it('throws when the CDN tile fetch fails', async () => {
+  it('throws when the CDN tile fetch fails with a non-retryable status', async () => {
     const root = await createTempRoot();
     const fetchMock = vi.fn(async () => pngResponse(404));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(ensureCardTileCached('NONEXISTENT_CARD', { root })).rejects.toThrow(/failed to download/i);
+    // 404 is treated as the resource genuinely not existing — no retries.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries transient 5xx tile fetches and succeeds on a later attempt', async () => {
+    const root = await createTempRoot();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(pngResponse(503))
+      .mockResolvedValueOnce(pngResponse(503))
+      .mockResolvedValueOnce(pngResponse(200));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const cached = await ensureCardTileCached('CS2_029', { root });
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(cached.url).toBe('hdt-card-image://tile/CS2_029.png');
+  });
+
+  it('retries network errors before giving up', async () => {
+    const root = await createTempRoot();
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('ECONNRESET'))
+      .mockResolvedValueOnce(pngResponse(200));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const cached = await ensureCardTileCached('CS2_029', { root });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(cached.url).toBe('hdt-card-image://tile/CS2_029.png');
   });
 
   it('hits the CDN exactly once per cardId via the URL builder', async () => {
