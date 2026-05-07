@@ -218,6 +218,8 @@
     "deck": "Deck",
     "remainingCards": "Remaining Cards",
     "remaining": "Remaining",
+    "currentHand": "Current Hand",
+    "emptyHand": "No cards in hand",
     "waitingForMatch": "Waiting for match to start...",
     "loadingMatch": "Loading match information...",
     "deckNotDetected": "Current deck not detected. Select it in the dialog.",

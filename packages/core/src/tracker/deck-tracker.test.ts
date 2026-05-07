@@ -195,6 +195,31 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('orders friendlyHand by zonePosition', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = {
+      friendlyHand: [
+        { entityId: 2, cardId: 'B', zonePosition: 2 },
+        { entityId: 1, cardId: 'A', zonePosition: 1 },
+        { entityId: 3, cardId: 'C', zonePosition: 3 },
+      ],
+      opposingHandCount: 0,
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().friendlyHand).toEqual(['A', 'B', 'C']);
+    tracker.stop();
+  });
+
   it('identifies a saved deck from visible friendly hand cards when selected deck id is unavailable', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

@@ -218,6 +218,8 @@
     "deck": "卡组",
     "remainingCards": "剩余卡牌",
     "remaining": "剩余",
+    "currentHand": "当前手牌",
+    "emptyHand": "当前没有手牌",
     "waitingForMatch": "等待对局开始...",
     "loadingMatch": "正在加载对局信息...",
     "deckNotDetected": "未识别到当前卡组。请在弹窗中选择。",

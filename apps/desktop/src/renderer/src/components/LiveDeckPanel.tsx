@@ -126,7 +126,11 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     return m;
   }, [deck.remaining]);
 
-  // Build card defs map for sorting
+  // Build card defs map for sorting and friendly-hand display.
+  const friendlyHandCardIds = useMemo(
+    () => snapshot.friendlyHand.filter((cardId) => cardId !== ''),
+    [snapshot.friendlyHand],
+  );
   const cardIds = useMemo(
     () => [...new Set([...deck.original, ...deck.remaining].map((e) => e.cardId))],
     [deck.original, deck.remaining],
@@ -192,6 +196,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     [onRowEnter],
   );
   const handleRowMouseLeave = useCallback(() => onRowLeave(), [onRowLeave]);
+  const handleHandAnimationEnd = useCallback(() => {}, []);
 
   return (
     <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
@@ -222,7 +227,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-        <section>
+        <section data-testid="remaining-cards-section">
           <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
             {t('deckTracker.remaining')}
           </h3>
@@ -263,6 +268,36 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
             })}
           </div>
         )}
+        <section data-testid="friendly-hand-section" className="mt-3 border-t border-border pt-2">
+          <div className="flex items-center justify-between gap-2 px-1 pb-1">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-text-mute">
+              {t('deckTracker.currentHand')}
+            </h3>
+            <span className="font-mono text-[11px] tabular-nums text-text-dim">
+              {friendlyHandCardIds.length}
+            </span>
+          </div>
+          {friendlyHandCardIds.length === 0 ? (
+            <div className="rounded border border-border bg-bg px-2 py-2 text-center text-xs text-text-dim">
+              {t('deckTracker.emptyHand')}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {friendlyHandCardIds.map((cardId, index) => (
+                <CardCopyRow
+                  key={`${cardId}-${index}`}
+                  copyKey={`hand-${index}-${cardId}`}
+                  cardId={cardId}
+                  exiting={false}
+                  testId="friendly-hand-row"
+                  onAnimationEnd={handleHandAnimationEnd}
+                  onMouseEnter={handleRowMouseEnter}
+                  onMouseLeave={handleRowMouseLeave}
+                />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
 
       <div className="bg-bg-2 p-3 border-t border-border flex justify-between items-center text-xs text-text-dim">
@@ -338,6 +373,7 @@ interface CardCopyRowProps {
   copyKey: string;
   cardId: string;
   exiting: boolean;
+  testId?: string;
   onAnimationEnd: (copyKey: string) => void;
   onMouseEnter: (cardId: string, el: HTMLDivElement) => void;
   onMouseLeave: () => void;
@@ -347,6 +383,7 @@ function CardCopyRow({
   copyKey,
   cardId,
   exiting,
+  testId = 'card-copy-row',
   onAnimationEnd,
   onMouseEnter,
   onMouseLeave,
@@ -361,7 +398,7 @@ function CardCopyRow({
   return (
     <div
       ref={ref}
-      data-testid="card-copy-row"
+      data-testid={testId}
       className={clsx(
         'relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]',
         exiting ? 'animate-deck-exit' : '',
@@ -406,4 +443,3 @@ function CardCopyRow({
     </div>
   );
 }
-

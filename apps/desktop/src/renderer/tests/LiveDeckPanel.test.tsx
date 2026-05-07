@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor, within } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import { LiveDeckPanel } from '../src/components/LiveDeckPanel';
 import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
@@ -13,6 +13,7 @@ import type { DeckTrackerSnapshot } from '@hdt/core';
 function makeSnapshot(overrides: {
   original: { cardId: string; count: number }[];
   remaining?: { cardId: string; count: number }[];
+  friendlyHand?: string[];
 }): DeckTrackerSnapshot {
   return {
     phase: 'IN_MATCH',
@@ -34,7 +35,7 @@ function makeSnapshot(overrides: {
       extras: [],
     },
     pendingDeckSelection: null,
-    friendlyHand: [],
+    friendlyHand: overrides.friendlyHand ?? [],
     opposingHandCount: 0,
     opponent: {
       revealed: [],
@@ -61,6 +62,9 @@ const CARD_DEFS: Record<string, { name: string; cost?: number; rarity?: string }
   HERO_01: { name: 'Fireblast', rarity: 'FREE' }, // no cost — hero power
   ALBATROSS: { name: 'Bad Luck Albatross', cost: 3, rarity: 'RARE' },
   ALEX: { name: 'Alexstrasza', cost: 9, rarity: 'LEGENDARY' },
+  COST1: { name: 'Middle Card', cost: 1, rarity: 'COMMON' },
+  COST5: { name: 'Right Card', cost: 5, rarity: 'COMMON' },
+  COST10: { name: 'Left Card', cost: 10, rarity: 'COMMON' },
 };
 
 // Mock useCardDef to return stubs from CARD_DEFS.
@@ -252,6 +256,69 @@ describe('LiveDeckPanel sorting', () => {
       const rows = screen.getAllByTestId('card-copy-row');
       expect(rows).toHaveLength(3);
       expect(rows.some((row) => row.textContent?.includes('Bad Luck Albatross'))).toBe(true);
+    });
+  });
+
+  it('renders friendly hand below remaining cards in hand order', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 1 }],
+      friendlyHand: ['COST10', 'COST1', 'COST5'],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Current Hand')).toBeInTheDocument();
+      const remainingSection = screen.getByTestId('remaining-cards-section');
+      const handSection = screen.getByTestId('friendly-hand-section');
+      expect(
+        remainingSection.compareDocumentPosition(handSection) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        within(handSection).getAllByTestId('friendly-hand-row').map((row) => row.textContent),
+      ).toEqual([
+        expect.stringContaining('Left Card'),
+        expect.stringContaining('Middle Card'),
+        expect.stringContaining('Right Card'),
+      ]);
+      for (const row of within(handSection).getAllByTestId('friendly-hand-row')) {
+        expect(within(row).getByTestId('card-row-art')).toBeInTheDocument();
+      }
+    });
+  });
+
+  it('keeps remaining deck sort separate from hand order', async () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'COST10', count: 1 },
+        { cardId: 'COST1', count: 1 },
+        { cardId: 'COST5', count: 1 },
+      ],
+      friendlyHand: ['COST10', 'COST1', 'COST5'],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      const deckRows = within(screen.getByTestId('remaining-cards-section'))
+        .getAllByTestId('card-copy-row')
+        .map((row) => row.textContent);
+      expect(deckRows).toEqual([
+        expect.stringContaining('Middle Card'),
+        expect.stringContaining('Right Card'),
+        expect.stringContaining('Left Card'),
+      ]);
+
+      const handRows = within(screen.getByTestId('friendly-hand-section'))
+        .getAllByTestId('friendly-hand-row')
+        .map((row) => row.textContent);
+      expect(handRows).toEqual([
+        expect.stringContaining('Left Card'),
+        expect.stringContaining('Middle Card'),
+        expect.stringContaining('Right Card'),
+      ]);
     });
   });
 });

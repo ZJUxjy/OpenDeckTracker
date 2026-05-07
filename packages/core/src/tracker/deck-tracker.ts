@@ -606,7 +606,11 @@ export class DeckTracker {
     const matchInfo = args?.matchInfo ?? this.currentSnapshot.matchInfo;
     const handState = args?.handState ?? null;
     const deckState = args?.deckState ?? null;
-    const friendlyHand = handState?.friendlyHand.map((c) => c.cardId) ?? [];
+    const friendlyHand =
+      handState?.friendlyHand
+        .slice()
+        .sort((a, b) => a.zonePosition - b.zonePosition || a.entityId - b.entityId)
+        .map((c) => c.cardId) ?? [];
 
     let deck: DeckTrackerSnapshot['deck'] = null;
     const original = this.game.localPlayer.originalDeck;
