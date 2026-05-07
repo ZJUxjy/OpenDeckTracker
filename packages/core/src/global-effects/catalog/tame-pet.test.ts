@@ -10,6 +10,7 @@ import type { CardPlayedEvent, ExtractCtx } from '../types';
 const cast: CardPlayedEvent = {
   cardId: 'MEND_300',
   controllerId: 1,
+  entityId: 50, // matches the BLOCK_START entity in tamePetSuccess fixture
   timestamp: 1000,
 };
 
@@ -44,75 +45,37 @@ describe('tame-pet effect', () => {
   });
 
   it('extractor picks the LATEST cast when the same card was played twice', async () => {
-    const empty = { raw: '', content: '' } as const;
+    const e = { raw: '', content: '' } as const;
+    const fullEntity = (id: number, cardId: string): PowerEvent => ({
+      type: 'full-entity',
+      entityId: id,
+      cardId,
+      tags: { ZONE: 'SETASIDE', PLAYER_ID: 1 },
+      ...e,
+    });
     const stream: PowerEvent[] = [
-      // First cast — early in the match
-      {
-        type: 'block-start',
-        blockType: 'PLAY',
-        entity: 30,
-        effectCardId: 'MEND_300',
-        target: null,
-        subOption: null,
-        ...empty,
-      },
-      {
-        type: 'show-entity',
-        entity: 31,
-        cardId: 'OLD_001',
-        tags: { ZONE: 'SETASIDE', CONTROLLER: 1 },
-        ...empty,
-      },
-      {
-        type: 'show-entity',
-        entity: 32,
-        cardId: 'OLD_002',
-        tags: { ZONE: 'SETASIDE', CONTROLLER: 1 },
-        ...empty,
-      },
-      {
-        type: 'show-entity',
-        entity: 33,
-        cardId: 'OLD_003',
-        tags: { ZONE: 'SETASIDE', CONTROLLER: 1 },
-        ...empty,
-      },
-      { type: 'block-end', ...empty },
-      // Second cast — later
-      {
-        type: 'block-start',
-        blockType: 'PLAY',
-        entity: 50,
-        effectCardId: 'MEND_300',
-        target: null,
-        subOption: null,
-        ...empty,
-      },
-      {
-        type: 'show-entity',
-        entity: 51,
-        cardId: 'NEW_001',
-        tags: { ZONE: 'SETASIDE', CONTROLLER: 1 },
-        ...empty,
-      },
-      {
-        type: 'show-entity',
-        entity: 52,
-        cardId: 'NEW_002',
-        tags: { ZONE: 'SETASIDE', CONTROLLER: 1 },
-        ...empty,
-      },
-      {
-        type: 'show-entity',
-        entity: 53,
-        cardId: 'NEW_003',
-        tags: { ZONE: 'SETASIDE', CONTROLLER: 1 },
-        ...empty,
-      },
-      { type: 'block-end', ...empty },
+      // First cast — early in the match. 6 spawns (3 old + 3 new).
+      { type: 'block-start', blockType: 'PLAY', entity: 30, effectCardId: '', target: null, subOption: null, ...e },
+      fullEntity(31, 'NEW1_032'), // old pool (originals)
+      fullEntity(32, 'NEW1_033'),
+      fullEntity(33, 'NEW1_034'),
+      fullEntity(34, 'OLD_POOL_1'), // first cast's "new" pool
+      fullEntity(35, 'OLD_POOL_2'),
+      fullEntity(36, 'OLD_POOL_3'),
+      { type: 'block-end', ...e },
+      // Second cast — later. Old-pool slot is the previous cast's
+      // chosen pool, then the second cast's brand-new pool.
+      { type: 'block-start', blockType: 'PLAY', entity: 50, effectCardId: '', target: null, subOption: null, ...e },
+      fullEntity(51, 'OLD_POOL_1'), // skipped: the just-replaced pool
+      fullEntity(52, 'OLD_POOL_2'),
+      fullEntity(53, 'OLD_POOL_3'),
+      fullEntity(54, 'NEW_001'), // returned: second cast's actual new pool
+      fullEntity(55, 'NEW_002'),
+      fullEntity(56, 'NEW_003'),
+      { type: 'block-end', ...e },
     ];
     const params = await tamePet.parameterExtractor!(
-      { cardId: 'MEND_300', controllerId: 1, timestamp: 5000 },
+      { cardId: 'MEND_300', controllerId: 1, entityId: 50, timestamp: 5000 },
       makeCtx(stream),
     );
     expect((params as { pool: string[] } | null)?.pool).toEqual([

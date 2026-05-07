@@ -6,6 +6,7 @@ import {
   useDeckTrackerStore,
   useOpposingEffects,
 } from '../stores/deck-tracker-store';
+import { partitionAnimalCompanionEffects } from '../lib/animal-companion-effects';
 
 const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
 
@@ -17,6 +18,7 @@ const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
 export function OpponentOverlayView() {
   const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
   const opposingEffects = useOpposingEffects();
+  const { effectiveRowCount } = partitionAnimalCompanionEffects(opposingEffects);
 
   const close = (): void => {
     void window.hdt?.overlay?.closeFromWindow?.('opponent');
@@ -26,7 +28,7 @@ export function OpponentOverlayView() {
     <div className="w-full h-full relative">
       <TrackerPanelTabs
         side="opponent"
-        effectsCount={opposingEffects.length}
+        effectsCount={effectiveRowCount}
         deckSlot={
           <OpponentCardsPanel
             revealed={opponent?.revealed ?? []}

@@ -23,14 +23,24 @@ const ANIMAL_COMPANION_IDS = new Set<string>([
  * Split active effects into the Animal Companion summary plus
  * everything else. The summary collapses Tame Pet / Roam Free /
  * Migrating Elekk / Talya Earthstrider into a single row keyed on the
- * CURRENT state (latest pool replacement wins, Talya stacks via
- * triggerCount) — what the user actually wants to know.
+ * CURRENT state — latest replacement's pool wins, but the cost
+ * offset is the SUM of ALL active replacements (HS rule: each
+ * "Beasts that cost (X) more" stacks on top of the previous pool's
+ * cost, so chained casts compound). Talya's `triggerCount` sums into
+ * the extra-summon total.
  */
 export function partitionAnimalCompanionEffects(
   effects: readonly ActiveEffect[],
 ): {
   summary: AnimalCompanionSummary | null;
   others: ActiveEffect[];
+  /**
+   * Effective row count for tab-badge display: 1 if the AC cluster
+   * collapses to a summary, plus the others. Lets renderers show a
+   * count that matches the visual row count rather than the raw
+   * `effects.length` (which over-counts collapsed AC siblings).
+   */
+  effectiveRowCount: number;
 } {
   const acEffects: ActiveEffect[] = [];
   const others: ActiveEffect[] = [];
@@ -38,13 +48,24 @@ export function partitionAnimalCompanionEffects(
     if (ANIMAL_COMPANION_IDS.has(e.id)) acEffects.push(e);
     else others.push(e);
   }
-  if (acEffects.length === 0) return { summary: null, others };
+  if (acEffects.length === 0) {
+    return { summary: null, others, effectiveRowCount: others.length };
+  }
 
-  // Pool replacement: latest by triggeredAt wins (HS rule — only the
-  // most recent pool is active; earlier replacements are overridden).
+  // Pool replacement: latest by triggeredAt wins for the actual pool
+  // (only the most recent pool is in effect). Cost offset is the SUM
+  // of all replacements' offsets — chained casts stack, so Tame Pet
+  // (+1) followed by Migrating Elekk (+1) means current beasts cost
+  // 3+1+1 = 5 mana.
   let latestReplacement: ActiveEffect | null = null;
+  let totalCostOffset = 0;
   for (const e of acEffects) {
     if (!(e.id in POOL_REPLACEMENT_OFFSETS)) continue;
+    const offset = POOL_REPLACEMENT_OFFSETS[e.id] ?? 0;
+    // Each TRIGGER of the same card stacks too (a 2nd Tame Pet adds
+    // another +1). The registry stores triggerCount for repeated
+    // casts of the same card.
+    totalCostOffset += offset * e.triggerCount;
     if (latestReplacement === null || e.triggeredAt > latestReplacement.triggeredAt) {
       latestReplacement = e;
     }
@@ -66,7 +87,7 @@ export function partitionAnimalCompanionEffects(
       latestReplacement !== null
         ? {
             sourceCardId: latestReplacement.sourceCardId,
-            costOffset: POOL_REPLACEMENT_OFFSETS[latestReplacement.id] ?? 0,
+            costOffset: totalCostOffset,
             pool:
               ((latestReplacement.params as AnimalCompanionPoolParams | undefined)?.pool) ??
               [],
@@ -76,7 +97,11 @@ export function partitionAnimalCompanionEffects(
     triggeredAt: earliest,
   };
 
-  return { summary, others };
+  return {
+    summary,
+    others,
+    effectiveRowCount: 1 + others.length,
+  };
 }
 
 export const ANIMAL_COMPANION_EFFECT_IDS_FOR_TEST = ANIMAL_COMPANION_IDS;

@@ -17,18 +17,21 @@ import {
   useFriendlyEffects,
   useOpposingEffects,
 } from './stores/deck-tracker-store';
+import { partitionAnimalCompanionEffects } from './lib/animal-companion-effects';
 
 function RightPanel() {
   const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
   const friendlyEffects = useFriendlyEffects();
   const opposingEffects = useOpposingEffects();
+  const friendlyCount = partitionAnimalCompanionEffects(friendlyEffects).effectiveRowCount;
+  const opposingCount = partitionAnimalCompanionEffects(opposingEffects).effectiveRowCount;
 
   return (
     <div className="flex h-full gap-4">
       <div className="hidden xl:block h-full">
         <TrackerPanelTabs
           side="opponent"
-          effectsCount={opposingEffects.length}
+          effectsCount={opposingCount}
           deckSlot={
             <OpponentCardsPanel
               revealed={opponent?.revealed ?? []}
@@ -42,7 +45,7 @@ function RightPanel() {
       </div>
       <TrackerPanelTabs
         side="player"
-        effectsCount={friendlyEffects.length}
+        effectsCount={friendlyCount}
         deckSlot={<LiveDeckPanel />}
         effectsSlot={
           <GlobalEffectsPanel side="player" effects={friendlyEffects} />

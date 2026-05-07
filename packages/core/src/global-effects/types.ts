@@ -43,6 +43,13 @@ export type ExpireRule =
 export interface CardPlayedEvent {
   cardId: string;
   controllerId: number;
+  /**
+   * The HS-engine entity id of the played card. Critical for the
+   * registry's parameter extractor: the parser strips cardId from
+   * entity-bracket references, so the only stable handle to find the
+   * cast's BLOCK_START in the event stream is by entity id.
+   */
+  entityId: number;
   /** Wall-clock ms; the registry stamps `triggeredAt` from this. */
   timestamp: number;
 }

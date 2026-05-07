@@ -62,6 +62,9 @@ export function registerIpc(overlay?: OverlayControllers): void {
       ipcMain.handle('card-preview:show', (_, cardId: string, anchor: PreviewAnchor) => {
         cp.show(cardId, anchor);
       });
+      ipcMain.handle('card-preview:show-pool', (_, cardIds: string[], anchor: PreviewAnchor) => {
+        cp.showPool(cardIds, anchor);
+      });
       ipcMain.handle('card-preview:hide', () => {
         cp.hide();
       });

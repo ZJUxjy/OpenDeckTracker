@@ -62,7 +62,21 @@ export class GlobalEffectsRegistry {
     if (!def) return;
 
     const map = this.mapForController(event.controllerId);
-    if (!map) return;
+    if (!map) {
+      // Diagnostic: this fires when controllerId doesn't match either
+      // local or opposing — usually means Game.setPlayers hasn't been
+      // called yet (matchInfo not received) when the card was played.
+      // eslint-disable-next-line no-console
+      console.log(
+        `[global-effects] registry skipped: id=${def.id} controllerId=${event.controllerId} (not local/opposing)`,
+      );
+      return;
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `[global-effects] registry recorded: id=${def.id} controllerId=${event.controllerId}`,
+    );
 
     const ts = event.timestamp || this.now();
     const existing = map.get(def.id);

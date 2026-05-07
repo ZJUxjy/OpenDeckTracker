@@ -218,11 +218,20 @@ const api = {
       cardId: string,
       anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
     ): Promise<void> => ipcRenderer.invoke('card-preview:show', cardId, anchor),
+    showPool: (
+      cardIds: readonly string[],
+      anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
+    ): Promise<void> => ipcRenderer.invoke('card-preview:show-pool', cardIds, anchor),
     hide: (): Promise<void> => ipcRenderer.invoke('card-preview:hide'),
     onSetCard: (cb: (cardId: string) => void): (() => void) => {
       const handler = (_e: IpcRendererEvent, cardId: string): void => cb(cardId);
       ipcRenderer.on('card-preview:set-card', handler);
       return () => ipcRenderer.removeListener('card-preview:set-card', handler);
+    },
+    onSetPool: (cb: (cardIds: readonly string[]) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, cardIds: readonly string[]): void => cb(cardIds);
+      ipcRenderer.on('card-preview:set-pool', handler);
+      return () => ipcRenderer.removeListener('card-preview:set-pool', handler);
     },
   },
 };

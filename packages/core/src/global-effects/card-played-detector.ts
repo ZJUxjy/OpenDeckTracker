@@ -27,8 +27,18 @@ interface KnownEntity {
  * keeps it Vitest-friendly and lets the renderer get the same view
  * via the snapshot.
  */
+/**
+ * Tight time window (ms) for suppressing duplicate fires from the same
+ * entity. Hearthstone's Power.log mirrors every play through both the
+ * GameState and PowerTaskList streams (~1-2s apart), so a per-entity
+ * "fired within the last N ms" guard kills the duplicate cleanly.
+ * Bounce-and-replay scenarios are seconds apart so they're unaffected.
+ */
+const REFIRE_SUPPRESS_MS = 3000;
+
 export class CardPlayedDetector {
   private readonly entities = new Map<number, KnownEntity>();
+  private readonly lastFiredAt = new Map<number, number>();
   private readonly emit: (event: CardPlayedEvent) => void;
   private readonly clock: () => number;
 
@@ -42,6 +52,7 @@ export class CardPlayedDetector {
 
   reset(): void {
     this.entities.clear();
+    this.lastFiredAt.clear();
   }
 
   handle(event: PowerEvent): void {
@@ -103,12 +114,26 @@ export class CardPlayedDetector {
       // still fires.
       if (previousZone === 'PLAY' || previousZone === '1') return;
       if (known.cardId === '' || known.controllerId === 0) return;
-      this.emit({
-        cardId: known.cardId,
-        controllerId: known.controllerId,
-        timestamp: this.clock(),
-      });
+      this.fireEmit(id, known);
     }
+  }
+
+  private fireEmit(entityId: number, known: KnownEntity): void {
+    const now = this.clock();
+    const prevFire = this.lastFiredAt.get(entityId);
+    if (prevFire !== undefined && now - prevFire < REFIRE_SUPPRESS_MS) {
+      // Recent dual-stream replay (GameState + PowerTaskList for the
+      // same play). Don't double-record. Bounce-and-replay legitimate
+      // re-fires happen on a much longer cadence (>3s).
+      return;
+    }
+    this.lastFiredAt.set(entityId, now);
+    this.emit({
+      cardId: known.cardId,
+      controllerId: known.controllerId,
+      entityId,
+      timestamp: now,
+    });
   }
 
   /**
@@ -147,11 +172,7 @@ export class CardPlayedDetector {
     // when previousZone is already PLAY.
     if (known.zone === 'PLAY' || known.zone === '1') return;
     known.zone = 'PLAY';
-    this.emit({
-      cardId: known.cardId,
-      controllerId: known.controllerId,
-      timestamp: this.clock(),
-    });
+    this.fireEmit(entityId, known);
   }
 
   private recordEntity(

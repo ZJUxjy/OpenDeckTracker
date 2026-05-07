@@ -3,6 +3,7 @@ import { LiveDeckPanel } from './LiveDeckPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
 import { GlobalEffectsPanel } from './GlobalEffectsPanel';
 import { useFriendlyEffects } from '../stores/deck-tracker-store';
+import { partitionAnimalCompanionEffects } from '../lib/animal-companion-effects';
 
 const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
 
@@ -16,11 +17,12 @@ export function OverlayView() {
     void window.hdt?.overlay?.closeFromWindow?.('player');
   };
   const friendlyEffects = useFriendlyEffects();
+  const { effectiveRowCount } = partitionAnimalCompanionEffects(friendlyEffects);
   return (
     <div className="w-full h-full relative">
       <TrackerPanelTabs
         side="player"
-        effectsCount={friendlyEffects.length}
+        effectsCount={effectiveRowCount}
         deckSlot={<LiveDeckPanel />}
         effectsSlot={
           <GlobalEffectsPanel side="player" effects={friendlyEffects} />

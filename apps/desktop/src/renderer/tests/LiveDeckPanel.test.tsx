@@ -549,8 +549,10 @@ describe('LiveDeckPanel hover', () => {
       ...savedHdt,
       cardPreview: {
         show: cardPreviewShow,
+        showPool: vi.fn(),
         hide: cardPreviewHide,
         onSetCard: vi.fn(() => () => {}),
+        onSetPool: vi.fn(() => () => {}),
       },
     };
   });

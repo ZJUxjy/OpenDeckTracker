@@ -48,6 +48,7 @@ describe('CardPlayedDetector', () => {
     expect(emit).toHaveBeenCalledWith({
       cardId: 'CATA_216',
       controllerId: 1,
+      entityId: 64,
       timestamp: 9000,
     });
   });
@@ -110,12 +111,34 @@ describe('CardPlayedDetector', () => {
 
   it('emits twice when an entity is bounced and replayed (PLAY→HAND→PLAY)', () => {
     const emit = vi.fn();
-    const det = new CardPlayedDetector({ emit });
+    let now = 1000;
+    const det = new CardPlayedDetector({ emit, clock: () => now });
     det.handle(fullEntity(64, 'CATA_216', 1));
     det.handle(tagChange(64, 'ZONE', 'PLAY'));
     det.handle(tagChange(64, 'ZONE', 'HAND'));
+    // Real bounce-and-replay is seconds apart, well beyond the dual-
+    // stream replay suppression window. Advance the clock to clear it.
+    now += 5000;
     det.handle(tagChange(64, 'ZONE', 'PLAY'));
     expect(emit).toHaveBeenCalledTimes(2);
+  });
+
+  it('suppresses dual-stream re-emit (GameState + PowerTaskList same play)', () => {
+    // HS dumps every play through both the GameState and PowerTaskList
+    // streams 1-2s apart. The detector MUST collapse those into one
+    // emit; otherwise stacking effects (Free Spirit, Lightshow, etc.)
+    // get their triggerCount artificially doubled.
+    const emit = vi.fn();
+    let now = 1000;
+    const det = new CardPlayedDetector({ emit, clock: () => now });
+    det.handle(fullEntity(64, 'MEND_300', 1));
+    det.handle(blockStart(64, 'PLAY'));
+    // ZONE → GRAVEYARD between the two BLOCK_STARTs (HS spells go to
+    // graveyard immediately after PLAY).
+    det.handle(tagChange(64, 'ZONE', 'GRAVEYARD'));
+    now += 1500; // PowerTaskList replay ~1.5s later
+    det.handle(blockStart(64, 'PLAY'));
+    expect(emit).toHaveBeenCalledTimes(1);
   });
 
   it('emits on BLOCK_START blockType=PLAY (spell-cast signal)', () => {

@@ -252,8 +252,8 @@
       "bodyCostAndExtra": "现在召唤 {cost} 费的随机野兽，每次召唤额外 +{extra} 只。",
       "bodyExtraOnly": "每次召唤动物伙伴时额外召唤 +{extra} 只野兽。",
       "bodyUnknown": "动物伙伴召唤规则已被修改 — 池子详情暂未获取。",
-      "hoverHint": "悬停 / 点击",
-      "pinnedHint": "点击收起"
+      "hoverHint": "悬停查看",
+      "poolUnavailableBody": "未能从 Power.log 中解析出池子里的 3 张野兽 —— 规则已生效，但具体卡牌尚不可知。"
     },
     "artanis": {
       "title": "阿塔尼斯",

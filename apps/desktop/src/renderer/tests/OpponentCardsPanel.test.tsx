@@ -133,8 +133,10 @@ describe('OpponentCardsPanel', () => {
       ...savedHdt,
       cardPreview: {
         show: cardPreviewShow,
+        showPool: vi.fn(),
         hide: cardPreviewHide,
         onSetCard: vi.fn(() => () => {}),
+        onSetPool: vi.fn(() => () => {}),
       },
     };
     try {
