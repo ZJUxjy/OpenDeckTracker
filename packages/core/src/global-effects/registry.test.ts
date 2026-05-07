@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { GlobalEffectsRegistry } from './registry';
-import type { CardPlayedEvent, EffectDef } from './types';
+import type { CardPlayedEvent, EffectDef, ExtractCtx } from './types';
+
+void ((): ExtractCtx => ({ recentEvents: [], waitForMoreEvents: () => Promise.resolve([]) }));
 
 const CLEANSING_CLERIC: EffectDef = {
   id: 'cleansing-cleric',
@@ -116,6 +118,36 @@ describe('GlobalEffectsRegistry', () => {
 
     const second = reg.snapshot();
     expect(second.local.map((e) => e.id)).toEqual(snap.local.map((e) => e.id));
+  });
+
+  it('runs declared extractor and patches params on resolve', async () => {
+    const extractor = vi
+      .fn<NonNullable<EffectDef<{ pool: string[] }>['parameterExtractor']>>()
+      .mockResolvedValue({ pool: ['A', 'B', 'C'] });
+    const def: EffectDef<{ pool: string[] }> = {
+      id: 'with-params',
+      sourceCardId: 'PARAM_001',
+      side: 'caster',
+      mode: 'STANDARD',
+      parameterExtractor: extractor,
+    };
+    const reg = new GlobalEffectsRegistry({
+      catalogIndex: makeCatalog(def as EffectDef),
+      now: () => 1000,
+      localControllerId: 1,
+      opposingControllerId: 2,
+      extractCtx: () => ({ recentEvents: [], waitForMoreEvents: () => Promise.resolve([]) }),
+    });
+    reg.handleCardPlayed({ cardId: 'PARAM_001', controllerId: 1, timestamp: 1000 });
+
+    // Synchronously: params undefined.
+    const before = reg.snapshot();
+    expect(before.local[0]?.params).toBeUndefined();
+
+    // After microtask: params populated.
+    await new Promise((r) => setImmediate(r));
+    const after = reg.snapshot();
+    expect(after.local[0]?.params).toEqual({ pool: ['A', 'B', 'C'] });
   });
 
   it('snapshot orders entries by triggeredAt ascending', () => {

@@ -25,16 +25,16 @@
 
 ## 4. Tame Pet effect (parameterized, with extractor)
 
-- [ ] 4.1 Capture a real Power.log fragment around a Tame Pet cast — store under `packages/core/src/global-effects/__fixtures__/tame-pet-success.log` (the casting controller plus 3 follow-up beast SHOW_ENTITY events). If a real fixture isn't available yet, hand-craft one matching the actual Power.log format used elsewhere in the repo (cross-check with `packages/hearthwatcher/src/__tests__/fixtures/`).
-- [ ] 4.2 Capture / hand-craft a degraded fixture `__fixtures__/tame-pet-truncated.log` (cast event only, no follow-up entities).
-- [ ] 4.3 Add failing test `tame-pet.test.ts`: feed each fixture into the to-be-written extractor, expect success → `{ pool: [c1, c2, c3] }` in entity-spawn order; expect truncated → `null`.
-- [ ] 4.4 Look up Tame Pet's `cardId` in `cards.collectible.enUS.json`; record it in the commit message.
-- [ ] 4.5 Implement `packages/core/src/global-effects/power-log-extractor.ts` with a `readBeastSpawnsAfter(event, ctx, count)` helper that scans HearthWatcher's already-parsed events (do NOT re-parse raw log lines — work off the same event stream the rest of `@hdt/core` consumes); time-window bounded to N events post-cast on the same controllerId.
-- [ ] 4.6 Implement `packages/core/src/global-effects/catalog/tame-pet.ts` with `parameterExtractor: async (event, ctx) => { const pool = await readBeastSpawnsAfter(event, ctx, 3); return pool ? { pool } : null; }`.
-- [ ] 4.7 Re-run 4.3 — expect PASS.
-- [ ] 4.8 Add Tame Pet to the `EFFECT_CATALOG` barrel; verify catalog tests in §2.1/2.6 still pass with the new entry.
-- [ ] 4.9 Wire `parameterExtractor` invocation into `GlobalEffectsRegistry.handleCardPlayed`: kick off the promise, store an initial `ActiveEffect` with `params: undefined`, on resolve mutate the entry's `params` in place. Add registry test `re-runs extractor and patches params on resolve`.
-- [ ] 4.10 Commit: `feat(core): add tame-pet effect with Power.log parameter extractor`.
+- [x] 4.1 Capture a real Power.log fragment around a Tame Pet cast — store under `packages/core/src/global-effects/__fixtures__/tame-pet-success.log` (the casting controller plus 3 follow-up beast SHOW_ENTITY events). If a real fixture isn't available yet, hand-craft one matching the actual Power.log format used elsewhere in the repo (cross-check with `packages/hearthwatcher/src/__tests__/fixtures/`). → Stored as parsed `PowerEvent[]` modules in `__fixtures__/tame-pet-fixtures.ts` per design "do NOT re-parse raw log lines".
+- [x] 4.2 Capture / hand-craft a degraded fixture `__fixtures__/tame-pet-truncated.log` (cast event only, no follow-up entities). → Same module.
+- [x] 4.3 Add failing test `tame-pet.test.ts`: feed each fixture into the to-be-written extractor, expect success → `{ pool: [c1, c2, c3] }` in entity-spawn order; expect truncated → `null`.
+- [x] 4.4 Look up Tame Pet's `cardId` in `cards.collectible.enUS.json`; record it in the commit message. → `MEND_300`
+- [x] 4.5 Implement `packages/core/src/global-effects/power-log-extractor.ts` with a `readBeastSpawnsAfter(event, ctx, count)` helper that scans HearthWatcher's already-parsed events (do NOT re-parse raw log lines — work off the same event stream the rest of `@hdt/core` consumes); time-window bounded to N events post-cast on the same controllerId.
+- [x] 4.6 Implement `packages/core/src/global-effects/catalog/tame-pet.ts` with `parameterExtractor: async (event, ctx) => { const pool = await readBeastSpawnsAfter(event, ctx, 3); return pool ? { pool } : null; }`.
+- [x] 4.7 Re-run 4.3 — expect PASS.
+- [x] 4.8 Add Tame Pet to the `EFFECT_CATALOG` barrel; verify catalog tests in §2.1/2.6 still pass with the new entry.
+- [x] 4.9 Wire `parameterExtractor` invocation into `GlobalEffectsRegistry.handleCardPlayed`: kick off the promise, store an initial `ActiveEffect` with `params: undefined`, on resolve mutate the entry's `params` in place. Add registry test `re-runs extractor and patches params on resolve`.
+- [x] 4.10 Commit: `feat(core): add tame-pet effect with Power.log parameter extractor`.
 
 ## 5. Snapshot integration in DeckTrackerSnapshot
 
