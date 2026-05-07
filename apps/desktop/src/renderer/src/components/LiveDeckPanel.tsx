@@ -207,6 +207,18 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
             {totalRemaining} / {totalOriginal}
           </span>
         </div>
+        <div
+          className="mt-2 flex items-center justify-between gap-3 text-[11px] text-text-dim"
+          title={t('boardAttack.hint')}
+        >
+          <span className="uppercase tracking-wider">{t('boardAttack.friendly')}</span>
+          <span
+            data-testid="friendly-board-attack-value"
+            className="font-mono tabular-nums text-accent"
+          >
+            {snapshot.boardAttack?.friendly ?? 0}
+          </span>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">

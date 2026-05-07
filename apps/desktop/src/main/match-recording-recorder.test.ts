@@ -46,6 +46,7 @@ function snapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTrackerSnap
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],
+    boardAttack: { friendly: 0, opposing: 0 },
     error: null,
     updatedAt: 100,
     ...overrides,

@@ -230,6 +230,11 @@
     "hearthstoneNotRunningHint": "Start the game to begin live deck tracking.",
     "matchNotDetected": "Match not detected"
   },
+  "boardAttack": {
+    "friendly": "Your board attack",
+    "opposing": "Opponent board attack",
+    "hint": "Total attack ready to swing this turn — frozen / sleeping / exhausted minions excluded; weapon and windfury included."
+  },
   "onboarding": {
     "bannerHsNotRunningTitle": "Hearthstone is not running",
     "bannerHsNotRunningBody": "Live deck tracking and overlays activate automatically once the game is open. Decks, statistics, and the popular-deck library remain available offline.",

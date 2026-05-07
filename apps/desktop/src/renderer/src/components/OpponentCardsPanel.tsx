@@ -21,6 +21,8 @@ const ART_MASK_STYLE: CSSProperties = {
 interface OpponentCardsPanelProps {
   revealed: OpponentCardRecord[];
   graveyard: OpponentCardRecord[];
+  /** Total board attack on the opposing side; rendered in the header. */
+  boardAttack?: number;
 }
 
 interface CardDisplayDef {
@@ -35,7 +37,11 @@ interface GroupedOpponentCard {
   order: number;
 }
 
-export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelProps) {
+export function OpponentCardsPanel({
+  revealed,
+  graveyard,
+  boardAttack = 0,
+}: OpponentCardsPanelProps) {
   const { t } = useTranslation();
   const cardIds = useMemo(
     () => [...new Set([...revealed, ...graveyard].map((record) => record.cardId))],
@@ -71,6 +77,18 @@ export function OpponentCardsPanel({ revealed, graveyard }: OpponentCardsPanelPr
           {t('opponent.title')}
         </div>
         <div className="text-text font-bold text-sm">{t('opponent.revealed')}</div>
+        <div
+          className="mt-2 flex items-center justify-between gap-3 text-[11px] text-text-dim"
+          title={t('boardAttack.hint')}
+        >
+          <span className="uppercase tracking-wider">{t('boardAttack.opposing')}</span>
+          <span
+            data-testid="opposing-board-attack-value"
+            className="font-mono tabular-nums text-rarity-rare"
+          >
+            {boardAttack}
+          </span>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">

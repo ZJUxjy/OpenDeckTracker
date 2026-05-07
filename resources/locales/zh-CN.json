@@ -230,6 +230,11 @@
     "hearthstoneNotRunningHint": "启动游戏即可开始实时记牌。",
     "matchNotDetected": "未识别到对局"
   },
+  "boardAttack": {
+    "friendly": "我方场攻",
+    "opposing": "对方场攻",
+    "hint": "本回合可立即打出的总攻击力（已排除冰冻、刚下场未冲锋/冲杀、本回合已攻击或不能攻击的随从；包含武器与风怒）。"
+  },
   "onboarding": {
     "bannerHsNotRunningTitle": "炉石传说尚未运行",
     "bannerHsNotRunningBody": "游戏启动后将自动开启实时记牌器与游戏内浮窗。牌组管理、统计数据与热门卡组库可离线使用。",

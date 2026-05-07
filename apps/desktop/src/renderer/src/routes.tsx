@@ -21,6 +21,9 @@ import { partitionAnimalCompanionEffects } from './lib/animal-companion-effects'
 
 function RightPanel() {
   const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
+  const opposingBoardAttack = useDeckTrackerStore(
+    (s) => s.snapshot?.boardAttack?.opposing ?? 0,
+  );
   const friendlyEffects = useFriendlyEffects();
   const opposingEffects = useOpposingEffects();
   const friendlyCount = partitionAnimalCompanionEffects(friendlyEffects).effectiveRowCount;
@@ -36,6 +39,7 @@ function RightPanel() {
             <OpponentCardsPanel
               revealed={opponent?.revealed ?? []}
               graveyard={opponent?.graveyard ?? []}
+              boardAttack={opposingBoardAttack}
             />
           }
           effectsSlot={

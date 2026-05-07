@@ -2,10 +2,18 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import {
   CardPlayedDetector,
   DeckTracker,
+  type ComputeBoardAttackOptions,
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
+  type MinionTags,
+  type WeaponState,
 } from '@hdt/core';
-import type { PowerEvent } from '@hdt/hearthwatcher';
+import type { BoardState, MatchInfo } from '@hdt/hearthmirror';
+import {
+  HearthWatcherGameState,
+  reducePowerEvent,
+  type PowerEvent,
+} from '@hdt/hearthwatcher';
 import { getHearthMirror } from './hearthmirror';
 import { recordCompletedMatch } from './stats-host';
 
@@ -42,6 +50,87 @@ import { recordCompletedMatch } from './stats-host';
 let tracker: DeckTracker | null = null;
 let cardPlayedDetector: CardPlayedDetector | null = null;
 
+// ── Board-attack tag overlay ────────────────────────────────────────
+//
+// Tag-tracked entity store fed by every PowerEvent. The deck-tracker
+// asks for filter context each tick via `boardAttackContextProvider`;
+// we materialize it from this state. Reset on `create-game` so a new
+// match starts clean.
+let boardAttackState = new HearthWatcherGameState();
+
+function resetBoardAttackState(): void {
+  boardAttackState = new HearthWatcherGameState();
+}
+
+function numericTag(value: unknown): number | undefined {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && /^\d+$/.test(value)) return Number(value);
+  return undefined;
+}
+
+function boolTag(value: unknown): boolean {
+  if (value === 1 || value === true) return true;
+  if (typeof value === 'string') return value === 'True' || value === '1';
+  return false;
+}
+
+function isWeaponEntity(tags: Readonly<Record<string, unknown>>): boolean {
+  const ct = tags['CARDTYPE'];
+  return ct === 'WEAPON' || ct === 7;
+}
+
+function buildBoardAttackContext(
+  _boardState: BoardState | null,
+  matchInfo: MatchInfo | null,
+): ComputeBoardAttackOptions {
+  const localId =
+    matchInfo?.localPlayer?.id !== undefined && matchInfo.localPlayer.id > 0
+      ? matchInfo.localPlayer.id
+      : 1;
+
+  const tagsByEntityId = new Map<number, MinionTags>();
+  const weapons: WeaponState[] = [];
+
+  for (const e of boardAttackState.entities.values()) {
+    if (e.zone !== 'PLAY') continue;
+    if (isWeaponEntity(e.tags)) {
+      const attack = numericTag(e.tags['ATK']);
+      if (attack === undefined || attack <= 0) continue;
+      const durability = numericTag(e.tags['DURABILITY']);
+      const wfNum = numericTag(e.tags['WINDFURY']);
+      const weapon: WeaponState = {
+        controllerId: e.controllerId,
+        attack,
+        windfury: boolTag(e.tags['WINDFURY']),
+        megaWindfury: wfNum === 3 || boolTag(e.tags['MEGA_WINDFURY']),
+        numAttacksThisTurn: numericTag(e.tags['NUM_ATTACKS_THIS_TURN']) ?? 0,
+        ...(durability !== undefined ? { durability } : {}),
+      };
+      weapons.push(weapon);
+      continue;
+    }
+
+    // Minion tag overlay for the calculator. Only entries that change
+    // a minion's swing budget go in — others (e.g. heroes) are filtered
+    // out by the calculator's HERO_/GAME_ cardId guard.
+    const wfNum = numericTag(e.tags['WINDFURY']);
+    const tags: MinionTags = {
+      frozen: boolTag(e.tags['FROZEN']),
+      cantAttack: boolTag(e.tags['CANT_ATTACK']),
+      numTurnsInPlay: numericTag(e.tags['NUM_TURNS_IN_PLAY']) ?? 1,
+      charge: boolTag(e.tags['CHARGE']),
+      rush: boolTag(e.tags['RUSH']),
+      windfury: boolTag(e.tags['WINDFURY']),
+      megaWindfury: wfNum === 3 || boolTag(e.tags['MEGA_WINDFURY']),
+      numAttacksThisTurn: numericTag(e.tags['NUM_ATTACKS_THIS_TURN']) ?? 0,
+      extraAttacksThisTurn: numericTag(e.tags['EXTRA_ATTACKS_THIS_TURN']) ?? 0,
+    };
+    tagsByEntityId.set(e.entityId, tags);
+  }
+
+  return { tagsByEntityId, weapons, localControllerId: localId };
+}
+
 function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) {
@@ -53,7 +142,10 @@ function broadcast(channel: string, payload: unknown): void {
 export function startDeckTracker(): void {
   if (tracker !== null) return;
   const mirror = getHearthMirror();
-  tracker = new DeckTracker({ mirror });
+  tracker = new DeckTracker({
+    mirror,
+    boardAttackContextProvider: buildBoardAttackContext,
+  });
   // Live detector that turns the upstream PowerEvent stream into
   // `card:played` calls on the tracker's global-effects registry.
   cardPlayedDetector = new CardPlayedDetector({
@@ -128,6 +220,10 @@ export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {
  */
 export function forwardPowerEventToDeckTracker(event: PowerEvent): void {
   cardPlayedDetector?.handle(event);
+  if (event.type === 'create-game') {
+    resetBoardAttackState();
+  }
+  reducePowerEvent(boardAttackState, event);
 }
 
 /**

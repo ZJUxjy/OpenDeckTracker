@@ -31,6 +31,15 @@ export type {
   OpponentCardRecord,
 } from './tracker/deck-tracker';
 
+// Board-attack calculator.
+export { computeBoardAttack } from './tracker/board-attack';
+export type {
+  BoardAttackTotals,
+  ComputeBoardAttackOptions,
+  MinionTags,
+  WeaponState,
+} from './tracker/board-attack';
+
 // Deck identifiers.
 export {
   ChainedDeckIdentifier,

@@ -19,6 +19,7 @@ function blankSnap(extra: Partial<DeckTrackerSnapshot> = {}): DeckTrackerSnapsho
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],
+    boardAttack: { friendly: 0, opposing: 0 },
     error: null,
     updatedAt: 0,
     ...extra,

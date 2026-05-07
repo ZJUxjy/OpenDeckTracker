@@ -43,6 +43,7 @@ function makeSnapshot(overrides: {
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
     friendlyEffects: [],
     opposingEffects: [],
+    boardAttack: { friendly: 0, opposing: 0 },
     error: null,
     updatedAt: Date.now(),
   };

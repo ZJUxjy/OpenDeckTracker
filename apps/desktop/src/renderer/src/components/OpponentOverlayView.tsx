@@ -17,6 +17,9 @@ const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
  */
 export function OpponentOverlayView() {
   const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
+  const opposingBoardAttack = useDeckTrackerStore(
+    (s) => s.snapshot?.boardAttack?.opposing ?? 0,
+  );
   const opposingEffects = useOpposingEffects();
   const { effectiveRowCount } = partitionAnimalCompanionEffects(opposingEffects);
 
@@ -33,6 +36,7 @@ export function OpponentOverlayView() {
           <OpponentCardsPanel
             revealed={opponent?.revealed ?? []}
             graveyard={opponent?.graveyard ?? []}
+            boardAttack={opposingBoardAttack}
           />
         }
         effectsSlot={

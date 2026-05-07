@@ -22,6 +22,11 @@ import {
   type NormalizedCompletedMatch,
 } from '../stats/match-history';
 import { computeRemaining, gatherSeenEntities } from './remaining-algorithm';
+import {
+  computeBoardAttack,
+  type BoardAttackTotals,
+  type ComputeBoardAttackOptions,
+} from './board-attack';
 import { nextPhase } from './phase-machine';
 import { PollingLoop } from './polling-loop';
 import { GlobalEffectsRegistry } from '../global-effects/registry';
@@ -90,6 +95,14 @@ export interface DeckTrackerSnapshot {
   friendlyEffects: ActiveEffect[];
   /** Global effects whose caster is the opposing player (per-match scope). */
   opposingEffects: ActiveEffect[];
+  /**
+   * Total board attack per side. Sum of minion ATK with optional
+   * tag-overlay filtering (frozen / sleeping / exhausted / windfury)
+   * plus equipped weapon damage when the host supplies a context
+   * provider; falls back to a plain "sum positive ATK from
+   * mirror.boardState" when no overlay is wired.
+   */
+  boardAttack: BoardAttackTotals;
   /** Last error from the poll loop (null when healthy). */
   error: string | null;
   /** Wall-clock timestamp of the last successful poll. */
@@ -160,13 +173,36 @@ export class DeckTracker {
    */
   private cachedDecks: Deck[] = [];
 
+  /**
+   * Optional callback the host injects to supply per-tick filter
+   * context for `computeBoardAttack`: per-entity power tags (FROZEN /
+   * EXHAUSTED / etc.) plus equipped weapon descriptors. Lives outside
+   * core because the tag stream comes from `@hdt/hearthwatcher` and
+   * `core → hearthwatcher` would create a dependency cycle.
+   *
+   * When unset, board attack falls back to a plain "sum positive
+   * ATK" pass over `mirror.boardState`.
+   */
+  private readonly boardAttackContextProvider:
+    | ((boardState: BoardState | null, matchInfo: MatchInfo | null) => ComputeBoardAttackOptions)
+    | null;
+  /** Latest reflector boardState — fed to `computeBoardAttack`. */
+  private latestBoardState: BoardState | null = null;
+  private latestMatchInfo: MatchInfo | null = null;
+
   constructor(args: {
     mirror: HearthMirror;
     identifier?: IDeckIdentifier;
     /** Optional context provider for parameterized global effects. */
     extractCtx?: () => ExtractCtx;
+    /** Optional per-tick filter context for board-attack (host-owned). */
+    boardAttackContextProvider?: (
+      boardState: BoardState | null,
+      matchInfo: MatchInfo | null,
+    ) => ComputeBoardAttackOptions;
   }) {
     this.mirror = args.mirror;
+    this.boardAttackContextProvider = args.boardAttackContextProvider ?? null;
     // In-game memory-field identifier ONLY. The dialog fallback flow
     // is intentionally NOT wired in here as a "blocking identifier"
     // (which would deadlock against the dialog event being shown):
@@ -387,6 +423,10 @@ export class DeckTracker {
     if (target === 'IN_MATCH' || target === 'PRE_MATCH') {
       this.applyEntitySnapshots({ matchInfo, deckState, handState, boardState });
     }
+    // Cache latest reflector state so `computeBoardAttack` (called
+    // from `buildSnapshot`) sees authoritative minion data.
+    this.latestBoardState = boardState;
+    this.latestMatchInfo = matchInfo ?? this.latestMatchInfo;
 
     // Adapt loop rate to phase.
     this.loop.setInterval(this.intervalFor(target));
@@ -581,6 +621,13 @@ export class DeckTracker {
 
     const effects = this.registry.snapshot();
 
+    const resolvedMatchInfo = matchInfo ?? this.latestMatchInfo;
+    const boardAttackOpts =
+      this.boardAttackContextProvider !== null
+        ? this.boardAttackContextProvider(this.latestBoardState, resolvedMatchInfo)
+        : {};
+    const boardAttack = computeBoardAttack(this.latestBoardState, boardAttackOpts);
+
     return {
       phase: this.game.phase,
       matchInfo,
@@ -592,6 +639,7 @@ export class DeckTracker {
       friendlyDeckCount: deckState?.friendlyDeck.length ?? 0,
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
+      boardAttack,
       // A successful tick clears any previous error; `onError` sets it
       // again on the next snapshot if a tick throws. Without this clear,
       // a single transient error would stay visible in the UI's "Error"
@@ -835,6 +883,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],
+    boardAttack: { friendly: 0, opposing: 0 },
     error: null,
     updatedAt: 0,
   };
