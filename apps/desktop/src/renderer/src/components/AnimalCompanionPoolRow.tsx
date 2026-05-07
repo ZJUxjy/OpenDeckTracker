@@ -82,46 +82,55 @@ export function AnimalCompanionPoolRow({
     <li
       data-testid="animal-companion-pool-row"
       data-tracker-side={side}
-      className="relative overflow-visible rounded-md border border-border bg-bg-2 mb-2 last:mb-0 group"
+      className="relative rounded-md border border-border bg-bg-2 mb-2 last:mb-0 group"
     >
-      {sourceArtCardId !== null ? (
-        <img
-          src={tileUrl}
-          data-testid="global-effect-art"
-          alt=""
-          aria-hidden
-          style={ART_MASK_STYLE}
-          className="absolute right-0 top-0 h-full w-2/5 object-cover object-right pointer-events-none select-none z-0 rounded-md"
-        />
-      ) : null}
-      <div className="relative z-10 px-3 py-2">
-        <div className="flex items-center gap-2">
-          <div className="text-text font-semibold text-sm flex-1 min-w-0 truncate">
-            {t('globalEffects.animalCompanionPool.title')}
+      <div className="relative">
+        {sourceArtCardId !== null ? (
+          <img
+            src={tileUrl}
+            data-testid="global-effect-art"
+            alt=""
+            aria-hidden
+            style={ART_MASK_STYLE}
+            className="absolute right-0 top-0 h-full w-2/5 object-cover object-right pointer-events-none select-none z-0 rounded-md"
+          />
+        ) : null}
+        <div className="relative z-10 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <div className="text-text font-semibold text-sm flex-1 min-w-0 truncate">
+              {t('globalEffects.animalCompanionPool.title')}
+            </div>
+            {hasPool ? (
+              <span
+                data-testid="animal-companion-pool-hint"
+                className="shrink-0 text-text-mute text-[10px] uppercase tracking-wider"
+              >
+                {t('globalEffects.animalCompanionPool.hoverHint')}
+              </span>
+            ) : null}
           </div>
-          {hasPool ? (
-            <span
-              data-testid="animal-companion-pool-hint"
-              className="shrink-0 text-text-mute text-[10px] uppercase tracking-wider"
-            >
-              {t('globalEffects.animalCompanionPool.hoverHint')}
-            </span>
-          ) : null}
+          <p className="text-text-dim text-xs mt-1 leading-relaxed pr-12">
+            {body}
+          </p>
         </div>
-        <p className="text-text-dim text-xs mt-1 leading-relaxed pr-12">
-          {body}
-        </p>
       </div>
 
       {hasPool ? (
+        // Inline expand on hover. The container is part of the <li>'s
+        // own bounding box (no absolute positioning), so the parent
+        // <ul>'s overflow-y-auto can't clip it; the row simply grows
+        // taller while hovered. max-h transition makes the reveal feel
+        // animated rather than snappy.
         <div
           data-testid="animal-companion-pool-detail"
-          className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity absolute left-0 right-0 top-full mt-1 z-30 rounded-md border border-border bg-bg-2 shadow-xl p-2"
+          className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-200 ease-out"
         >
-          <div className="grid grid-cols-3 gap-2">
-            {pool.map((cardId, i) => (
-              <BeastDetail key={`${cardId}-${i}`} cardId={cardId} />
-            ))}
+          <div className="overflow-hidden">
+            <div className="px-3 pb-2 pt-1 border-t border-border/50 grid grid-cols-3 gap-2">
+              {pool.map((cardId, i) => (
+                <BeastDetail key={`${cardId}-${i}`} cardId={cardId} />
+              ))}
+            </div>
           </div>
         </div>
       ) : null}
