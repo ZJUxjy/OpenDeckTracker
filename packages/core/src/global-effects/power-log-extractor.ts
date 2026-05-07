@@ -74,15 +74,16 @@ function scanForSpawns(
 }
 
 /**
- * Find the index of the cast event in the parsed stream. We match on
- * the first FullEntity / ShowEntity / BlockStart whose effectCardId
- * equals the cast cardId. Falls back to -1 (not found).
+ * Find the index of the most recent matching cast in the parsed
+ * stream. We scan from the end so a player who casts the same card
+ * twice (Tame Pet/Roam Free in long matches) gets the latest pool's
+ * post-cast spawns, not the original. Returns -1 when not found.
  */
 function findCastIndex(
   events: readonly PowerEvent[],
   cast: CardPlayedEvent,
 ): number {
-  for (let i = 0; i < events.length; i++) {
+  for (let i = events.length - 1; i >= 0; i--) {
     const ev = events[i];
     if (!ev) continue;
     if (ev.type === 'block-start' && ev.effectCardId === cast.cardId) return i;

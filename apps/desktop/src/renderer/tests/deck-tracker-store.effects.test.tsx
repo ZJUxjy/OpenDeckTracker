@@ -68,6 +68,7 @@ describe('useFriendlyEffects / useOpposingEffects', () => {
       id: 'cleansing-cleric',
       sourceCardId: 'CATA_216',
       triggeredAt: 1000,
+      triggerCount: 1,
     };
     act(() => {
       useDeckTrackerStore.setState({
@@ -84,6 +85,7 @@ describe('useFriendlyEffects / useOpposingEffects', () => {
       id: 'cleansing-cleric',
       sourceCardId: 'CATA_216',
       triggeredAt: 1000,
+      triggerCount: 1,
     };
     const snap = blankSnap({ friendlyEffects: [fx] });
     act(() => {
