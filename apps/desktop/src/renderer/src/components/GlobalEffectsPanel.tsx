@@ -23,7 +23,7 @@ export function GlobalEffectsPanel({ side, effects }: GlobalEffectsPanelProps) {
     return (
       <div
         data-tracker-side={side}
-        className="w-full h-full flex flex-col items-center justify-center text-center px-6"
+        className="w-full h-full flex flex-col items-center justify-center text-center px-6 bg-bg-2 border border-border rounded-lg shadow-xl"
       >
         <div className="text-text-dim text-sm font-medium">
           {t('globalEffects.emptyTitle')}
@@ -40,7 +40,7 @@ export function GlobalEffectsPanel({ side, effects }: GlobalEffectsPanelProps) {
   return (
     <ul
       data-tracker-side={side}
-      className="w-full h-full overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent list-none"
+      className="w-full h-full overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent list-none bg-bg-2 border border-border rounded-lg shadow-xl"
     >
       {effects.map((effect) => (
         <GlobalEffectRow key={`${effect.id}-${effect.triggeredAt}`} effect={effect} />

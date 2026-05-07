@@ -64,6 +64,19 @@ export class CardPlayedDetector {
       }
       return;
     }
+    if (event.type === 'block-start') {
+      // BLOCK_START blockType=PLAY is the canonical "card N is being
+      // played" signal in HS Power.log. Fires for spells (where ZONE
+      // briefly passes through PLAY before going to GRAVEYARD, which
+      // can be missed by a TAG_CHANGE-only watcher) and for minions
+      // entering play. The `effectCardId` is usually empty here; we
+      // resolve cardId from the tracked entity table.
+      if (event.blockType !== 'PLAY') return;
+      const id = entityIdOf(event.entity);
+      if (id === null) return;
+      this.tryFire(id);
+      return;
+    }
     if (event.type === 'tag-change') {
       const id = entityIdOf(event.entity);
       if (id === null) return;
@@ -75,17 +88,17 @@ export class CardPlayedDetector {
       }
       if (event.tag !== 'ZONE') return;
       const value = String(event.value);
-      const isPlayTransition = value === 'PLAY' || value === '1';
       const known = this.entities.get(id);
       if (!known) return;
-      // Update tracked zone regardless — stale zone state is worse
-      // than over-fire; we still gate emits below.
       const previousZone = known.zone;
       known.zone = value;
+      const isPlayTransition = value === 'PLAY' || value === '1';
       if (!isPlayTransition) return;
-      // Suppress PLAY→PLAY no-ops. The first time we see an entity we
-      // genuinely don't know its prior zone; allow the emit then so
-      // a renderer that joined mid-game still sees plays.
+      // Suppress PLAY→PLAY no-ops AND duplicates against a recent
+      // BLOCK_START fire (which already set zone='PLAY'). The first
+      // time we see an entity we genuinely don't know its prior zone,
+      // so a non-PLAY → PLAY transition through a `null` previousZone
+      // still fires.
       if (previousZone === 'PLAY' || previousZone === '1') return;
       if (known.cardId === '' || known.controllerId === 0) return;
       this.emit({
@@ -94,6 +107,21 @@ export class CardPlayedDetector {
         timestamp: this.clock(),
       });
     }
+  }
+
+  private tryFire(entityId: number): void {
+    const known = this.entities.get(entityId);
+    if (!known || known.cardId === '' || known.controllerId === 0) return;
+    // Dedupe against a follow-up TAG_CHANGE ZONE=PLAY by setting the
+    // zone state ourselves — the TAG_CHANGE handler short-circuits
+    // when previousZone is already PLAY.
+    if (known.zone === 'PLAY' || known.zone === '1') return;
+    known.zone = 'PLAY';
+    this.emit({
+      cardId: known.cardId,
+      controllerId: known.controllerId,
+      timestamp: this.clock(),
+    });
   }
 
   private recordEntity(

@@ -26,6 +26,18 @@ function tagChange(
   return { type: 'tag-change', entity, tag, value, ...empty };
 }
 
+function blockStart(entity: number, blockType: string): PowerEvent {
+  return {
+    type: 'block-start',
+    blockType,
+    entity,
+    effectCardId: '',
+    target: null,
+    subOption: null,
+    ...empty,
+  };
+}
+
 describe('CardPlayedDetector', () => {
   it('emits a cardPlayed when an entity with known cardId moves to PLAY', () => {
     const emit = vi.fn();
@@ -104,6 +116,36 @@ describe('CardPlayedDetector', () => {
     det.handle(tagChange(64, 'ZONE', 'HAND'));
     det.handle(tagChange(64, 'ZONE', 'PLAY'));
     expect(emit).toHaveBeenCalledTimes(2);
+  });
+
+  it('emits on BLOCK_START blockType=PLAY (spell-cast signal)', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle(fullEntity(64, 'MEND_300', 1));
+    det.handle(blockStart(64, 'PLAY'));
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toMatchObject({
+      cardId: 'MEND_300',
+      controllerId: 1,
+    });
+  });
+
+  it('does not double-fire when BLOCK_START is followed by TAG_CHANGE ZONE=PLAY', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle(fullEntity(64, 'MEND_300', 1));
+    det.handle(blockStart(64, 'PLAY'));
+    det.handle(tagChange(64, 'ZONE', 'PLAY'));
+    expect(emit).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not fire on non-PLAY blocks (e.g. TRIGGER, ATTACK)', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle(fullEntity(64, 'MEND_300', 1));
+    det.handle(blockStart(64, 'TRIGGER'));
+    det.handle(blockStart(64, 'ATTACK'));
+    expect(emit).not.toHaveBeenCalled();
   });
 
   it('entityIdOf prefers a word-boundary `id=` over substring `playerid=`', () => {
