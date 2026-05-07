@@ -34,17 +34,24 @@ export interface AnimalCompanionSummary {
 }
 
 /**
- * Aggregated "Animal Companion pool" row. Replaces the per-source-card
- * rendering for Tame Pet / Roam Free / Migrating Elekk / Talya
- * Earthstrider — what the user actually wants to know is the CURRENT
- * pool, not which cards modified it.
+ * Aggregated "Animal Companion pool" row.
  *
- * Hover reveals the 3-beast pool detail. Implementation uses React
- * state + conditional render rather than CSS `group-hover:` because
- * Tailwind v4's arbitrary-value compilation for `grid-template-rows`
- * isn't reliable. The hover state also drives clear visual affordances
- * (accent border, chevron rotation, cursor) so the user can tell the
- * row is interactive.
+ * Three independent triggers can expand the detail panel; the union
+ * wins. This belt-and-suspenders setup is intentional — earlier
+ * iterations had hover not fire reliably (Tailwind v4 arbitrary-value
+ * compilation, transparent BrowserWindow event quirks), so the row
+ * also responds to click and pointer events:
+ *
+ *   - onPointerEnter/Leave → modern unified pointer events (preferred)
+ *   - onMouseEnter/Leave   → legacy fallback
+ *   - onClick              → latching toggle, works even if neither
+ *                            hover/pointer event reaches the React tree
+ *
+ * Visual feedback at every state:
+ *   - default     : `cursor-help`, hint text muted
+ *   - hovered     : accent border, hint+chevron tint accent, chevron
+ *                   rotates 180°
+ *   - expanded    : detail panel mounted with 3 beast tiles + names
  */
 export function AnimalCompanionPoolRow({
   summary,
@@ -56,6 +63,7 @@ export function AnimalCompanionPoolRow({
   const { t } = useTranslation();
   const { poolReplacement, extraSummons } = summary;
   const [hovered, setHovered] = useState(false);
+  const [pinned, setPinned] = useState(false);
 
   const cost =
     poolReplacement !== null
@@ -84,22 +92,39 @@ export function AnimalCompanionPoolRow({
   const tileUrl = useCardTileUrl(sourceArtCardId ?? '');
   const pool = poolReplacement?.pool ?? [];
   const hasPool = pool.length > 0;
-  const expanded = hasPool && hovered;
+  const expanded = hasPool && (hovered || pinned);
+
+  const handleEnter = (): void => setHovered(true);
+  const handleLeave = (): void => setHovered(false);
+  const handleClick = (): void => {
+    if (!hasPool) return;
+    setPinned((p) => !p);
+  };
 
   return (
     <li
       data-testid="animal-companion-pool-row"
       data-tracker-side={side}
       data-hovered={hovered ? 'true' : 'false'}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={clsx(
-        'relative rounded-md border bg-bg-2 mb-2 last:mb-0 transition-colors',
-        hasPool ? 'cursor-help' : '',
+      data-pinned={pinned ? 'true' : 'false'}
+      data-expanded={expanded ? 'true' : 'false'}
+      onPointerEnter={handleEnter}
+      onPointerLeave={handleLeave}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onClick={handleClick}
+      style={
         expanded
-          ? 'border-accent shadow-[0_0_0_1px_var(--accent)]'
+          ? { boxShadow: '0 0 0 2px var(--accent)' }
+          : undefined
+      }
+      className={clsx(
+        'relative rounded-md border-2 bg-bg-2 mb-2 last:mb-0 transition-colors',
+        hasPool ? 'cursor-pointer' : '',
+        expanded
+          ? 'border-accent'
           : hasPool
-            ? 'border-border hover:border-accent/50'
+            ? 'border-border hover:border-accent'
             : 'border-border',
       )}
     >
@@ -123,11 +148,13 @@ export function AnimalCompanionPoolRow({
               <span
                 data-testid="animal-companion-pool-hint"
                 className={clsx(
-                  'shrink-0 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider transition-colors',
+                  'shrink-0 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider transition-colors pointer-events-none',
                   expanded ? 'text-accent' : 'text-text-mute',
                 )}
               >
-                {t('globalEffects.animalCompanionPool.hoverHint')}
+                {pinned
+                  ? t('globalEffects.animalCompanionPool.pinnedHint')
+                  : t('globalEffects.animalCompanionPool.hoverHint')}
                 <ChevronDown
                   size={12}
                   className={clsx(
@@ -138,7 +165,7 @@ export function AnimalCompanionPoolRow({
               </span>
             ) : null}
           </div>
-          <p className="text-text-dim text-xs mt-1 leading-relaxed pr-12">
+          <p className="text-text-dim text-xs mt-1 leading-relaxed pr-12 pointer-events-none">
             {body}
           </p>
         </div>
@@ -147,7 +174,7 @@ export function AnimalCompanionPoolRow({
       {expanded ? (
         <div
           data-testid="animal-companion-pool-detail"
-          className="px-3 pb-2 pt-2 border-t border-border/50 grid grid-cols-3 gap-2"
+          className="px-3 pb-2 pt-2 border-t border-border/50 grid grid-cols-3 gap-2 pointer-events-none"
         >
           {pool.map((cardId, i) => (
             <BeastDetail key={`${cardId}-${i}`} cardId={cardId} />

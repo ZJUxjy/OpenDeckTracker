@@ -252,7 +252,8 @@
       "bodyCostAndExtra": "Now summons random {cost}-cost Beasts, +{extra} extra summon per cast.",
       "bodyExtraOnly": "Each Animal Companion cast summons +{extra} extra Beast.",
       "bodyUnknown": "Animal Companion summon rules are modified — pool details unavailable.",
-      "hoverHint": "Hover for pool"
+      "hoverHint": "Hover / click",
+      "pinnedHint": "Click to close"
     },
     "artanis": {
       "title": "Artanis",
