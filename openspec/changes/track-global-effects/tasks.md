@@ -69,10 +69,10 @@
 
 ## 9. TrackerPanelTabs container
 
-- [ ] 9.1 Failing component test `apps/desktop/src/renderer/tests/TrackerPanelTabs.test.tsx` covering "Default tab is Deck", "Effects badge shows count when non-zero", "Switching tabs preserves deck panel state" (the third uses two `<div data-testid="kept-mounted">` slots whose `useEffect` mount counters are asserted equal across a tab toggle). Run → FAIL.
-- [ ] 9.2 Implement `apps/desktop/src/renderer/src/components/TrackerPanelTabs.tsx` per `specs/global-effects-ui/spec.md` §"TrackerPanelTabs container component". Both slots stay mounted; the inactive one is hidden via `hidden` attribute.
-- [ ] 9.3 Re-run 9.1 — expect PASS.
-- [ ] 9.4 Commit: `feat(renderer): TrackerPanelTabs container`.
+- [x] 9.1 Failing component test `apps/desktop/src/renderer/tests/TrackerPanelTabs.test.tsx` covering "Default tab is Deck", "Effects badge shows count when non-zero", "Switching tabs preserves deck panel state". Run → FAIL.
+- [x] 9.2 Implement `apps/desktop/src/renderer/src/components/TrackerPanelTabs.tsx` per `specs/global-effects-ui/spec.md` §"TrackerPanelTabs container component". Both slots stay mounted; the inactive one is hidden via `hidden` attribute.
+- [x] 9.3 Re-run 9.1 — expect PASS.
+- [x] 9.4 Commit: `feat(renderer): TrackerPanelTabs container`.
 
 ## 10. GlobalEffectsPanel + GlobalEffectRow
 
