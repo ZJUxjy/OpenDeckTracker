@@ -267,9 +267,17 @@
       "title": "Foreboding Flame",
       "body": "Demons that didn't start in the caster's deck cost (1) less for the rest of the match."
     },
+    "free-spirit": {
+      "title": "Free Spirit",
+      "body": "The caster's Hero Power gains +1 Armor for the rest of the match. Battlecry and Deathrattle stack."
+    },
     "frost-lich-jaina": {
       "title": "Frost Lich Jaina",
       "body": "The caster's Elementals gain Lifesteal for the rest of the match."
+    },
+    "groovy-cat": {
+      "title": "Groovy Cat",
+      "body": "The caster's Hero Power grants +1 Attack for the rest of the match. Battlecry and Deathrattle stack."
     },
     "interstellar-starslicer": {
       "title": "Interstellar Starslicer",
@@ -282,6 +290,14 @@
     "inzah": {
       "title": "Inzah",
       "body": "The caster's Overload cards cost (1) less for the rest of the match."
+    },
+    "lightshow": {
+      "title": "Lightshow",
+      "body": "The caster's future Lightshows each shoot one additional beam. Stacks per copy played."
+    },
+    "mystic-runesaber": {
+      "title": "Mystic Runesaber",
+      "body": "The caster's Leyline effects are increased by 1 for the rest of the match. Stacks per copy played."
     },
     "photon-cannon": {
       "title": "Photon Cannon",
@@ -306,6 +322,10 @@
     "starlight-groove": {
       "title": "Starlight Groove",
       "body": "For the rest of the match, every Holy spell the caster plays refreshes the hero's Divine Shield."
+    },
+    "surge-needle": {
+      "title": "Surge Needle",
+      "body": "The caster's Leylines trigger one additional time for the rest of the match. Stacks per copy played."
     },
     "talya-earthstrider": {
       "title": "Talya Earthstrider",

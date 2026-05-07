@@ -5,16 +5,21 @@ import cleansingCleric from './cleansing-cleric';
 import dewProcess from './dew-process';
 import emboldeningBlade from './emboldening-blade';
 import forebodingFlame from './foreboding-flame';
+import freeSpirit from './free-spirit';
 import frostLichJaina from './frost-lich-jaina';
+import groovyCat from './groovy-cat';
 import interstellarStarslicer from './interstellar-starslicer';
 import interstellarWayfarer from './interstellar-wayfarer';
 import inzah from './inzah';
+import lightshow from './lightshow';
+import mysticRunesaber from './mystic-runesaber';
 import photonCannon from './photon-cannon';
 import pursuitOfJustice from './pursuit-of-justice';
 import resilientSavior from './resilient-savior';
 import roamFree from './roam-free';
 import sentry from './sentry';
 import starlightGroove from './starlight-groove';
+import surgeNeedle from './surge-needle';
 import talyaEarthstrider from './talya-earthstrider';
 import tamePet from './tame-pet';
 import theStonewright from './the-stonewright';
@@ -30,16 +35,21 @@ const ALL_EFFECTS: readonly EffectDef[] = [
   dewProcess,
   emboldeningBlade,
   forebodingFlame,
+  freeSpirit,
   frostLichJaina,
+  groovyCat,
   interstellarStarslicer,
   interstellarWayfarer,
   inzah,
+  lightshow,
+  mysticRunesaber,
   photonCannon,
   pursuitOfJustice,
   resilientSavior,
   roamFree as unknown as EffectDef,
   sentry,
   starlightGroove,
+  surgeNeedle,
   talyaEarthstrider,
   tamePet as unknown as EffectDef,
   theStonewright,
