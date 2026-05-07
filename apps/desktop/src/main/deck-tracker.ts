@@ -5,6 +5,7 @@ import {
   type ComputeBoardAttackOptions,
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
+  type ExtractCtx,
   type MinionTags,
   type WeaponState,
 } from '@hdt/core';
@@ -131,6 +132,52 @@ function buildBoardAttackContext(
   return { tagsByEntityId, weapons, localControllerId: localId };
 }
 
+// ── PowerEvent ring buffer for the global-effects extractCtx ─────────
+//
+// Parameterized effects (Tame Pet / Roam Free / Migrating Elekk) need
+// to look ~tens of events forward in the PowerEvent stream from the
+// cast block to find the spawned beast cardIds. The registry's
+// `parameterExtractor` runs asynchronously after `handleCardPlayed`,
+// so we buffer recent events in a bounded ring and expose them via an
+// `ExtractCtx` factory. Bound is generous (1000 events) because
+// Hearthstone fires lots of per-tick TAG_CHANGE noise; the actual
+// lookahead is capped inside the extractor.
+const MAX_EVENT_BUFFER = 1000;
+const recentPowerEvents: PowerEvent[] = [];
+type EventWaiter = (events: readonly PowerEvent[]) => void;
+const eventWaiters = new Set<EventWaiter>();
+
+function pushPowerEvent(event: PowerEvent): void {
+  recentPowerEvents.push(event);
+  if (recentPowerEvents.length > MAX_EVENT_BUFFER) {
+    recentPowerEvents.splice(0, recentPowerEvents.length - MAX_EVENT_BUFFER);
+  }
+  if (eventWaiters.size > 0) {
+    const snapshot = [...recentPowerEvents];
+    for (const w of eventWaiters) w(snapshot);
+    eventWaiters.clear();
+  }
+}
+
+function makeExtractCtx(): ExtractCtx {
+  return {
+    recentEvents: [...recentPowerEvents],
+    waitForMoreEvents: (timeoutMs: number): Promise<readonly PowerEvent[]> =>
+      new Promise((resolve) => {
+        let settled = false;
+        const settle = (events: readonly PowerEvent[]): void => {
+          if (settled) return;
+          settled = true;
+          eventWaiters.delete(waiter);
+          resolve(events);
+        };
+        const waiter: EventWaiter = (events) => settle(events);
+        eventWaiters.add(waiter);
+        setTimeout(() => settle([...recentPowerEvents]), timeoutMs);
+      }),
+  };
+}
+
 function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) {
@@ -144,6 +191,7 @@ export function startDeckTracker(): void {
   const mirror = getHearthMirror();
   tracker = new DeckTracker({
     mirror,
+    extractCtx: makeExtractCtx,
     boardAttackContextProvider: buildBoardAttackContext,
   });
   // Live detector that turns the upstream PowerEvent stream into
@@ -219,6 +267,7 @@ export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {
  * the existing match-recorder + recording-recorder dispatches.
  */
 export function forwardPowerEventToDeckTracker(event: PowerEvent): void {
+  pushPowerEvent(event);
   cardPlayedDetector?.handle(event);
   if (event.type === 'create-game') {
     resetBoardAttackState();
