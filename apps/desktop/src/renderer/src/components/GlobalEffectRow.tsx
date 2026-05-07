@@ -103,13 +103,21 @@ function BeastTile({ cardId }: { cardId: string }) {
   );
 }
 
+type AnimalCompanionEffectId = 'tame-pet' | 'roam-free' | 'migrating-elekk';
+
 interface AnimalCompanionEffect extends ActiveEffect<AnimalCompanionPoolParams> {
-  id: 'tame-pet' | 'roam-free';
+  id: AnimalCompanionEffectId;
   params: AnimalCompanionPoolParams;
 }
 
+const ANIMAL_COMPANION_EFFECT_IDS = new Set<string>([
+  'tame-pet',
+  'roam-free',
+  'migrating-elekk',
+]);
+
 function hasAnimalCompanionPool(effect: ActiveEffect): effect is AnimalCompanionEffect {
-  if (effect.id !== 'tame-pet' && effect.id !== 'roam-free') return false;
+  if (!ANIMAL_COMPANION_EFFECT_IDS.has(effect.id)) return false;
   const params = effect.params as { pool?: unknown } | undefined;
   return Array.isArray(params?.pool) && (params!.pool as unknown[]).length > 0;
 }

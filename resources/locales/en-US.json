@@ -250,6 +250,10 @@
       "title": "Artanis",
       "body": "The caster's Protoss minions cost (2) less for the rest of the match. Stacks with Photon Cannon and Sentry."
     },
+    "bolide-behemoth": {
+      "title": "Bolide Behemoth",
+      "body": "The caster's Asteroids deal 1 more damage for the rest of the match. Stacks per copy played."
+    },
     "brash-battlemaster": {
       "title": "Brash Battlemaster",
       "body": "After this minion dies, the caster's Silver Hand Recruits gain +1 Attack for the rest of the match."
@@ -258,9 +262,17 @@
       "title": "Cleansing Cleric",
       "body": "Healing dealt by the caster's side restores 2 more Health for the rest of the match."
     },
+    "deepminer-brann": {
+      "title": "Deepminer Brann",
+      "body": "If the caster's starting deck had no duplicates, their Battlecries trigger twice for the rest of the match."
+    },
     "dew-process": {
       "title": "Dew Process",
       "body": "Both players draw an extra card at the start of every turn for the rest of the match."
+    },
+    "ebyssian": {
+      "title": "Ebyssian",
+      "body": "The caster's Dragons gain Rush for the rest of the match."
     },
     "emboldening-blade": {
       "title": "Emboldening Blade",
@@ -282,6 +294,10 @@
       "title": "Groovy Cat",
       "body": "The caster's Hero Power grants +1 Attack for the rest of the match. Battlecry and Deathrattle stack."
     },
+    "infestor": {
+      "title": "Infestor",
+      "body": "After Infestor dies, the caster's Zerg minions gain +1 Attack for the rest of the match."
+    },
     "interstellar-starslicer": {
       "title": "Interstellar Starslicer",
       "body": "Each battlecry and deathrattle reduces the cost of the caster's Librams by (1). Stacks with Interstellar Wayfarer."
@@ -294,9 +310,17 @@
       "title": "Inzah",
       "body": "The caster's Overload cards cost (1) less for the rest of the match."
     },
+    "ley-walker": {
+      "title": "Ley Walker",
+      "body": "The caster's Leylines cost (1) less for the rest of the match. Stacks per copy played."
+    },
     "lightshow": {
       "title": "Lightshow",
       "body": "The caster's future Lightshows each shoot one additional beam. Stacks per copy played."
+    },
+    "migrating-elekk": {
+      "title": "Migrating Elekk",
+      "body": "The caster's future Animal Companions are summoned from 3 random Beasts that cost (1) more, locked in when Migrating Elekk was played."
     },
     "mystic-runesaber": {
       "title": "Mystic Runesaber",
