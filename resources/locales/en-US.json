@@ -243,9 +243,33 @@
     "tabEffects": "Effects",
     "emptyTitle": "No active global effects",
     "emptyBody": "Match-wide modifiers triggered by either player will appear here.",
+    "brash-battlemaster": {
+      "title": "Brash Battlemaster",
+      "body": "After this minion dies, the caster's Silver Hand Recruits gain +1 Attack for the rest of the match."
+    },
     "cleansing-cleric": {
       "title": "Cleansing Cleric",
       "body": "Healing dealt by the caster's side restores 2 more Health for the rest of the match."
+    },
+    "emboldening-blade": {
+      "title": "Emboldening Blade",
+      "body": "The caster's Silver Hand Recruits gain +1/+1 for the rest of the match. Stacks with other Recruit buffs."
+    },
+    "pursuit-of-justice": {
+      "title": "Pursuit of Justice",
+      "body": "Silver Hand Recruits the caster summons gain +1 Attack for the rest of the match."
+    },
+    "resilient-savior": {
+      "title": "Resilient Savior",
+      "body": "Once this minion loses Divine Shield, the caster's Silver Hand Recruits gain +1 Health for the rest of the match."
+    },
+    "roam-free": {
+      "title": "Roam Free",
+      "body": "The caster's future Animal Companions are summoned from 3 random Beasts that cost (2) more, locked in when Roam Free was played."
+    },
+    "talya-earthstrider": {
+      "title": "Talya Earthstrider",
+      "body": "The caster's cards that summon Animal Companions summon 1 additional Companion for the rest of the match."
     },
     "tame-pet": {
       "title": "Tame Pet",
