@@ -44,6 +44,8 @@ function snapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTrackerSnap
     opposingHandCount: 0,
     opponent: { revealed: [], graveyard: [] },
     friendlyDeckCount: 0,
+    friendlyEffects: [],
+    opposingEffects: [],
     error: null,
     updatedAt: 100,
     ...overrides,

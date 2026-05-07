@@ -32,6 +32,8 @@ function makeSnapshot(): DeckTrackerSnapshot {
       graveyard: [],
     },
     friendlyDeckCount: 2,
+    friendlyEffects: [],
+    opposingEffects: [],
     error: null,
     updatedAt: Date.now(),
   };

@@ -28,6 +28,8 @@ function makeSnapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTracker
       graveyard: [],
     },
     friendlyDeckCount: 0,
+    friendlyEffects: [],
+    opposingEffects: [],
     error: null,
     updatedAt: Date.now(),
     ...overrides,

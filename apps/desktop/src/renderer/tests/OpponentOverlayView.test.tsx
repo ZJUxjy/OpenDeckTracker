@@ -32,6 +32,8 @@ function makeSnapshot(opponentRevealed: OpponentCardRecord[] = []): DeckTrackerS
       graveyard: [],
     },
     friendlyDeckCount: 2,
+    friendlyEffects: [],
+    opposingEffects: [],
     error: null,
     updatedAt: Date.now(),
   };

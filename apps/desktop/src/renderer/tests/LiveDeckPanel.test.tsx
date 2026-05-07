@@ -41,6 +41,8 @@ function makeSnapshot(overrides: {
       graveyard: [],
     },
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
+    friendlyEffects: [],
+    opposingEffects: [],
     error: null,
     updatedAt: Date.now(),
   };

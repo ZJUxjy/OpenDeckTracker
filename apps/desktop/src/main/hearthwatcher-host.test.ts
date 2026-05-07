@@ -51,6 +51,7 @@ vi.mock('./match-recording-recorder', () => ({
 
 vi.mock('./deck-tracker', () => ({
   getLatestDeckTrackerSnapshot: mocks.getLatestDeckTrackerSnapshot,
+  forwardPowerEventToDeckTracker: vi.fn(),
 }));
 
 vi.mock('./stats-host', () => ({
