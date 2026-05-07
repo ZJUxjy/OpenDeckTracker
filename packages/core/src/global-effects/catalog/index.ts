@@ -25,9 +25,9 @@ import tamePet from './tame-pet';
 import theStonewright from './the-stonewright';
 
 // `tamePet` and `roamFree` carry typed params; the catalog erases
-// per-effect param types and stores the structural-erased form.
-// `Record<string, unknown>` isn't assignable to typed param shapes
-// directly (no string index signature), so we route through `unknown`.
+// per-effect param types via the structural `EffectDef` shape (the
+// default param type is `unknown`, which accepts any specific param
+// shape via covariance — no `as unknown as` casts needed).
 const ALL_EFFECTS: readonly EffectDef[] = [
   artanis,
   brashBattlemaster,
@@ -46,12 +46,12 @@ const ALL_EFFECTS: readonly EffectDef[] = [
   photonCannon,
   pursuitOfJustice,
   resilientSavior,
-  roamFree as unknown as EffectDef,
+  roamFree,
   sentry,
   starlightGroove,
   surgeNeedle,
   talyaEarthstrider,
-  tamePet as unknown as EffectDef,
+  tamePet,
   theStonewright,
 ];
 

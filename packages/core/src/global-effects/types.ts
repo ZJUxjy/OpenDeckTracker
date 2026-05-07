@@ -66,7 +66,7 @@ export interface ExtractCtx {
  * Catalog entry. One per known global effect; default-exported from
  * `catalog/<id>.ts`.
  */
-export interface EffectDef<P = Record<string, unknown>> {
+export interface EffectDef<P = unknown> {
   /** Kebab-case unique id; equal to the file basename in `catalog/`. */
   readonly id: string;
   /** hsdata cardId whose play triggers the effect. */
@@ -95,13 +95,24 @@ export interface EffectDef<P = Record<string, unknown>> {
  * Per-side per-effect snapshot entry. Plain JSON so the structure
  * round-trips through Electron IPC unchanged.
  */
-export interface ActiveEffect<P = Record<string, unknown>> {
+export interface ActiveEffect<P = unknown> {
   /** Originating `EffectDef.id`. */
   id: string;
   /** Denormalized `EffectDef.sourceCardId`, saves the renderer a join. */
   sourceCardId: string;
-  /** Wall-clock ms when the registry recorded the trigger. */
+  /** Wall-clock ms when the registry first observed the trigger. */
   triggeredAt: number;
+  /**
+   * Number of times the effect has fired this match. Stacking effects
+   * (Free Spirit, Lightshow, etc.) MUST surface this so the renderer
+   * can show "×N" — the body string alone hides the actual magnitude.
+   */
+  triggerCount: number;
   /** Extracted params; absent when the extractor wasn't declared OR returned null. */
   params?: P;
+}
+
+/** Shared param shape for Animal Companion pool replacements (Tame Pet, Roam Free). */
+export interface AnimalCompanionPoolParams {
+  pool: string[];
 }

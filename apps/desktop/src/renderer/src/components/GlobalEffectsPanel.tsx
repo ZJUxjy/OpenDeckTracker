@@ -16,6 +16,9 @@ interface GlobalEffectsPanelProps {
 export function GlobalEffectsPanel({ side, effects }: GlobalEffectsPanelProps) {
   const { t } = useTranslation();
 
+  const emptyBodyKey =
+    side === 'opponent' ? 'globalEffects.emptyBodyOpponent' : 'globalEffects.emptyBodyPlayer';
+
   if (effects.length === 0) {
     return (
       <div
@@ -26,20 +29,20 @@ export function GlobalEffectsPanel({ side, effects }: GlobalEffectsPanelProps) {
           {t('globalEffects.emptyTitle')}
         </div>
         <p className="text-text-mute text-xs mt-2 leading-relaxed max-w-xs">
-          {t('globalEffects.emptyBody')}
+          {t(emptyBodyKey)}
         </p>
       </div>
     );
   }
 
-  const sorted = [...effects].sort((a, b) => a.triggeredAt - b.triggeredAt);
-
+  // The registry already returns entries sorted by triggeredAt
+  // ascending; no need to re-sort here.
   return (
     <ul
       data-tracker-side={side}
       className="w-full h-full overflow-y-auto p-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent list-none"
     >
-      {sorted.map((effect) => (
+      {effects.map((effect) => (
         <GlobalEffectRow key={`${effect.id}-${effect.triggeredAt}`} effect={effect} />
       ))}
     </ul>

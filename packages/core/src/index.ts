@@ -133,6 +133,7 @@ export type { PhaseSignals } from './tracker/phase-machine';
 // Global-effects domain.
 export type {
   ActiveEffect,
+  AnimalCompanionPoolParams,
   CardPlayedEvent,
   EffectDef,
   ExpireRule,

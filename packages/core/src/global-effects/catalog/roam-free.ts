@@ -1,6 +1,5 @@
-import type { EffectDef } from '../types';
+import type { AnimalCompanionPoolParams, EffectDef } from '../types';
 import { readBeastSpawnsAfter } from '../power-log-extractor';
-import type { TamePetParams } from './tame-pet';
 
 /**
  * Roam Free (Hunter, SET_1980 / Cataclysm).
@@ -12,7 +11,7 @@ import type { TamePetParams } from './tame-pet';
  * of +1; we reuse the 3-cardId pool params + Power.log extractor and
  * just discriminate by `id` in the renderer's body text.
  */
-const roamFree: EffectDef<TamePetParams> = {
+const roamFree: EffectDef<AnimalCompanionPoolParams> = {
   id: 'roam-free',
   sourceCardId: 'MEND_307',
   side: 'caster',

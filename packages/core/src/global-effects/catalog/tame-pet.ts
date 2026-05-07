@@ -1,10 +1,8 @@
-import type { EffectDef } from '../types';
+import type { AnimalCompanionPoolParams, EffectDef } from '../types';
 import { readBeastSpawnsAfter } from '../power-log-extractor';
 
-export interface TamePetParams {
-  /** The 3 random beast cardIds chosen at cast time. */
-  pool: string[];
-}
+/** @deprecated Use `AnimalCompanionPoolParams`. Kept for back-compat with the renderer's type guard. */
+export type TamePetParams = AnimalCompanionPoolParams;
 
 /**
  * Tame Pet (Hunter, SET_1980 / Cataclysm).
@@ -18,7 +16,7 @@ export interface TamePetParams {
  * (or arrives delayed past the wait window) it returns `null` and the
  * registry stores the effect with `params: undefined`.
  */
-const tamePet: EffectDef<TamePetParams> = {
+const tamePet: EffectDef<AnimalCompanionPoolParams> = {
   id: 'tame-pet',
   sourceCardId: 'MEND_300',
   side: 'caster',

@@ -50,6 +50,7 @@ describe('GlobalEffectsRegistry', () => {
     const localOnly = reg.snapshot();
     expect(localOnly.local).toHaveLength(1);
     expect(localOnly.local[0]?.id).toBe('cleansing-cleric');
+    expect(localOnly.local[0]?.triggerCount).toBe(1);
     expect(localOnly.opposing).toEqual([]);
 
     reg.handleCardPlayed({
@@ -77,7 +78,7 @@ describe('GlobalEffectsRegistry', () => {
     expect(reg.snapshot()).toEqual({ local: [], opposing: [] });
   });
 
-  it('re-triggering the same effect refreshes triggeredAt and stays unique', () => {
+  it('re-triggering increments triggerCount, refreshes triggeredAt, stays unique', () => {
     let now = 100;
     const reg = new GlobalEffectsRegistry({
       catalogIndex: makeCatalog(CLEANSING_CLERIC),
@@ -85,14 +86,22 @@ describe('GlobalEffectsRegistry', () => {
       getControllerIds: () => ({ local: 1, opposing: 2 }),
     });
     reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 100 });
-    expect(reg.snapshot().local).toHaveLength(1);
-    expect(reg.snapshot().local[0]?.triggeredAt).toBe(100);
+    let snap = reg.snapshot();
+    expect(snap.local).toHaveLength(1);
+    expect(snap.local[0]?.triggeredAt).toBe(100);
+    expect(snap.local[0]?.triggerCount).toBe(1);
 
     now = 500;
     reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 500 });
-    const after = reg.snapshot();
-    expect(after.local).toHaveLength(1);
-    expect(after.local[0]?.triggeredAt).toBe(500);
+    snap = reg.snapshot();
+    expect(snap.local).toHaveLength(1);
+    expect(snap.local[0]?.triggeredAt).toBe(500);
+    expect(snap.local[0]?.triggerCount).toBe(2);
+
+    now = 700;
+    reg.handleCardPlayed({ cardId: 'CATA_216', controllerId: 1, timestamp: 700 });
+    snap = reg.snapshot();
+    expect(snap.local[0]?.triggerCount).toBe(3);
   });
 
   it('snapshot is JSON-safe and stable on tie', () => {

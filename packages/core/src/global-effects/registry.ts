@@ -54,7 +54,8 @@ export class GlobalEffectsRegistry {
   /**
    * Forward a played-card event from the host. Unknown cardIds are
    * silently ignored. Re-triggering an already-active effect refreshes
-   * `triggeredAt` and re-runs the parameter extractor (if any).
+   * `triggeredAt`, increments `triggerCount`, and re-runs the
+   * parameter extractor (if any) — the latest pool wins for params.
    */
   handleCardPlayed(event: CardPlayedEvent): void {
     const def = this.catalogIndex.get(event.cardId);
@@ -63,28 +64,39 @@ export class GlobalEffectsRegistry {
     const map = this.mapForController(event.controllerId);
     if (!map) return;
 
-    const active: ActiveEffect = {
-      id: def.id,
-      sourceCardId: def.sourceCardId,
-      triggeredAt: event.timestamp || this.now(),
-    };
+    const ts = event.timestamp || this.now();
+    const existing = map.get(def.id);
+    const active: ActiveEffect = existing
+      ? {
+          ...existing,
+          triggeredAt: ts,
+          triggerCount: existing.triggerCount + 1,
+        }
+      : {
+          id: def.id,
+          sourceCardId: def.sourceCardId,
+          triggeredAt: ts,
+          triggerCount: 1,
+        };
     map.set(def.id, active);
 
     if (def.parameterExtractor !== undefined) {
       const ctx = this.extractCtx?.();
       if (!ctx) return; // No ctx provider — leave params undefined.
-      void def.parameterExtractor(event, ctx).then(
-        (params) => {
-          if (params === null) return;
-          const current = map.get(def.id);
-          if (current && current.triggeredAt === active.triggeredAt) {
-            current.params = params;
-          }
-        },
-        () => {
-          // Extractor threw — leave params undefined.
-        },
-      );
+      void Promise.resolve()
+        .then(() => def.parameterExtractor!(event, ctx))
+        .then(
+          (params) => {
+            if (params === null) return;
+            const current = map.get(def.id);
+            if (current && current.triggeredAt === active.triggeredAt) {
+              current.params = params;
+            }
+          },
+          () => {
+            // Extractor threw or rejected — leave params undefined.
+          },
+        );
     }
   }
 
@@ -120,6 +132,7 @@ export class GlobalEffectsRegistry {
         id: e.id,
         sourceCardId: e.sourceCardId,
         triggeredAt: e.triggeredAt,
+        triggerCount: e.triggerCount,
         ...(e.params !== undefined ? { params: e.params } : {}),
       }))
       .sort((a, b) => a.triggeredAt - b.triggeredAt);

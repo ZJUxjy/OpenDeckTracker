@@ -1,5 +1,6 @@
 export type {
   ActiveEffect,
+  AnimalCompanionPoolParams,
   CardPlayedEvent,
   EffectDef,
   ExpireRule,

@@ -1,5 +1,5 @@
 import { type CSSProperties } from 'react';
-import type { ActiveEffect } from '@hdt/core';
+import type { ActiveEffect, AnimalCompanionPoolParams } from '@hdt/core';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useTranslation } from '../i18n';
 
@@ -38,23 +38,35 @@ export function GlobalEffectRow({ effect }: GlobalEffectRowProps) {
         className="absolute right-0 top-0 h-full w-2/5 object-cover object-right pointer-events-none select-none z-0"
       />
       <div className="relative z-10 px-3 py-2">
-        <div className="text-text font-semibold text-sm">{title}</div>
+        <div className="flex items-center gap-2">
+          <div className="text-text font-semibold text-sm flex-1 min-w-0 truncate">
+            {title}
+          </div>
+          {effect.triggerCount > 1 ? (
+            <span
+              data-testid="global-effect-stack-count"
+              className="shrink-0 inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full bg-accent text-bg text-[11px] font-bold tabular-nums"
+            >
+              ×{effect.triggerCount}
+            </span>
+          ) : null}
+        </div>
         <p className="text-text-dim text-xs mt-1 leading-relaxed pr-12">
           {body}
         </p>
-        {isTamePetParams(effect) ? (
-          <TamePetPool pool={effect.params.pool} />
+        {hasAnimalCompanionPool(effect) ? (
+          <AnimalCompanionPool pool={effect.params.pool} />
         ) : null}
       </div>
     </li>
   );
 }
 
-interface TamePetPoolProps {
+interface AnimalCompanionPoolProps {
   pool: string[];
 }
 
-function TamePetPool({ pool }: TamePetPoolProps) {
+function AnimalCompanionPool({ pool }: AnimalCompanionPoolProps) {
   return (
     <div
       data-testid="global-effect-params"
@@ -82,13 +94,13 @@ function BeastTile({ cardId }: { cardId: string }) {
   );
 }
 
-interface TamePetEffect extends ActiveEffect {
-  id: 'tame-pet';
-  params: { pool: string[] };
+interface AnimalCompanionEffect extends ActiveEffect<AnimalCompanionPoolParams> {
+  id: 'tame-pet' | 'roam-free';
+  params: AnimalCompanionPoolParams;
 }
 
-function isTamePetParams(effect: ActiveEffect): effect is TamePetEffect {
-  if (effect.id !== 'tame-pet') return false;
+function hasAnimalCompanionPool(effect: ActiveEffect): effect is AnimalCompanionEffect {
+  if (effect.id !== 'tame-pet' && effect.id !== 'roam-free') return false;
   const params = effect.params as { pool?: unknown } | undefined;
   return Array.isArray(params?.pool) && (params!.pool as unknown[]).length > 0;
 }

@@ -31,12 +31,27 @@ describe('GlobalEffectsPanel', () => {
         id: 'cleansing-cleric',
         sourceCardId: 'CATA_216',
         triggeredAt: 1000,
+        triggerCount: 1,
       },
     ]);
     const rows = screen.getAllByTestId('global-effect-row');
     expect(rows).toHaveLength(1);
     expect(screen.getByText('Cleansing Cleric')).toBeInTheDocument();
     expect(screen.queryByTestId('global-effect-params')).toBeNull();
+    expect(screen.queryByTestId('global-effect-stack-count')).toBeNull();
+  });
+
+  it('shows ×N stack badge when triggerCount > 1', () => {
+    wrap([
+      {
+        id: 'free-spirit',
+        sourceCardId: 'ETC_382',
+        triggeredAt: 1000,
+        triggerCount: 3,
+      },
+    ]);
+    const badge = screen.getByTestId('global-effect-stack-count');
+    expect(badge.textContent).toBe('×3');
   });
 
   it('renders Tame Pet with the beast pool when params are present', async () => {
@@ -45,6 +60,7 @@ describe('GlobalEffectsPanel', () => {
         id: 'tame-pet',
         sourceCardId: 'MEND_300',
         triggeredAt: 2000,
+        triggerCount: 1,
         params: { pool: ['CS3_022', 'CS3_023', 'CS3_024'] },
       },
     ]);
@@ -68,9 +84,34 @@ describe('GlobalEffectsPanel', () => {
         id: 'tame-pet',
         sourceCardId: 'MEND_300',
         triggeredAt: 2000,
+        triggerCount: 1,
       },
     ]);
     expect(screen.getByText('Tame Pet')).toBeInTheDocument();
     expect(screen.queryByTestId('global-effect-params')).toBeNull();
+  });
+
+  it('renders Roam Free with the same pool treatment as Tame Pet', async () => {
+    wrap([
+      {
+        id: 'roam-free',
+        sourceCardId: 'MEND_307',
+        triggeredAt: 2000,
+        triggerCount: 1,
+        params: { pool: ['BEAST_A', 'BEAST_B', 'BEAST_C'] },
+      },
+    ]);
+    const params = await screen.findByTestId('global-effect-params');
+    expect(params).toBeInTheDocument();
+    await waitFor(() => {
+      const arts = screen.getAllByTestId('card-row-art');
+      expect(arts).toHaveLength(3);
+      const urls = arts.map((el) => (el as HTMLImageElement).src);
+      expect(urls).toEqual([
+        'hdt-card-image://tile/BEAST_A.png',
+        'hdt-card-image://tile/BEAST_B.png',
+        'hdt-card-image://tile/BEAST_C.png',
+      ]);
+    });
   });
 });
