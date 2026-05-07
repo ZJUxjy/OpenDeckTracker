@@ -74,12 +74,14 @@ export class CardPlayedDetector {
       if (event.blockType !== 'PLAY') return;
       const id = entityIdOf(event.entity);
       if (id === null) return;
+      this.maybeBackfillFromRef(id, event.entity);
       this.tryFire(id);
       return;
     }
     if (event.type === 'tag-change') {
       const id = entityIdOf(event.entity);
       if (id === null) return;
+      this.maybeBackfillFromRef(id, event.entity);
       if (event.tag === 'CONTROLLER') {
         const known = this.entities.get(id);
         const ctrl = numberOf(event.value);
@@ -109,6 +111,34 @@ export class CardPlayedDetector {
     }
   }
 
+  /**
+   * Real Power.log lines embed `cardId=` / `player=N` inside the
+   * entity ref bracket — useful as a backstop when an entity wasn't
+   * announced via FULL_ENTITY / SHOW_ENTITY first (e.g. opponent's
+   * card we never saw the deck origin of). Pulls cardId / controllerId
+   * from a stringy `entity=[entityName=... id=N cardId=X player=Y]`
+   * ref into the tracked record.
+   */
+  private maybeBackfillFromRef(
+    entityId: number,
+    ref: number | string | null | undefined,
+  ): void {
+    if (typeof ref !== 'string') return;
+    const cardIdMatch = /\bcardId=([A-Za-z0-9_]+)/.exec(ref);
+    const playerMatch = /\bplayer=(\d+)/i.exec(ref);
+    if (!cardIdMatch && !playerMatch) return;
+    const existing = this.entities.get(entityId) ?? {
+      cardId: '',
+      controllerId: 0,
+      zone: null,
+    };
+    if (existing.cardId === '' && cardIdMatch) existing.cardId = cardIdMatch[1] ?? '';
+    if (existing.controllerId === 0 && playerMatch) {
+      existing.controllerId = Number(playerMatch[1]);
+    }
+    this.entities.set(entityId, existing);
+  }
+
   private tryFire(entityId: number): void {
     const known = this.entities.get(entityId);
     if (!known || known.cardId === '' || known.controllerId === 0) return;
@@ -129,8 +159,13 @@ export class CardPlayedDetector {
     cardId: string,
     tags: Record<string, unknown>,
   ): void {
-    const ctrlRaw = tags['CONTROLLER'];
-    const controllerId = numberOf(ctrlRaw) ?? 0;
+    // Real Hearthstone Power.log embeds the controller as `player=N`
+    // inside the entity ref bracket; HearthWatcher's parser surfaces
+    // that under tag key `PLAYER_ID`. The synthetic `tag=CONTROLLER`
+    // form is rare in practice. Read both, prefer CONTROLLER if both
+    // are present.
+    const controllerId =
+      numberOf(tags['CONTROLLER']) ?? numberOf(tags['PLAYER_ID']) ?? 0;
     const zone = readTagString(tags['ZONE']);
     const existing = this.entities.get(entityId);
     if (existing) {

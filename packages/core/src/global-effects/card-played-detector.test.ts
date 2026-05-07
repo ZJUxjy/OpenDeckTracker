@@ -148,6 +148,50 @@ describe('CardPlayedDetector', () => {
     expect(emit).not.toHaveBeenCalled();
   });
 
+  it('reads controllerId from PLAYER_ID tag (real HS Power.log shape)', () => {
+    // Hearthstone never emits tag=CONTROLLER for the entity-creation
+    // line; the controller is `player=N` inside the entity ref, which
+    // HearthWatcher's parser surfaces under tag key PLAYER_ID. The
+    // detector MUST honour this or it will silently drop every play.
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle({
+      type: 'show-entity',
+      entity: '[entityName=驯服宠物 id=28 zone=DECK zonePos=0 cardId= player=1]',
+      cardId: 'MEND_300',
+      tags: { ZONE: 'DECK', PLAYER_ID: 1 },
+      ...empty,
+    });
+    det.handle(blockStart(28, 'PLAY'));
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toMatchObject({
+      cardId: 'MEND_300',
+      controllerId: 1,
+    });
+  });
+
+  it('backfills cardId + controllerId from a stringy entity ref when never announced', () => {
+    // Some opponent / created entities arrive directly in a TAG_CHANGE
+    // before any FULL_ENTITY or SHOW_ENTITY. The bracket ref carries
+    // the cardId/player info; we extract it as a backstop.
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle({
+      type: 'block-start',
+      blockType: 'PLAY',
+      entity: '[entityName=Cleansing Cleric id=42 zone=HAND zonePos=2 cardId=CATA_216 player=2]',
+      effectCardId: '',
+      target: null,
+      subOption: null,
+      ...empty,
+    });
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toMatchObject({
+      cardId: 'CATA_216',
+      controllerId: 2,
+    });
+  });
+
   it('entityIdOf prefers a word-boundary `id=` over substring `playerid=`', () => {
     const emit = vi.fn();
     const det = new CardPlayedDetector({ emit });
