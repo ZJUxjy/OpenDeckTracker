@@ -255,6 +255,10 @@
       "title": "Cleansing Cleric",
       "body": "Healing dealt by the caster's side restores 2 more Health for the rest of the match."
     },
+    "dew-process": {
+      "title": "Dew Process",
+      "body": "Both players draw an extra card at the start of every turn for the rest of the match."
+    },
     "emboldening-blade": {
       "title": "Emboldening Blade",
       "body": "The caster's Silver Hand Recruits gain +1/+1 for the rest of the match. Stacks with other Recruit buffs."
@@ -262,6 +266,10 @@
     "foreboding-flame": {
       "title": "Foreboding Flame",
       "body": "Demons that didn't start in the caster's deck cost (1) less for the rest of the match."
+    },
+    "frost-lich-jaina": {
+      "title": "Frost Lich Jaina",
+      "body": "The caster's Elementals gain Lifesteal for the rest of the match."
     },
     "interstellar-starslicer": {
       "title": "Interstellar Starslicer",
@@ -295,6 +303,10 @@
       "title": "Sentry",
       "body": "After Sentry dies, the caster's Protoss minions cost (1) less for the rest of the match."
     },
+    "starlight-groove": {
+      "title": "Starlight Groove",
+      "body": "For the rest of the match, every Holy spell the caster plays refreshes the hero's Divine Shield."
+    },
     "talya-earthstrider": {
       "title": "Talya Earthstrider",
       "body": "The caster's cards that summon Animal Companions summon 1 additional Companion for the rest of the match."
@@ -302,6 +314,10 @@
     "tame-pet": {
       "title": "Tame Pet",
       "body": "The caster's future Animal Companions are summoned from 3 random Beasts that cost (1) more, locked in when Tame Pet was played."
+    },
+    "the-stonewright": {
+      "title": "The Stonewright",
+      "body": "The caster's Totems gain +2 Attack for the rest of the match."
     }
   },
   "deckSelect": {
