@@ -91,16 +91,16 @@ describe('OverlayView', () => {
     (window as unknown as { hdt?: unknown }).hdt = undefined;
   });
 
-  it('passes compact={true} to LiveDeckPanel', () => {
+  it('renders the per-copy LiveDeckPanel layout (matches main window)', () => {
     const snap = makeSnapshot();
     useDeckTrackerStore.setState({ snapshot: snap });
 
     render(<OverlayView />);
 
-    // The compact branch renders card-compact-row, not card-copy-row
-    const compactRows = screen.queryAllByTestId('card-compact-row');
+    // The overlay must use the same per-copy layout as the main window —
+    // one card-copy-row per remaining physical copy, no compact pip rows.
     const copyRows = screen.queryAllByTestId('card-copy-row');
-    expect(compactRows.length).toBeGreaterThan(0);
-    expect(copyRows).toHaveLength(0);
+    expect(copyRows).toHaveLength(2);
+    expect(screen.queryAllByTestId('card-compact-row')).toHaveLength(0);
   });
 });

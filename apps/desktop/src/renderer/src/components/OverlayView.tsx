@@ -16,7 +16,7 @@ export function OverlayView() {
   };
   return (
     <div className="w-full h-full relative">
-      <LiveDeckPanel compact />
+      <LiveDeckPanel />
       <button
         type="button"
         aria-label="Close player overlay"
