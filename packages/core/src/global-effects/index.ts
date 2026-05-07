@@ -6,3 +6,4 @@ export type {
   ExtractCtx,
   GameMode,
 } from './types';
+export { EFFECT_CATALOG } from './catalog';

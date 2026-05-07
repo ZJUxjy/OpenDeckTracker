@@ -7,13 +7,13 @@
 
 ## 2. Catalog barrel + Cleansing Cleric (paramless effect)
 
-- [ ] 2.1 Create failing test `packages/core/src/global-effects/catalog/catalog.test.ts` asserting (a) `EFFECT_CATALOG` is a non-empty `readonly EffectDef[]`, (b) all `id`s pairwise unique, (c) all `sourceCardId`s pairwise unique, (d) every entry has `mode === 'STANDARD'` and `side === 'caster'`. Run: `pnpm --filter @hdt/core test catalog` → expect FAIL (catalog not yet defined).
-- [ ] 2.2 Look up Cleansing Cleric's `cardId` in `data/cards/generated/cards.collectible.enUS.json` (search by name) and write it down in this task's commit message.
-- [ ] 2.3 Create `packages/core/src/global-effects/catalog/cleansing-cleric.ts` exporting a default `EffectDef` with `id: 'cleansing-cleric'`, `sourceCardId: <id from 2.2>`, `side: 'caster'`, `mode: 'STANDARD'`, no `parameterExtractor`, no `expiresOn`.
-- [ ] 2.4 Create `packages/core/src/global-effects/catalog/index.ts` exporting `export const EFFECT_CATALOG: readonly EffectDef[] = [cleansingCleric].sort(...)` (alphabetical by `id`). Re-export from `global-effects/index.ts`.
-- [ ] 2.5 Re-run 2.1's test — expect PASS.
-- [ ] 2.6 Add test `catalog/hsdata-coverage.test.ts`: load `cards.collectible.enUS.json`, assert each `EFFECT_CATALOG[i].sourceCardId` exists in the collectible pool, AND each STANDARD entry's resolved `set` field is in `STANDARD_SET_CODES` (import from `@hdt/hearthdb`). Run → PASS.
-- [ ] 2.7 Commit: `feat(core): add EFFECT_CATALOG with cleansing-cleric`.
+- [x] 2.1 Create failing test `packages/core/src/global-effects/catalog/catalog.test.ts` asserting (a) `EFFECT_CATALOG` is a non-empty `readonly EffectDef[]`, (b) all `id`s pairwise unique, (c) all `sourceCardId`s pairwise unique, (d) every entry has `mode === 'STANDARD'` and `side === 'caster'`. Run: `pnpm --filter @hdt/core test catalog` → expect FAIL (catalog not yet defined).
+- [x] 2.2 Look up Cleansing Cleric's `cardId` in `data/cards/generated/cards.collectible.enUS.json` (search by name) and write it down in this task's commit message. → `CATA_216`
+- [x] 2.3 Create `packages/core/src/global-effects/catalog/cleansing-cleric.ts` exporting a default `EffectDef` with `id: 'cleansing-cleric'`, `sourceCardId: <id from 2.2>`, `side: 'caster'`, `mode: 'STANDARD'`, no `parameterExtractor`, no `expiresOn`.
+- [x] 2.4 Create `packages/core/src/global-effects/catalog/index.ts` exporting `export const EFFECT_CATALOG: readonly EffectDef[] = [cleansingCleric].sort(...)` (alphabetical by `id`). Re-export from `global-effects/index.ts`.
+- [x] 2.5 Re-run 2.1's test — expect PASS.
+- [x] 2.6 Add test `catalog/hsdata-coverage.test.ts`: load `cards.collectible.enUS.json`, assert each `EFFECT_CATALOG[i].sourceCardId` exists in the collectible pool, AND each STANDARD entry's resolved `set` field is in `STANDARD_SET_CODES` (import from `@hdt/hearthdb`). Run → PASS.
+- [x] 2.7 Commit: `feat(core): add EFFECT_CATALOG with cleansing-cleric`.
 
 ## 3. GlobalEffectsRegistry lifecycle
 

@@ -139,3 +139,4 @@ export type {
   ExtractCtx,
   GameMode as GlobalEffectsGameMode,
 } from './global-effects';
+export { EFFECT_CATALOG } from './global-effects';
