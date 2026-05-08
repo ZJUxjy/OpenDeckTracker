@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 
 export interface OverlayManagerOptions {
   rendererUrl: string;
@@ -13,8 +13,38 @@ export interface BoundsRect {
   height: number;
 }
 
+interface UserOffset {
+  dx: number;
+  dy: number;
+}
+
 function boundsEqual(a: BoundsRect, b: BoundsRect): boolean {
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+}
+
+/**
+ * Keep the overlay's top-left within the display work-area so an
+ * absurd user offset (e.g. dragged way off-screen, then HS shifts)
+ * cannot end up in unrecoverable territory. Falls back to the input
+ * unchanged if the screen module is unavailable (pre-app-ready or
+ * mocked in tests that don't stub `screen`).
+ */
+function clampToWorkArea(rect: BoundsRect): BoundsRect {
+  let workArea: BoundsRect | null = null;
+  try {
+    workArea = screen.getDisplayMatching(rect).workArea;
+  } catch {
+    workArea = null;
+  }
+  if (workArea === null) return rect;
+  const minX = workArea.x;
+  const minY = workArea.y;
+  const maxX = workArea.x + workArea.width - rect.width;
+  const maxY = workArea.y + workArea.height - rect.height;
+  const clampedX = Math.max(minX, Math.min(rect.x, Math.max(minX, maxX)));
+  const clampedY = Math.max(minY, Math.min(rect.y, Math.max(minY, maxY)));
+  if (clampedX === rect.x && clampedY === rect.y) return rect;
+  return { x: clampedX, y: clampedY, width: rect.width, height: rect.height };
 }
 
 export class OverlayManager {
@@ -31,6 +61,27 @@ export class OverlayManager {
   private inActiveMatch = false;
   private pendingBounds: BoundsRect | null = null;
   private lastAppliedBounds: BoundsRect | null = null;
+  /**
+   * The most recent rect passed to the public `setBounds` API
+   * (i.e. what the HearthstoneWindowTracker derived). Used as the
+   * reference frame for computing `userOffset` after a user drag.
+   */
+  private lastTrackerBounds: BoundsRect | null = null;
+  /**
+   * Pixel offset the user has dragged the overlay away from the
+   * tracker-derived position. Composed onto every subsequent
+   * `setBounds` call so the overlay follows Hearthstone window
+   * movement while preserving the user's preferred placement.
+   * Lives only in memory — not persisted across app restarts.
+   */
+  private userOffset: UserOffset = { dx: 0, dy: 0 };
+  /**
+   * Set true around an internal `BrowserWindow.setBounds(...)` call
+   * and cleared in the next microtask. Suppresses the `moved` event
+   * that fires as a side-effect of our own bounds application, so we
+   * only treat true user drags as offset updates.
+   */
+  private isApplyingTrackerBounds = false;
   private readonly opts: OverlayManagerOptions;
   private readonly routeHash: string;
 
@@ -67,18 +118,41 @@ export class OverlayManager {
   }
 
   setBounds(rect: BoundsRect): void {
+    this.lastTrackerBounds = { ...rect };
     if (!this.win || this.win.isDestroyed()) {
-      // Window not yet created — remember the bounds and apply on createWindow().
+      // Window not yet created — remember the tracker bounds and
+      // apply (composed) on createWindow().
       this.pendingBounds = { ...rect };
       console.log(`[overlay-mgr ${this.routeHash}] setBounds before window — buffered`);
       return;
     }
-    if (this.lastAppliedBounds && boundsEqual(this.lastAppliedBounds, rect)) {
+    this.applyComposedBounds(rect);
+  }
+
+  private applyComposedBounds(trackerRect: BoundsRect): void {
+    if (!this.win || this.win.isDestroyed()) return;
+    const composed: BoundsRect = {
+      x: trackerRect.x + this.userOffset.dx,
+      y: trackerRect.y + this.userOffset.dy,
+      width: trackerRect.width,
+      height: trackerRect.height,
+    };
+    const clamped = clampToWorkArea(composed);
+    if (this.lastAppliedBounds && boundsEqual(this.lastAppliedBounds, clamped)) {
       return;
     }
-    console.log(`[overlay-mgr ${this.routeHash}] setBounds → ${rect.x},${rect.y} ${rect.width}×${rect.height}`);
-    this.win.setBounds(rect);
-    this.lastAppliedBounds = { ...rect };
+    console.log(
+      `[overlay-mgr ${this.routeHash}] setBounds → ${clamped.x},${clamped.y} ${clamped.width}×${clamped.height}` +
+        (this.userOffset.dx !== 0 || this.userOffset.dy !== 0
+          ? ` (tracker ${trackerRect.x},${trackerRect.y} + offset ${this.userOffset.dx},${this.userOffset.dy})`
+          : ''),
+    );
+    this.isApplyingTrackerBounds = true;
+    this.win.setBounds(clamped);
+    queueMicrotask(() => {
+      this.isApplyingTrackerBounds = false;
+    });
+    this.lastAppliedBounds = { ...clamped };
   }
 
   dispose(): void {
@@ -118,9 +192,23 @@ export class OverlayManager {
 
     this.win.setAlwaysOnTop(true, 'screen-saver');
 
+    this.win.on('moved', () => {
+      if (this.isApplyingTrackerBounds) return;
+      if (this.lastTrackerBounds === null) return;
+      if (!this.win || this.win.isDestroyed()) return;
+      const cur = this.win.getBounds();
+      this.userOffset = {
+        dx: cur.x - this.lastTrackerBounds.x,
+        dy: cur.y - this.lastTrackerBounds.y,
+      };
+      this.lastAppliedBounds = { x: cur.x, y: cur.y, width: cur.width, height: cur.height };
+      console.log(
+        `[overlay-mgr ${this.routeHash}] user-moved → offset dx=${this.userOffset.dx} dy=${this.userOffset.dy}`,
+      );
+    });
+
     if (this.pendingBounds) {
-      this.win.setBounds(this.pendingBounds);
-      this.lastAppliedBounds = this.pendingBounds;
+      this.applyComposedBounds(this.pendingBounds);
       this.pendingBounds = null;
     }
 

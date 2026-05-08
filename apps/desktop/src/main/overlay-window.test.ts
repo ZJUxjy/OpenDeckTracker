@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => {
     _destroyed = false;
     _opts: Record<string, unknown>;
     _currentBounds: { x: number; y: number; width: number; height: number };
+    _listeners: Record<string, Array<() => void>> = {};
     webContents = { on: vi.fn() };
 
     constructor(opts: Record<string, unknown>) {
@@ -31,18 +32,39 @@ const mocks = vi.hoisted(() => {
     setBounds = vi.fn((rect: { x: number; y: number; width: number; height: number }) => {
       this._currentBounds = { ...rect };
     });
+    getBounds = vi.fn(() => ({ ...this._currentBounds }));
+    on = vi.fn((event: string, handler: () => void) => {
+      (this._listeners[event] ??= []).push(handler);
+      return this;
+    });
+    /** Test helper — fire a registered event handler synchronously. */
+    _emit(event: string): void {
+      const handlers = this._listeners[event];
+      if (!handlers) return;
+      for (const h of handlers) h();
+    }
   }
+
+  // Default screen mock with a 1920×1080 work-area; individual
+  // tests can override `getDisplayMatching` via the `screen` export.
+  const screen = {
+    getDisplayMatching: vi.fn(() => ({
+      workArea: { x: 0, y: 0, width: 1920, height: 1080 },
+    })),
+  };
 
   return {
     windows,
     MockWindow,
     BrowserWindow: vi.fn((opts: Record<string, unknown>) => new MockWindow(opts)),
+    screen,
     setInterval: vi.spyOn(globalThis, 'setInterval'),
   };
 });
 
 vi.mock('electron', () => ({
   BrowserWindow: mocks.BrowserWindow,
+  screen: mocks.screen,
 }));
 
 import { OverlayManager, type OverlayManagerOptions } from './overlay-window';
@@ -242,5 +264,101 @@ describe('OverlayManager', () => {
     mgr.setBounds({ x: 0, y: 0, width: 1920, height: 1080 });
     mgr.setBounds({ x: 100, y: 100, width: 1280, height: 720 });
     expect(win.setBounds).toHaveBeenCalledTimes(2);
+  });
+
+  it('user-initiated moved event updates userOffset', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+
+    // Tracker emits its first bounds; flag clears on the next microtask.
+    mgr.setBounds({ x: 100, y: 50, width: 320, height: 800 });
+    return Promise.resolve().then(() => {
+      // User drags the window — simulate the new bounds and fire `moved`.
+      win._currentBounds = { x: 140, y: 70, width: 320, height: 800 };
+      win._emit('moved');
+
+      expect((mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset).toEqual({
+        dx: 40,
+        dy: 20,
+      });
+    });
+  });
+
+  it('setBounds composes userOffset onto tracker bounds', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+    win.setBounds.mockClear();
+
+    (mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset = { dx: 40, dy: 20 };
+    mgr.setBounds({ x: 100, y: 50, width: 320, height: 800 });
+
+    expect(win.setBounds).toHaveBeenCalledWith({ x: 140, y: 70, width: 320, height: 800 });
+  });
+
+  it('composed bounds clamp to display work-area', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+    win.setBounds.mockClear();
+
+    // Force the workArea so the test is deterministic regardless of host display.
+    mocks.screen.getDisplayMatching.mockReturnValueOnce({
+      workArea: { x: 0, y: 0, width: 1920, height: 1080 },
+    });
+    (mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset = { dx: 100000, dy: 0 };
+    mgr.setBounds({ x: 100, y: 50, width: 320, height: 800 });
+
+    const applied = win.setBounds.mock.calls[0]![0] as { x: number; width: number };
+    expect(applied.x + applied.width).toBeLessThanOrEqual(1920);
+  });
+
+  it('programmatic setBounds does not update userOffset (flag suppresses)', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+
+    // No user offset yet. Tracker emits — `moved` event fires from the
+    // BrowserWindow.setBounds mock side-effect (we simulate by emitting
+    // while the flag is still set, before the microtask clears it).
+    mgr.setBounds({ x: 200, y: 50, width: 320, height: 800 });
+    win._currentBounds = { x: 200, y: 50, width: 320, height: 800 };
+    win._emit('moved');
+
+    expect((mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset).toEqual({
+      dx: 0,
+      dy: 0,
+    });
+  });
+
+  it('successive drags compose against lastTrackerBounds (not previous offset)', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+
+    // First tracker tick + user drag → offset { dx: 40, dy: 20 }.
+    mgr.setBounds({ x: 100, y: 50, width: 320, height: 800 });
+    return Promise.resolve()
+      .then(() => {
+        win._currentBounds = { x: 140, y: 70, width: 320, height: 800 };
+        win._emit('moved');
+        expect(
+          (mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset,
+        ).toEqual({ dx: 40, dy: 20 });
+
+        // Second tracker tick at same x,y — nothing recomposed yet.
+        mgr.setBounds({ x: 100, y: 50, width: 320, height: 800 });
+        return Promise.resolve();
+      })
+      .then(() => {
+        // User drags again to (110, 45) — offset is recomputed from
+        // current vs lastTrackerBounds, NOT added to previous offset.
+        win._currentBounds = { x: 110, y: 45, width: 320, height: 800 };
+        win._emit('moved');
+        expect(
+          (mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset,
+        ).toEqual({ dx: 10, dy: -5 });
+      });
   });
 });
