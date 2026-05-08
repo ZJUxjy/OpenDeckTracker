@@ -21,6 +21,10 @@ import {
   type EventPhase,
   type PowerEvent,
 } from '@hdt/hearthwatcher';
+import {
+  defaultCardImageCacheRoot,
+  ensureCardTileCached,
+} from './card-image-cache';
 import { getHearthMirror } from './hearthmirror';
 import { recordCompletedMatch } from './stats-host';
 
@@ -268,6 +272,40 @@ function broadcast(channel: string, payload: unknown): void {
   }
 }
 
+const preloadedTileCardIds = new Set<string>();
+let cardImageRoot: string | null = null;
+
+function getCardImageRoot(): string {
+  if (cardImageRoot === null) {
+    cardImageRoot = defaultCardImageCacheRoot(app.getPath('userData'));
+  }
+  return cardImageRoot;
+}
+
+function extractTileCardIds(snapshot: DeckTrackerSnapshot): string[] {
+  const ids = new Set<string>();
+  for (const card of snapshot.deck?.remaining ?? []) {
+    if (card.count > 0) ids.add(card.cardId);
+  }
+  for (const cardId of snapshot.friendlyHand ?? []) {
+    if (cardId) ids.add(cardId);
+  }
+  return Array.from(ids);
+}
+
+function preloadCardTiles(cardIds: string[]): void {
+  const toFetch = cardIds.filter((id) => !preloadedTileCardIds.has(id));
+  if (toFetch.length === 0) return;
+  for (const id of toFetch) {
+    preloadedTileCardIds.add(id);
+  }
+  void Promise.allSettled(
+    toFetch.map((cardId) =>
+      ensureCardTileCached(cardId, { root: getCardImageRoot() }).catch(() => undefined),
+    ),
+  );
+}
+
 export function startDeckTracker(): void {
   if (tracker !== null) return;
   const mirror = getHearthMirror();
@@ -296,10 +334,19 @@ export function startDeckTracker(): void {
       lastPhaseLogged = phase;
       lastDeckIdLogged = deckId;
     }
+    // Fire-and-forget tile preload: every snapshot carries the cardIds
+    // that are about to be rendered in the overlay. Getting them into
+    // the disk (and therefore the in-memory protocol cache) before the
+    // renderer paints avoids the blank-tile flash on first draw.
+    const tileIds = extractTileCardIds(s);
+    if (tileIds.length > 0) {
+      preloadCardTiles(tileIds);
+    }
     fanoutPhase(phase);
     broadcast('deck-tracker:state', event.snapshot);
   });
   tracker.on('match-started', (event: DeckTrackerEvent) => {
+    preloadedTileCardIds.clear();
     console.log(`[deck-tracker] match-started deck=${event.snapshot?.deck?.id ?? 'null'}`);
     broadcast('deck-tracker:event', { type: event.type, snapshot: event.snapshot });
   });
