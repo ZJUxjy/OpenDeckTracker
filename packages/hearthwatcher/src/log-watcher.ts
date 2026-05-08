@@ -2,7 +2,7 @@ import { open, stat } from 'node:fs/promises';
 import { LogFileWatcher, type LogFileWatcherOptions } from './log-file-watcher';
 import { findCurrentMatchStartOffset } from './log/match-boundary';
 import { discoverPowerLog, type LogDiscoveryOptions } from './log-paths';
-import { parsePowerLine } from './parsers/power-parser';
+import { PowerLineStreamingParser } from './parsers/power-parser';
 import type { HearthWatcherDiagnostic } from './types/diagnostics';
 import { createParserDiagnostics } from './types/diagnostics';
 import type { PowerEvent } from './types/power-events';
@@ -49,6 +49,12 @@ export class HearthWatcher {
   private latestLogTimer: NodeJS.Timeout | null = null;
   private latestLogCheckInFlight = false;
   private currentPowerLogPath: string | null = null;
+  /**
+   * One streaming parser per log session so block-continuation context
+   * (FULL_ENTITY → indented `tag=` lines) carries across the
+   * replay→live boundary. Reset on every new log path.
+   */
+  private parser = new PowerLineStreamingParser();
 
   constructor(options: HearthWatcherOptions = {}) {
     this.options = options;
@@ -83,6 +89,7 @@ export class HearthWatcher {
     this.tailer?.stop();
     this.tailer = null;
     this.currentPowerLogPath = null;
+    this.parser.reset();
   }
 
   private async attemptDiscoveryAndTail(): Promise<void> {
@@ -158,7 +165,7 @@ export class HearthWatcher {
     const diagnostics = createParserDiagnostics();
     let replayedEvents = 0;
     for (const line of lines) {
-      const event = parsePowerLine(line, { diagnostics });
+      const event = this.parser.parse(line, { diagnostics });
       if (event !== null) {
         this.emitEvent(event, 'replay');
         replayedEvents += 1;
@@ -193,7 +200,7 @@ export class HearthWatcher {
     let readyEmitted = false;
     tailer.onLine((line) => {
       const before = diagnostics.malformedRecords;
-      const event = parsePowerLine(line, { diagnostics });
+      const event = this.parser.parse(line, { diagnostics });
       if (event !== null) {
         if (!readyEmitted) {
           readyEmitted = true;
@@ -257,6 +264,7 @@ export class HearthWatcher {
       const discovery = await discoverPowerLog({ ...this.options.discovery });
       if (discovery.powerLogPath !== null && discovery.powerLogPath !== this.currentPowerLogPath) {
         this.tailer?.stop();
+        this.parser.reset();
         this.currentPowerLogPath = discovery.powerLogPath;
         this.tailer = this.buildTailer(discovery.powerLogPath);
         await this.tailer.start();

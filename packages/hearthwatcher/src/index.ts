@@ -7,7 +7,11 @@ export type { LogDiscoveryOptions, LogDiscoveryResult } from './log-paths';
 export { findCurrentMatchStartOffset } from './log/match-boundary';
 export { parseLogLine } from './log-line';
 export type { LogLine } from './log-line';
-export { parsePowerLine, parseEntityRef } from './parsers/power-parser';
+export {
+  parsePowerLine,
+  parseEntityRef,
+  PowerLineStreamingParser,
+} from './parsers/power-parser';
 export { parseLoadingScreenLine } from './parsers/loading-screen-parser';
 export {
   HearthWatcherGameState,

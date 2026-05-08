@@ -132,6 +132,85 @@ export function parsePowerLine(
   return null;
 }
 
+/**
+ * Streaming variant that captures Power.log block continuations.
+ *
+ * Power.log emits multi-line blocks like:
+ *
+ *   FULL_ENTITY - Updating [id=10 ... cardId=DINO_434]
+ *       tag=ATK value=4
+ *       tag=HEALTH value=4
+ *       tag=TAUNT value=1
+ *
+ * The header line ('FULL_ENTITY ...') carries minimal inline data; the
+ * intrinsic tags (ATK / HEALTH / TAUNT / DIVINE_SHIELD / etc.) appear on
+ * indented continuation lines. The stateless `parsePowerLine` returns
+ * `null` for those continuations because they don't match any record-
+ * type prefix, which means downstream consumers never see them.
+ *
+ * This streaming parser keeps the entity ref of the most recently
+ * opened FULL_/SHOW_/CHANGE_/HIDE_ENTITY block and re-emits each
+ * continuation `tag=K value=V` line as a synthetic `tag-change`
+ * targeting that entity. Any line that's not a continuation closes the
+ * block context — TAG_CHANGE / BLOCK_START / a fresh FULL_ENTITY etc.
+ *
+ * One instance must back the whole stream (replay + live tail) so
+ * blocks straddling the replay→live boundary stay correctly attributed.
+ */
+const TAG_CONTINUATION_RE = /^tag=([A-Za-z0-9_]+)\s+value=(.+?)\s*$/;
+
+export class PowerLineStreamingParser {
+  private lastBlockEntityRef: PowerEntityRef | null = null;
+
+  parse(
+    rawOrLine: string | LogLine,
+    options: ParsePowerLineOptions = {},
+  ): PowerEvent | null {
+    const line = typeof rawOrLine === 'string' ? parseLogLine(rawOrLine) : rawOrLine;
+    const trimmed = line.content.trim();
+
+    // Tag-continuation: only meaningful while a block is open.
+    if (this.lastBlockEntityRef !== null) {
+      const tagMatch = TAG_CONTINUATION_RE.exec(trimmed);
+      if (tagMatch !== null) {
+        return {
+          ...basePowerEvent(line),
+          type: 'tag-change',
+          entity: this.lastBlockEntityRef,
+          tag: normalizePowerTagName(tagMatch[1] ?? ''),
+          value: parsePowerTagValue((tagMatch[2] ?? '').trim()),
+        };
+      }
+    }
+
+    const event = parsePowerLine(line, options);
+    if (event === null) {
+      // An unhandled / malformed line ends the current block.
+      this.lastBlockEntityRef = null;
+      return null;
+    }
+    switch (event.type) {
+      case 'full-entity':
+        this.lastBlockEntityRef = event.entityId;
+        break;
+      case 'show-entity':
+      case 'change-entity':
+      case 'hide-entity':
+        this.lastBlockEntityRef = event.entity;
+        break;
+      default:
+        // TAG_CHANGE, BLOCK_START/END, CREATE_GAME, SHUFFLE_DECK all close
+        // the current FULL_ENTITY-style block context.
+        this.lastBlockEntityRef = null;
+    }
+    return event;
+  }
+
+  reset(): void {
+    this.lastBlockEntityRef = null;
+  }
+}
+
 export function parseEntityRef(value: string): PowerEntityRef {
   const trimmed = value.trim();
   if (/^\d+$/.test(trimmed)) return Number(trimmed);

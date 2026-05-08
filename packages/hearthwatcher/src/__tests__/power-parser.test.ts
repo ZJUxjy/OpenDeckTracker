@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { createParserDiagnostics, parsePowerLine } from '..';
+import { createParserDiagnostics, parsePowerLine, PowerLineStreamingParser } from '..';
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const fixture = (name: string): string[] =>
@@ -115,6 +115,55 @@ describe('parsePowerLine', () => {
       subOption: -1,
     });
     expect(diagnostics.malformedRecords).toBe(0);
+  });
+
+  it('emits indented tag continuations as tag-change events targeting the open block', () => {
+    // The Power.log emits FULL_ENTITY / SHOW_ENTITY etc. as multi-line
+    // blocks: a header followed by indented `tag=KEY value=VAL` rows
+    // carrying the intrinsic stats. The line-at-a-time `parsePowerLine`
+    // returns null for those continuations; the streaming variant
+    // re-emits them as synthetic tag-change events for the most recent
+    // entity block.
+    const parser = new PowerLineStreamingParser();
+    const lines = [
+      'D 21:56:59.8995687 PowerTaskList.DebugPrintPower() -     SHOW_ENTITY - Updating Entity=[entityName=UNKNOWN ENTITY [cardType=INVALID] id=10 zone=DECK zonePos=0 cardId= player=1] CardID=DINO_434',
+      'D 21:56:59.8995687 PowerTaskList.DebugPrintPower() -         tag=ATK value=4',
+      'D 21:56:59.8995687 PowerTaskList.DebugPrintPower() -         tag=HEALTH value=4',
+      'D 21:56:59.8995687 PowerTaskList.DebugPrintPower() -         tag=TAUNT value=1',
+      'D 21:56:59.8995687 PowerTaskList.DebugPrintPower() -         tag=DIVINE_SHIELD value=1',
+    ];
+    const events = lines.map((line) => parser.parse(line));
+
+    expect(events[0]?.type).toBe('show-entity');
+    expect(events[1]).toMatchObject({ type: 'tag-change', entity: 10, tag: 'ATK', value: 4 });
+    expect(events[2]).toMatchObject({ type: 'tag-change', entity: 10, tag: 'HEALTH', value: 4 });
+    expect(events[3]).toMatchObject({ type: 'tag-change', entity: 10, tag: 'TAUNT', value: 1 });
+    expect(events[4]).toMatchObject({
+      type: 'tag-change',
+      entity: 10,
+      tag: 'DIVINE_SHIELD',
+      value: 1,
+    });
+  });
+
+  it('a non-continuation line (TAG_CHANGE / BLOCK_START / fresh FULL_ENTITY) closes the block', () => {
+    const parser = new PowerLineStreamingParser();
+    const lines = [
+      // FULL_ENTITY block opens.
+      'D 17:57:12.7769580 PowerTaskList.DebugPrintPower() -         FULL_ENTITY - Updating [entityName=foo id=82 zone=SETASIDE zonePos=0 cardId=END_009 player=1] CardID=END_009',
+      'D 17:57:12.7769580 PowerTaskList.DebugPrintPower() -             tag=ATK value=2',
+      // Independent TAG_CHANGE — should NOT inherit entity 82.
+      'D 17:57:12.7769580 PowerTaskList.DebugPrintPower() - TAG_CHANGE Entity=[id=99 zone=PLAY] tag=DAMAGE value=3',
+      // After that close, a stray indented `tag=` line has no open block,
+      // so it must NOT be re-emitted.
+      'D 17:57:12.7769580 PowerTaskList.DebugPrintPower() -             tag=HEALTH value=5',
+    ];
+    const events = lines.map((line) => parser.parse(line));
+
+    expect(events[0]?.type).toBe('full-entity');
+    expect(events[1]).toMatchObject({ type: 'tag-change', entity: 82, tag: 'ATK' });
+    expect(events[2]).toMatchObject({ type: 'tag-change', entity: 99, tag: 'DAMAGE' });
+    expect(events[3]).toBeNull();
   });
 
   it('parses FULL_ENTITY updating records', () => {
