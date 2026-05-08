@@ -69,6 +69,11 @@
   --green:      #34d399;
   --red:        #f87171;
   --amber:      #fbbf24;
+  --scrollbar-size:         8px;
+  --scrollbar-track:        var(--bg-2);
+  --scrollbar-thumb:        var(--border-hi);
+  --scrollbar-thumb-hover:  var(--text-mute);
+  --scrollbar-thumb-active: var(--accent);
   --rarity-free:        #5b6573;
   --rarity-common:      #cdd5e0;
   --rarity-rare:        #3b82f6;
