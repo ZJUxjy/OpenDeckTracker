@@ -23,6 +23,8 @@ interface OpponentCardsPanelProps {
   graveyard: OpponentCardRecord[];
   /** Total board attack on the opposing side; rendered in the header. */
   boardAttack?: number;
+  /** Friendly hero health + armor, used to color opposing board attack. */
+  targetEffectiveHealth?: number | null;
 }
 
 interface CardDisplayDef {
@@ -41,6 +43,7 @@ export function OpponentCardsPanel({
   revealed,
   graveyard,
   boardAttack = 0,
+  targetEffectiveHealth = null,
 }: OpponentCardsPanelProps) {
   const { t } = useTranslation();
   const cardIds = useMemo(
@@ -77,18 +80,10 @@ export function OpponentCardsPanel({
           {t('opponent.title')}
         </div>
         <div className="text-text font-bold text-sm">{t('opponent.revealed')}</div>
-        <div
-          className="mt-2 flex items-center justify-between gap-3 text-[11px] text-text-dim"
-          title={t('boardAttack.hint')}
-        >
-          <span className="uppercase tracking-wider">{t('boardAttack.opposing')}</span>
-          <span
-            data-testid="opposing-board-attack-value"
-            className="font-mono tabular-nums text-rarity-rare"
-          >
-            {boardAttack}
-          </span>
-        </div>
+        <OpponentBoardAttackSummary
+          attack={boardAttack}
+          targetEffectiveHealth={targetEffectiveHealth}
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
@@ -116,6 +111,56 @@ export function OpponentCardsPanel({
         )}
       </div>
     </aside>
+  );
+}
+
+function OpponentBoardAttackSummary({
+  attack,
+  targetEffectiveHealth,
+}: {
+  attack: number;
+  targetEffectiveHealth: number | null;
+}) {
+  const { t } = useTranslation();
+  const hasTarget = targetEffectiveHealth !== null;
+  const isLethal = hasTarget && attack >= targetEffectiveHealth;
+  const isShort = hasTarget && attack < targetEffectiveHealth;
+  const toneClass = isLethal
+    ? 'border-red/40 bg-red/15 text-red shadow-sm'
+    : isShort
+      ? 'border-green/40 bg-green/15 text-green shadow-sm'
+      : 'border-accent/30 bg-accent-dim/20 text-accent';
+
+  return (
+    <div
+      data-testid="opposing-board-attack-card"
+      className={clsx('mt-3 rounded border px-3 py-2', toneClass)}
+      title={t('boardAttack.hint')}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[11px] font-bold uppercase tracking-wider">
+          {t('boardAttack.opposing')}
+        </span>
+        {hasTarget ? (
+          <span className="text-[10px] font-medium uppercase tracking-wider opacity-80">
+            {t('boardAttack.friendlyTarget', { value: targetEffectiveHealth })}
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-1 flex items-end justify-between gap-3">
+        <span
+          data-testid="opposing-board-attack-value"
+          className="font-mono text-3xl font-black leading-none tabular-nums"
+        >
+          {attack}
+        </span>
+        {hasTarget ? (
+          <span className="pb-0.5 font-mono text-sm font-bold tabular-nums opacity-90">
+            / {targetEffectiveHealth}
+          </span>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

@@ -6,6 +6,8 @@ import {
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
   type ExtractCtx,
+  type HeroAttackState,
+  type HeroVitals,
   type LogDerivedEntityUpdate,
   type MinionTags,
   type Zone,
@@ -84,25 +86,85 @@ function isWeaponEntity(tags: Readonly<Record<string, unknown>>): boolean {
   return ct === 'WEAPON' || ct === 7;
 }
 
+function isHeroEntity(entity: { cardId: string; tags: Readonly<Record<string, unknown>> }): boolean {
+  const ct = entity.tags['CARDTYPE'];
+  return ct === 'HERO' || ct === 3 || entity.cardId.startsWith('HERO_');
+}
+
+function heroVitalsFromTags(tags: Readonly<Record<string, unknown>>): HeroVitals | null {
+  const health = numericTag(tags['HEALTH']);
+  if (health === undefined) return null;
+  const damage = numericTag(tags['DAMAGE']) ?? 0;
+  const armor = numericTag(tags['ARMOR']) ?? 0;
+  const remainingHealth = Math.max(0, health - damage);
+  return {
+    health: remainingHealth,
+    armor,
+    effectiveHealth: remainingHealth + armor,
+  };
+}
+
+function heroVitalsForController(controllerId: number): HeroVitals | null {
+  for (const e of boardAttackState.entities.values()) {
+    if (e.controllerId !== controllerId) continue;
+    if (e.zone !== 'PLAY') continue;
+    if (!isHeroEntity(e)) continue;
+    const vitals = heroVitalsFromTags(e.tags);
+    if (vitals !== null) return vitals;
+  }
+  return null;
+}
+
+function opposingHeroVitals(localControllerId: number): HeroVitals | null {
+  for (const e of boardAttackState.entities.values()) {
+    if (e.controllerId === localControllerId) continue;
+    if (e.zone !== 'PLAY') continue;
+    if (!isHeroEntity(e)) continue;
+    const vitals = heroVitalsFromTags(e.tags);
+    if (vitals !== null) return vitals;
+  }
+  return null;
+}
+
 function buildBoardAttackContext(
   _boardState: BoardState | null,
-  matchInfo: MatchInfo | null,
+  _matchInfo: MatchInfo | null,
+  localControllerId: number,
 ): ComputeBoardAttackOptions {
-  const localId =
-    matchInfo?.localPlayer?.id !== undefined && matchInfo.localPlayer.id > 0
-      ? matchInfo.localPlayer.id
-      : 1;
+  // Trust the tracker's resolved controllerId — it already runs through
+  // `validControllerId` and falls back deterministically. matchInfo can
+  // still be 0/0 mid-restart (mirror hasn't populated MatchInfo yet);
+  // the tracker's value is the right source of truth for left/right
+  // bucketing of hero attacks and weapons.
+  const localId = localControllerId;
 
   const tagsByEntityId = new Map<number, MinionTags>();
   const weapons: WeaponState[] = [];
+  const heroAttacks: HeroAttackState[] = [];
 
   for (const e of boardAttackState.entities.values()) {
     if (e.zone !== 'PLAY') continue;
+    const wfNum = numericTag(e.tags['WINDFURY']);
+    if (isHeroEntity(e)) {
+      const attack = numericTag(e.tags['ATK']);
+      if (attack !== undefined) {
+        heroAttacks.push({
+          controllerId: e.controllerId,
+          attack,
+          frozen: boolTag(e.tags['FROZEN']),
+          cantAttack: boolTag(e.tags['CANT_ATTACK']),
+          windfury: boolTag(e.tags['WINDFURY']),
+          megaWindfury: wfNum === 3 || boolTag(e.tags['MEGA_WINDFURY']),
+          numAttacksThisTurn: numericTag(e.tags['NUM_ATTACKS_THIS_TURN']) ?? 0,
+          extraAttacksThisTurn: numericTag(e.tags['EXTRA_ATTACKS_THIS_TURN']) ?? 0,
+        });
+      }
+      continue;
+    }
     if (isWeaponEntity(e.tags)) {
       const attack = numericTag(e.tags['ATK']);
       if (attack === undefined || attack <= 0) continue;
       const durability = numericTag(e.tags['DURABILITY']);
-      const wfNum = numericTag(e.tags['WINDFURY']);
       const weapon: WeaponState = {
         controllerId: e.controllerId,
         attack,
@@ -118,11 +180,11 @@ function buildBoardAttackContext(
     // Minion tag overlay for the calculator. Only entries that change
     // a minion's swing budget go in — others (e.g. heroes) are filtered
     // out by the calculator's HERO_/GAME_ cardId guard.
-    const wfNum = numericTag(e.tags['WINDFURY']);
+    const numTurnsInPlay = numericTag(e.tags['NUM_TURNS_IN_PLAY']);
     const tags: MinionTags = {
       frozen: boolTag(e.tags['FROZEN']),
+      exhausted: boolTag(e.tags['EXHAUSTED']),
       cantAttack: boolTag(e.tags['CANT_ATTACK']),
-      numTurnsInPlay: numericTag(e.tags['NUM_TURNS_IN_PLAY']) ?? 1,
       charge: boolTag(e.tags['CHARGE']),
       rush: boolTag(e.tags['RUSH']),
       windfury: boolTag(e.tags['WINDFURY']),
@@ -130,10 +192,18 @@ function buildBoardAttackContext(
       numAttacksThisTurn: numericTag(e.tags['NUM_ATTACKS_THIS_TURN']) ?? 0,
       extraAttacksThisTurn: numericTag(e.tags['EXTRA_ATTACKS_THIS_TURN']) ?? 0,
     };
+    if (numTurnsInPlay !== undefined) tags.numTurnsInPlay = numTurnsInPlay;
     tagsByEntityId.set(e.entityId, tags);
   }
 
-  return { tagsByEntityId, weapons, localControllerId: localId };
+  return {
+    tagsByEntityId,
+    weapons,
+    heroAttacks,
+    localControllerId: localId,
+    friendlyHero: heroVitalsForController(localId),
+    opposingHero: opposingHeroVitals(localId),
+  };
 }
 
 // ── PowerEvent ring buffer for the global-effects extractCtx ─────────

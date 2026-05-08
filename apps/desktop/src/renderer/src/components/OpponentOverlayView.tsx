@@ -20,6 +20,9 @@ export function OpponentOverlayView() {
   const opposingBoardAttack = useDeckTrackerStore(
     (s) => s.snapshot?.boardAttack?.opposing ?? 0,
   );
+  const friendlyEffectiveHealth = useDeckTrackerStore(
+    (s) => s.snapshot?.friendlyHero?.effectiveHealth ?? null,
+  );
   const opposingEffects = useOpposingEffects();
   const { effectiveRowCount } = partitionAnimalCompanionEffects(opposingEffects);
 
@@ -37,6 +40,7 @@ export function OpponentOverlayView() {
             revealed={opponent?.revealed ?? []}
             graveyard={opponent?.graveyard ?? []}
             boardAttack={opposingBoardAttack}
+            targetEffectiveHealth={friendlyEffectiveHealth}
           />
         }
         effectsSlot={

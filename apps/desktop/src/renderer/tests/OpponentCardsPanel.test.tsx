@@ -86,6 +86,35 @@ describe('OpponentCardsPanel', () => {
     expect(screen.getByText('Hearthstone not running')).toBeInTheDocument();
   });
 
+  it('highlights opposing board attack in green when it is below friendly hero effective health', () => {
+    render(
+      <OpponentCardsPanel
+        revealed={[]}
+        graveyard={[]}
+        boardAttack={8}
+        targetEffectiveHealth={15}
+      />,
+    );
+
+    const card = screen.getByTestId('opposing-board-attack-card');
+    expect(card).toHaveClass('text-green');
+    expect(screen.getByTestId('opposing-board-attack-value')).toHaveTextContent('8');
+    expect(card).toHaveTextContent('/ 15');
+  });
+
+  it('highlights opposing board attack in red when it threatens lethal', () => {
+    render(
+      <OpponentCardsPanel
+        revealed={[]}
+        graveyard={[]}
+        boardAttack={15}
+        targetEffectiveHealth={15}
+      />,
+    );
+
+    expect(screen.getByTestId('opposing-board-attack-card')).toHaveClass('text-red');
+  });
+
   it('routes opponent row art through the local cache protocol (never a CDN URL)', async () => {
     render(
       <OpponentCardsPanel

@@ -159,4 +159,146 @@ describe('deck-tracker main host', () => {
       { entityId: 42, cardId: 'MEND_300', zone: 'GRAVEYARD', controllerId: 1 },
     ]);
   });
+
+  it('exposes opposing hero effective health through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker();
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 7,
+        cardId: 'HERO_08',
+        tags: {
+          CARDTYPE: 3,
+          CONTROLLER: 2,
+          ZONE: 'PLAY',
+          HEALTH: 30,
+          DAMAGE: 8,
+          ARMOR: 5,
+        },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          friendlyHero?: { health: number; armor: number; effectiveHealth: number } | null;
+          opposingHero?: { health: number; armor: number; effectiveHealth: number } | null;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+
+    const context = trackerArgs.boardAttackContextProvider(null, null, 1);
+    expect(context.opposingHero).toEqual({
+      health: 22,
+      armor: 5,
+      effectiveHealth: 27,
+    });
+    expect(context.friendlyHero).toBeNull();
+  });
+
+  it('exposes hero attack availability through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker();
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 7,
+        cardId: 'HERO_08',
+        tags: {
+          CARDTYPE: 3,
+          CONTROLLER: 1,
+          ZONE: 'PLAY',
+          ATK: 5,
+          NUM_ATTACKS_THIS_TURN: 1,
+        },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          heroAttacks?: Array<{
+            controllerId: number;
+            attack: number;
+            numAttacksThisTurn?: number;
+          }>;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+
+    expect(
+      trackerArgs.boardAttackContextProvider(null, null, 1).heroAttacks,
+    ).toEqual([
+      expect.objectContaining({
+        controllerId: 1,
+        attack: 5,
+        numAttacksThisTurn: 1,
+      }),
+    ]);
+  });
+
+  it('uses tracker-supplied localControllerId regardless of matchInfo', async () => {
+    // Mid-restart scenario: matchInfo.localPlayer.id is still 0 but the
+    // tracker's resolved local controller is 2 (the user is player 2).
+    // The board-attack context must trust the tracker, not matchInfo.
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker();
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 7,
+        cardId: 'HERO_08',
+        tags: { CARDTYPE: 3, CONTROLLER: 2, ZONE: 'PLAY', ATK: 4 },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 8,
+        cardId: 'HERO_05',
+        tags: { CARDTYPE: 3, CONTROLLER: 1, ZONE: 'PLAY', ATK: 3 },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => { localControllerId?: number };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+
+    // matchInfo.localPlayer.id=0 (or null) — provider must ignore it.
+    const ctx = trackerArgs.boardAttackContextProvider(null, { localPlayer: { id: 0 } }, 2);
+    expect(ctx.localControllerId).toBe(2);
+  });
 });

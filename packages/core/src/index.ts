@@ -36,6 +36,8 @@ export { computeBoardAttack } from './tracker/board-attack';
 export type {
   BoardAttackTotals,
   ComputeBoardAttackOptions,
+  HeroAttackState,
+  HeroVitals,
   MinionTags,
   WeaponState,
 } from './tracker/board-attack';

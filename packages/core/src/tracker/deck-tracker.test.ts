@@ -341,6 +341,38 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('includes opposing hero vitals from the board-attack context provider', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        friendlyHero: { health: 26, armor: 1, effectiveHealth: 27 },
+        opposingHero: { health: 18, armor: 4, effectiveHealth: 22 },
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().friendlyHero).toEqual({
+      health: 26,
+      armor: 1,
+      effectiveHealth: 27,
+    });
+    expect(tracker.getSnapshot().opposingHero).toEqual({
+      health: 18,
+      armor: 4,
+      effectiveHealth: 22,
+    });
+    tracker.stop();
+  });
+
   it('includes known shuffled-in deck cards in snapshot remaining', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

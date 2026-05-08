@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { BoardEntity, BoardState } from '@hdt/hearthmirror';
 import {
   computeBoardAttack,
+  type HeroAttackState,
   type MinionTags,
   type WeaponState,
 } from './board-attack';
@@ -72,6 +73,16 @@ describe('computeBoardAttack — minion tag overlay', () => {
 
   it('sleeping minion (just summoned, no charge/rush) contributes 0', () => {
     const { boardState, tagsByEntityId } = build([[1, { numTurnsInPlay: 0 }]]);
+    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+  });
+
+  it('minion with overlay but missing NUM_TURNS_IN_PLAY is treated as just summoned', () => {
+    const { boardState, tagsByEntityId } = build([[1, {}]]);
+    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+  });
+
+  it('exhausted minion contributes 0 even when attack remains positive', () => {
+    const { boardState, tagsByEntityId } = build([[1, { exhausted: true, numTurnsInPlay: 1 }]]);
     expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
   });
 
@@ -186,5 +197,48 @@ describe('computeBoardAttack — weapons', () => {
       weapons: [weapon({ controllerId: 1, attack: 4 })],
     });
     expect(result.friendly).toBe(7);
+  });
+});
+
+describe('computeBoardAttack — hero attack state', () => {
+  const board: BoardState = {
+    friendly: [entity({ entityId: 1, attack: 3 })],
+    opposing: [entity({ entityId: 2, attack: 2 })],
+  };
+
+  function hero(overrides: Partial<HeroAttackState>): HeroAttackState {
+    return {
+      controllerId: 1,
+      attack: 4,
+      ...overrides,
+    };
+  }
+
+  it('adds available friendly and opposing hero attack', () => {
+    const result = computeBoardAttack(board, {
+      heroAttacks: [
+        hero({ controllerId: 1, attack: 4 }),
+        hero({ controllerId: 2, attack: 5 }),
+      ],
+      localControllerId: 1,
+    });
+    expect(result).toEqual({ friendly: 7, opposing: 7 });
+  });
+
+  it('does not count a hero that already spent all attacks this turn', () => {
+    const result = computeBoardAttack(board, {
+      heroAttacks: [hero({ controllerId: 1, attack: 4, numAttacksThisTurn: 1 })],
+      localControllerId: 1,
+    });
+    expect(result).toEqual({ friendly: 3, opposing: 2 });
+  });
+
+  it('uses hero attack state instead of weapon state when both are present', () => {
+    const result = computeBoardAttack(board, {
+      heroAttacks: [hero({ controllerId: 1, attack: 4, numAttacksThisTurn: 1 })],
+      weapons: [{ controllerId: 1, attack: 9 }],
+      localControllerId: 1,
+    });
+    expect(result).toEqual({ friendly: 3, opposing: 2 });
   });
 });

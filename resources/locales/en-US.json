@@ -235,7 +235,9 @@
   "boardAttack": {
     "friendly": "Your board attack",
     "opposing": "Opponent board attack",
-    "hint": "Total attack ready to swing this turn — frozen / sleeping / exhausted minions excluded; weapon and windfury included."
+    "target": "Opponent HP+Armor {{value}}",
+    "friendlyTarget": "Your HP+Armor {{value}}",
+    "hint": "Total attack ready to swing this turn — frozen / sleeping / exhausted minions excluded; hero attack, weapon, and windfury included."
   },
   "onboarding": {
     "bannerHsNotRunningTitle": "Hearthstone is not running",

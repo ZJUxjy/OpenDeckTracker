@@ -24,6 +24,9 @@ function RightPanel() {
   const opposingBoardAttack = useDeckTrackerStore(
     (s) => s.snapshot?.boardAttack?.opposing ?? 0,
   );
+  const friendlyEffectiveHealth = useDeckTrackerStore(
+    (s) => s.snapshot?.friendlyHero?.effectiveHealth ?? null,
+  );
   const friendlyEffects = useFriendlyEffects();
   const opposingEffects = useOpposingEffects();
   const friendlyCount = partitionAnimalCompanionEffects(friendlyEffects).effectiveRowCount;
@@ -40,6 +43,7 @@ function RightPanel() {
               revealed={opponent?.revealed ?? []}
               graveyard={opponent?.graveyard ?? []}
               boardAttack={opposingBoardAttack}
+              targetEffectiveHealth={friendlyEffectiveHealth}
             />
           }
           effectsSlot={

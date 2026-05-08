@@ -14,6 +14,8 @@ function makeSnapshot(overrides: {
   original: { cardId: string; count: number }[];
   remaining?: { cardId: string; count: number }[];
   friendlyHand?: string[];
+  boardAttack?: DeckTrackerSnapshot['boardAttack'];
+  opposingHero?: DeckTrackerSnapshot['opposingHero'];
 }): DeckTrackerSnapshot {
   return {
     phase: 'IN_MATCH',
@@ -44,7 +46,8 @@ function makeSnapshot(overrides: {
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
     friendlyEffects: [],
     opposingEffects: [],
-    boardAttack: { friendly: 0, opposing: 0 },
+    boardAttack: overrides.boardAttack ?? { friendly: 0, opposing: 0 },
+    opposingHero: overrides.opposingHero ?? null,
     error: null,
     updatedAt: Date.now(),
   };
@@ -320,6 +323,35 @@ describe('LiveDeckPanel sorting', () => {
         expect.stringContaining('Right Card'),
       ]);
     });
+  });
+
+  it('highlights friendly board attack in green when it is below opposing hero effective health', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 1 }],
+      boardAttack: { friendly: 7, opposing: 0 },
+      opposingHero: { health: 10, armor: 2, effectiveHealth: 12 },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    const card = screen.getByTestId('friendly-board-attack-card');
+    expect(card).toHaveClass('text-green');
+    expect(screen.getByTestId('friendly-board-attack-value')).toHaveTextContent('7');
+    expect(card).toHaveTextContent('/ 12');
+  });
+
+  it('highlights friendly board attack in red when it is lethal', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 1 }],
+      boardAttack: { friendly: 12, opposing: 0 },
+      opposingHero: { health: 10, armor: 2, effectiveHealth: 12 },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    expect(screen.getByTestId('friendly-board-attack-card')).toHaveClass('text-red');
   });
 });
 

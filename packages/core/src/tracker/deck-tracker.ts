@@ -26,6 +26,7 @@ import {
   computeBoardAttack,
   type BoardAttackTotals,
   type ComputeBoardAttackOptions,
+  type HeroVitals,
 } from './board-attack';
 import { nextPhase } from './phase-machine';
 import { PollingLoop } from './polling-loop';
@@ -103,6 +104,10 @@ export interface DeckTrackerSnapshot {
    * mirror.boardState" when no overlay is wired.
    */
   boardAttack: BoardAttackTotals;
+  /** Friendly hero's current health/armor when available from Power.log tags. */
+  friendlyHero?: HeroVitals | null;
+  /** Opposing hero's current health/armor when available from Power.log tags. */
+  opposingHero?: HeroVitals | null;
   /** Last error from the poll loop (null when healthy). */
   error: string | null;
   /** Wall-clock timestamp of the last successful poll. */
@@ -184,7 +189,11 @@ export class DeckTracker {
    * ATK" pass over `mirror.boardState`.
    */
   private readonly boardAttackContextProvider:
-    | ((boardState: BoardState | null, matchInfo: MatchInfo | null) => ComputeBoardAttackOptions)
+    | ((
+        boardState: BoardState | null,
+        matchInfo: MatchInfo | null,
+        localControllerId: number,
+      ) => ComputeBoardAttackOptions)
     | null;
   /** Latest reflector boardState — fed to `computeBoardAttack`. */
   private latestBoardState: BoardState | null = null;
@@ -199,6 +208,7 @@ export class DeckTracker {
     boardAttackContextProvider?: (
       boardState: BoardState | null,
       matchInfo: MatchInfo | null,
+      localControllerId: number,
     ) => ComputeBoardAttackOptions;
   }) {
     this.mirror = args.mirror;
@@ -652,9 +662,15 @@ export class DeckTracker {
     const resolvedMatchInfo = matchInfo ?? this.latestMatchInfo;
     const boardAttackOpts =
       this.boardAttackContextProvider !== null
-        ? this.boardAttackContextProvider(this.latestBoardState, resolvedMatchInfo)
+        ? this.boardAttackContextProvider(
+            this.latestBoardState,
+            resolvedMatchInfo,
+            this.game.localPlayer.controllerId,
+          )
         : {};
     const boardAttack = computeBoardAttack(this.latestBoardState, boardAttackOpts);
+    const friendlyHero = boardAttackOpts.friendlyHero ?? null;
+    const opposingHero = boardAttackOpts.opposingHero ?? null;
 
     return {
       phase: this.game.phase,
@@ -668,6 +684,8 @@ export class DeckTracker {
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
       boardAttack,
+      friendlyHero,
+      opposingHero,
       // A successful tick clears any previous error; `onError` sets it
       // again on the next snapshot if a tick throws. Without this clear,
       // a single transient error would stay visible in the UI's "Error"
@@ -961,6 +979,8 @@ function blankSnapshot(): DeckTrackerSnapshot {
     friendlyEffects: [],
     opposingEffects: [],
     boardAttack: { friendly: 0, opposing: 0 },
+    friendlyHero: null,
+    opposingHero: null,
     error: null,
     updatedAt: 0,
   };
