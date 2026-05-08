@@ -81,11 +81,6 @@ describe('computeBoardAttack — minion tag overlay', () => {
     expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
   });
 
-  it('exhausted minion contributes 0 even when attack remains positive', () => {
-    const { boardState, tagsByEntityId } = build([[1, { exhausted: true, numTurnsInPlay: 1 }]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
-  });
-
   it('charge overrides sleeping', () => {
     const { boardState, tagsByEntityId } = build([[1, { numTurnsInPlay: 0, charge: true }]]);
     expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 7, opposing: 5 });
@@ -108,7 +103,7 @@ describe('computeBoardAttack — minion tag overlay', () => {
     expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 7, opposing: 5 });
   });
 
-  it('exhausted minion (used all swings) contributes 0', () => {
+  it('minion that used all swings this turn contributes 0', () => {
     const { boardState, tagsByEntityId } = build([
       [1, { numTurnsInPlay: 1, numAttacksThisTurn: 1 }],
     ]);

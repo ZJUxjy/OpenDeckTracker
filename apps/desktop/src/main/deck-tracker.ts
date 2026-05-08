@@ -187,7 +187,6 @@ function buildBoardAttackContext(
     const numTurnsInPlay = numericTag(e.tags['NUM_TURNS_IN_PLAY']);
     const tags: MinionTags = {
       frozen: boolTag(e.tags['FROZEN']),
-      exhausted: boolTag(e.tags['EXHAUSTED']),
       cantAttack: boolTag(e.tags['CANT_ATTACK']),
       charge: boolTag(e.tags['CHARGE']),
       rush: boolTag(e.tags['RUSH']),

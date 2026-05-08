@@ -18,15 +18,22 @@ export interface HeroVitals {
  * Power.log history yet) still produces a useful number.
  *
  * Filters applied when an entry IS present:
- *   - frozen / exhausted / cantAttack → contributes 0
+ *   - frozen / cantAttack → contributes 0
  *   - sleeping (numTurnsInPlay missing or 0) without charge / rush → 0
  *   - swing budget = (megaWindfury ? 4 : windfury ? 2 : 1) + extraAttacksThisTurn
  *   - remaining = max(0, swingBudget - numAttacksThisTurn)
  *   - contribution = attack × remaining
+ *
+ * EXHAUSTED is intentionally NOT a hard filter: the engine sets it
+ * on summon (covered by the sleep check) and after an attack
+ * (covered by numAttacksThisTurn vs swing budget), and the reset to
+ * 0 at the controller's next turn-start is unreliable in our event
+ * stream. Trusting it caused opposing minions on board for several
+ * turns to be reported as 0-attack when their EXHAUSTED bit was
+ * never observed reset.
  */
 export interface MinionTags {
   frozen?: boolean;
-  exhausted?: boolean;
   cantAttack?: boolean;
   /** missing or 0 = freshly summoned this turn (sleeping unless charge/rush). */
   numTurnsInPlay?: number;
@@ -157,7 +164,6 @@ function minionContribution(attack: number, tags: MinionTags | undefined): numbe
   if (tags === undefined) return attack;
 
   if (tags.frozen === true) return 0;
-  if (tags.exhausted === true) return 0;
   if (tags.cantAttack === true) return 0;
   if ((tags.numTurnsInPlay ?? 0) === 0 && tags.charge !== true && tags.rush !== true) return 0;
 

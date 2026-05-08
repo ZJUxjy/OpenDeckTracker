@@ -98,7 +98,7 @@ export interface DeckTrackerSnapshot {
   opposingEffects: ActiveEffect[];
   /**
    * Total board attack per side. Sum of minion ATK with optional
-   * tag-overlay filtering (frozen / sleeping / exhausted / windfury)
+   * tag-overlay filtering (frozen / sleeping / windfury)
    * plus equipped weapon damage when the host supplies a context
    * provider; falls back to a plain "sum positive ATK from
    * mirror.boardState" when no overlay is wired.
