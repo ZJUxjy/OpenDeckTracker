@@ -10,9 +10,12 @@ import {
   cardTileCachePath,
   cardTileCacheUrl,
   cleanLegacyTileCacheDirs,
+  clearFileExistenceCache,
   enforceCardImageCacheCap,
   ensureCardImageCached,
+  ensureCardImagesCachedBatch,
   ensureCardTileCached,
+  ensureCardTilesCachedBatch,
   InMemoryImageCache,
   trimWhiteBorders,
 } from './card-image-cache';
@@ -434,6 +437,94 @@ describe('trimWhiteBorders', () => {
     // 100 - 60 = 40 < 50 (half) → fallback to original
     expect(png.width).toBe(100);
     expect(png.height).toBe(100);
+  });
+});
+
+describe('ensureCardImagesCachedBatch', () => {
+  it('downloads multiple images in parallel', async () => {
+    const root = await createTempRoot();
+    const fetchMock = vi.fn(async () => pngResponse());
+    vi.stubGlobal('fetch', fetchMock);
+
+    const results = await ensureCardImagesCachedBatch(['CS2_029', 'CS2_030'], { root });
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).not.toBeNull();
+    expect(results[1]).not.toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns null for individual failures without aborting the batch', async () => {
+    const root = await createTempRoot();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(pngResponse())
+      .mockResolvedValueOnce(pngResponse(404));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const results = await ensureCardImagesCachedBatch(['CS2_029', 'NONEXISTENT'], { root });
+
+    expect(results[0]).not.toBeNull();
+    expect(results[1]).toBeNull();
+  });
+});
+
+describe('ensureCardTilesCachedBatch', () => {
+  it('downloads multiple tiles in parallel', async () => {
+    const root = await createTempRoot();
+    const fetchMock = vi.fn(async () => pngResponse());
+    vi.stubGlobal('fetch', fetchMock);
+
+    const results = await ensureCardTilesCachedBatch(['CS2_029', 'CS2_030'], { root });
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).not.toBeNull();
+    expect(results[1]).not.toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('fileExistenceCache', () => {
+  it('caches stat results across multiple lookups', async () => {
+    const root = await createTempRoot();
+    const fetchMock = vi.fn(async () => pngResponse());
+    vi.stubGlobal('fetch', fetchMock);
+
+    const first = await ensureCardImageCached('CS2_029', { root });
+
+    // Second lookup should hit the existence cache, skip both stat
+    // and the already-downloaded disk file.
+    const fetchBefore = fetchMock.mock.calls.length;
+    const second = await ensureCardImageCached('CS2_029', { root });
+    expect(fetchMock).toHaveBeenCalledTimes(fetchBefore); // no extra fetch
+    expect(second.url).toBe(first.url);
+  });
+
+  it('clears cached entries after enforceCardImageCacheCap removes files', async () => {
+    const root = await createTempRoot();
+    const fetchMock = vi.fn(async () => pngResponse());
+    vi.stubGlobal('fetch', fetchMock);
+    const fs = await import('node:fs/promises');
+    const now = Date.now();
+    const tileDir = path.join(root, 'tiles-v2');
+    await fs.mkdir(tileDir, { recursive: true });
+    const oldFile = path.join(tileDir, 'old.png');
+    await fs.writeFile(oldFile, Buffer.alloc(10_000, 'x'));
+    await fs.utimes(oldFile, new Date(now - 1000), new Date(now - 1000));
+
+    // Prime the existence cache
+    await ensureCardTileCached('old', { root });
+    const fetchBefore = fetchMock.mock.calls.length;
+
+    // Evict via cap
+    await enforceCardImageCacheCap(root, 1000);
+
+    // After sweep + clear, the existence cache is empty.
+    // A subsequent lookup must discover the file is gone
+    // and trigger a re-download.
+    const third = await ensureCardTileCached('old', { root });
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(fetchBefore);
+    expect(third.url).toBe('hdt-card-image://tile/old.png');
   });
 });
 

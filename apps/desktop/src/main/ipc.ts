@@ -17,7 +17,9 @@ import {
   defaultCardImageCacheRoot,
   enforceCardImageCacheCap,
   ensureCardImageCached,
+  ensureCardImagesCachedBatch,
   ensureCardTileCached,
+  ensureCardTilesCachedBatch,
   guessContentType,
 } from './card-image-cache';
 import { registerAboutIpc } from './about';
@@ -193,6 +195,39 @@ export function registerIpc(overlay?: OverlayControllers): void {
     } catch (e) {
       console.error('[ipc card-images:getTile]', (e as Error).message);
       return null;
+    }
+  });
+
+  ipcMain.handle('card-images:get-batch', async (_, cardIds: string[], appLocale?: string) => {
+    try {
+      const results = await ensureCardImagesCachedBatch(cardIds, {
+        root: cardImageRoot,
+        primaryLocale: toHearthstoneLocale(appLocale),
+      });
+      return results.map((r) =>
+        r
+          ? {
+              url: r.url,
+              locale: r.locale,
+              size: r.size,
+            }
+          : null,
+      );
+    } catch (e) {
+      console.error('[ipc card-images:get-batch]', (e as Error).message);
+      return cardIds.map(() => null);
+    }
+  });
+
+  ipcMain.handle('card-images:get-tile-batch', async (_, cardIds: string[]) => {
+    try {
+      const results = await ensureCardTilesCachedBatch(cardIds, {
+        root: cardImageRoot,
+      });
+      return results.map((r) => (r ? { url: r.url } : null));
+    } catch (e) {
+      console.error('[ipc card-images:get-tile-batch]', (e as Error).message);
+      return cardIds.map(() => null);
     }
   });
 

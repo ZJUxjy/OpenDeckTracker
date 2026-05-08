@@ -237,6 +237,13 @@ export async function enforceCardImageCacheCap(
       // sweep continues; the cap is best-effort.
     }
   }
+  // Files were removed — stale existence entries would cause us to skip
+  // re-downloads for evicted cards. Clear the map so the next lookup
+  // re-stats from disk.
+  if (removedCount > 0) {
+    clearFileExistenceCache();
+  }
+
   return { freedBytes, removedCount };
 }
 
@@ -323,7 +330,6 @@ export async function ensureCardTileCached(
   options: EnsureCardTileCachedOptions,
 ): Promise<CachedCardTile> {
   assertValidCardId(cardId);
-  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
 
   const tilePath = cardTileCachePath({ root: options.root, cardId });
   const tileUrl = cardTileCacheUrl({ cardId });
@@ -332,6 +338,27 @@ export async function ensureCardTileCached(
     return { cardId, path: tilePath, url: tileUrl };
   }
 
+  // Deduplicate concurrent tile downloads.
+  const key = tileDedupKey(cardId, options);
+  const existing = tileDownloadInFlight.get(key);
+  if (existing) return existing;
+
+  const promise = downloadCardTile(cardId, options, tilePath, tileUrl);
+  tileDownloadInFlight.set(key, promise);
+  promise.then(
+    () => { tileDownloadInFlight.delete(key); },
+    () => { tileDownloadInFlight.delete(key); },
+  );
+  return promise;
+}
+
+async function downloadCardTile(
+  cardId: string,
+  options: EnsureCardTileCachedOptions,
+  tilePath: string,
+  tileUrl: string,
+): Promise<CachedCardTile> {
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const response = await fetchWithRetry(buildRemoteCardTileUrl(cardId), fetchImpl);
   if (!response.ok) {
     throw new Error(`failed to download card tile ${cardId}: ${response.status}`);
@@ -341,6 +368,39 @@ export async function ensureCardTileCached(
   await writeBufferAtomic(tilePath, trimmed);
 
   return { cardId, path: tilePath, url: tileUrl };
+}
+
+/** Batch variant of {@link ensureCardImageCached}. Parallel, never throws —
+ *  failures surface as `null` entries so the renderer can skip the image. */
+export async function ensureCardImagesCachedBatch(
+  cardIds: readonly string[],
+  options: EnsureCardImageCachedOptions,
+): Promise<(CachedCardImage | null)[]> {
+  return Promise.all(
+    cardIds.map(async (cardId) => {
+      try {
+        return await ensureCardImageCached(cardId, options);
+      } catch {
+        return null;
+      }
+    }),
+  );
+}
+
+/** Batch variant of {@link ensureCardTileCached}. Parallel, never throws. */
+export async function ensureCardTilesCachedBatch(
+  cardIds: readonly string[],
+  options: EnsureCardTileCachedOptions,
+): Promise<(CachedCardTile | null)[]> {
+  return Promise.all(
+    cardIds.map(async (cardId) => {
+      try {
+        return await ensureCardTileCached(cardId, options);
+      } catch {
+        return null;
+      }
+    }),
+  );
 }
 
 /**
@@ -467,6 +527,26 @@ async function writeBufferAtomic(filePath: string, bytes: Buffer): Promise<void>
   const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
   await writeFile(tempPath, bytes);
   await rename(tempPath, filePath);
+  markFileExists(filePath, true);
+}
+
+// ── In-flight download deduplication ────────────────────────────────────
+// Multiple overlay panels can request the same cardId simultaneously.
+// Without dedup each concurrent request spawns its own HTTP fetch; the
+// first response is written to disk and the rest overwrite it. A simple
+// Promise-map collapses them into a single download.
+const imageDownloadInFlight = new Map<string, Promise<CachedCardImage>>();
+const tileDownloadInFlight = new Map<string, Promise<CachedCardTile>>();
+
+function imageDedupKey(cardId: string, options: EnsureCardImageCachedOptions): string {
+  const primaryLocale = options.primaryLocale ?? CARD_IMAGE_PRIMARY_LOCALE;
+  const fallbackLocale = options.fallbackLocale ?? CARD_IMAGE_FALLBACK_LOCALE;
+  const size = options.size ?? CARD_IMAGE_SIZE;
+  return `${options.root}:${cardId}:${primaryLocale}:${fallbackLocale}:${size}:${options.force ?? false}`;
+}
+
+function tileDedupKey(cardId: string, options: EnsureCardTileCachedOptions): string {
+  return `${options.root}:${cardId}:${options.force ?? false}`;
 }
 
 export async function ensureCardImageCached(
@@ -477,16 +557,38 @@ export async function ensureCardImageCached(
   const primaryLocale = options.primaryLocale ?? CARD_IMAGE_PRIMARY_LOCALE;
   const fallbackLocale = options.fallbackLocale ?? CARD_IMAGE_FALLBACK_LOCALE;
   const size = options.size ?? CARD_IMAGE_SIZE;
-  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
 
+  // Fast path: already on disk (uses the memory existence cache).
   const primary = cacheEntry(options.root, primaryLocale, size, cardId);
   if (!options.force && await fileExists(primary.path)) return primary;
 
   const fallback = cacheEntry(options.root, fallbackLocale, size, cardId);
   if (!options.force && await fileExists(fallback.path)) return fallback;
 
+  // Deduplicate concurrent downloads for the same card + options.
+  const key = imageDedupKey(cardId, options);
+  const existing = imageDownloadInFlight.get(key);
+  if (existing) return existing;
+
+  const promise = downloadCardImage(cardId, options, primary, fallback);
+  imageDownloadInFlight.set(key, promise);
+  promise.then(
+    () => { imageDownloadInFlight.delete(key); },
+    () => { imageDownloadInFlight.delete(key); },
+  );
+  return promise;
+}
+
+async function downloadCardImage(
+  cardId: string,
+  options: EnsureCardImageCachedOptions,
+  primary: CachedCardImage,
+  fallback: CachedCardImage,
+): Promise<CachedCardImage> {
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch;
+
   const primaryResponse = await fetchWithRetry(
-    buildRemoteCardImageUrl(cardId, primaryLocale, size),
+    buildRemoteCardImageUrl(cardId, primary.locale, primary.size),
     fetchImpl,
   );
   if (primaryResponse.ok) {
@@ -495,7 +597,7 @@ export async function ensureCardImageCached(
   }
 
   const fallbackResponse = await fetchWithRetry(
-    buildRemoteCardImageUrl(cardId, fallbackLocale, size),
+    buildRemoteCardImageUrl(cardId, fallback.locale, fallback.size),
     fetchImpl,
   );
   if (fallbackResponse.ok) {
@@ -517,7 +619,28 @@ function cacheEntry(root: string, locale: string, size: string, cardId: string):
   };
 }
 
-async function fileExists(filePath: string): Promise<boolean> {
+// ── In-memory file-existence cache ──────────────────────────────────────
+// Each stat() is a disk I/O; overlays re-request the same cardIds on
+// every tick, so caching the result eliminates thousands of syscalls per
+// session. Invalidation is simple: we only ever write files (never delete
+// individual images outside the startup LRU sweep), and the sweep itself
+// clears the whole map.
+const fileExistenceCache = new Map<string, boolean>();
+
+function fileExistsCached(filePath: string): boolean | undefined {
+  return fileExistenceCache.get(filePath);
+}
+
+function markFileExists(filePath: string, exists: boolean): void {
+  fileExistenceCache.set(filePath, exists);
+}
+
+/** Clear the entire file-existence cache. Called after LRU sweep. */
+export function clearFileExistenceCache(): void {
+  fileExistenceCache.clear();
+}
+
+async function statFile(filePath: string): Promise<boolean> {
   try {
     const info = await stat(filePath);
     return info.isFile();
@@ -526,12 +649,21 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
+async function fileExists(filePath: string): Promise<boolean> {
+  const cached = fileExistsCached(filePath);
+  if (cached !== undefined) return cached;
+  const result = await statFile(filePath);
+  markFileExists(filePath, result);
+  return result;
+}
+
 async function writeResponse(filePath: string, response: Response): Promise<void> {
   const bytes = new Uint8Array(await response.arrayBuffer());
   await mkdir(path.dirname(filePath), { recursive: true });
   const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
   await writeFile(tempPath, bytes);
   await rename(tempPath, filePath);
+  markFileExists(filePath, true);
 }
 
 // ── In-memory image cache (protocol layer) ────────────────────────────
