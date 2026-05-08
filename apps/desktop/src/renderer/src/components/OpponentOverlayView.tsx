@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import { OpponentCardsPanel } from './OpponentCardsPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
 import { GlobalEffectsPanel } from './GlobalEffectsPanel';
@@ -16,6 +16,12 @@ const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
  * opponent cards and the opposing side's active global effects.
  */
 export function OpponentOverlayView() {
+  useEffect(() => {
+    document.body.dataset['overlay'] = 'true';
+    return () => {
+      delete document.body.dataset['overlay'];
+    };
+  }, []);
   const opponent = useDeckTrackerStore((s) => s.snapshot?.opponent);
   const opposingBoardAttack = useDeckTrackerStore(
     (s) => s.snapshot?.boardAttack?.opposing ?? 0,

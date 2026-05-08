@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import { LiveDeckPanel } from './LiveDeckPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
 import { GlobalEffectsPanel } from './GlobalEffectsPanel';
@@ -13,6 +13,12 @@ const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
  * active global-effects list without leaving the in-game overlay.
  */
 export function OverlayView() {
+  useEffect(() => {
+    document.body.dataset['overlay'] = 'true';
+    return () => {
+      delete document.body.dataset['overlay'];
+    };
+  }, []);
   const close = (): void => {
     void window.hdt?.overlay?.closeFromWindow?.('player');
   };
