@@ -13,6 +13,7 @@ import {
   enforceCardImageCacheCap,
   ensureCardImageCached,
   ensureCardTileCached,
+  InMemoryImageCache,
   trimWhiteBorders,
 } from './card-image-cache';
 
@@ -323,6 +324,70 @@ describe('enforceCardImageCacheCap', () => {
       1000,
     );
     expect(result).toEqual({ freedBytes: 0, removedCount: 0 });
+  });
+});
+
+describe('InMemoryImageCache', () => {
+  const bufferA = Buffer.from('image-a');
+  const bufferB = Buffer.from('image-b');
+  const bufferC = Buffer.from('image-c');
+
+  it('stores and retrieves entries', () => {
+    const cache = new InMemoryImageCache();
+    cache.set('a', { buffer: bufferA, contentType: 'image/png' });
+    expect(cache.get('a')).toEqual({ buffer: bufferA, contentType: 'image/png' });
+  });
+
+  it('returns undefined for missing keys', () => {
+    const cache = new InMemoryImageCache();
+    expect(cache.get('missing')).toBeUndefined();
+  });
+
+  it('evicts oldest entries when maxEntries is reached', () => {
+    const cache = new InMemoryImageCache({ maxEntries: 2 });
+    cache.set('a', { buffer: bufferA, contentType: 'image/png' });
+    cache.set('b', { buffer: bufferB, contentType: 'image/png' });
+    cache.set('c', { buffer: bufferC, contentType: 'image/png' });
+    expect(cache.get('a')).toBeUndefined();
+    expect(cache.get('b')).toBeDefined();
+    expect(cache.get('c')).toBeDefined();
+  });
+
+  it('updates existing entries without leaking bytes', () => {
+    const cache = new InMemoryImageCache();
+    cache.set('a', { buffer: bufferA, contentType: 'image/png' });
+    const bigger = Buffer.from('this-is-much-larger-image');
+    cache.set('a', { buffer: bigger, contentType: 'image/png' });
+    expect(cache.stats().bytes).toBe(bigger.length);
+  });
+
+  it('evicts by total bytes when maxBytes is exceeded', () => {
+    const cache = new InMemoryImageCache({ maxBytes: 15 });
+    cache.set('a', { buffer: bufferA, contentType: 'image/png' });
+    cache.set('b', { buffer: bufferB, contentType: 'image/png' });
+    cache.set('c', { buffer: bufferC, contentType: 'image/png' });
+    expect(cache.get('a')).toBeUndefined();
+    expect(cache.get('b')).toBeDefined();
+    expect(cache.get('c')).toBeDefined();
+  });
+
+  it('promotes accessed entry to most-recent on get', () => {
+    const cache = new InMemoryImageCache({ maxEntries: 2 });
+    cache.set('a', { buffer: bufferA, contentType: 'image/png' });
+    cache.set('b', { buffer: bufferB, contentType: 'image/png' });
+    cache.get('a');
+    cache.set('c', { buffer: bufferC, contentType: 'image/png' });
+    expect(cache.get('a')).toBeDefined();
+    expect(cache.get('b')).toBeUndefined();
+    expect(cache.get('c')).toBeDefined();
+  });
+
+  it('clears all entries', () => {
+    const cache = new InMemoryImageCache();
+    cache.set('a', { buffer: bufferA, contentType: 'image/png' });
+    cache.clear();
+    expect(cache.get('a')).toBeUndefined();
+    expect(cache.stats()).toEqual({ entries: 0, bytes: 0 });
   });
 });
 

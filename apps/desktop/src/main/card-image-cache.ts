@@ -533,3 +533,89 @@ async function writeResponse(filePath: string, response: Response): Promise<void
   await writeFile(tempPath, bytes);
   await rename(tempPath, filePath);
 }
+
+// ── In-memory image cache (protocol layer) ────────────────────────────
+
+interface CachedImageEntry {
+  buffer: Buffer;
+  contentType: string;
+}
+
+export interface InMemoryCacheOptions {
+  maxEntries?: number;
+  maxBytes?: number;
+}
+
+/**
+ * LRU memory cache for protocol-handler reads. Chromium's own HTTP cache
+ * does NOT cache custom-scheme responses (hdt-card-image://), so without
+ * this layer every <img> paint that hits the protocol handler re-reads
+ * the file from disk. A small in-memory LRU covers the "same card rendered
+ * in multiple panels / re-rendered on state update" hot path.
+ *
+ * Defaults: 200 entries, 32 MB. PNG tiles are ~50-200 KB each; renders are
+ * ~100-300 KB. 32 MB comfortably holds the active-match working set.
+ */
+export class InMemoryImageCache {
+  private readonly maxEntries: number;
+  private readonly maxBytes: number;
+  private cache = new Map<string, CachedImageEntry>();
+  private currentBytes = 0;
+
+  constructor(options: InMemoryCacheOptions = {}) {
+    this.maxEntries = options.maxEntries ?? 200;
+    this.maxBytes = options.maxBytes ?? 32 * 1024 * 1024;
+  }
+
+  get(url: string): CachedImageEntry | undefined {
+    const entry = this.cache.get(url);
+    if (entry === undefined) return undefined;
+    this.cache.delete(url);
+    this.cache.set(url, entry);
+    return entry;
+  }
+
+  set(url: string, entry: CachedImageEntry): void {
+    const existing = this.cache.get(url);
+    if (existing !== undefined) {
+      this.currentBytes -= existing.buffer.length;
+      this.cache.delete(url);
+    }
+    while (
+      this.cache.size >= this.maxEntries ||
+      (this.currentBytes + entry.buffer.length > this.maxBytes && this.cache.size > 0)
+    ) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey === undefined) break;
+      const evicted = this.cache.get(firstKey)!;
+      this.currentBytes -= evicted.buffer.length;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(url, entry);
+    this.currentBytes += entry.buffer.length;
+  }
+
+  clear(): void {
+    this.cache.clear();
+    this.currentBytes = 0;
+  }
+
+  stats(): { entries: number; bytes: number } {
+    return { entries: this.cache.size, bytes: this.currentBytes };
+  }
+}
+
+export function guessContentType(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  switch (ext) {
+    case '.png':
+      return 'image/png';
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg';
+    case '.webp':
+      return 'image/webp';
+    default:
+      return 'application/octet-stream';
+  }
+}

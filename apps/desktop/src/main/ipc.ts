@@ -1,5 +1,5 @@
-import { app, ipcMain, net, protocol } from 'electron';
-import { pathToFileURL } from 'node:url';
+import { app, ipcMain, protocol } from 'electron';
+import { readFile } from 'node:fs/promises';
 import {
   encodeDeck,
   decodeDeck,
@@ -10,12 +10,14 @@ import { ensureCardDb } from './cards';
 import {
   CARD_IMAGE_PROTOCOL,
   DEFAULT_CARD_IMAGE_CACHE_CAP_BYTES,
+  InMemoryImageCache,
   cardImageCachePathFromUrl,
   cleanLegacyTileCacheDirs,
   defaultCardImageCacheRoot,
   enforceCardImageCacheCap,
   ensureCardImageCached,
   ensureCardTileCached,
+  guessContentType,
 } from './card-image-cache';
 import { registerAboutIpc } from './about';
 import { getHearthMirror } from './hearthmirror';
@@ -101,22 +103,25 @@ export function registerIpc(overlay?: OverlayControllers): void {
       console.error('[card-image-cache] failed to clean legacy tile dirs', e);
     });
 
-  // LRU sweep against the disk-cache cap. Runs once at startup; the
-  // cache is bounded by user playtime per session, so a startup-only
-  // pass is sufficient — long sessions can be handled by adding a
-  // periodic timer later if telemetry shows it matters.
-  void enforceCardImageCacheCap(cardImageRoot, DEFAULT_CARD_IMAGE_CACHE_CAP_BYTES)
-    .then(({ freedBytes, removedCount }) => {
-      if (removedCount > 0) {
-        const mb = (freedBytes / (1024 * 1024)).toFixed(1);
-        console.log(
-          `[card-image-cache] LRU sweep removed ${removedCount} files, freed ${mb} MB`,
-        );
-      }
-    })
-    .catch((e) => {
-      console.error('[card-image-cache] LRU sweep failed', e);
-    });
+  // LRU sweep against the disk-cache cap. Runs once at startup, then
+  // every 30 minutes so long-running sessions don't drift past the cap.
+  function runDiskCacheSweep(): void {
+    void enforceCardImageCacheCap(cardImageRoot, DEFAULT_CARD_IMAGE_CACHE_CAP_BYTES)
+      .then(({ freedBytes, removedCount }) => {
+        if (removedCount > 0) {
+          const mb = (freedBytes / (1024 * 1024)).toFixed(1);
+          console.log(
+            `[card-image-cache] LRU sweep removed ${removedCount} files, freed ${mb} MB`,
+          );
+        }
+      })
+      .catch((e) => {
+        console.error('[card-image-cache] LRU sweep failed', e);
+      });
+  }
+  runDiskCacheSweep();
+  const sweepInterval = setInterval(runDiskCacheSweep, 30 * 60 * 1000);
+  app.on('before-quit', () => clearInterval(sweepInterval));
 
   ipcMain.handle('cards:findByDbfId', async (_, dbfId: number, appLocale?: string) => {
     try {
@@ -262,14 +267,42 @@ export function registerIpc(overlay?: OverlayControllers): void {
   });
 }
 
+const inMemoryImageCache = new InMemoryImageCache({
+  maxEntries: 200,
+  maxBytes: 32 * 1024 * 1024,
+});
+
 function registerCardImageProtocol(root: string): void {
   if (cardImageProtocolRegistered) return;
   cardImageProtocolRegistered = true;
 
-  protocol.handle(CARD_IMAGE_PROTOCOL, (request) => {
+  protocol.handle(CARD_IMAGE_PROTOCOL, async (request) => {
     try {
       const imagePath = cardImageCachePathFromUrl(request.url, root);
-      return net.fetch(pathToFileURL(imagePath).toString());
+
+      // 1. In-memory cache hit — fastest path, avoids every disk read
+      // for cards that are already hot (same card in multiple panels or
+      // re-rendered on snapshot updates).
+      const memHit = inMemoryImageCache.get(request.url);
+      if (memHit !== undefined) {
+        return new Response(new Uint8Array(memHit.buffer), {
+          headers: {
+            'Content-Type': memHit.contentType,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+          },
+        });
+      }
+
+      // 2. Disk read → populate memory cache → return
+      const buffer = await readFile(imagePath);
+      const contentType = guessContentType(imagePath);
+      inMemoryImageCache.set(request.url, { buffer, contentType });
+      return new Response(new Uint8Array(buffer), {
+        headers: {
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      });
     } catch (e) {
       console.error('[protocol card-image]', (e as Error).message);
       return new Response('Not found', { status: 404 });
