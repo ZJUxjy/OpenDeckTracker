@@ -75,12 +75,14 @@ export function registerIpc(overlay?: OverlayControllers): void {
         cp.show(cardId, anchor);
       });
       ipcMain.handle('card-preview:show-pool', (_, cardIds: string[], anchor: PreviewAnchor) => {
-        for (const cardId of cardIds) {
-          void ensureCardImageCached(cardId, {
-            root: cardImageRoot,
-            primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
-          }).catch(() => undefined);
-        }
+        void Promise.all(
+          cardIds.map((cardId) =>
+            ensureCardImageCached(cardId, {
+              root: cardImageRoot,
+              primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
+            }).catch(() => undefined),
+          ),
+        );
         cp.showPool(cardIds, anchor);
       });
       ipcMain.handle('card-preview:hide', () => {
@@ -321,6 +323,15 @@ const inMemoryImageCache = new InMemoryImageCache({
   maxBytes: 32 * 1024 * 1024,
 });
 
+function imageResponse(buffer: Buffer, contentType: string): Response {
+  return new Response(new Uint8Array(buffer), {
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  });
+}
+
 function registerCardImageProtocol(root: string): void {
   if (cardImageProtocolRegistered) return;
   cardImageProtocolRegistered = true;
@@ -329,29 +340,15 @@ function registerCardImageProtocol(root: string): void {
     try {
       const imagePath = cardImageCachePathFromUrl(request.url, root);
 
-      // 1. In-memory cache hit — fastest path, avoids every disk read
-      // for cards that are already hot (same card in multiple panels or
-      // re-rendered on snapshot updates).
       const memHit = inMemoryImageCache.get(request.url);
       if (memHit !== undefined) {
-        return new Response(new Uint8Array(memHit.buffer), {
-          headers: {
-            'Content-Type': memHit.contentType,
-            'Cache-Control': 'public, max-age=31536000, immutable',
-          },
-        });
+        return imageResponse(memHit.buffer, memHit.contentType);
       }
 
-      // 2. Disk read → populate memory cache → return
       const buffer = await readFile(imagePath);
       const contentType = guessContentType(imagePath);
       inMemoryImageCache.set(request.url, { buffer, contentType });
-      return new Response(new Uint8Array(buffer), {
-        headers: {
-          'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=31536000, immutable',
-        },
-      });
+      return imageResponse(buffer, contentType);
     } catch (e) {
       console.error('[protocol card-image]', (e as Error).message);
       return new Response('Not found', { status: 404 });

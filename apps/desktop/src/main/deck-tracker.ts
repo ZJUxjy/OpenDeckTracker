@@ -283,14 +283,18 @@ function getCardImageRoot(): string {
 }
 
 function extractTileCardIds(snapshot: DeckTrackerSnapshot): string[] {
-  const ids = new Set<string>();
+  const out: string[] = [];
   for (const card of snapshot.deck?.remaining ?? []) {
-    if (card.count > 0) ids.add(card.cardId);
+    if (card.count > 0 && !preloadedTileCardIds.has(card.cardId)) {
+      out.push(card.cardId);
+    }
   }
   for (const cardId of snapshot.friendlyHand ?? []) {
-    if (cardId) ids.add(cardId);
+    if (cardId && !preloadedTileCardIds.has(cardId)) {
+      out.push(cardId);
+    }
   }
-  return Array.from(ids);
+  return out;
 }
 
 function preloadCardTiles(cardIds: string[]): void {

@@ -372,14 +372,14 @@ async function downloadCardTile(
 
 /** Batch variant of {@link ensureCardImageCached}. Parallel, never throws —
  *  failures surface as `null` entries so the renderer can skip the image. */
-export async function ensureCardImagesCachedBatch(
+async function batchLoad<T>(
   cardIds: readonly string[],
-  options: EnsureCardImageCachedOptions,
-): Promise<(CachedCardImage | null)[]> {
+  load: (cardId: string) => Promise<T>,
+): Promise<(T | null)[]> {
   return Promise.all(
     cardIds.map(async (cardId) => {
       try {
-        return await ensureCardImageCached(cardId, options);
+        return await load(cardId);
       } catch {
         return null;
       }
@@ -387,20 +387,18 @@ export async function ensureCardImagesCachedBatch(
   );
 }
 
-/** Batch variant of {@link ensureCardTileCached}. Parallel, never throws. */
+export async function ensureCardImagesCachedBatch(
+  cardIds: readonly string[],
+  options: EnsureCardImageCachedOptions,
+): Promise<(CachedCardImage | null)[]> {
+  return batchLoad(cardIds, (id) => ensureCardImageCached(id, options));
+}
+
 export async function ensureCardTilesCachedBatch(
   cardIds: readonly string[],
   options: EnsureCardTileCachedOptions,
 ): Promise<(CachedCardTile | null)[]> {
-  return Promise.all(
-    cardIds.map(async (cardId) => {
-      try {
-        return await ensureCardTileCached(cardId, options);
-      } catch {
-        return null;
-      }
-    }),
-  );
+  return batchLoad(cardIds, (id) => ensureCardTileCached(id, options));
 }
 
 /**
@@ -620,11 +618,6 @@ function cacheEntry(root: string, locale: string, size: string, cardId: string):
 }
 
 // ── In-memory file-existence cache ──────────────────────────────────────
-// Each stat() is a disk I/O; overlays re-request the same cardIds on
-// every tick, so caching the result eliminates thousands of syscalls per
-// session. Invalidation is simple: we only ever write files (never delete
-// individual images outside the startup LRU sweep), and the sweep itself
-// clears the whole map.
 const fileExistenceCache = new Map<string, boolean>();
 
 function fileExistsCached(filePath: string): boolean | undefined {
@@ -679,20 +672,14 @@ export interface InMemoryCacheOptions {
 }
 
 /**
- * LRU memory cache for protocol-handler reads. Chromium's own HTTP cache
- * does NOT cache custom-scheme responses (hdt-card-image://), so without
- * this layer every <img> paint that hits the protocol handler re-reads
- * the file from disk. A small in-memory LRU covers the "same card rendered
- * in multiple panels / re-rendered on state update" hot path.
- *
- * Defaults: 200 entries, 32 MB. PNG tiles are ~50-200 KB each; renders are
- * ~100-300 KB. 32 MB comfortably holds the active-match working set.
+ * LRU memory cache for protocol-handler reads. Chromium does not cache
+ * custom-scheme responses (hdt-card-image://), so every <img> paint
+ * re-reads from disk without this layer.
  */
 export class InMemoryImageCache {
   private readonly maxEntries: number;
   private readonly maxBytes: number;
   private cache = new Map<string, CachedImageEntry>();
-  private currentBytes = 0;
 
   constructor(options: InMemoryCacheOptions = {}) {
     this.maxEntries = options.maxEntries ?? 200;
@@ -708,32 +695,29 @@ export class InMemoryImageCache {
   }
 
   set(url: string, entry: CachedImageEntry): void {
+    if (entry.buffer.length > this.maxBytes) return;
     const existing = this.cache.get(url);
-    if (existing !== undefined) {
-      this.currentBytes -= existing.buffer.length;
-      this.cache.delete(url);
-    }
-    while (
-      this.cache.size >= this.maxEntries ||
-      (this.currentBytes + entry.buffer.length > this.maxBytes && this.cache.size > 0)
-    ) {
+    if (existing !== undefined) this.cache.delete(url);
+    while (this.cache.size >= this.maxEntries || this.sizeInBytes() + entry.buffer.length > this.maxBytes) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey === undefined) break;
-      const evicted = this.cache.get(firstKey)!;
-      this.currentBytes -= evicted.buffer.length;
       this.cache.delete(firstKey);
     }
     this.cache.set(url, entry);
-    this.currentBytes += entry.buffer.length;
   }
 
   clear(): void {
     this.cache.clear();
-    this.currentBytes = 0;
   }
 
   stats(): { entries: number; bytes: number } {
-    return { entries: this.cache.size, bytes: this.currentBytes };
+    return { entries: this.cache.size, bytes: this.sizeInBytes() };
+  }
+
+  private sizeInBytes(): number {
+    let sum = 0;
+    for (const e of this.cache.values()) sum += e.buffer.length;
+    return sum;
   }
 }
 
