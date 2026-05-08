@@ -341,6 +341,46 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('exposes boardAttackToFace via buildSnapshot, blocked by an opposing taunt', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = {
+      friendly: [
+        { entityId: 11, cardId: 'CS2_231', zonePosition: 1, attack: 5, health: 5, damage: 0 },
+        { entityId: 12, cardId: 'CS2_231', zonePosition: 2, attack: 2, health: 2, damage: 0 },
+      ],
+      opposing: [
+        // 2-HP taunt — clearable with the 2-attack swing alone.
+        { entityId: 21, cardId: 'CS2_231', zonePosition: 1, attack: 0, health: 2, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        tagsByEntityId: new Map([
+          [11, { numTurnsInPlay: 1 }],
+          [12, { numTurnsInPlay: 1 }],
+          [21, { numTurnsInPlay: 1, taunt: true }],
+        ]),
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    const snapshot = tracker.getSnapshot();
+    // Raw board attack: 5 + 2 = 7.
+    expect(snapshot.boardAttack).toEqual({ friendly: 7, opposing: 0 });
+    // Optimal: spend the 2-attack swing on the 2-HP taunt, send the 5
+    // to face → boardAttackToFace.friendly = 5.
+    expect(snapshot.boardAttackToFace).toEqual({ friendly: 5, opposing: 0 });
+    tracker.stop();
+  });
+
   it('includes opposing hero vitals from the board-attack context provider', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

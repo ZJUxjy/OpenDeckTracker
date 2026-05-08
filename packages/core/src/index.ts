@@ -32,7 +32,7 @@ export type {
 } from './tracker/deck-tracker';
 
 // Board-attack calculator.
-export { computeBoardAttack } from './tracker/board-attack';
+export { computeBoardAttack, computeMaxFaceDamage } from './tracker/board-attack';
 export type {
   BoardAttackTotals,
   ComputeBoardAttackOptions,

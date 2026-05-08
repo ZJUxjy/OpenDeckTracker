@@ -24,6 +24,9 @@ function RightPanel() {
   const opposingBoardAttack = useDeckTrackerStore(
     (s) => s.snapshot?.boardAttack?.opposing ?? 0,
   );
+  const opposingFaceDamage = useDeckTrackerStore(
+    (s) => s.snapshot?.boardAttackToFace?.opposing ?? s.snapshot?.boardAttack?.opposing ?? 0,
+  );
   const friendlyEffectiveHealth = useDeckTrackerStore(
     (s) => s.snapshot?.friendlyHero?.effectiveHealth ?? null,
   );
@@ -43,6 +46,7 @@ function RightPanel() {
               revealed={opponent?.revealed ?? []}
               graveyard={opponent?.graveyard ?? []}
               boardAttack={opposingBoardAttack}
+              faceDamage={opposingFaceDamage}
               targetEffectiveHealth={friendlyEffectiveHealth}
             />
           }

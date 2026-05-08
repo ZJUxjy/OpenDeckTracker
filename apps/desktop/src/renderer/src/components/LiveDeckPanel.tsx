@@ -120,6 +120,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   const { t } = useTranslation();
   const deck = snapshot.deck!;
   const friendlyBoardAttack = snapshot.boardAttack?.friendly ?? 0;
+  const friendlyFaceDamage = snapshot.boardAttackToFace?.friendly ?? friendlyBoardAttack;
   const opposingEffectiveHealth = snapshot.opposingHero?.effectiveHealth ?? null;
 
   const remainingByCardId = useMemo(() => {
@@ -216,6 +217,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
         </div>
         <BoardAttackSummary
           attack={friendlyBoardAttack}
+          faceDamage={friendlyFaceDamage}
           opposingEffectiveHealth={opposingEffectiveHealth}
         />
       </div>
@@ -312,20 +314,25 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
 
 function BoardAttackSummary({
   attack,
+  faceDamage,
   opposingEffectiveHealth,
 }: {
   attack: number;
+  faceDamage: number;
   opposingEffectiveHealth: number | null;
 }) {
   const { t } = useTranslation();
   const hasTarget = opposingEffectiveHealth !== null;
-  const isLethal = hasTarget && attack >= opposingEffectiveHealth;
-  const isShort = hasTarget && attack < opposingEffectiveHealth;
+  // Lethal vs. short coloring is driven by the face-damage number — that
+  // is the value that actually compares against the opposing hero's HP.
+  const isLethal = hasTarget && faceDamage >= opposingEffectiveHealth;
+  const isShort = hasTarget && faceDamage < opposingEffectiveHealth;
   const toneClass = isLethal
     ? 'border-red/40 bg-red/15 text-red shadow-sm'
     : isShort
       ? 'border-green/40 bg-green/15 text-green shadow-sm'
       : 'border-accent/30 bg-accent-dim/20 text-accent';
+  const faceDiffersFromTotal = faceDamage !== attack;
 
   return (
     <div
@@ -355,6 +362,21 @@ function BoardAttackSummary({
             / {opposingEffectiveHealth}
           </span>
         ) : null}
+      </div>
+      <div
+        className={clsx(
+          'mt-1 flex items-baseline justify-between gap-3 text-[11px] font-semibold uppercase tracking-wider',
+          faceDiffersFromTotal ? 'opacity-100' : 'opacity-70',
+        )}
+        title={t('boardAttack.faceHint')}
+      >
+        <span>{t('boardAttack.face')}</span>
+        <span
+          data-testid="friendly-face-damage-value"
+          className="font-mono text-base font-black tabular-nums"
+        >
+          {faceDamage}
+        </span>
       </div>
     </div>
   );

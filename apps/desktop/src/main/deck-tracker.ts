@@ -194,6 +194,8 @@ function buildBoardAttackContext(
       megaWindfury: wfNum === 3 || boolTag(e.tags['MEGA_WINDFURY']),
       numAttacksThisTurn: numericTag(e.tags['NUM_ATTACKS_THIS_TURN']) ?? 0,
       extraAttacksThisTurn: numericTag(e.tags['EXTRA_ATTACKS_THIS_TURN']) ?? 0,
+      taunt: boolTag(e.tags['TAUNT']),
+      divineShield: boolTag(e.tags['DIVINE_SHIELD']),
     };
     if (numTurnsInPlay !== undefined) tags.numTurnsInPlay = numTurnsInPlay;
     tagsByEntityId.set(e.entityId, tags);

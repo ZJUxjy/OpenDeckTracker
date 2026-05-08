@@ -23,6 +23,13 @@ interface OpponentCardsPanelProps {
   graveyard: OpponentCardRecord[];
   /** Total board attack on the opposing side; rendered in the header. */
   boardAttack?: number;
+  /**
+   * Maximum damage the opposing side can land on the friendly hero this
+   * turn under an optimal attack assignment (taunts + divine shields
+   * factored in). Defaults to `boardAttack` so the legacy renderer path
+   * keeps showing matching numbers when overlay info is missing.
+   */
+  faceDamage?: number;
   /** Friendly hero health + armor, used to color opposing board attack. */
   targetEffectiveHealth?: number | null;
 }
@@ -43,8 +50,10 @@ export function OpponentCardsPanel({
   revealed,
   graveyard,
   boardAttack = 0,
+  faceDamage,
   targetEffectiveHealth = null,
 }: OpponentCardsPanelProps) {
+  const resolvedFaceDamage = faceDamage ?? boardAttack;
   const { t } = useTranslation();
   const cardIds = useMemo(
     () => [...new Set([...revealed, ...graveyard].map((record) => record.cardId))],
@@ -82,6 +91,7 @@ export function OpponentCardsPanel({
         <div className="text-text font-bold text-sm">{t('opponent.revealed')}</div>
         <OpponentBoardAttackSummary
           attack={boardAttack}
+          faceDamage={resolvedFaceDamage}
           targetEffectiveHealth={targetEffectiveHealth}
         />
       </div>
@@ -116,20 +126,25 @@ export function OpponentCardsPanel({
 
 function OpponentBoardAttackSummary({
   attack,
+  faceDamage,
   targetEffectiveHealth,
 }: {
   attack: number;
+  faceDamage: number;
   targetEffectiveHealth: number | null;
 }) {
   const { t } = useTranslation();
   const hasTarget = targetEffectiveHealth !== null;
-  const isLethal = hasTarget && attack >= targetEffectiveHealth;
-  const isShort = hasTarget && attack < targetEffectiveHealth;
+  // Lethal coloring tracks face damage — that is what actually compares
+  // against the friendly hero's HP after my taunts/divine shields.
+  const isLethal = hasTarget && faceDamage >= targetEffectiveHealth;
+  const isShort = hasTarget && faceDamage < targetEffectiveHealth;
   const toneClass = isLethal
     ? 'border-red/40 bg-red/15 text-red shadow-sm'
     : isShort
       ? 'border-green/40 bg-green/15 text-green shadow-sm'
       : 'border-accent/30 bg-accent-dim/20 text-accent';
+  const faceDiffersFromTotal = faceDamage !== attack;
 
   return (
     <div
@@ -159,6 +174,21 @@ function OpponentBoardAttackSummary({
             / {targetEffectiveHealth}
           </span>
         ) : null}
+      </div>
+      <div
+        className={clsx(
+          'mt-1 flex items-baseline justify-between gap-3 text-[11px] font-semibold uppercase tracking-wider',
+          faceDiffersFromTotal ? 'opacity-100' : 'opacity-70',
+        )}
+        title={t('boardAttack.faceHint')}
+      >
+        <span>{t('boardAttack.face')}</span>
+        <span
+          data-testid="opposing-face-damage-value"
+          className="font-mono text-base font-black tabular-nums"
+        >
+          {faceDamage}
+        </span>
       </div>
     </div>
   );

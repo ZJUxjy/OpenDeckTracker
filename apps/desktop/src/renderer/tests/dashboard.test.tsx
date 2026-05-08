@@ -31,6 +31,7 @@ function makeSnapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTracker
     friendlyEffects: [],
     opposingEffects: [],
     boardAttack: { friendly: 0, opposing: 0 },
+    boardAttackToFace: { friendly: 0, opposing: 0 },
     error: null,
     updatedAt: Date.now(),
     ...overrides,

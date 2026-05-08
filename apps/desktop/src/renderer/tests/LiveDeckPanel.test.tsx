@@ -47,6 +47,7 @@ function makeSnapshot(overrides: {
     friendlyEffects: [],
     opposingEffects: [],
     boardAttack: overrides.boardAttack ?? { friendly: 0, opposing: 0 },
+    boardAttackToFace: overrides.boardAttack ?? { friendly: 0, opposing: 0 },
     opposingHero: overrides.opposingHero ?? null,
     error: null,
     updatedAt: Date.now(),

@@ -237,7 +237,9 @@
     "opposing": "Opponent board attack",
     "target": "Opponent HP+Armor {{value}}",
     "friendlyTarget": "Your HP+Armor {{value}}",
-    "hint": "Total attack ready to swing this turn — frozen / sleeping / exhausted minions excluded; hero attack, weapon, and windfury included."
+    "hint": "Total attack ready to swing this turn — frozen, freshly summoned (no charge/rush), can't-attack, or already-swung minions excluded; hero attack, weapon, and windfury included.",
+    "face": "To face",
+    "faceHint": "Maximum damage that can reach the enemy hero this turn under an optimal attack assignment (taunts cleared, divine shields broken). Rush minions can't go face on their first turn."
   },
   "onboarding": {
     "bannerHsNotRunningTitle": "Hearthstone is not running",

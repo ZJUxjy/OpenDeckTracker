@@ -59,6 +59,7 @@ describe('LiveDeckPanel i18n', () => {
         friendlyEffects: [],
         opposingEffects: [],
         boardAttack: { friendly: 0, opposing: 0 },
+        boardAttackToFace: { friendly: 0, opposing: 0 },
         error: null,
         updatedAt: 0,
       } satisfies DeckTrackerSnapshot,

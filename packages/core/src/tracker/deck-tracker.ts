@@ -24,6 +24,7 @@ import {
 import { computeRemaining, gatherSeenEntities } from './remaining-algorithm';
 import {
   computeBoardAttack,
+  computeMaxFaceDamage,
   type BoardAttackTotals,
   type ComputeBoardAttackOptions,
   type HeroVitals,
@@ -104,6 +105,14 @@ export interface DeckTrackerSnapshot {
    * mirror.boardState" when no overlay is wired.
    */
   boardAttack: BoardAttackTotals;
+  /**
+   * Maximum damage that can reach the opposing hero this turn under an
+   * optimal attack assignment, accounting for opposing taunts and
+   * divine shields. 0 when there's at least one taunt the available
+   * swings cannot kill. Falls back to the same value as `boardAttack`
+   * when no tag overlay is present (no taunt info ⇒ assume no taunts).
+   */
+  boardAttackToFace: BoardAttackTotals;
   /** Friendly hero's current health/armor when available from Power.log tags. */
   friendlyHero?: HeroVitals | null;
   /** Opposing hero's current health/armor when available from Power.log tags. */
@@ -669,6 +678,7 @@ export class DeckTracker {
           )
         : {};
     const boardAttack = computeBoardAttack(this.latestBoardState, boardAttackOpts);
+    const boardAttackToFace = computeMaxFaceDamage(this.latestBoardState, boardAttackOpts);
     const friendlyHero = boardAttackOpts.friendlyHero ?? null;
     const opposingHero = boardAttackOpts.opposingHero ?? null;
 
@@ -684,6 +694,7 @@ export class DeckTracker {
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
       boardAttack,
+      boardAttackToFace,
       friendlyHero,
       opposingHero,
       // A successful tick clears any previous error; `onError` sets it
@@ -979,6 +990,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     friendlyEffects: [],
     opposingEffects: [],
     boardAttack: { friendly: 0, opposing: 0 },
+    boardAttackToFace: { friendly: 0, opposing: 0 },
     friendlyHero: null,
     opposingHero: null,
     error: null,
