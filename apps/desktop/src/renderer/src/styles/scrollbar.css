@@ -1,0 +1,45 @@
+/* ─────────────────────────────────────────────────────────────
+   Custom scrollbar — Console theme
+   Single source of scrollbar styling for both the main window and
+   the overlay BrowserWindows. Tokens declared in theme.css.
+   ───────────────────────────────────────────────────────────── */
+
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: calc(var(--scrollbar-size) / 2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+/* Overlay variant: narrower + transparent track for the in-game
+   transparent BrowserWindows. Hover/active thumb tokens are
+   inherited from the root so the press-state accent still pops. */
+body[data-overlay="true"] {
+  --scrollbar-size: 6px;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(42, 53, 67, 0.55);
+}
