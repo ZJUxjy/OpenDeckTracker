@@ -8,6 +8,7 @@ import {
 } from '@hdt/hearthdb';
 import { ensureCardDb } from './cards';
 import {
+  CARD_IMAGE_PRIMARY_LOCALE,
   CARD_IMAGE_PROTOCOL,
   DEFAULT_CARD_IMAGE_CACHE_CAP_BYTES,
   InMemoryImageCache,
@@ -62,9 +63,22 @@ export function registerIpc(overlay?: OverlayControllers): void {
     if (overlay.cardPreview) {
       const cp = overlay.cardPreview;
       ipcMain.handle('card-preview:show', (_, cardId: string, anchor: PreviewAnchor) => {
+        // Fire-and-forget render preload: the popup will need the full
+        // 256x image shortly; starting the download now eliminates the
+        // blank flash when the window actually opens.
+        void ensureCardImageCached(cardId, {
+          root: cardImageRoot,
+          primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
+        }).catch(() => undefined);
         cp.show(cardId, anchor);
       });
       ipcMain.handle('card-preview:show-pool', (_, cardIds: string[], anchor: PreviewAnchor) => {
+        for (const cardId of cardIds) {
+          void ensureCardImageCached(cardId, {
+            root: cardImageRoot,
+            primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
+          }).catch(() => undefined);
+        }
         cp.showPool(cardIds, anchor);
       });
       ipcMain.handle('card-preview:hide', () => {
