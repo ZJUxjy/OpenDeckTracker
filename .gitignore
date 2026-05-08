@@ -62,3 +62,4 @@ packages/hearthmirror/native/dump_reflection_*.jsonl
 data/hsguru-data/
 data/hsguru-data-spider/
 .claude
+tmp
