@@ -1,8 +1,15 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { useTranslation } from '../i18n';
 
 type Tab = 'deck' | 'effects';
+
+// Frameless overlay BrowserWindows recognize `-webkit-app-region: drag`
+// as the OS drag handle. The styles are inert in framed windows (the
+// main window has its own native title bar), so applying them here
+// unconditionally is safe.
+const DRAG: CSSProperties = { WebkitAppRegion: 'drag' } as CSSProperties;
+const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
 
 interface TrackerPanelTabsProps {
   side: 'player' | 'opponent';
@@ -31,6 +38,7 @@ export function TrackerPanelTabs({
       <div
         role="tablist"
         aria-label={`${side} tracker tabs`}
+        style={DRAG}
         className="shrink-0 flex items-stretch gap-1 px-2 pt-2 pb-1 bg-bg-2 border-b border-border"
       >
         <TabPill
@@ -49,6 +57,7 @@ export function TrackerPanelTabs({
           {effectsCount > 0 ? (
             <span
               data-testid="tracker-tab-effects-badge"
+              style={NO_DRAG}
               className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-accent text-bg text-[11px] font-bold tabular-nums"
             >
               {effectsCount}
@@ -92,6 +101,7 @@ function TabPill({ testId, active, onClick, children }: TabPillProps) {
       data-active={active ? 'true' : 'false'}
       aria-selected={active}
       onClick={onClick}
+      style={NO_DRAG}
       className={clsx(
         'px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-colors',
         active
