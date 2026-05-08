@@ -144,7 +144,7 @@ function OpponentBoardAttackSummary({
     : isShort
       ? 'border-green/40 bg-green/15 text-green shadow-sm'
       : 'border-accent/30 bg-accent-dim/20 text-accent';
-  const faceDiffersFromTotal = faceDamage !== attack;
+  const isInformationalChip = faceDamage === attack;
 
   return (
     <div
@@ -152,15 +152,8 @@ function OpponentBoardAttackSummary({
       className={clsx('mt-3 rounded border px-3 py-2', toneClass)}
       title={t('boardAttack.hint')}
     >
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[11px] font-bold uppercase tracking-wider">
-          {t('boardAttack.opposing')}
-        </span>
-        {hasTarget ? (
-          <span className="text-[10px] font-medium uppercase tracking-wider opacity-80">
-            {t('boardAttack.friendlyTarget', { value: targetEffectiveHealth })}
-          </span>
-        ) : null}
+      <div className="text-[11px] font-bold uppercase tracking-wider">
+        {t('boardAttack.opposing')}
       </div>
       <div className="mt-1 flex items-end justify-between gap-3">
         <span
@@ -169,25 +162,27 @@ function OpponentBoardAttackSummary({
         >
           {attack}
         </span>
-        {hasTarget ? (
-          <span className="pb-0.5 font-mono text-sm font-bold tabular-nums opacity-90">
-            / {targetEffectiveHealth}
-          </span>
-        ) : null}
-      </div>
-      <div
-        className={clsx(
-          'mt-1 flex items-baseline justify-between gap-3 text-[11px] font-semibold uppercase tracking-wider',
-          faceDiffersFromTotal ? 'opacity-100' : 'opacity-70',
-        )}
-        title={t('boardAttack.faceHint')}
-      >
-        <span>{t('boardAttack.face')}</span>
         <span
-          data-testid="opposing-face-damage-value"
-          className="font-mono text-base font-black tabular-nums"
+          className={clsx(
+            'inline-flex items-baseline gap-1.5 rounded-md border border-current/30 bg-current/10 px-2 py-1',
+            isInformationalChip ? 'opacity-75' : 'opacity-100',
+          )}
+          title={t('boardAttack.faceHint')}
         >
-          {faceDamage}
+          <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+            {t('boardAttack.face')}
+          </span>
+          <span
+            data-testid="opposing-face-damage-value"
+            className="font-mono text-base font-black leading-none tabular-nums"
+          >
+            {faceDamage}
+          </span>
+          {hasTarget ? (
+            <span className="font-mono text-[11px] font-bold tabular-nums opacity-70">
+              / {targetEffectiveHealth}
+            </span>
+          ) : null}
         </span>
       </div>
     </div>

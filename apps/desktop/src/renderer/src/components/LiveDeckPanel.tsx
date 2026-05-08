@@ -332,7 +332,6 @@ function BoardAttackSummary({
     : isShort
       ? 'border-green/40 bg-green/15 text-green shadow-sm'
       : 'border-accent/30 bg-accent-dim/20 text-accent';
-  const faceDiffersFromTotal = faceDamage !== attack;
 
   return (
     <div
@@ -340,15 +339,8 @@ function BoardAttackSummary({
       className={clsx('mt-3 rounded border px-3 py-2', toneClass)}
       title={t('boardAttack.hint')}
     >
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-[11px] font-bold uppercase tracking-wider">
-          {t('boardAttack.friendly')}
-        </span>
-        {hasTarget ? (
-          <span className="text-[10px] font-medium uppercase tracking-wider opacity-80">
-            {t('boardAttack.target', { value: opposingEffectiveHealth })}
-          </span>
-        ) : null}
+      <div className="text-[11px] font-bold uppercase tracking-wider">
+        {t('boardAttack.friendly')}
       </div>
       <div className="mt-1 flex items-end justify-between gap-3">
         <span
@@ -357,28 +349,63 @@ function BoardAttackSummary({
         >
           {attack}
         </span>
-        {hasTarget ? (
-          <span className="pb-0.5 font-mono text-sm font-bold tabular-nums opacity-90">
-            / {opposingEffectiveHealth}
-          </span>
-        ) : null}
-      </div>
-      <div
-        className={clsx(
-          'mt-1 flex items-baseline justify-between gap-3 text-[11px] font-semibold uppercase tracking-wider',
-          faceDiffersFromTotal ? 'opacity-100' : 'opacity-70',
-        )}
-        title={t('boardAttack.faceHint')}
-      >
-        <span>{t('boardAttack.face')}</span>
-        <span
-          data-testid="friendly-face-damage-value"
-          className="font-mono text-base font-black tabular-nums"
-        >
-          {faceDamage}
-        </span>
+        <FaceDamageChip
+          faceDamage={faceDamage}
+          rawAttack={attack}
+          target={opposingEffectiveHealth}
+          dataTestId="friendly-face-damage-value"
+        />
       </div>
     </div>
+  );
+}
+
+/**
+ * Compact "to face" chip rendered to the right of the big raw-attack
+ * number. The raw board attack stays the visual hero of the card; this
+ * chip carries the after-taunt face-damage value plus the opposing
+ * hero's effective HP. Pairing the `/ HP` slash with face damage (not
+ * with raw attack) eliminates the misread that "raw / HP" implied a
+ * fraction relationship.
+ */
+function FaceDamageChip({
+  faceDamage,
+  rawAttack,
+  target,
+  dataTestId,
+}: {
+  faceDamage: number;
+  rawAttack: number;
+  target: number | null;
+  dataTestId: string;
+}) {
+  const { t } = useTranslation();
+  // When face equals raw, taunts/shields aren't filtering anything — the
+  // chip is informational rather than corrective, so we soften it.
+  const isInformational = faceDamage === rawAttack;
+  return (
+    <span
+      className={clsx(
+        'inline-flex items-baseline gap-1.5 rounded-md border border-current/30 bg-current/10 px-2 py-1',
+        isInformational ? 'opacity-75' : 'opacity-100',
+      )}
+      title={t('boardAttack.faceHint')}
+    >
+      <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+        {t('boardAttack.face')}
+      </span>
+      <span
+        data-testid={dataTestId}
+        className="font-mono text-base font-black leading-none tabular-nums"
+      >
+        {faceDamage}
+      </span>
+      {target !== null ? (
+        <span className="font-mono text-[11px] font-bold tabular-nums opacity-70">
+          / {target}
+        </span>
+      ) : null}
+    </span>
   );
 }
 
