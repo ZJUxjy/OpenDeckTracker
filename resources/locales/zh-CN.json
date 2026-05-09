@@ -77,6 +77,17 @@
       "syncErrorUnknown": "同步失败",
       "syncSuccess": "已同步 {count} 副卡组"
     },
+    "opponentPrediction": {
+      "sectionTitle": "猜测构筑",
+      "expand": "查看其他可能",
+      "collapse": "收起",
+      "noMatch": "没有匹配的热门卡组",
+      "excludedCards": "已剔除 {count} 张创造卡",
+      "confidenceLow": "低置信度",
+      "confidenceMedium": "中",
+      "confidenceHigh": "高",
+      "matchScore": "{score}% 匹配"
+    },
     "list": {
       "title": "已保存的卡组",
       "empty": {

@@ -77,6 +77,17 @@
       "syncErrorUnknown": "Sync failed",
       "syncSuccess": "Synced {count} decks"
     },
+    "opponentPrediction": {
+      "sectionTitle": "Predicted deck",
+      "expand": "Show alternatives",
+      "collapse": "Hide alternatives",
+      "noMatch": "No matching popular decks",
+      "excludedCards": "Excluded {count} created cards",
+      "confidenceLow": "low",
+      "confidenceMedium": "medium",
+      "confidenceHigh": "high",
+      "matchScore": "{score}% match"
+    },
     "list": {
       "title": "Saved Decks",
       "empty": {

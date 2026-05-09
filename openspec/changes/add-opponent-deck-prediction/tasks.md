@@ -71,28 +71,28 @@
 
 ## 5. UI 区块
 
-- [ ] 5.1 写 `apps/desktop/src/renderer/src/components/OpponentDeckPredictionSection.test.tsx`：
+- [x] 5.1 写 `apps/desktop/src/renderer/tests/OpponentDeckPredictionSection.test.tsx`：
       - 空 predictions + 空 observed → 区块不在 DOM
       - 空 predictions + 非空 observed → 显示 "No matching popular decks"
       - top-1 显示 deck name + 职业 + 胜率 + 匹配分 + confidence badge
       - 创造卡 ≥ 1 时显示"已剔除 N 张创造卡"
       - 展开按钮显示 top2~5
-- [ ] 5.2 实现 `OpponentDeckPredictionSection.tsx`：
+- [x] 5.2 实现 `OpponentDeckPredictionSection.tsx`：
       - props: `predictions: OpponentDeckPrediction[]`, `excludedCount: number`, `observedCount: number`
       - 折叠 / 展开 state（useState）
       - 用 `useTranslation` 走 i18n
-- [ ] 5.3 修改 `OpponentCardsPanel.tsx`：
+- [x] 5.3 修改 `OpponentCardsPanel.tsx`：
       - 在文件顶部用 `useEffect` 订阅 `window.hdt.opponentDeckPrediction.onUpdate`，初始挂载时调 `get()`，state 存 predictions
       - 从当前 snapshot 派生 `excludedCount = revealed.filter(c => c.created).length`
       - 在 revealed list 之上渲染 `<OpponentDeckPredictionSection .../>`
-- [ ] 5.4 跑 `pnpm --filter @hdt/desktop test src/renderer/tests` 该区块测试全绿
-- [ ] 5.5 提交：`feat(opponent-deck-prediction): add Predicted Deck section to OpponentCardsPanel`
+- [x] 5.4 跑测试全绿（7 new tests）
+- [x] 5.5 提交：`feat(opponent-deck-prediction): add Predicted Deck section to OpponentCardsPanel`
 
 ## 6. i18n
 
-- [ ] 6.1 在 `resources/locales/en-US.json` 加 `decks.opponentPrediction.*` 文案集（按 design 表）
-- [ ] 6.2 在 `resources/locales/zh-CN.json` 加对应中文文案
-- [ ] 6.3 提交：`feat(i18n): add opponent-deck-prediction strings`
+- [x] 6.1 在 `resources/locales/en-US.json` 加 `decks.opponentPrediction.*` 文案集（按 design 表）
+- [x] 6.2 在 `resources/locales/zh-CN.json` 加对应中文文案
+- [x] 6.3 提交：`feat(i18n): add opponent-deck-prediction strings`
 
 ## 7. 验证
 

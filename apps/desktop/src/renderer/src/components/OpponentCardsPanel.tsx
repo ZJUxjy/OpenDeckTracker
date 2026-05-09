@@ -1,11 +1,12 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import type { OpponentCardRecord } from '@hdt/core';
+import type { OpponentCardRecord, OpponentDeckPrediction } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useLocale, useTranslation } from '../i18n';
+import { OpponentDeckPredictionSection } from './OpponentDeckPredictionSection';
 
 const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
 
@@ -79,6 +80,29 @@ export function OpponentCardsPanel({
   );
   const handleRowMouseLeave = useCallback(() => onRowLeave(), [onRowLeave]);
 
+  // Opponent deck prediction: subscribe to push updates and seed with one
+  // initial fetch so a freshly-mounted panel doesn't wait for the next
+  // tick. Cleared back to [] on every snapshot push that has no opponent
+  // observations (handled by main-side `computePredictions`).
+  const [predictions, setPredictions] = useState<readonly OpponentDeckPrediction[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void window.hdt.opponentDeckPrediction?.get().then((result) => {
+      if (!cancelled) setPredictions(result);
+    });
+    const off = window.hdt.opponentDeckPrediction?.onUpdate?.((updated) => {
+      setPredictions(updated);
+    });
+    return () => {
+      cancelled = true;
+      off?.();
+    };
+  }, []);
+  const excludedCreatedCount = useMemo(
+    () => revealed.filter((r) => r.created).length,
+    [revealed],
+  );
+
   return (
     <aside className="w-full bg-bg-2 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
       <div
@@ -97,28 +121,35 @@ export function OpponentCardsPanel({
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
-        {isEmpty ? (
-          <div className="h-full flex items-center justify-center text-text-mute text-sm px-4 text-center">
-            {emptyMessage}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <OpponentCardSection
-              title={t('opponent.played')}
-              cards={revealedGroups}
-              defs={defs}
-              onMouseEnter={handleRowMouseEnter}
-              onMouseLeave={handleRowMouseLeave}
-            />
-            <OpponentCardSection
-              title={t('opponent.graveyard')}
-              cards={graveyardGroups}
-              defs={defs}
-              onMouseEnter={handleRowMouseEnter}
-              onMouseLeave={handleRowMouseLeave}
-            />
-          </div>
-        )}
+        <div className="space-y-3">
+          <OpponentDeckPredictionSection
+            predictions={predictions}
+            excludedCount={excludedCreatedCount}
+            observedCount={revealed.length}
+          />
+          {isEmpty ? (
+            <div className="h-full flex items-center justify-center text-text-mute text-sm px-4 text-center">
+              {emptyMessage}
+            </div>
+          ) : (
+            <>
+              <OpponentCardSection
+                title={t('opponent.played')}
+                cards={revealedGroups}
+                defs={defs}
+                onMouseEnter={handleRowMouseEnter}
+                onMouseLeave={handleRowMouseLeave}
+              />
+              <OpponentCardSection
+                title={t('opponent.graveyard')}
+                cards={graveyardGroups}
+                defs={defs}
+                onMouseEnter={handleRowMouseEnter}
+                onMouseLeave={handleRowMouseLeave}
+              />
+            </>
+          )}
+        </div>
       </div>
     </aside>
   );
