@@ -1,6 +1,10 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
-import type { PopularDeckEnriched, SetProgress } from '@hdt/core';
+import type {
+  OpponentDeckPrediction,
+  PopularDeckEnriched,
+  SetProgress,
+} from '@hdt/core';
 
 type PopularDecksListResult = {
   decks: PopularDeckEnriched[];
@@ -227,6 +231,16 @@ const api = {
       const handler = (_e: IpcRendererEvent, which: 'player' | 'opponent'): void => cb(which);
       ipcRenderer.on('overlay:disabled-by-window', handler);
       return () => ipcRenderer.removeListener('overlay:disabled-by-window', handler);
+    },
+  },
+  opponentDeckPrediction: {
+    get: (): Promise<OpponentDeckPrediction[]> =>
+      ipcRenderer.invoke('opponent-deck-prediction:get'),
+    onUpdate: (cb: (predictions: OpponentDeckPrediction[]) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, predictions: OpponentDeckPrediction[]): void =>
+        cb(predictions);
+      ipcRenderer.on('opponent-deck-prediction:update', handler);
+      return () => ipcRenderer.removeListener('opponent-deck-prediction:update', handler);
     },
   },
   popularDecks: {

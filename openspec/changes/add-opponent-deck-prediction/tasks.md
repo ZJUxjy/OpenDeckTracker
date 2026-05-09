@@ -65,15 +65,9 @@
 
 ## 4. preload + 类型
 
-- [ ] 4.1 修改 `apps/desktop/src/preload/index.ts`：在 api 对象里加
-      ```
-      opponentDeckPrediction: {
-        get: () => ipcRenderer.invoke('opponent-deck-prediction:get'),
-        onUpdate: (cb) => { ipcRenderer.on('opponent-deck-prediction:update', handler); return () => ipcRenderer.removeListener(...) }
-      }
-      ```
-- [ ] 4.2 typecheck 通过（`HdtApi` 自动包含新 namespace）
-- [ ] 4.3 提交：`feat(preload): expose opponentDeckPrediction.get/onUpdate`
+- [x] 4.1 修改 `apps/desktop/src/preload/index.ts`：在 api 对象里加 `opponentDeckPrediction` 命名空间
+- [x] 4.2 typecheck 通过（`HdtApi` 自动包含新 namespace）
+- [x] 4.3 提交：`feat(preload): expose opponentDeckPrediction.get/onUpdate`
 
 ## 5. UI 区块
 
