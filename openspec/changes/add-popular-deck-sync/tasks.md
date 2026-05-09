@@ -27,15 +27,15 @@
 
 ## 3. 转换器（spider → PopularDeck）
 
-- [ ] 3.1 写 `transformer.test.ts`：
+- [x] 3.1 写 `transformer.test.ts`：
       - 给定一个真实 mage deckstring，转换后 `class === 'MAGE'`、`format` 与解码一致
       - 同样的 (archetype, deckId) 调用两次产生相同 `id`
       - 未知 archetype label 时 `archetype === 'Midrange'`
       - `author === 'hsguru'`，`updatedAt === fetchedAt.slice(0,10)`
       - 解码失败的 deckstring 被跳过（返回 null 而不是抛）
-- [ ] 3.2 实现 `transformer.ts` 导出 `transformVariant(archetype, variant, fetchedAt): PopularDeck | null`
+- [x] 3.2 实现 `transformer.ts` 导出 `transformVariant(archetype, variant, fetchedAt): PopularDeck | null`
       内部调用 `@hdt/hearthdb` `decodeDeck`、用 `classifyArchetypeLabel`
-- [ ] 3.3 提交：`feat(popular-decks-sync): add hsguru variant → PopularDeck transformer`
+- [x] 3.3 提交：`feat(popular-decks-sync): add hsguru variant → PopularDeck transformer`
 
 ## 4. 持久化 storage + 单测
 
