@@ -8,7 +8,7 @@ const MAGE_DECKSTRING =
 const ROGUE_DECKSTRING =
   'AAECAaIHCsODB9GdB+ylB4aoB4eoB4ioB9C/B4rUB5vUB4jZBwr3nwT3gQeQgweMrQfHrgfZrweaswe0wQedxQfVxQcAAA==';
 
-function fakeCard(over: Partial<CardDef> & { id: string; cardClass: string }): CardDef {
+function fakeCard(over: { id: string; cardClass: CardDef['cardClass'] }): CardDef {
   return {
     id: over.id,
     dbfId: 0,
@@ -21,7 +21,7 @@ function fakeCard(over: Partial<CardDef> & { id: string; cardClass: string }): C
   } as CardDef;
 }
 
-function makeCtx(heroDbfId: number, cardClass: string) {
+function makeCtx(heroDbfId: number, cardClass: CardDef['cardClass']) {
   return {
     findByDbfId: (dbfId: number): CardDef | null =>
       dbfId === heroDbfId ? fakeCard({ id: `H${heroDbfId}`, cardClass }) : null,
