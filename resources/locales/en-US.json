@@ -62,7 +62,20 @@
       "byAuthor": "by",
       "updatedPrefix": "upd",
       "manaCurveAriaLabel": "Mana curve",
-      "winratePercent": "%"
+      "winratePercent": "%",
+      "syncButton": "Sync popular decks",
+      "syncButtonShort": "Sync",
+      "syncing": "Syncing… ({phase})",
+      "lastUpdated": "Last updated: {date}",
+      "lastUpdatedNever": "Never synced",
+      "syncErrorNetwork": "Network error — check your connection or proxy",
+      "syncErrorParse": "HSGuru data format changed — try again later",
+      "syncErrorAlreadySyncing": "Sync already in progress",
+      "syncErrorCardDb": "Card database not ready — try again in a moment",
+      "syncErrorPersist": "Could not save sync result to disk",
+      "syncErrorAborted": "Sync aborted",
+      "syncErrorUnknown": "Sync failed",
+      "syncSuccess": "Synced {count} decks"
     },
     "list": {
       "title": "Saved Decks",

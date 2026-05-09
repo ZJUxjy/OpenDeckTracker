@@ -62,7 +62,20 @@
       "byAuthor": "作者",
       "updatedPrefix": "更新",
       "manaCurveAriaLabel": "费用曲线",
-      "winratePercent": "%"
+      "winratePercent": "%",
+      "syncButton": "同步热门卡组",
+      "syncButtonShort": "同步",
+      "syncing": "同步中…（{phase}）",
+      "lastUpdated": "上次更新：{date}",
+      "lastUpdatedNever": "从未同步",
+      "syncErrorNetwork": "网络错误 —— 请检查网络或代理",
+      "syncErrorParse": "HSGuru 数据格式发生变化 —— 请稍后再试",
+      "syncErrorAlreadySyncing": "同步已在进行中",
+      "syncErrorCardDb": "卡牌数据库尚未就绪 —— 请稍后再试",
+      "syncErrorPersist": "无法将同步结果写入磁盘",
+      "syncErrorAborted": "同步已取消",
+      "syncErrorUnknown": "同步失败",
+      "syncSuccess": "已同步 {count} 副卡组"
     },
     "list": {
       "title": "已保存的卡组",
