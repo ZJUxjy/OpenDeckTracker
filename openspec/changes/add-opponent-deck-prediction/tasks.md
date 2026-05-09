@@ -96,9 +96,9 @@
 
 ## 7. 验证
 
-- [ ] 7.1 `pnpm --filter @hdt/core test` 全绿
-- [ ] 7.2 `pnpm --filter @hdt/desktop test` 全绿（除既有 App.i18n flake）
-- [ ] 7.3 `pnpm --filter @hdt/desktop typecheck` 全绿
+- [x] 7.1 `pnpm --filter @hdt/core test` 全绿（295 tests）
+- [x] 7.2 `pnpm --filter @hdt/desktop test` 492/493（唯一失败是既存的 App.i18n flake）
+- [x] 7.3 `pnpm --filter @hdt/desktop typecheck` 全绿
 - [ ] 7.4 `pnpm --filter @hdt/desktop dev` 跑起来开一局：对手打几张牌后看预测区块出现，
       职业 / 胜率 / 匹配分显示正确；对手发现一张牌时"已剔除 N 张创造卡"出现
 - [ ] 7.5 验证 mulligan 阶段不显示预测（因为 revealed 还没更新）
