@@ -52,14 +52,14 @@
 
 ## 5. fetcher（net.fetch + abort + delay）
 
-- [ ] 5.1 写 `fetcher.test.ts`（mock `net.fetch`）：
+- [x] 5.1 写 `fetcher.test.ts`（mock `net.fetch`）：
       - 成功 fetch 返回 text
       - 非 2xx 抛 `Error('Request failed: <status>')`
       - `signal.aborted` 在循环中被检查 → 后续不发请求
       - 两次请求间隔 ≥ 1000ms（fake timers）
-- [ ] 5.2 实现 `fetcher.ts` 导出 `fetchHsguruMeta(signal) / fetchHsguruArchetypeVariants(label, signal)`
+- [x] 5.2 实现 `fetcher.ts` 导出 `fetchHsguruMeta(signal) / fetchHsguruArchetypeVariants(label, signal)`
       内部用 Electron `net.fetch`，1s delay，45s 超时（与 spider 一致）
-- [ ] 5.3 提交：`feat(popular-decks-sync): add electron net.fetch wrapper with abort + throttle`
+- [x] 5.3 提交：`feat(popular-decks-sync): add electron net.fetch wrapper with abort + throttle`
 
 ## 6. sync 协调器 + IPC
 
