@@ -31,6 +31,14 @@ export type {
   OpponentCardRecord,
 } from './tracker/deck-tracker';
 
+// Opponent deck prediction.
+export { predictOpponentDecks } from './tracker/opponent-deck-prediction';
+export type {
+  OpponentDeckPrediction,
+  PredictionConfidence,
+  PredictionInput,
+} from './tracker/opponent-deck-prediction';
+
 // Board-attack calculator.
 export { computeBoardAttack, computeMaxFaceDamage } from './tracker/board-attack';
 export type {

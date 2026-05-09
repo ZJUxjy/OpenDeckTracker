@@ -23,7 +23,7 @@
 
 ## 2. 预测引擎纯函数
 
-- [ ] 2.1 写 `packages/core/src/tracker/opponent-deck-prediction.test.ts`，覆盖：
+- [x] 2.1 写 `packages/core/src/tracker/opponent-deck-prediction.test.ts`，覆盖：
       - 空 observation → `[]`
       - 全部 created → `[]`
       - class 过滤生效（MAGE 候选只剩 MAGE）
@@ -35,14 +35,14 @@
       - confidence: 3/7/12 → low/medium/high
       - topN 截断
       - 解码失败的 candidate 静默 drop
-- [ ] 2.2 实现 `packages/core/src/tracker/opponent-deck-prediction.ts` 导出
+- [x] 2.2 实现 `packages/core/src/tracker/opponent-deck-prediction.ts` 导出
       `predictOpponentDecks(input)`：
       - 不依赖 `@hdt/hearthdb` / Buffer / electron
       - `deckCardLookup` 返回 `null` 时跳过
       - 算法严格按 design.md：observation-coverage IoU 变体 + tiebreak + confidence + topN
-- [ ] 2.3 在 `packages/core/src/index.ts` 重新导出预测函数 + 类型
-- [ ] 2.4 跑 `pnpm --filter @hdt/core test` 全绿
-- [ ] 2.5 提交：`feat(opponent-deck-prediction): add pure prediction function in core`
+- [x] 2.3 在 `packages/core/src/index.ts` 重新导出预测函数 + 类型
+- [x] 2.4 跑 `pnpm --filter @hdt/core test` 全绿（295 tests, 10 new for prediction）
+- [x] 2.5 提交：`feat(opponent-deck-prediction): add pure prediction function in core`
 
 ## 3. 主进程 IPC + 推送
 
