@@ -63,35 +63,35 @@
 
 ## 6. sync 协调器 + IPC
 
-- [ ] 6.1 写 `index.test.ts`：
+- [x] 6.1 写 `index.test.ts`：
       - `startSync()` 在已有 sync 运行时返回 `{ ok: false, error: 'already-syncing' }`
       - `startSync()` 触发的 progress events 至少包含 4 个 phase（meta/variants/transform/persist）
       - `getStatus()` 在 sync 完成后返回 `{ inFlight: false, lastFetchedAt: <iso> }`
       - 解析返回 0 条时 `startSync` 返回 `{ ok: false, error: 'parse-failed' }` 且不写 cache
-- [ ] 6.2 实现 `index.ts` 导出 `startSync(progressCb, signal) / getStatus() / loadCache()`，
+- [x] 6.2 实现 `index.ts` 导出 `startSync(progressCb, signal) / getStatus() / loadCache()`，
       串联 fetcher → parser → transformer → storage，实现互斥锁、进度回调
-- [ ] 6.3 写 `ipc.test.ts`：
+- [x] 6.3 写 `ipc.test.ts`：
       - 注册三个通道后 `ipcMain.listenerCount('popular-decks:sync-start') === 1` 等
-- [ ] 6.4 实现 `ipc.ts` 导出 `registerPopularDecksSyncIpc()`：
+- [x] 6.4 实现 `ipc.ts` 导出 `registerPopularDecksSyncIpc()`：
       - `ipcMain.handle('popular-decks:sync-start', ...)`
       - `ipcMain.handle('popular-decks:sync-status', ...)`
       - sync 内部 progress 回调 → `webContents.send('popular-decks:sync-progress', payload)`
         （遍历 `BrowserWindow.getAllWindows()` 广播，避免依赖具体 window 引用）
-- [ ] 6.5 在 `apps/desktop/src/main/ipc.ts` 的 `registerIpc` 里调用
+- [x] 6.5 在 `apps/desktop/src/main/ipc.ts` 的 `registerIpc` 里调用
       `registerPopularDecksSyncIpc()`，并在 `app.before-quit` 注册 abort 钩子
-- [ ] 6.6 提交：`feat(popular-decks-sync): add sync orchestrator + IPC channels`
+- [x] 6.6 提交：`feat(popular-decks-sync): add sync orchestrator + IPC channels`
 
 ## 7. 修改 popular-decks:list IPC 数据源
 
-- [ ] 7.1 修改 `apps/desktop/src/main/popular-decks-ipc.ts`：
+- [x] 7.1 修改 `apps/desktop/src/main/popular-decks-ipc.ts`：
       - 启动时调用 `loadCache(userDataDir)` 一次，结果存模块级 `let cachedSnapshot`
       - sync 完成事件触发时（通过 EventEmitter 或重新 loadCache）刷新 `cachedSnapshot`
       - `popular-decks:list` handler 改为返回
         `{ decks, source: 'synced' | 'seed', fetchedAt }`，根据 cachedSnapshot 选择来源
-- [ ] 7.2 更新该文件的现有单测以断言新返回 shape；增加两个测试：
+- [x] 7.2 更新该文件的现有单测以断言新返回 shape；增加两个测试：
       - cache 存在 → `source === 'synced'`、`fetchedAt` 与 cache 一致
       - cache 缺失 → `source === 'seed'`、`fetchedAt === null`、`decks` 长度 == seed 长度
-- [ ] 7.3 提交：`feat(deck-finder-ipc): switch popular-decks:list to synced cache with seed fallback`
+- [x] 7.3 提交：`feat(deck-finder-ipc): switch popular-decks:list to synced cache with seed fallback`
 
 ## 8. preload API
 

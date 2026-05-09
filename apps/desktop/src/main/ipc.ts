@@ -34,6 +34,12 @@ import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
 import { registerPopularDecksIpc } from './popular-decks-ipc';
+import {
+  PopularDeckSyncOrchestrator,
+  type SyncedSnapshot,
+} from './popular-decks-sync';
+import { registerPopularDecksSyncIpc } from './popular-decks-sync/ipc';
+import { net } from 'electron';
 import type { CardPreviewWindow, PreviewAnchor } from './card-preview-window';
 
 export interface OverlayControllers {
@@ -288,9 +294,39 @@ export function registerIpc(overlay?: OverlayControllers): void {
 
   // Popular decks (Deck Finder data source). The handler reads from a
   // module-level lazy reference to the active CardDb so it can serve
-  // requests both before and after the CardDb finishes loading.
+  // requests both before and after the CardDb finishes loading. The
+  // synced snapshot lives in `<userData>/popular-decks/synced.json`
+  // and is loaded lazily on boot; if absent or invalid the handler
+  // falls back to the bundled `POPULAR_DECKS_SEED`.
   let popularDecksCardDb: import('@hdt/hearthdb').CardDb | null = null;
-  registerPopularDecksIpc(() => popularDecksCardDb);
+  let popularDecksSnapshot: SyncedSnapshot | null = null;
+  const popularDecksCacheDir = join(app.getPath('userData'), 'popular-decks');
+  const popularDecksSync = new PopularDeckSyncOrchestrator({
+    fetchImpl: (url, init) => net.fetch(url, init as Parameters<typeof net.fetch>[1]),
+    getCardLookup: () =>
+      popularDecksCardDb
+        ? (dbfId: number) => popularDecksCardDb!.findByDbfId(dbfId) ?? null
+        : null,
+    cacheDir: popularDecksCacheDir,
+  });
+  popularDecksSync.onSnapshotChange((snapshot) => {
+    popularDecksSnapshot = snapshot;
+  });
+  void popularDecksSync.loadCacheOnce().then((snapshot) => {
+    popularDecksSnapshot = snapshot;
+  });
+  registerPopularDecksIpc({
+    getSyncedDecks: () =>
+      popularDecksSnapshot
+        ? { decks: popularDecksSnapshot.decks, fetchedAt: popularDecksSnapshot.fetchedAt }
+        : null,
+    getCardDb: () => popularDecksCardDb,
+  });
+  const disposePopularDecksSyncIpc = registerPopularDecksSyncIpc(popularDecksSync);
+  app.on('before-quit', () => {
+    popularDecksSync.abort();
+    disposePopularDecksSyncIpc();
+  });
 
   // Saved deck management (deck CRUD + deckstring import/export).
   const deckStore = createDeckStore(join(app.getPath('userData'), 'decks.db'));
