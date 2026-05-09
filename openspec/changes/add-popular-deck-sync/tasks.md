@@ -14,16 +14,16 @@
 
 ## 2. archetype 分类映射 + 单测
 
-- [ ] 2.1 写 `classifier.test.ts`：
+- [x] 2.1 写 `classifier.test.ts`：
       - 输入 `'Aggro Hunter'` → `'Aggro'`
       - 输入 `'Control Warrior'` → `'Control'`
       - 输入 `'Tempo Mage'` → `'Tempo'`
       - 输入 `'Combo Druid'` → `'Combo'`
       - 输入 `'Ramp Druid'` → `'Ramp'`
       - 输入 `'Big Priest'` 或 `'Whatever Foo'` → `'Midrange'`（兜底）
-- [ ] 2.2 实现 `classifier.ts` 导出 `classifyArchetypeLabel(label: string): PopularDeckArchetype`
+- [x] 2.2 实现 `classifier.ts` 导出 `classifyArchetypeLabel(label: string): PopularDeckArchetype`
       用关键字匹配表（大小写不敏感、按优先级 Combo > Tempo > Ramp > Aggro > Control > Midrange）
-- [ ] 2.3 提交：`feat(popular-decks-sync): add archetype label classifier`
+- [x] 2.3 提交：`feat(popular-decks-sync): add archetype label classifier`
 
 ## 3. 转换器（spider → PopularDeck）
 
