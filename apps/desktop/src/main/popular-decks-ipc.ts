@@ -1,7 +1,13 @@
 import { ipcMain } from 'electron';
 import { POPULAR_DECKS_SEED, type PopularDeck, type PopularDeckEnriched } from '@hdt/core';
 import type { CardDb } from '@hdt/hearthdb';
-import { computeCardNames, computeDustCost, computeKeyCards, computeManaCurve } from './popular-decks-derived';
+import {
+  computeCardNames,
+  computeDeckCardList,
+  computeDustCost,
+  computeKeyCards,
+  computeManaCurve,
+} from './popular-decks-derived';
 
 const EMPTY_CURVE: readonly number[] = [0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -57,6 +63,7 @@ export function getPopularDecksList(source: PopularDecksDataSource): PopularDeck
         manaCurve: EMPTY_CURVE,
         keyCards: [],
         cardNames: [],
+        deckCardList: [],
         dustCost: 0,
       })),
       source: sourceLabel,
@@ -70,6 +77,7 @@ export function getPopularDecksList(source: PopularDecksDataSource): PopularDeck
         manaCurve: computeManaCurve(d.deckstring, lookup),
         keyCards: computeKeyCards(d.deckstring, lookup),
         cardNames: computeCardNames(d.deckstring, lookup),
+        deckCardList: computeDeckCardList(d.deckstring, lookup),
         dustCost: computeDustCost(d.deckstring, lookup),
       })),
       source: sourceLabel,

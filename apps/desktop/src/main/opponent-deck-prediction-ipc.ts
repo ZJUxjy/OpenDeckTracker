@@ -3,10 +3,26 @@ import {
   predictOpponentDecks,
   type DeckTrackerSnapshot,
   type Format,
+  type HeroClass,
   type OpponentDeckPrediction,
   type PopularDeckEnriched,
 } from '@hdt/core';
-import { decodeDeck, type CardDb } from '@hdt/hearthdb';
+import { decodeDeck, type CardClass, type CardDb } from '@hdt/hearthdb';
+
+const PLAYER_CLASS_VALUES: ReadonlySet<string> = new Set<HeroClass>([
+  'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE', 'PALADIN',
+  'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK', 'WARRIOR', 'NEUTRAL',
+]);
+
+function makeCardClassResolver(cardDb: CardDb | null): (cardId: string) => HeroClass | null {
+  if (!cardDb) return () => null;
+  return (cardId: string): HeroClass | null => {
+    const card = cardDb.findById(cardId);
+    if (!card) return null;
+    const cls: CardClass = card.cardClass;
+    return PLAYER_CLASS_VALUES.has(cls) ? (cls as HeroClass) : null;
+  };
+}
 
 export const PREDICTION_GET_CHANNEL = 'opponent-deck-prediction:get';
 export const PREDICTION_UPDATE_CHANNEL = 'opponent-deck-prediction:update';
@@ -99,15 +115,19 @@ export function computePredictions(
   if (snapshot.opponent.revealed.length === 0) return [];
   if (popularDecks.length === 0) return [];
 
+  const observedCards = snapshot.opponent.revealed.map((r) => ({
+    cardId: r.cardId,
+    created: r.created,
+  }));
+  const format = formatFromMatchInfo(snapshot);
+
   return predictOpponentDecks({
-    observedCards: snapshot.opponent.revealed.map((r) => ({
-      cardId: r.cardId,
-      created: r.created,
-    })),
+    observedCards,
     opponentClass: snapshot.opponentClass,
-    format: formatFromMatchInfo(snapshot),
+    format,
     candidates: popularDecks,
     deckCardLookup: (deckstring) => cachedLookup.get(deckstring, popularDecks, cardDb),
+    cardClassResolver: makeCardClassResolver(cardDb),
   });
 }
 

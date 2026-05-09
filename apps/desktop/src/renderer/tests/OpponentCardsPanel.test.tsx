@@ -63,18 +63,23 @@ describe('OpponentCardsPanel', () => {
     });
   });
 
-  it('renders opponent graveyard cards in a separate section', async () => {
+  it('cumulative `revealed` includes already-killed cards (no separate graveyard section)', async () => {
+    // The deck-tracker now feeds GRAVEYARD entries through `revealed`
+    // too, so the panel surfaces them in the single cumulative list
+    // rather than a separate "Graveyard" section. Test that:
+    //   1. A killed card still appears (cumulative behaviour),
+    //   2. The legacy "Graveyard" header is no longer rendered.
     render(
       <OpponentCardsPanel
-        revealed={[]}
+        revealed={[record({ entityId: 21, cardId: 'CS2_024', zone: 'GRAVEYARD' })]}
         graveyard={[record({ entityId: 21, cardId: 'CS2_024', zone: 'GRAVEYARD' })]}
       />,
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Graveyard')).toBeInTheDocument();
       expect(screen.getByText('Frostbolt')).toBeInTheDocument();
     });
+    expect(screen.queryByText('Graveyard')).toBeNull();
   });
 
   it('renders an empty state when no opponent cards are revealed', () => {

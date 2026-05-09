@@ -12,21 +12,24 @@ const FIXTURE: PopularDeckEnriched[] = [
     deckstring: 'AAEC-FAKE', winratePercent: 58, gamesCount: 12400, dustCost: 4800,
     author: 'thalia', updatedAt: '2026-04-25',
     manaCurve: [0, 6, 8, 6, 4, 2, 2, 2], cardNames: ['Fireball', 'Polymorph', 'Frostbolt'],
-    keyCards: [{ name: 'Fireball', count: 2, cost: 4 }, { name: 'Polymorph', count: 2, cost: 4 }],
+    deckCardList: [],
+    keyCards: [{ cardId: 'CS2_029', name: 'Fireball', count: 2, cost: 4 }, { cardId: 'NEW_010', name: 'Polymorph', count: 2, cost: 4 }],
   },
   {
     id: 'warrior1', name: 'Control Warrior', class: 'WARRIOR', format: 'Standard', archetype: 'Control',
     deckstring: 'AAEC-FAKE2', winratePercent: 54, gamesCount: 8240, dustCost: 11200,
     author: 'okuda', updatedAt: '2026-04-22',
     manaCurve: [0, 2, 4, 6, 4, 4, 4, 6], cardNames: ['Brawl', 'Execute', 'Shield Slam'],
-    keyCards: [{ name: 'Brawl', count: 2, cost: 5 }],
+    deckCardList: [],
+    keyCards: [{ cardId: 'EX1_407', name: 'Brawl', count: 2, cost: 5 }],
   },
   {
     id: 'priestw', name: 'Reno Priest', class: 'PRIEST', format: 'Wild', archetype: 'Combo',
     deckstring: 'AAEC-FAKE3', winratePercent: 52, gamesCount: 6120, dustCost: 13400,
     author: 'ren', updatedAt: '2026-04-24',
     manaCurve: [0, 0, 4, 4, 6, 4, 6, 6], cardNames: ['Anduin'],
-    keyCards: [{ name: 'Anduin', count: 1, cost: 4 }],
+    deckCardList: [],
+    keyCards: [{ cardId: 'HERO_09y', name: 'Anduin', count: 1, cost: 4 }],
   },
 ];
 
@@ -76,7 +79,8 @@ describe('DeckFinderTab', () => {
       const counts = screen.getAllByText((_, el) => el?.tagName === 'DIV' && /of/.test(el.textContent ?? ''));
       expect(counts.length).toBeGreaterThan(0);
     });
-    expect(screen.getByText('2')).toBeInTheDocument();
+    // Multiple `2`s now appear (count chip + ×2 in key cards). At least one is the count chip.
+    expect(screen.getAllByText('2').length).toBeGreaterThan(0);
   });
 
   it('clicking the MAGE class chip narrows the list', async () => {

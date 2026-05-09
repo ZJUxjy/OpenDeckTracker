@@ -48,6 +48,15 @@ export interface PopularDeck {
 }
 
 export interface PopularDeckKeyCard {
+  /**
+   * Stable card identifier (e.g. `EX1_277`). The renderer uses this to
+   * re-resolve `name`, `cost`, `rarity` against the active locale's
+   * CardDb so it can match Hearthstone's in-game language. The IPC-side
+   * `name` and `cost` here are baked from the default-locale CardDb and
+   * are kept as a fallback when the renderer-side lookup hasn't
+   * resolved yet.
+   */
+  cardId: string;
   name: string;
   count: number;
   cost: number;
@@ -63,11 +72,26 @@ export interface PopularDeckEnriched extends PopularDeck {
    */
   cardNames: readonly string[];
   /**
+   * Full per-card list (uncapped) sorted by cost asc then name asc.
+   * Used by the opponent-deck-prediction popup to render the deck's
+   * contents with played/unplayed coloring. `cardId` is the stable
+   * card identifier so the renderer can match against opponent plays;
+   * `count` is the per-deck copy count (1 or 2 for collectibles).
+   */
+  deckCardList: readonly PopularDeckCardEntry[];
+  /**
    * Crafting cost in dust, computed at IPC time from the deckstring's
    * card rarities against the current CardDb. Not baked into the seed
    * because it's deterministic from the deckstring.
    */
   dustCost: number;
+}
+
+export interface PopularDeckCardEntry {
+  cardId: string;
+  name: string;
+  cost: number;
+  count: number;
 }
 
 export interface DeckCard {

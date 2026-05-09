@@ -11,6 +11,17 @@ export interface PredictionInput {
    * stays runtime-neutral and avoids depending on `@hdt/hearthdb`).
    */
   deckCardLookup: (deckstring: string) => ReadonlyMap<string, number> | null;
+  /**
+   * Optional per-card class resolver. When provided, observed cards
+   * whose class is non-`NEUTRAL` and disagrees with `opponentClass`
+   * are dropped from the matching multiset — they cannot legally be
+   * in the opponent's constructed deck, so they must have come from a
+   * Discover / Generate / random-create effect even if the
+   * HearthWatcher origin classifier failed to flag them. Returning
+   * `null` means "unknown / not in the renderer's CardDb yet" and the
+   * card is kept (conservative default).
+   */
+  cardClassResolver?: (cardId: string) => HeroClass | null;
   /** Default 5. */
   topN?: number;
 }
@@ -37,6 +48,20 @@ function classifyConfidence(observedOriginalCount: number): PredictionConfidence
 }
 
 /**
+ * The Hearthstone "coin" handed to whoever is going second is not part
+ * of any deckstring. If the opponent plays it, ignoring it is the right
+ * default — including it would lower every candidate's score by 1/N
+ * and inflate the denominator in `confidence`. Mirrors the suppression
+ * already done by `isDeckIdentityCardId` for friendly deck identification.
+ */
+function isCoinLikeCard(cardId: string): boolean {
+  if (cardId === 'GAME_005') return true;
+  if (cardId.endsWith('_COIN')) return true;
+  if (cardId.includes('COIN')) return true;
+  return false;
+}
+
+/**
  * Predict the opponent's most-likely popular decks given their observed
  * plays. Excludes Discover / Generate cards (`created: true`) from the
  * matching multiset to avoid pollution. Returns at most `topN` entries
@@ -51,14 +76,31 @@ export function predictOpponentDecks(
 ): OpponentDeckPrediction[] {
   const topN = input.topN ?? DEFAULT_TOP_N;
 
-  // Build the observed multiset of non-created cards.
+  // Build the observed multiset of non-created, non-coin, in-class cards.
   const observed = new Map<string, number>();
   let observedOriginalCount = 0;
+  let offClassDropped = 0;
   for (const card of input.observedCards) {
     if (card.created) continue;
+    if (isCoinLikeCard(card.cardId)) continue;
+    if (input.opponentClass !== null && input.cardClassResolver) {
+      const cardClass = input.cardClassResolver(card.cardId);
+      if (cardClass !== null && cardClass !== 'NEUTRAL' && cardClass !== input.opponentClass) {
+        // Off-class: cannot be in the opponent's constructed deck, so it
+        // must be created (the heuristic origin classifier missed it).
+        offClassDropped++;
+        continue;
+      }
+    }
     observed.set(card.cardId, (observed.get(card.cardId) ?? 0) + 1);
     observedOriginalCount++;
   }
+  // `offClassDropped` is intentionally accumulated but not surfaced —
+  // the renderer derives its own "excluded created cards" count from
+  // `OpponentCardRecord.created` for UI display, and the prediction
+  // contract is "what fits the candidates after filters." Keeping the
+  // local for clarity / future "diagnostics" metric.
+  void offClassDropped;
   if (observedOriginalCount === 0) return [];
 
   // Filter candidates by class / format.

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { OpponentDeckPrediction, PopularDeckEnriched } from '@hdt/core';
+import type {
+  OpponentCardRecord,
+  OpponentDeckPrediction,
+  PopularDeckCardEntry,
+  PopularDeckEnriched,
+} from '@hdt/core';
 import { OpponentDeckPredictionSection } from '../src/components/OpponentDeckPredictionSection';
 import { I18nProvider } from '../src/i18n';
 
@@ -20,6 +25,7 @@ function deck(over: Partial<PopularDeckEnriched> & { id: string }): PopularDeckE
     manaCurve: [0, 0, 0, 0, 0, 0, 0, 0],
     keyCards: [],
     cardNames: [],
+    deckCardList: over.deckCardList ?? [],
     dustCost: 0,
   };
 }
@@ -38,6 +44,7 @@ function renderSection(
   predictions: OpponentDeckPrediction[],
   excludedCount = 0,
   observedCount = 0,
+  revealed: OpponentCardRecord[] = [],
 ) {
   return render(
     <I18nProvider preference="en-US">
@@ -45,9 +52,19 @@ function renderSection(
         predictions={predictions}
         excludedCount={excludedCount}
         observedCount={observedCount}
+        revealed={revealed}
       />
     </I18nProvider>,
   );
+}
+
+function entry(over: Partial<PopularDeckCardEntry> & { cardId: string; name: string }): PopularDeckCardEntry {
+  return {
+    cardId: over.cardId,
+    name: over.name,
+    cost: over.cost ?? 4,
+    count: over.count ?? 2,
+  };
 }
 
 describe('OpponentDeckPredictionSection', () => {
@@ -121,5 +138,76 @@ describe('OpponentDeckPredictionSection', () => {
   it('hides toggle when only 1 prediction', () => {
     renderSection([pred({ deck: deck({ id: 'a' }) })], 0, 5);
     expect(screen.queryByTestId('opponent-prediction-toggle')).toBeNull();
+  });
+
+  it('clicking the top row opens the deck popup with one row per copy', async () => {
+    const user = userEvent.setup();
+    const fireball = entry({ cardId: 'CS2_029', name: 'Fireball', cost: 4, count: 2 });
+    const polymorph = entry({ cardId: 'NEW_010', name: 'Polymorph', cost: 4, count: 1 });
+    const arcane = entry({ cardId: 'CS2_023', name: 'Arcane Intellect', cost: 3, count: 2 });
+    const d = deck({
+      id: 'mage-fb',
+      deckCardList: [fireball, polymorph, arcane],
+    });
+    const revealed: OpponentCardRecord[] = [
+      // 1× Fireball played (partial — deck has 2)
+      { entityId: 1, cardId: 'CS2_029', zone: 'PLAY', order: 1, created: false },
+      // 1× Polymorph played (full — deck has 1)
+      { entityId: 2, cardId: 'NEW_010', zone: 'PLAY', order: 2, created: false },
+      // discovered Arcane Intellect — must NOT count toward played
+      { entityId: 3, cardId: 'CS2_023', zone: 'PLAY', order: 3, created: true },
+    ];
+    renderSection([pred({ deck: d })], 0, 3, revealed);
+
+    await act(async () => {
+      await user.click(screen.getByTestId('opponent-prediction-top'));
+    });
+
+    const popup = await screen.findByTestId('opponent-prediction-popup');
+    expect(popup).toBeInTheDocument();
+    // 2 + 1 + 2 = 5 rows total (one per copy)
+    const rows = screen.getAllByTestId('opponent-prediction-popup-row');
+    expect(rows).toHaveLength(5);
+
+    const fireballRows = rows.filter((r) => r.getAttribute('data-card-id') === 'CS2_029');
+    expect(fireballRows).toHaveLength(2);
+    // First copy played, second still in deck
+    expect(fireballRows[0]!.getAttribute('data-played')).toBe('true');
+    expect(fireballRows[1]!.getAttribute('data-played')).toBe('false');
+
+    const polymorphRows = rows.filter((r) => r.getAttribute('data-card-id') === 'NEW_010');
+    expect(polymorphRows).toHaveLength(1);
+    expect(polymorphRows[0]!.getAttribute('data-played')).toBe('true');
+
+    const arcaneRows = rows.filter((r) => r.getAttribute('data-card-id') === 'CS2_023');
+    expect(arcaneRows).toHaveLength(2);
+    // Discovered Arcane Intellect must not count toward played
+    expect(arcaneRows.every((r) => r.getAttribute('data-played') === 'false')).toBe(true);
+  });
+
+  it('clicking the same row again closes the popup', async () => {
+    const user = userEvent.setup();
+    renderSection([pred({ deck: deck({ id: 'a', deckCardList: [entry({ cardId: 'X', name: 'X' })] }) })], 0, 1);
+    await act(async () => {
+      await user.click(screen.getByTestId('opponent-prediction-top'));
+    });
+    expect(screen.getByTestId('opponent-prediction-popup')).toBeInTheDocument();
+    await act(async () => {
+      await user.click(screen.getByTestId('opponent-prediction-top'));
+    });
+    expect(screen.queryByTestId('opponent-prediction-popup')).toBeNull();
+  });
+
+  it('Escape key closes the popup', async () => {
+    const user = userEvent.setup();
+    renderSection([pred({ deck: deck({ id: 'a', deckCardList: [entry({ cardId: 'X', name: 'X' })] }) })], 0, 1);
+    await act(async () => {
+      await user.click(screen.getByTestId('opponent-prediction-top'));
+    });
+    expect(screen.getByTestId('opponent-prediction-popup')).toBeInTheDocument();
+    await act(async () => {
+      await user.keyboard('{Escape}');
+    });
+    expect(screen.queryByTestId('opponent-prediction-popup')).toBeNull();
   });
 });

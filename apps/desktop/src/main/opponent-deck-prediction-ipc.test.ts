@@ -75,6 +75,7 @@ function snapshot(over: Partial<DeckTrackerSnapshot>): DeckTrackerSnapshot {
     opposingHandCount: 0,
     opponent: { revealed: [], graveyard: [] },
     opponentClass: null,
+    friendlyGraveyard: [],
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],
@@ -120,6 +121,7 @@ function popularDeck(over: Partial<PopularDeckEnriched> & { id: string }): Popul
     manaCurve: over.manaCurve ?? [0, 0, 0, 0, 0, 0, 0, 0],
     keyCards: over.keyCards ?? [],
     cardNames: over.cardNames ?? [],
+    deckCardList: over.deckCardList ?? [],
     dustCost: over.dustCost ?? 0,
   };
 }

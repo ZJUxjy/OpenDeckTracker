@@ -2,7 +2,8 @@ import { useEffect, type CSSProperties } from 'react';
 import { LiveDeckPanel } from './LiveDeckPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
 import { GlobalEffectsPanel } from './GlobalEffectsPanel';
-import { useFriendlyEffects } from '../stores/deck-tracker-store';
+import { FriendlyGraveyardPanel } from './FriendlyGraveyardPanel';
+import { useFriendlyEffects, useFriendlyGraveyard } from '../stores/deck-tracker-store';
 import { partitionAnimalCompanionEffects } from '../lib/animal-companion-effects';
 
 const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
@@ -23,6 +24,7 @@ export function OverlayView() {
     void window.hdt?.overlay?.closeFromWindow?.('player');
   };
   const friendlyEffects = useFriendlyEffects();
+  const friendlyGraveyard = useFriendlyGraveyard();
   const { effectiveRowCount } = partitionAnimalCompanionEffects(friendlyEffects);
   return (
     <div className="w-full h-full relative">
@@ -33,6 +35,8 @@ export function OverlayView() {
         effectsSlot={
           <GlobalEffectsPanel side="player" effects={friendlyEffects} />
         }
+        graveyardSlot={<FriendlyGraveyardPanel records={friendlyGraveyard} />}
+        graveyardCount={friendlyGraveyard.length}
       />
       <button
         type="button"

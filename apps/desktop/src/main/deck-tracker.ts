@@ -74,16 +74,72 @@ const HERO_CLASS_VALUES: ReadonlySet<string> = new Set<HeroClass>([
   'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK', 'WARRIOR',
 ]);
 
+/**
+ * Lazily-built `HERO_<NN> prefix → HeroClass` map. Hero portrait cardIds
+ * follow a pattern like `HERO_05` (Rexxar, Hunter), `HERO_05a`
+ * (Alleria, Hunter alt skin), `HERO_05bp` (Hunter hero power) — every
+ * sibling sharing the numeric prefix maps to the same class. By
+ * walking every HERO card the local CardDb knows about, we derive the
+ * mapping at runtime so a bundled cards.json that's missing one
+ * specific alt-skin can still resolve its class via any sibling.
+ */
+let heroPrefixCache: Map<string, HeroClass> | null = null;
+
+function rebuildHeroPrefixCache(db: CardDb): Map<string, HeroClass> {
+  const map = new Map<string, HeroClass>();
+  const heroes = db.search({ type: 'HERO', limit: 1000 });
+  for (const h of heroes) {
+    const m = /^HERO_(\d+)/.exec(h.id);
+    if (!m) continue;
+    const prefix = m[1]!;
+    const cls = h.cardClass;
+    if (HERO_CLASS_VALUES.has(cls) && !map.has(prefix)) {
+      map.set(prefix, cls as HeroClass);
+    }
+  }
+  return map;
+}
+
 export function setCardDbForDeckTracker(db: CardDb): void {
   cachedCardDb = db;
+  heroPrefixCache = rebuildHeroPrefixCache(db);
 }
 
 function cardClassLookup(cardId: string): HeroClass | null {
   if (!cachedCardDb) return null;
   const card = cachedCardDb.findById(cardId);
-  if (!card) return null;
-  const cls: CardClass = card.cardClass;
-  return HERO_CLASS_VALUES.has(cls) ? (cls as HeroClass) : null;
+  if (card) {
+    const cls: CardClass = card.cardClass;
+    if (HERO_CLASS_VALUES.has(cls)) return cls as HeroClass;
+  }
+  // Fallback: alt-skin portrait the bundled cards.json doesn't list by
+  // exact id. Derive class from any sibling HERO_<NN>* card.
+  const m = /^HERO_(\d+)/.exec(cardId);
+  if (m && heroPrefixCache) {
+    return heroPrefixCache.get(m[1]!) ?? null;
+  }
+  return null;
+}
+
+/**
+ * Heuristic: the card's text indicates it triggers at game start and
+ * removes itself from play (e.g., the "Wonder" / 奇闻 mechanic). These
+ * cards belong to the LOCAL player's deck but Hearthstone briefly
+ * surfaces their effect tokens / phantom entities on the opposing side
+ * during the start-of-game phase, which our cumulative `revealed` list
+ * would otherwise lock onto. Suppressing them at the deck-tracker level
+ * keeps the opponent panel + prediction honest.
+ */
+function isStartOfGameDisappearCard(cardId: string): boolean {
+  if (!cachedCardDb) return false;
+  const card = cachedCardDb.findById(cardId);
+  const text = card?.text;
+  if (typeof text !== 'string' || text.length === 0) return false;
+  // Match either locale (the bundled CardDb is whichever ensureCardDb
+  // resolved with — currently default enUS, but be tolerant either way).
+  if (/Start of Game[\s\S]*Disappear/i.test(text)) return true;
+  if (/对战开始时[\s\S]*消失/.test(text)) return true;
+  return false;
 }
 let cardPlayedDetector: CardPlayedDetector | null = null;
 
@@ -345,6 +401,7 @@ export function startDeckTracker(): void {
     extractCtx: makeExtractCtx,
     boardAttackContextProvider: buildBoardAttackContext,
     cardClassLookup,
+    opponentCardSuppressor: isStartOfGameDisappearCard,
   });
   // Live detector that turns the upstream PowerEvent stream into
   // `card:played` calls on the tracker's global-effects registry.
@@ -450,6 +507,9 @@ export function forwardPowerEventToDeckTracker(
     resetBoardAttackState();
     cardPlayedDetector?.reset();
     tracker?.resetGlobalEffects();
+    // Power.log says actual gameplay is starting — flip the
+    // overlay-visibility gate. Cleared on phase → IDLE further below.
+    setLiveMatchActive(true);
   }
   pushPowerEvent(event);
   const logUpdates = logUpdatesFromPowerEvent(event);
@@ -630,6 +690,10 @@ export function onDeckTrackerPhase(cb: PhaseListener): () => void {
 function fanoutPhase(phase: string): void {
   if (phase === lastBroadcastPhase) return;
   lastBroadcastPhase = phase;
+  // Clear the live-match flag whenever the phase machine returns to
+  // IDLE — that's the canonical "no game in progress" state. Any
+  // subsequent `create-game` PowerEvent will flip it back on.
+  if (phase === 'IDLE') setLiveMatchActive(false);
   for (const cb of phaseListeners) {
     try { cb(phase); } catch { /* keep loop healthy */ }
   }
@@ -637,6 +701,37 @@ function fanoutPhase(phase: string): void {
 
 type SnapshotListener = (snapshot: DeckTrackerSnapshot) => void;
 const snapshotListeners = new Set<SnapshotListener>();
+
+// "Live match active" signal driven by Power.log `create-game` events:
+// flipped true when hearthwatcher observes (or replays) a CREATE_GAME
+// line and flipped false when the deck-tracker's phase machine returns
+// to IDLE. Used to distinguish a real gameplay match from a populated-
+// matchInfo lobby / deck-picker — HearthMirror's getMatchInfo can fire
+// in those states too, but Power.log only writes CREATE_GAME once
+// actual gameplay begins.
+type LiveMatchListener = (active: boolean) => void;
+const liveMatchListeners = new Set<LiveMatchListener>();
+let liveMatchActive = false;
+
+export function onLiveMatchChange(cb: LiveMatchListener): () => void {
+  liveMatchListeners.add(cb);
+  cb(liveMatchActive);
+  return () => {
+    liveMatchListeners.delete(cb);
+  };
+}
+
+function setLiveMatchActive(active: boolean): void {
+  if (active === liveMatchActive) return;
+  liveMatchActive = active;
+  for (const cb of liveMatchListeners) {
+    try { cb(active); } catch { /* keep loop healthy */ }
+  }
+}
+
+export function isLiveMatchActive(): boolean {
+  return liveMatchActive;
+}
 
 /**
  * Subscribe to every published deck-tracker snapshot. Used by the

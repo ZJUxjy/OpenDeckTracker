@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 import {
   filterPopularDecks,
   sortPopularDecks,
@@ -6,11 +6,30 @@ import {
   type HeroClass,
   type PopularDeckArchetype,
   type PopularDeckEnriched,
+  type PopularDeckKeyCard,
   type PopularDeckSort,
 } from '@hdt/core';
+import type { Rarity } from '@hdt/hearthdb';
+import { clsx } from 'clsx';
 
 import { useTranslation } from '../i18n';
+import { useCardDef } from '../hooks/use-card-def';
+import { useCardTileUrl } from '../hooks/use-card-image-url';
+import { useCardPreview } from '../hooks/use-card-preview';
 import { ManaCurveChart } from './ManaCurveChart';
+
+const ART_MASK_STYLE: CSSProperties = {
+  maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
+  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
+};
+const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
+
+function getRarityCostBg(rarity: Rarity | undefined): string {
+  if (rarity === 'LEGENDARY') return 'bg-rarity-legendary text-bg';
+  if (rarity === 'EPIC') return 'bg-rarity-epic text-bg';
+  if (rarity === 'RARE') return 'bg-rarity-rare text-bg';
+  return 'bg-bg-3 text-text border border-border-hi';
+}
 
 type SyncProgress = {
   phase: 'meta' | 'variants' | 'transform' | 'persist';
@@ -110,10 +129,15 @@ function formatGames(n: number): string {
 }
 
 interface DeckFinderTabProps {
+  /**
+   * Kept for prop-shape compatibility with existing callers; the import
+   * button has been removed in favour of the copy-deckstring flow, so
+   * this callback is currently never fired.
+   */
   onImported?: (deckId: string) => void;
 }
 
-export function DeckFinderTab({ onImported }: DeckFinderTabProps): ReactElement {
+export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
   const { t, locale } = useTranslation();
   const [decks, setDecks] = useState<readonly PopularDeckEnriched[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -234,16 +258,6 @@ export function DeckFinderTab({ onImported }: DeckFinderTabProps): ReactElement 
 
   const selected = sorted.find((d) => d.id === selectedId) ?? null;
   const cardDbReady = decks.length > 0 && decks.some((d) => d.cardNames.length > 0);
-
-  const onImport = async (): Promise<void> => {
-    if (!selected) return;
-    try {
-      const created = await window.hdt.decks.importDeckstring(selected.deckstring);
-      onImported?.(created.id);
-    } catch (e) {
-      console.error('[deck-finder import]', e);
-    }
-  };
 
   const onCopy = async (): Promise<void> => {
     if (!selected) return;
@@ -519,8 +533,9 @@ export function DeckFinderTab({ onImported }: DeckFinderTabProps): ReactElement 
               <ManaCurveChart
                 buckets={selected.manaCurve}
                 width={300}
-                height={48}
+                height={62}
                 ariaLabel={t('decks.finder.manaCurveAriaLabel')}
+                showAxisLabels
               />
             </div>
 
@@ -528,38 +543,113 @@ export function DeckFinderTab({ onImported }: DeckFinderTabProps): ReactElement 
               <div className="text-[9px] text-text-mute font-mono tracking-[0.14em] mb-2">
                 {t('decks.finder.keyCardsLabel')}
               </div>
-              <div className="flex flex-col gap-0.5">
-                {selected.keyCards.map((kc, i) => (
-                  <div
-                    key={`${kc.name}-${i}`}
-                    className="flex items-center gap-2 px-2 py-1 bg-bg-2 rounded-sm text-xs border border-transparent hover:border-border-hi"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-bg-3 flex items-center justify-center text-[9px] font-bold text-text border border-border-hi font-mono">
-                      {kc.cost}
-                    </div>
-                    <span className="flex-1 text-text">{kc.name}</span>
-                    <span className="font-mono text-[11px] text-accent font-semibold">×{kc.count}</span>
-                  </div>
-                ))}
-              </div>
+              <KeyCardsList keyCards={selected.keyCards} />
             </div>
 
             <div className="flex gap-2 mt-auto pt-2">
               <button
-                onClick={() => { void onImport(); }}
-                className="flex-1 px-3.5 py-2.5 rounded-sm bg-accent text-bg border-0 font-mono text-[11px] tracking-[0.14em] font-bold cursor-pointer"
-              >
-                {t('decks.finder.importButton')}
-              </button>
-              <button
                 onClick={() => { void onCopy(); }}
-                className="px-3.5 py-2.5 rounded-sm bg-transparent text-text-dim border border-border font-mono text-[11px] tracking-[0.14em] font-semibold cursor-pointer"
+                className="flex-1 px-3.5 py-2.5 rounded-sm bg-accent text-bg border-0 font-mono text-[11px] tracking-[0.14em] font-bold cursor-pointer"
               >
                 {copied ? t('decks.finder.copyConfirm') : t('decks.finder.copyButton')}
               </button>
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Renders the deck's top-N cards with locale-correct names (resolved at
+ * render time against the active locale's CardDb), tile art, and the
+ * existing card-preview hover. Mirrors LiveDeckPanel's row treatment so
+ * the Deck Finder feels consistent with the in-game tracker.
+ */
+function KeyCardsList({ keyCards }: { keyCards: readonly PopularDeckKeyCard[] }): ReactElement {
+  const { onRowEnter, onRowLeave } = useCardPreview();
+  const handleEnter = useCallback(
+    (cardId: string, el: HTMLDivElement) => onRowEnter(cardId, el),
+    [onRowEnter],
+  );
+  return (
+    <div className="flex flex-col gap-0.5">
+      {keyCards.map((kc, i) => (
+        <KeyCardRow
+          key={`${kc.cardId}-${i}`}
+          cardId={kc.cardId}
+          fallbackName={kc.name}
+          fallbackCost={kc.cost}
+          count={kc.count}
+          onMouseEnter={handleEnter}
+          onMouseLeave={onRowLeave}
+        />
+      ))}
+    </div>
+  );
+}
+
+function KeyCardRow({
+  cardId,
+  fallbackName,
+  fallbackCost,
+  count,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  cardId: string;
+  fallbackName: string;
+  fallbackCost: number;
+  count: number;
+  onMouseEnter: (cardId: string, el: HTMLDivElement) => void;
+  onMouseLeave: () => void;
+}): ReactElement {
+  const def = useCardDef(cardId);
+  const name = def?.name ?? fallbackName;
+  const cost = def?.cost ?? fallbackCost;
+  const rarity = def?.rarity as Rarity | undefined;
+  const tileUrl = useCardTileUrl(cardId);
+  const ref = useRef<HTMLDivElement>(null);
+  return (
+    <div
+      ref={ref}
+      onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
+      onMouseLeave={onMouseLeave}
+      className="relative overflow-hidden rounded-sm bg-bg-2 text-xs border border-transparent hover:border-border-hi"
+    >
+      {tileUrl ? (
+        <img
+          src={tileUrl}
+          alt=""
+          aria-hidden
+          style={ART_MASK_STYLE}
+          className="absolute right-0 top-0 h-full w-3/5 object-cover object-right pointer-events-none select-none z-0"
+        />
+      ) : null}
+      <div className="relative z-10 flex items-center gap-2 px-2 py-1 w-full">
+        <div
+          className={clsx(
+            'w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold font-mono shrink-0',
+            getRarityCostBg(rarity),
+          )}
+        >
+          {cost}
+        </div>
+        <span
+          className={clsx(
+            'flex-1 min-w-0 truncate font-medium',
+            rarity === 'LEGENDARY' ? 'text-rarity-legendary' : '',
+            rarity === 'EPIC' ? 'text-rarity-epic' : '',
+            rarity === 'RARE' ? 'text-rarity-rare' : '',
+            !rarity || rarity === 'COMMON' || rarity === 'FREE' ? 'text-text' : '',
+          )}
+          style={NAME_TEXT_SHADOW}
+          title={cardId}
+        >
+          {name}
+        </span>
+        <span className="font-mono text-[11px] text-accent font-semibold shrink-0">×{count}</span>
       </div>
     </div>
   );

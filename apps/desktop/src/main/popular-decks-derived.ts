@@ -1,5 +1,5 @@
 import { decodeDeck, type CardDef } from '@hdt/hearthdb';
-import type { PopularDeckKeyCard } from '@hdt/core';
+import type { PopularDeckCardEntry, PopularDeckKeyCard } from '@hdt/core';
 
 export type CardLookup = (dbfId: number) => CardDef | null;
 
@@ -74,6 +74,36 @@ export function computeDustCost(deckstring: string, cardLookup: CardLookup): num
 }
 
 /**
+ * Full per-card list sorted by cost asc then name asc. Uncapped — meant
+ * for the opponent-deck-prediction popup which renders every card with
+ * played/unplayed coloring. Cards with no resolvable name are skipped.
+ */
+export function computeDeckCardList(
+  deckstring: string,
+  cardLookup: CardLookup,
+): PopularDeckCardEntry[] {
+  let blueprint;
+  try {
+    blueprint = decodeDeck(deckstring);
+  } catch {
+    return [];
+  }
+  const rows: PopularDeckCardEntry[] = [];
+  for (const entry of blueprint.cards) {
+    const card = cardLookup(entry.dbfId);
+    if (!card?.name) continue;
+    rows.push({
+      cardId: card.id,
+      name: card.name,
+      cost: typeof card.cost === 'number' ? card.cost : 0,
+      count: entry.count,
+    });
+  }
+  rows.sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+  return rows;
+}
+
+/**
  * Distinct cards in the deck sorted by in-deck count desc, then cost asc.
  * Capped at 12 entries. Cards with no resolvable name are skipped.
  */
@@ -89,6 +119,7 @@ export function computeKeyCards(deckstring: string, cardLookup: CardLookup): Pop
     const card = cardLookup(entry.dbfId);
     if (!card?.name) continue;
     rows.push({
+      cardId: card.id,
       name: card.name,
       count: entry.count,
       cost: typeof card.cost === 'number' ? card.cost : 0,

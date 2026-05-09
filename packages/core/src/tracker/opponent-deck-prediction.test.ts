@@ -212,6 +212,107 @@ describe('predictOpponentDecks', () => {
     expect(result).toHaveLength(5);
   });
 
+  it('excludes the coin (GAME_005) from the observed multiset', () => {
+    const result = predictOpponentDecks({
+      observedCards: [
+        { cardId: 'GAME_005', created: false }, // coin — must be ignored
+        { cardId: 'CS2_023', created: false },  // Arcane Intellect — in deck
+      ],
+      opponentClass: 'MAGE',
+      format: null,
+      candidates: [MAGE_FIREBALL],
+      deckCardLookup: lookup,
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]!.observedOriginalCount).toBe(1); // coin not counted
+    expect(result[0]!.matchedCount).toBe(1);
+    expect(result[0]!.score).toBe(1);
+  });
+
+  it('off-class cards are dropped when cardClassResolver is provided', () => {
+    // Opponent is MAGE, observed includes a HUNTER-only card. The
+    // off-class card must be excluded from the multiset (treat as
+    // created/discovered — it cannot legally be in a Mage deck).
+    const result = predictOpponentDecks({
+      observedCards: [
+        { cardId: 'CS2_023', created: false }, // Arcane Intellect — in Mage deck
+        { cardId: 'EX1_543', created: false }, // imaginary HUNTER card
+      ],
+      opponentClass: 'MAGE',
+      format: null,
+      candidates: [MAGE_FIREBALL],
+      deckCardLookup: lookup,
+      cardClassResolver: (cardId) =>
+        cardId === 'EX1_543' ? 'HUNTER' : cardId === 'CS2_023' ? 'MAGE' : null,
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]!.observedOriginalCount).toBe(1);
+    expect(result[0]!.matchedCount).toBe(1);
+    expect(result[0]!.score).toBe(1);
+  });
+
+  it('NEUTRAL cards are kept regardless of opponentClass', () => {
+    const result = predictOpponentDecks({
+      observedCards: [
+        { cardId: 'CS2_023', created: false }, // Arcane Intellect — MAGE
+        { cardId: 'NEUTRAL_001', created: false }, // a NEUTRAL card
+      ],
+      opponentClass: 'MAGE',
+      format: null,
+      candidates: [MAGE_FIREBALL],
+      deckCardLookup: lookup,
+      cardClassResolver: (cardId) =>
+        cardId === 'NEUTRAL_001' ? 'NEUTRAL' : cardId === 'CS2_023' ? 'MAGE' : null,
+    });
+    expect(result[0]!.observedOriginalCount).toBe(2);
+  });
+
+  it('unknown class (resolver returns null) keeps the card (conservative)', () => {
+    const result = predictOpponentDecks({
+      observedCards: [
+        { cardId: 'CS2_023', created: false },
+        { cardId: 'UNKNOWN_CARD', created: false },
+      ],
+      opponentClass: 'MAGE',
+      format: null,
+      candidates: [MAGE_FIREBALL],
+      deckCardLookup: lookup,
+      cardClassResolver: () => null,
+    });
+    expect(result[0]!.observedOriginalCount).toBe(2);
+  });
+
+  it('off-class filter is skipped when opponentClass is null', () => {
+    const result = predictOpponentDecks({
+      observedCards: [
+        { cardId: 'CS2_023', created: false }, // MAGE card
+        { cardId: 'EX1_543', created: false }, // HUNTER card
+      ],
+      opponentClass: null,
+      format: null,
+      candidates: [MAGE_FIREBALL],
+      deckCardLookup: lookup,
+      cardClassResolver: (cardId) =>
+        cardId === 'EX1_543' ? 'HUNTER' : cardId === 'CS2_023' ? 'MAGE' : null,
+    });
+    // Both kept since we don't know the opponent's class
+    expect(result[0]!.observedOriginalCount).toBe(2);
+  });
+
+  it('returns [] if every observed card is the coin', () => {
+    const result = predictOpponentDecks({
+      observedCards: [
+        { cardId: 'GAME_005', created: false },
+        { cardId: 'GAME_005', created: false },
+      ],
+      opponentClass: 'MAGE',
+      format: null,
+      candidates: [MAGE_FIREBALL],
+      deckCardLookup: lookup,
+    });
+    expect(result).toEqual([]);
+  });
+
   it('drops candidates whose deckstring fails to decode (no throw)', () => {
     const badDeck = deck({ id: 'bad', class: 'MAGE', deckstring: 'DS:bad' });
     const result = predictOpponentDecks({

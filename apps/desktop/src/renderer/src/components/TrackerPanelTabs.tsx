@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { useTranslation } from '../i18n';
 
-type Tab = 'deck' | 'effects';
+type Tab = 'deck' | 'effects' | 'graveyard';
 
 // Frameless overlay BrowserWindows recognize `-webkit-app-region: drag`
 // as the OS drag handle. The styles are inert in framed windows (the
@@ -16,6 +16,14 @@ interface TrackerPanelTabsProps {
   deckSlot: ReactNode;
   effectsSlot: ReactNode;
   effectsCount: number;
+  /**
+   * Optional third tab for the local-side tracker showing this match's
+   * friendly graveyard. Strictly local — never carries opponent data.
+   * When `graveyardSlot` is omitted, the third tab is not rendered.
+   */
+  graveyardSlot?: ReactNode;
+  /** Number of cards in the friendly graveyard, rendered as a count badge. */
+  graveyardCount?: number;
 }
 
 /**
@@ -29,6 +37,8 @@ export function TrackerPanelTabs({
   deckSlot,
   effectsSlot,
   effectsCount,
+  graveyardSlot,
+  graveyardCount = 0,
 }: TrackerPanelTabsProps) {
   const { t } = useTranslation();
   const [active, setActive] = useState<Tab>('deck');
@@ -64,6 +74,24 @@ export function TrackerPanelTabs({
             </span>
           ) : null}
         </TabPill>
+        {graveyardSlot ? (
+          <TabPill
+            testId="tracker-tab-graveyard"
+            active={active === 'graveyard'}
+            onClick={() => setActive('graveyard')}
+          >
+            <span>{t('tracker.tabGraveyard')}</span>
+            {graveyardCount > 0 ? (
+              <span
+                data-testid="tracker-tab-graveyard-badge"
+                style={NO_DRAG}
+                className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-accent text-bg text-[11px] font-bold tabular-nums"
+              >
+                {graveyardCount}
+              </span>
+            ) : null}
+          </TabPill>
+        ) : null}
       </div>
       <div className="flex-1 min-h-0 overflow-hidden">
         <div
@@ -80,6 +108,15 @@ export function TrackerPanelTabs({
         >
           {effectsSlot}
         </div>
+        {graveyardSlot ? (
+          <div
+            aria-hidden={active !== 'graveyard'}
+            hidden={active !== 'graveyard'}
+            className="w-full h-full"
+          >
+            {graveyardSlot}
+          </div>
+        ) : null}
       </div>
     </div>
   );

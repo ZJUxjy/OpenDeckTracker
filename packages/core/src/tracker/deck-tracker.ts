@@ -108,6 +108,13 @@ export interface DeckTrackerSnapshot {
    * lifetime so brief mid-turn entity gaps don't flicker the UI.
    */
   opponentClass: HeroClass | null;
+  /**
+   * Cards the LOCAL player has used / lost this match (minions that
+   * died, spells that resolved, weapons that broke, etc.). Strictly
+   * local-side: never includes opposing entities, even ones briefly
+   * routed through the opposing controller by game effects.
+   */
+  friendlyGraveyard: OpponentCardRecord[];
   /** Friendly remaining deck count (for header summary). */
   friendlyDeckCount: number;
   /** Global effects whose caster is the local player (per-match scope). */
@@ -229,6 +236,16 @@ export class DeckTracker {
    */
   private readonly cardClassLookup: ((cardId: string) => HeroClass | null) | null;
   /**
+   * Optional predicate to suppress specific cardIds from the opponent's
+   * `revealed` list. Used to filter "Start of Game: Disappear" /
+   * 奇闻 cards (e.g., Brox / Broxigar / TIME_020) whose phantom
+   * entity briefly shows up on the opposing controller during the
+   * start-of-game phase — they belong to the LOCAL player's deck and
+   * counting them as opponent plays would pollute downstream analyses.
+   * Returning `true` excludes the card from the opponent record list.
+   */
+  private readonly opponentCardSuppressor: ((cardId: string) => boolean) | null;
+  /**
    * Once-per-match memoised opponent class. Cleared on PRE_MATCH entry
    * and POST_MATCH → IDLE. Avoids UI flicker if the hero entity is
    * briefly missing from `game.opposingPlayer.entities` mid-turn.
@@ -255,10 +272,18 @@ export class DeckTracker {
      * `opponentClass` field stays null.
      */
     cardClassLookup?: (cardId: string) => HeroClass | null;
+    /**
+     * Optional predicate that returns `true` for cardIds whose entities
+     * should NOT appear in the opponent's revealed/graveyard records,
+     * even when Hearthstone's reflectors briefly attribute them to the
+     * opposing controller (e.g. start-of-game-disappear / 奇闻 cards).
+     */
+    opponentCardSuppressor?: (cardId: string) => boolean;
   }) {
     this.mirror = args.mirror;
     this.boardAttackContextProvider = args.boardAttackContextProvider ?? null;
     this.cardClassLookup = args.cardClassLookup ?? null;
+    this.opponentCardSuppressor = args.opponentCardSuppressor ?? null;
     // In-game memory-field identifier ONLY. The dialog fallback flow
     // is intentionally NOT wired in here as a "blocking identifier"
     // (which would deadlock against the dialog event being shown):
@@ -730,6 +755,7 @@ export class DeckTracker {
       opposingHandCount: handState?.opposingHandCount ?? 0,
       opponent: this.buildOpponentRecords(),
       opponentClass: this.resolveOpponentClass(),
+      friendlyGraveyard: this.buildFriendlyGraveyard(),
       friendlyDeckCount: deckState?.friendlyDeck.length ?? this.game.localPlayer.deck.length,
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
@@ -799,12 +825,35 @@ export class DeckTracker {
   }
 
   private buildOpponentRecords(): DeckTrackerSnapshot['opponent'] {
+    // `revealed` is cumulative: once an opposing entity has been seen
+    // face-up in PLAY / GRAVEYARD / SECRET, it stays in this list for
+    // the rest of the match (the underlying `Game.applyEntitySnapshot`
+    // transitions disappeared entities to GRAVEYARD instead of deleting
+    // them, which is what makes this work with no extra bookkeeping).
+    // Killing a played minion no longer makes it vanish from the
+    // opponent panel.
+    const localControllerId = this.game.localPlayer.controllerId;
     const records = this.game.opposingPlayer.entities
-      .filter((entity) =>
-        entity.isRevealed &&
-        isOpponentHistoryCardId(entity.cardId) &&
-        (entity.isInPlay || entity.isInGraveyard || entity.isInSecret)
-      )
+      .filter((entity) => {
+        if (!entity.isRevealed) return false;
+        if (!isOpponentHistoryCardId(entity.cardId)) return false;
+        if (!(entity.isInPlay || entity.isInGraveyard || entity.isInSecret)) return false;
+        if (this.opponentCardSuppressor?.(entity.cardId) === true) return false;
+        // Strict ownership filter: an entity that originated in the LOCAL
+        // player's deck zone and was not later created on opposing side
+        // (`info.created !== true`) is the local player's card, even if
+        // some game effect briefly attributes it to the opposing
+        // controller (e.g. Brox-style "summon for your opponent" tokens
+        // and similar cross-side transfers). Hide it from the opponent
+        // panel so we never conflate "my dead minions" with "his plays".
+        if (
+          entity.info.originalController === localControllerId &&
+          entity.info.created !== true
+        ) {
+          return false;
+        }
+        return true;
+      })
       .map((entity) => ({
         entityId: entity.entityId,
         cardId: entity.cardId,
@@ -815,9 +864,36 @@ export class DeckTracker {
       .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
 
     return {
-      revealed: records.filter((record) => record.zone !== 'GRAVEYARD'),
+      revealed: records,
       graveyard: records.filter((record) => record.zone === 'GRAVEYARD'),
     };
+  }
+
+  /**
+   * Cards the LOCAL player has used / lost this match — minions that
+   * died, spells that resolved, weapons that broke, discards, etc.
+   * Strictly local-side only: filtered to entities controlled by the
+   * local player. Opposing entities are explicitly excluded so the
+   * "my graveyard" tab never mirrors anything from the opponent panel.
+   */
+  private buildFriendlyGraveyard(): OpponentCardRecord[] {
+    const localControllerId = this.game.localPlayer.controllerId;
+    return this.game.localPlayer.entities
+      .filter(
+        (entity) =>
+          entity.isRevealed &&
+          isOpponentHistoryCardId(entity.cardId) &&
+          entity.isInGraveyard &&
+          entity.controllerId === localControllerId,
+      )
+      .map((entity) => ({
+        entityId: entity.entityId,
+        cardId: entity.cardId,
+        zone: entity.zone,
+        order: this.ensureOpponentRecordOrder(entity.entityId),
+        created: entity.info.created === true,
+      }))
+      .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
   }
 
   /**
@@ -1048,6 +1124,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
       graveyard: [],
     },
     opponentClass: null,
+    friendlyGraveyard: [],
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],

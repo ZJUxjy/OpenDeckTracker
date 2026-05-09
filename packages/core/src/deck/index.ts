@@ -11,6 +11,7 @@ export {
   type HeroClass,
   type PopularDeck,
   type PopularDeckArchetype,
+  type PopularDeckCardEntry,
   type PopularDeckEnriched,
   type PopularDeckKeyCard,
   type UpdateDeckPatch,

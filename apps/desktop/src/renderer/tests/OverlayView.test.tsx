@@ -32,6 +32,7 @@ function makeSnapshot(): DeckTrackerSnapshot {
       graveyard: [],
     },
     opponentClass: null,
+    friendlyGraveyard: [],
     friendlyDeckCount: 2,
     friendlyEffects: [],
     opposingEffects: [],

@@ -3,6 +3,7 @@ import type {
   ActiveEffect,
   DeckTrackerEvent,
   DeckTrackerSnapshot,
+  OpponentCardRecord,
 } from '@hdt/core';
 
 const EMPTY_EFFECTS: readonly ActiveEffect[] = Object.freeze([]);
@@ -87,5 +88,17 @@ export function useFriendlyEffects(): readonly ActiveEffect[] {
 export function useOpposingEffects(): readonly ActiveEffect[] {
   return useDeckTrackerStore(
     (s) => s.snapshot?.opposingEffects ?? EMPTY_EFFECTS,
+  );
+}
+
+const EMPTY_RECORDS: readonly OpponentCardRecord[] = Object.freeze([]);
+
+/**
+ * Cards the LOCAL player has used / lost this match. Strictly
+ * local-side; the opponent panel never reflects anything from this.
+ */
+export function useFriendlyGraveyard(): readonly OpponentCardRecord[] {
+  return useDeckTrackerStore(
+    (s) => s.snapshot?.friendlyGraveyard ?? EMPTY_RECORDS,
   );
 }

@@ -56,6 +56,7 @@ describe('LiveDeckPanel i18n', () => {
         opposingHandCount: 0,
         opponent: { revealed: [], graveyard: [] },
         opponentClass: null,
+        friendlyGraveyard: [],
         friendlyDeckCount: 1,
         friendlyEffects: [],
         opposingEffects: [],

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createMainWindow } from './window';
 import { registerIpc } from './ipc';
-import { startDeckTracker, onDeckTrackerPhase } from './deck-tracker';
+import { startDeckTracker, onDeckTrackerPhase, onLiveMatchChange } from './deck-tracker';
 import { startHearthWatcher } from './hearthwatcher-host';
 import { OverlayManager } from './overlay-window';
 import { createHearthstoneWindowTracker } from './hearthstone-window-tracker';
@@ -147,14 +147,33 @@ if (!gotLock) {
     startDeckTracker();
     startHearthWatcher();
 
-    // Gate overlay visibility on the deck-tracker phase: only show the
-    // panels when cards have actually been dealt (IN_MATCH). PRE_MATCH
-    // is too loose — it fires when the deck-picker / queueing screen
-    // populates matchInfo, before any deck-tracker data is meaningful.
-    onDeckTrackerPhase((phase) => {
-      const active = phase === 'IN_MATCH';
+    // Gate overlay visibility on EITHER:
+    //   1. `phase === 'IN_MATCH'` — HearthMirror has confirmed gameplay
+    //      (deckState available); the canonical happy path, or
+    //   2. `liveMatchActive` — hearthwatcher saw a `create-game` event
+    //      in Power.log, which only fires for actual gameplay (NOT for
+    //      the deck-picker / queue / lobby, even though those screens
+    //      can populate `getMatchInfo` and trigger PRE_MATCH).
+    //
+    // Either signal alone is sufficient — Power.log covers the case
+    // where HearthMirror's reflectors are briefly stuck on a
+    // newly-launched game, and the IN_MATCH phase covers the case
+    // where the tracker was started mid-match (no live `create-game`
+    // event arrives, but HearthMirror still surfaces deckState).
+    let phaseSignal: string = 'IDLE';
+    let livePowerSignal = false;
+    const recomputeOverlayGate = (): void => {
+      const active = phaseSignal === 'IN_MATCH' || livePowerSignal;
       playerOverlay.setInActiveMatch(active);
       opponentOverlay.setInActiveMatch(active);
+    };
+    onDeckTrackerPhase((phase) => {
+      phaseSignal = phase;
+      recomputeOverlayGate();
+    });
+    onLiveMatchChange((active) => {
+      livePowerSignal = active;
+      recomputeOverlayGate();
     });
 
     const mainWindow = createMainWindow();

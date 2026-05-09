@@ -56,14 +56,18 @@ export function OpponentCardsPanel({
 }: OpponentCardsPanelProps) {
   const resolvedFaceDamage = faceDamage ?? boardAttack;
   const { t } = useTranslation();
+  // `revealed` is now cumulative (includes graveyard entries), so we no
+  // longer need to merge the graveyard array into the lookup pool. The
+  // `graveyard` prop is still accepted for prop-shape compatibility but
+  // doesn't drive any UI of its own.
+  void graveyard;
   const cardIds = useMemo(
-    () => [...new Set([...revealed, ...graveyard].map((record) => record.cardId))],
-    [revealed, graveyard],
+    () => [...new Set(revealed.map((record) => record.cardId))],
+    [revealed],
   );
   const defs = useOpponentCardDefs(cardIds);
   const revealedGroups = useMemo(() => groupRecords(revealed), [revealed]);
-  const graveyardGroups = useMemo(() => groupRecords(graveyard), [graveyard]);
-  const isEmpty = revealedGroups.length === 0 && graveyardGroups.length === 0;
+  const isEmpty = revealedGroups.length === 0;
   const { isAlive } = useHearthMirrorStatus();
   // Mirror the LiveDeckPanel behaviour: if the game isn't running and
   // there's nothing to show, surface that explicitly so the panel
@@ -126,28 +130,25 @@ export function OpponentCardsPanel({
             predictions={predictions}
             excludedCount={excludedCreatedCount}
             observedCount={revealed.length}
+            revealed={revealed}
           />
           {isEmpty ? (
             <div className="h-full flex items-center justify-center text-text-mute text-sm px-4 text-center">
               {emptyMessage}
             </div>
           ) : (
-            <>
-              <OpponentCardSection
-                title={t('opponent.played')}
-                cards={revealedGroups}
-                defs={defs}
-                onMouseEnter={handleRowMouseEnter}
-                onMouseLeave={handleRowMouseLeave}
-              />
-              <OpponentCardSection
-                title={t('opponent.graveyard')}
-                cards={graveyardGroups}
-                defs={defs}
-                onMouseEnter={handleRowMouseEnter}
-                onMouseLeave={handleRowMouseLeave}
-              />
-            </>
+            // Single cumulative list of opponent plays — `revealed` now
+            // includes cards that have died (GRAVEYARD zone), so the
+            // separate graveyard section was redundant + made cards look
+            // like they "disappeared" when they were actually still in
+            // history. Cumulative is the source of truth.
+            <OpponentCardSection
+              title={t('opponent.played')}
+              cards={revealedGroups}
+              defs={defs}
+              onMouseEnter={handleRowMouseEnter}
+              onMouseLeave={handleRowMouseLeave}
+            />
           )}
         </div>
       </div>

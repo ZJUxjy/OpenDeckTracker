@@ -273,6 +273,10 @@
     "bannerInMatchTitle": "对局进行中",
     "bannerInMatchBody": "记牌器已激活。可拖动游戏内浮窗以调整位置，下次启动时位置会被记住。"
   },
+  "tracker": {
+    "tabGraveyard": "墓地",
+    "graveyardEmpty": "你的墓地还是空的。"
+  },
   "globalEffects": {
     "tabDeck": "牌库",
     "tabEffects": "全局效果",

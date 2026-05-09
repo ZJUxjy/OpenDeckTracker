@@ -17,6 +17,7 @@ function blankSnap(extra: Partial<DeckTrackerSnapshot> = {}): DeckTrackerSnapsho
     opposingHandCount: 0,
     opponent: { revealed: [], graveyard: [] },
     opponentClass: null,
+    friendlyGraveyard: [],
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],
