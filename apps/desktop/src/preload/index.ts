@@ -1,6 +1,25 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
 import type { PopularDeckEnriched, SetProgress } from '@hdt/core';
+
+type PopularDecksListResult = {
+  decks: PopularDeckEnriched[];
+  source: 'synced' | 'seed';
+  fetchedAt: string | null;
+};
+
+type PopularDecksSyncProgress = {
+  phase: 'meta' | 'variants' | 'transform' | 'persist';
+  completed: number;
+  total: number;
+  currentLabel?: string;
+};
+
+type PopularDecksSyncStartResult =
+  | { ok: true; fetchedAt: string; count: number }
+  | { ok: false; error: string };
+
+type PopularDecksSyncStatus = { inFlight: boolean; lastFetchedAt: string | null };
 import type {
   CreateDeckInput,
   DeckTrackerEvent,
@@ -211,7 +230,17 @@ const api = {
     },
   },
   popularDecks: {
-    list: (): Promise<PopularDeckEnriched[]> => ipcRenderer.invoke('popular-decks:list'),
+    list: (): Promise<PopularDecksListResult> => ipcRenderer.invoke('popular-decks:list'),
+    syncStart: (): Promise<PopularDecksSyncStartResult> =>
+      ipcRenderer.invoke('popular-decks:sync-start'),
+    syncStatus: (): Promise<PopularDecksSyncStatus> =>
+      ipcRenderer.invoke('popular-decks:sync-status'),
+    onSyncProgress: (cb: (progress: PopularDecksSyncProgress) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, progress: PopularDecksSyncProgress): void =>
+        cb(progress);
+      ipcRenderer.on('popular-decks:sync-progress', handler);
+      return () => ipcRenderer.removeListener('popular-decks:sync-progress', handler);
+    },
   },
   cardPreview: {
     show: (
