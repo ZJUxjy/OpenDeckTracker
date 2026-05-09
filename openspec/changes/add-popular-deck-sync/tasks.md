@@ -39,16 +39,16 @@
 
 ## 4. 持久化 storage + 单测
 
-- [ ] 4.1 写 `storage.test.ts`（用 `tmp` 目录）：
+- [x] 4.1 写 `storage.test.ts`（用 `tmp` 目录）：
       - `loadCache(dir)` 返回 `null` 当文件不存在
       - `loadCache(dir)` 返回 `null` 当 JSON 损坏
       - `loadCache(dir)` 返回 `null` 当 `schemaVersion !== 1`
       - `loadCache(dir)` 返回 `null` 当任一 deck 缺字段
       - `saveCache(dir, snapshot)` 先写 `synced.json.tmp` 再 rename，最终读得回
       - 模拟"写 tmp 但 rename 前进程退出" → 现存 `synced.json` 仍可读
-- [ ] 4.2 实现 `storage.ts` 导出 `loadCache(dir) / saveCache(dir, snapshot)`，
+- [x] 4.2 实现 `storage.ts` 导出 `loadCache(dir) / saveCache(dir, snapshot)`，
       内部用 `fs.promises.writeFile` + `fs.promises.rename`
-- [ ] 4.3 提交：`feat(popular-decks-sync): add atomic synced.json persistence`
+- [x] 4.3 提交：`feat(popular-decks-sync): add atomic synced.json persistence`
 
 ## 5. fetcher（net.fetch + abort + delay）
 
