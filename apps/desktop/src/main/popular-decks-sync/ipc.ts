@@ -14,7 +14,10 @@ export function registerPopularDecksSyncIpc(
   orchestrator: PopularDeckSyncOrchestrator,
 ): () => void {
   ipcMain.handle(SYNC_START_CHANNEL, async () => {
-    return orchestrator.startSync(broadcastProgress);
+    console.log('[popular-decks-sync] IPC sync-start invoked');
+    const result = await orchestrator.startSync(broadcastProgress);
+    console.log('[popular-decks-sync] IPC sync-start result', result);
+    return result;
   });
 
   ipcMain.handle(SYNC_STATUS_CHANNEL, () => orchestrator.getStatus());

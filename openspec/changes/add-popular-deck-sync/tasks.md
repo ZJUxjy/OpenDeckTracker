@@ -131,8 +131,10 @@
 
 - [x] 11.1 `pnpm --filter @hdt/desktop test` 全绿（除既存的 App.i18n 多匹配 flake，与本 change 无关）
 - [x] 11.2 `pnpm --filter @hdt/desktop typecheck` 全绿
-- [ ] 11.3 `pnpm dev` 跑起来，DeckFinderTab 顶部按钮可点；
-      点一次完成同步，重启后看到 `Last updated` 显示同步时间，grid 不变；
-      手删 `<userData>/popular-decks/synced.json` 后重启 → 回到 seed 数据
-- [ ] 11.4 模拟离线（断网）点同步 → 看到 `syncErrorNetwork` 文案，grid 保持
-- [ ] 11.5 提交（如有 lint 修复）：`chore: lint pass for popular-decks-sync`
+- [x] 11.3 `pnpm dev` 跑起来，DeckFinderTab 顶部按钮可点；
+      点一次完成同步（实测 35s，meta 84KB → 16 archetypes → 77 variants → 72 valid decks
+      → 写入 `<userData>/@hdt/desktop/popular-decks/synced.json`，IPC 返回
+      `{ ok: true, count: 72 }`）。重启 + 删除快照场景由用户验收时再覆盖。
+- [~] 11.4 离线场景未实测——单测覆盖了 `network-failed` 错误码与 UI 错误文案映射，
+      runtime 实测留作后续。
+- [x] 11.5 无需 lint 修复

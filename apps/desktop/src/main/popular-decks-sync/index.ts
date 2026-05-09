@@ -107,22 +107,35 @@ export class PopularDeckSyncOrchestrator {
     const archetypeLimit = this.deps.archetypeLimit ?? 20;
     const variantLimit = this.deps.variantLimit ?? 5;
     const fetchedAt = now().toISOString();
+    console.log('[popular-decks-sync] start', { fetchedAt, cacheDir: this.deps.cacheDir });
 
     // Phase 1: meta
     progressCb({ phase: 'meta', completed: 0, total: 1 });
     let metaHtml: string;
+    const metaStart = Date.now();
     try {
       metaHtml = await fetchHsguruMeta(
         { fetchImpl: this.deps.fetchImpl, delay },
         signal,
       );
     } catch (e) {
+      console.error('[popular-decks-sync] meta fetch failed', {
+        elapsedMs: Date.now() - metaStart,
+        name: (e as Error)?.name,
+        message: (e as Error)?.message,
+      });
       return { ok: false, error: classifyError(e, 'network-failed') };
     }
+    console.log('[popular-decks-sync] meta fetched', {
+      elapsedMs: Date.now() - metaStart,
+      bytes: metaHtml.length,
+    });
     const archetypes = parseLegendArchetypes(metaHtml, archetypeLimit);
     if (archetypes.length === 0) {
+      console.warn('[popular-decks-sync] meta parse yielded 0 archetypes (DOM changed?)');
       return { ok: false, error: 'parse-failed' };
     }
+    console.log(`[popular-decks-sync] parsed ${archetypes.length} archetypes`);
     progressCb({ phase: 'meta', completed: 1, total: 1 });
 
     // Phase 2: variants (one round-trip set per archetype)
@@ -140,6 +153,7 @@ export class PopularDeckSyncOrchestrator {
         currentLabel: archetype.archetype,
       });
       let result: { html: string; url: string } | null;
+      const variantStart = Date.now();
       try {
         result = await fetchHsguruArchetypeVariants(
           archetype.archetype,
@@ -147,9 +161,18 @@ export class PopularDeckSyncOrchestrator {
           signal,
         );
       } catch (e) {
+        console.error('[popular-decks-sync] variants fetch failed', {
+          archetype: archetype.archetype,
+          elapsedMs: Date.now() - variantStart,
+          name: (e as Error)?.name,
+          message: (e as Error)?.message,
+        });
         return { ok: false, error: classifyError(e, 'network-failed') };
       }
       const variants = result ? parseDeckVariants(result.html, variantLimit) : [];
+      console.log(
+        `[popular-decks-sync] variants ${i + 1}/${archetypes.length} ${archetype.archetype}: ${variants.length} decks (${Date.now() - variantStart}ms)`,
+      );
       variantsByArchetype.push({ archetype, variants });
       if (i < archetypes.length - 1) await delay(ARCHETYPE_DELAY_MS);
     }
@@ -179,7 +202,11 @@ export class PopularDeckSyncOrchestrator {
         });
       }
     }
+    console.log(
+      `[popular-decks-sync] transform: ${decks.length} valid decks (skipped ${totalVariants - decks.length})`,
+    );
     if (decks.length === 0) {
+      console.warn('[popular-decks-sync] transform yielded 0 decks — every variant rejected');
       return { ok: false, error: 'parse-failed' };
     }
 
@@ -193,12 +220,17 @@ export class PopularDeckSyncOrchestrator {
     try {
       await saveCache(this.deps.cacheDir, snapshot);
     } catch (e) {
+      console.error('[popular-decks-sync] persist failed', {
+        cacheDir: this.deps.cacheDir,
+        message: (e as Error)?.message,
+      });
       return { ok: false, error: classifyError(e, 'persist-failed') };
     }
     this.snapshot = snapshot;
     this.lastFetchedAt = fetchedAt;
     for (const cb of this.snapshotListeners) cb(snapshot);
     progressCb({ phase: 'persist', completed: 1, total: 1 });
+    console.log(`[popular-decks-sync] done: ${decks.length} decks → ${this.deps.cacheDir}/synced.json`);
     return { ok: true, fetchedAt, count: decks.length };
   }
 }
