@@ -24,7 +24,15 @@ import {
 } from './card-image-cache';
 import { registerAboutIpc } from './about';
 import { getHearthMirror } from './hearthmirror';
-import { registerDeckTrackerIpc, setCardDbForDeckTracker } from './deck-tracker';
+import {
+  getLatestDeckTrackerSnapshot,
+  onDeckTrackerSnapshotChange,
+  registerDeckTrackerIpc,
+  setCardDbForDeckTracker,
+} from './deck-tracker';
+import { registerOpponentDeckPredictionIpc } from './opponent-deck-prediction-ipc';
+import { getPopularDecksList } from './popular-decks-ipc';
+import type { PopularDeckEnriched } from '@hdt/core';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
 import { registerMatchRecordingsIpc } from './match-recordings-ipc';
 import { registerStatsIpc } from './stats-host';
@@ -315,17 +323,32 @@ export function registerIpc(overlay?: OverlayControllers): void {
   void popularDecksSync.loadCacheOnce().then((snapshot) => {
     popularDecksSnapshot = snapshot;
   });
-  registerPopularDecksIpc({
+  const popularDecksDataSource = {
     getSyncedDecks: () =>
       popularDecksSnapshot
         ? { decks: popularDecksSnapshot.decks, fetchedAt: popularDecksSnapshot.fetchedAt }
         : null,
     getCardDb: () => popularDecksCardDb,
-  });
+  };
+  registerPopularDecksIpc(popularDecksDataSource);
   const disposePopularDecksSyncIpc = registerPopularDecksSyncIpc(popularDecksSync);
+
+  // Opponent deck prediction: matches each deck-tracker snapshot against
+  // the synced popular decks list, broadcasts a top-N ranking. The same
+  // data sources as popular-decks:list are reused so a sync immediately
+  // refreshes predictions without invalidating any independent cache.
+  const disposeOpponentDeckPredictionIpc = registerOpponentDeckPredictionIpc({
+    getSnapshot: getLatestDeckTrackerSnapshot,
+    getPopularDecks: (): readonly PopularDeckEnriched[] =>
+      getPopularDecksList(popularDecksDataSource).decks,
+    getCardDb: () => popularDecksCardDb,
+    onSnapshotChange: onDeckTrackerSnapshotChange,
+  });
+
   app.on('before-quit', () => {
     popularDecksSync.abort();
     disposePopularDecksSyncIpc();
+    disposeOpponentDeckPredictionIpc();
   });
 
   // Saved deck management (deck CRUD + deckstring import/export).

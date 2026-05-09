@@ -46,23 +46,22 @@
 
 ## 3. 主进程 IPC + 推送
 
-- [ ] 3.1 写 `apps/desktop/src/main/opponent-deck-prediction-ipc.test.ts`（mock `electron.ipcMain`）：
+- [x] 3.1 写 `apps/desktop/src/main/opponent-deck-prediction-ipc.test.ts`（mock `electron.ipcMain`），覆盖：
       - 调 `opponent-deck-prediction:get` 返回 `OpponentDeckPrediction[]`
       - opponent.revealed 为空时返回 `[]`
       - 同样 snapshot + cache 调两次结果相等（idempotent）
-      - 注入 mock snapshot store + popular-decks store + cardDb，断言 push 走 `webContents.send('opponent-deck-prediction:update', ...)`
-- [ ] 3.2 实现 `apps/desktop/src/main/opponent-deck-prediction-ipc.ts`：
+      - 注入 mock snapshot/decks/cardDb，断言 push 走 `webContents.send('opponent-deck-prediction:update', ...)`
+- [x] 3.2 实现 `apps/desktop/src/main/opponent-deck-prediction-ipc.ts`：
       - 暴露 `registerOpponentDeckPredictionIpc({ getSnapshot, getPopularDecks, getCardDb, onSnapshotChange })`
-      - `getDeckCardLookup(cardDb)`：cached deckstring → `Map<cardId, count>`，LRU 200
-      - 内部 helper `computePredictions(snapshot, popularDecks, cardDb)`
-      - `ipcMain.handle('opponent-deck-prediction:get', ...)` 调 helper
+      - 内部 cached `deckstring → Map<cardId, count>`（按 (decks, cardDb) 引用键）
+      - 内部 helper `computePredictions(snapshot, popularDecks, cardDb, lookup)`
       - subscribe 到 onSnapshotChange，每次 snapshot 推送时算 + `BrowserWindow.getAllWindows().forEach(win.webContents.send(...))`
-      - 暴露 `dispose()` 拆 handler
-- [ ] 3.3 修改 `apps/desktop/src/main/ipc.ts`，注册 `registerOpponentDeckPredictionIpc(...)`，
-      复用现有的 popular-decks snapshot 引用 + deck-tracker 的 onChange 钩子；`app.before-quit`
-      里调 dispose
-- [ ] 3.4 跑 `pnpm --filter @hdt/desktop test src/main/opponent-deck-prediction-ipc.test.ts` 全绿
-- [ ] 3.5 提交：`feat(opponent-deck-prediction): add IPC handler + push channel`
+      - 暴露 `dispose()` 拆 handler + 取消订阅
+- [x] 3.3 修改 `apps/desktop/src/main/ipc.ts`，注册 prediction IPC，
+      复用 `getPopularDecksList(...)` 拿 enriched decks + `onDeckTrackerSnapshotChange` 推送；
+      `app.before-quit` 里调 dispose
+- [x] 3.4 跑 `pnpm --filter @hdt/desktop test src/main/opponent-deck-prediction-ipc.test.ts` 全绿
+- [x] 3.5 提交：`feat(opponent-deck-prediction): add IPC handler + push channel`
 
 ## 4. preload + 类型
 

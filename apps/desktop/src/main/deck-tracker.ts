@@ -375,6 +375,7 @@ export function startDeckTracker(): void {
       preloadCardTiles(tileIds);
     }
     fanoutPhase(phase);
+    fanoutSnapshot(event.snapshot);
     broadcast('deck-tracker:state', event.snapshot);
   });
   tracker.on('match-started', (event: DeckTrackerEvent) => {
@@ -631,6 +632,27 @@ function fanoutPhase(phase: string): void {
   lastBroadcastPhase = phase;
   for (const cb of phaseListeners) {
     try { cb(phase); } catch { /* keep loop healthy */ }
+  }
+}
+
+type SnapshotListener = (snapshot: DeckTrackerSnapshot) => void;
+const snapshotListeners = new Set<SnapshotListener>();
+
+/**
+ * Subscribe to every published deck-tracker snapshot. Used by the
+ * opponent-deck-prediction IPC to recompute on each tick. Mirrors the
+ * `onDeckTrackerPhase` pattern: returns an unsubscribe.
+ */
+export function onDeckTrackerSnapshotChange(cb: SnapshotListener): () => void {
+  snapshotListeners.add(cb);
+  return () => {
+    snapshotListeners.delete(cb);
+  };
+}
+
+function fanoutSnapshot(snapshot: DeckTrackerSnapshot): void {
+  for (const cb of snapshotListeners) {
+    try { cb(snapshot); } catch { /* keep loop healthy */ }
   }
 }
 
