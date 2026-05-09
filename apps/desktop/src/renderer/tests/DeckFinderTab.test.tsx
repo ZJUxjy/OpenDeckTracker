@@ -42,9 +42,12 @@ describe('DeckFinderTab', () => {
   let popularDecksSaved: typeof window.hdt.popularDecks;
 
   beforeEach(() => {
-    popularDecksSaved = (window.hdt as { popularDecks?: typeof window.hdt.popularDecks }).popularDecks ?? { list: () => Promise.resolve([]) };
-    (window as { hdt: { popularDecks: { list: () => Promise<PopularDeckEnriched[]> } } }).hdt.popularDecks = {
-      list: vi.fn().mockResolvedValue([...FIXTURE]),
+    popularDecksSaved = window.hdt.popularDecks;
+    (window as { hdt: { popularDecks: typeof window.hdt.popularDecks } }).hdt.popularDecks = {
+      list: vi.fn().mockResolvedValue({ decks: [...FIXTURE], source: 'seed', fetchedAt: null }),
+      syncStart: vi.fn().mockResolvedValue({ ok: true, fetchedAt: '2026-05-09T12:00:00Z', count: FIXTURE.length }),
+      syncStatus: vi.fn().mockResolvedValue({ inFlight: false, lastFetchedAt: null }),
+      onSyncProgress: vi.fn().mockReturnValue(() => undefined),
     };
   });
 

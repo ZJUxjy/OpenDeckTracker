@@ -20,20 +20,23 @@ describe('DecksPage tabs', () => {
 
   beforeEach(() => {
     saved = window.hdt.decks;
-    popularDecksSaved = (window.hdt as { popularDecks?: typeof window.hdt.popularDecks }).popularDecks ?? { list: () => Promise.resolve([]) };
+    popularDecksSaved = window.hdt.popularDecks;
     useDecksStore.setState({ decks: [], loading: false, error: null });
     (window.hdt as { decks: typeof window.hdt.decks }).decks = {
       ...saved,
       list: vi.fn().mockResolvedValue([]),
     };
-    (window as { hdt: { popularDecks?: { list: () => Promise<unknown[]> } } }).hdt.popularDecks = {
-      list: vi.fn().mockResolvedValue([]),
+    (window as { hdt: { popularDecks: typeof window.hdt.popularDecks } }).hdt.popularDecks = {
+      list: vi.fn().mockResolvedValue({ decks: [], source: 'seed', fetchedAt: null }),
+      syncStart: vi.fn().mockResolvedValue({ ok: true, fetchedAt: 'X', count: 0 }),
+      syncStatus: vi.fn().mockResolvedValue({ inFlight: false, lastFetchedAt: null }),
+      onSyncProgress: vi.fn().mockReturnValue(() => undefined),
     };
   });
 
   afterEach(() => {
     (window.hdt as { decks: typeof window.hdt.decks }).decks = saved;
-    (window as { hdt: { popularDecks?: typeof window.hdt.popularDecks } }).hdt.popularDecks = popularDecksSaved;
+    (window as { hdt: { popularDecks: typeof window.hdt.popularDecks } }).hdt.popularDecks = popularDecksSaved;
   });
 
   it('Saved tab is active on mount', async () => {

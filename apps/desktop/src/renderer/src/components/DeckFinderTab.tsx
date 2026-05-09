@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import {
   filterPopularDecks,
   sortPopularDecks,
@@ -11,6 +11,62 @@ import {
 
 import { useTranslation } from '../i18n';
 import { ManaCurveChart } from './ManaCurveChart';
+
+type SyncProgress = {
+  phase: 'meta' | 'variants' | 'transform' | 'persist';
+  completed: number;
+  total: number;
+  currentLabel?: string;
+};
+
+function progressPercent(p: SyncProgress | null): number {
+  if (!p) return 0;
+  // Phase weights: meta 5%, variants 60%, transform 15%, persist 20%
+  const weights: Record<SyncProgress['phase'], [number, number]> = {
+    meta: [0, 0.05],
+    variants: [0.05, 0.65],
+    transform: [0.65, 0.8],
+    persist: [0.8, 1],
+  };
+  const [start, end] = weights[p.phase];
+  const frac = p.total > 0 ? p.completed / p.total : 1;
+  return Math.min(100, Math.round((start + (end - start) * frac) * 100));
+}
+
+function formatLastUpdated(fetchedAt: string | null, locale: string): string | null {
+  if (!fetchedAt) return null;
+  try {
+    const d = new Date(fetchedAt);
+    return d.toLocaleString(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return fetchedAt.slice(0, 10);
+  }
+}
+
+function syncErrorKey(error: string): string {
+  switch (error) {
+    case 'network-failed':
+      return 'decks.finder.syncErrorNetwork';
+    case 'parse-failed':
+      return 'decks.finder.syncErrorParse';
+    case 'already-syncing':
+      return 'decks.finder.syncErrorAlreadySyncing';
+    case 'card-db-not-ready':
+      return 'decks.finder.syncErrorCardDb';
+    case 'persist-failed':
+      return 'decks.finder.syncErrorPersist';
+    case 'aborted':
+      return 'decks.finder.syncErrorAborted';
+    default:
+      return 'decks.finder.syncErrorUnknown';
+  }
+}
 
 const CLASSES: HeroClass[] = [
   'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE', 'PALADIN',
@@ -58,9 +114,10 @@ interface DeckFinderTabProps {
 }
 
 export function DeckFinderTab({ onImported }: DeckFinderTabProps): ReactElement {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [decks, setDecks] = useState<readonly PopularDeckEnriched[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [fetchedAt, setFetchedAt] = useState<string | null>(null);
 
   // Filter state
   const [includesCard, setIncludesCard] = useState('');
@@ -73,17 +130,78 @@ export function DeckFinderTab({ onImported }: DeckFinderTabProps): ReactElement 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Load
+  // Sync state
+  const [syncing, setSyncing] = useState(false);
+  const [progress, setProgress] = useState<SyncProgress | null>(null);
+  const [syncMessage, setSyncMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const messageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const refetchList = useCallback(async () => {
+    const result = await window.hdt.popularDecks.list();
+    setDecks(result.decks);
+    setFetchedAt(result.fetchedAt);
+    setLoaded(true);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    void window.hdt.popularDecks.list().then((list) => {
+    void window.hdt.popularDecks.list().then((result) => {
       if (!cancelled) {
-        setDecks(list);
+        setDecks(result.decks);
+        setFetchedAt(result.fetchedAt);
         setLoaded(true);
       }
     });
     return () => { cancelled = true; };
   }, []);
+
+  // Initial sync status (handles the case where a sync was already
+  // in flight when this tab mounted, e.g. user navigated away and back).
+  useEffect(() => {
+    void window.hdt.popularDecks.syncStatus?.().then((s) => {
+      setSyncing(s.inFlight);
+    });
+  }, []);
+
+  // Subscribe to progress events while mounted.
+  useEffect(() => {
+    const off = window.hdt.popularDecks.onSyncProgress?.((p) => {
+      setProgress(p);
+    });
+    return () => {
+      off?.();
+    };
+  }, []);
+
+  const onSync = useCallback(async () => {
+    if (syncing) return;
+    setSyncing(true);
+    setProgress(null);
+    setSyncMessage(null);
+    if (messageTimerRef.current) {
+      clearTimeout(messageTimerRef.current);
+      messageTimerRef.current = null;
+    }
+    try {
+      const result = await window.hdt.popularDecks.syncStart();
+      if (result.ok) {
+        setSyncMessage({
+          kind: 'success',
+          text: t('decks.finder.syncSuccess', { count: String(result.count) }),
+        });
+        await refetchList();
+      } else {
+        setSyncMessage({ kind: 'error', text: t(syncErrorKey(result.error)) });
+      }
+    } catch (e) {
+      console.error('[deck-finder sync]', e);
+      setSyncMessage({ kind: 'error', text: t('decks.finder.syncErrorUnknown') });
+    } finally {
+      setSyncing(false);
+      setProgress(null);
+      messageTimerRef.current = setTimeout(() => setSyncMessage(null), 5000);
+    }
+  }, [syncing, refetchList, t]);
 
   const cardNamesByDeckId = useMemo(() => {
     const map: Record<string, readonly string[]> = {};
@@ -156,6 +274,49 @@ export function DeckFinderTab({ onImported }: DeckFinderTabProps): ReactElement 
           <span className="text-text-mute">{decks.length}</span> {t('decks.finder.countSuffix')}{' '}
           <span className="text-text">{decks.length}</span>
         </div>
+      </div>
+
+      {/* Sync row */}
+      <div
+        data-testid="deck-finder-sync-row"
+        className="px-6 py-2 border-b border-border flex items-center gap-3 font-mono text-[10px] text-text-dim tracking-[0.06em]"
+      >
+        <button
+          type="button"
+          onClick={() => { void onSync(); }}
+          disabled={syncing}
+          data-testid="deck-finder-sync-button"
+          className="px-3 py-1.5 rounded-sm bg-bg-2 border border-border text-text hover:border-accent hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer tracking-[0.12em] font-bold"
+        >
+          {syncing
+            ? t('decks.finder.syncing', { phase: progress?.phase ?? 'meta' })
+            : t('decks.finder.syncButton')}
+        </button>
+        {syncing && (
+          <div
+            data-testid="deck-finder-sync-progress"
+            className="flex-1 h-1.5 bg-bg-2 border border-border rounded-sm overflow-hidden max-w-[260px]"
+          >
+            <div
+              className="h-full bg-accent transition-[width] duration-150"
+              style={{ width: `${progressPercent(progress)}%` }}
+            />
+          </div>
+        )}
+        <div className="flex-1" />
+        <span data-testid="deck-finder-last-updated" className="text-text-mute">
+          {fetchedAt
+            ? t('decks.finder.lastUpdated', { date: formatLastUpdated(fetchedAt, locale) ?? fetchedAt })
+            : t('decks.finder.lastUpdatedNever')}
+        </span>
+        {syncMessage && (
+          <span
+            data-testid="deck-finder-sync-message"
+            className={`font-sans text-xs ${syncMessage.kind === 'success' ? 'text-green' : 'text-red'}`}
+          >
+            {syncMessage.text}
+          </span>
+        )}
       </div>
 
       {/* Filter row 1: includes/excludes + format pills */}

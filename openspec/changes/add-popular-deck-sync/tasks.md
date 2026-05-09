@@ -95,27 +95,27 @@
 
 ## 8. preload API
 
-- [ ] 8.1 修改 `apps/desktop/src/preload/index.ts`：在 `popularDecks` 命名空间下追加
+- [x] 8.1 修改 `apps/desktop/src/preload/index.ts`：在 `popularDecks` 命名空间下追加
       `syncStart()`, `syncStatus()`, `onSyncProgress(cb)` 方法
       （`onSyncProgress` 内部用 `ipcRenderer.on` 包装并返回 `() => ipcRenderer.removeListener(...)`）
-- [ ] 8.2 同步更新 preload 类型导出，确保 `HdtApi` 包含新签名
-- [ ] 8.3 提交：`feat(preload): expose popularDecks.syncStart/syncStatus/onSyncProgress`
+- [x] 8.2 同步更新 preload 类型导出，确保 `HdtApi` 包含新签名
+- [x] 8.3 提交：`feat(preload): expose popularDecks.syncStart/syncStatus/onSyncProgress`
 
 ## 9. DeckFinderTab UI
 
-- [ ] 9.1 在 `apps/desktop/src/renderer/src/components/DeckFinderTab.tsx` 顶部加
+- [x] 9.1 在 `apps/desktop/src/renderer/src/components/DeckFinderTab.tsx` 顶部加
       sync 控制行：sync 按钮、上次更新时间标签、（条件渲染的）进度条
-- [ ] 9.2 用 `useEffect` 在挂载时订阅 `window.hdt.popularDecks.onSyncProgress`，
+- [x] 9.2 用 `useEffect` 在挂载时订阅 `window.hdt.popularDecks.onSyncProgress`，
       卸载时调用返回的 unsubscribe
-- [ ] 9.3 点按钮调用 `syncStart()`：成功后重新调用 `list()` 刷新 grid；失败显示错误（toast 或
+- [x] 9.3 点按钮调用 `syncStart()`：成功后重新调用 `list()` 刷新 grid；失败显示错误（toast 或
       行内）；失败保留旧 grid 数据
-- [ ] 9.4 按钮在 `inFlight` 期间 `disabled`；在挂载时通过 `syncStatus()` 拿初始 inFlight 状态
+- [x] 9.4 按钮在 `inFlight` 期间 `disabled`；在挂载时通过 `syncStatus()` 拿初始 inFlight 状态
       （主进程退出再开启时 inFlight 必为 false）
-- [ ] 9.5 提交：`feat(deck-finder-ui): add manual sync button + progress UI to DeckFinderTab`
+- [x] 9.5 提交：`feat(deck-finder-ui): add manual sync button + progress UI to DeckFinderTab`
 
 ## 10. i18n
 
-- [ ] 10.1 在 `resources/locales/en-US.json` 的 `decks.finder` 下加：
+- [x] 10.1 在 `resources/locales/en-US.json` 的 `decks.finder` 下加：
       `syncButton: "Sync popular decks"`,
       `syncing: "Syncing... ({phase})"`,
       `lastUpdated: "Last updated: {date}"`,
@@ -124,8 +124,8 @@
       `syncErrorParse: "HSGuru data format changed — try again later"`,
       `syncErrorAlreadySyncing: "Sync already in progress"`,
       `syncErrorUnknown: "Sync failed"`
-- [ ] 10.2 在 `resources/locales/zh-CN.json` 加对应中文文案
-- [ ] 10.3 提交：`feat(i18n): add popular-decks sync strings`
+- [x] 10.2 在 `resources/locales/zh-CN.json` 加对应中文文案
+- [x] 10.3 提交：`feat(i18n): add popular-decks sync strings`
 
 ## 11. 验证
 
