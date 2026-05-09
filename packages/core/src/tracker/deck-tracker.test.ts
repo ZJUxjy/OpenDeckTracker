@@ -916,4 +916,149 @@ describe('DeckTracker', () => {
     // we just assert the call doesn't throw and handler stays at zero calls.
     expect(handler).not.toHaveBeenCalled();
   });
+
+  it('opponent records have a created flag defaulting to false', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 20, cardId: 'CS2_029', zonePosition: 1, attack: 0, health: 0, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    const record = tracker.getSnapshot().opponent.revealed[0];
+    expect(record).toBeDefined();
+    expect(record!.created).toBe(false);
+    tracker.stop();
+  });
+
+  it('propagates entity.info.created to OpponentCardRecord', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 30, cardId: 'CS2_029', zonePosition: 1, attack: 0, health: 0, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    // Mark the entity created via the log-derived ingestion path.
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 30, info: { created: true } },
+    ]);
+
+    const record = tracker.getSnapshot().opponent.revealed.find(
+      (r) => r.entityId === 30,
+    );
+    expect(record?.created).toBe(true);
+    tracker.stop();
+  });
+
+  it('resolves opponentClass via cardClassLookup', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 20, cardId: 'HERO_08', zonePosition: 0, attack: 0, health: 30, damage: 0 },
+        { entityId: 21, cardId: 'CS2_029', zonePosition: 1, attack: 0, health: 0, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      cardClassLookup: (cardId) => (cardId === 'HERO_08' ? 'MAGE' : null),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().opponentClass).toBe('MAGE');
+    tracker.stop();
+  });
+
+  it('opponentClass is null when no cardClassLookup is provided', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 20, cardId: 'HERO_08', zonePosition: 0, attack: 0, health: 30, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().opponentClass).toBe(null);
+    tracker.stop();
+  });
+
+  it('opponentClass is cached across mid-match entity gaps', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = {
+      friendly: [],
+      opposing: [
+        { entityId: 20, cardId: 'HERO_08', zonePosition: 0, attack: 0, health: 30, damage: 0 },
+      ],
+    };
+
+    let lookupCalls = 0;
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      cardClassLookup: (cardId) => {
+        lookupCalls++;
+        return cardId === 'HERO_08' ? 'MAGE' : null;
+      },
+    });
+    tracker.start();
+    await advanceTicks(4);
+    expect(tracker.getSnapshot().opponentClass).toBe('MAGE');
+    const callsAfterFirstResolve = lookupCalls;
+
+    // Hero entity disappears mid-turn (e.g., transition).
+    state.boardState = { friendly: [], opposing: [] };
+    await advanceTicks(2);
+
+    // Cached value is still served; no new lookup needed.
+    expect(tracker.getSnapshot().opponentClass).toBe('MAGE');
+    expect(lookupCalls).toBe(callsAfterFirstResolve);
+    tracker.stop();
+  });
 });

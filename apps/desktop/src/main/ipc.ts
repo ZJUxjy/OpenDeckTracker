@@ -24,7 +24,7 @@ import {
 } from './card-image-cache';
 import { registerAboutIpc } from './about';
 import { getHearthMirror } from './hearthmirror';
-import { registerDeckTrackerIpc } from './deck-tracker';
+import { registerDeckTrackerIpc, setCardDbForDeckTracker } from './deck-tracker';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
 import { registerMatchRecordingsIpc } from './match-recordings-ipc';
 import { registerStatsIpc } from './stats-host';
@@ -351,6 +351,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
       getCollection: () => hm().getCollection(),
     });
     popularDecksCardDb = db;
+    setCardDbForDeckTracker(db);
   });
 }
 

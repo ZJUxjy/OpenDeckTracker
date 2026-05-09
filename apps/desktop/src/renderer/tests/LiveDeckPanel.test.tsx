@@ -43,6 +43,7 @@ function makeSnapshot(overrides: {
       revealed: [],
       graveyard: [],
     },
+    opponentClass: null,
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
     friendlyEffects: [],
     opposingEffects: [],

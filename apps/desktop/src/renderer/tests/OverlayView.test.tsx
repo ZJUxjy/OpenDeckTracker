@@ -31,6 +31,7 @@ function makeSnapshot(): DeckTrackerSnapshot {
       revealed: [],
       graveyard: [],
     },
+    opponentClass: null,
     friendlyDeckCount: 2,
     friendlyEffects: [],
     opposingEffects: [],

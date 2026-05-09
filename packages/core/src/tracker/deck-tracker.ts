@@ -38,6 +38,7 @@ import type {
   CardPlayedEvent,
   ExtractCtx,
 } from '../global-effects/types';
+import type { HeroClass } from '../deck/deck-types';
 
 // ── Polling intervals (per design D6) ────────────────────────────────
 const INTERVAL_IDLE_MS = 2_000;
@@ -52,6 +53,14 @@ export interface OpponentCardRecord {
   cardId: string;
   zone: Zone;
   order: number;
+  /**
+   * True when the entity originated from a Discover / Generate / random-create
+   * effect rather than the opponent's original deck. Surfaced from
+   * `EntityInfo.created` (set by the HearthWatcher origin classifier).
+   * Consumers that match opponent plays against a known deck list MUST
+   * exclude `created === true` records to avoid Discover-pollution.
+   */
+  created: boolean;
 }
 
 export interface DeckTrackerSnapshot {
@@ -91,6 +100,14 @@ export interface DeckTrackerSnapshot {
     revealed: OpponentCardRecord[];
     graveyard: OpponentCardRecord[];
   };
+  /**
+   * Opposing player's class, resolved once at first sight from the
+   * `HERO_*` entity in `game.opposingPlayer.entities` via the host-injected
+   * `cardClassLookup`. `null` until resolved or when the lookup yields a
+   * non-player class (DREAM / WHIZBANG / etc.). Cached for the match
+   * lifetime so brief mid-turn entity gaps don't flicker the UI.
+   */
+  opponentClass: HeroClass | null;
   /** Friendly remaining deck count (for header summary). */
   friendlyDeckCount: number;
   /** Global effects whose caster is the local player (per-match scope). */
@@ -204,6 +221,19 @@ export class DeckTracker {
         localControllerId: number,
       ) => ComputeBoardAttackOptions)
     | null;
+  /**
+   * Optional callback to resolve a HERO_* cardId into the opposing
+   * player's class. Hosted in the desktop main process where `CardDb`
+   * is available; left null in tests / non-electron consumers (snapshot
+   * `opponentClass` then stays null).
+   */
+  private readonly cardClassLookup: ((cardId: string) => HeroClass | null) | null;
+  /**
+   * Once-per-match memoised opponent class. Cleared on PRE_MATCH entry
+   * and POST_MATCH → IDLE. Avoids UI flicker if the hero entity is
+   * briefly missing from `game.opposingPlayer.entities` mid-turn.
+   */
+  private opponentClassCache: HeroClass | null = null;
   /** Latest reflector boardState — fed to `computeBoardAttack`. */
   private latestBoardState: BoardState | null = null;
   private latestMatchInfo: MatchInfo | null = null;
@@ -219,9 +249,16 @@ export class DeckTracker {
       matchInfo: MatchInfo | null,
       localControllerId: number,
     ) => ComputeBoardAttackOptions;
+    /**
+     * Optional resolver from `HERO_*` cardId → opposing-player HeroClass.
+     * Host-owned (CardDb-backed in apps/desktop). When unset, the snapshot's
+     * `opponentClass` field stays null.
+     */
+    cardClassLookup?: (cardId: string) => HeroClass | null;
   }) {
     this.mirror = args.mirror;
     this.boardAttackContextProvider = args.boardAttackContextProvider ?? null;
+    this.cardClassLookup = args.cardClassLookup ?? null;
     // In-game memory-field identifier ONLY. The dialog fallback flow
     // is intentionally NOT wired in here as a "blocking identifier"
     // (which would deadlock against the dialog event being shown):
@@ -420,6 +457,7 @@ export class DeckTracker {
     if (previousPhase === 'IDLE' && target === 'PRE_MATCH') {
       this.game.reset();
       this.resetOpponentRecords();
+      this.opponentClassCache = null;
       // NOTE: registry.reset() is intentionally NOT called here. The
       // global-effects registry is reset on the `create-game`
       // PowerEvent (driven by the host on watcher's replay or live
@@ -448,6 +486,7 @@ export class DeckTracker {
       this.awaitingDeckSelection = false;
       this.lastKnownSelectedDeckId = null;
       this.identifiedDeck = null;
+      this.opponentClassCache = null;
     }
     this.game.phase = target;
 
@@ -690,6 +729,7 @@ export class DeckTracker {
       friendlyHand,
       opposingHandCount: handState?.opposingHandCount ?? 0,
       opponent: this.buildOpponentRecords(),
+      opponentClass: this.resolveOpponentClass(),
       friendlyDeckCount: deckState?.friendlyDeck.length ?? this.game.localPlayer.deck.length,
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
@@ -770,6 +810,7 @@ export class DeckTracker {
         cardId: entity.cardId,
         zone: entity.zone,
         order: this.ensureOpponentRecordOrder(entity.entityId),
+        created: entity.info.created === true,
       }))
       .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
 
@@ -777,6 +818,26 @@ export class DeckTracker {
       revealed: records.filter((record) => record.zone !== 'GRAVEYARD'),
       graveyard: records.filter((record) => record.zone === 'GRAVEYARD'),
     };
+  }
+
+  /**
+   * Locate the opposing hero entity (cardId starts with `HERO_`) and
+   * resolve its class via the host-injected `cardClassLookup`. Cached
+   * for the match lifetime so brief mid-turn entity gaps don't make
+   * the snapshot flicker between MAGE → null → MAGE.
+   */
+  private resolveOpponentClass(): HeroClass | null {
+    if (this.opponentClassCache !== null) return this.opponentClassCache;
+    if (this.cardClassLookup === null) return null;
+    for (const entity of this.game.opposingPlayer.entities) {
+      if (!entity.cardId.startsWith('HERO_')) continue;
+      const heroClass = this.cardClassLookup(entity.cardId);
+      if (heroClass !== null) {
+        this.opponentClassCache = heroClass;
+        return heroClass;
+      }
+    }
+    return null;
   }
 
   private buildCompletedMatch(matchInfo: MatchInfo | null): NormalizedCompletedMatch | undefined {
@@ -986,6 +1047,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
       revealed: [],
       graveyard: [],
     },
+    opponentClass: null,
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],

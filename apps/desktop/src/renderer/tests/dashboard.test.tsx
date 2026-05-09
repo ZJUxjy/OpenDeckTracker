@@ -27,6 +27,7 @@ function makeSnapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTracker
       revealed: [],
       graveyard: [],
     },
+    opponentClass: null,
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],
@@ -127,7 +128,7 @@ describe('Dashboard rank display', () => {
     useDeckTrackerStore.setState({
       snapshot: makeSnapshot({
         opponent: {
-          revealed: [{ entityId: 20, cardId: 'CS2_029', zone: 'PLAY', order: 1 }],
+          revealed: [{ entityId: 20, cardId: 'CS2_029', zone: 'PLAY', order: 1, created: false }],
           graveyard: [],
         },
       }),

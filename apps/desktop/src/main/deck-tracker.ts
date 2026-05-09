@@ -7,6 +7,7 @@ import {
   type DeckTrackerSnapshot,
   type ExtractCtx,
   type HeroAttackState,
+  type HeroClass,
   type HeroVitals,
   type LogDerivedEntityUpdate,
   type MinionTags,
@@ -14,6 +15,7 @@ import {
   type WeaponState,
   zoneFromNumber,
 } from '@hdt/core';
+import type { CardDb, CardClass } from '@hdt/hearthdb';
 import type { BoardState, MatchInfo } from '@hdt/hearthmirror';
 import {
   HearthWatcherGameState,
@@ -59,6 +61,30 @@ import { recordCompletedMatch } from './stats-host';
  */
 
 let tracker: DeckTracker | null = null;
+
+/**
+ * CardDb reference used by `cardClassLookup` to resolve `HERO_*` cardIds
+ * into the opposing player's `HeroClass`. Set asynchronously by the IPC
+ * host once `ensureCardDb()` resolves; until then, `opponentClass`
+ * falls back to null in every snapshot.
+ */
+let cachedCardDb: CardDb | null = null;
+const HERO_CLASS_VALUES: ReadonlySet<string> = new Set<HeroClass>([
+  'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE', 'PALADIN',
+  'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK', 'WARRIOR',
+]);
+
+export function setCardDbForDeckTracker(db: CardDb): void {
+  cachedCardDb = db;
+}
+
+function cardClassLookup(cardId: string): HeroClass | null {
+  if (!cachedCardDb) return null;
+  const card = cachedCardDb.findById(cardId);
+  if (!card) return null;
+  const cls: CardClass = card.cardClass;
+  return HERO_CLASS_VALUES.has(cls) ? (cls as HeroClass) : null;
+}
 let cardPlayedDetector: CardPlayedDetector | null = null;
 
 // ── Board-attack tag overlay ────────────────────────────────────────
@@ -318,6 +344,7 @@ export function startDeckTracker(): void {
     mirror,
     extractCtx: makeExtractCtx,
     boardAttackContextProvider: buildBoardAttackContext,
+    cardClassLookup,
   });
   // Live detector that turns the upstream PowerEvent stream into
   // `card:played` calls on the tracker's global-effects registry.

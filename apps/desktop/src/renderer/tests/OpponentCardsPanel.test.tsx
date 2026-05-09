@@ -15,6 +15,7 @@ function record(
   return {
     zone: 'PLAY',
     order: overrides.entityId,
+    created: false,
     ...overrides,
   };
 }
