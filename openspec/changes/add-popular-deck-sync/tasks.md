@@ -129,8 +129,8 @@
 
 ## 11. 验证
 
-- [ ] 11.1 `pnpm --filter @hdt/desktop test` 全绿
-- [ ] 11.2 `pnpm --filter @hdt/desktop typecheck` 全绿
+- [x] 11.1 `pnpm --filter @hdt/desktop test` 全绿（除既存的 App.i18n 多匹配 flake，与本 change 无关）
+- [x] 11.2 `pnpm --filter @hdt/desktop typecheck` 全绿
 - [ ] 11.3 `pnpm dev` 跑起来，DeckFinderTab 顶部按钮可点；
       点一次完成同步，重启后看到 `Last updated` 显示同步时间，grid 不变；
       手删 `<userData>/popular-decks/synced.json` 后重启 → 回到 seed 数据
