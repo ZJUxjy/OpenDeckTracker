@@ -368,9 +368,10 @@ export function createDeckStore(dbPath: string): DeckStore {
         if (!info || !info.collectible) offenders.push(c.cardId);
       }
       if (offenders.length > 0) throw new NonCollectibleSnapshotError(offenders);
+      const hasLiveId = live.liveDeckId !== undefined && live.liveDeckId !== null;
       const tx = db.transaction(() => {
-        if (live.liveDeckId !== undefined && live.liveDeckId !== null) {
-          const existing = findByLiveDeckIdInternal(live.liveDeckId);
+        if (hasLiveId) {
+          const existing = findByLiveDeckIdInternal(live.liveDeckId as number);
           if (existing !== null) {
             return updateLiveSyncedDeck(existing, live);
           }
@@ -382,10 +383,12 @@ export function createDeckStore(dbPath: string): DeckStore {
             format: live.format,
             cards: live.cards,
           },
-          {
-            source: 'hearthstone-live',
-            liveDeckId: live.liveDeckId ?? null,
-          },
+          hasLiveId
+            ? {
+                source: 'hearthstone-live',
+                liveDeckId: live.liveDeckId as number,
+              }
+            : {},
         );
       });
       return tx();

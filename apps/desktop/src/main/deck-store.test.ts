@@ -284,6 +284,86 @@ describe('createDeckStore', () => {
     }
   });
 
+  it('saveFromLive without liveDeckId creates app-managed deck', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const created = store.saveFromLive(
+        {
+          name: 'Manual Live',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 1 }],
+        },
+        lookup,
+      );
+      expect(created.source).toBeUndefined();
+      expect(created.liveDeckId).toBeUndefined();
+    } finally {
+      store.close();
+    }
+  });
+
+  it('saveFromLive upserts unchanged liveDeckId without version bump', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const input = {
+        name: 'Live A',
+        class: 'DRUID' as const,
+        format: 'Standard' as const,
+        cards: [{ cardId: 'A', count: 1 }],
+        liveDeckId: 11,
+      };
+      const first = store.saveFromLive(input, lookup);
+      const second = store.saveFromLive(input, lookup);
+
+      expect(second.id).toBe(first.id);
+      expect(second.version).toBe(first.version);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('saveFromLive bumps version when live card list changes', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+        { cardId: 'B', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const first = store.saveFromLive(
+        {
+          name: 'Live A',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 1 }],
+          liveDeckId: 12,
+        },
+        lookup,
+      );
+      const second = store.saveFromLive(
+        {
+          name: 'Live A',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 1 }, { cardId: 'B', count: 1 }],
+          liveDeckId: 12,
+        },
+        lookup,
+      );
+
+      expect(second.id).toBe(first.id);
+      expect(second.version).toBe(first.version + 1);
+    } finally {
+      store.close();
+    }
+  });
+
   it('saveFromLive upserts live-synced rows by liveDeckId', () => {
     const store = createDeckStore(dbPath());
     try {
