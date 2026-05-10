@@ -69,8 +69,8 @@ export function LiveDeckPanel() {
 function EmptyState({ message, hint }: { message: string; hint?: string }) {
   const { t } = useTranslation();
   return (
-    <aside className="w-full bg-white/5 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-white/5 p-3 border-b border-border cursor-move" style={DRAG_HEADER_STYLE}>
+    <aside className="w-full bg-overlay-surface border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-overlay-surface p-3 border-b border-border cursor-move" style={DRAG_HEADER_STYLE}>
         <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('deckTracker.deck')}
         </div>
@@ -202,8 +202,8 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   const handleHandAnimationEnd = useCallback(() => {}, []);
 
   return (
-    <aside className="w-full bg-white/5 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-white/5 p-3 border-b border-border cursor-move" style={DRAG_HEADER_STYLE}>
+    <aside className="w-full bg-overlay-surface border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+      <div className="bg-overlay-surface p-3 border-b border-border cursor-move" style={DRAG_HEADER_STYLE}>
         <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
           {t('deckTracker.deck')}
         </div>
@@ -277,7 +277,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
             </span>
           </div>
           {friendlyHandCardIds.length === 0 ? (
-            <div className="rounded border border-border bg-white/10 backdrop-blur-xl px-2 py-2 text-center text-xs text-text-dim">
+            <div className="rounded border border-border bg-overlay-elevated backdrop-blur-xl px-2 py-2 text-center text-xs text-text-dim">
               {t('deckTracker.emptyHand')}
             </div>
           ) : (
@@ -299,7 +299,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
         </section>
       </div>
 
-      <div className="bg-white/5 p-3 border-t border-border flex justify-between items-center text-xs text-text-dim">
+      <div className="bg-overlay-surface p-3 border-t border-border flex justify-between items-center text-xs text-text-dim">
         <div>
           {t('deckTracker.handAndOpponent', {
             hand: snapshot.friendlyHand.length,
@@ -496,7 +496,7 @@ function CardCopyRow({
       ref={ref}
       data-testid={testId}
       className={clsx(
-        'relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-white/10 hover:shadow-[inset_3px_0_0_var(--accent)]',
+        'relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-overlay-elevated hover:shadow-[inset_3px_0_0_var(--accent)]',
         exiting ? 'animate-deck-exit' : '',
       )}
       onAnimationEnd={() => onAnimationEnd(copyKey)}

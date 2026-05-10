@@ -10,7 +10,7 @@ export interface MatchupMatrixProps {
 const LOW_CONFIDENCE_THRESHOLD = 5;
 
 function cellColor(winrate: number | null): string {
-  if (winrate === null) return 'bg-white/5 text-text-mute';
+  if (winrate === null) return 'bg-overlay-surface text-text-mute';
   if (winrate >= 60) return 'bg-green/30 text-green';
   if (winrate >= 50) return 'bg-green/15 text-green';
   if (winrate >= 40) return 'bg-red/15 text-red';

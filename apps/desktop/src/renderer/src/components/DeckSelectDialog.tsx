@@ -89,12 +89,12 @@ export function DeckSelectDialog() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay-dialog backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="deck-select-title"
     >
-      <div className="bg-white/5 border border-border rounded-lg shadow-2xl w-[440px] max-h-[80vh] flex flex-col">
+      <div className="bg-overlay-surface border border-border rounded-lg shadow-2xl w-[440px] max-h-[80vh] flex flex-col">
         <div className="px-6 py-4 border-b border-border">
           <h2 id="deck-select-title" className="text-lg font-bold text-text">
             {t('deckSelect.title')}
@@ -125,7 +125,7 @@ export function DeckSelectDialog() {
                             'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
                             (active
                               ? 'bg-accent text-bg'
-                              : 'bg-white/5 hover:bg-white/10 text-text')
+                              : 'bg-overlay-surface hover:bg-overlay-hover text-text')
                           }
                         >
                           <span className="font-medium truncate">
@@ -164,7 +164,7 @@ export function DeckSelectDialog() {
                               'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
                               (active
                                 ? 'bg-accent text-bg'
-                                : 'bg-white/5 hover:bg-white/10 text-text')
+                                : 'bg-overlay-surface hover:bg-overlay-hover text-text')
                             }
                           >
                             <span className="font-medium truncate">

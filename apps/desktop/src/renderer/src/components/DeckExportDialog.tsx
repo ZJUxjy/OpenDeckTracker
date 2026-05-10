@@ -54,15 +54,15 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[600px] max-w-[95vw] bg-white/10 backdrop-blur-xl border border-border rounded-md text-text">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-overlay-dialog" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[600px] max-w-[95vw] bg-overlay-elevated backdrop-blur-xl border border-border rounded-md text-text">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <Dialog.Title className="text-lg font-bold text-text">
               {t('decks.export.title')}
             </Dialog.Title>
             <Dialog.Description className="sr-only">{t('decks.export.title')}</Dialog.Description>
             <Dialog.Close asChild>
-              <button aria-label="Close" className="p-1 hover:bg-white/10 rounded">
+              <button aria-label="Close" className="p-1 hover:bg-overlay-hover rounded">
                 <X size={18} />
               </button>
             </Dialog.Close>
@@ -93,7 +93,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
                 </div>
               ) : (
                 <pre
-                  className="text-xs bg-white/5 border border-border rounded p-3 break-all whitespace-pre-wrap font-mono"
+                  className="text-xs bg-overlay-input border border-border rounded p-3 break-all whitespace-pre-wrap font-mono"
                   data-testid="deckstring-content"
                 >
                   {deckstring ?? '...'}
@@ -102,7 +102,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
               <button
                 onClick={() => deckstring && copy('deckstring', deckstring)}
                 disabled={deckstring === null}
-                className="px-3 py-1.5 text-sm bg-white/10 hover:bg-border-hi rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-sm bg-overlay-elevated hover:bg-overlay-hover rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="copy-deckstring"
               >
                 <Copy size={14} />
@@ -112,7 +112,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
 
             <Tabs.Content value="json" className="space-y-3" data-testid="tab-json">
               <pre
-                className="text-xs bg-white/5 border border-border rounded p-3 break-all whitespace-pre-wrap font-mono max-h-[300px] overflow-y-auto"
+                className="text-xs bg-overlay-input border border-border rounded p-3 break-all whitespace-pre-wrap font-mono max-h-[300px] overflow-y-auto"
                 data-testid="json-content"
               >
                 {json || '...'}
@@ -120,7 +120,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
               <button
                 onClick={() => copy('json', json)}
                 disabled={json === ''}
-                className="px-3 py-1.5 text-sm bg-white/10 hover:bg-border-hi rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-sm bg-overlay-elevated hover:bg-overlay-hover rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Copy size={14} />
                 {copyAck === 'json' ? t('decks.export.copied') : t('decks.export.copy')}

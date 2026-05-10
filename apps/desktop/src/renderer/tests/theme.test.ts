@@ -20,7 +20,7 @@ describe('macOS Liquid Glass theme tokens', () => {
   });
 
   it('declares the macOS surface ladder in :root (light) and .dark', () => {
-    // Light defaults
+    // Light defaults — true light mode
     expect(themeCss).toMatch(/--surface-window:\s*#F4F4F6;/);
     expect(themeCss).toMatch(/--surface-content:\s*#FFFFFF;/);
     // Dark overrides
@@ -28,9 +28,39 @@ describe('macOS Liquid Glass theme tokens', () => {
     expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--surface-content:\s*#242427;/);
   });
 
+  it('declares light-mode text as dark (for true light backgrounds)', () => {
+    expect(themeCss).toMatch(/--text-primary:\s*#1C1C1E;/);
+    expect(themeCss).toMatch(/--text-secondary:\s*rgba\(0,\s*0,\s*0,/);
+  });
+
+  it('declares dark-mode text as light', () => {
+    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--text-primary:\s*#F4F4F8;/);
+  });
+
+  it('declares dark-mode borders (dark-with-alpha for light mode)', () => {
+    expect(themeCss).toMatch(/--border-hairline:\s*rgba\(0,\s*0,\s*0,/);
+  });
+
+  it('declares light-mode borders (white-with-alpha for dark mode)', () => {
+    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--border-hairline:\s*rgba\(255,/);
+  });
+
   it('declares glass overlay for in-game vibrancy', () => {
     expect(themeCss).toMatch(/--glass-overlay:\s*rgba\(/);
     expect(themeCss).toMatch(/--glass-blur:/);
+  });
+
+  it('declares overlay variables for mode-aware component backgrounds', () => {
+    expect(themeCss).toMatch(/--overlay-surface:\s*rgba\(/);
+    expect(themeCss).toMatch(/--overlay-hover:\s*rgba\(/);
+    expect(themeCss).toMatch(/--overlay-elevated:\s*rgba\(/);
+    expect(themeCss).toMatch(/--overlay-input:\s*rgba\(/);
+    expect(themeCss).toMatch(/--overlay-dialog:\s*rgba\(/);
+  });
+
+  it('exposes overlay colors to Tailwind via @theme inline', () => {
+    expect(themeCss).toMatch(/--color-overlay-surface:\s*var\(--overlay-surface\)/);
+    expect(themeCss).toMatch(/--color-overlay-hover:\s*var\(--overlay-hover\)/);
   });
 
   it('declares mono font family with JetBrains Mono fallback', () => {
@@ -103,5 +133,12 @@ describe('macOS Liquid Glass theme tokens', () => {
     expect(themeCss).toMatch(/\.macos-glass\s*\{[\s\S]*backdrop-filter:\s*blur/);
     // Fallback for browsers without backdrop-filter support
     expect(themeCss).toMatch(/@supports not \(backdrop-filter/);
+  });
+
+  it('declares Tahoe chrome utilities (tahoe-sidebar, tahoe-topbar, tahoe-card)', () => {
+    expect(themeCss).toMatch(/\.tahoe-sidebar\s*\{/);
+    expect(themeCss).toMatch(/\.tahoe-topbar\s*\{/);
+    expect(themeCss).toMatch(/\.tahoe-card\s*\{/);
+    expect(themeCss).toMatch(/\.tahoe-active-pill\s*\{/);
   });
 });

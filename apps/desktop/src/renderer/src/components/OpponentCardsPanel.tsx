@@ -108,9 +108,9 @@ export function OpponentCardsPanel({
   );
 
   return (
-    <aside className="w-full bg-white/5 border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+    <aside className="w-full bg-overlay-surface border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
       <div
-        className="bg-white/5 p-3 border-b border-border cursor-move"
+        className="bg-overlay-surface p-3 border-b border-border cursor-move"
         style={{ WebkitAppRegion: 'drag' } as CSSProperties}
       >
         <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
@@ -284,7 +284,7 @@ function OpponentCardRow({
     <div
       ref={ref}
       data-testid="opponent-card-row"
-      className="relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-white/10 hover:shadow-[inset_3px_0_0_var(--accent)]"
+      className="relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-overlay-hover hover:shadow-[inset_3px_0_0_var(--accent)]"
       onMouseEnter={() => ref.current && onMouseEnter(card.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >

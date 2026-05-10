@@ -72,7 +72,7 @@ export function Settings() {
                 className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${
                   activeCategory === cat.id
                     ? 'tahoe-active-pill text-text font-semibold'
-                    : 'text-text-secondary hover:text-text hover:bg-white/8 dark:hover:bg-white/5'
+                    : 'text-text-secondary hover:text-text hover:bg-overlay-hover'
                 }`}
               >
                 <cat.icon size={18} className={activeCategory === cat.id ? 'text-text' : 'text-text-tertiary'} />
@@ -99,7 +99,7 @@ export function Settings() {
                       <h3 className="text-text font-medium">{t('settings.language')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.languageDescription')}</p>
                     </div>
-                    <div className="flex rounded-md border border-border bg-white/5 p-1">
+                    <div className="flex rounded-md border border-border bg-overlay-surface p-1">
                       {languageOptions.map((option) => (
                         <button
                           key={option.value}
@@ -107,7 +107,7 @@ export function Settings() {
                           onClick={() => setLanguagePreference(option.value)}
                           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                             languagePreference === option.value
-                              ? 'bg-accent text-bg'
+                              ? 'bg-accent text-on-accent'
                               : 'text-text-dim hover:text-text'
                           }`}
                         >
@@ -123,7 +123,7 @@ export function Settings() {
                       <h3 className="text-text font-medium">{t('settings.appearance.density.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.density.description')}</p>
                     </div>
-                    <div className="flex rounded-md border border-border bg-white/5 p-1">
+                    <div className="flex rounded-md border border-border bg-overlay-surface p-1">
                       {(['comfortable', 'compact'] as Density[]).map((opt) => (
                         <button
                           key={opt}
@@ -131,7 +131,7 @@ export function Settings() {
                           onClick={() => setDensity(opt)}
                           className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                             density === opt
-                              ? 'bg-accent text-bg'
+                              ? 'bg-accent text-on-accent'
                               : 'text-text-dim hover:text-text'
                           }`}
                         >
@@ -147,7 +147,7 @@ export function Settings() {
                       <h3 className="text-text font-medium">{t('settings.appearance.theme.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.theme.description')}</p>
                     </div>
-                    <div className="flex rounded-md border border-border bg-white/5 p-1">
+                    <div className="flex rounded-md border border-border bg-overlay-surface p-1">
                       {(['system', 'light', 'dark'] as Theme[]).map((opt) => (
                         <button
                           key={opt}
@@ -209,7 +209,7 @@ export function Settings() {
                     </div>
                     <button
                       onClick={() => setGameOverlay(!gameOverlay)}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlay ? 'bg-accent' : 'bg-white/10'}`}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlay ? 'bg-accent' : 'bg-overlay-elevated'}`}
                     >
                       <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${gameOverlay ? 'left-7' : 'left-1'}`} />
                     </button>
@@ -222,7 +222,7 @@ export function Settings() {
                     </div>
                     <button
                       onClick={() => setGameOverlayOpponent(!gameOverlayOpponent)}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlayOpponent ? 'bg-accent' : 'bg-white/10'}`}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlayOpponent ? 'bg-accent' : 'bg-overlay-elevated'}`}
                     >
                       <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${gameOverlayOpponent ? 'left-7' : 'left-1'}`} />
                     </button>
@@ -315,7 +315,7 @@ function AboutPanel() {
             type="button"
             onClick={handleCheckForUpdates}
             disabled={updateState.kind === 'checking'}
-            className="px-4 py-2 rounded bg-accent text-bg font-medium text-sm hover:bg-accent/90 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded bg-accent text-on-accent font-medium text-sm hover:bg-accent/90 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {updateState.kind === 'checking'
               ? t('settings.about.checking')

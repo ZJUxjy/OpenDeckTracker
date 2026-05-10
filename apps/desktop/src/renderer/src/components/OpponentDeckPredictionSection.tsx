@@ -26,7 +26,7 @@ function getRarityCostBg(rarity: Rarity | undefined): string {
   if (rarity === 'LEGENDARY') return 'bg-rarity-legendary text-bg';
   if (rarity === 'EPIC') return 'bg-rarity-epic text-bg';
   if (rarity === 'RARE') return 'bg-rarity-rare text-bg';
-  return 'bg-white/10 text-text border border-border-hi';
+  return 'bg-overlay-elevated text-text border border-border-hi';
 }
 
 interface OpponentDeckPredictionSectionProps {
@@ -107,11 +107,11 @@ function PredictionRow({
         isActive
           ? 'bg-accent-dim/40 border border-accent'
           : isTop
-            ? 'bg-white/10 border border-border-hi'
-            : 'bg-white/8 border border-transparent'
+            ? 'bg-overlay-elevated border border-border-hi'
+            : 'bg-overlay-surface border border-transparent'
       }`}
     >
-      <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-text text-[9px] font-bold border border-border-hi shrink-0">
+      <div className="w-6 h-6 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-[9px] font-bold border border-border-hi shrink-0">
         {prediction.deck.class.slice(0, 2)}
       </div>
       <div className="flex-1 min-w-0">
@@ -233,9 +233,9 @@ function DeckPopup({ prediction, anchor, playedCounts, onClose }: DeckPopupProps
         maxHeight: `calc(100vh - ${POPUP_MARGIN * 2}px)`,
         zIndex: 50,
       }}
-      className="bg-white/5 border border-border-hi rounded-md shadow-2xl overflow-hidden flex flex-col"
+      className="bg-overlay-surface border border-border-hi rounded-md shadow-2xl overflow-hidden flex flex-col"
     >
-      <header className="px-3 py-2 border-b border-border bg-white/10">
+      <header className="px-3 py-2 border-b border-border bg-overlay-elevated">
         <div className="text-xs font-bold text-text truncate" title={prediction.deck.name}>
           {prediction.deck.name}
         </div>
@@ -290,7 +290,7 @@ function DeckPopupRow({
       onMouseEnter={() => ref.current && onMouseEnter(row.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
       className={clsx(
-        'relative overflow-hidden text-sm border-b border-border last:border-b-0 transition-colors hover:bg-white/10 hover:shadow-[inset_3px_0_0_var(--accent)]',
+        'relative overflow-hidden text-sm border-b border-border last:border-b-0 transition-colors hover:bg-overlay-elevated hover:shadow-[inset_3px_0_0_var(--accent)]',
         row.played ? 'opacity-40 grayscale' : '',
       )}
     >
@@ -386,7 +386,7 @@ export function OpponentDeckPredictionSection({
   return (
     <section
       data-testid="opponent-deck-prediction-section"
-      className="bg-white/5 border border-border rounded-sm px-2 py-2 space-y-1.5"
+      className="bg-overlay-surface border border-border rounded-sm px-2 py-2 space-y-1.5"
     >
       <header className="flex items-baseline justify-between gap-2 px-1">
         <span className="text-[10px] text-text-mute font-mono tracking-[0.14em] uppercase">

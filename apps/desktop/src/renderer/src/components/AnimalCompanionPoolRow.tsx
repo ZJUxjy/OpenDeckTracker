@@ -110,7 +110,7 @@ export function AnimalCompanionPoolRow({
         ...(hovered && hasPool ? { boxShadow: '0 0 0 2px var(--accent)' } : {}),
       }}
       className={clsx(
-        'relative rounded-md border-2 bg-white/5 mb-2 last:mb-0 transition-colors',
+        'relative rounded-md border-2 bg-overlay-surface mb-2 last:mb-0 transition-colors',
         hasPool ? 'cursor-help' : '',
         hovered && hasPool
           ? 'border-accent'

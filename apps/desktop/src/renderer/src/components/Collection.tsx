@@ -78,7 +78,7 @@ export function Collection() {
 
           {/* Format Switcher */}
           <div className="flex justify-start">
-            <div className="flex bg-white/5 dark:bg-black/20 rounded-md p-1 border border-border-hairline">
+            <div className="flex bg-overlay-surface dark:bg-black/20 rounded-md p-1 border border-border-hairline">
               {(['standard', 'wild'] as const).map((fmt) => (
                 <button
                   key={fmt}

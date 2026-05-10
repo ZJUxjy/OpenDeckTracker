@@ -21,36 +21,35 @@
    ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── Surfaces — Light mode = warm-tinted dark ─────────────────
-     Light text in BOTH modes (Acrylic shows unpredictable backdrop
-     colour through, dark text on a varied backdrop is unreadable),
-     so light mode is a *warm* tinted dark and dark mode is a *cool*
-     tinted dark. The visual difference between the two modes is
-     hue temperature, not lightness.                                */
-  --surface-window:   #2D2A33;
-  --surface-sidebar:  #29262F;
-  --surface-toolbar:  #302C36;
-  --surface-content:  #34313B;
-  --surface-elevated: #3B3742;
-  --surface-raised:   #322E38;
-  --surface-popover:  #38343F;
+  /* ── Surfaces — Light mode: true light, warm-tinted gray ─────
+     A genuine macOS-style light palette. White content surfaces
+     with subtle warm-gray chrome. Dark text for high legibility
+     on solid backgrounds. The translucent glass variants further
+     below adapt these for Mica/Acrylic backdrop scenarios.         */
+  --surface-window:   #F4F4F6;
+  --surface-sidebar:  #ECECEE;
+  --surface-toolbar:  #EEEEF0;
+  --surface-content:  #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-raised:   #F7F7F9;
+  --surface-popover:  #FFFFFF;
 
-  /* Glass — translucent panels. Lower alpha than before so Acrylic
-     bleeds through more (less gray dominance) and the warm tint
-     pulls the chrome away from neutral gray.                       */
-  --glass-overlay:    rgba(56, 50, 68, 0.36);
+  /* Glass — translucent panels for light mode.
+     Higher alpha white so the panel remains readable when
+     Mica/Acrylic bleeds desktop wallpaper through.               */
+  --glass-overlay:    rgba(255, 255, 255, 0.72);
   --glass-blur:       60px;
 
-  /* ── Borders ─ white-with-alpha (works on dark surfaces) ─── */
-  --border-hairline:  rgba(255, 255, 255, 0.10);
-  --border-separator: rgba(255, 255, 255, 0.06);
-  --border-strong:    rgba(255, 255, 255, 0.20);
+  /* ── Borders ─ dark-with-alpha (works on light surfaces) ─── */
+  --border-hairline:  rgba(0, 0, 0, 0.08);
+  --border-separator: rgba(0, 0, 0, 0.05);
+  --border-strong:    rgba(0, 0, 0, 0.18);
 
-  /* ── Text — light values, kept identical in dark mode ───────── */
-  --text-primary:     #F4F4F8;
-  --text-secondary:   rgba(240, 240, 250, 0.72);
-  --text-tertiary:    rgba(240, 240, 250, 0.40);
-  --text-quaternary:  rgba(240, 240, 250, 0.22);
+  /* ── Text ─ dark values for light backgrounds ──────────────── */
+  --text-primary:     #1C1C1E;
+  --text-secondary:   rgba(0, 0, 0, 0.55);
+  --text-tertiary:    rgba(0, 0, 0, 0.35);
+  --text-quaternary:  rgba(0, 0, 0, 0.18);
   --text-on-accent:   #FFFFFF;
 
   /* ── Accent — macOS System Blue ──────────────────────────── */
@@ -58,7 +57,7 @@
   --accent-hover:     #0070EE;
   --accent-pressed:   #0058C8;
   --accent-translucent: rgba(0, 122, 255, 0.12);
-  --accent-dim:       rgba(0, 122, 255, 0.15);
+  --accent-dim:       rgba(0, 122, 255, 0.10);
 
   /* ── Semantic status ──────────────────────────────────────── */
   --semantic-success: #28A745;
@@ -87,11 +86,11 @@
   --class-deathknight: #0E7490;
   --class-neutral:     #5C5C61;
 
-  /* ── Shadows — single soft window light source (HIG) ──────── */
-  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.30), 0 0 1px rgba(0,0,0,0.40);
-  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.20), 0 0 1px rgba(0,0,0,0.30);
-  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.10), 0 0 1px rgba(0,0,0,0.15);
-  --shadow-raised:   0 1px 2px rgba(0,0,0,0.08);
+  /* ── Shadows — softer for light mode ─────────────────────── */
+  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.10), 0 0 1px rgba(0,0,0,0.08);
+  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.06);
+  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.04);
+  --shadow-raised:   0 1px 2px rgba(0,0,0,0.04);
 
   /* ── Radii ────────────────────────────────────────────────── */
   --radius-xs:   4px;
@@ -110,9 +109,20 @@
   /* ── Scrollbar — macOS thinness, hidden track ─────────────── */
   --scrollbar-size:         8px;
   --scrollbar-track:        transparent;
-  --scrollbar-thumb:        rgba(0, 0, 0, 0.18);
-  --scrollbar-thumb-hover:  rgba(0, 0, 0, 0.32);
+  --scrollbar-thumb:        rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover:  rgba(0, 0, 0, 0.30);
   --scrollbar-thumb-active: var(--accent);
+
+  /* ── Overlay variables — mode-aware replacements for
+     hardcoded bg-white/X and bg-black/X in components.
+     Light mode uses dark-tinted overlays (black with low alpha)
+     so they subtly darken the light surface beneath.              */
+  --overlay-surface:  rgba(0, 0, 0, 0.04);
+  --overlay-hover:    rgba(0, 0, 0, 0.06);
+  --overlay-pressed:  rgba(0, 0, 0, 0.10);
+  --overlay-elevated: rgba(0, 0, 0, 0.07);
+  --overlay-input:    rgba(0, 0, 0, 0.03);
+  --overlay-dialog:   rgba(0, 0, 0, 0.40);
 
   /* ── Backward-compat aliases ──────────────────────────────────
      Components written before the macOS redesign reference these
@@ -172,29 +182,28 @@
 }
 
 /* ─── Dark mode overrides ─────────────────────────────────────
-   Only the values that differ from Light mode. Most domain colors
+   Dark mode = cool-tinted deep dark. Most domain colors
    (rarities, classes) keep the same hue with optional vibrancy
    adjustment for dark backgrounds.
    ───────────────────────────────────────────────────────────── */
 
 .dark {
-  /* Dark mode = cool-tinted deeper dark. Same light text as :root
-     so toggling modes only shifts hue/depth, never legibility. */
-  --surface-window:   #14181F;
-  --surface-sidebar:  #11151C;
-  --surface-toolbar:  #161A22;
-  --surface-content:  #1A1E27;
-  --surface-elevated: #1F232E;
-  --surface-raised:   #181C25;
-  --surface-popover:  #1D212A;
+  /* Dark mode = cool-tinted deeper dark. Light text. */
+  --surface-window:   #1C1C1E;
+  --surface-sidebar:  #171719;
+  --surface-toolbar:  #1A1A1C;
+  --surface-content:  #242427;
+  --surface-elevated: #262629;
+  --surface-raised:   #1E1E21;
+  --surface-popover:  #242427;
 
-  --glass-overlay:    rgba(22, 30, 52, 0.40);
+  --glass-overlay:    rgba(28, 28, 30, 0.55);
 
-  --border-hairline:  rgba(255, 255, 255, 0.12);
-  --border-separator: rgba(255, 255, 255, 0.07);
+  --border-hairline:  rgba(255, 255, 255, 0.10);
+  --border-separator: rgba(255, 255, 255, 0.06);
   --border-strong:    rgba(255, 255, 255, 0.20);
 
-  /* Text identical to :root — light text in both modes. */
+  /* Text — light values for dark backgrounds */
   --text-primary:     #F4F4F8;
   --text-secondary:   rgba(240, 240, 250, 0.72);
   --text-tertiary:    rgba(240, 240, 250, 0.40);
@@ -204,7 +213,7 @@
   --accent-hover:     #1A8CFF;
   --accent-pressed:   #0066D9;
   --accent-translucent: rgba(10, 132, 255, 0.18);
-  --accent-dim:       rgba(10, 132, 255, 0.22);
+  --accent-dim:       rgba(10, 132, 255, 0.18);
 
   --semantic-success: #30D158;
   --semantic-warning: #FF9F0A;
@@ -221,13 +230,21 @@
   --class-shaman:      #0A84FF;
   --class-deathknight: #64D2FF;
 
-  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.55);
-  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.45), 0 0 1px rgba(0,0,0,0.45);
-  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.30);
-  --shadow-raised:   0 1px 2px rgba(0,0,0,0.30);
+  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.40), 0 0 1px rgba(0,0,0,0.40);
+  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.30), 0 0 1px rgba(0,0,0,0.30);
+  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.20), 0 0 1px rgba(0,0,0,0.15);
+  --shadow-raised:   0 1px 2px rgba(0,0,0,0.15);
 
-  --scrollbar-thumb:       rgba(255, 255, 255, 0.18);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
+  /* Dark mode overlays — white-tinted */
+  --overlay-surface:  rgba(255, 255, 255, 0.05);
+  --overlay-hover:    rgba(255, 255, 255, 0.08);
+  --overlay-pressed:  rgba(255, 255, 255, 0.12);
+  --overlay-elevated: rgba(255, 255, 255, 0.07);
+  --overlay-input:    rgba(255, 255, 255, 0.04);
+  --overlay-dialog:   rgba(0, 0, 0, 0.60);
+
+  --scrollbar-thumb:       rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.30);
 }
 
 /* Tailwind v4 theme exposure — these utility names map back to
@@ -254,6 +271,14 @@
   --color-text-tertiary:    var(--text-tertiary);
   --color-text-quaternary:  var(--text-quaternary);
   --color-text-on-accent:   var(--text-on-accent);
+
+  /* Overlay variables (mode-aware) */
+  --color-overlay-surface:  var(--overlay-surface);
+  --color-overlay-hover:    var(--overlay-hover);
+  --color-overlay-pressed:  var(--overlay-pressed);
+  --color-overlay-elevated: var(--overlay-elevated);
+  --color-overlay-input:    var(--overlay-input);
+  --color-overlay-dialog:   var(--overlay-dialog);
 
   /* Accent + semantic */
   --color-accent:            var(--accent);
@@ -361,8 +386,8 @@
      are fully transparent here, and any tint lives on individual
      surfaces (.tahoe-card, .tahoe-sidebar, .tahoe-topbar) where it
      belongs. On platforms WITHOUT Mica/vibrancy, the BrowserWindow's
-     backgroundColor (#0E0E14 on Linux/Win10) provides a solid base
-     so the window doesn't read as a black hole. */
+     backgroundColor provides a solid base so the window doesn't read
+     as a black hole. */
   html, #root {
     background: transparent;
   }
@@ -454,27 +479,38 @@
 .macos-glass {
   position: relative;
   background: var(--glass-overlay);
-  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
   border-radius: var(--radius-3xl);
-  border: 1px solid rgba(255, 255, 255, 0.30);
+  border: 1px solid rgba(0, 0, 0, 0.12);
   box-shadow:
     /* Refractive rim — top-left blue, bottom-right warm pink.
-       Alpha boosted to match the aggressive Tahoe ref so the
-       edge actually reads as refractive against any backdrop. */
-    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+       Adapted alpha for light mode visibility. */
+    inset 1px  1px 0 rgba(180, 200, 220, 0.30),
+    inset -1px -1px 0 rgba(220, 190, 200, 0.22),
     /* Top edge highlight */
     inset 0  1px 0 rgba(255, 255, 255, 0.55),
     /* Subtle bottom pull-down */
-    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
     /* Single soft outer shadow — Tahoe one-source-light feel */
+    0 24px 64px -8px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark mode — heavier saturation, less bright, light borders */
+.dark .macos-glass {
+  border-color: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+  box-shadow:
+    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+    inset 0  1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
     0 24px 64px -8px rgba(0, 0, 0, 0.40);
 }
 
 /* Top specular sheen — fades from a faint white wash at the
-   top edge into nothing within the first 18% of the height.
-   Mimics how Tahoe glass catches the desktop light source. */
+   top edge into nothing within the first 18% of the height. */
 .macos-glass::after {
   content: '';
   position: absolute;
@@ -482,17 +518,21 @@
   border-radius: inherit;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.18) 0%,
     rgba(255, 255, 255, 0.00) 18%
   );
   pointer-events: none;
   z-index: 0;
 }
+.dark .macos-glass::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.00) 18%
+  );
+}
 
-/* Mouse-follow specular highlight. The radial gradient is
-   anchored at --glass-mx / --glass-my, set in pixels by the JS
-   hook on the same element. Defaults park it off-screen so
-   when the cursor isn't over the element, no highlight shows. */
+/* Mouse-follow specular highlight */
 .macos-glass::before {
   content: '';
   position: absolute;
@@ -500,12 +540,19 @@
   border-radius: inherit;
   background: radial-gradient(
     260px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
-    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.18),
     transparent 65%
   );
   pointer-events: none;
   z-index: 0;
   transition: background-position 80ms linear;
+}
+.dark .macos-glass::before {
+  background: radial-gradient(
+    260px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
+    rgba(255, 255, 255, 0.12),
+    transparent 65%
+  );
 }
 
 .macos-glass > * {
@@ -513,34 +560,25 @@
   z-index: 1;
 }
 
-/* Dark mode tweaks — heavier saturation, less bright */
-.dark .macos-glass {
-  border-color: rgba(255, 255, 255, 0.10);
-  backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
-}
-
 /* Clear variant — HUD overlays where the glass should be barely
    there. Extra transparency + just a hint of saturation. */
 .macos-glass-clear {
-  background: rgba(250, 250, 252, 0.55);
+  background: rgba(250, 250, 252, 0.65);
 }
 .dark .macos-glass-clear {
   background: rgba(28, 28, 30, 0.40);
 }
 
 /* Tinted variant — the glass picks up the accent color, used
-   for selected popovers / focused panels. Layer the tint UNDER
-   the base translucent overlay so the saturation effect still
-   pulls colour from the backdrop.                              */
+   for selected popovers / focused panels. */
 .macos-glass-tinted {
   background:
-    linear-gradient(rgba(0, 122, 255, 0.12), rgba(0, 122, 255, 0.12)),
+    linear-gradient(rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.08)),
     var(--glass-overlay);
 }
 .dark .macos-glass-tinted {
   background:
-    linear-gradient(rgba(10, 132, 255, 0.16), rgba(10, 132, 255, 0.16)),
+    linear-gradient(rgba(10, 132, 255, 0.14), rgba(10, 132, 255, 0.14)),
     var(--glass-overlay);
 }
 
@@ -556,6 +594,80 @@
   }
 }
 
+/* ── Main-app chrome utilities — Tahoe 26 ──────────────────────
+   .tahoe-sidebar / .tahoe-topbar paint translucent surfaces with
+   backdrop-blur over the body's translucent bg. The body shows
+   Win11 Mica or macOS vibrancy through when the OS supports it.
+   Without OS vibrancy these just look like subtly-tinted panels.
+
+   .tahoe-card adds the chromatic rim + macOS depth shadow
+   without transparency — for opaque content cards (hero,
+   stat cards, etc).
+
+   Light mode: white-tinted translucent panels with dark borders.
+   Dark mode:  dark-tinted translucent panels with light borders.  */
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.tahoe-sidebar {
+  background: rgba(238, 238, 240, 0.55);
+  backdrop-filter: blur(35px) saturate(180%);
+  -webkit-backdrop-filter: blur(35px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+.dark .tahoe-sidebar {
+  background: rgba(23, 23, 25, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Topbar ─────────────────────────────────────────────────── */
+.tahoe-topbar {
+  background: rgba(236, 236, 238, 0.55);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+.dark .tahoe-topbar {
+  background: rgba(26, 26, 28, 0.55);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Content card — frosted-glass platter ──────────────────── */
+.tahoe-card {
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: var(--radius-2xl);
+  box-shadow:
+    inset  1px  1px 0 rgba(180, 200, 220, 0.25),
+    inset -1px -1px 0 rgba(220, 190, 200, 0.18),
+    inset 0  1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 6px 22px -4px rgba(0, 0, 0, 0.10);
+}
+.dark .tahoe-card {
+  background: rgba(38, 38, 40, 0.55);
+  box-shadow:
+    inset  1px  1px 0 rgba(180, 220, 255, 0.30),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.18),
+    inset 0  1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 6px 22px -4px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Active pill — translucent selection indicator ──────────── */
+.tahoe-active-pill {
+  background: rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.40);
+}
+.dark .tahoe-active-pill {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
 /* ── In-game overlay: Tahoe 26 aggressive Liquid Glass ──────────
    The OverlayView / OpponentOverlayView routes set
    body[data-overlay="true"]; inside that scope, the tracker-panel
@@ -565,19 +677,18 @@
 body[data-overlay="true"] .tracker-panel-shell {
   position: relative;
   background: var(--glass-overlay);
-  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
   border-radius: var(--radius-3xl);
-  border: 1px solid rgba(255, 255, 255, 0.30);
+  border: 1px solid rgba(0, 0, 0, 0.14);
   box-shadow:
-    /* Stronger chromatic rim — wider alpha so the edge reads as
-       refractive against any game scene behind. */
-    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
-    inset 0  1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
-    /* Single soft outer shadow — Tahoe single-source feel */
-    0 24px 64px -8px rgba(0, 0, 0, 0.50);
+    /* Chromatic rim — slightly stronger for game scene visibility */
+    inset 1px  1px 0 rgba(180, 200, 220, 0.38),
+    inset -1px -1px 0 rgba(220, 190, 200, 0.28),
+    inset 0  1px 0 rgba(255, 255, 255, 0.50),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    /* Single soft outer shadow */
+    0 24px 64px -8px rgba(0, 0, 0, 0.20);
   overflow: hidden;
 }
 
@@ -587,6 +698,12 @@ body[data-overlay="true"] .dark .tracker-panel-shell {
   border-color: rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+  box-shadow:
+    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+    inset 0  1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+    0 24px 64px -8px rgba(0, 0, 0, 0.45);
 }
 
 /* Top specular sheen */
@@ -597,14 +714,21 @@ body[data-overlay="true"] .tracker-panel-shell::after {
   border-radius: inherit;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.14) 0%,
     rgba(255, 255, 255, 0.00) 18%
   );
   pointer-events: none;
   z-index: 0;
 }
+.dark body[data-overlay="true"] .tracker-panel-shell::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.00) 18%
+  );
+}
 
-/* Mouse-follow specular — JS sets --glass-mx / --glass-my */
+/* Mouse-follow specular */
 body[data-overlay="true"] .tracker-panel-shell::before {
   content: '';
   position: absolute;
@@ -612,11 +736,18 @@ body[data-overlay="true"] .tracker-panel-shell::before {
   border-radius: inherit;
   background: radial-gradient(
     260px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
-    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.14),
     transparent 65%
   );
   pointer-events: none;
   z-index: 0;
+}
+.dark body[data-overlay="true"] .tracker-panel-shell::before {
+  background: radial-gradient(
+    260px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
+    rgba(255, 255, 255, 0.10),
+    transparent 65%
+  );
 }
 
 body[data-overlay="true"] .tracker-panel-shell > * {
@@ -637,101 +768,6 @@ body[data-overlay="true"] .tracker-panel-tabbar {
   body[data-overlay="true"] .tracker-panel-shell::after {
     display: none;
   }
-}
-
-/* ── Main-app chrome utilities — Tahoe 26 ──────────────────────
-   .tahoe-sidebar / .tahoe-topbar paint translucent surfaces with
-   backdrop-blur over the body's translucent bg. The body shows
-   Win11 Mica or macOS vibrancy through when the OS supports it
-   (BrowserWindow opts in via backgroundMaterial / vibrancy).
-   Without OS vibrancy these just look like subtly-tinted panels.
-
-   .tahoe-card adds the chromatic rim + macOS depth shadow
-   without transparency — for opaque content cards (hero,
-   stat cards, etc).                                              */
-
-/* ── Aggressive Liquid Glass — Tahoe 26 ref ────────────────────
-   Chrome (sidebar / topbar) is dialed *way* down so the OS Mica /
-   vibrancy material dominates the visual. Content cards become
-   frosted-glass platters at ~0.55 opacity — readable text on top,
-   wallpaper colour blurring through underneath.
-
-   Why these values:
-     • Sidebar 0.10 / 0.30 — barely visible chrome, Mica-led
-     • Topbar  0.12 / 0.30 — same idea
-     • Card    0.55 / 0.55 — read-grade translucency, frosted look
-     • Backdrop blur big enough to actually dissolve detail behind
-       (35 / 30 / 20 px respectively). saturate(180%) bumps the
-       refracted colour so Liquid Glass catches the wallpaper hue.
-   ───────────────────────────────────────────────────────────── */
-
-/* Sidebar / topbar — very low alpha + warm/cool tint so Acrylic
-   dominates the visual and the chrome reads as "tinted glass" not
-   "gray panel". Light = warm purple-gray, dark = cool blue-black. */
-.tahoe-sidebar {
-  background: rgba(48, 42, 58, 0.20);
-  backdrop-filter: blur(35px) saturate(180%);
-  -webkit-backdrop-filter: blur(35px) saturate(180%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  border-right: 1px solid rgba(255, 255, 255, 0.10);
-}
-.dark .tahoe-sidebar {
-  background: rgba(18, 24, 42, 0.32);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  border-right-color: rgba(255, 255, 255, 0.06);
-}
-
-.tahoe-topbar {
-  background: rgba(48, 42, 58, 0.22);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-}
-.dark .tahoe-topbar {
-  background: rgba(18, 24, 42, 0.32);
-  border-bottom-color: rgba(255, 255, 255, 0.06);
-}
-
-/* Frosted-glass content card — lower alpha than the previous 0.55
-   variant so Acrylic colour bleeds through more (less gray
-   dominance). Tint pulls slightly off neutral so each mode reads
-   as having a personality: warm-purple in light, cool-blue in dark. */
-.tahoe-card {
-  background: rgba(50, 44, 62, 0.32);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: var(--radius-2xl);
-  box-shadow:
-    inset  1px  1px 0 rgba(180, 220, 255, 0.35),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.22),
-    inset 0  1px 0 rgba(255, 255, 255, 0.20),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.20),
-    0 6px 22px -4px rgba(0, 0, 0, 0.35);
-}
-.dark .tahoe-card {
-  background: rgba(22, 30, 52, 0.34);
-  box-shadow:
-    inset  1px  1px 0 rgba(180, 220, 255, 0.30),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.18),
-    inset 0  1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.30),
-    0 6px 22px -4px rgba(0, 0, 0, 0.50);
-}
-
-/* Active-pill treatment — for sidebar nav, segmented controls in
-   Settings sidebar etc. Replaces the previous solid accent fill
-   with a translucent white pill + visible ring. Looks like glass
-   with a soft inner highlight; reads as "selected" without
-   dominating the chrome.                                          */
-.tahoe-active-pill {
-  background: rgba(255, 255, 255, 0.20);
-  border: 1px solid rgba(255, 255, 255, 0.40);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-.dark .tahoe-active-pill {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 /* ── In-game overlay: dissolve chrome inside the panel shell ───
@@ -755,9 +791,7 @@ body[data-overlay="true"] .tracker-panel-shell > div > div > div[data-tracker-si
   border-radius: 0 !important;
 }
 
-/* Header / footer chrome (direct children of the aside) — kill
-   their solid bg + horizontal borders. The deck list area
-   below carries an explicit data attribute so it's spared. */
+/* Header / footer chrome — kill their solid bg + borders. */
 body[data-overlay="true"] .tracker-panel-shell aside > div:not([data-overlay-list-area]) {
   background: transparent !important;
   border-color: var(--border-separator) !important;
@@ -765,10 +799,10 @@ body[data-overlay="true"] .tracker-panel-shell aside > div:not([data-overlay-lis
 
 /* Deck list "platter" — translucent enough to feel like glass
    but dense enough that card rows stay readable against any
-   game scene blurred behind. Matches the main-app .tahoe-card
-   language so the visual system is consistent across surfaces. */
+   game scene blurred behind. Light mode = near-white frost,
+   dark mode = dark gray frost.                                   */
 body[data-overlay="true"] [data-overlay-list-area] {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid var(--border-separator);
@@ -776,11 +810,10 @@ body[data-overlay="true"] [data-overlay-list-area] {
 .dark body[data-overlay="true"] [data-overlay-list-area],
 body[data-overlay="true"] .dark [data-overlay-list-area],
 body[data-overlay="true"].dark [data-overlay-list-area] {
-  background: rgba(36, 36, 39, 0.70);
+  background: rgba(42, 42, 45, 0.78);
 }
 
-/* Last child = footer — needs a separator above to visually
-   detach it from the platter when the platter has its bg. */
+/* Footer — needs a separator above to visually detach it. */
 body[data-overlay="true"] .tracker-panel-shell aside > div:last-child:not([data-overlay-list-area]) {
   border-top: 1px solid var(--border-separator) !important;
 }

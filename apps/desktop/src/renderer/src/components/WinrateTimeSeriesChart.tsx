@@ -41,7 +41,7 @@ export function WinrateTimeSeriesChart({
               className={`px-2 py-1 text-xs rounded ${
                 granularity === g
                   ? 'bg-accent text-bg'
-                  : 'bg-white/5 text-text-dim hover:text-text'
+                  : 'bg-overlay-surface text-text-dim hover:text-text'
               }`}
             >
               {t(`stats.timeSeries.${g}`)}

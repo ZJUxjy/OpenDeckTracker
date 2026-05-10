@@ -112,7 +112,7 @@ export function Stats() {
         </div>
 
         <div className="flex flex-col items-end space-y-2">
-          <div className="flex bg-white/5 dark:bg-black/20 rounded-md p-1 border border-border-hairline">
+          <div className="flex bg-overlay-surface dark:bg-black/20 rounded-md p-1 border border-border-hairline">
             {FILTERS.map((filter) => (
               <button
                 key={filter}
@@ -271,7 +271,7 @@ export function Stats() {
                               ? 'bg-green/20 text-green'
                               : match.result === 'loss'
                                 ? 'bg-red/20 text-red'
-                                : 'bg-white/5 text-text'
+                                : 'bg-overlay-surface text-text'
                           }`}
                         >
                           {t(`stats.result.${match.result}`)}

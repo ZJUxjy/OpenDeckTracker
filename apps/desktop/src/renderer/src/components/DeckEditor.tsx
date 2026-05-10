@@ -209,8 +209,8 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[800px] max-w-[95vw] max-h-[90vh] bg-white/10 backdrop-blur-xl border border-border rounded-md text-text flex flex-col">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-overlay-dialog" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[800px] max-w-[95vw] max-h-[90vh] bg-overlay-elevated backdrop-blur-xl border border-border rounded-md text-text flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <Dialog.Title className="text-lg font-bold text-text">
               {t('decks.editor.title')}
@@ -219,7 +219,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
               {t('decks.editor.title')}
             </Dialog.Description>
             <Dialog.Close asChild>
-              <button aria-label={t('decks.editor.cancel')} className="p-1 hover:bg-white/10 rounded">
+              <button aria-label={t('decks.editor.cancel')} className="p-1 hover:bg-overlay-elevated rounded">
                 <X size={18} />
               </button>
             </Dialog.Close>
@@ -238,7 +238,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                     queueSave({ name: e.target.value });
                   }}
                   placeholder={t('decks.editor.namePlaceholder')}
-                  className="w-full mt-1 px-3 py-2 bg-white/5 border border-border rounded text-text"
+                  className="w-full mt-1 px-3 py-2 bg-overlay-input border border-border rounded text-text"
                 />
               </div>
               <div className="flex gap-2">
@@ -250,7 +250,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                       setHeroClass(e.target.value as HeroClass);
                       queueSave({ class: e.target.value as HeroClass });
                     }}
-                    className="w-full mt-1 px-3 py-2 bg-white/5 border border-border rounded text-text"
+                    className="w-full mt-1 px-3 py-2 bg-overlay-input border border-border rounded text-text"
                   >
                     {CLASSES.map((c) => (
                       <option key={c} value={c}>
@@ -267,7 +267,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                       setFormat(e.target.value as Format);
                       queueSave({ format: e.target.value as Format });
                     }}
-                    className="w-full mt-1 px-3 py-2 bg-white/5 border border-border rounded text-text"
+                    className="w-full mt-1 px-3 py-2 bg-overlay-input border border-border rounded text-text"
                   >
                     {FORMATS.map((f) => (
                       <option key={f} value={f}>
@@ -286,7 +286,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                     queueSave({ notes: e.target.value });
                   }}
                   rows={4}
-                  className="w-full mt-1 px-3 py-2 bg-white/5 border border-border rounded text-text text-sm"
+                  className="w-full mt-1 px-3 py-2 bg-overlay-input border border-border rounded text-text text-sm"
                 />
               </div>
               <div>
@@ -303,7 +303,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                         .filter(Boolean),
                     });
                   }}
-                  className="w-full mt-1 px-3 py-2 bg-white/5 border border-border rounded text-text text-sm"
+                  className="w-full mt-1 px-3 py-2 bg-overlay-input border border-border rounded text-text text-sm"
                 />
               </div>
             </div>
@@ -321,12 +321,12 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                 onChange={(e) => onSearchChange(e.target.value)}
                 onKeyDown={onSearchKeyDown}
                 placeholder={t('decks.editor.search.placeholder')}
-                className="w-full px-3 py-2 bg-white/5 border border-border rounded text-text text-sm"
+                className="w-full px-3 py-2 bg-overlay-input border border-border rounded text-text text-sm"
                 data-testid="card-search-input"
               />
               {results.length > 0 && (
                 <div
-                  className="mt-1 bg-white/5 border border-border rounded max-h-48 overflow-y-auto"
+                  className="mt-1 bg-overlay-input border border-border rounded max-h-48 overflow-y-auto"
                   role="listbox"
                   data-testid="card-search-results"
                 >
@@ -336,7 +336,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                       role="option"
                       aria-selected={false}
                       onClick={() => addCard(r.id)}
-                      className="w-full text-left px-3 py-1.5 text-sm hover:bg-white/10 flex justify-between"
+                      className="w-full text-left px-3 py-1.5 text-sm hover:bg-overlay-elevated flex justify-between"
                     >
                       <span>{r.name}</span>
                       <span className="text-text-dim">{r.cost} mana</span>
@@ -350,21 +350,21 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
                   return (
                     <div
                       key={c.cardId}
-                      className="flex items-center gap-2 px-2 py-1 bg-white/5 rounded text-sm"
+                      className="flex items-center gap-2 px-2 py-1 bg-overlay-input rounded text-sm"
                     >
                       <span className="text-text-dim w-6">{hit?.cost ?? '?'}</span>
                       <span className="flex-1 truncate">{hit?.name ?? c.cardId}</span>
                       <span className="text-accent font-bold">×{c.count}</span>
                       <button
                         onClick={() => addCard(c.cardId)}
-                        className="p-1 hover:bg-white/10 rounded text-text-dim"
+                        className="p-1 hover:bg-overlay-elevated rounded text-text-dim"
                         aria-label={`add ${c.cardId}`}
                       >
                         <Plus size={14} />
                       </button>
                       <button
                         onClick={() => removeCard(c.cardId)}
-                        className="p-1 hover:bg-white/10 rounded text-text-dim"
+                        className="p-1 hover:bg-overlay-elevated rounded text-text-dim"
                         aria-label={`remove ${c.cardId}`}
                       >
                         <Trash2 size={14} />
@@ -391,7 +391,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
 
           <div className="flex justify-end gap-2 p-4 border-t border-border">
             <Dialog.Close asChild>
-              <button className="px-4 py-2 rounded text-sm hover:bg-white/10">
+              <button className="px-4 py-2 rounded text-sm hover:bg-overlay-elevated">
                 {t('decks.editor.cancel')}
               </button>
             </Dialog.Close>

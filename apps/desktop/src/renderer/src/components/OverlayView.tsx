@@ -43,7 +43,7 @@ export function OverlayView() {
         aria-label="Close player overlay"
         onClick={close}
         style={NO_DRAG}
-        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded text-text-mute hover:text-red hover:bg-white/10 transition-colors text-sm leading-none z-20"
+        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded text-text-mute hover:text-red hover:bg-overlay-hover transition-colors text-sm leading-none z-20"
       >
         ×
       </button>

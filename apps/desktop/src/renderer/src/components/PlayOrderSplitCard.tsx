@@ -22,7 +22,7 @@ function Bucket({
 }): ReactElement {
   return (
     <div
-      className="flex-1 bg-white/10 backdrop-blur-xl border border-border rounded-lg p-4"
+      className="flex-1 bg-overlay-elevated backdrop-blur-xl border border-border rounded-lg p-4"
       data-testid={testid}
     >
       <div className="text-xs text-text-dim uppercase tracking-wider mb-1">{label}</div>

@@ -35,7 +35,7 @@ export function Sidebar() {
             className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-all duration-200 ${
               isActive(item.id)
                 ? 'tahoe-active-pill text-text font-semibold'
-                : 'text-text-dim hover:bg-white/8 hover:text-text dark:hover:bg-white/5'
+                : 'text-text-dim hover:bg-overlay-hover hover:text-text'
             }`}
           >
             <item.icon
@@ -55,7 +55,7 @@ export function Sidebar() {
           className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors ${
             isActive('settings')
               ? 'tahoe-active-pill text-text font-semibold'
-              : 'text-text-dim hover:text-text hover:bg-white/8'
+              : 'text-text-dim hover:text-text hover:bg-overlay-hover'
           }`}
         >
           <Settings

@@ -56,7 +56,7 @@ export function TrackerPanelTabs({
         role="tablist"
         aria-label={`${side} tracker tabs`}
         style={DRAG}
-        className="tracker-panel-tabbar shrink-0 flex items-stretch gap-1 px-2 pt-2 pb-1 bg-white/5 border-b border-border"
+        className="tracker-panel-tabbar shrink-0 flex items-stretch gap-1 px-2 pt-2 pb-1 bg-overlay-surface border-b border-border"
       >
         <TabPill
           testId="tracker-tab-deck"
@@ -150,7 +150,7 @@ function TabPill({ testId, active, onClick, children }: TabPillProps) {
         'px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-colors',
         active
           ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
-          : 'text-text-mute hover:text-text hover:bg-white/5',
+          : 'text-text-mute hover:text-text hover:bg-overlay-surface',
       )}
     >
       {children}

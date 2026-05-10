@@ -71,7 +71,7 @@ export function CardImagePopover({
       style={{ top: `${top}px`, left: `${left}px` }}
       onMouseLeave={onClose}
     >
-      <div className="w-[256px] bg-white/5 rounded-lg shadow-2xl border border-border overflow-hidden">
+      <div className="w-[256px] bg-overlay-surface rounded-lg shadow-2xl border border-border overflow-hidden">
         {loading && (
           <div className="h-[386px] flex items-center justify-center text-text-dim text-xs">
             {t('cardImage.loading')}

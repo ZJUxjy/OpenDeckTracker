@@ -28,7 +28,7 @@ function getRarityCostBg(rarity: Rarity | undefined): string {
   if (rarity === 'LEGENDARY') return 'bg-rarity-legendary text-bg';
   if (rarity === 'EPIC') return 'bg-rarity-epic text-bg';
   if (rarity === 'RARE') return 'bg-rarity-rare text-bg';
-  return 'bg-white/10 text-text border border-border-hi';
+  return 'bg-overlay-elevated text-text border border-border-hi';
 }
 
 type SyncProgress = {
@@ -109,7 +109,7 @@ const SORTS: PopularDeckSort[] = ['popular', 'winrate', 'updated', 'cheapest'];
 function ClassChip({ heroClass, label }: { heroClass: HeroClass; label: string }): ReactElement {
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-text text-[9px] font-bold border border-border-hi">
+      <div className="w-5 h-5 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-[9px] font-bold border border-border-hi">
         {heroClass.slice(0, 2)}
       </div>
       <span>{label}</span>
@@ -300,7 +300,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
           onClick={() => { void onSync(); }}
           disabled={syncing}
           data-testid="deck-finder-sync-button"
-          className="px-3 py-1.5 rounded-sm bg-white/5 border border-border text-text hover:border-accent hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer tracking-[0.12em] font-bold"
+          className="px-3 py-1.5 rounded-sm bg-overlay-surface border border-border text-text hover:border-accent hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer tracking-[0.12em] font-bold"
         >
           {syncing
             ? t('decks.finder.syncing', { phase: progress?.phase ?? 'meta' })
@@ -309,7 +309,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
         {syncing && (
           <div
             data-testid="deck-finder-sync-progress"
-            className="flex-1 h-1.5 bg-white/5 border border-border rounded-sm overflow-hidden max-w-[260px]"
+            className="flex-1 h-1.5 bg-overlay-surface border border-border rounded-sm overflow-hidden max-w-[260px]"
           >
             <div
               className="h-full bg-accent transition-[width] duration-150"
@@ -341,7 +341,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
             onChange={(e) => setIncludesCard(e.target.value)}
             placeholder={cardDbReady ? t('decks.finder.includesCardPlaceholder') : t('decks.finder.indexingCards')}
             disabled={!cardDbReady}
-            className="w-full pl-7 pr-3 py-1.5 bg-white/5 border border-border rounded-sm text-text text-sm font-sans focus:border-accent focus:outline-none disabled:opacity-50"
+            className="w-full pl-7 pr-3 py-1.5 bg-overlay-surface border border-border rounded-sm text-text text-sm font-sans focus:border-accent focus:outline-none disabled:opacity-50"
           />
           <span className="absolute left-2 top-1.5 text-green font-mono text-sm font-bold">+</span>
         </div>
@@ -351,7 +351,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
             onChange={(e) => setExcludesCard(e.target.value)}
             placeholder={cardDbReady ? t('decks.finder.excludesCardPlaceholder') : t('decks.finder.indexingCards')}
             disabled={!cardDbReady}
-            className="w-full pl-7 pr-3 py-1.5 bg-white/5 border border-border rounded-sm text-text text-sm font-sans focus:border-accent focus:outline-none disabled:opacity-50"
+            className="w-full pl-7 pr-3 py-1.5 bg-overlay-surface border border-border rounded-sm text-text text-sm font-sans focus:border-accent focus:outline-none disabled:opacity-50"
           />
           <span className="absolute left-2 top-1.5 text-red font-mono text-sm font-bold">−</span>
         </div>
@@ -467,10 +467,10 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
                 key={d.id}
                 onClick={() => setSelectedId(d.id)}
                 className={`w-full text-left border-l-2 border-b border-border px-4 py-3 grid grid-cols-[30px_1fr_auto] gap-3 items-center cursor-pointer transition-colors ${
-                  active ? 'border-l-accent bg-accent-dim/30' : 'border-l-transparent hover:bg-white/5'
+                  active ? 'border-l-accent bg-accent-dim/30' : 'border-l-transparent hover:bg-overlay-surface'
                 }`}
               >
-                <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-text text-[10px] font-bold border border-border-hi">
+                <div className="w-7 h-7 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-[10px] font-bold border border-border-hi">
                   {d.class.slice(0, 2)}
                 </div>
                 <div className="min-w-0">
@@ -498,7 +498,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
         {selected && (
           <div className="overflow-auto p-5 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-text text-xs font-bold border border-border-hi">
+              <div className="w-9 h-9 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-xs font-bold border border-border-hi">
                 {selected.class.slice(0, 2)}
               </div>
               <div className="flex-1 min-w-0">
@@ -510,17 +510,17 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
             </div>
 
             <div className="grid grid-cols-3 gap-px bg-border rounded-sm overflow-hidden border border-border">
-              <div className="bg-white/5 px-3 py-2.5">
+              <div className="bg-overlay-surface px-3 py-2.5">
                 <div className="text-[9px] text-text-mute font-mono tracking-[0.14em]">{t('decks.finder.kpiWinrate')}</div>
                 <div className={`text-base font-semibold font-mono mt-0.5 ${winrateColor(selected.winratePercent)}`}>
                   {selected.winratePercent}%
                 </div>
               </div>
-              <div className="bg-white/5 px-3 py-2.5">
+              <div className="bg-overlay-surface px-3 py-2.5">
                 <div className="text-[9px] text-text-mute font-mono tracking-[0.14em]">{t('decks.finder.kpiGames')}</div>
                 <div className="text-base font-semibold font-mono mt-0.5 text-text">{formatGames(selected.gamesCount)}</div>
               </div>
-              <div className="bg-white/5 px-3 py-2.5">
+              <div className="bg-overlay-surface px-3 py-2.5">
                 <div className="text-[9px] text-text-mute font-mono tracking-[0.14em]">{t('decks.finder.kpiDust')}</div>
                 <div className="text-base font-semibold font-mono mt-0.5 text-amber">◆ {selected.dustCost.toLocaleString()}</div>
               </div>
@@ -616,7 +616,7 @@ function KeyCardRow({
       ref={ref}
       onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
       onMouseLeave={onMouseLeave}
-      className="relative overflow-hidden rounded-sm bg-white/5 text-xs border border-transparent hover:border-border-hi"
+      className="relative overflow-hidden rounded-sm bg-overlay-surface text-xs border border-transparent hover:border-border-hi"
     >
       {tileUrl ? (
         <img

@@ -40,7 +40,7 @@ const CLASS_LABELS: Record<HeroClass, string> = {
 function ClassIcon({ heroClass }: { heroClass: HeroClass }): ReactElement {
   return (
     <div
-      className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-text text-xs font-bold border border-border-hi"
+      className="w-8 h-8 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-xs font-bold border border-border-hi"
       aria-hidden="true"
     >
       {heroClass.slice(0, 2)}
@@ -80,7 +80,7 @@ function DeckRow({
 
   return (
     <div
-      className="flex items-center gap-3 p-3 bg-white/5 border border-border hover:border-border-hi rounded-md"
+      className="flex items-center gap-3 p-3 bg-overlay-surface border border-border hover:border-border-hi rounded-md"
       data-testid={`deck-row-${deck.id}`}
     >
       <ClassIcon heroClass={deck.class} />
@@ -98,34 +98,34 @@ function DeckRow({
         <DropdownMenu.Trigger asChild>
           <button
             aria-label={t('decks.list.row.edit')}
-            className="p-1 rounded hover:bg-white/10 text-text-dim hover:text-text"
+            className="p-1 rounded hover:bg-overlay-elevated text-text-dim hover:text-text"
           >
             <MoreVertical size={18} />
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content className="z-50 min-w-[8rem] bg-white/10 backdrop-blur-xl border border-border rounded-md shadow-xl py-1 text-sm text-text">
+          <DropdownMenu.Content className="z-50 min-w-[8rem] bg-overlay-elevated backdrop-blur-xl border border-border rounded-md shadow-xl py-1 text-sm text-text">
             <DropdownMenu.Item
               onSelect={() => onEdit(deck.id)}
-              className="px-3 py-1.5 hover:bg-white/10 outline-none cursor-pointer"
+              className="px-3 py-1.5 hover:bg-overlay-elevated outline-none cursor-pointer"
             >
               {t('decks.list.row.edit')}
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={() => onDuplicate(deck.id)}
-              className="px-3 py-1.5 hover:bg-white/10 outline-none cursor-pointer"
+              className="px-3 py-1.5 hover:bg-overlay-elevated outline-none cursor-pointer"
             >
               {t('decks.list.row.duplicate')}
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={() => onExport(deck.id)}
-              className="px-3 py-1.5 hover:bg-white/10 outline-none cursor-pointer"
+              className="px-3 py-1.5 hover:bg-overlay-elevated outline-none cursor-pointer"
             >
               {t('decks.list.row.export')}
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={() => setConfirmOpen(true)}
-              className="px-3 py-1.5 hover:bg-white/10 outline-none cursor-pointer text-red"
+              className="px-3 py-1.5 hover:bg-overlay-elevated outline-none cursor-pointer text-red"
             >
               {t('decks.list.row.delete')}
             </DropdownMenu.Item>
@@ -135,8 +135,8 @@ function DeckRow({
 
       <AlertDialog.Root open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[400px] bg-white/10 backdrop-blur-xl border border-border rounded-md p-6 text-text">
+          <AlertDialog.Overlay className="fixed inset-0 z-40 bg-overlay-dialog" />
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[400px] bg-overlay-elevated backdrop-blur-xl border border-border rounded-md p-6 text-text">
             <AlertDialog.Title className="text-lg font-bold text-text">
               {t('decks.list.row.deleteConfirm.title')}
             </AlertDialog.Title>
@@ -145,7 +145,7 @@ function DeckRow({
             </AlertDialog.Description>
             <div className="mt-6 flex justify-end gap-2">
               <AlertDialog.Cancel asChild>
-                <button className="px-4 py-2 rounded text-sm hover:bg-white/10">
+                <button className="px-4 py-2 rounded text-sm hover:bg-overlay-elevated">
                   {t('decks.list.row.deleteConfirm.cancel')}
                 </button>
               </AlertDialog.Cancel>
@@ -218,7 +218,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
           <button
             onClick={() => props.onImport?.()}
             aria-label={t('decks.list.empty.import')}
-            className="px-4 py-2 bg-white/10 hover:bg-border-hi text-text text-sm font-medium rounded inline-flex items-center gap-2"
+            className="px-4 py-2 bg-overlay-elevated hover:bg-border-hi text-text text-sm font-medium rounded inline-flex items-center gap-2"
           >
             <Upload size={16} />
             {t('decks.list.empty.import')}
