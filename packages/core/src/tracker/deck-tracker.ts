@@ -141,6 +141,21 @@ export interface DeckTrackerSnapshot {
   friendlyHero?: HeroVitals | null;
   /** Opposing hero's current health/armor when available from Power.log tags. */
   opposingHero?: HeroVitals | null;
+  /**
+   * Local player's hero class for the active match (e.g. `'DRUID'`),
+   * resolved from the identified deck. `null` until a deck has been
+   * identified or selected. Used by recorders that need class context
+   * at match end without reaching into the tracker's private state.
+   */
+  playerClass?: string | null;
+  /**
+   * App-managed saved-deck attribution for the active match. Set when
+   * the user picks a saved deck through `DeckSelectDialog`. Recorders
+   * copy these into persisted match rows so Stats can compute deck
+   * matchup aggregates. Both fields appear together or not at all.
+   */
+  savedDeckId?: string;
+  savedDeckVersion?: number;
   /** Last error from the poll loop (null when healthy). */
   error: string | null;
   /** Wall-clock timestamp of the last successful poll. */
@@ -763,6 +778,13 @@ export class DeckTracker {
       boardAttackToFace,
       friendlyHero,
       opposingHero,
+      playerClass: this.identifiedDeck?.heroClass ?? null,
+      ...(this.savedDeckAttribution !== null
+        ? {
+            savedDeckId: this.savedDeckAttribution.savedDeckId,
+            savedDeckVersion: this.savedDeckAttribution.savedDeckVersion,
+          }
+        : {}),
       // A successful tick clears any previous error; `onError` sets it
       // again on the next snapshot if a tick throws. Without this clear,
       // a single transient error would stay visible in the UI's "Error"
@@ -1132,6 +1154,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     boardAttackToFace: { friendly: 0, opposing: 0 },
     friendlyHero: null,
     opposingHero: null,
+    playerClass: null,
     error: null,
     updatedAt: 0,
   };

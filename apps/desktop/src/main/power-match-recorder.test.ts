@@ -177,6 +177,44 @@ describe('power-match-recorder', () => {
     );
   });
 
+  it('records snapshot opponent class, player class, and saved-deck attribution', () => {
+    const record = vi.fn<(match: NormalizedCompletedMatch) => void>();
+    const recorder = createPowerMatchRecorder({
+      getSnapshot: () =>
+        snapshot({
+          opponentClass: 'MAGE',
+          playerClass: 'DRUID',
+          savedDeckId: 'deck-1',
+          savedDeckVersion: 3,
+        }),
+      record,
+      now: () => 2_000,
+    });
+
+    recorder.handleEvent({ type: 'create-game', raw: '', content: '' });
+    recorder.handleEvent({
+      type: 'tag-change',
+      raw: '',
+      content: '',
+      entity: 'TestPlayer#1',
+      tag: 'PLAYSTATE',
+      value: 'WON',
+    });
+    recorder.handleEvent(tagChange('STATE', 'COMPLETE'));
+
+    expect(record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        result: 'win',
+        opponentClass: 'MAGE',
+        playerClass: 'DRUID',
+        savedDeckId: 'deck-1',
+        savedDeckVersion: 3,
+        deckId: 42,
+        deckName: 'Recorded Real Deck',
+      }),
+    );
+  });
+
   it('uses human Power.log classification when HearthMirror reports a mission id for a human match', () => {
     const record = vi.fn<(match: NormalizedCompletedMatch) => void>();
     const recorder = createPowerMatchRecorder({

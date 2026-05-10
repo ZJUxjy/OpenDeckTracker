@@ -37,6 +37,8 @@ interface MatchHistoryRow {
   game_type: number;
   format_type: number;
   player_class: string | null;
+  saved_deck_id: string | null;
+  saved_deck_version: number | null;
   source: MatchHistoryRecord['source'];
 }
 
@@ -45,42 +47,105 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
   const db = new Database(dbPath);
   initializeSchema(db);
 
+  const insertStmt = db.prepare(`
+    INSERT INTO match_history (
+      fingerprint,
+      started_at,
+      ended_at,
+      duration_seconds,
+      result,
+      play_order,
+      deck_id,
+      deck_name,
+      opponent_name,
+      opponent_class,
+      game_type,
+      format_type,
+      player_class,
+      saved_deck_id,
+      saved_deck_version,
+      source
+    ) VALUES (
+      @fingerprint,
+      @startedAt,
+      @endedAt,
+      @durationSeconds,
+      @result,
+      @playOrder,
+      @deckId,
+      @deckName,
+      @opponentName,
+      @opponentClass,
+      @gameType,
+      @formatType,
+      @playerClass,
+      @savedDeckId,
+      @savedDeckVersion,
+      @source
+    )
+  `);
+
+  const selectByFingerprintStmt = db.prepare(
+    'SELECT * FROM match_history WHERE fingerprint = ?',
+  );
+
+  const updateStmt = db.prepare(`
+    UPDATE match_history SET
+      result = @result,
+      play_order = @playOrder,
+      deck_id = @deckId,
+      deck_name = @deckName,
+      opponent_name = @opponentName,
+      opponent_class = @opponentClass,
+      player_class = @playerClass,
+      saved_deck_id = @savedDeckId,
+      saved_deck_version = @savedDeckVersion
+    WHERE fingerprint = @fingerprint
+  `);
+
   return {
     record(match) {
       if (!isConstructedMatch(match)) return;
-      db.prepare(`
-        INSERT OR IGNORE INTO match_history (
-          fingerprint,
-          started_at,
-          ended_at,
-          duration_seconds,
-          result,
-          play_order,
-          deck_id,
-          deck_name,
-          opponent_name,
-          opponent_class,
-          game_type,
-          format_type,
-          player_class,
-          source
-        ) VALUES (
-          @fingerprint,
-          @startedAt,
-          @endedAt,
-          @durationSeconds,
-          @result,
-          @playOrder,
-          @deckId,
-          @deckName,
-          @opponentName,
-          @opponentClass,
-          @gameType,
-          @formatType,
-          @playerClass,
-          @source
-        )
-      `).run({ ...match, playerClass: match.playerClass ?? null });
+      const incoming = {
+        fingerprint: match.fingerprint,
+        startedAt: match.startedAt,
+        endedAt: match.endedAt,
+        durationSeconds: match.durationSeconds,
+        result: match.result,
+        playOrder: match.playOrder,
+        deckId: match.deckId,
+        deckName: match.deckName,
+        opponentName: match.opponentName,
+        opponentClass: match.opponentClass,
+        gameType: match.gameType,
+        formatType: match.formatType,
+        playerClass: match.playerClass ?? null,
+        savedDeckId: match.savedDeckId ?? null,
+        savedDeckVersion: match.savedDeckVersion ?? null,
+        source: match.source,
+      };
+
+      const existing = selectByFingerprintStmt.get(match.fingerprint) as
+        | MatchHistoryRow
+        | undefined;
+      if (existing === undefined) {
+        insertStmt.run(incoming);
+        return;
+      }
+
+      const merged = {
+        fingerprint: incoming.fingerprint,
+        result: pickResult(existing.result, incoming.result),
+        playOrder: pickPlayOrder(existing.play_order, incoming.playOrder),
+        deckId: pickNonNull(existing.deck_id, incoming.deckId),
+        deckName: pickNonNull(existing.deck_name, incoming.deckName),
+        opponentName: pickNonNull(existing.opponent_name, incoming.opponentName),
+        opponentClass: pickNonNull(existing.opponent_class, incoming.opponentClass),
+        playerClass: pickNonNull(existing.player_class, incoming.playerClass),
+        savedDeckId: pickNonNull(existing.saved_deck_id, incoming.savedDeckId),
+        savedDeckVersion: pickNonNull(existing.saved_deck_version, incoming.savedDeckVersion),
+      };
+      updateStmt.run(merged);
     },
 
     listRecent(query) {
@@ -130,6 +195,12 @@ function initializeSchema(db: Database.Database): void {
   if (!existingCols.includes('player_class')) {
     db.exec('ALTER TABLE match_history ADD COLUMN player_class TEXT');
   }
+  if (!existingCols.includes('saved_deck_id')) {
+    db.exec('ALTER TABLE match_history ADD COLUMN saved_deck_id TEXT');
+  }
+  if (!existingCols.includes('saved_deck_version')) {
+    db.exec('ALTER TABLE match_history ADD COLUMN saved_deck_version INTEGER');
+  }
 }
 
 function readAll(db: Database.Database): MatchHistoryRecord[] {
@@ -157,5 +228,33 @@ function rowToRecord(row: MatchHistoryRow): MatchHistoryRecord {
   if (row.player_class !== undefined) {
     record.playerClass = row.player_class;
   }
+  if (row.saved_deck_id !== null && row.saved_deck_id !== undefined) {
+    record.savedDeckId = row.saved_deck_id;
+  }
+  if (row.saved_deck_version !== null && row.saved_deck_version !== undefined) {
+    record.savedDeckVersion = row.saved_deck_version;
+  }
   return record;
+}
+
+function pickResult(
+  existing: MatchHistoryRecord['result'],
+  incoming: MatchHistoryRecord['result'],
+): MatchHistoryRecord['result'] {
+  if (existing !== 'unknown') return existing;
+  return incoming;
+}
+
+function pickPlayOrder(
+  existing: MatchHistoryRecord['playOrder'],
+  incoming: MatchHistoryRecord['playOrder'],
+): MatchHistoryRecord['playOrder'] {
+  if (existing !== 'unknown') return existing;
+  return incoming;
+}
+
+function pickNonNull<T>(existing: T | null | undefined, incoming: T | null | undefined): T | null {
+  if (existing !== null && existing !== undefined) return existing;
+  if (incoming !== null && incoming !== undefined) return incoming;
+  return null;
 }

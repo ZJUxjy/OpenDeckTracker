@@ -77,7 +77,14 @@ export function createPowerMatchRecorder(args: {
           deckId: snapshot.deck?.id ?? null,
           deckName: snapshot.deck?.name ?? null,
           opponentName: matchInfo?.opposingPlayer?.name ?? inferred.opponentName,
-          opponentClass: null,
+          opponentClass: snapshot.opponentClass ?? null,
+          playerClass: snapshot.playerClass ?? null,
+          ...(snapshot.savedDeckId !== undefined && snapshot.savedDeckVersion !== undefined
+            ? {
+                savedDeckId: snapshot.savedDeckId,
+                savedDeckVersion: snapshot.savedDeckVersion,
+              }
+            : {}),
           gameType: classification.gameType,
           formatType: classification.formatType,
           missionId: classification.missionId,

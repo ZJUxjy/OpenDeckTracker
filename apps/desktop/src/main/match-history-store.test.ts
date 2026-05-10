@@ -84,6 +84,143 @@ describe('match-history-store', () => {
     store.close();
   });
 
+  it('persists savedDeckId and savedDeckVersion on new records', () => {
+    const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'saved-1',
+        savedDeckId: 'deck-1',
+        savedDeckVersion: 2,
+      }),
+    );
+    const records = store.getAllForFilter({ filter: 'all-time' });
+    expect(records).toHaveLength(1);
+    expect(records[0]?.savedDeckId).toBe('deck-1');
+    expect(records[0]?.savedDeckVersion).toBe(2);
+    store.close();
+  });
+
+  it('records null saved-deck attribution when not provided', () => {
+    const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
+    store.record(makeCompletedMatch({ fingerprint: 'no-saved' }));
+    const records = store.getAllForFilter({ filter: 'all-time' });
+    expect(records[0]?.savedDeckId).toBeUndefined();
+    expect(records[0]?.savedDeckVersion).toBeUndefined();
+    store.close();
+  });
+
+  it('migrates existing pre-migration databases by adding saved-deck columns', async () => {
+    const Database = (await import('better-sqlite3')).default;
+    const dbPath = join(dir, 'stats.sqlite');
+    const raw = new Database(dbPath);
+    raw.exec(`
+      CREATE TABLE match_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fingerprint TEXT NOT NULL UNIQUE,
+        started_at INTEGER NOT NULL,
+        ended_at INTEGER NOT NULL,
+        duration_seconds INTEGER NOT NULL,
+        result TEXT NOT NULL,
+        play_order TEXT NOT NULL,
+        deck_id INTEGER,
+        deck_name TEXT,
+        opponent_name TEXT,
+        opponent_class TEXT,
+        game_type INTEGER NOT NULL,
+        format_type INTEGER NOT NULL,
+        source TEXT NOT NULL
+      );
+    `);
+    raw.prepare(`
+      INSERT INTO match_history (
+        fingerprint, started_at, ended_at, duration_seconds, result, play_order,
+        deck_id, deck_name, opponent_name, opponent_class, game_type, format_type, source
+      ) VALUES ('legacy-saved', 0, 0, 0, 'win', 'first', null, 'Legacy Deck', null, null, 3, 2, 'deck-tracker')
+    `).run();
+    raw.close();
+
+    const store = createMatchHistoryStore(dbPath);
+    const records = store.getAllForFilter({ filter: 'all-time' });
+    expect(records).toHaveLength(1);
+    expect(records[0]?.savedDeckId).toBeUndefined();
+    expect(records[0]?.savedDeckVersion).toBeUndefined();
+
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'post-saved',
+        savedDeckId: 'deck-2',
+        savedDeckVersion: 3,
+      }),
+    );
+    const all = store.getAllForFilter({ filter: 'all-time' });
+    const fresh = all.find((r) => r.fingerprint === 'post-saved');
+    expect(fresh?.savedDeckId).toBe('deck-2');
+    expect(fresh?.savedDeckVersion).toBe(3);
+    store.close();
+  });
+
+  it('enriches an existing unknown row with later result and class data', () => {
+    const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'enrich-1',
+        result: 'unknown',
+        opponentClass: null,
+        playerClass: null,
+      }),
+    );
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'enrich-1',
+        result: 'win',
+        opponentClass: 'MAGE',
+        playerClass: 'DRUID',
+        savedDeckId: 'deck-1',
+        savedDeckVersion: 2,
+      }),
+    );
+
+    const records = store.getAllForFilter({ filter: 'all-time' });
+    expect(records).toHaveLength(1);
+    expect(records[0]?.result).toBe('win');
+    expect(records[0]?.opponentClass).toBe('MAGE');
+    expect(records[0]?.playerClass).toBe('DRUID');
+    expect(records[0]?.savedDeckId).toBe('deck-1');
+    expect(records[0]?.savedDeckVersion).toBe(2);
+    store.close();
+  });
+
+  it('does not downgrade a known result or non-null fields', () => {
+    const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'enrich-2',
+        result: 'win',
+        opponentClass: 'MAGE',
+        playerClass: 'DRUID',
+        savedDeckId: 'deck-1',
+        savedDeckVersion: 2,
+      }),
+    );
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'enrich-2',
+        result: 'unknown',
+        opponentClass: null,
+        playerClass: null,
+      }),
+    );
+
+    const records = store.getAllForFilter({ filter: 'all-time' });
+    expect(records).toHaveLength(1);
+    expect(records[0]?.result).toBe('win');
+    expect(records[0]?.opponentClass).toBe('MAGE');
+    expect(records[0]?.playerClass).toBe('DRUID');
+    expect(records[0]?.savedDeckId).toBe('deck-1');
+    expect(records[0]?.savedDeckVersion).toBe(2);
+    store.close();
+  });
+
   it('migrates existing pre-migration databases by adding player_class column', async () => {
     // Build a pre-migration DB by hand (no player_class column).
     const Database = (await import('better-sqlite3')).default;
