@@ -50,6 +50,8 @@ const ALL_CHANNELS = [
   'decks:set-sort-index',
 ];
 
+const ALL_CHANNELS_WITH_SYNC = [...ALL_CHANNELS, 'decks:sync-from-live'];
+
 function makeStubStore(overrides: Partial<DeckStore> = {}): DeckStore {
   return {
     list: vi.fn(() => []),
@@ -230,5 +232,71 @@ describe('deck-ipc', () => {
     expect(new UnknownCardError('X').name).toBe('UnknownCardError');
     expect(new DeckstringDecodeError('x').name).toBe('DeckstringDecodeError');
     expect(new IllegalDeckExportError([]).name).toBe('IllegalDeckExportError');
+  });
+
+  it('does not register decks:sync-from-live when syncFromLive is omitted', () => {
+    mocks.handlers.clear();
+    mocks.ipcMain.handle.mockClear();
+    registerDeckIpc(makeOptions());
+
+    expect(mocks.handlers.has('decks:sync-from-live')).toBe(false);
+  });
+
+  it('syncFromLive resolves sync result', async () => {
+    mocks.handlers.clear();
+    mocks.ipcMain.handle.mockClear();
+    const result = {
+      ok: true,
+      source: 'live' as const,
+      synced: 2,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 1,
+      finishedAt: 2,
+    };
+    registerDeckIpc(
+      makeOptions({
+        syncFromLive: vi.fn(async () => result),
+      }),
+    );
+
+    const handler = mocks.handlers.get('decks:sync-from-live')!;
+    await expect(handler({})).resolves.toMatchObject({ source: 'live', ok: true });
+    for (const ch of ALL_CHANNELS_WITH_SYNC) {
+      expect(mocks.handlers.has(ch)).toBe(true);
+    }
+  });
+
+  it('re-registers decks:sync-from-live idempotently', async () => {
+    mocks.handlers.clear();
+    mocks.ipcMain.handle.mockClear();
+    mocks.ipcMain.removeHandler.mockClear();
+
+    const first = vi.fn(async () => ({
+      ok: false,
+      source: 'not-ready' as const,
+      synced: 0,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 0,
+      finishedAt: 0,
+    }));
+    const second = vi.fn(async () => ({
+      ok: true,
+      source: 'live' as const,
+      synced: 1,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 0,
+      finishedAt: 0,
+    }));
+    registerDeckIpc(makeOptions({ syncFromLive: first }));
+    registerDeckIpc(makeOptions({ syncFromLive: second }));
+
+    const handler = mocks.handlers.get('decks:sync-from-live')!;
+    await handler({});
+
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
   });
 });

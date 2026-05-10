@@ -41,6 +41,7 @@ import type {
   UpdateDeckPatch,
 } from '@hdt/core';
 import type { LiveDeckSnapshotInput } from '../main/deck-store';
+import type { LiveDeckSyncResult } from '../main/deck-sync-host';
 import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 import type {
   AccountId,
@@ -144,6 +145,8 @@ const api = {
     exportJson: (id: string): Promise<string> => ipcRenderer.invoke('decks:export-json', id),
     saveFromLive: (input: LiveDeckSnapshotInput): Promise<DeckDetail> =>
       ipcRenderer.invoke('decks:save-from-live', input),
+    syncFromLive: (): Promise<LiveDeckSyncResult> =>
+      ipcRenderer.invoke('decks:sync-from-live'),
     setSortIndex: (id: string, sortIndex: number): Promise<void> =>
       ipcRenderer.invoke('decks:set-sort-index', id, sortIndex),
   },

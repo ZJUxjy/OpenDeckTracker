@@ -33,6 +33,16 @@ Object.defineProperty(window, 'hdt', {
       exportDeckstring: async () => Promise.reject(new Error('decks.exportDeckstring not stubbed')),
       exportJson: async () => Promise.reject(new Error('decks.exportJson not stubbed')),
       saveFromLive: async () => Promise.reject(new Error('decks.saveFromLive not stubbed')),
+      syncFromLive: async () =>
+        Promise.resolve({
+          ok: false,
+          source: 'not-ready' as const,
+          synced: 0,
+          skippedNonCollectible: 0,
+          skippedUnknownClass: 0,
+          startedAt: 0,
+          finishedAt: 0,
+        }),
       setSortIndex: async () => Promise.resolve(undefined),
     },
     hearthmirror: {

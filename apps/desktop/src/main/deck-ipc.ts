@@ -19,6 +19,7 @@ import {
   type LiveDeckSnapshotInput,
   type SaveFromLiveCardLookup,
 } from './deck-store';
+import type { LiveDeckSyncResult } from './deck-sync-host';
 
 export interface DeckIpcOptions {
   store: DeckStore;
@@ -26,6 +27,12 @@ export interface DeckIpcOptions {
   codecLookup: () => DeckCodecLookup;
   /** Lazy resolver for collectibility lookups used by saveFromLive. */
   collectibleLookup: () => SaveFromLiveCardLookup;
+  /**
+   * Optional live deck sync entry point. When provided, the renderer can
+   * call `window.hdt.decks.syncFromLive()`. Omitted in tests that don't
+   * exercise sync; the channel is then simply not registered.
+   */
+  syncFromLive?: () => Promise<LiveDeckSyncResult>;
 }
 
 const CHANNELS = {
@@ -40,6 +47,7 @@ const CHANNELS = {
   exportDeckstring: 'decks:export-deckstring',
   exportJson: 'decks:export-json',
   saveFromLive: 'decks:save-from-live',
+  syncFromLive: 'decks:sync-from-live',
   setSortIndex: 'decks:set-sort-index',
 } as const;
 
@@ -58,7 +66,7 @@ function preserveError(err: unknown): never {
 }
 
 export function registerDeckIpc(options: DeckIpcOptions): void {
-  const { store, codecLookup, collectibleLookup } = options;
+  const { store, codecLookup, collectibleLookup, syncFromLive } = options;
 
   // Idempotency: clear any previous handlers so hot-reload in dev doesn't
   // throw "second handler" errors.
@@ -158,4 +166,8 @@ export function registerDeckIpc(options: DeckIpcOptions): void {
   ipcMain.handle(CHANNELS.setSortIndex, (_e, id: string, sortIndex: number): void => {
     store.setSortIndex(id, sortIndex);
   });
+
+  if (syncFromLive !== undefined) {
+    ipcMain.handle(CHANNELS.syncFromLive, (): Promise<LiveDeckSyncResult> => syncFromLive());
+  }
 }
