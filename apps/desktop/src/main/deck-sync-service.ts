@@ -7,12 +7,22 @@ import {
 } from './deck-store';
 
 export interface DeckSyncResult {
+  /**
+   * `'live'` when HearthMirror returned a (possibly empty) deck array,
+   * `'unavailable'` when `getDecks()` returned null (Hearthstone not
+   * running / CollectionManager not initialized), or `'error'` when
+   * `getLiveDecks` threw. The sync host maps these to the broader
+   * `LiveDeckSyncResult.source` set.
+   */
+  source: 'live' | 'unavailable' | 'error';
   /** Number of live decks the service successfully synced this run. */
   synced: number;
   /** Number of live decks skipped because they had non-collectible cards. */
   skippedNonCollectible: number;
   /** Number of live decks skipped because the hero card had no class mapping. */
   skippedUnknownClass: number;
+  /** Populated when `source === 'error'`. */
+  error?: string;
 }
 
 export interface DeckSyncDependencies {
@@ -42,16 +52,25 @@ export function createDeckSyncService(deps: DeckSyncDependencies): {
   return {
     async syncOnce(): Promise<DeckSyncResult> {
       const result: DeckSyncResult = {
+        source: 'live',
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
       };
 
-      const live = await deps.getLiveDecks().catch((err) => {
+      let live: readonly LiveDeck[] | null = null;
+      try {
+        live = await deps.getLiveDecks();
+      } catch (err) {
         console.warn('[deck-sync] getLiveDecks failed', err);
-        return null;
-      });
-      if (live === null) return result;
+        result.source = 'error';
+        result.error = err instanceof Error ? err.message : String(err);
+        return result;
+      }
+      if (live === null) {
+        result.source = 'unavailable';
+        return result;
+      }
 
       for (const liveDeck of live) {
         const heroClass = deps.resolveHeroClass(liveDeck.hero);

@@ -47,6 +47,7 @@ import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
 import { createCollectionSnapshotStore } from './collection-snapshot-store';
 import { createDeckSyncService } from './deck-sync-service';
+import { createDeckSyncHost } from './deck-sync-host';
 import { registerPopularDecksIpc } from './popular-decks-ipc';
 import {
   PopularDeckSyncOrchestrator,
@@ -371,6 +372,11 @@ export function registerIpc(overlay?: OverlayControllers): void {
 
   // Saved deck management (deck CRUD + deckstring import/export).
   const deckStore = createDeckStore(join(app.getPath('userData'), 'decks.db'));
+  // Sync host exists before CardDb is ready so the renderer can call
+  // `decks.syncFromLive()` and receive a structured `not-ready` status
+  // instead of a thrown error. The real service is installed below once
+  // `ensureCardDb()` resolves.
+  const deckSyncHost = createDeckSyncHost();
   registerDeckIpc({
     store: deckStore,
     codecLookup: () => {
@@ -379,6 +385,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
     collectibleLookup: () => {
       throw new Error('collectibleLookup: card database not yet ready');
     },
+    syncFromLive: () => deckSyncHost.syncFromLive(),
   });
   // Replace lazy lookups once the default-locale CardDb finishes loading.
   void ensureCardDb().then((db) => {
@@ -386,6 +393,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
       store: deckStore,
       codecLookup: () => makeDeckCodecLookup(db),
       collectibleLookup: () => makeCollectibleLookup(db),
+      syncFromLive: () => deckSyncHost.syncFromLive(),
     });
     const collectionSnapshotStore = createCollectionSnapshotStore(
       join(app.getPath('userData'), 'collection-snapshot.sqlite'),
@@ -423,8 +431,12 @@ export function registerIpc(overlay?: OverlayControllers): void {
       },
       collectibleLookup: makeCollectibleLookup(db),
     });
+    deckSyncHost.setService(deckSync);
 
-    void deckSync.syncOnce().catch((err) => {
+    // Best-effort startup sync. Failures must not block IPC registration
+    // or renderer startup — the host already swallows errors into a
+    // structured result.
+    void deckSyncHost.syncFromLive().catch((err) => {
       console.warn('[deck-sync] initial sync failed', err);
     });
   });
