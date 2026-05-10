@@ -1,6 +1,7 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { useTranslation } from '../i18n';
+import { useGlassMouseFollow } from '../hooks/use-glass-mouse-follow';
 
 type Tab = 'deck' | 'effects' | 'graveyard';
 
@@ -42,9 +43,12 @@ export function TrackerPanelTabs({
 }: TrackerPanelTabsProps) {
   const { t } = useTranslation();
   const [active, setActive] = useState<Tab>('deck');
+  const shellRef = useRef<HTMLDivElement | null>(null);
+  useGlassMouseFollow(shellRef);
 
   return (
     <div
+      ref={shellRef}
       className="tracker-panel-shell w-full h-full flex flex-col"
       data-tracker-side={side}
     >
@@ -145,8 +149,8 @@ function TabPill({ testId, active, onClick, children }: TabPillProps) {
       className={clsx(
         'px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-colors',
         active
-          ? 'bg-bg-3 text-text shadow-[inset_0_-2px_0_var(--accent)]'
-          : 'text-text-mute hover:text-text hover:bg-bg-3/50',
+          ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+          : 'text-text-mute hover:text-text hover:bg-white/5',
       )}
     >
       {children}

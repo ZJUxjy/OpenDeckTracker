@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { markFallback, markSuccess, useCardImageUrl } from '../hooks/use-card-image-url';
 import { useCardDef } from '../hooks/use-card-def';
+import { useGlassMouseFollow } from '../hooks/use-glass-mouse-follow';
 import { useLocale } from '../i18n';
 
 /**
@@ -21,6 +22,8 @@ import { useLocale } from '../i18n';
 export function CardPreviewView() {
   const [cardId, setCardId] = useState<string | null>(null);
   const [pool, setPool] = useState<readonly string[] | null>(null);
+  const poolGlassRef = useRef<HTMLDivElement | null>(null);
+  useGlassMouseFollow(poolGlassRef);
 
   useEffect(() => {
     const offCard = window.hdt?.cardPreview?.onSetCard?.((next) => {
@@ -40,7 +43,10 @@ export function CardPreviewView() {
   if (pool && pool.length > 0) {
     return (
       <div className="w-screen h-screen flex items-center justify-center bg-transparent select-none p-2">
-        <div className="macos-glass flex items-stretch justify-center gap-3 w-full h-full px-4 py-3 rounded-2xl">
+        <div
+          ref={poolGlassRef}
+          className="macos-glass flex items-stretch justify-center gap-3 w-full h-full px-4 py-3 rounded-2xl"
+        >
           {pool.map((id, i) => (
             <div
               key={`${id}-${i}`}

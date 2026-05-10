@@ -408,53 +408,197 @@
   }
 }
 
-/* ── Utility class: macOS vibrancy / liquid glass ─────────────
-   Use on overlay panels and popovers that need to refract the
-   content behind them. Falls back to solid surface-popover on
-   browsers without backdrop-filter support.                     */
+/* ── Liquid Glass — macOS Tahoe 26 style ──────────────────────
+   Multi-layer translucent material:
+   • Backdrop blur + heavy saturation + slight brightness boost
+   • Refractive rim lighting via stacked inset shadows with subtle
+     blue→pink chromatic offsets (the "rainbow edge" Apple ships
+     in Tahoe 26 controls — kept very low-alpha so it's a hint
+     not a feature)
+   • Top specular sheen via ::after gradient
+   • Mouse-follow highlight via ::before + JS-driven CSS vars
+     (--glass-mx / --glass-my, set by useGlassMouseFollow hook)
+   • Children sit at z-index 1 so they paint above the highlights
+
+   Variants:
+   • .macos-glass         — default, panel chrome
+   • .macos-glass-clear   — much higher transparency (overlays /
+                            HUD-grade vibrancy)
+   • .macos-glass-tinted  — base tinted by accent color
+   ───────────────────────────────────────────────────────────── */
+
 .macos-glass {
+  position: relative;
   background: var(--glass-overlay);
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border: 1px solid var(--border-hairline);
-  /* Inner edge highlights — top white wash + bottom black, the
-     "上压下提" trick that gives macOS controls their dimensional
-     feel. Stacked with the actual shadow below.                 */
+  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
+  border-radius: var(--radius-2xl);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    inset 0  1px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -1px 0 rgba(0,   0,   0,   0.10),
-    var(--shadow-popover);
+    /* Refractive rim — top-left blueish, bottom-right warm
+       pink: a hair of chromatic aberration to suggest light
+       refracting through a curved edge.                        */
+    inset 1px  1px 0 rgba(180, 220, 255, 0.18),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.10),
+    /* Primary "上压下提" edge highlights */
+    inset 0  1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
+    /* Outer drop shadow with subtle volumetric depth */
+    0 1px 0 rgba(255, 255, 255, 0.05),
+    var(--shadow-window);
+}
+
+/* Top specular sheen — fades from a faint white wash at the
+   top edge into nothing within the first 18% of the height.
+   Mimics how Tahoe glass catches the desktop light source. */
+.macos-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.00) 18%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Mouse-follow specular highlight. The radial gradient is
+   anchored at --glass-mx / --glass-my, set in pixels by the JS
+   hook on the same element. Defaults park it off-screen so
+   when the cursor isn't over the element, no highlight shows. */
+.macos-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    260px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
+    rgba(255, 255, 255, 0.12),
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: 0;
+  transition: background-position 80ms linear;
+}
+
+.macos-glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dark mode tweaks — heavier saturation, less bright */
+.dark .macos-glass {
+  border-color: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+}
+
+/* Clear variant — HUD overlays where the glass should be barely
+   there. Extra transparency + just a hint of saturation. */
+.macos-glass-clear {
+  background: rgba(250, 250, 252, 0.55);
+}
+.dark .macos-glass-clear {
+  background: rgba(28, 28, 30, 0.40);
+}
+
+/* Tinted variant — the glass picks up the accent color, used
+   for selected popovers / focused panels. Layer the tint UNDER
+   the base translucent overlay so the saturation effect still
+   pulls colour from the backdrop.                              */
+.macos-glass-tinted {
+  background:
+    linear-gradient(rgba(0, 122, 255, 0.12), rgba(0, 122, 255, 0.12)),
+    var(--glass-overlay);
+}
+.dark .macos-glass-tinted {
+  background:
+    linear-gradient(rgba(10, 132, 255, 0.16), rgba(10, 132, 255, 0.16)),
+    var(--glass-overlay);
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .macos-glass {
+  .macos-glass,
+  .macos-glass-clear,
+  .macos-glass-tinted {
     background: var(--surface-popover);
+  }
+  .macos-glass::before,
+  .macos-glass::after {
+    display: none;
   }
 }
 
-/* ── In-game overlay: apply Liquid Glass to the panel shell ───
-   The OverlayView / OpponentOverlayView routes set
-   body[data-overlay="true"]. Inside that scope, the tracker-panel
-   shell becomes a vibrancy-glass container floating above the
-   game window. The main-app right panel uses the same
-   TrackerPanelTabs component but without glass — it's solid since
-   it sits inside an opaque app window.                          */
+/* ── In-game overlay: Tahoe 26 Liquid Glass on the panel shell ─
+   Same multi-layer treatment as .macos-glass. The OverlayView /
+   OpponentOverlayView routes set body[data-overlay="true"];
+   inside that scope, the tracker-panel-shell becomes a true
+   floating-glass panel. Main-app right panel uses the same
+   component but without data-overlay, so it stays opaque.       */
 body[data-overlay="true"] .tracker-panel-shell {
+  position: relative;
   background: var(--glass-overlay);
-  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
   border-radius: var(--radius-2xl);
-  border: 1px solid var(--border-hairline);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    inset 0  1px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -1px 0 rgba(0,   0,   0,   0.10),
-    var(--shadow-popover);
+    inset 1px  1px 0 rgba(180, 220, 255, 0.18),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.10),
+    inset 0  1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.05),
+    var(--shadow-window);
   overflow: hidden;
 }
 
+.dark body[data-overlay="true"] .tracker-panel-shell,
+body[data-overlay="true"].dark .tracker-panel-shell,
+body[data-overlay="true"] .dark .tracker-panel-shell {
+  border-color: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+}
+
+/* Top specular sheen */
+body[data-overlay="true"] .tracker-panel-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    rgba(255, 255, 255, 0.00) 18%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Mouse-follow specular — JS sets --glass-mx / --glass-my */
+body[data-overlay="true"] .tracker-panel-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    260px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
+    rgba(255, 255, 255, 0.12),
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+body[data-overlay="true"] .tracker-panel-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
 body[data-overlay="true"] .tracker-panel-tabbar {
-  /* Tab bar should be transparent so the glass shows through.
-     The bottom hairline still separates it from the deck list. */
   background: transparent !important;
   border-bottom-color: var(--border-separator) !important;
 }
@@ -462,6 +606,10 @@ body[data-overlay="true"] .tracker-panel-tabbar {
 @supports not (backdrop-filter: blur(1px)) {
   body[data-overlay="true"] .tracker-panel-shell {
     background: var(--surface-popover);
+  }
+  body[data-overlay="true"] .tracker-panel-shell::before,
+  body[data-overlay="true"] .tracker-panel-shell::after {
+    display: none;
   }
 }
 
