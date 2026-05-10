@@ -50,6 +50,9 @@ Object.defineProperty(window, 'hdt', {
       getBattlegroundRatingInfo: async () => Promise.resolve(null),
       getServerInfo: async () => Promise.resolve(null),
     },
+    playerProfile: {
+      get: async () => Promise.resolve(null),
+    },
   },
   writable: true,
 });

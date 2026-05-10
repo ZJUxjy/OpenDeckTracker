@@ -58,4 +58,45 @@ describe('App header three-state status', () => {
     const monitor = document.querySelector('.text-green');
     expect(monitor).toBeTruthy();
   });
+
+  it('removes the notification bell and player dropdown affordances', async () => {
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
+    window.hdt.hearthmirror.getBattleTag = vi
+      .fn()
+      .mockResolvedValue({ name: 'Player', fullBattleTag: 'Player#1234' });
+    window.hdt.hearthmirror.getMedalInfo = vi.fn().mockResolvedValue(null);
+
+    renderApp();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+
+    // No bell-shaped lucide icon. Lucide renders SVGs with a `lucide-bell` class.
+    expect(document.querySelector('.lucide-bell')).toBeNull();
+    // No notification dot styled as a small absolute red badge.
+    expect(document.querySelector('.bg-red.rounded-full')).toBeNull();
+    // No chevron-down on the player block.
+    expect(document.querySelector('.lucide-chevron-down')).toBeNull();
+
+    // The player identity container is not a button.
+    const identity = screen.getByTestId('player-identity');
+    expect(identity.tagName).not.toBe('BUTTON');
+  });
+
+  it('shows cached battle tag when Hearthstone is not running', async () => {
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(false);
+    window.hdt.playerProfile.get = vi.fn().mockResolvedValue({
+      battleTag: { name: 'Cached', fullBattleTag: 'Cached#9999' },
+      accountId: null,
+      lastSeenAt: 1_000,
+    });
+
+    renderApp();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+
+    expect(screen.getByText('Game Not Running')).toBeInTheDocument();
+    expect(screen.getByText('Cached#9999')).toBeInTheDocument();
+  });
 });

@@ -71,4 +71,23 @@ describe('useHearthMirrorStatus', () => {
     expect(result.current.battleTag).toBeNull();
     expect(result.current.medalInfo).toBeNull();
   });
+
+  it('exposes cached profile as displayBattleTag when live tag is null', async () => {
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(false);
+    window.hdt.playerProfile.get = vi.fn().mockResolvedValue({
+      battleTag: { name: 'Cached', fullBattleTag: 'Cached#1' },
+      accountId: null,
+      lastSeenAt: 1_000,
+    });
+
+    const { result } = renderHook(() => useHearthMirrorStatus());
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+
+    expect(result.current.isAlive).toBe(false);
+    expect(result.current.battleTag).toBeNull();
+    expect(result.current.displayBattleTag?.fullBattleTag).toBe('Cached#1');
+    expect(result.current.cachedIdentity?.battleTag.fullBattleTag).toBe('Cached#1');
+  });
 });

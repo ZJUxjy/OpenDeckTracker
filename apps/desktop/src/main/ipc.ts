@@ -36,11 +36,17 @@ import type { PopularDeckEnriched } from '@hdt/core';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
 import { registerMatchRecordingsIpc } from './match-recordings-ipc';
 import { registerStatsIpc } from './stats-host';
+import {
+  refreshPlayerProfileFromLive,
+  registerPlayerProfileIpc,
+} from './player-profile-ipc';
 import { join } from 'node:path';
 import { createDeckStore } from './deck-store';
 import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
+import { createCollectionSnapshotStore } from './collection-snapshot-store';
+import { createDeckSyncService } from './deck-sync-service';
 import { registerPopularDecksIpc } from './popular-decks-ipc';
 import {
   PopularDeckSyncOrchestrator,
@@ -258,7 +264,18 @@ export function registerIpc(overlay?: OverlayControllers): void {
 
   ipcMain.handle('hearthmirror:isAlive', () => swallow('isAlive', () => hm().isAlive(), false));
   ipcMain.handle('hearthmirror:get-window', () => swallow('getHearthstoneWindow', () => hm().getHearthstoneWindow(), null));
-  ipcMain.handle('hearthmirror:getBattleTag', () => swallow('getBattleTag', () => hm().getBattleTag(), null));
+  ipcMain.handle('hearthmirror:getBattleTag', async () => {
+    const tag = await swallow('getBattleTag', () => hm().getBattleTag(), null);
+    if (tag !== null) {
+      const accountId = await swallow('getAccountId', () => hm().getAccountId(), null);
+      try {
+        refreshPlayerProfileFromLive(tag, accountId);
+      } catch (err) {
+        console.error('[player-profile] refresh failed', err);
+      }
+    }
+    return tag;
+  });
   ipcMain.handle('hearthmirror:getAccountId', () => swallow('getAccountId', () => hm().getAccountId(), null));
   // getGameType now returns a composite { gameType, formatType, missionId } | null
   // (was a single number before R-17). null fallback covers IPC errors / Hearthstone
@@ -298,6 +315,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
   registerHearthWatcherIpc();
   registerMatchRecordingsIpc();
   registerStatsIpc();
+  registerPlayerProfileIpc();
   registerAboutIpc();
 
   // Popular decks (Deck Finder data source). The handler reads from a
@@ -369,12 +387,46 @@ export function registerIpc(overlay?: OverlayControllers): void {
       codecLookup: () => makeDeckCodecLookup(db),
       collectibleLookup: () => makeCollectibleLookup(db),
     });
+    const collectionSnapshotStore = createCollectionSnapshotStore(
+      join(app.getPath('userData'), 'collection-snapshot.sqlite'),
+    );
     registerCollectionProgressIpc({
       cardDb: db,
       getCollection: () => hm().getCollection(),
+      snapshotStore: collectionSnapshotStore,
     });
     popularDecksCardDb = db;
     setCardDbForDeckTracker(db);
+
+    const deckSync = createDeckSyncService({
+      store: deckStore,
+      getLiveDecks: () => hm().getDecks(),
+      resolveHeroClass: (cardId) => {
+        const card = db.findById(cardId);
+        if (card === null || card === undefined) return null;
+        const cls = card.cardClass;
+        // The hero card must itself carry one of the player class values.
+        const known: ReadonlySet<string> = new Set([
+          'WARRIOR',
+          'PALADIN',
+          'HUNTER',
+          'ROGUE',
+          'PRIEST',
+          'SHAMAN',
+          'MAGE',
+          'WARLOCK',
+          'DRUID',
+          'DEMONHUNTER',
+          'DEATHKNIGHT',
+        ]);
+        return known.has(cls) ? (cls as import('@hdt/core').HeroClass) : null;
+      },
+      collectibleLookup: makeCollectibleLookup(db),
+    });
+
+    void deckSync.syncOnce().catch((err) => {
+      console.warn('[deck-sync] initial sync failed', err);
+    });
   });
 }
 

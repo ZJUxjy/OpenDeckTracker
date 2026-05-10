@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Bell, ChevronDown, Monitor, User } from 'lucide-react';
+import { Monitor, User } from 'lucide-react';
 import { Outlet, useLocation } from 'react-router';
 import { Sidebar } from './components/Sidebar';
 import { DeckSelectDialog } from './components/DeckSelectDialog';
@@ -17,7 +17,7 @@ export default function App() {
     location.pathname === '/overlay' ||
     location.pathname === '/overlay-opponent' ||
     location.pathname === '/card-preview';
-  const { isAlive, battleTag } = useHearthMirrorStatus();
+  const { isAlive, battleTag, displayBattleTag } = useHearthMirrorStatus();
   // Subscribe the global deck-tracker store to main-process IPC pushes.
   // Mounted at App root so the subscription survives all route changes.
   useDeckTracker();
@@ -92,18 +92,17 @@ export default function App() {
             className="flex items-center space-x-4"
             style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           >
-            <button className="relative text-text-dim hover:text-text transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red rounded-full border border-bg" />
-            </button>
-            <div className="h-6 w-px bg-border mx-2" />
-            <button className="flex items-center space-x-2 hover:bg-white/5 px-3 py-1.5 rounded-md transition-colors">
+            <div
+              data-testid="player-identity"
+              className="flex items-center space-x-2 px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors select-none"
+            >
               <div className="w-7 h-7 bg-indigo-500 rounded flex items-center justify-center text-white font-bold text-sm">
                 <User size={16} />
               </div>
-              <span className="text-sm font-medium text-text">{battleTag?.fullBattleTag ?? t('app.playerFallback')}</span>
-              <ChevronDown size={14} className="text-text-mute" />
-            </button>
+              <span className="text-sm font-medium text-text">
+                {displayBattleTag?.fullBattleTag ?? t('app.playerFallback')}
+              </span>
+            </div>
           </div>
         </header>
 
