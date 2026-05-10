@@ -31,7 +31,7 @@ export function GlobalEffectRow({ effect }: GlobalEffectRowProps) {
   return (
     <li
       data-testid="global-effect-row"
-      className="relative overflow-hidden rounded-md border border-border bg-bg-2 mb-2 last:mb-0"
+      className="relative overflow-hidden rounded-md border border-border bg-white/5 mb-2 last:mb-0"
     >
       <img
         src={tileUrl}

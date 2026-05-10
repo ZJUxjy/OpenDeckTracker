@@ -57,14 +57,14 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[500px] max-w-[95vw] bg-bg border border-border rounded-md text-text">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[500px] max-w-[95vw] bg-white/10 backdrop-blur-xl border border-border rounded-md text-text">
           <div className="flex items-center justify-between p-4 border-b border-border">
             <Dialog.Title className="text-lg font-bold text-text">
               {t('decks.import.title')}
             </Dialog.Title>
             <Dialog.Description className="sr-only">{t('decks.import.title')}</Dialog.Description>
             <Dialog.Close asChild>
-              <button aria-label={t('decks.import.cancel')} className="p-1 hover:bg-bg-3 rounded">
+              <button aria-label={t('decks.import.cancel')} className="p-1 hover:bg-white/10 rounded">
                 <X size={18} />
               </button>
             </Dialog.Close>
@@ -78,7 +78,7 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
               onChange={(e) => setText(e.target.value)}
               placeholder={t('decks.import.deckstringPlaceholder')}
               rows={5}
-              className="w-full px-3 py-2 bg-bg-2 border border-border rounded text-text text-sm font-mono"
+              className="w-full px-3 py-2 bg-white/5 border border-border rounded text-text text-sm font-mono"
               data-testid="deckstring-input"
             />
             <button
@@ -99,7 +99,7 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
           </div>
           <div className="flex justify-end gap-2 p-4 border-t border-border">
             <Dialog.Close asChild>
-              <button className="px-4 py-2 rounded text-sm hover:bg-bg-3">
+              <button className="px-4 py-2 rounded text-sm hover:bg-white/10">
                 {t('decks.import.cancel')}
               </button>
             </Dialog.Close>

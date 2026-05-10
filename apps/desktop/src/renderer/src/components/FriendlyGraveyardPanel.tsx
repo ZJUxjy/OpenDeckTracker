@@ -106,7 +106,7 @@ function FriendlyGraveyardRow({
       ref={ref}
       data-testid="friendly-graveyard-row"
       data-card-id={row.cardId}
-      className="relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-bg-3 hover:shadow-[inset_3px_0_0_var(--accent)]"
+      className="relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-white/10 hover:shadow-[inset_3px_0_0_var(--accent)]"
       onMouseEnter={() => ref.current && onMouseEnter(row.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
@@ -120,7 +120,7 @@ function FriendlyGraveyardRow({
         />
       ) : null}
       <div className="relative z-10 flex items-center px-2 py-1.5 w-full">
-        <div className="w-7 h-7 rounded bg-bg-3 flex items-center justify-center text-text font-bold text-xs shrink-0 border border-border-hi">
+        <div className="w-7 h-7 rounded bg-white/10 flex items-center justify-center text-text font-bold text-xs shrink-0 border border-border-hi">
           {cost}
         </div>
         <div className="flex-1 min-w-0 px-2">

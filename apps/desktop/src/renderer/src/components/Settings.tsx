@@ -99,7 +99,7 @@ export function Settings() {
                       <h3 className="text-text font-medium">{t('settings.language')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.languageDescription')}</p>
                     </div>
-                    <div className="flex rounded-md border border-border bg-bg-2 p-1">
+                    <div className="flex rounded-md border border-border bg-white/5 p-1">
                       {languageOptions.map((option) => (
                         <button
                           key={option.value}
@@ -123,7 +123,7 @@ export function Settings() {
                       <h3 className="text-text font-medium">{t('settings.appearance.density.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.density.description')}</p>
                     </div>
-                    <div className="flex rounded-md border border-border bg-bg-2 p-1">
+                    <div className="flex rounded-md border border-border bg-white/5 p-1">
                       {(['comfortable', 'compact'] as Density[]).map((opt) => (
                         <button
                           key={opt}
@@ -147,7 +147,7 @@ export function Settings() {
                       <h3 className="text-text font-medium">{t('settings.appearance.theme.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.theme.description')}</p>
                     </div>
-                    <div className="flex rounded-md border border-border bg-bg-2 p-1">
+                    <div className="flex rounded-md border border-border bg-white/5 p-1">
                       {(['system', 'light', 'dark'] as Theme[]).map((opt) => (
                         <button
                           key={opt}
@@ -209,7 +209,7 @@ export function Settings() {
                     </div>
                     <button
                       onClick={() => setGameOverlay(!gameOverlay)}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlay ? 'bg-accent' : 'bg-bg-3'}`}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlay ? 'bg-accent' : 'bg-white/10'}`}
                     >
                       <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${gameOverlay ? 'left-7' : 'left-1'}`} />
                     </button>
@@ -222,7 +222,7 @@ export function Settings() {
                     </div>
                     <button
                       onClick={() => setGameOverlayOpponent(!gameOverlayOpponent)}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlayOpponent ? 'bg-accent' : 'bg-bg-3'}`}
+                      className={`w-12 h-6 rounded-full transition-colors relative ${gameOverlayOpponent ? 'bg-accent' : 'bg-white/10'}`}
                     >
                       <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${gameOverlayOpponent ? 'left-7' : 'left-1'}`} />
                     </button>

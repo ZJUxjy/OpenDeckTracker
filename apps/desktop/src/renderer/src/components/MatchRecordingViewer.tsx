@@ -45,7 +45,7 @@ export function MatchRecordingViewer({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[700px] max-w-[95vw] max-h-[90vh] bg-bg border border-border rounded-md text-text flex flex-col"
+          className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-[700px] max-w-[95vw] max-h-[90vh] bg-white/10 backdrop-blur-xl border border-border rounded-md text-text flex flex-col"
           data-testid="match-recording-viewer"
         >
           <div className="flex items-center justify-between p-4 border-b border-border">
@@ -56,7 +56,7 @@ export function MatchRecordingViewer({
               {t('stats.recordingViewer.title')}
             </Dialog.Description>
             <Dialog.Close asChild>
-              <button aria-label={t('stats.recordingViewer.close')} className="p-1 hover:bg-bg-3 rounded">
+              <button aria-label={t('stats.recordingViewer.close')} className="p-1 hover:bg-white/10 rounded">
                 <X size={18} />
               </button>
             </Dialog.Close>

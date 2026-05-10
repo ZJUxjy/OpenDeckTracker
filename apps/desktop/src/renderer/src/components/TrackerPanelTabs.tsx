@@ -56,7 +56,7 @@ export function TrackerPanelTabs({
         role="tablist"
         aria-label={`${side} tracker tabs`}
         style={DRAG}
-        className="tracker-panel-tabbar shrink-0 flex items-stretch gap-1 px-2 pt-2 pb-1 bg-bg-2 border-b border-border"
+        className="tracker-panel-tabbar shrink-0 flex items-stretch gap-1 px-2 pt-2 pb-1 bg-white/5 border-b border-border"
       >
         <TabPill
           testId="tracker-tab-deck"

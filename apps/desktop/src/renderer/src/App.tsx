@@ -97,7 +97,7 @@ export default function App() {
               <span className="absolute top-0 right-0 w-2 h-2 bg-red rounded-full border border-bg" />
             </button>
             <div className="h-6 w-px bg-border mx-2" />
-            <button className="flex items-center space-x-2 hover:bg-bg-2 px-3 py-1.5 rounded-md transition-colors">
+            <button className="flex items-center space-x-2 hover:bg-white/5 px-3 py-1.5 rounded-md transition-colors">
               <div className="w-7 h-7 bg-indigo-500 rounded flex items-center justify-center text-white font-bold text-sm">
                 <User size={16} />
               </div>

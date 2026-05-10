@@ -23,7 +23,7 @@ export function FormatFilterPills({ value, onChange }: FormatFilterPillsProps): 
           className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
             value === fmt
               ? 'bg-accent text-bg'
-              : 'bg-bg-2 text-text-dim hover:text-text hover:bg-bg-3'
+              : 'bg-white/5 text-text-dim hover:text-text hover:bg-white/10'
           }`}
         >
           {t(`stats.formatFilter.${fmt}`)}

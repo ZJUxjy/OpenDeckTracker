@@ -271,7 +271,7 @@ export function Stats() {
                               ? 'bg-green/20 text-green'
                               : match.result === 'loss'
                                 ? 'bg-red/20 text-red'
-                                : 'bg-bg-3/20 text-text'
+                                : 'bg-white/5 text-text'
                           }`}
                         >
                           {t(`stats.result.${match.result}`)}
