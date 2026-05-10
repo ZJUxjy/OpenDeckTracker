@@ -109,54 +109,11 @@ export function createMainWindow(): BrowserWindow {
       // Older Windows 10 / unsupported — silent fallback.
     }
 
-    // DWM Acrylic compositing breaks after the user resizes / maximizes
-    // / restores the window on Win11 22H2+: the system stops painting
-    // the backdrop and the renderer's translucent surfaces composite
-    // over a solid OS chrome colour, looking entirely opaque, and DWM
-    // does not auto-recover. Tracked upstream as electron/electron
-    // #39959, #41824 (frameless maximize), #42393, #38743 (still open
-    // as of Electron 33.x).
-    //
-    // Workaround: re-attach the backdrop by toggling `none → acrylic`.
-    // The simple synchronous toggle isn't enough for the maximize case
-    // (titleBarStyle 'hidden' makes DWM treat the window as frameless,
-    // hitting #41824). DWM needs a real time gap to register the
-    // maximize/unmaximize transition before the toggle, otherwise the
-    // call is collapsed to a "current material unchanged" no-op. So:
-    //   1. Wait 150ms after the event so DWM settles.
-    //   2. setBackgroundMaterial('none').
-    //   3. Wait another 50ms so DWM registers the off-state.
-    //   4. setBackgroundMaterial('acrylic') — DWM re-attaches.
-    // Resize fires per-pixel during edge drag, so we debounce.
-    const SETTLE_MS = 150;
-    const TOGGLE_GAP_MS = 50;
-    let resizeTimer: NodeJS.Timeout | null = null;
-    let settleTimer: NodeJS.Timeout | null = null;
-    let toggleTimer: NodeJS.Timeout | null = null;
-    const reapplyAcrylic = (): void => {
-      if (settleTimer) clearTimeout(settleTimer);
-      if (toggleTimer) clearTimeout(toggleTimer);
-      settleTimer = setTimeout(() => {
-        try { win.setBackgroundMaterial?.('none'); } catch { /* unsupported */ }
-        toggleTimer = setTimeout(() => {
-          try { win.setBackgroundMaterial?.('acrylic'); } catch { /* unsupported */ }
-        }, TOGGLE_GAP_MS);
-      }, SETTLE_MS);
-    };
-    const debouncedReapply = (): void => {
-      if (resizeTimer) clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(reapplyAcrylic, 80);
-    };
-    win.on('resize', debouncedReapply);
-    win.on('maximize', reapplyAcrylic);
-    win.on('unmaximize', reapplyAcrylic);
-    win.on('restore', reapplyAcrylic);
-    win.on('closed', () => {
-      if (resizeTimer) clearTimeout(resizeTimer);
-      if (settleTimer) clearTimeout(settleTimer);
-      if (toggleTimer) clearTimeout(toggleTimer);
-      resizeTimer = settleTimer = toggleTimer = null;
-    });
+    // Do not toggle `none → acrylic` on maximize/restore. That was a
+    // workaround for Electron 33-era backgroundMaterial bugs, but with
+    // Electron 37 the upstream fix is present and the toggle itself
+    // causes a visible flash because the transparent window briefly has
+    // no DWM backdrop behind it.
   }
 
   win.webContents.on('will-navigate', (e) => e.preventDefault());
