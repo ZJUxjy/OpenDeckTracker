@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 
 /**
  * Single floating tooltip window that shows a card image when the user
@@ -27,6 +27,44 @@ const PREVIEW_WIDTH = 280;
 const PREVIEW_HEIGHT = 400;
 const POOL_PREVIEW_HEIGHT = 440;
 const POOL_GAP = 8;
+const EDGE_GAP = 8;
+
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(Math.max(n, min), max);
+}
+
+function computePreviewBounds(
+  anchor: PreviewAnchor,
+  width: number,
+  height: number,
+): { x: number; y: number; width: number; height: number } {
+  const display = screen.getDisplayNearestPoint({ x: anchor.x, y: anchor.y });
+  const workArea = display.workArea;
+  const workRight = workArea.x + workArea.width;
+  const workBottom = workArea.y + workArea.height;
+  const anchorRight = anchor.x + anchor.width;
+  const spaceLeft = anchor.x - workArea.x;
+  const spaceRight = workRight - anchorRight;
+  let side = anchor.side;
+
+  if (side === 'right' && spaceRight < width + EDGE_GAP && spaceLeft > spaceRight) {
+    side = 'left';
+  } else if (side === 'left' && spaceLeft < width + EDGE_GAP && spaceRight > spaceLeft) {
+    side = 'right';
+  }
+
+  const rawX = side === 'left' ? anchor.x - width - EDGE_GAP : anchorRight + EDGE_GAP;
+  const maxX = Math.max(workArea.x, workRight - width);
+  const rawY = anchor.y + Math.round(anchor.height / 2) - Math.round(height / 2);
+  const maxY = Math.max(workArea.y, workBottom - height);
+
+  return {
+    x: clamp(rawX, workArea.x, maxX),
+    y: clamp(rawY, workArea.y, maxY),
+    width,
+    height,
+  };
+}
 
 export class CardPreviewWindow {
   private win: BrowserWindow | null = null;
@@ -41,14 +79,7 @@ export class CardPreviewWindow {
     if (!this.win || this.win.isDestroyed()) this.createWindow();
     if (!this.win) return;
 
-    // Position: place to the requested side of the anchor row, vertically
-    // centered on the row. For side='right' we anchor off the row's right
-    // edge so the preview sits *next* to the panel rather than over it.
-    const x = anchor.side === 'left'
-      ? Math.max(0, anchor.x - PREVIEW_WIDTH - 8)
-      : anchor.x + anchor.width + 8;
-    const y = Math.max(0, anchor.y + Math.round(anchor.height / 2) - Math.round(PREVIEW_HEIGHT / 2));
-    this.win.setBounds({ x, y, width: PREVIEW_WIDTH, height: PREVIEW_HEIGHT });
+    this.win.setBounds(computePreviewBounds(anchor, PREVIEW_WIDTH, PREVIEW_HEIGHT));
 
     const key = `single:${cardId}`;
     if (key !== this.currentKey) {
@@ -76,11 +107,7 @@ export class CardPreviewWindow {
     if (!this.win) return;
 
     const totalWidth = cardIds.length * PREVIEW_WIDTH + (cardIds.length - 1) * POOL_GAP;
-    const x = anchor.side === 'left'
-      ? Math.max(0, anchor.x - totalWidth - 8)
-      : anchor.x + anchor.width + 8;
-    const y = Math.max(0, anchor.y + Math.round(anchor.height / 2) - Math.round(POOL_PREVIEW_HEIGHT / 2));
-    this.win.setBounds({ x, y, width: totalWidth, height: POOL_PREVIEW_HEIGHT });
+    this.win.setBounds(computePreviewBounds(anchor, totalWidth, POOL_PREVIEW_HEIGHT));
 
     const key = `pool:${cardIds.join(',')}`;
     if (key !== this.currentKey) {

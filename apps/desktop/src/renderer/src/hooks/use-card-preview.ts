@@ -8,14 +8,22 @@ interface AnchorRect {
   side: 'left' | 'right';
 }
 
+const PREVIEW_WIDTH = 280;
+const PREVIEW_GAP = 8;
+
 function computeAnchor(el: HTMLElement): AnchorRect {
   const rect = el.getBoundingClientRect();
   const screenX = window.screenX + rect.left;
   const screenY = window.screenY + rect.top;
-  const winCenterX = window.screenX + window.innerWidth / 2;
-  const screenWidth = window.screen.width;
-  // If the panel is on the RIGHT half of the desktop, push preview LEFT.
-  const side: 'left' | 'right' = winCenterX > screenWidth / 2 ? 'left' : 'right';
+  const screenRight = window.screenX + rect.right;
+  const screenInfo = window.screen as Screen & { availLeft?: number };
+  const displayLeft = Number.isFinite(screenInfo.availLeft) ? screenInfo.availLeft! : 0;
+  const displayRight = displayLeft + (screenInfo.availWidth || screenInfo.width);
+  const spaceLeft = screenX - displayLeft;
+  const spaceRight = displayRight - screenRight;
+  const required = PREVIEW_WIDTH + PREVIEW_GAP;
+  const side: 'left' | 'right' =
+    spaceRight >= required && spaceRight >= spaceLeft ? 'right' : 'left';
   return {
     x: Math.round(screenX),
     y: Math.round(screenY),
