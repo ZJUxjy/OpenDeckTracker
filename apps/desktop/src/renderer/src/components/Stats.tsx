@@ -103,24 +103,24 @@ export function Stats() {
   }));
 
   return (
-    <div className="flex-1 flex flex-col bg-bg overflow-y-auto">
+    <div className="flex-1 flex flex-col overflow-y-auto">
       {/* Header */}
-      <div className="bg-bg border-b border-border p-6 flex items-center justify-between sticky top-0 z-10">
+      <div className="px-8 pt-7 pb-4 flex items-center justify-between sticky top-0 z-10">
         <div>
           <h1 className="text-2xl font-bold text-text mb-1">{t('stats.title')}</h1>
-          <p className="text-text-dim text-sm">{t('stats.subtitle')}</p>
+          <p className="text-text-secondary text-sm">{t('stats.subtitle')}</p>
         </div>
 
         <div className="flex flex-col items-end space-y-2">
-          <div className="flex space-x-2">
+          <div className="flex bg-white/5 dark:bg-black/20 rounded-md p-1 border border-border-hairline">
             {FILTERS.map((filter) => (
               <button
                 key={filter}
                 onClick={() => setTimeFilter(filter)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded text-sm font-semibold transition-colors ${
                   timeFilter === filter
-                    ? 'bg-accent text-bg'
-                    : 'bg-bg-2 text-text-dim hover:text-text hover:bg-bg-3'
+                    ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+                    : 'text-text-secondary hover:text-text'
                 }`}
               >
                 {t(`stats.timeFilter.${filter}`)}
@@ -131,52 +131,52 @@ export function Stats() {
         </div>
       </div>
 
-      <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
-        
+      <div className="px-8 pb-8 space-y-5 max-w-7xl mx-auto w-full">
+
         {/* Top Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-accent group-hover:opacity-10 transition-opacity">
               <Trophy size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.overallWinrate')}</span>
+            <span className="text-text-tertiary text-[11px] font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.overallWinrate')}</span>
             <div className="text-3xl font-black font-mono tabular-nums text-text">{formatPercent(summary.overallWinrate)}</div>
-            <div className="text-sm mt-2 text-text-dim font-mono tabular-nums">
+            <div className="text-sm mt-2 text-text-tertiary font-mono tabular-nums">
               {t('stats.kpi.winsLosses', { wins: summary.wins, losses: summary.losses })}
             </div>
           </div>
 
-          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
+          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
+            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-tertiary group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.matchesPlayed')}</span>
+            <span className="text-text-tertiary text-[11px] font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.matchesPlayed')}</span>
             <div className="text-3xl font-black font-mono tabular-nums text-text">{summary.matchesPlayed.toLocaleString()}</div>
-            <div className="text-sm mt-2 text-text-dim">{t('stats.kpi.matchesPlayedSubtitle')}</div>
+            <div className="text-sm mt-2 text-text-tertiary">{t('stats.kpi.matchesPlayedSubtitle')}</div>
           </div>
 
-          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
-            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-dim group-hover:opacity-10 transition-opacity">
+          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
+            <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-tertiary group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.timePlayed')}</span>
+            <span className="text-text-tertiary text-[11px] font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.timePlayed')}</span>
             <div className="text-3xl font-black font-mono tabular-nums text-text">{formatTimePlayed(summary.timePlayedSeconds)}</div>
-            <div className="text-sm mt-2 text-text-dim font-mono tabular-nums">
+            <div className="text-sm mt-2 text-text-tertiary font-mono tabular-nums">
               {summary.averageDurationSeconds === null
                 ? t('stats.kpi.noAverage')
                 : t('stats.kpi.averageDuration', { duration: formatDuration(summary.averageDurationSeconds) })}
             </div>
           </div>
 
-          <div className="kpi-card bg-bg-2 border border-border rounded-xl p-5 flex flex-col relative overflow-hidden group">
+          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red group-hover:opacity-10 transition-opacity">
               <Target size={100} />
             </div>
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.bestDeck')}</span>
+            <span className="text-text-tertiary text-[11px] font-semibold uppercase tracking-wider mb-2">{t('stats.kpi.bestDeck')}</span>
             <div className="text-xl font-bold text-accent truncate mt-1">
               {summary.bestDeck?.deckName ?? t('stats.kpi.bestDeckEmpty')}
             </div>
-            <div className="text-sm mt-2 text-text-dim font-mono tabular-nums">
+            <div className="text-sm mt-2 text-text-tertiary font-mono tabular-nums">
               {summary.bestDeck === null
                 ? t('stats.kpi.bestDeckPlaceholder')
                 : t('stats.kpi.bestDeckLine', {
@@ -189,29 +189,29 @@ export function Stats() {
         </div>
 
         {/* Winrate Time Series + Play/Coin Split */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2 bg-bg-2 border border-border rounded-xl p-5">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="xl:col-span-2 tahoe-card p-5">
             <WinrateTimeSeriesChart
               points={summary.winrateTimeSeries ?? null}
               granularity={granularity}
               onGranularityChange={setGranularity}
             />
           </div>
-          <div className="bg-bg-2 border border-border rounded-xl p-5">
+          <div className="tahoe-card p-5">
             <PlayOrderSplitCard split={summary.playOrderSplit ?? null} />
           </div>
         </div>
 
         {/* Matchup Matrix */}
-        <div className="bg-bg-2 border border-border rounded-xl p-5">
+        <div className="tahoe-card p-5">
           <h2 className="text-lg font-bold text-text mb-4">{t('stats.matchup.title')}</h2>
           <MatchupMatrix matrix={summary.matchupMatrix ?? null} />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
           {/* Class Winrate Chart */}
-          <div className="xl:col-span-2 bg-bg-2 border border-border rounded-xl p-5">
+          <div className="xl:col-span-2 tahoe-card p-5">
             <h2 className="text-lg font-bold text-text mb-6 flex items-center">
               {t('stats.classChart.title')}
             </h2>
@@ -239,7 +239,7 @@ export function Stats() {
           </div>
 
           {/* Recent Matches */}
-          <div className="bg-bg-2 border border-border rounded-xl p-5 flex flex-col">
+          <div className="tahoe-card p-5 flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-text">{t('stats.recent.title')}</h2>
               <button className="text-accent text-sm font-medium hover:text-accent">{t('stats.recent.viewAll')}</button>
@@ -260,7 +260,7 @@ export function Stats() {
                   return (
                     <div
                       key={match.id}
-                      className="recent-match-row bg-bg rounded-lg p-3 border border-border hover:border-border-hi transition-colors flex flex-col"
+                      className="recent-match-row bg-white/40 dark:bg-black/30 rounded-lg p-3 border border-border-hairline hover:border-border-strong transition-colors flex flex-col"
                       data-testid={`match-row-${match.id}`}
                     >
                       <div className="flex justify-between items-center mb-2">

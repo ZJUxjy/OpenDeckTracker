@@ -52,30 +52,30 @@ export function Settings() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col bg-bg overflow-hidden text-text">
-      
+    <div className="flex-1 flex flex-col overflow-hidden text-text">
+
       {/* Header */}
-      <div className="bg-bg border-b border-border p-6 shrink-0 z-10 sticky top-0">
+      <div className="px-8 pt-7 pb-4 shrink-0 z-10 sticky top-0">
         <h1 className="text-2xl font-bold text-text mb-1">{t('settings.title')}</h1>
-        <p className="text-text-dim text-sm">{t('settings.subtitle')}</p>
+        <p className="text-text-secondary text-sm">{t('settings.subtitle')}</p>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        
-        {/* Settings Sidebar */}
-        <div className="w-64 bg-bg border-r border-border flex flex-col overflow-y-auto">
-          <div className="p-4 space-y-1">
+
+        {/* Settings Sidebar — Apple-style nested category list */}
+        <div className="w-60 flex flex-col overflow-y-auto">
+          <div className="px-3 py-2 space-y-1">
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-sm font-medium ${
-                  activeCategory === cat.id 
-                    ? 'bg-accent/10 text-accent border border-accent/20' 
-                    : 'text-text-dim hover:text-text hover:bg-bg-2 border border-transparent'
+                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${
+                  activeCategory === cat.id
+                    ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+                    : 'text-text-secondary hover:text-text hover:bg-white/5 dark:hover:bg-white/5'
                 }`}
               >
-                <cat.icon size={18} className={activeCategory === cat.id ? 'text-accent' : 'text-text-mute'} />
+                <cat.icon size={18} className={activeCategory === cat.id ? 'text-text-on-accent' : 'text-text-tertiary'} />
                 <span>{t(cat.labelKey)}</span>
               </button>
             ))}
@@ -83,7 +83,7 @@ export function Settings() {
         </div>
 
         {/* Settings Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 bg-bg">
+        <div className="flex-1 overflow-y-auto px-8 pb-8">
           <div className="max-w-3xl space-y-8">
             
             {activeCategory === 'appearance' && (
@@ -94,7 +94,7 @@ export function Settings() {
 
                 <div className="space-y-4">
                   {/* Language */}
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+                  <div className="settings-row tahoe-card flex items-center justify-between p-4 gap-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.language')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.languageDescription')}</p>
@@ -118,7 +118,7 @@ export function Settings() {
                   </div>
 
                   {/* Density */}
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+                  <div className="settings-row tahoe-card flex items-center justify-between p-4 gap-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.appearance.density.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.density.description')}</p>
@@ -142,7 +142,7 @@ export function Settings() {
                   </div>
 
                   {/* Theme — System / Light / Dark */}
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+                  <div className="settings-row tahoe-card flex items-center justify-between p-4 gap-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.appearance.theme.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.theme.description')}</p>
@@ -166,7 +166,7 @@ export function Settings() {
                   </div>
 
                   {/* Accent — 8 macOS System colors */}
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+                  <div className="settings-row tahoe-card flex items-center justify-between p-4 gap-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.appearance.accent.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.accent.description')}</p>
@@ -202,7 +202,7 @@ export function Settings() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                  <div className="settings-row tahoe-card flex items-center justify-between p-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.overlayPanel.enableTitle')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.overlayPanel.enableDescription')}</p>
@@ -215,7 +215,7 @@ export function Settings() {
                     </button>
                   </div>
 
-                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border">
+                  <div className="settings-row tahoe-card flex items-center justify-between p-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.overlayPanel.enableOpponentTitle')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.overlayPanel.enableOpponentDescription')}</p>
@@ -304,7 +304,7 @@ function AboutPanel() {
       </div>
 
       <div className="space-y-4">
-        <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+        <div className="settings-row tahoe-card flex items-center justify-between p-4 gap-4">
           <div className="flex-1 min-w-0">
             <h3 className="text-text font-medium">{t('settings.about.checkForUpdates')}</h3>
             <p className="text-text-mute text-sm mt-0.5">
@@ -323,7 +323,7 @@ function AboutPanel() {
           </button>
         </div>
 
-        <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+        <div className="settings-row tahoe-card flex items-center justify-between p-4 gap-4">
           <div className="flex-1 min-w-0">
             <h3 className="text-text font-medium">{t('settings.about.viewLicense')}</h3>
             <p className="text-text-mute text-sm mt-0.5">{t('settings.about.copyright')}</p>
@@ -350,7 +350,7 @@ function AboutPanel() {
           <p className="text-red text-xs px-4">{t('settings.about.openFailed')}</p>
         )}
 
-        <div className="p-4 bg-bg-2 rounded-xl border border-border">
+        <div className="tahoe-card p-4">
           <p className="text-text-mute text-xs leading-relaxed">
             {t('settings.about.disclaimer')}
           </p>
