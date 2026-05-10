@@ -1,39 +1,72 @@
 import { ipcMain } from 'electron';
 import { computeSetProgress, type SetProgress } from '@hdt/core';
 import type { CardDb } from '@hdt/hearthdb';
+import type { CollectionCard } from '@hdt/hearthmirror';
+import type { CollectionSnapshotStore } from './collection-snapshot-store';
+
+export type CollectionProgressSource = 'live' | 'cache' | 'empty';
 
 export interface CollectionProgressResponse {
   standard: SetProgress[];
   wild: SetProgress[];
   mirrorAlive: boolean;
+  source: CollectionProgressSource;
+  lastUpdatedAt: number | null;
 }
 
 export interface CollectionProgressDeps {
   cardDb: CardDb;
-  getCollection: () => Promise<import('@hdt/hearthmirror').CollectionCard[] | null>;
+  getCollection: () => Promise<CollectionCard[] | null>;
+  /** Optional cache; when provided, fall back to cached counts when live read fails. */
+  snapshotStore?: CollectionSnapshotStore;
 }
 
 export function registerCollectionProgressIpc(deps: CollectionProgressDeps): void {
   ipcMain.handle('collection:get-progress', async (): Promise<CollectionProgressResponse> => {
     const allCollectible = deps.cardDb.search({ collectible: true, limit: 100_000 });
 
-    let mirrorAlive = true;
-    let collection: import('@hdt/hearthmirror').CollectionCard[] | null = null;
+    let liveCollection: CollectionCard[] | null = null;
+    let liveOk = true;
     try {
-      collection = await deps.getCollection();
+      liveCollection = await deps.getCollection();
     } catch {
-      mirrorAlive = false;
+      liveOk = false;
     }
-    if (collection === null) {
+
+    let source: CollectionProgressSource;
+    let owned: readonly CollectionCard[] = [];
+    let lastUpdatedAt: number | null = null;
+    let mirrorAlive: boolean;
+
+    if (liveOk && liveCollection !== null) {
+      mirrorAlive = true;
+      owned = liveCollection;
+      source = 'live';
+      lastUpdatedAt = Date.now();
+      if (deps.snapshotStore !== undefined) {
+        try {
+          const saved = deps.snapshotStore.save(liveCollection, lastUpdatedAt);
+          lastUpdatedAt = saved.lastUpdatedAt;
+        } catch (err) {
+          console.error('[collection-progress] cache save failed', err);
+        }
+      }
+    } else {
       mirrorAlive = false;
+      const cached = deps.snapshotStore?.get() ?? null;
+      if (cached !== null) {
+        owned = cached.cards;
+        source = 'cache';
+        lastUpdatedAt = cached.lastUpdatedAt;
+      } else {
+        source = 'empty';
+      }
     }
 
     const ownedByDbfId = new Map<number, number>();
-    if (collection) {
-      for (const card of collection) {
-        const existing = ownedByDbfId.get(card.dbfId) ?? 0;
-        ownedByDbfId.set(card.dbfId, existing + card.count);
-      }
+    for (const card of owned) {
+      const existing = ownedByDbfId.get(card.dbfId) ?? 0;
+      ownedByDbfId.set(card.dbfId, existing + card.count);
     }
 
     const all = computeSetProgress(allCollectible, ownedByDbfId);
@@ -43,6 +76,6 @@ export function registerCollectionProgressIpc(deps: CollectionProgressDeps): voi
       (row.format === 'standard' ? standard : wild).push(row);
     }
 
-    return { standard, wild, mirrorAlive };
+    return { standard, wild, mirrorAlive, source, lastUpdatedAt };
   });
 }

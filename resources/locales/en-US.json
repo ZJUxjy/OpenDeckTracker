@@ -35,6 +35,18 @@
       "formatClassic": "CLS",
       "formatTwist": "TWS",
       "classAll": "ALL CLASSES",
+      "classDeathKnight": "Death Knight",
+      "classDemonHunter": "Demon Hunter",
+      "classDruid": "Druid",
+      "classHunter": "Hunter",
+      "classMage": "Mage",
+      "classPaladin": "Paladin",
+      "classPriest": "Priest",
+      "classRogue": "Rogue",
+      "classShaman": "Shaman",
+      "classWarlock": "Warlock",
+      "classWarrior": "Warrior",
+      "classNeutral": "Neutral",
       "archAll": "ALL",
       "archAggro": "AGGRO",
       "archMidrange": "MIDRANGE",
@@ -508,6 +520,7 @@
       "tabStandard": "Standard",
       "tabWild": "Wild",
       "mirrorBanner": "Launch Hearthstone for live numbers",
+      "cachedBanner": "Showing cached collection — last updated {date}",
       "unknownSet": "Unknown set ({code})"
     }
   },
@@ -572,6 +585,16 @@
       "unknownClass": "Unknown",
       "emptyCell": "—",
       "empty": "No matches yet."
+    },
+    "deckMatchup": {
+      "title": "Deck Matchups",
+      "deckLabel": "Saved deck",
+      "deckPlaceholder": "Select a deck",
+      "noDecks": "Save a deck to see its matchups.",
+      "empty": "No matches yet for this deck.",
+      "headerOpponent": "Opponent",
+      "headerRecord": "W-L",
+      "headerWinrate": "Winrate"
     },
     "timeSeries": {
       "title": "Winrate Over Time",

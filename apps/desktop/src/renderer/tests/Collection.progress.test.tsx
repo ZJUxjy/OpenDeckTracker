@@ -8,6 +8,8 @@ interface ProgressResponse {
   standard: SetProgress[];
   wild: SetProgress[];
   mirrorAlive: boolean;
+  source?: 'live' | 'cache' | 'empty';
+  lastUpdatedAt?: number | null;
 }
 
 function row(overrides: Partial<SetProgress> & { setCode: string }): SetProgress {
@@ -155,5 +157,39 @@ describe('Collection — set progress', () => {
 
     await waitFor(() => expect(screen.getByText('核心')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: '标准' })).toBeInTheDocument();
+  });
+
+  it('shows the cached banner with last-updated timestamp when source=cache', async () => {
+    const cachedAt = Date.parse('2026-04-25T10:00:00Z');
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810', ownedCopies: 30 })],
+      wild: [],
+      mirrorAlive: false,
+      source: 'cache',
+      lastUpdatedAt: cachedAt,
+    });
+
+    renderWithLocale('en-US');
+
+    const banner = await screen.findByTestId('collection-banner');
+    expect(banner).toHaveAttribute('data-banner-source', 'cache');
+    expect(banner).toHaveTextContent(/Showing cached collection/i);
+    expect(screen.queryByText(/Launch Hearthstone/i)).not.toBeInTheDocument();
+  });
+
+  it('shows the launch-game banner when source=empty', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [],
+      mirrorAlive: false,
+      source: 'empty',
+      lastUpdatedAt: null,
+    });
+
+    renderWithLocale('en-US');
+
+    const banner = await screen.findByTestId('collection-banner');
+    expect(banner).toHaveAttribute('data-banner-source', 'empty');
+    expect(banner).toHaveTextContent(/Launch Hearthstone for live numbers/i);
   });
 });

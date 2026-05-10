@@ -35,6 +35,18 @@
       "formatClassic": "经典",
       "formatTwist": "时光",
       "classAll": "全部职业",
+      "classDeathKnight": "死亡骑士",
+      "classDemonHunter": "恶魔猎手",
+      "classDruid": "德鲁伊",
+      "classHunter": "猎人",
+      "classMage": "法师",
+      "classPaladin": "圣骑士",
+      "classPriest": "牧师",
+      "classRogue": "潜行者",
+      "classShaman": "萨满祭司",
+      "classWarlock": "术士",
+      "classWarrior": "战士",
+      "classNeutral": "中立",
       "archAll": "全部",
       "archAggro": "快攻",
       "archMidrange": "中速",
@@ -508,6 +520,7 @@
       "tabStandard": "标准",
       "tabWild": "狂野",
       "mirrorBanner": "启动炉石传说获取实时数据",
+      "cachedBanner": "正在显示缓存的卡牌收藏——上次更新于 {date}",
       "unknownSet": "未知系列（{code}）"
     }
   },
@@ -572,6 +585,16 @@
       "unknownClass": "未知",
       "emptyCell": "—",
       "empty": "尚无对局。"
+    },
+    "deckMatchup": {
+      "title": "卡组对战",
+      "deckLabel": "已保存卡组",
+      "deckPlaceholder": "选择一副卡组",
+      "noDecks": "保存一副卡组后即可查看对战数据。",
+      "empty": "该卡组暂无对局记录。",
+      "headerOpponent": "对手",
+      "headerRecord": "胜-负",
+      "headerWinrate": "胜率"
     },
     "timeSeries": {
       "title": "胜率趋势",

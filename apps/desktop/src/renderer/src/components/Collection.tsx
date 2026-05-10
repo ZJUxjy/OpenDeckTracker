@@ -9,6 +9,8 @@ type ProgressResponse = {
   standard: SetProgress[];
   wild: SetProgress[];
   mirrorAlive: boolean;
+  source?: 'live' | 'cache' | 'empty';
+  lastUpdatedAt?: number | null;
 };
 
 export function Collection() {
@@ -95,11 +97,21 @@ export function Collection() {
             </div>
           </div>
 
-          {/* Mirror banner */}
+          {/* Mirror / cached banner */}
           {progress && !progress.mirrorAlive && (
-            <div className="tahoe-card p-4 flex items-center space-x-3">
+            <div
+              className="tahoe-card p-4 flex items-center space-x-3"
+              data-testid="collection-banner"
+              data-banner-source={progress.source ?? 'empty'}
+            >
               <AlertTriangle size={20} className="text-accent shrink-0" />
-              <p className="text-text-secondary text-sm">{t('collection.progress.mirrorBanner')}</p>
+              <p className="text-text-secondary text-sm">
+                {progress.source === 'cache' && progress.lastUpdatedAt
+                  ? t('collection.progress.cachedBanner', {
+                      date: new Date(progress.lastUpdatedAt).toLocaleString(locale),
+                    })
+                  : t('collection.progress.mirrorBanner')}
+              </p>
             </div>
           )}
 

@@ -128,4 +128,81 @@ describe('collection:get-progress IPC handler', () => {
     const b = await invoke();
     expect(a).toEqual(b);
   });
+
+  it('reports source=live and refreshes the snapshot cache on success', async () => {
+    const owned: CollectionCard[] = [{ dbfId: 1, count: 1, premium: 0 }];
+    const save = vi.fn((cards: readonly CollectionCard[], now?: number) => ({
+      cards: [...cards],
+      lastUpdatedAt: now ?? 0,
+    }));
+    const snapshotStore = {
+      get: vi.fn(() => null),
+      save,
+      close: vi.fn(),
+    };
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection: async () => owned,
+      snapshotStore: snapshotStore as never,
+    });
+
+    const result = (await invoke()) as { mirrorAlive: boolean; source: string };
+    expect(result.mirrorAlive).toBe(true);
+    expect(result.source).toBe('live');
+    expect(save).toHaveBeenCalledWith(owned, expect.any(Number));
+  });
+
+  it('reports source=cache when live read fails but cache exists', async () => {
+    // dbfId 1 is LEGENDARY (legal max = 1), dbfId 2 is COMMON (legal max = 2).
+    const cachedCards: CollectionCard[] = [
+      { dbfId: 1, count: 1, premium: 0 },
+      { dbfId: 2, count: 2, premium: 0 },
+    ];
+    const snapshotStore = {
+      get: vi.fn(() => ({ cards: cachedCards, lastUpdatedAt: 1234 })),
+      save: vi.fn(),
+      close: vi.fn(),
+    };
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection: async () => null,
+      snapshotStore: snapshotStore as never,
+    });
+
+    const result = (await invoke()) as {
+      mirrorAlive: boolean;
+      source: string;
+      lastUpdatedAt: number | null;
+      standard: { setCode: string; ownedCopies: number }[];
+    };
+    expect(result.mirrorAlive).toBe(false);
+    expect(result.source).toBe('cache');
+    expect(result.lastUpdatedAt).toBe(1234);
+    const standardSet = result.standard.find((s) => s.setCode === 'SET_1810');
+    expect(standardSet?.ownedCopies).toBe(3);
+  });
+
+  it('reports source=empty when live fails and no cache exists', async () => {
+    const snapshotStore = {
+      get: vi.fn(() => null),
+      save: vi.fn(),
+      close: vi.fn(),
+    };
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection: async () => null,
+      snapshotStore: snapshotStore as never,
+    });
+
+    const result = (await invoke()) as {
+      mirrorAlive: boolean;
+      source: string;
+      lastUpdatedAt: number | null;
+      standard: { ownedCopies: number }[];
+    };
+    expect(result.mirrorAlive).toBe(false);
+    expect(result.source).toBe('empty');
+    expect(result.lastUpdatedAt).toBeNull();
+    expect(result.standard.every((r) => r.ownedCopies === 0)).toBe(true);
+  });
 });
