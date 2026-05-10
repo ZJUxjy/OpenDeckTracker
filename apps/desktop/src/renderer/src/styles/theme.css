@@ -21,32 +21,36 @@
    ───────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── Surfaces ─────────────────────────────────────────────── */
-  --surface-window:   #F4F4F6;
-  --surface-sidebar:  #ECECEE;
-  --surface-toolbar:  #F0F0F2;
-  --surface-content:  #FFFFFF;
-  --surface-elevated: #FFFFFF;
-  --surface-raised:   #FAFAFB;
-  --surface-popover:  #FFFFFF;
+  /* ── Surfaces — Light mode = warm-tinted dark ─────────────────
+     Light text in BOTH modes (Acrylic shows unpredictable backdrop
+     colour through, dark text on a varied backdrop is unreadable),
+     so light mode is a *warm* tinted dark and dark mode is a *cool*
+     tinted dark. The visual difference between the two modes is
+     hue temperature, not lightness.                                */
+  --surface-window:   #2D2A33;
+  --surface-sidebar:  #29262F;
+  --surface-toolbar:  #302C36;
+  --surface-content:  #34313B;
+  --surface-elevated: #3B3742;
+  --surface-raised:   #322E38;
+  --surface-popover:  #38343F;
 
-  /* Glass — translucent for in-game overlay and popovers. The
-     low alpha means the game scene behind the BrowserWindow
-     refracts through the panel chrome. The deck-list area inside
-     keeps a higher-opacity platter so card rows stay readable. */
-  --glass-overlay:    rgba(255, 255, 255, 0.40);
+  /* Glass — translucent panels. Lower alpha than before so Acrylic
+     bleeds through more (less gray dominance) and the warm tint
+     pulls the chrome away from neutral gray.                       */
+  --glass-overlay:    rgba(56, 50, 68, 0.36);
   --glass-blur:       60px;
 
-  /* ── Borders ──────────────────────────────────────────────── */
-  --border-hairline:  rgba(0, 0, 0, 0.12);
-  --border-separator: rgba(0, 0, 0, 0.06);
-  --border-strong:    rgba(0, 0, 0, 0.20);
+  /* ── Borders ─ white-with-alpha (works on dark surfaces) ─── */
+  --border-hairline:  rgba(255, 255, 255, 0.10);
+  --border-separator: rgba(255, 255, 255, 0.06);
+  --border-strong:    rgba(255, 255, 255, 0.20);
 
-  /* ── Text ─────────────────────────────────────────────────── */
-  --text-primary:     #1D1D1F;
-  --text-secondary:   rgba(60, 60, 67, 0.65);
-  --text-tertiary:    rgba(60, 60, 67, 0.30);
-  --text-quaternary:  rgba(60, 60, 67, 0.18);
+  /* ── Text — light values, kept identical in dark mode ───────── */
+  --text-primary:     #F4F4F8;
+  --text-secondary:   rgba(240, 240, 250, 0.72);
+  --text-tertiary:    rgba(240, 240, 250, 0.40);
+  --text-quaternary:  rgba(240, 240, 250, 0.22);
   --text-on-accent:   #FFFFFF;
 
   /* ── Accent — macOS System Blue ──────────────────────────── */
@@ -174,24 +178,27 @@
    ───────────────────────────────────────────────────────────── */
 
 .dark {
-  --surface-window:   #1C1C1E;
-  --surface-sidebar:  #1A1A1C;
-  --surface-toolbar:  #202022;
-  --surface-content:  #242427;
-  --surface-elevated: #2C2C2F;
-  --surface-raised:   #2A2A2D;
-  --surface-popover:  #2E2E31;
+  /* Dark mode = cool-tinted deeper dark. Same light text as :root
+     so toggling modes only shifts hue/depth, never legibility. */
+  --surface-window:   #14181F;
+  --surface-sidebar:  #11151C;
+  --surface-toolbar:  #161A22;
+  --surface-content:  #1A1E27;
+  --surface-elevated: #1F232E;
+  --surface-raised:   #181C25;
+  --surface-popover:  #1D212A;
 
-  --glass-overlay:    rgba(28, 28, 30, 0.42);
+  --glass-overlay:    rgba(22, 30, 52, 0.40);
 
-  --border-hairline:  rgba(255, 255, 255, 0.10);
+  --border-hairline:  rgba(255, 255, 255, 0.12);
   --border-separator: rgba(255, 255, 255, 0.07);
-  --border-strong:    rgba(255, 255, 255, 0.18);
+  --border-strong:    rgba(255, 255, 255, 0.20);
 
-  --text-primary:     #F2F2F4;
-  --text-secondary:   rgba(235, 235, 245, 0.60);
-  --text-tertiary:    rgba(235, 235, 245, 0.30);
-  --text-quaternary:  rgba(235, 235, 245, 0.18);
+  /* Text identical to :root — light text in both modes. */
+  --text-primary:     #F4F4F8;
+  --text-secondary:   rgba(240, 240, 250, 0.72);
+  --text-tertiary:    rgba(240, 240, 250, 0.40);
+  --text-quaternary:  rgba(240, 240, 250, 0.22);
 
   --accent:           #0A84FF;
   --accent-hover:     #1A8CFF;
@@ -658,54 +665,57 @@ body[data-overlay="true"] .tracker-panel-tabbar {
        refracted colour so Liquid Glass catches the wallpaper hue.
    ───────────────────────────────────────────────────────────── */
 
+/* Sidebar / topbar — very low alpha + warm/cool tint so Acrylic
+   dominates the visual and the chrome reads as "tinted glass" not
+   "gray panel". Light = warm purple-gray, dark = cool blue-black. */
 .tahoe-sidebar {
-  background: rgba(255, 255, 255, 0.10);
+  background: rgba(48, 42, 58, 0.20);
   backdrop-filter: blur(35px) saturate(180%);
   -webkit-backdrop-filter: blur(35px) saturate(180%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30);
-  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  border-right: 1px solid rgba(255, 255, 255, 0.10);
 }
 .dark .tahoe-sidebar {
-  background: rgba(20, 20, 22, 0.30);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
-  border-right-color: rgba(255, 255, 255, 0.08);
+  background: rgba(18, 24, 42, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-right-color: rgba(255, 255, 255, 0.06);
 }
 
 .tahoe-topbar {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(48, 42, 58, 0.22);
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
 .dark .tahoe-topbar {
-  background: rgba(20, 20, 22, 0.30);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: rgba(18, 24, 42, 0.32);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Frosted-glass content card — translucent fill + backdrop-blur so
-   wallpaper iridescence bleeds through. Stronger chromatic rim
-   (top-left blue / bottom-right pink) than the previous opaque
-   variant — the see-through fill makes the rim more visible. */
+/* Frosted-glass content card — lower alpha than the previous 0.55
+   variant so Acrylic colour bleeds through more (less gray
+   dominance). Tint pulls slightly off neutral so each mode reads
+   as having a personality: warm-purple in light, cool-blue in dark. */
 .tahoe-card {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(50, 44, 62, 0.32);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: var(--radius-2xl);
   box-shadow:
-    inset  1px  1px 0 rgba(180, 220, 255, 0.45),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
-    inset 0  1px 0 rgba(255, 255, 255, 0.65),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
-    0 4px 18px -4px rgba(0, 0, 0, 0.12);
+    inset  1px  1px 0 rgba(180, 220, 255, 0.35),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.22),
+    inset 0  1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20),
+    0 6px 22px -4px rgba(0, 0, 0, 0.35);
 }
 .dark .tahoe-card {
-  background: rgba(36, 36, 39, 0.55);
+  background: rgba(22, 30, 52, 0.34);
   box-shadow:
     inset  1px  1px 0 rgba(180, 220, 255, 0.30),
     inset -1px -1px 0 rgba(255, 200, 215, 0.18),
-    inset 0  1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.20),
-    0 6px 22px -4px rgba(0, 0, 0, 0.45);
+    inset 0  1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.30),
+    0 6px 22px -4px rgba(0, 0, 0, 0.50);
 }
 
 /* Active-pill treatment — for sidebar nav, segmented controls in
