@@ -241,6 +241,95 @@ describe('createDeckStore', () => {
     }
   });
 
+  it('saveFromLive marks records with hearthstone-live source and liveDeckId', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const created = store.saveFromLive(
+        {
+          name: 'Live Druid',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 2 }],
+          liveDeckId: 42,
+        },
+        lookup,
+      );
+      expect(created.source).toBe('hearthstone-live');
+      expect(created.liveDeckId).toBe(42);
+
+      const summary = store.list().find((d) => d.id === created.id);
+      expect(summary?.source).toBe('hearthstone-live');
+      expect(summary?.liveDeckId).toBe(42);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('manual decks created via create() do not carry live-sync metadata', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const created = store.create({
+        name: 'Manual',
+        class: 'DRUID',
+        format: 'Standard',
+        cards: [{ cardId: 'A', count: 1 }],
+      });
+      expect(created.source).toBeUndefined();
+      expect(created.liveDeckId).toBeUndefined();
+    } finally {
+      store.close();
+    }
+  });
+
+  it('saveFromLive upserts live-synced rows by liveDeckId', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+        { cardId: 'B', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const first = store.saveFromLive(
+        {
+          name: 'Live A',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 1 }],
+          liveDeckId: 7,
+        },
+        lookup,
+      );
+      const second = store.saveFromLive(
+        {
+          name: 'Live A v2',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 1 }, { cardId: 'B', count: 2 }],
+          liveDeckId: 7,
+        },
+        lookup,
+      );
+
+      expect(second.id).toBe(first.id);
+      expect(second.name).toBe('Live A v2');
+      expect(second.version).toBe(2);
+      expect(store.list()).toHaveLength(1);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('findByLiveDeckId returns null when no live-synced record matches', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      expect(store.findByLiveDeckId(99)).toBeNull();
+    } finally {
+      store.close();
+    }
+  });
+
   it('saveFromLive throws NonCollectibleSnapshotError for a non-collectible card', () => {
     const store = createDeckStore(dbPath());
     try {

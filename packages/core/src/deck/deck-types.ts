@@ -99,6 +99,14 @@ export interface DeckCard {
   count: number;
 }
 
+/**
+ * How this deck record was created.
+ * - `manual`: user-created or imported by the user. Always wins on conflict.
+ * - `hearthstone-live`: app-managed copy of an in-game Hearthstone deck,
+ *   synced via `deck-sync-service`. Mutated on later live reads.
+ */
+export type DeckSource = 'manual' | 'hearthstone-live';
+
 export interface Deck {
   id: string;
   name: string;
@@ -112,6 +120,10 @@ export interface Deck {
   sortIndex?: number;
   createdAt: number;
   updatedAt: number;
+  /** Defaults to `'manual'` when absent on legacy rows. */
+  source?: DeckSource;
+  /** Hearthstone numeric deck id; only present when `source === 'hearthstone-live'`. */
+  liveDeckId?: number | null;
 }
 
 export interface DeckSummary {
@@ -124,6 +136,8 @@ export interface DeckSummary {
   coverCardId?: string;
   sortIndex?: number;
   updatedAt: number;
+  source?: DeckSource;
+  liveDeckId?: number | null;
 }
 
 export interface DeckDetail extends Deck {}

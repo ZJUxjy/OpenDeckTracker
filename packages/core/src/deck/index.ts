@@ -5,6 +5,7 @@ export {
   type Deck,
   type DeckCard,
   type DeckDetail,
+  type DeckSource,
   type DeckSummary,
   type DeckVersion,
   type Format,

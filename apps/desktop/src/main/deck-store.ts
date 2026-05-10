@@ -7,6 +7,7 @@ import {
   type Deck,
   type DeckCard,
   type DeckDetail,
+  type DeckSource,
   type DeckSummary,
   type DeckVersion,
   type Format,
@@ -33,6 +34,13 @@ export interface LiveDeckSnapshotInput {
   class: HeroClass;
   format: Format;
   cards: DeckCard[];
+  /**
+   * Hearthstone numeric deck id from `hearthmirror.getDecks()`. When
+   * provided, `saveFromLive` will treat the resulting record as
+   * `source: 'hearthstone-live'` and the deck-sync-service can later
+   * upsert against it without creating duplicates.
+   */
+  liveDeckId?: number | null;
 }
 
 export interface SaveFromLiveCardLookup {
@@ -48,6 +56,12 @@ export interface DeckStore {
   delete(id: string): void;
   setSortIndex(id: string, sortIndex: number): void;
   saveFromLive(live: LiveDeckSnapshotInput, lookup: SaveFromLiveCardLookup): DeckDetail;
+  /**
+   * Look up a live-synced deck by its Hearthstone deck id. Used by the
+   * deck-sync-service to decide upsert vs insert. Returns `null` if no
+   * matching `source: 'hearthstone-live'` record exists.
+   */
+  findByLiveDeckId(liveDeckId: number): DeckDetail | null;
   listVersions(id: string): DeckVersion[];
   schemaVersion(): number;
   close(): void;
@@ -65,6 +79,8 @@ interface DeckRow {
   sort_index: number | null;
   created_at: number;
   updated_at: number;
+  source: DeckSource | null;
+  live_deck_id: number | null;
 }
 
 interface DeckCardRow {
@@ -105,6 +121,8 @@ export function createDeckStore(dbPath: string): DeckStore {
     };
     if (row.cover_card_id !== null) summary.coverCardId = row.cover_card_id;
     if (row.sort_index !== null) summary.sortIndex = row.sort_index;
+    if (row.source !== null) summary.source = row.source;
+    if (row.live_deck_id !== null) summary.liveDeckId = row.live_deck_id;
     return summary;
   }
 
@@ -123,6 +141,8 @@ export function createDeckStore(dbPath: string): DeckStore {
     };
     if (row.cover_card_id !== null) detail.coverCardId = row.cover_card_id;
     if (row.sort_index !== null) detail.sortIndex = row.sort_index;
+    if (row.source !== null) detail.source = row.source;
+    if (row.live_deck_id !== null) detail.liveDeckId = row.live_deck_id;
     return detail;
   }
 
@@ -139,6 +159,37 @@ export function createDeckStore(dbPath: string): DeckStore {
       .get(id) as DeckRow | undefined;
     if (!row) return null;
     return detailFromRow(row, loadCards(id));
+  }
+
+  function findByLiveDeckIdInternal(liveDeckId: number): DeckDetail | null {
+    const row = db
+      .prepare<[number]>(
+        `SELECT * FROM decks WHERE source = 'hearthstone-live' AND live_deck_id = ? LIMIT 1`,
+      )
+      .get(liveDeckId) as DeckRow | undefined;
+    if (!row) return null;
+    return detailFromRow(row, loadCards(row.id));
+  }
+
+  function updateLiveSyncedDeck(existing: DeckDetail, live: LiveDeckSnapshotInput): DeckDetail {
+    const now = Date.now();
+    let version = existing.version;
+    if (!areCardListsEqual(existing.cards, live.cards)) {
+      version = existing.version + 1;
+      writeVersionRow(existing.id, version, live.cards, now);
+    }
+    writeDeckCards(existing.id, live.cards);
+    db.prepare(
+      `UPDATE decks SET name = @name, class = @class, format = @format, version = @version, updated_at = @now WHERE id = @id`,
+    ).run({
+      id: existing.id,
+      name: live.name,
+      class: live.class,
+      format: live.format,
+      version,
+      now,
+    });
+    return deckFromId(existing.id)!;
   }
 
   function writeDeckCards(deckId: string, cards: DeckCard[]): void {
@@ -160,14 +211,22 @@ export function createDeckStore(dbPath: string): DeckStore {
     for (const c of cards) insertCard.run(deckId, version, c.cardId, c.count);
   }
 
-  function insertDeck(input: CreateDeckInput, override: { id?: string; now?: number } = {}): DeckDetail {
+  function insertDeck(
+    input: CreateDeckInput,
+    override: {
+      id?: string;
+      now?: number;
+      source?: DeckSource;
+      liveDeckId?: number | null;
+    } = {},
+  ): DeckDetail {
     const now = override.now ?? Date.now();
     const id = override.id ?? randomUUID();
     const cards = (input.cards ?? []).map((c) => ({ ...c }));
     const tagsJson = JSON.stringify(input.tags ?? []);
     db.prepare(
-      `INSERT INTO decks (id, name, class, format, version, notes, tags_json, cover_card_id, sort_index, created_at, updated_at)
-       VALUES (@id, @name, @class, @format, 1, @notes, @tags, @cover, NULL, @now, @now)`,
+      `INSERT INTO decks (id, name, class, format, version, notes, tags_json, cover_card_id, sort_index, created_at, updated_at, source, live_deck_id)
+       VALUES (@id, @name, @class, @format, 1, @notes, @tags, @cover, NULL, @now, @now, @source, @liveDeckId)`,
     ).run({
       id,
       name: input.name,
@@ -176,6 +235,8 @@ export function createDeckStore(dbPath: string): DeckStore {
       notes: input.notes ?? '',
       tags: tagsJson,
       cover: input.coverCardId ?? null,
+      source: override.source ?? null,
+      liveDeckId: override.liveDeckId ?? null,
       now,
     });
     writeDeckCards(id, cards);
@@ -307,12 +368,31 @@ export function createDeckStore(dbPath: string): DeckStore {
         if (!info || !info.collectible) offenders.push(c.cardId);
       }
       if (offenders.length > 0) throw new NonCollectibleSnapshotError(offenders);
-      return insertDeck({
-        name: live.name,
-        class: live.class,
-        format: live.format,
-        cards: live.cards,
+      const tx = db.transaction(() => {
+        if (live.liveDeckId !== undefined && live.liveDeckId !== null) {
+          const existing = findByLiveDeckIdInternal(live.liveDeckId);
+          if (existing !== null) {
+            return updateLiveSyncedDeck(existing, live);
+          }
+        }
+        return insertDeck(
+          {
+            name: live.name,
+            class: live.class,
+            format: live.format,
+            cards: live.cards,
+          },
+          {
+            source: 'hearthstone-live',
+            liveDeckId: live.liveDeckId ?? null,
+          },
+        );
       });
+      return tx();
+    },
+
+    findByLiveDeckId(liveDeckId) {
+      return findByLiveDeckIdInternal(liveDeckId);
     },
 
     listVersions(id) {
@@ -438,5 +518,18 @@ function initializeSchema(db: Database.Database): void {
     | undefined;
   if (!existing) {
     db.prepare(`INSERT INTO schema_version (version) VALUES (?)`).run(SCHEMA_VERSION);
+  }
+
+  const existingDeckCols = (db.pragma('table_info(decks)') as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!existingDeckCols.includes('source')) {
+    db.exec(`ALTER TABLE decks ADD COLUMN source TEXT`);
+  }
+  if (!existingDeckCols.includes('live_deck_id')) {
+    db.exec(`ALTER TABLE decks ADD COLUMN live_deck_id INTEGER`);
+    db.exec(
+      `CREATE INDEX IF NOT EXISTS idx_decks_live_deck_id ON decks(source, live_deck_id) WHERE source = 'hearthstone-live'`,
+    );
   }
 }
