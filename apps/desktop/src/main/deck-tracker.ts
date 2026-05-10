@@ -508,8 +508,18 @@ export function forwardPowerEventToDeckTracker(
     cardPlayedDetector?.reset();
     tracker?.resetGlobalEffects();
     // Power.log says actual gameplay is starting — flip the
-    // overlay-visibility gate. Cleared on phase → IDLE further below.
-    setLiveMatchActive(true);
+    // overlay-visibility gate, BUT only for `phase === 'live'`. The
+    // hearthwatcher replays the entire current Power.log file on
+    // startup so we can rebuild state mid-match; those events carry
+    // `phase === 'replay'` and refer to PAST matches, not the
+    // current one. Honoring them would mark the gate live the moment
+    // HDT_js launches against any non-empty Power.log, even if the
+    // user is sitting on the main menu / deck picker.
+    //
+    // Cleared on phase → IDLE further below.
+    if (phase === 'live') {
+      setLiveMatchActive(true);
+    }
   }
   pushPowerEvent(event);
   const logUpdates = logUpdatesFromPowerEvent(event);
