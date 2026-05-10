@@ -15,7 +15,7 @@ describe('AppearanceApplyEffect', () => {
   it('sets data-density and accent custom properties from store state on mount', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'compact', accent: 'violet' }),
+      JSON.stringify({ density: 'compact', accent: 'purple' }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -25,8 +25,8 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.violet.accent);
-    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(ACCENT_PALETTE.violet.accentDim);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.purple.accentDark);
+    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(ACCENT_PALETTE.purple.accentDimDark);
   });
 
   it('updates inline custom properties when accent changes', async () => {
@@ -38,11 +38,11 @@ describe('AppearanceApplyEffect', () => {
     });
 
     act(() => {
-      useAppearanceStore.getState().setAccent('violet');
+      useAppearanceStore.getState().setAccent('purple');
     });
 
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.violet.accent);
-    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(ACCENT_PALETTE.violet.accentDim);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.purple.accentDark);
+    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(ACCENT_PALETTE.purple.accentDimDark);
   });
 
   it('updates data-density when density changes', async () => {
@@ -65,7 +65,7 @@ describe('AppearanceApplyEffect', () => {
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
 
     act(() => {
-      useAppearanceStore.getState().setAccent('teal');
+      useAppearanceStore.getState().setAccent('mint');
     });
 
     const { unmount } = render(<AppearanceApplyEffect />, {
@@ -75,7 +75,7 @@ describe('AppearanceApplyEffect', () => {
     unmount();
 
     // Properties should persist after unmount
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.teal.accent);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.mint.accentDark);
   });
 
   it('fires overlay:set-enabled on mount when gameOverlay is saved as true', async () => {
@@ -84,7 +84,7 @@ describe('AppearanceApplyEffect', () => {
 
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: true }),
+      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlay: true }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -121,7 +121,7 @@ describe('AppearanceApplyEffect', () => {
 
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: false, gameOverlayOpponent: true }),
+      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlay: false, gameOverlayOpponent: true }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -144,7 +144,7 @@ describe('AppearanceApplyEffect', () => {
 
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: true, gameOverlayOpponent: true }),
+      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlay: true, gameOverlayOpponent: true }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');

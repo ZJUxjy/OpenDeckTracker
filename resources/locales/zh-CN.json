@@ -214,11 +214,15 @@
         "compact": "紧凑"
       },
       "accent": {
-        "title": "主题色",
-        "description": "选择高亮使用的主题色。",
-        "cyan": "青色",
-        "teal": "蓝绿色",
-        "violet": "紫色"
+        "title": "强调色",
+        "description": "用于按钮、链接和选中项。"
+      },
+      "theme": {
+        "title": "外观",
+        "description": "跟随系统设置，或显式选择浅色 / 深色。",
+        "system": "跟随系统",
+        "light": "浅色",
+        "dark": "深色"
       }
     },
     "about": {

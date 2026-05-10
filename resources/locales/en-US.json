@@ -214,11 +214,15 @@
         "compact": "Compact"
       },
       "accent": {
-        "title": "Accent",
-        "description": "Choose the accent color for highlights.",
-        "cyan": "Cyan",
-        "teal": "Teal",
-        "violet": "Violet"
+        "title": "Accent color",
+        "description": "Used for buttons, links, and selected items."
+      },
+      "theme": {
+        "title": "Appearance",
+        "description": "Match system appearance, or pick Light / Dark explicitly.",
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
       }
     },
     "about": {

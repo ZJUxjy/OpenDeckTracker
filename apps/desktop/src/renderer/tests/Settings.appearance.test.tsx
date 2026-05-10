@@ -18,10 +18,6 @@ describe('Settings — Appearance category', () => {
   });
 
   it('exposes Appearance, Overlay, and About in the sidebar (placeholder categories hidden)', () => {
-    // The General / Tracker / Notifications / Data / Audio sidebar entries
-    // were removed as part of the commercial-release Settings cleanup —
-    // their panels were non-functional placeholders. Only categories with
-    // real wired controls (plus the About panel) remain.
     renderSettings();
 
     const sidebarButtons = screen.getAllByRole('button');
@@ -35,35 +31,43 @@ describe('Settings — Appearance category', () => {
     expect(sidebarLabels).toEqual(['Appearance', 'In-Game Overlay', 'About']);
   });
 
-  it('shows language picker, density control, and accent swatches under Appearance', () => {
+  it('shows language picker, density control, theme picker, and accent swatches under Appearance', () => {
     renderSettings();
 
-    // Appearance is the default active category, so its content is
-    // visible without a sidebar click. (After the cleanup the heading
-    // text "Appearance" also appears inside the panel, so getByText
-    // alone is ambiguous — we just skip the click.)
-
-    // Language picker should be present
-    expect(screen.getByText('System')).toBeInTheDocument();
+    // Appearance is the default active category. Multiple "System" buttons
+    // exist (Language, Theme), so we use queryAllByText for that one.
+    expect(screen.getAllByText('System').length).toBeGreaterThan(0);
     expect(screen.getByText('English')).toBeInTheDocument();
 
-    // Density control
     expect(screen.getByText('Comfortable')).toBeInTheDocument();
     expect(screen.getByText('Compact')).toBeInTheDocument();
 
-    // Accent swatches use aria-label
-    expect(screen.getByRole('button', { name: 'Cyan' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Teal' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Violet' })).toBeInTheDocument();
+    // Theme picker (System / Light / Dark)
+    expect(screen.getByText('Light')).toBeInTheDocument();
+    expect(screen.getByText('Dark')).toBeInTheDocument();
+
+    // 8 macOS System accent swatches
+    for (const name of ['Blue', 'Red', 'Orange', 'Yellow', 'Green', 'Mint', 'Purple', 'Pink']) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
   });
 
-  it('clicking Violet swatch updates the appearance store', async () => {
+  it('clicking Purple swatch updates the appearance store', async () => {
     renderSettings();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Violet' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Purple' }));
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().accent).toBe('violet');
+    expect(useAppearanceStore.getState().accent).toBe('purple');
+  });
+
+  it('clicking Light theme button updates theme to light', async () => {
+    renderSettings();
+
+    fireEvent.click(screen.getByText('Light'));
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().theme).toBe('light');
   });
 
   it('renders Chinese labels under zh-CN locale', () => {
@@ -71,8 +75,12 @@ describe('Settings — Appearance category', () => {
 
     expect(screen.getByText('舒适')).toBeInTheDocument();
     expect(screen.getByText('紧凑')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '青色' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '蓝绿色' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '紫色' })).toBeInTheDocument();
+    // Theme picker labels in Chinese
+    expect(screen.getByText('浅色')).toBeInTheDocument();
+    expect(screen.getByText('深色')).toBeInTheDocument();
+    // Accent swatches use English aria-labels (system names) — they're
+    // proper-noun colors in macOS and stay untranslated, matching how
+    // System Settings displays them.
+    expect(screen.getByRole('button', { name: 'Blue' })).toBeInTheDocument();
   });
 });

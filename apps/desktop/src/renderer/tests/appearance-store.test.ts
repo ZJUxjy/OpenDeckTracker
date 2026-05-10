@@ -7,28 +7,37 @@ describe('appearance store', () => {
     vi.resetModules();
   });
 
-  it('defaults to comfortable density and cyan accent when nothing is stored', async () => {
+  it('defaults to comfortable density, blue accent, system theme when nothing is stored', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().accent).toBe('cyan');
+    expect(useAppearanceStore.getState().accent).toBe('blue');
+    expect(useAppearanceStore.getState().theme).toBe('system');
   });
 
   it('round-trips preferences through localStorage', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     useAppearanceStore.getState().setDensity('compact');
-    useAppearanceStore.getState().setAccent('violet');
+    useAppearanceStore.getState().setAccent('purple');
+    useAppearanceStore.getState().setTheme('dark');
 
     expect(localStorage.getItem(APPEARANCE_STORAGE_KEY)).toBe(
-      JSON.stringify({ density: 'compact', accent: 'violet', gameOverlay: false, gameOverlayOpponent: false }),
+      JSON.stringify({
+        density: 'compact',
+        accent: 'purple',
+        theme: 'dark',
+        gameOverlay: false,
+        gameOverlayOpponent: false,
+      }),
     );
 
     // Fresh import hydrates from storage
     vi.resetModules();
     const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
     expect(fresh.getState().density).toBe('compact');
-    expect(fresh.getState().accent).toBe('violet');
+    expect(fresh.getState().accent).toBe('purple');
+    expect(fresh.getState().theme).toBe('dark');
   });
 
   it('falls back to defaults on malformed JSON', async () => {
@@ -37,24 +46,43 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().accent).toBe('cyan');
+    expect(useAppearanceStore.getState().accent).toBe('blue');
+    expect(useAppearanceStore.getState().theme).toBe('system');
   });
 
   it('falls back to defaults on unknown enum values', async () => {
-    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density: 'spacious', accent: 'red' }));
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'spacious', accent: 'banana', theme: 'sepia' }),
+    );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().accent).toBe('cyan');
+    expect(useAppearanceStore.getState().accent).toBe('blue');
+    expect(useAppearanceStore.getState().theme).toBe('system');
   });
 
-  it('exports ACCENT_PALETTE with correct hex and rgba values', () => {
-    expect(ACCENT_PALETTE).toEqual({
-      cyan:   { accent: '#22d3ee', accentDim: 'rgba(34,211,238,0.15)' },
-      teal:   { accent: '#2dd4bf', accentDim: 'rgba(45,212,191,0.15)' },
-      violet: { accent: '#a78bfa', accentDim: 'rgba(167,139,250,0.15)' },
-    });
+  it('migrates legacy accent values (cyan/teal → mint, violet → purple)', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', accent: 'violet' }),
+    );
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().accent).toBe('purple');
+  });
+
+  it('exports ACCENT_PALETTE with all 8 macOS system accents', () => {
+    const expectedKeys = ['blue', 'red', 'orange', 'yellow', 'green', 'mint', 'purple', 'pink'];
+    expect(Object.keys(ACCENT_PALETTE).sort()).toEqual(expectedKeys.sort());
+    for (const key of expectedKeys) {
+      const v = ACCENT_PALETTE[key as keyof typeof ACCENT_PALETTE];
+      expect(v.accentLight).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(v.accentDark).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(v.accentDimLight).toMatch(/^rgba\(/);
+      expect(v.accentDimDark).toMatch(/^rgba\(/);
+    }
   });
 
   it('defaults gameOverlay to false when nothing is stored', async () => {
@@ -76,7 +104,7 @@ describe('appearance store', () => {
   });
 
   it('handles legacy payload without gameOverlay gracefully', async () => {
-    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density: 'compact', accent: 'violet' }));
+    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density: 'compact', accent: 'purple' }));
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
@@ -119,7 +147,7 @@ describe('appearance store', () => {
   it('handles legacy payload without gameOverlayOpponent gracefully', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', accent: 'cyan', gameOverlay: true }),
+      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlay: true }),
     );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');

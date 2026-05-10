@@ -2,7 +2,13 @@
 import { Info, Monitor, Palette } from 'lucide-react';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
-import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density } from '../stores/appearance-store';
+import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme } from '../stores/appearance-store';
+
+const ALL_ACCENTS: Accent[] = ['blue', 'red', 'orange', 'yellow', 'green', 'mint', 'purple', 'pink'];
+const ACCENT_LABELS: Record<Accent, string> = {
+  blue: 'Blue', red: 'Red', orange: 'Orange', yellow: 'Yellow',
+  green: 'Green', mint: 'Mint', purple: 'Purple', pink: 'Pink',
+};
 
 // Only categories whose panels are wired to real preferences are exposed.
 // "general" / "tracker" / "notifications" / "data" / "audio" panels were
@@ -29,10 +35,12 @@ export function Settings() {
   const setLanguagePreference = useI18nStore((state) => state.setLanguagePreference);
   const density = useAppearanceStore((state) => state.density);
   const accent = useAppearanceStore((state) => state.accent);
+  const theme = useAppearanceStore((state) => state.theme);
   const gameOverlay = useAppearanceStore((state) => state.gameOverlay);
   const gameOverlayOpponent = useAppearanceStore((state) => state.gameOverlayOpponent);
   const setDensity = useAppearanceStore((state) => state.setDensity);
   const setAccent = useAppearanceStore((state) => state.setAccent);
+  const setTheme = useAppearanceStore((state) => state.setTheme);
   const setGameOverlay = useAppearanceStore((state) => state.setGameOverlay);
   const setGameOverlayOpponent = useAppearanceStore((state) => state.setGameOverlayOpponent);
   const [activeCategory, setActiveCategory] = useState('appearance');
@@ -133,30 +141,51 @@ export function Settings() {
                     </div>
                   </div>
 
-                  {/* Accent */}
+                  {/* Theme — System / Light / Dark */}
+                  <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
+                    <div>
+                      <h3 className="text-text font-medium">{t('settings.appearance.theme.title')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.theme.description')}</p>
+                    </div>
+                    <div className="flex rounded-md border border-border bg-bg-2 p-1">
+                      {(['system', 'light', 'dark'] as Theme[]).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setTheme(opt)}
+                          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                            theme === opt
+                              ? 'bg-accent text-text-on-accent'
+                              : 'text-text-dim hover:text-text'
+                          }`}
+                        >
+                          {t(`settings.appearance.theme.${opt}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Accent — 8 macOS System colors */}
                   <div className="settings-row flex items-center justify-between p-4 bg-bg-2 rounded-xl border border-border gap-4">
                     <div>
                       <h3 className="text-text font-medium">{t('settings.appearance.accent.title')}</h3>
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.accent.description')}</p>
                     </div>
                     <div className="flex gap-2">
-                      {(['cyan', 'teal', 'violet'] as Accent[]).map((opt) => (
+                      {ALL_ACCENTS.map((opt) => (
                         <button
                           key={opt}
                           type="button"
                           onClick={() => setAccent(opt)}
-                          className={`w-8 h-8 rounded-full border-2 transition-all ${
+                          className={`w-7 h-7 rounded-full transition-all ${
                             accent === opt
-                              ? 'border-text ring-2 ring-text/30'
-                              : 'border-border hover:border-border-hi'
+                              ? 'ring-2 ring-offset-2 ring-offset-bg-2 ring-accent'
+                              : 'ring-1 ring-border hover:ring-border-hi'
                           }`}
-                          style={{ backgroundColor: ACCENT_PALETTE[opt].accent }}
-                          aria-label={t(`settings.appearance.accent.${opt}`)}
-                        >
-                          {accent === opt && (
-                            <span className="flex items-center justify-center w-full h-full text-bg text-xs font-bold">&#10003;</span>
-                          )}
-                        </button>
+                          style={{ backgroundColor: ACCENT_PALETTE[opt].accentLight }}
+                          aria-label={ACCENT_LABELS[opt]}
+                          title={ACCENT_LABELS[opt]}
+                        />
                       ))}
                     </div>
                   </div>

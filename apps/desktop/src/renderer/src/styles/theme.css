@@ -14,151 +14,329 @@
   .animate-deck-exit { animation: deckExit 50ms forwards linear; }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   macOS Liquid Glass — Light mode (default)
+   `:root.dark` overrides below toggles to Dark mode.
+   The `.dark` class is set on <html> by the theme controller.
+   ───────────────────────────────────────────────────────────── */
+
 :root {
-  /* ── Legacy shadcn-style variables (unused, kept for compat) ── */
-  --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
+  /* ── Surfaces ─────────────────────────────────────────────── */
+  --surface-window:   #F4F4F6;
+  --surface-sidebar:  #ECECEE;
+  --surface-toolbar:  #F0F0F2;
+  --surface-content:  #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-raised:   #FAFAFB;
+  --surface-popover:  #FFFFFF;
+
+  /* Glass — translucent for in-game overlay and popovers */
+  --glass-overlay:    rgba(250, 250, 252, 0.93);
+  --glass-blur:       60px;
+
+  /* ── Borders ──────────────────────────────────────────────── */
+  --border-hairline:  rgba(0, 0, 0, 0.12);
+  --border-separator: rgba(0, 0, 0, 0.06);
+  --border-strong:    rgba(0, 0, 0, 0.20);
+
+  /* ── Text ─────────────────────────────────────────────────── */
+  --text-primary:     #1D1D1F;
+  --text-secondary:   rgba(60, 60, 67, 0.65);
+  --text-tertiary:    rgba(60, 60, 67, 0.30);
+  --text-quaternary:  rgba(60, 60, 67, 0.18);
+  --text-on-accent:   #FFFFFF;
+
+  /* ── Accent — macOS System Blue ──────────────────────────── */
+  --accent:           #007AFF;
+  --accent-hover:     #0070EE;
+  --accent-pressed:   #0058C8;
+  --accent-translucent: rgba(0, 122, 255, 0.12);
+  --accent-dim:       rgba(0, 122, 255, 0.15);
+
+  /* ── Semantic status ──────────────────────────────────────── */
+  --semantic-success: #28A745;
+  --semantic-warning: #FF9500;
+  --semantic-danger:  #FF3B30;
+  --semantic-info:    #5AC8FA;
+
+  /* ── Hearthstone domain — rarities ────────────────────────── */
+  --rarity-free:      #7E7E84;
+  --rarity-common:    #5C5C61;
+  --rarity-rare:      #0A84FF;
+  --rarity-epic:      #AF52DE;
+  --rarity-legendary: #FF9500;
+
+  /* ── Hearthstone domain — classes ─────────────────────────── */
+  --class-mage:        #3B82F6;
+  --class-hunter:      #22C55E;
+  --class-priest:      #8B95A3;
+  --class-rogue:       #1F2937;
+  --class-warlock:     #7C3AED;
+  --class-warrior:     #B91C1C;
+  --class-druid:       #A16207;
+  --class-shaman:      #1D4ED8;
+  --class-paladin:     #CA8A04;
+  --class-demonhunter: #15803D;
+  --class-deathknight: #0E7490;
+  --class-neutral:     #5C5C61;
+
+  /* ── Shadows — single soft window light source (HIG) ──────── */
+  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.30), 0 0 1px rgba(0,0,0,0.40);
+  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.20), 0 0 1px rgba(0,0,0,0.30);
+  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.10), 0 0 1px rgba(0,0,0,0.15);
+  --shadow-raised:   0 1px 2px rgba(0,0,0,0.08);
+
+  /* ── Radii ────────────────────────────────────────────────── */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   10px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
+  --radius-3xl:  20px;
+  --radius-full: 9999px;
+
+  /* ── Typography ───────────────────────────────────────────── */
+  --font-sans: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* ── Scrollbar — macOS thinness, hidden track ─────────────── */
+  --scrollbar-size:         8px;
+  --scrollbar-track:        transparent;
+  --scrollbar-thumb:        rgba(0, 0, 0, 0.18);
+  --scrollbar-thumb-hover:  rgba(0, 0, 0, 0.32);
+  --scrollbar-thumb-active: var(--accent);
+
+  /* ── Backward-compat aliases ──────────────────────────────────
+     Components written before the macOS redesign reference these
+     old names (`--bg`, `--bg-2`, `--text`, etc). Aliasing keeps
+     them working without a sweeping refactor.                    */
+  --bg:        var(--surface-window);
+  --bg-2:      var(--surface-toolbar);
+  --bg-3:      var(--surface-raised);
+  --border:    var(--border-hairline);
+  --border-hi: var(--border-strong);
+  --text:      var(--text-primary);
+  --text-dim:  var(--text-secondary);
+  --text-mute: var(--text-tertiary);
+  --green:     var(--semantic-success);
+  --red:       var(--semantic-danger);
+  --amber:     var(--semantic-warning);
+  --radius:    var(--radius-lg);
+  --font-size: 14px;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 
-  /* ── Console theme tokens (active source of truth; declared after shadcn to win conflicts) ── */
-  --bg:         #0b0f14;
-  --bg-2:       #11161d;
-  --bg-3:       #161c25;
-  --border:     #1f2731;
-  --border-hi:  #2a3543;
-  --text:       #e6edf3;
-  --text-dim:   #8b96a3;
-  --text-mute:  #5b6573;
-  --accent:     #22d3ee;
-  --accent-dim: rgba(34,211,238,0.15);
-  --green:      #34d399;
-  --red:        #f87171;
-  --amber:      #fbbf24;
-  --scrollbar-size:         8px;
-  --scrollbar-track:        var(--bg-2);
-  --scrollbar-thumb:        var(--border-hi);
-  --scrollbar-thumb-hover:  var(--text-mute);
-  --scrollbar-thumb-active: var(--accent);
-  --rarity-free:        #5b6573;
-  --rarity-common:      #cdd5e0;
-  --rarity-rare:        #3b82f6;
-  --rarity-epic:        #a855f7;
-  --rarity-legendary:   #f59e0b;
-  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono:  'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  /* ── Legacy shadcn-style — kept as inert defaults so any
+        leftover usage doesn't crash. Mapped to current surface
+        tokens so colors stay coherent.                          */
+  --background:           var(--surface-window);
+  --foreground:           var(--text-primary);
+  --card:                 var(--surface-content);
+  --card-foreground:      var(--text-primary);
+  --popover:              var(--surface-popover);
+  --popover-foreground:   var(--text-primary);
+  --primary:              var(--accent);
+  --primary-foreground:   var(--text-on-accent);
+  --secondary:            var(--surface-raised);
+  --secondary-foreground: var(--text-primary);
+  --muted:                var(--surface-raised);
+  --muted-foreground:     var(--text-secondary);
+  --accent-foreground:    var(--text-on-accent);
+  --destructive:          var(--semantic-danger);
+  --destructive-foreground: var(--text-on-accent);
+  --input:                transparent;
+  --input-background:     var(--surface-content);
+  --switch-background:    var(--border-strong);
+  --ring:                 var(--accent);
+  --sidebar:              var(--surface-sidebar);
+  --sidebar-foreground:   var(--text-primary);
+  --sidebar-primary:      var(--accent);
+  --sidebar-primary-foreground: var(--text-on-accent);
+  --sidebar-accent:       var(--accent-translucent);
+  --sidebar-accent-foreground: var(--accent);
+  --sidebar-border:       var(--border-hairline);
+  --sidebar-ring:         var(--accent);
+  --chart-1: var(--accent);
+  --chart-2: var(--semantic-success);
+  --chart-3: var(--rarity-epic);
+  --chart-4: var(--semantic-warning);
+  --chart-5: var(--semantic-info);
 }
+
+/* ─── Dark mode overrides ─────────────────────────────────────
+   Only the values that differ from Light mode. Most domain colors
+   (rarities, classes) keep the same hue with optional vibrancy
+   adjustment for dark backgrounds.
+   ───────────────────────────────────────────────────────────── */
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --surface-window:   #1C1C1E;
+  --surface-sidebar:  #1A1A1C;
+  --surface-toolbar:  #202022;
+  --surface-content:  #242427;
+  --surface-elevated: #2C2C2F;
+  --surface-raised:   #2A2A2D;
+  --surface-popover:  #2E2E31;
+
+  --glass-overlay:    rgba(28, 28, 30, 0.62);
+
+  --border-hairline:  rgba(255, 255, 255, 0.10);
+  --border-separator: rgba(255, 255, 255, 0.07);
+  --border-strong:    rgba(255, 255, 255, 0.18);
+
+  --text-primary:     #F2F2F4;
+  --text-secondary:   rgba(235, 235, 245, 0.60);
+  --text-tertiary:    rgba(235, 235, 245, 0.30);
+  --text-quaternary:  rgba(235, 235, 245, 0.18);
+
+  --accent:           #0A84FF;
+  --accent-hover:     #1A8CFF;
+  --accent-pressed:   #0066D9;
+  --accent-translucent: rgba(10, 132, 255, 0.18);
+  --accent-dim:       rgba(10, 132, 255, 0.22);
+
+  --semantic-success: #30D158;
+  --semantic-warning: #FF9F0A;
+  --semantic-danger:  #FF453A;
+  --semantic-info:    #64D2FF;
+
+  --rarity-free:      #98989D;
+  --rarity-common:    #C7C7CC;
+  --rarity-epic:      #BF5AF2;
+  --rarity-legendary: #FF9F0A;
+
+  --class-priest:      #F2F2F4;
+  --class-rogue:       #48484A;
+  --class-shaman:      #0A84FF;
+  --class-deathknight: #64D2FF;
+
+  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.55), 0 0 1px rgba(0,0,0,0.55);
+  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.45), 0 0 1px rgba(0,0,0,0.45);
+  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.30);
+  --shadow-raised:   0 1px 2px rgba(0,0,0,0.30);
+
+  --scrollbar-thumb:       rgba(255, 255, 255, 0.18);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
 }
 
+/* Tailwind v4 theme exposure — these utility names map back to
+   the CSS custom properties so `bg-bg`, `text-text`, etc work. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
+  /* Semantic surfaces */
+  --color-surface-window:   var(--surface-window);
+  --color-surface-sidebar:  var(--surface-sidebar);
+  --color-surface-toolbar:  var(--surface-toolbar);
+  --color-surface-content:  var(--surface-content);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-raised:   var(--surface-raised);
+  --color-surface-popover:  var(--surface-popover);
+  --color-glass-overlay:    var(--glass-overlay);
+
+  /* Borders */
+  --color-border-hairline:  var(--border-hairline);
+  --color-border-separator: var(--border-separator);
+  --color-border-strong:    var(--border-strong);
+
+  /* Text */
+  --color-text-primary:     var(--text-primary);
+  --color-text-secondary:   var(--text-secondary);
+  --color-text-tertiary:    var(--text-tertiary);
+  --color-text-quaternary:  var(--text-quaternary);
+  --color-text-on-accent:   var(--text-on-accent);
+
+  /* Accent + semantic */
+  --color-accent:            var(--accent);
+  --color-accent-hover:      var(--accent-hover);
+  --color-accent-pressed:    var(--accent-pressed);
+  --color-accent-translucent: var(--accent-translucent);
+  --color-semantic-success:  var(--semantic-success);
+  --color-semantic-warning:  var(--semantic-warning);
+  --color-semantic-danger:   var(--semantic-danger);
+  --color-semantic-info:     var(--semantic-info);
+
+  /* Class colors */
+  --color-class-mage:        var(--class-mage);
+  --color-class-hunter:      var(--class-hunter);
+  --color-class-priest:      var(--class-priest);
+  --color-class-rogue:       var(--class-rogue);
+  --color-class-warlock:     var(--class-warlock);
+  --color-class-warrior:     var(--class-warrior);
+  --color-class-druid:       var(--class-druid);
+  --color-class-shaman:      var(--class-shaman);
+  --color-class-paladin:     var(--class-paladin);
+  --color-class-demonhunter: var(--class-demonhunter);
+  --color-class-deathknight: var(--class-deathknight);
+  --color-class-neutral:     var(--class-neutral);
+
+  /* Backward-compat aliases (existing code) */
+  --color-bg:                var(--bg);
+  --color-bg-2:              var(--bg-2);
+  --color-bg-3:              var(--bg-3);
+  --color-border:            var(--border);
+  --color-border-hi:         var(--border-hi);
+  --color-text:              var(--text);
+  --color-text-dim:          var(--text-dim);
+  --color-text-mute:         var(--text-mute);
+  --color-accent-dim:        var(--accent-dim);
+  --color-green:             var(--green);
+  --color-red:               var(--red);
+  --color-amber:             var(--amber);
+  --color-rarity-free:       var(--rarity-free);
+  --color-rarity-common:     var(--rarity-common);
+  --color-rarity-rare:       var(--rarity-rare);
+  --color-rarity-epic:       var(--rarity-epic);
+  --color-rarity-legendary:  var(--rarity-legendary);
+
+  /* Shadcn-compat aliases */
+  --color-background:        var(--background);
+  --color-foreground:        var(--foreground);
+  --color-card:              var(--card);
+  --color-card-foreground:   var(--card-foreground);
+  --color-popover:           var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
+  --color-primary:           var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
+  --color-secondary:         var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
+  --color-muted:             var(--muted);
+  --color-muted-foreground:  var(--muted-foreground);
   --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
+  --color-destructive:       var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-input-background: var(--input-background);
+  --color-input:             var(--input);
+  --color-input-background:  var(--input-background);
   --color-switch-background: var(--switch-background);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
+  --color-ring:              var(--ring);
+  --color-sidebar:           var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary:   var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent:    var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border:    var(--sidebar-border);
+  --color-sidebar-ring:      var(--sidebar-ring);
+  --color-chart-1:           var(--chart-1);
+  --color-chart-2:           var(--chart-2);
+  --color-chart-3:           var(--chart-3);
+  --color-chart-4:           var(--chart-4);
+  --color-chart-5:           var(--chart-5);
+
+  /* Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  /* Shadows as Tailwind shadow utilities */
+  --shadow-window:   var(--shadow-window);
+  --shadow-popover:  var(--shadow-popover);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-raised:   var(--shadow-raised);
+
+  /* Fonts */
+  --font-family-sans: var(--font-sans);
+  --font-family-mono: var(--font-mono);
 }
 
 @layer base {
@@ -167,69 +345,127 @@
   }
 
   body {
-    @apply bg-background text-foreground;
     background: var(--bg);
     color: var(--text);
     font-family: var(--font-sans);
+    /* macOS uses -webkit-font-smoothing: antialiased by default in
+       SwiftUI/AppKit. Apply on web for consistent rendering. */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
 
   html {
     font-size: var(--font-size);
   }
 
+  /* macOS HIG type ramp — applied as defaults; Tailwind utilities
+     (text-sm, text-lg, etc.) still override. */
   h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 34px;
+    letter-spacing: -0.022em;
   }
 
   h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 28px;
+    letter-spacing: -0.018em;
   }
 
   h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 22px;
+    letter-spacing: -0.012em;
   }
 
   h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 20px;
+    letter-spacing: -0.008em;
   }
 
   label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 16px;
   }
 
   button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 16px;
   }
 
   input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
   }
 }
 
-/* ── Compact density overrides ─────────────────────────────────────────
-   Allow-list: chrome surfaces only (settings rows, KPI cards, recent-match
-   list items). Gameplay-critical surfaces (LiveDeckPanel, OpponentCardsPanel,
-   Decklist) are explicitly excluded.                                       */
+/* ── Utility class: macOS vibrancy / liquid glass ─────────────
+   Use on overlay panels and popovers that need to refract the
+   content behind them. Falls back to solid surface-popover on
+   browsers without backdrop-filter support.                     */
+.macos-glass {
+  background: var(--glass-overlay);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 1px solid var(--border-hairline);
+  /* Inner edge highlights — top white wash + bottom black, the
+     "上压下提" trick that gives macOS controls their dimensional
+     feel. Stacked with the actual shadow below.                 */
+  box-shadow:
+    inset 0  1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0,   0,   0,   0.10),
+    var(--shadow-popover);
+}
 
+@supports not (backdrop-filter: blur(1px)) {
+  .macos-glass {
+    background: var(--surface-popover);
+  }
+}
+
+/* ── In-game overlay: apply Liquid Glass to the panel shell ───
+   The OverlayView / OpponentOverlayView routes set
+   body[data-overlay="true"]. Inside that scope, the tracker-panel
+   shell becomes a vibrancy-glass container floating above the
+   game window. The main-app right panel uses the same
+   TrackerPanelTabs component but without glass — it's solid since
+   it sits inside an opaque app window.                          */
+body[data-overlay="true"] .tracker-panel-shell {
+  background: var(--glass-overlay);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-hairline);
+  box-shadow:
+    inset 0  1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0,   0,   0,   0.10),
+    var(--shadow-popover);
+  overflow: hidden;
+}
+
+body[data-overlay="true"] .tracker-panel-tabbar {
+  /* Tab bar should be transparent so the glass shows through.
+     The bottom hairline still separates it from the deck list. */
+  background: transparent !important;
+  border-bottom-color: var(--border-separator) !important;
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  body[data-overlay="true"] .tracker-panel-shell {
+    background: var(--surface-popover);
+  }
+}
+
+/* ── Compact density overrides (preserved from existing code) ── */
 [data-density="compact"] .settings-row {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
