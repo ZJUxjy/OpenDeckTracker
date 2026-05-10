@@ -348,13 +348,15 @@
   }
 
   body {
-    /* Translucent body so Win11 Mica / macOS vibrancy bleeds through.
-       On systems without OS-level vibrancy material, the BrowserWindow
-       paints its own default background and this rgba composites over
-       it — still readable, just no real wallpaper bleed. The
-       `body.overlay-route` selector overrides this back to fully
-       transparent for the in-game overlay BrowserWindows.            */
-    background: rgba(244, 244, 246, 0.85);
+    /* Aggressive translucent body so Win11 Mica / macOS vibrancy
+       dominates the visual. At rgba 0.20 the OS material reads
+       through almost untouched — the readable content surfaces
+       (.tahoe-card, .tahoe-active-pill etc) provide the platters
+       that actually hold text. The body itself is mostly there
+       to set color-scheme for the text + give a tiny base wash
+       so utterly-blank chrome regions still read as a window
+       and not a hole.                                              */
+    background: rgba(255, 255, 255, 0.20);
     color: var(--text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -363,7 +365,7 @@
   }
 
   .dark body {
-    background: rgba(28, 28, 30, 0.78);
+    background: rgba(28, 28, 30, 0.30);
   }
 
   body.overlay-route {
