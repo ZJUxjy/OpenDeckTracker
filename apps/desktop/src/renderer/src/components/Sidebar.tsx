@@ -34,13 +34,13 @@ export function Sidebar() {
             }}
             className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-all duration-200 ${
               isActive(item.id)
-                ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
-                : 'text-text-dim hover:bg-white/5 hover:text-text dark:hover:bg-white/5'
+                ? 'tahoe-active-pill text-text font-semibold'
+                : 'text-text-dim hover:bg-white/8 hover:text-text dark:hover:bg-white/5'
             }`}
           >
             <item.icon
               size={18}
-              className={isActive(item.id) ? 'text-text-on-accent' : 'text-text-mute'}
+              className={isActive(item.id) ? 'text-text' : 'text-text-mute'}
             />
             <span className="font-medium text-sm">{t(item.labelKey)}</span>
           </button>
@@ -54,13 +54,13 @@ export function Sidebar() {
           }}
           className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors ${
             isActive('settings')
-              ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
-              : 'text-text-dim hover:text-text hover:bg-white/5'
+              ? 'tahoe-active-pill text-text font-semibold'
+              : 'text-text-dim hover:text-text hover:bg-white/8'
           }`}
         >
           <Settings
             size={18}
-            className={isActive('settings') ? 'text-text-on-accent' : ''}
+            className={isActive('settings') ? 'text-text' : ''}
           />
           <span className="font-medium text-sm">{t('sidebar.settings')}</span>
         </button>

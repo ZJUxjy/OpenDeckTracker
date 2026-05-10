@@ -636,48 +636,85 @@ body[data-overlay="true"] .tracker-panel-tabbar {
    without transparency — for opaque content cards (hero,
    stat cards, etc).                                              */
 
+/* ── Aggressive Liquid Glass — Tahoe 26 ref ────────────────────
+   Chrome (sidebar / topbar) is dialed *way* down so the OS Mica /
+   vibrancy material dominates the visual. Content cards become
+   frosted-glass platters at ~0.55 opacity — readable text on top,
+   wallpaper colour blurring through underneath.
+
+   Why these values:
+     • Sidebar 0.10 / 0.30 — barely visible chrome, Mica-led
+     • Topbar  0.12 / 0.30 — same idea
+     • Card    0.55 / 0.55 — read-grade translucency, frosted look
+     • Backdrop blur big enough to actually dissolve detail behind
+       (35 / 30 / 20 px respectively). saturate(180%) bumps the
+       refracted colour so Liquid Glass catches the wallpaper hue.
+   ───────────────────────────────────────────────────────────── */
+
 .tahoe-sidebar {
-  background: rgba(236, 236, 238, 0.55);
-  backdrop-filter: blur(25px) saturate(180%);
-  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  background: rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(35px) saturate(180%);
+  -webkit-backdrop-filter: blur(35px) saturate(180%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30);
-  border-right: 1px solid var(--border-hairline);
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
 }
 .dark .tahoe-sidebar {
-  background: rgba(26, 26, 28, 0.55);
+  background: rgba(20, 20, 22, 0.30);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  border-right-color: rgba(255, 255, 255, 0.08);
 }
 
 .tahoe-topbar {
-  background: rgba(240, 240, 242, 0.55);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--border-hairline);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
 }
 .dark .tahoe-topbar {
-  background: rgba(32, 32, 34, 0.55);
+  background: rgba(20, 20, 22, 0.30);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
+/* Frosted-glass content card — translucent fill + backdrop-blur so
+   wallpaper iridescence bleeds through. Stronger chromatic rim
+   (top-left blue / bottom-right pink) than the previous opaque
+   variant — the see-through fill makes the rim more visible. */
 .tahoe-card {
-  background: var(--surface-content);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: var(--radius-2xl);
-  /* Multi-layer: chromatic rim + 上压下提 + outer drop shadow */
   box-shadow:
-    inset  1px  1px 0 rgba(180, 220, 255, 0.20),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.12),
-    inset 0  1px 0 rgba(255, 255, 255, 0.55),
+    inset  1px  1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+    inset 0  1px 0 rgba(255, 255, 255, 0.65),
     inset 0 -1px 0 rgba(0, 0, 0, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.04),
-    0 4px 16px -4px rgba(0, 0, 0, 0.10);
+    0 4px 18px -4px rgba(0, 0, 0, 0.12);
 }
 .dark .tahoe-card {
+  background: rgba(36, 36, 39, 0.55);
   box-shadow:
-    inset  1px  1px 0 rgba(180, 220, 255, 0.14),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.08),
-    inset 0  1px 0 rgba(255, 255, 255, 0.10),
+    inset  1px  1px 0 rgba(180, 220, 255, 0.30),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.18),
+    inset 0  1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(0, 0, 0, 0.20),
-    0 1px 2px rgba(0, 0, 0, 0.30),
-    0 4px 16px -4px rgba(0, 0, 0, 0.45);
+    0 6px 22px -4px rgba(0, 0, 0, 0.45);
+}
+
+/* Active-pill treatment — for sidebar nav, segmented controls in
+   Settings sidebar etc. Replaces the previous solid accent fill
+   with a translucent white pill + visible ring. Looks like glass
+   with a soft inner highlight; reads as "selected" without
+   dominating the chrome.                                          */
+.tahoe-active-pill {
+  background: rgba(255, 255, 255, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.40);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.dark .tahoe-active-pill {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 /* ── In-game overlay: dissolve chrome inside the panel shell ───

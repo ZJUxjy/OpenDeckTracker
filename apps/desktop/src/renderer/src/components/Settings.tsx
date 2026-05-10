@@ -71,11 +71,11 @@ export function Settings() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors text-sm font-medium ${
                   activeCategory === cat.id
-                    ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
-                    : 'text-text-secondary hover:text-text hover:bg-white/5 dark:hover:bg-white/5'
+                    ? 'tahoe-active-pill text-text font-semibold'
+                    : 'text-text-secondary hover:text-text hover:bg-white/8 dark:hover:bg-white/5'
                 }`}
               >
-                <cat.icon size={18} className={activeCategory === cat.id ? 'text-text-on-accent' : 'text-text-tertiary'} />
+                <cat.icon size={18} className={activeCategory === cat.id ? 'text-text' : 'text-text-tertiary'} />
                 <span>{t(cat.labelKey)}</span>
               </button>
             ))}
