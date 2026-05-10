@@ -347,25 +347,25 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Mica / macOS vibrancy can only render through if EVERY ancestor
+     in the stacking chain is transparent. The OS material is opaque —
+     anything the renderer paints (even low-alpha rgba) composites over
+     it and hides the wallpaper iridescence. So html / body / #root
+     are fully transparent here, and any tint lives on individual
+     surfaces (.tahoe-card, .tahoe-sidebar, .tahoe-topbar) where it
+     belongs. On platforms WITHOUT Mica/vibrancy, the BrowserWindow's
+     backgroundColor (#0E0E14 on Linux/Win10) provides a solid base
+     so the window doesn't read as a black hole. */
+  html, #root {
+    background: transparent;
+  }
   body {
-    /* Aggressive translucent body so Win11 Mica / macOS vibrancy
-       dominates the visual. At rgba 0.20 the OS material reads
-       through almost untouched — the readable content surfaces
-       (.tahoe-card, .tahoe-active-pill etc) provide the platters
-       that actually hold text. The body itself is mostly there
-       to set color-scheme for the text + give a tiny base wash
-       so utterly-blank chrome regions still read as a window
-       and not a hole.                                              */
-    background: rgba(255, 255, 255, 0.20);
+    background: transparent;
     color: var(--text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-  }
-
-  .dark body {
-    background: rgba(28, 28, 30, 0.30);
   }
 
   body.overlay-route {

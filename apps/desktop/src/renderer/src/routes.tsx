@@ -70,13 +70,13 @@ function RightPanel() {
 function TrackerRoute() {
   return (
     <>
-      <div className="flex-1 flex flex-col overflow-hidden bg-bg">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <TrackerStatusBanner />
         <div className="flex-1 flex overflow-hidden">
           <Dashboard />
         </div>
       </div>
-      <div className="hidden lg:block h-full bg-bg p-6 border-l border-border">
+      <div className="hidden lg:block h-full p-6 border-l border-border">
         <RightPanel />
       </div>
     </>
