@@ -75,7 +75,10 @@ export default function App() {
       {!isOverlay && <Sidebar />}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="tahoe-topbar h-14 flex items-center justify-between px-6 shrink-0 z-50 relative">
+        <header
+          className="tahoe-topbar h-14 flex items-center justify-between pl-6 pr-[148px] shrink-0 z-50 relative"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+        >
           <div className="flex items-center space-x-4">
             <span className="text-text-dim text-sm font-medium uppercase tracking-wider flex items-center">
               <Monitor size={16} className={`mr-2 ${isAlive ? (battleTag ? 'text-green' : 'text-amber') : 'text-text-mute'}`} />
@@ -85,7 +88,10 @@ export default function App() {
             </span>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div
+            className="flex items-center space-x-4"
+            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          >
             <button className="relative text-text-dim hover:text-text transition-colors">
               <Bell size={20} />
               <span className="absolute top-0 right-0 w-2 h-2 bg-red rounded-full border border-bg" />

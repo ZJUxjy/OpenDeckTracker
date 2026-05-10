@@ -45,19 +45,34 @@ export function createMainWindow(): BrowserWindow {
     width: 1280,
     height: 800,
     title: 'OpenDeckTracker',
-    // Fully-transparent backgroundColor so DWM can substitute Mica
-    // / vibrancy. On non-vibrancy systems Electron falls back to the
-    // window's chrome default (usually OS theme colour).
+    // Fully-transparent backgroundColor so DWM can substitute the
+    // backdrop material. On non-vibrancy systems Electron falls back
+    // to the window's chrome default (usually OS theme colour).
     backgroundColor: isWin || isMac ? '#00000000' : '#0E0E14',
     ...(isWin
       ? {
-          backgroundMaterial: 'mica' as const,
-          // NOTE: We deliberately keep `frame: true` (default) so the
-          // OS draws the title bar. With Mica enabled, Win11 DWM
-          // composites the title bar onto the Mica backdrop — we
-          // don't need titleBarOverlay (which only works with
-          // frameless / titleBarStyle: 'hidden'). The title bar
-          // tinting follows the OS theme automatically.
+          // Acrylic — not Mica — for the Tahoe-style iridescent
+          // Liquid Glass look. Mica only tints the desktop wallpaper
+          // (gray, desaturated) and ignores windows behind. Acrylic
+          // shows actual windows behind, blurred + saturated, which
+          // is what reads as "Liquid Glass" against any backdrop.
+          backgroundMaterial: 'acrylic' as const,
+          // titleBarStyle 'hidden' + titleBarOverlay turns the title
+          // bar into client area covered by Acrylic, while keeping the
+          // native min/max/close window controls. Without this the
+          // OS draws an opaque title bar on top of Acrylic, leaving a
+          // solid bar that breaks the glass continuity.
+          titleBarStyle: 'hidden' as const,
+          titleBarOverlay: {
+            // Transparent background so Acrylic shows through the
+            // title-bar region. symbolColor is a mid-light gray that
+            // reads well on both light and dark Acrylic — exact
+            // theme-sync (light symbols on dark, dark on light) is
+            // a follow-up via win.setTitleBarOverlay() + nativeTheme.
+            color: '#00000000',
+            symbolColor: '#C8C8CD',
+            height: 32,
+          },
         }
       : {}),
     ...(isMac
@@ -78,14 +93,14 @@ export function createMainWindow(): BrowserWindow {
     },
   });
 
-  // Belt-and-suspenders Mica enable. Some Electron + Win11 22H2
+  // Belt-and-suspenders Acrylic enable. Some Electron + Win11 22H2
   // builds need an explicit post-creation call before DWM picks up
   // the material — the constructor option alone has been observed
   // to silently fail on certain SKUs. setBackgroundMaterial is a
   // no-op on platforms that don't support it.
   if (isWin) {
     try {
-      win.setBackgroundMaterial?.('mica');
+      win.setBackgroundMaterial?.('acrylic');
     } catch {
       // Older Windows 10 / unsupported — silent fallback.
     }
