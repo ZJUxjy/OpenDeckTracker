@@ -30,7 +30,7 @@ export function DecksPage(): ReactElement {
     >
       <Tabs.List
         aria-label={t('decks.tabs.ariaLabel')}
-        className="flex shrink-0 border-b border-border bg-bg px-6"
+        className="flex shrink-0 border-b border-border px-6"
       >
         <Tabs.Trigger
           value="saved"
