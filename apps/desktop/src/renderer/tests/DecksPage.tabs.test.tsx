@@ -39,11 +39,11 @@ describe('DecksPage tabs', () => {
     (window as { hdt: { popularDecks: typeof window.hdt.popularDecks } }).hdt.popularDecks = popularDecksSaved;
   });
 
-  it('Saved tab is active on mount', async () => {
+  it('My Decks tab is active on mount', async () => {
     await act(async () => {
       renderPage();
     });
-    const savedTab = screen.getByRole('tab', { name: 'Saved' });
+    const savedTab = screen.getByRole('tab', { name: 'My Decks' });
     expect(savedTab.getAttribute('data-state')).toBe('active');
   });
 
@@ -67,7 +67,7 @@ describe('DecksPage tabs', () => {
     await act(async () => {
       renderPage('zh-CN');
     });
-    expect(screen.getByRole('tab', { name: '已保存' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '我的卡组' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: '查找' })).toBeInTheDocument();
   });
 });

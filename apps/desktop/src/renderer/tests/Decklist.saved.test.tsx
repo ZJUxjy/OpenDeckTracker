@@ -105,6 +105,68 @@ describe('SavedDecksList', () => {
     expect(badge.className).toContain('amber');
   });
 
+  it('syncs before rendering cached my decks', async () => {
+    const callOrder: string[] = [];
+    const list = vi.fn(async () => {
+      callOrder.push('list');
+      return [];
+    });
+    const syncFromLive = vi.fn(async () => {
+      callOrder.push('sync');
+      return {
+        ok: false as const,
+        source: 'unavailable' as const,
+        synced: 0,
+        skippedNonCollectible: 0,
+        skippedUnknownClass: 0,
+        startedAt: 0,
+        finishedAt: 0,
+      };
+    });
+    (window.hdt as { decks: typeof window.hdt.decks }).decks = {
+      ...saved,
+      list,
+      syncFromLive,
+    };
+
+    await act(async () => {
+      renderList();
+    });
+
+    await waitFor(() => expect(list).toHaveBeenCalled());
+    expect(syncFromLive).toHaveBeenCalled();
+    expect(callOrder[0]).toBe('sync');
+    expect(callOrder).toContain('list');
+  });
+
+  it('falls back to cached decks when sync rejects', async () => {
+    const summaries = [
+      {
+        id: 'd-1',
+        name: 'Cached Druid',
+        class: 'DRUID' as const,
+        format: 'Standard' as const,
+        version: 1,
+        cardCount: 30,
+        updatedAt: 0,
+      },
+    ];
+    const list = vi.fn().mockResolvedValue(summaries);
+    const syncFromLive = vi.fn().mockRejectedValue(new Error('ipc broke'));
+    (window.hdt as { decks: typeof window.hdt.decks }).decks = {
+      ...saved,
+      list,
+      syncFromLive,
+    };
+
+    await act(async () => {
+      renderList();
+    });
+
+    await waitFor(() => expect(list).toHaveBeenCalled());
+    expect(screen.getByText('Cached Druid')).toBeInTheDocument();
+  });
+
   it('renders an action trigger per deck row', async () => {
     const summaries = [
       {

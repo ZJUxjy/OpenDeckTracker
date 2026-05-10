@@ -173,7 +173,9 @@ export interface SavedDecksListProps {
 }
 
 export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
-  const { decks, refresh } = useDecks();
+  // Sync live Hearthstone decks into the store before rendering, so My
+  // Decks reflects in-game edits without requiring an app restart.
+  const { decks, refresh } = useDecks({ sync: true });
   const { t } = useTranslation();
 
   const grouped = useMemo(() => {

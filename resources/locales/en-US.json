@@ -21,7 +21,7 @@
   "decks": {
     "tabs": {
       "ariaLabel": "Decks page tabs",
-      "saved": "Saved",
+      "saved": "My Decks",
       "finder": "Finder"
     },
     "finder": {
@@ -101,7 +101,7 @@
       "matchScore": "{score}% match"
     },
     "list": {
-      "title": "Saved Decks",
+      "title": "My Decks",
       "empty": {
         "title": "No saved decks yet",
         "create": "Create deck",

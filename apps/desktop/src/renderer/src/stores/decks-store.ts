@@ -7,6 +7,13 @@ interface DecksStoreState {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  /**
+   * Call `syncFromLive()` against the main-process sync host first, then
+   * always re-fetch the canonical list. A failed sync (Hearthstone
+   * unavailable, card db not ready, error) must not block the list
+   * refresh — the renderer keeps cached local decks visible.
+   */
+  syncAndRefresh: () => Promise<void>;
   createDeck: (input: CreateDeckInput) => Promise<DeckDetail>;
   updateDeck: (id: string, patch: UpdateDeckPatch) => Promise<DeckDetail>;
   duplicateDeck: (id: string) => Promise<DeckDetail>;
@@ -26,6 +33,21 @@ export const useDecksStore = create<DecksStoreState>((set) => ({
   async refresh() {
     set({ loading: true, error: null });
     try {
+      const decks = await window.hdt.decks.list();
+      set({ decks, loading: false });
+    } catch (err) {
+      set({ loading: false, error: (err as Error).message });
+    }
+  },
+  async syncAndRefresh() {
+    set({ loading: true, error: null });
+    try {
+      try {
+        await window.hdt.decks.syncFromLive();
+      } catch (err) {
+        // Sync failures stay non-fatal so cached decks keep rendering.
+        console.warn('[decks-store] syncFromLive failed', err);
+      }
       const decks = await window.hdt.decks.list();
       set({ decks, loading: false });
     } catch (err) {

@@ -41,8 +41,8 @@ describe('decks UI i18n smoke test (en-US + zh-CN)', () => {
   });
 
   it.each([
-    ['en-US', /No saved decks yet|Saved Decks/],
-    ['zh-CN', /尚无已保存的卡组|已保存的卡组/],
+    ['en-US', /No saved decks yet|My Decks/],
+    ['zh-CN', /尚无已保存的卡组|我的卡组/],
   ] as const)('SavedDecksList renders localized title under %s', async (preference, pattern) => {
     await act(async () => {
       render(

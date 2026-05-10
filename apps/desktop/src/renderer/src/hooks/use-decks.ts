@@ -9,7 +9,7 @@ import { useDecksStore } from '../stores/decks-store';
  * use; component remounts that share the store (same renderer session) reuse
  * the in-memory copy and only refresh on explicit mutations.
  */
-export function useDecks(): {
+export function useDecks(options: { sync?: boolean } = {}): {
   decks: DeckSummary[];
   loading: boolean;
   error: string | null;
@@ -19,10 +19,13 @@ export function useDecks(): {
   const loading = useDecksStore((s) => s.loading);
   const error = useDecksStore((s) => s.error);
   const refresh = useDecksStore((s) => s.refresh);
+  const syncAndRefresh = useDecksStore((s) => s.syncAndRefresh);
+  const sync = options.sync === true;
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (sync) void syncAndRefresh();
+    else void refresh();
+  }, [sync, refresh, syncAndRefresh]);
 
   return { decks, loading, error, refresh };
 }
