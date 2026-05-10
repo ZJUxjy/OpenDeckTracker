@@ -104,6 +104,11 @@ export {
   type PlayOrderBucket,
   type PlayOrderSplit,
 } from './stats/play-order-split';
+export {
+  computeSavedDeckMatchups,
+  type SavedDeckMatchupOptions,
+  type SavedDeckMatchupStats,
+} from './stats/saved-deck-matchups';
 
 // Collection set-progress aggregation.
 export { computeSetProgress } from './collection/set-progress';

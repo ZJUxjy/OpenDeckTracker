@@ -22,6 +22,7 @@ function mockStatsApi(): void {
     stats: {
       getSummary: vi.fn(async () => emptySummary()),
       listRecent: vi.fn(async () => []),
+      getSavedDeckMatchups: vi.fn(async () => []),
     },
   };
 }

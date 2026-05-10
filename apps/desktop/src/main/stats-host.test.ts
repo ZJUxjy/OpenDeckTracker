@@ -118,6 +118,60 @@ describe('stats-host', () => {
     expect(recent[0].fingerprint).toBe('wild');
   });
 
+  it('registers stats:get-saved-deck-matchups and returns filtered buckets', async () => {
+    const { registerStatsIpc } = await import('./stats-host');
+    const store = makeStoreWithMatches([
+      makeRecord({
+        id: 1,
+        fingerprint: 'a',
+        savedDeckId: 'deck-a',
+        opponentClass: 'MAGE',
+        result: 'win',
+        formatType: 2,
+      }),
+      makeRecord({
+        id: 2,
+        fingerprint: 'b',
+        savedDeckId: 'deck-a',
+        opponentClass: 'MAGE',
+        result: 'loss',
+        formatType: 2,
+      }),
+      makeRecord({
+        id: 3,
+        fingerprint: 'c',
+        savedDeckId: 'deck-b',
+        opponentClass: 'PRIEST',
+        result: 'win',
+        formatType: 2,
+      }),
+      makeRecord({
+        id: 4,
+        fingerprint: 'd',
+        savedDeckId: 'deck-a',
+        opponentClass: 'WARRIOR',
+        result: 'loss',
+        formatType: 1,
+      }),
+    ]);
+    registerStatsIpc(store);
+
+    const handler = mocks.ipcMain.handle.mock.calls.find(
+      ([channel]) => channel === 'stats:get-saved-deck-matchups',
+    )?.[1];
+    expect(handler).toBeDefined();
+
+    const result = await handler({}, 'deck-a', 'all-time', { formatFilter: 'standard' });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      opponentClass: 'MAGE',
+      wins: 1,
+      losses: 1,
+      winrate: 50,
+    });
+  });
+
   it('summary handler stays backwards-compatible with single-arg call', async () => {
     const { registerStatsIpc } = await import('./stats-host');
     const store = makeStoreWithMatches([makeRecord()]);

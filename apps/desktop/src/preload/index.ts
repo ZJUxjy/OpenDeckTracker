@@ -34,6 +34,7 @@ import type {
   MatchRecordingDetail,
   MatchRecordingSummary,
   MatchHistoryRecord,
+  SavedDeckMatchupStats,
   StatsQueryOptions,
   StatsSummary,
   StatsTimeFilter,
@@ -115,6 +116,12 @@ const api = {
       options?: { formatFilter?: FormatFilter },
     ): Promise<MatchHistoryRecord[]> =>
       ipcRenderer.invoke('stats:list-recent', filter, limit, options),
+    getSavedDeckMatchups: (
+      savedDeckId: string,
+      filter: StatsTimeFilter,
+      options?: { formatFilter?: FormatFilter },
+    ): Promise<SavedDeckMatchupStats[]> =>
+      ipcRenderer.invoke('stats:get-saved-deck-matchups', savedDeckId, filter, options),
   },
   recordings: {
     list: (): Promise<MatchRecordingSummary[]> => ipcRenderer.invoke('recordings:list'),
@@ -175,6 +182,13 @@ const api = {
     getSelectedDeckId: (): Promise<SelectedDeck | null> =>
       ipcRenderer.invoke('hearthmirror:getSelectedDeckId'),
   },
+  playerProfile: {
+    get: (): Promise<{
+      battleTag: BattleTag;
+      accountId: AccountId | null;
+      lastSeenAt: number;
+    } | null> => ipcRenderer.invoke('player-profile:get'),
+  },
   deckTracker: {
     getSnapshot: (): Promise<DeckTrackerSnapshot | null> =>
       ipcRenderer.invoke('deck-tracker:get-snapshot'),
@@ -218,6 +232,8 @@ const api = {
       standard: SetProgress[];
       wild: SetProgress[];
       mirrorAlive: boolean;
+      source: 'live' | 'cache' | 'empty';
+      lastUpdatedAt: number | null;
     }> => ipcRenderer.invoke('collection:get-progress'),
   },
   overlay: {

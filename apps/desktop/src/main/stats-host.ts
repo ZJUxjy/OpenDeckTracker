@@ -2,9 +2,11 @@ import { app, ipcMain } from 'electron';
 import { join } from 'node:path';
 import {
   aggregateStats,
+  computeSavedDeckMatchups,
   filterMatchesByFormat,
   type FormatFilter,
   type NormalizedCompletedMatch,
+  type SavedDeckMatchupStats,
   type StatsQueryOptions,
   type StatsSummary,
   type StatsTimeFilter,
@@ -47,6 +49,9 @@ export type SummaryIpcOptions = Omit<StatsQueryOptions, 'filter' | 'now' | 'rece
 export interface ListRecentIpcOptions {
   formatFilter?: FormatFilter;
 }
+export interface SavedDeckMatchupsIpcOptions {
+  formatFilter?: FormatFilter;
+}
 
 export function registerStatsIpc(store: MatchHistoryStore = getMatchHistoryStore()): void {
   ipcMain.handle(
@@ -71,6 +76,21 @@ export function registerStatsIpc(store: MatchHistoryStore = getMatchHistoryStore
           ? filterMatchesByFormat(all, options.formatFilter)
           : all;
       return filtered.slice(0, limit);
+    },
+  );
+
+  ipcMain.handle(
+    'stats:get-saved-deck-matchups',
+    (
+      _event,
+      savedDeckId: string,
+      filter: StatsTimeFilter,
+      options?: SavedDeckMatchupsIpcOptions,
+    ): SavedDeckMatchupStats[] => {
+      return computeSavedDeckMatchups(store.getAllForFilter({ filter }), savedDeckId, {
+        filter,
+        ...(options?.formatFilter !== undefined ? { formatFilter: options.formatFilter } : {}),
+      });
     },
   );
 }

@@ -2,9 +2,11 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Swords, Trophy, Clock, Target, Film } from 'lucide-react';
 import type {
+  DeckSummary,
   FormatFilter,
   MatchHistoryRecord,
   MatchRecordingSummary,
+  SavedDeckMatchupStats,
   StatsSummary,
   StatsTimeFilter,
   TimeSeriesGranularity,
@@ -43,6 +45,9 @@ export function Stats() {
   const [viewerRecordingId, setViewerRecordingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [savedDecks, setSavedDecks] = useState<DeckSummary[]>([]);
+  const [selectedSavedDeckId, setSelectedSavedDeckId] = useState<string | null>(null);
+  const [deckMatchups, setDeckMatchups] = useState<SavedDeckMatchupStats[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +85,46 @@ export function Stats() {
       cancelled = true;
     };
   }, [timeFilter, formatFilter, granularity]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void window.hdt.decks
+      .list()
+      .then((decks) => {
+        if (cancelled) return;
+        const sorted = [...decks].sort((a, b) => a.name.localeCompare(b.name));
+        setSavedDecks(sorted);
+        setSelectedSavedDeckId((prev) => {
+          if (prev !== null && sorted.some((d) => d.id === prev)) return prev;
+          return sorted[0]?.id ?? null;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setSavedDecks([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedSavedDeckId === null) {
+      setDeckMatchups([]);
+      return;
+    }
+    let cancelled = false;
+    void window.hdt.stats
+      .getSavedDeckMatchups(selectedSavedDeckId, timeFilter, { formatFilter })
+      .then((rows) => {
+        if (!cancelled) setDeckMatchups(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setDeckMatchups([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSavedDeckId, timeFilter, formatFilter]);
 
   // Build a quick lookup so each match row can find its recording (joined on
   // `endedAt` since the recordings store doesn't carry the match fingerprint
@@ -206,6 +251,62 @@ export function Stats() {
         <div className="tahoe-card p-5">
           <h2 className="text-lg font-bold text-text mb-4">{t('stats.matchup.title')}</h2>
           <MatchupMatrix matrix={summary.matchupMatrix ?? null} />
+        </div>
+
+        {/* Saved Deck Matchups */}
+        <div className="tahoe-card p-5" data-testid="deck-matchup-card">
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <h2 className="text-lg font-bold text-text">{t('stats.deckMatchup.title')}</h2>
+            {savedDecks.length > 0 && (
+              <label className="flex items-center gap-2 text-sm text-text-secondary">
+                <span>{t('stats.deckMatchup.deckLabel')}</span>
+                <select
+                  data-testid="deck-matchup-select"
+                  className="bg-overlay-surface dark:bg-black/20 border border-border-hairline rounded px-2 py-1 text-text text-sm"
+                  value={selectedSavedDeckId ?? ''}
+                  onChange={(e) => setSelectedSavedDeckId(e.target.value || null)}
+                >
+                  {savedDecks.map((deck) => (
+                    <option key={deck.id} value={deck.id}>
+                      {deck.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+          {savedDecks.length === 0 ? (
+            <div className="text-text-mute text-sm py-6 text-center">
+              {t('stats.deckMatchup.noDecks')}
+            </div>
+          ) : deckMatchups.length === 0 ? (
+            <div className="text-text-mute text-sm py-6 text-center">
+              {t('stats.deckMatchup.empty')}
+            </div>
+          ) : (
+            <table className="w-full text-sm" data-testid="deck-matchup-table">
+              <thead>
+                <tr className="text-text-tertiary text-[11px] uppercase tracking-wider">
+                  <th className="text-left font-semibold pb-2">{t('stats.deckMatchup.headerOpponent')}</th>
+                  <th className="text-right font-semibold pb-2">{t('stats.deckMatchup.headerRecord')}</th>
+                  <th className="text-right font-semibold pb-2">{t('stats.deckMatchup.headerWinrate')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deckMatchups.map((row) => (
+                  <tr key={row.opponentClass} className="border-t border-border-hairline">
+                    <td className="py-2 text-text">{row.opponentClass}</td>
+                    <td className="py-2 text-right font-mono tabular-nums text-text">
+                      {row.wins}-{row.losses}
+                    </td>
+                    <td className="py-2 text-right font-mono tabular-nums text-text">
+                      {row.winrate === null ? '—' : `${row.winrate}%`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
