@@ -1,4 +1,5 @@
-﻿import { Activity, Clock, Hand, Layers, Radio, Trophy } from 'lucide-react';
+﻿import type { ReactNode } from 'react';
+import { Activity, Clock, Hand, Layers, Radio, Trophy } from 'lucide-react';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useHearthWatcherStore } from '../stores/hearthwatcher-store';
@@ -43,82 +44,96 @@ export function Dashboard() {
     : t('dashboard.watcherDisconnected');
 
   return (
-    <div className="flex-1 bg-bg flex flex-col overflow-y-auto">
-      <div className="bg-bg-2 px-8 py-8 border-b border-border">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="bg-accent-dim text-accent text-xs font-bold px-2 py-1 rounded border border-accent/20 uppercase tracking-widest">
-                {t('dashboard.badge')}
-              </span>
-              <span className="text-text-dim text-sm">{t('dashboard.phase', { phase })}</span>
-            </div>
-            <h1 className="text-4xl font-black text-text tracking-tight mb-3">
-              {deck ? deck.name || t('dashboard.unnamedDeck') : t('dashboard.noActiveDeck')}
-            </h1>
-            <div className="flex items-center text-text-dim text-sm gap-4">
-              <span className="flex items-center">
-                <Trophy size={14} className="mr-1 text-amber" />
-                {t('dashboard.rank', { rank: rankLabel })}
-              </span>
-              <span className="flex items-center">
-                <Clock size={14} className="mr-1 text-text-dim" />
-                {snapshot ? new Date(snapshot.updatedAt).toLocaleTimeString() : t('dashboard.waitingForGame')}
-              </span>
-            </div>
-          </div>
+    <div className="flex-1 flex flex-col overflow-y-auto p-6 gap-4">
+      {/* Hero card — Outcast DH or whichever deck is active. Wrapped in
+          a Tahoe card so the chromatic rim + dual-shadow gives it the
+          Tahoe 26 floating-glass look. */}
+      <div className="tahoe-card px-7 py-6">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="bg-accent-translucent text-accent text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
+            {t('dashboard.badge')}
+          </span>
+          <span className="text-text-tertiary text-xs">{t('dashboard.phase', { phase })}</span>
+        </div>
+        <h1 className="text-[32px] leading-tight font-black text-text tracking-tight mb-3">
+          {deck ? deck.name || t('dashboard.unnamedDeck') : t('dashboard.noActiveDeck')}
+        </h1>
+        <div className="flex items-center text-text-secondary text-sm gap-5">
+          <span className="flex items-center">
+            <Trophy size={14} className="mr-1.5 text-amber" />
+            {t('dashboard.rank', { rank: rankLabel })}
+          </span>
+          <span className="flex items-center">
+            <Clock size={14} className="mr-1.5 text-text-tertiary" />
+            {snapshot ? new Date(snapshot.updatedAt).toLocaleTimeString() : t('dashboard.waitingForGame')}
+          </span>
         </div>
       </div>
 
-      <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-bg-2 p-5 rounded-xl border border-border">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              {t('dashboard.cardsLeft')}
+      {/* 4 stat cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label={t('dashboard.cardsLeft')}
+          icon={<Layers size={18} className="text-accent" />}
+          value={
+            <>
+              {totalRemaining}
+              <span className="text-base text-text-tertiary font-semibold"> / {totalOriginal}</span>
+            </>
+          }
+        />
+        <StatCard
+          label={t('dashboard.hand')}
+          icon={<Hand size={18} className="text-text-tertiary" />}
+          value={snapshot?.friendlyHand.length ?? 0}
+        />
+        <StatCard
+          label={t('dashboard.status')}
+          icon={<Activity size={18} className={deck ? 'text-green' : 'text-text-tertiary'} />}
+          value={
+            <span className={deck ? 'text-green' : 'text-text'}>
+              {deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')}
             </span>
-            <Layers size={18} className="text-accent" />
-          </div>
-          <div className="text-3xl font-black text-text font-mono tabular-nums">
-            {totalRemaining}
-            <span className="text-base text-text-mute font-semibold"> / {totalOriginal}</span>
-          </div>
-        </div>
+          }
+        />
+        <StatCard
+          label={t('dashboard.watcher')}
+          icon={
+            <Radio
+              size={18}
+              className={watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-tertiary' : 'text-text-tertiary'}
+            />
+          }
+          value={
+            <span
+              className={`text-sm ${watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-tertiary' : 'text-text-tertiary'}`}
+            >
+              {watcherKindLabel}
+            </span>
+          }
+        />
+      </div>
+    </div>
+  );
+}
 
-        <div className="bg-bg-2 p-5 rounded-xl border border-border">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              {t('dashboard.hand')}
-            </span>
-            <Hand size={18} className="text-text-dim" />
-          </div>
-          <div className="text-3xl font-black text-text font-mono tabular-nums">
-            {snapshot?.friendlyHand.length ?? 0}
-          </div>
-        </div>
+interface StatCardProps {
+  label: string;
+  icon: ReactNode;
+  value: ReactNode;
+}
 
-        <div className="bg-bg-2 p-5 rounded-xl border border-border">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              {t('dashboard.status')}
-            </span>
-            <Activity size={18} className={deck ? 'text-green' : 'text-text-mute'} />
-          </div>
-          <div className="text-3xl font-black text-text">
-            {deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')}
-          </div>
-        </div>
-
-        <div className="bg-bg-2 p-5 rounded-xl border border-border">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-text-dim text-sm font-semibold uppercase tracking-wider">
-              {t('dashboard.watcher')}
-            </span>
-            <Radio size={18} className={watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-mute' : 'text-text-mute'} />
-          </div>
-          <div className={`text-sm font-bold ${watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-mute' : 'text-text-mute'}`}>
-            {watcherKindLabel}
-          </div>
-        </div>
+function StatCard({ label, icon, value }: StatCardProps) {
+  return (
+    <div className="tahoe-card p-5 kpi-card">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-text-tertiary text-[11px] font-semibold uppercase tracking-wider">
+          {label}
+        </span>
+        {icon}
+      </div>
+      <div className="text-3xl font-black text-text font-mono tabular-nums">
+        {value}
       </div>
     </div>
   );
