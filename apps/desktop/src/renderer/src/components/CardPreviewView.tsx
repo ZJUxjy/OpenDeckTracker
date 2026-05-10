@@ -40,7 +40,7 @@ export function CardPreviewView() {
   if (pool && pool.length > 0) {
     return (
       <div className="w-screen h-screen flex items-center justify-center bg-transparent select-none p-2">
-        <div className="flex items-stretch justify-center gap-3 w-full h-full px-4 py-3 rounded-xl border border-border bg-bg-2/95 backdrop-blur-sm shadow-[0_12px_40px_rgba(0,0,0,0.55)]">
+        <div className="macos-glass flex items-stretch justify-center gap-3 w-full h-full px-4 py-3 rounded-2xl">
           {pool.map((id, i) => (
             <div
               key={`${id}-${i}`}
@@ -75,7 +75,7 @@ function PoolCardPreview({ cardId }: { cardId: string }) {
         <CardImage cardId={cardId} />
       </div>
       <div
-        className="h-9 w-full px-2 flex items-center justify-center rounded-md border border-border/70 bg-bg/90 text-center text-[13px] leading-tight font-semibold text-fg shadow-[0_4px_16px_rgba(0,0,0,0.35)]"
+        className="h-9 w-full px-2 flex items-center justify-center rounded-md border border-border-hairline bg-surface-popover/85 text-center text-[13px] leading-tight font-semibold text-text-primary shadow-elevated"
         title={name}
       >
         <span className="overflow-hidden break-words [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">

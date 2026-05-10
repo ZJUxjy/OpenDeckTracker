@@ -64,7 +64,10 @@ export function FriendlyGraveyardPanel({ records }: FriendlyGraveyardPanelProps)
   }
 
   return (
-    <div className="h-full overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+    <div
+      data-overlay-list-area
+      className="h-full overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+    >
       <div
         data-testid="friendly-graveyard-list"
         className="space-y-1"

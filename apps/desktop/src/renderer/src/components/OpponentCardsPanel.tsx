@@ -124,7 +124,10 @@ export function OpponentCardsPanel({
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+      <div
+        data-overlay-list-area
+        className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+      >
         <div className="space-y-3">
           <OpponentDeckPredictionSection
             predictions={predictions}

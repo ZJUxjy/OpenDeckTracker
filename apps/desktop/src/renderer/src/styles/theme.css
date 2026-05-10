@@ -465,6 +465,49 @@ body[data-overlay="true"] .tracker-panel-tabbar {
   }
 }
 
+/* ── In-game overlay: dissolve chrome inside the panel shell ───
+   The LiveDeckPanel / OpponentCardsPanel / GlobalEffectsPanel /
+   FriendlyGraveyardPanel components paint their own outer
+   `<aside>` + header/footer with a solid `bg-bg-2` background.
+   Inside an overlay, we want the OUTER glass (.tracker-panel-shell)
+   to be the visible chrome — not these inner blocks. So we
+   neutralize the panel's outer container and any direct
+   solid-coloured chrome children, leaving only the deck-list
+   area with a real surface for readability.                     */
+
+/* Outer panel container — strip bg/border/shadow/radius so the
+   .tracker-panel-shell glass is what the user actually sees. */
+body[data-overlay="true"] .tracker-panel-shell aside,
+body[data-overlay="true"] .tracker-panel-shell ul[data-tracker-side],
+body[data-overlay="true"] .tracker-panel-shell > div > div > div[data-tracker-side] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Header / footer chrome (direct children of the aside) — kill
+   their solid bg + horizontal borders. The deck list area
+   below carries an explicit data attribute so it's spared. */
+body[data-overlay="true"] .tracker-panel-shell aside > div:not([data-overlay-list-area]) {
+  background: transparent !important;
+  border-color: var(--border-separator) !important;
+}
+
+/* Deck list "platter" — keeps a solid surface inside the glass
+   so card rows stay readable against the (potentially busy) game
+   scene blurred behind the panel.                              */
+body[data-overlay="true"] [data-overlay-list-area] {
+  background: var(--surface-content);
+  border-top: 1px solid var(--border-separator);
+}
+
+/* Last child = footer — needs a separator above to visually
+   detach it from the platter when the platter has its bg. */
+body[data-overlay="true"] .tracker-panel-shell aside > div:last-child:not([data-overlay-list-area]) {
+  border-top: 1px solid var(--border-separator) !important;
+}
+
 /* ── Compact density overrides (preserved from existing code) ── */
 [data-density="compact"] .settings-row {
   padding-top: 0.5rem;

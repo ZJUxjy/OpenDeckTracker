@@ -222,7 +222,10 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+      <div
+        data-overlay-list-area
+        className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+      >
         <section data-testid="remaining-cards-section">
           <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
             {t('deckTracker.remaining')}
