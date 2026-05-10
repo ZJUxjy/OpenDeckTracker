@@ -4,7 +4,6 @@ import {
   sortPopularDecks,
   type Format,
   type HeroClass,
-  type PopularDeckArchetype,
   type PopularDeckEnriched,
   type PopularDeckKeyCard,
   type PopularDeckSort,
@@ -92,19 +91,25 @@ const CLASSES: HeroClass[] = [
   'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK', 'WARRIOR',
 ];
 
-const CLASS_LABELS: Record<HeroClass, string> = {
-  DEATHKNIGHT: 'Death Knight', DEMONHUNTER: 'Demon Hunter', DRUID: 'Druid',
-  HUNTER: 'Hunter', MAGE: 'Mage', PALADIN: 'Paladin', PRIEST: 'Priest',
-  ROGUE: 'Rogue', SHAMAN: 'Shaman', WARLOCK: 'Warlock', WARRIOR: 'Warrior',
-  NEUTRAL: 'Neutral',
+const CLASS_LABEL_KEYS: Record<HeroClass, string> = {
+  DEATHKNIGHT: 'decks.finder.classDeathKnight',
+  DEMONHUNTER: 'decks.finder.classDemonHunter',
+  DRUID: 'decks.finder.classDruid',
+  HUNTER: 'decks.finder.classHunter',
+  MAGE: 'decks.finder.classMage',
+  PALADIN: 'decks.finder.classPaladin',
+  PRIEST: 'decks.finder.classPriest',
+  ROGUE: 'decks.finder.classRogue',
+  SHAMAN: 'decks.finder.classShaman',
+  WARLOCK: 'decks.finder.classWarlock',
+  WARRIOR: 'decks.finder.classWarrior',
+  NEUTRAL: 'decks.finder.classNeutral',
 };
 
-const ARCHETYPES: Array<PopularDeckArchetype | 'all'> = [
-  'all', 'Aggro', 'Midrange', 'Control', 'Combo', 'Tempo', 'Ramp',
-];
-
-const FORMATS: Format[] = ['Standard', 'Wild', 'Classic', 'Twist'];
+const FORMATS: Format[] = ['Standard', 'Wild'];
 const SORTS: PopularDeckSort[] = ['popular', 'winrate', 'updated', 'cheapest'];
+const MAX_DUST_LIMIT = 20000;
+const MAX_DUST_UNLIMITED = MAX_DUST_LIMIT + 500;
 
 function ClassChip({ heroClass, label }: { heroClass: HeroClass; label: string }): ReactElement {
   return (
@@ -147,9 +152,8 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
   const [includesCard, setIncludesCard] = useState('');
   const [excludesCard, setExcludesCard] = useState('');
   const [classFilter, setClassFilter] = useState<HeroClass | 'all'>('all');
-  const [archetypeFilter, setArchetypeFilter] = useState<PopularDeckArchetype | 'all'>('all');
   const [formatFilter, setFormatFilter] = useState<Format>('Standard');
-  const [maxDust, setMaxDust] = useState(20000);
+  const [maxDust, setMaxDust] = useState<number>(MAX_DUST_LIMIT);
   const [sort, setSort] = useState<PopularDeckSort>('popular');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -234,17 +238,17 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
   }, [decks]);
 
   const filtered = useMemo(() => {
+    const effectiveMaxDust = maxDust >= MAX_DUST_UNLIMITED ? undefined : maxDust;
     const criteria: Parameters<typeof filterPopularDecks>[1] = {
       classFilter,
-      archetypeFilter,
       formatFilter,
-      maxDust,
+      ...(effectiveMaxDust === undefined ? {} : { maxDust: effectiveMaxDust }),
       cardNamesByDeckId,
     };
     if (includesCard) criteria.includesCardName = includesCard;
     if (excludesCard) criteria.excludesCardName = excludesCard;
     return filterPopularDecks(decks, criteria);
-  }, [decks, classFilter, archetypeFilter, formatFilter, maxDust, includesCard, excludesCard, cardNamesByDeckId]);
+  }, [decks, classFilter, formatFilter, maxDust, includesCard, excludesCard, cardNamesByDeckId]);
 
   const sorted = useMemo(() => sortPopularDecks(filtered, sort), [filtered, sort]);
 
@@ -396,27 +400,11 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
                   : 'text-text-dim border border-border'
               }`}
             >
-              <ClassChip heroClass={c} label={CLASS_LABELS[c]} />
+              <ClassChip heroClass={c} label={t(CLASS_LABEL_KEYS[c])} />
             </button>
           );
         })}
         <div className="flex-1 min-w-[12px]" />
-        <div className="flex gap-1.5 font-mono text-[10px] items-center">
-          <span className="text-text-mute tracking-[0.1em]">{t('decks.finder.archLabel')}</span>
-          {ARCHETYPES.map((a) => (
-            <button
-              key={a}
-              onClick={() => setArchetypeFilter(a)}
-              className={`px-2 py-1 rounded-sm tracking-[0.1em] font-semibold uppercase cursor-pointer ${
-                archetypeFilter === a
-                  ? 'bg-accent-dim text-accent border border-accent'
-                  : 'text-text-dim border border-border'
-              }`}
-            >
-              {t(`decks.finder.arch${a === 'all' ? 'All' : a}`)}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Filter row 3: max dust + sort */}
@@ -426,13 +414,16 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
           <input
             type="range"
             min={1000}
-            max={20000}
+            max={MAX_DUST_UNLIMITED}
             step={500}
             value={maxDust}
             onChange={(e) => setMaxDust(Number(e.target.value))}
             className="w-[120px] accent-accent"
+            aria-label={t('decks.finder.maxDustLabel')}
           />
-          <span className="text-text font-semibold min-w-[60px]">◆ {maxDust.toLocaleString()}</span>
+          <span className="text-text font-semibold min-w-[60px]">
+            ◆ {maxDust >= MAX_DUST_UNLIMITED ? '∞' : maxDust.toLocaleString()}
+          </span>
         </div>
         <div className="flex-1" />
         <div className="flex items-center gap-1.5">
@@ -475,10 +466,13 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold tracking-tight text-text">{d.name}</div>
-                  <div className="text-[10px] text-text-mute font-mono tracking-[0.08em] mt-0.5 flex gap-2">
+                  <div
+                    data-testid="deck-finder-list-row-meta"
+                    className="text-[10px] text-text-mute font-mono tracking-[0.08em] mt-0.5 flex gap-2"
+                  >
                     <span className="text-text-dim uppercase">{d.archetype}</span>
                     <span>·</span>
-                    <span>{t('decks.finder.byAuthor')} {d.author}</span>
+                    <span>◆ {d.dustCost.toLocaleString()}</span>
                     <span>·</span>
                     <span>{t('decks.finder.updatedPrefix')} {d.updatedAt}</span>
                   </div>
@@ -504,7 +498,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
               <div className="flex-1 min-w-0">
                 <div className="text-lg font-semibold tracking-tight text-text">{selected.name}</div>
                 <div className="text-[10px] text-text-mute font-mono tracking-[0.1em] mt-0.5 uppercase">
-                  {CLASS_LABELS[selected.class]} · {selected.archetype} · {t('decks.finder.byAuthor')} {selected.author}
+                  {t(CLASS_LABEL_KEYS[selected.class])} · {selected.archetype} · {t('decks.finder.byAuthor')} {selected.author}
                 </div>
               </div>
             </div>
@@ -614,6 +608,7 @@ function KeyCardRow({
   return (
     <div
       ref={ref}
+      data-testid="deck-finder-key-card-row"
       onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
       onMouseLeave={onMouseLeave}
       className="relative overflow-hidden rounded-sm bg-overlay-surface text-xs border border-transparent hover:border-border-hi"
@@ -649,7 +644,12 @@ function KeyCardRow({
         >
           {name}
         </span>
-        <span className="font-mono text-[11px] text-accent font-semibold shrink-0">×{count}</span>
+        <span
+          data-testid="deck-finder-key-card-count"
+          className="min-w-6 h-5 px-1 rounded bg-overlay-elevated border border-border-hi flex items-center justify-center font-mono text-[10px] text-text font-bold shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.28)]"
+        >
+          ×{count}
+        </span>
       </div>
     </div>
   );
