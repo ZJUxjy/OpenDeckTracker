@@ -17,48 +17,51 @@ export function Sidebar() {
   const isActive = (id: string) => location.pathname === `/${id}`;
 
   return (
-    <aside className="w-64 bg-bg border-r border-border flex flex-col h-full text-text">
+    <aside className="tahoe-sidebar w-64 flex flex-col h-full text-text">
       <div className="p-6 flex items-center space-x-3 text-accent">
-        <div className="w-8 h-8 rounded-lg bg-accent-dim flex items-center justify-center border border-accent/20">
-          <Crown size={20} className="text-accent" />
+        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-[0_1px_3px_rgba(0,0,0,0.18)]">
+          <Crown size={20} className="text-text-on-accent" />
         </div>
         <span className="text-xl font-bold tracking-wide">OpenDeckTracker</span>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => {
               void navigate(`/${item.id}`);
             }}
-            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md transition-all duration-200 ${
+            className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-all duration-200 ${
               isActive(item.id)
-                ? 'bg-bg-3 text-text shadow-[inset_4px_0_0_0_var(--accent)]'
-                : 'hover:bg-bg-2 hover:text-text'
+                ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+                : 'text-text-dim hover:bg-white/5 hover:text-text dark:hover:bg-white/5'
             }`}
           >
             <item.icon
               size={18}
-              className={isActive(item.id) ? 'text-accent' : 'text-text-mute'}
+              className={isActive(item.id) ? 'text-text-on-accent' : 'text-text-mute'}
             />
             <span className="font-medium text-sm">{t(item.labelKey)}</span>
           </button>
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-3 border-t border-border-separator">
         <button
           onClick={() => {
             void navigate('/settings');
           }}
-          className={`w-full flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
+          className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md transition-colors ${
             isActive('settings')
-              ? 'bg-bg-3 text-text shadow-[inset_4px_0_0_0_var(--accent)]'
-              : 'text-text-dim hover:text-text hover:bg-bg-2'
+              ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+              : 'text-text-dim hover:text-text hover:bg-white/5'
           }`}
         >
-          <Settings size={18} className={isActive('settings') ? 'text-accent' : ''} />
+          <Settings
+            size={18}
+            className={isActive('settings') ? 'text-text-on-accent' : ''}
+          />
           <span className="font-medium text-sm">{t('sidebar.settings')}</span>
         </button>
       </div>

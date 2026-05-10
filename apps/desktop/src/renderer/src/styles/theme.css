@@ -345,14 +345,26 @@
   }
 
   body {
-    background: var(--bg);
+    /* Translucent body so Win11 Mica / macOS vibrancy bleeds through.
+       On systems without OS-level vibrancy material, the BrowserWindow
+       paints its own default background and this rgba composites over
+       it — still readable, just no real wallpaper bleed. The
+       `body.overlay-route` selector overrides this back to fully
+       transparent for the in-game overlay BrowserWindows.            */
+    background: rgba(244, 244, 246, 0.85);
     color: var(--text);
     font-family: var(--font-sans);
-    /* macOS uses -webkit-font-smoothing: antialiased by default in
-       SwiftUI/AppKit. Apply on web for consistent rendering. */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  .dark body {
+    background: rgba(28, 28, 30, 0.78);
+  }
+
+  body.overlay-route {
+    background: transparent !important;
   }
 
   html {
@@ -611,6 +623,61 @@ body[data-overlay="true"] .tracker-panel-tabbar {
   body[data-overlay="true"] .tracker-panel-shell::after {
     display: none;
   }
+}
+
+/* ── Main-app chrome utilities — Tahoe 26 ──────────────────────
+   .tahoe-sidebar / .tahoe-topbar paint translucent surfaces with
+   backdrop-blur over the body's translucent bg. The body shows
+   Win11 Mica or macOS vibrancy through when the OS supports it
+   (BrowserWindow opts in via backgroundMaterial / vibrancy).
+   Without OS vibrancy these just look like subtly-tinted panels.
+
+   .tahoe-card adds the chromatic rim + macOS depth shadow
+   without transparency — for opaque content cards (hero,
+   stat cards, etc).                                              */
+
+.tahoe-sidebar {
+  background: rgba(236, 236, 238, 0.55);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30);
+  border-right: 1px solid var(--border-hairline);
+}
+.dark .tahoe-sidebar {
+  background: rgba(26, 26, 28, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+.tahoe-topbar {
+  background: rgba(240, 240, 242, 0.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border-hairline);
+}
+.dark .tahoe-topbar {
+  background: rgba(32, 32, 34, 0.55);
+}
+
+.tahoe-card {
+  background: var(--surface-content);
+  border-radius: var(--radius-2xl);
+  /* Multi-layer: chromatic rim + 上压下提 + outer drop shadow */
+  box-shadow:
+    inset  1px  1px 0 rgba(180, 220, 255, 0.20),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.12),
+    inset 0  1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 16px -4px rgba(0, 0, 0, 0.10);
+}
+.dark .tahoe-card {
+  box-shadow:
+    inset  1px  1px 0 rgba(180, 220, 255, 0.14),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.08),
+    inset 0  1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20),
+    0 1px 2px rgba(0, 0, 0, 0.30),
+    0 4px 16px -4px rgba(0, 0, 0, 0.45);
 }
 
 /* ── In-game overlay: dissolve chrome inside the panel shell ───

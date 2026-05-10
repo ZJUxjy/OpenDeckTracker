@@ -21,11 +21,29 @@ function resolveIconPath(): string | undefined {
 
 export function createMainWindow(): BrowserWindow {
   const iconPath = resolveIconPath();
+  // Tahoe-grade Liquid Glass on the actual OS window:
+  //   • Windows 11 → backgroundMaterial: 'mica' (Mica material; real
+  //     desktop wallpaper colour bleeds through where the renderer
+  //     paints transparent or rgba bg)
+  //   • macOS    → vibrancy: 'sidebar' / titleBarStyle: 'hiddenInset'
+  //                so the title bar feels native & glass
+  // Both are conditional on platform so the same code works
+  // cross-platform without breaking older Windows 10.
+  const isWin11 = process.platform === 'win32';
+  const isMac = process.platform === 'darwin';
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     title: 'OpenDeckTracker',
-    backgroundColor: '#0E0E14',
+    // backgroundColor must be '#00000000' (or omitted) to let Mica /
+    // vibrancy show through. Solid colours paint over the material.
+    backgroundColor: isWin11 || isMac ? '#00000000' : '#0E0E14',
+    ...(isWin11 ? { backgroundMaterial: 'mica' as const } : {}),
+    ...(isMac ? {
+      vibrancy: 'sidebar' as const,
+      visualEffectState: 'active' as const,
+      titleBarStyle: 'hiddenInset' as const,
+    } : {}),
     autoHideMenuBar: true,
     ...(iconPath ? { icon: nativeImage.createFromPath(iconPath) } : {}),
     webPreferences: {

@@ -71,11 +71,11 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-bg text-text font-sans overflow-hidden">
+    <div className="flex h-screen text-text font-sans overflow-hidden">
       {!isOverlay && <Sidebar />}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 bg-bg border-b border-border flex items-center justify-between px-6 shrink-0 z-50 shadow-md relative">
+        <header className="tahoe-topbar h-14 flex items-center justify-between px-6 shrink-0 z-50 relative">
           <div className="flex items-center space-x-4">
             <span className="text-text-dim text-sm font-medium uppercase tracking-wider flex items-center">
               <Monitor size={16} className={`mr-2 ${isAlive ? (battleTag ? 'text-green' : 'text-amber') : 'text-text-mute'}`} />
