@@ -30,8 +30,11 @@
   --surface-raised:   #FAFAFB;
   --surface-popover:  #FFFFFF;
 
-  /* Glass — translucent for in-game overlay and popovers */
-  --glass-overlay:    rgba(250, 250, 252, 0.93);
+  /* Glass — translucent for in-game overlay and popovers. The
+     low alpha means the game scene behind the BrowserWindow
+     refracts through the panel chrome. The deck-list area inside
+     keeps a higher-opacity platter so card rows stay readable. */
+  --glass-overlay:    rgba(255, 255, 255, 0.40);
   --glass-blur:       60px;
 
   /* ── Borders ──────────────────────────────────────────────── */
@@ -179,7 +182,7 @@
   --surface-raised:   #2A2A2D;
   --surface-popover:  #2E2E31;
 
-  --glass-overlay:    rgba(28, 28, 30, 0.62);
+  --glass-overlay:    rgba(28, 28, 30, 0.42);
 
   --border-hairline:  rgba(255, 255, 255, 0.10);
   --border-separator: rgba(255, 255, 255, 0.07);
@@ -444,20 +447,20 @@
   background: var(--glass-overlay);
   backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
-  border-radius: var(--radius-2xl);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-3xl);
+  border: 1px solid rgba(255, 255, 255, 0.30);
   box-shadow:
-    /* Refractive rim — top-left blueish, bottom-right warm
-       pink: a hair of chromatic aberration to suggest light
-       refracting through a curved edge.                        */
-    inset 1px  1px 0 rgba(180, 220, 255, 0.18),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.10),
-    /* Primary "上压下提" edge highlights */
-    inset 0  1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
-    /* Outer drop shadow with subtle volumetric depth */
-    0 1px 0 rgba(255, 255, 255, 0.05),
-    var(--shadow-window);
+    /* Refractive rim — top-left blue, bottom-right warm pink.
+       Alpha boosted to match the aggressive Tahoe ref so the
+       edge actually reads as refractive against any backdrop. */
+    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+    /* Top edge highlight */
+    inset 0  1px 0 rgba(255, 255, 255, 0.55),
+    /* Subtle bottom pull-down */
+    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+    /* Single soft outer shadow — Tahoe one-source-light feel */
+    0 24px 64px -8px rgba(0, 0, 0, 0.40);
 }
 
 /* Top specular sheen — fades from a faint white wash at the
@@ -544,26 +547,28 @@
   }
 }
 
-/* ── In-game overlay: Tahoe 26 Liquid Glass on the panel shell ─
-   Same multi-layer treatment as .macos-glass. The OverlayView /
-   OpponentOverlayView routes set body[data-overlay="true"];
-   inside that scope, the tracker-panel-shell becomes a true
-   floating-glass panel. Main-app right panel uses the same
-   component but without data-overlay, so it stays opaque.       */
+/* ── In-game overlay: Tahoe 26 aggressive Liquid Glass ──────────
+   The OverlayView / OpponentOverlayView routes set
+   body[data-overlay="true"]; inside that scope, the tracker-panel
+   shell becomes a barely-there glass plate floating on the game
+   scene. Main-app right panel uses the same component but without
+   data-overlay, so it stays opaque.                              */
 body[data-overlay="true"] .tracker-panel-shell {
   position: relative;
   background: var(--glass-overlay);
   backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(102%);
-  border-radius: var(--radius-2xl);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-3xl);
+  border: 1px solid rgba(255, 255, 255, 0.30);
   box-shadow:
-    inset 1px  1px 0 rgba(180, 220, 255, 0.18),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.10),
-    inset 0  1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.16),
-    0 1px 0 rgba(255, 255, 255, 0.05),
-    var(--shadow-window);
+    /* Stronger chromatic rim — wider alpha so the edge reads as
+       refractive against any game scene behind. */
+    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+    inset 0  1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+    /* Single soft outer shadow — Tahoe single-source feel */
+    0 24px 64px -8px rgba(0, 0, 0, 0.50);
   overflow: hidden;
 }
 
@@ -746,12 +751,20 @@ body[data-overlay="true"] .tracker-panel-shell aside > div:not([data-overlay-lis
   border-color: var(--border-separator) !important;
 }
 
-/* Deck list "platter" — keeps a solid surface inside the glass
-   so card rows stay readable against the (potentially busy) game
-   scene blurred behind the panel.                              */
+/* Deck list "platter" — translucent enough to feel like glass
+   but dense enough that card rows stay readable against any
+   game scene blurred behind. Matches the main-app .tahoe-card
+   language so the visual system is consistent across surfaces. */
 body[data-overlay="true"] [data-overlay-list-area] {
-  background: var(--surface-content);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid var(--border-separator);
+}
+.dark body[data-overlay="true"] [data-overlay-list-area],
+body[data-overlay="true"] .dark [data-overlay-list-area],
+body[data-overlay="true"].dark [data-overlay-list-area] {
+  background: rgba(36, 36, 39, 0.70);
 }
 
 /* Last child = footer — needs a separator above to visually
