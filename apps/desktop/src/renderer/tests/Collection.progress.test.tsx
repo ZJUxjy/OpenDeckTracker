@@ -177,6 +177,51 @@ describe('Collection — set progress', () => {
     expect(screen.queryByText(/Launch Hearthstone/i)).not.toBeInTheDocument();
   });
 
+  it('triggers live deck sync without blocking progress', async () => {
+    const syncFromLive = vi.fn().mockResolvedValue({
+      ok: false,
+      source: 'unavailable',
+      synced: 0,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 0,
+      finishedAt: 0,
+    });
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [],
+      mirrorAlive: true,
+    });
+    (window.hdt as { decks: typeof window.hdt.decks }).decks = {
+      ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+      syncFromLive,
+    };
+
+    renderWithLocale('en-US');
+
+    await waitFor(() => expect(syncFromLive).toHaveBeenCalledTimes(1));
+    // Progress still renders even though sync was requested.
+    expect(await screen.findByText('Core')).toBeInTheDocument();
+  });
+
+  it('keeps showing progress when live deck sync rejects', async () => {
+    const syncFromLive = vi.fn().mockRejectedValue(new Error('boom'));
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [],
+      mirrorAlive: true,
+    });
+    (window.hdt as { decks: typeof window.hdt.decks }).decks = {
+      ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+      syncFromLive,
+    };
+
+    renderWithLocale('en-US');
+
+    await waitFor(() => expect(syncFromLive).toHaveBeenCalled());
+    expect(await screen.findByText('Core')).toBeInTheDocument();
+  });
+
   it('shows the launch-game banner when source=empty', async () => {
     mockProgressApi({
       standard: [row({ setCode: 'SET_1810' })],

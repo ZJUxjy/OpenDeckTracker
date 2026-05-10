@@ -43,6 +43,20 @@ export function Collection() {
     return () => { cancelled = true; };
   }, []);
 
+  // Opening Collection is a natural moment to refresh My Decks from
+  // Hearthstone (players often edit decks before checking their library).
+  // Sync is fire-and-forget — failures must not affect collection
+  // progress rendering or trigger an error screen here.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.hdt?.decks?.syncFromLive) return;
+    // Wrap in Promise.resolve so a stubbed `syncFromLive` that returns
+    // `undefined` (e.g. after `vi.restoreAllMocks()` between tests) still
+    // routes into the catch handler instead of throwing synchronously.
+    void Promise.resolve(window.hdt.decks.syncFromLive()).catch(() => {
+      // Non-fatal; existing My Decks views still show cached data.
+    });
+  }, []);
+
   const activeRows = progress
     ? activeFormat === 'standard' ? progress.standard : progress.wild
     : [];

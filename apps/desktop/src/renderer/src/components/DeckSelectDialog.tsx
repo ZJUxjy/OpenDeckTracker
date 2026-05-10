@@ -26,7 +26,10 @@ export function DeckSelectDialog() {
   const { t } = useTranslation();
   const pendingSelection = useDeckTrackerStore((s) => s.pendingSelection);
   const markDialogDismissed = useDeckTrackerStore((s) => s.markDialogDismissed);
-  const { decks: savedDecks } = useDecks();
+  // Sync live decks before presenting saved-deck choices so match
+  // attribution lands on the newest deck version. Failures fall back
+  // to the cached list — match start cannot be blocked on HearthMirror.
+  const { decks: savedDecks } = useDecks({ sync: true });
   const [chosen, setChosen] = useState<Choice | null>(null);
 
   const lastPickedId = useMemo<number | null>(() => {

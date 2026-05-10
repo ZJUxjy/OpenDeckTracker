@@ -138,6 +138,42 @@ describe('DeckSelectDialog with saved decks', () => {
     expect(selectSavedDeck).not.toHaveBeenCalled();
   });
 
+  it('syncs saved decks before showing choices and falls back when sync fails', async () => {
+    const syncFromLive = vi.fn().mockResolvedValue({
+      ok: false,
+      source: 'unavailable',
+      synced: 0,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 0,
+      finishedAt: 0,
+    });
+    const savedSummaries = [
+      {
+        id: 'saved-1',
+        name: 'My Saved Druid',
+        class: 'DRUID' as const,
+        format: 'Standard' as const,
+        version: 2,
+        cardCount: 30,
+        updatedAt: 0,
+      },
+    ];
+    (window.hdt as { decks: typeof window.hdt.decks }).decks = {
+      ...saved.decks,
+      list: vi.fn().mockResolvedValue(savedSummaries),
+      syncFromLive,
+    };
+    useDecksStore.setState({ decks: savedSummaries, loading: false, error: null });
+
+    await act(async () => {
+      renderDialog();
+    });
+
+    await waitFor(() => expect(syncFromLive).toHaveBeenCalled());
+    expect(screen.getByTestId('saved-deck-row-saved-1')).toBeInTheDocument();
+  });
+
   it('clicking a live deck and confirming preserves the legacy selectDeck call', async () => {
     const selectSavedDeck = vi.fn().mockResolvedValue(undefined);
     const selectDeck = vi.fn().mockResolvedValue(undefined);
