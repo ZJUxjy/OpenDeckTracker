@@ -171,6 +171,26 @@ export function createDeckStore(dbPath: string): DeckStore {
     return detailFromRow(row, loadCards(row.id));
   }
 
+  function findLiveSyncedDecksByFingerprint(
+    classCode: HeroClass,
+    format: Format,
+    cardListHash: string,
+  ): DeckDetail[] {
+    const rows = db
+      .prepare<[HeroClass, Format]>(
+        `SELECT * FROM decks WHERE source = 'hearthstone-live' AND class = ? AND format = ?`,
+      )
+      .all(classCode, format) as DeckRow[];
+    const matches: DeckDetail[] = [];
+    for (const row of rows) {
+      const cards = loadCards(row.id);
+      if (canonicalCardListHash(cards) === cardListHash) {
+        matches.push(detailFromRow(row, cards));
+      }
+    }
+    return matches;
+  }
+
   function updateLiveSyncedDeck(existing: DeckDetail, live: LiveDeckSnapshotInput): DeckDetail {
     const now = Date.now();
     let version = existing.version;
@@ -371,9 +391,30 @@ export function createDeckStore(dbPath: string): DeckStore {
       const hasLiveId = live.liveDeckId !== undefined && live.liveDeckId !== null;
       const tx = db.transaction(() => {
         if (hasLiveId) {
-          const existing = findByLiveDeckIdInternal(live.liveDeckId as number);
+          const liveDeckId = live.liveDeckId as number;
+          const existing = findByLiveDeckIdInternal(liveDeckId);
           if (existing !== null) {
             return updateLiveSyncedDeck(existing, live);
+          }
+          // Hearthstone may assign a new deck id for the same content
+          // (rename, clone, delete + re-import). Fall back to a
+          // (class, format, card-list hash) lookup against existing
+          // live-synced rows so the local row adopts the new live id
+          // instead of duplicating. Only act on an unambiguous single
+          // match — multiple matches fall through to insert.
+          const fingerprint = canonicalCardListHash(live.cards);
+          const matches = findLiveSyncedDecksByFingerprint(
+            live.class,
+            live.format,
+            fingerprint,
+          );
+          if (matches.length === 1) {
+            const target = matches[0]!;
+            db.prepare<[number, string]>(
+              `UPDATE decks SET live_deck_id = ? WHERE id = ?`,
+            ).run(liveDeckId, target.id);
+            const reloaded = deckFromId(target.id)!;
+            return updateLiveSyncedDeck(reloaded, live);
           }
         }
         return insertDeck(

@@ -401,6 +401,130 @@ describe('createDeckStore', () => {
     }
   });
 
+  it('saveFromLive reattaches new liveDeckId by content fingerprint when exactly one live-synced row matches', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+        { cardId: 'B', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const cards = [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+      ];
+      const first = store.saveFromLive(
+        {
+          name: 'Live A',
+          class: 'DRUID',
+          format: 'Standard',
+          cards,
+          liveDeckId: 100,
+        },
+        lookup,
+      );
+      const second = store.saveFromLive(
+        {
+          name: 'Live A renamed',
+          class: 'DRUID',
+          format: 'Standard',
+          cards,
+          liveDeckId: 200,
+        },
+        lookup,
+      );
+
+      expect(second.id).toBe(first.id);
+      expect(store.findByLiveDeckId(200)?.id).toBe(first.id);
+      expect(store.findByLiveDeckId(100)).toBeNull();
+      expect(second.version).toBe(first.version);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('saveFromLive does NOT reattach when more than one live-synced row matches the fingerprint', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+        { cardId: 'B', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const cards = [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+      ];
+      // Construct two distinct live-synced rows that share the same
+      // fingerprint. Reattach normally collapses identical content under
+      // one row, so we create row B with different cards first, then
+      // upsert it to match — leaving us in an ambiguous state.
+      const first = store.saveFromLive(
+        { name: 'Live A', class: 'DRUID', format: 'Standard', cards, liveDeckId: 301 },
+        lookup,
+      );
+      const seedB = store.saveFromLive(
+        {
+          name: 'Live B seed',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 1 }],
+          liveDeckId: 302,
+        },
+        lookup,
+      );
+      const second = store.saveFromLive(
+        { name: 'Live B', class: 'DRUID', format: 'Standard', cards, liveDeckId: 302 },
+        lookup,
+      );
+      expect(second.id).toBe(seedB.id);
+
+      const third = store.saveFromLive(
+        { name: 'Live C', class: 'DRUID', format: 'Standard', cards, liveDeckId: 303 },
+        lookup,
+      );
+
+      expect(third.id).not.toBe(first.id);
+      expect(third.id).not.toBe(second.id);
+      expect(store.findByLiveDeckId(301)?.id).toBe(first.id);
+      expect(store.findByLiveDeckId(302)?.id).toBe(second.id);
+      expect(store.findByLiveDeckId(303)?.id).toBe(third.id);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('saveFromLive does NOT reattach against app-managed rows', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+        { cardId: 'B', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const cards = [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+      ];
+      const manual = store.create({
+        name: 'Manual',
+        class: 'DRUID',
+        format: 'Standard',
+        cards,
+      });
+      const live = store.saveFromLive(
+        { name: 'Live A', class: 'DRUID', format: 'Standard', cards, liveDeckId: 500 },
+        lookup,
+      );
+
+      expect(store.findByLiveDeckId(500)?.id).toBe(live.id);
+      expect(live.id).not.toBe(manual.id);
+      const reloaded = store.getById(manual.id);
+      expect(reloaded?.id).toBe(manual.id);
+      expect(reloaded?.source).toBeUndefined();
+      expect(reloaded?.liveDeckId).toBeUndefined();
+    } finally {
+      store.close();
+    }
+  });
+
   it('findByLiveDeckId returns null when no live-synced record matches', () => {
     const store = createDeckStore(dbPath());
     try {
