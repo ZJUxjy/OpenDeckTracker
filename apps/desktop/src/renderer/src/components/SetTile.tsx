@@ -87,7 +87,7 @@ export function SetTile({ row, label, mini, accent, selected, onClick }: SetTile
           data-testid="tile-complete-badge"
           className="absolute top-2 left-2 rounded-full bg-green text-white text-[10px] font-bold px-2 py-0.5"
         >
-          ✓ {t('collection.tile.complete')}
+          {t('collection.complete')}
         </div>
       )}
     </button>
