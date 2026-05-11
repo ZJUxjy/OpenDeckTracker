@@ -576,6 +576,18 @@
     "card": {
       "ownedBadge": "Owned x{owned}/{max}",
       "unowned": "Not Owned"
+    },
+    "sync": {
+      "button": {
+        "idle": "Sync",
+        "syncing": "Syncing…",
+        "success": "Synced",
+        "error": "Sync failed",
+        "ariaLabel": {
+          "idle": "Sync collection now",
+          "syncing": "Syncing collection"
+        }
+      }
     }
   },
   "stats": {

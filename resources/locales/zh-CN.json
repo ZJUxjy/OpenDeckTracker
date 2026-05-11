@@ -576,6 +576,18 @@
     "card": {
       "ownedBadge": "收藏 x{owned}/{max}",
       "unowned": "未拥有"
+    },
+    "sync": {
+      "button": {
+        "idle": "同步",
+        "syncing": "正在同步…",
+        "success": "已同步",
+        "error": "同步失败",
+        "ariaLabel": {
+          "idle": "立即同步收藏",
+          "syncing": "正在同步收藏"
+        }
+      }
     }
   },
   "stats": {
