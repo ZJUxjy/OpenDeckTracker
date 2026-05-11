@@ -20,12 +20,14 @@ The surface MUST include:
 - `importJson(text: string): Promise<DeckDetail>`
 - `exportDeckstring(id: string): Promise<string>`
 - `exportJson(id: string): Promise<string>`
-- `saveFromLive(liveDeckId: string): Promise<DeckDetail>`
+- `saveFromLive(input: LiveDeckSnapshotInput): Promise<DeckDetail>`
+- `syncFromLive(): Promise<LiveDeckSyncResult>`
 - `setSortIndex(id: string, sortIndex: number): Promise<void>`
 
 The TypeScript type for `window.hdt.decks` MUST be declared in
-`apps/desktop/src/renderer/src/env.d.ts` so renderer call-sites get
-strict-mode autocomplete and parameter checking.
+`apps/desktop/src/renderer/src/env.d.ts` or inferred from the preload
+bridge so renderer call-sites get strict-mode autocomplete and parameter
+checking.
 
 #### Scenario: Renderer can list decks via the bridge
 
@@ -34,6 +36,14 @@ strict-mode autocomplete and parameter checking.
 - **WHEN** the renderer calls `window.hdt.decks.list()`
 - **THEN** the returned promise resolves to the same array shape as
   `DeckStore.list()`
+
+#### Scenario: Renderer can request live deck sync
+
+- **GIVEN** the main process has registered the live deck sync handler
+- **WHEN** the renderer calls `window.hdt.decks.syncFromLive()`
+- **THEN** the returned promise resolves to a `LiveDeckSyncResult`
+- **AND** normal Hearthstone-unavailable cases resolve with `ok: false`
+  instead of rejecting
 
 #### Scenario: env.d.ts shapes match the preload bridge
 
