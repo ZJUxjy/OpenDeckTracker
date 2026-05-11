@@ -78,7 +78,7 @@ export function CollectionSetDetail({ setCode, row, ownedByDbfId, onBack }: Coll
 
   const visibleCards = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return cards.filter((card) => {
+    const filtered = cards.filter((card) => {
       if (rarityFilter !== 'ALL' && card.rarity !== rarityFilter) return false;
       if (classFilter !== 'ALL' && card.cardClass !== classFilter) return false;
       if (!matchesType(card, typeFilter)) return false;
@@ -86,7 +86,13 @@ export function CollectionSetDetail({ setCode, row, ownedByDbfId, onBack }: Coll
       if (q !== '' && !card.name.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [cards, rarityFilter, classFilter, typeFilter, manaFilter, search]);
+    return filtered.slice().sort((a, b) => {
+      const ac = a.cost ?? 0;
+      const bc = b.cost ?? 0;
+      if (ac !== bc) return ac - bc;
+      return a.name.localeCompare(b.name, locale);
+    });
+  }, [cards, rarityFilter, classFilter, typeFilter, manaFilter, search, locale]);
 
   return (
     <div>
