@@ -574,8 +574,7 @@
       }
     },
     "card": {
-      "ownedBadge": "Owned x{owned}/{max}",
-      "unowned": "Not Owned"
+      "ownedBadge": "Owned x{owned}/{max}"
     },
     "sync": {
       "button": {

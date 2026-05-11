@@ -262,7 +262,7 @@ describe('CollectionSetDetail — filters + grid', () => {
     expect(allPill.getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('unowned card cells render the dim overlay', async () => {
+  it('unowned card cells render a red owned badge', async () => {
     setHdtMocks({
       cards: [makeCard({ id: 'U1', dbfId: 100, name: 'Locked', rarity: 'COMMON' })],
     });
@@ -270,6 +270,6 @@ describe('CollectionSetDetail — filters + grid', () => {
       renderDetail({ ownedByDbfId: new Map([[100, 0]]) });
     });
     await waitFor(() => expect(screen.getByAltText('Locked')).toBeInTheDocument());
-    expect(screen.getByTestId('cell-dim-overlay')).toBeInTheDocument();
+    expect(screen.getByTestId('cell-owned-badge').className).toContain('red');
   });
 });

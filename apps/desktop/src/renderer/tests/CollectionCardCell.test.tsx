@@ -46,12 +46,11 @@ describe('CollectionCardCell', () => {
     setCardImagesMock();
   });
 
-  it('fully owned card renders green badge with no dim overlay', () => {
+  it('fully owned card renders green badge', () => {
     renderCell({ card: card({ id: 'A', rarity: 'RARE' }), ownedCount: 2 });
     const badge = screen.getByTestId('cell-owned-badge');
     expect(badge.className).toContain('green');
     expect(badge.textContent).toContain('x2/2');
-    expect(screen.queryByTestId('cell-dim-overlay')).not.toBeInTheDocument();
   });
 
   it('partial ownership renders amber badge', () => {
@@ -61,11 +60,11 @@ describe('CollectionCardCell', () => {
     expect(badge.textContent).toContain('x1/2');
   });
 
-  it('unowned card renders dim overlay and 未拥有 pill', () => {
+  it('unowned card renders red badge without overlay or pill', () => {
     renderCell({ card: card({ id: 'C', rarity: 'LEGENDARY' }), ownedCount: 0 });
-    expect(screen.getByTestId('cell-dim-overlay')).toBeInTheDocument();
-    expect(screen.getByTestId('cell-unowned-pill')).toBeInTheDocument();
     expect(screen.getByTestId('cell-owned-badge').className).toContain('red');
+    expect(screen.queryByTestId('cell-dim-overlay')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('cell-unowned-pill')).not.toBeInTheDocument();
   });
 
   it('dust chip reads value from dustValueForRarity', () => {

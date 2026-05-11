@@ -48,21 +48,6 @@ export function CollectionCardCell({ card, ownedCount }: CollectionCardCellProps
           loading="lazy"
           className="w-full h-full object-cover"
         />
-        {isUnowned && (
-          <>
-            <div
-              data-testid="cell-dim-overlay"
-              className="absolute inset-0 bg-black/55"
-              aria-hidden
-            />
-            <div
-              data-testid="cell-unowned-pill"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-red font-semibold text-sm rounded-full px-3 py-1"
-            >
-              {t('collection.card.unowned')}
-            </div>
-          </>
-        )}
       </div>
       <div className="flex items-center justify-between px-1">
         <span

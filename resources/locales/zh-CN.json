@@ -574,8 +574,7 @@
       }
     },
     "card": {
-      "ownedBadge": "收藏 x{owned}/{max}",
-      "unowned": "未拥有"
+      "ownedBadge": "收藏 x{owned}/{max}"
     },
     "sync": {
       "button": {
