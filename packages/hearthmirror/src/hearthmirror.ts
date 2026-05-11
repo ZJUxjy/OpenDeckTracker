@@ -11,6 +11,7 @@ import type {
   ChoiceGroup,
   Choices,
   CollectionCard,
+  CollectionDiagnostic,
   Deck,
   DeckCard,
   DeckState,
@@ -192,6 +193,34 @@ export class HearthMirror {
     const r = await native.getCollection();
     if (!r) return null;
     return r.map((c) => ({ dbfId: c.dbfId, count: c.count, premium: c.premium }));
+  }
+
+  /**
+   * Diagnostic-only sibling of {@link getCollection}. Performs a fresh
+   * walk of `m_collectibleCards` and returns structured counters
+   * describing how the walk went (list size, per-element parse
+   * results, sampled element class). Used to debug why `getCollection`
+   * returns the data it does without having to scrape the
+   * `[hearthmirror:collection]` eprintln line out of stderr.
+   *
+   * Returns `null` only when the native fn itself resolves to a
+   * falsy value (i.e. the runtime is truly unavailable and the
+   * `with_runtime_or` default short-circuit fired with no struct).
+   * The happy path always returns a struct, even when every counter
+   * is 0 (e.g. the CollectionManager singleton isn't initialized).
+   */
+  async getCollectionDiagnostic(): Promise<CollectionDiagnostic | null> {
+    const r = await native.getCollectionDiagnostic();
+    if (!r) return null;
+    return {
+      listSize: r.listSize,
+      parsed: r.parsed,
+      nonZeroDbfid: r.nonZeroDbfid,
+      nullPtrs: r.nullPtrs,
+      fieldMisses: r.fieldMisses,
+      sampleClass: r.sampleClass ?? null,
+      elapsedMs: r.elapsedMs,
+    };
   }
 
   async getArenaDeck(): Promise<ArenaInfo | null> {

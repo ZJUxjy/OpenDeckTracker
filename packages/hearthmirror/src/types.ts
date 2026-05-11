@@ -39,6 +39,25 @@ export interface CollectionCard {
   premium: number;
 }
 
+/**
+ * Diagnostic counters captured during a single `getCollection` walk.
+ * Returned by `HearthMirror.getCollectionDiagnostic()` so consumers can
+ * tell *why* `getCollection` is returning the data it does, without
+ * scraping the structured `[hearthmirror:collection]` eprintln line.
+ *
+ * `sampleClass` is the runtime class name of the first parsed element,
+ * useful for spotting element-type drift across Hearthstone patches.
+ */
+export interface CollectionDiagnostic {
+  listSize: number;
+  parsed: number;
+  nonZeroDbfid: number;
+  nullPtrs: number;
+  fieldMisses: number;
+  sampleClass: string | null;
+  elapsedMs: number;
+}
+
 /** A card slot inside a saved CollectionDeck (string cardId, from `getDecks`). */
 export interface DeckCard {
   cardId: string;

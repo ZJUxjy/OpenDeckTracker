@@ -13,6 +13,7 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getDecks: vi.fn(),
   getEditedDeck: vi.fn(),
   getCollection: vi.fn(),
+  getCollectionDiagnostic: vi.fn(),
   getArenaDeck: vi.fn(),
   getBattlegroundRatingInfo: vi.fn(),
   getServerInfo: vi.fn(),
@@ -253,6 +254,43 @@ describe('HearthMirror', () => {
     it('returns null when no deck open', async () => {
       mocked(native.getEditedDeck).mockResolvedValue(null);
       expect(await mirror.getEditedDeck()).toBeNull();
+    });
+  });
+
+  describe('getCollectionDiagnostic', () => {
+    it('forwards the native counters', async () => {
+      mocked(native.getCollectionDiagnostic).mockResolvedValue({
+        listSize: 100,
+        parsed: 100,
+        nonZeroDbfid: 95,
+        nullPtrs: 0,
+        fieldMisses: 5,
+        sampleClass: 'CollectibleCard',
+        elapsedMs: 1234,
+      });
+      const result = await mirror.getCollectionDiagnostic();
+      expect(result).toEqual({
+        listSize: 100,
+        parsed: 100,
+        nonZeroDbfid: 95,
+        nullPtrs: 0,
+        fieldMisses: 5,
+        sampleClass: 'CollectibleCard',
+        elapsedMs: 1234,
+      });
+    });
+
+    it('normalizes undefined sampleClass to null', async () => {
+      mocked(native.getCollectionDiagnostic).mockResolvedValue({
+        listSize: 0,
+        parsed: 0,
+        nonZeroDbfid: 0,
+        nullPtrs: 0,
+        fieldMisses: 0,
+        elapsedMs: 0,
+      });
+      const result = await mirror.getCollectionDiagnostic();
+      expect(result?.sampleClass).toBeNull();
     });
   });
 

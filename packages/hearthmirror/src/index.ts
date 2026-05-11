@@ -11,6 +11,7 @@ export type {
   ChoiceGroup,
   Choices,
   CollectionCard,
+  CollectionDiagnostic,
   Deck,
   DeckCard,
   DeckState,
