@@ -25,6 +25,7 @@ export function Collection() {
   const [progress, setProgress] = useState<ProgressResponse | null>(null);
   const [selectedSetCode, setSelectedSetCode] = useState<string | null>(null);
   const [ownedByDbfId, setOwnedByDbfId] = useState<Map<number, number>>(new Map());
+  const [coverCardIds, setCoverCardIds] = useState<Map<string, string>>(new Map());
   const [syncState, setSyncState] = useState<SyncButtonState>('idle');
 
   const mountedRef = useRef(true);
@@ -47,6 +48,26 @@ export function Collection() {
         if (cancelled) return;
         const sets = new Set(all.map((c) => c.set));
         setDbStats({ total: all.length, sets: sets.size });
+
+        // Pick a representative card per set for tile cover art:
+        // prefer LEGENDARY-rarity collectible with the lowest dbfId
+        // (typically the set's keynote legendary), falling back to any
+        // collectible with the lowest dbfId.
+        const covers = new Map<string, string>();
+        const RARITY_RANK: Record<string, number> = {
+          LEGENDARY: 0, EPIC: 1, RARE: 2, COMMON: 3, FREE: 4,
+        };
+        const bySet = new Map<string, { id: string; rank: number; dbfId: number }>();
+        for (const c of all) {
+          if (!c.collectible) continue;
+          const rank = RARITY_RANK[c.rarity ?? 'FREE'] ?? 99;
+          const prev = bySet.get(c.set);
+          if (!prev || rank < prev.rank || (rank === prev.rank && c.dbfId < prev.dbfId)) {
+            bySet.set(c.set, { id: c.id, rank, dbfId: c.dbfId });
+          }
+        }
+        for (const [setCode, entry] of bySet) covers.set(setCode, entry.id);
+        setCoverCardIds(covers);
       })
       .catch(() => {});
     return () => { cancelled = true; };
@@ -204,6 +225,7 @@ export function Collection() {
           {progress && selectedSetCode === null && (
             <CollectionSetGrid
               progress={progress}
+              coverCardIds={coverCardIds}
               onOpenSet={(code) => setSelectedSetCode(code)}
             />
           )}

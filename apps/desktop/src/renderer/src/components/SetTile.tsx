@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { SetProgress } from '@hdt/core';
 import { useTranslation } from '../i18n';
 
@@ -6,12 +7,31 @@ interface SetTileProps {
   label: string;
   mini: boolean;
   accent: string;
+  coverCardId?: string;
   selected?: boolean;
   onClick: (setCode: string) => void;
 }
 
-export function SetTile({ row, label, mini, accent, selected, onClick }: SetTileProps) {
-  const { t } = useTranslation();
+export function SetTile({ row, label, mini, accent, coverCardId, selected, onClick }: SetTileProps) {
+  const { t, locale } = useTranslation();
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!coverCardId || typeof window === 'undefined' || !window.hdt?.cardImages?.get) {
+      setCoverUrl(null);
+      return;
+    }
+    void window.hdt.cardImages
+      .get(coverCardId, locale)
+      .then((res) => {
+        if (cancelled) return;
+        setCoverUrl(res?.url ?? null);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [coverCardId, locale]);
+
   const complete = row.totalCopies > 0 && row.ownedCopies === row.totalCopies;
   const pct = row.totalCards > 0 ? row.ownedUniqueCards / row.totalCards : 0;
 
@@ -37,16 +57,26 @@ export function SetTile({ row, label, mini, accent, selected, onClick }: SetTile
         (selected ? 'ring-2 ring-accent' : '')
       }
     >
-      {/* Art band */}
+      {/* Cover art band — falls back to the accent color until the image loads */}
       <div
-        className="flex flex-col items-center justify-center px-3 py-5 gap-2 h-[140px]"
+        data-testid="tile-cover"
+        className="relative h-[140px] overflow-hidden"
         style={{ backgroundColor: accent }}
       >
-        <span className="text-white font-bold text-base text-center leading-tight">{label}</span>
+        {coverUrl !== null && (
+          <img
+            src={coverUrl}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            className="w-full h-full object-cover"
+            style={{ objectPosition: 'center 18%' }}
+          />
+        )}
         {mini && (
           <span
             data-testid="tile-mini-badge"
-            className="rounded px-1.5 py-0.5 bg-white text-[9px] font-bold tracking-wider"
+            className="absolute top-2 right-2 rounded px-1.5 py-0.5 bg-white text-[9px] font-bold tracking-wider"
             style={{ color: accent }}
           >
             {t('collection.tile.miniSet')}
@@ -54,8 +84,16 @@ export function SetTile({ row, label, mini, accent, selected, onClick }: SetTile
         )}
       </div>
 
+      {/* Label sits below the cover, centered */}
+      <div
+        data-testid="tile-label"
+        className="px-3 pt-3 text-center text-text font-bold text-base leading-tight"
+      >
+        {label}
+      </div>
+
       {/* Info */}
-      <div className="flex flex-col gap-1.5 px-4 py-3">
+      <div className="flex flex-col gap-1.5 px-4 pt-2 pb-3">
         <div className="flex items-center justify-between text-xs">
           <span className="text-text-secondary font-medium">{t('collection.tile.uniqueLabel')}</span>
           <span

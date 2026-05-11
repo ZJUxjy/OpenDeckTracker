@@ -16,6 +16,7 @@ interface ProgressResponse {
 
 interface CollectionSetGridProps {
   progress: ProgressResponse;
+  coverCardIds?: Map<string, string>;
   onOpenSet: (setCode: string) => void;
 }
 
@@ -45,7 +46,7 @@ function isMiniSet(label: string): boolean {
   return /mini[- ]set|迷你/i.test(label);
 }
 
-export function CollectionSetGrid({ progress, onOpenSet }: CollectionSetGridProps) {
+export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: CollectionSetGridProps) {
   const { t, locale } = useTranslation();
   const [activeFormat, setActiveFormat] = useState<'standard' | 'wild'>('standard');
   const [activeTab, setActiveTab] = useState<TabId>('cards');
@@ -207,6 +208,7 @@ export function CollectionSetGrid({ progress, onOpenSet }: CollectionSetGridProp
               label={label}
               mini={isMiniSet(label)}
               accent={accentFor(row.setCode)}
+              coverCardId={coverCardIds?.get(row.setCode)}
               onClick={onOpenSet}
             />
           );
