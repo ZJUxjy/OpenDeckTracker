@@ -131,11 +131,22 @@ export function Collection() {
     const decksPromise = (window.hdt?.decks?.syncFromLive
       ? Promise.resolve(window.hdt.decks.syncFromLive())
       : Promise.resolve(undefined));
-    const [, progressResult] = await Promise.allSettled([
-      decksPromise.catch(() => undefined),
+    const startedAt = Date.now();
+    console.log('[collection-sync] start');
+    const [decksResult, progressResult, ownedResult] = await Promise.allSettled([
+      decksPromise,
       loadProgress(),
-      loadOwnedByDbfId().catch(() => null),
+      loadOwnedByDbfId(),
     ]);
+    console.log('[collection-sync] decks', decksResult.status, decksResult.status === 'fulfilled' ? decksResult.value : decksResult.reason);
+    console.log('[collection-sync] progress', progressResult.status, progressResult.status === 'fulfilled' ? {
+      source: progressResult.value?.source,
+      mirrorAlive: progressResult.value?.mirrorAlive,
+      standardTiles: progressResult.value?.standard.length,
+      totalOwned: progressResult.value?.standard.reduce((s, r) => s + r.ownedCopies, 0),
+    } : progressResult.reason);
+    console.log('[collection-sync] mirror.getCollection', ownedResult.status, ownedResult.status === 'fulfilled' ? (ownedResult.value === null ? 'null' : `${ownedResult.value.size} dbf-ids`) : ownedResult.reason);
+    console.log('[collection-sync] elapsed', Date.now() - startedAt, 'ms');
 
     if (!mountedRef.current) return;
     if (progressResult.status === 'fulfilled') {
