@@ -26,10 +26,12 @@ import { registerAboutIpc } from './about';
 import { getHearthMirror } from './hearthmirror';
 import {
   getLatestDeckTrackerSnapshot,
+  onDeckTrackerPhase,
   onDeckTrackerSnapshotChange,
   registerDeckTrackerIpc,
   setCardDbForDeckTracker,
 } from './deck-tracker';
+import { createMatchStartSyncTrigger } from './match-start-sync-trigger';
 import { registerOpponentDeckPredictionIpc } from './opponent-deck-prediction-ipc';
 import { getPopularDecksList } from './popular-decks-ipc';
 import type { PopularDeckEnriched } from '@hdt/core';
@@ -432,6 +434,15 @@ export function registerIpc(overlay?: OverlayControllers): void {
       collectibleLookup: makeCollectibleLookup(db),
     });
     deckSyncHost.setService(deckSync);
+
+    // Sync live decks the moment the player enters a matchmaking queue
+    // so deck attribution is fresh even when the user launched straight
+    // into a quick-match without visiting My Decks / DeckSelectDialog.
+    createMatchStartSyncTrigger({
+      onPhase: onDeckTrackerPhase,
+      syncFromLive: () => deckSyncHost.syncFromLive(),
+      now: Date.now,
+    });
 
     // Best-effort startup sync. Failures must not block IPC registration
     // or renderer startup — the host already swallows errors into a
