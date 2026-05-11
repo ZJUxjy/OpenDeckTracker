@@ -126,13 +126,13 @@ describe('CollectionSetDetail — header', () => {
 });
 
 describe('CollectionSetDetail — filters + grid', () => {
-  it('cards.search is called once with { set, collectible: true } on mount', async () => {
+  it('cards.search is called once with { set, collectible, limit } on mount', async () => {
     const search = setHdtMocks({ cards: [] });
     await act(async () => {
       renderDetail({ setCode: 'SET_1897' });
     });
     await waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search.mock.calls[0]?.[0]).toEqual({ set: 'SET_1897', collectible: true });
+    expect(search.mock.calls[0]?.[0]).toEqual({ set: 'SET_1897', collectible: true, limit: 10000 });
   });
 
   it('renders 4 filter controls plus mana pill group', async () => {

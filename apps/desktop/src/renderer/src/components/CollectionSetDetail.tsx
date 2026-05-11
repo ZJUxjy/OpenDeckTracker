@@ -67,7 +67,7 @@ export function CollectionSetDetail({ setCode, row, ownedByDbfId, onBack }: Coll
     setCards([]);
     if (typeof window === 'undefined' || !window.hdt?.cards?.search) return;
     void window.hdt.cards
-      .search({ set: setCode, collectible: true }, locale)
+      .search({ set: setCode, collectible: true, limit: 10000 }, locale)
       .then((res) => {
         if (cancelled) return;
         setCards(res);
