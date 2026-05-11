@@ -35,6 +35,10 @@ function wikiThumb(filename: string): string {
 }
 
 export const SET_LOGO_URLS: Record<string, string> = {
+  // ── Generic HS branding for sets without a marketing logo ─────
+  SET_1810: wikiThumb('Hearthstone_icon_-_Patch_20.4.png'), // Core — use the HS app icon
+  SET_1941: wikiThumb('Hearthstone_logo.png'), // Event — use the HEARTHSTONE wordmark
+
   // ── Standard rotation (Blizzard CMS) ──────────────────────────
   SET_1946: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt10f09c595ce577d9/67ad9eabf887ad6cef9fafb2/HS_32p0_TED_Logo_Launch_enUS_5500x3422.png',
   SET_1952: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltc155dfa7caf0d8c5/6830c93e8c0c5b0a6cfff161/HS_32p0_TED_Logo_Launch_enUS_5500x3422.png',
