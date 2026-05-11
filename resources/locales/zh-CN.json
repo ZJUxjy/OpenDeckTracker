@@ -557,7 +557,19 @@
           "legendary": "传说"
         },
         "class": {
-          "all": "所有职业"
+          "all": "所有职业",
+          "DEATHKNIGHT": "死亡骑士",
+          "DEMONHUNTER": "恶魔猎手",
+          "DRUID": "德鲁伊",
+          "HUNTER": "猎人",
+          "MAGE": "法师",
+          "PALADIN": "圣骑士",
+          "PRIEST": "牧师",
+          "ROGUE": "潜行者",
+          "SHAMAN": "萨满祭司",
+          "WARLOCK": "术士",
+          "WARRIOR": "战士",
+          "NEUTRAL": "中立"
         },
         "type": {
           "all": "全部类型",

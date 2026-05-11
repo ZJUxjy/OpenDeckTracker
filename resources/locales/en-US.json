@@ -557,7 +557,19 @@
           "legendary": "Legendary"
         },
         "class": {
-          "all": "All classes"
+          "all": "All classes",
+          "DEATHKNIGHT": "Death Knight",
+          "DEMONHUNTER": "Demon Hunter",
+          "DRUID": "Druid",
+          "HUNTER": "Hunter",
+          "MAGE": "Mage",
+          "PALADIN": "Paladin",
+          "PRIEST": "Priest",
+          "ROGUE": "Rogue",
+          "SHAMAN": "Shaman",
+          "WARLOCK": "Warlock",
+          "WARRIOR": "Warrior",
+          "NEUTRAL": "Neutral"
         },
         "type": {
           "all": "All types",

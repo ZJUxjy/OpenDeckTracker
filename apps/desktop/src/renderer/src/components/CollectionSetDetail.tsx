@@ -168,7 +168,7 @@ export function CollectionSetDetail({ setCode, row, ownedByDbfId, onBack }: Coll
         >
           <option value="ALL">{t('collection.detail.filter.class.all')}</option>
           {CLASS_OPTIONS.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>{t(`collection.detail.filter.class.${c}`)}</option>
           ))}
         </select>
         <select

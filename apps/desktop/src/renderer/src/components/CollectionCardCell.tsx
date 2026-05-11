@@ -10,21 +10,21 @@ interface CollectionCardCellProps {
 }
 
 export function CollectionCardCell({ card, ownedCount }: CollectionCardCellProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     if (typeof window === 'undefined' || !window.hdt?.cardImages?.get) return;
     void window.hdt.cardImages
-      .get(card.id)
+      .get(card.id, locale)
       .then((res) => {
         if (cancelled) return;
         setImageUrl(res?.url ?? null);
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [card.id]);
+  }, [card.id, locale]);
 
   const rarity = card.rarity ?? 'FREE';
   const max = maxCopiesForRarity(rarity);
@@ -48,6 +48,13 @@ export function CollectionCardCell({ card, ownedCount }: CollectionCardCellProps
           loading="lazy"
           className="w-full h-full object-cover"
         />
+      </div>
+      <div
+        data-testid="cell-card-name"
+        className="px-1 text-sm font-semibold text-text leading-tight truncate"
+        title={card.name}
+      >
+        {card.name}
       </div>
       <div className="flex items-center justify-between px-1">
         <span
