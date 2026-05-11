@@ -522,6 +522,60 @@
       "mirrorBanner": "启动炉石传说获取实时数据",
       "cachedBanner": "正在显示缓存的卡牌收藏——上次更新于 {date}",
       "unknownSet": "未知系列（{code}）"
+    },
+    "tabs": {
+      "cards": "卡牌",
+      "cardBacks": "卡背图案",
+      "heroes": "英雄",
+      "coins": "幸运币",
+      "packs": "卡牌包",
+      "comingSoon": "未开放"
+    },
+    "tile": {
+      "uniqueLabel": "唯一卡牌",
+      "copiesLabel": "总收藏数",
+      "miniSet": "迷你系列"
+    },
+    "filter": {
+      "mode": {
+        "all": "全部模式",
+        "standard": "标准",
+        "wild": "狂野"
+      },
+      "search": "搜索卡牌套装…"
+    },
+    "detail": {
+      "subtitle": "{english} · 共 {total} 张",
+      "uniqueProgress": "/ {total} 唯一",
+      "complete": "套装已完成",
+      "filter": {
+        "rarity": {
+          "any": "任意稀有度",
+          "common": "普通",
+          "rare": "稀有",
+          "epic": "史诗",
+          "legendary": "传说"
+        },
+        "class": {
+          "all": "所有职业"
+        },
+        "type": {
+          "all": "全部类型",
+          "minion": "随从",
+          "spell": "法术",
+          "weapon": "武器",
+          "location": "地标"
+        },
+        "mana": {
+          "all": "全部",
+          "sevenPlus": "7+"
+        },
+        "search": "搜索卡牌…"
+      }
+    },
+    "card": {
+      "ownedBadge": "收藏 x{owned}/{max}",
+      "unowned": "未拥有"
     }
   },
   "stats": {

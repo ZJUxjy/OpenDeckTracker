@@ -522,6 +522,60 @@
       "mirrorBanner": "Launch Hearthstone for live numbers",
       "cachedBanner": "Showing cached collection — last updated {date}",
       "unknownSet": "Unknown set ({code})"
+    },
+    "tabs": {
+      "cards": "Cards",
+      "cardBacks": "Card Backs",
+      "heroes": "Heroes",
+      "coins": "Lucky Coins",
+      "packs": "Card Packs",
+      "comingSoon": "Coming Soon"
+    },
+    "tile": {
+      "uniqueLabel": "Unique",
+      "copiesLabel": "Total copies",
+      "miniSet": "MINI-SET"
+    },
+    "filter": {
+      "mode": {
+        "all": "All modes",
+        "standard": "Standard",
+        "wild": "Wild"
+      },
+      "search": "Search sets…"
+    },
+    "detail": {
+      "subtitle": "{english} · {total} cards",
+      "uniqueProgress": "/ {total} unique",
+      "complete": "Set complete",
+      "filter": {
+        "rarity": {
+          "any": "Any rarity",
+          "common": "Common",
+          "rare": "Rare",
+          "epic": "Epic",
+          "legendary": "Legendary"
+        },
+        "class": {
+          "all": "All classes"
+        },
+        "type": {
+          "all": "All types",
+          "minion": "Minion",
+          "spell": "Spell",
+          "weapon": "Weapon",
+          "location": "Location"
+        },
+        "mana": {
+          "all": "All",
+          "sevenPlus": "7+"
+        },
+        "search": "Search cards…"
+      }
+    },
+    "card": {
+      "ownedBadge": "Owned x{owned}/{max}",
+      "unowned": "Not Owned"
     }
   },
   "stats": {

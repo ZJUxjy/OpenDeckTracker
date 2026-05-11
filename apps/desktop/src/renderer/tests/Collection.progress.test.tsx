@@ -287,6 +287,71 @@ describe('Collection — set progress', () => {
     expect(await screen.findByText('Core')).toBeInTheDocument();
   });
 
+  it('renders set tiles in a 5-column layout at xl', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' }), row({ setCode: 'SET_1897' })],
+      wild: [],
+      mirrorAlive: true,
+    });
+    renderWithLocale('en-US');
+    const grid = await screen.findByTestId('set-grid');
+    expect(grid.className).toContain('xl:grid-cols-5');
+  });
+
+  it('renders 5 tabs with only the cards tab active and interactive', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [],
+      mirrorAlive: true,
+    });
+    renderWithLocale('en-US');
+    await screen.findByText('Core');
+    for (const tab of ['cards', 'cardBacks', 'heroes', 'coins', 'packs']) {
+      expect(screen.getByTestId(`category-tab-${tab}`)).toBeInTheDocument();
+    }
+    expect(screen.getByTestId('category-tab-cards')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('category-tab-heroes')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('clicking a disabled tab does not change the active tab', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [],
+      mirrorAlive: true,
+    });
+    renderWithLocale('en-US');
+    await screen.findByText('Core');
+    fireEvent.click(screen.getByTestId('category-tab-heroes'));
+    expect(screen.getByTestId('category-tab-cards')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Core')).toBeInTheDocument();
+  });
+
+  it('mode dropdown filters tiles by format', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [row({ setCode: 'SET_12', format: 'wild' })],
+      mirrorAlive: true,
+    });
+    renderWithLocale('en-US');
+    await screen.findByText('Core');
+    fireEvent.change(screen.getByTestId('mode-dropdown'), { target: { value: 'wild' } });
+    await waitFor(() => expect(screen.getByText('Naxxramas')).toBeInTheDocument());
+    expect(screen.queryByText('Core')).not.toBeInTheDocument();
+  });
+
+  it('search filters tiles by localized set name', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' }), row({ setCode: 'SET_1897' })],
+      wild: [],
+      mirrorAlive: true,
+    });
+    renderWithLocale('en-US');
+    await screen.findByText('Core');
+    fireEvent.change(screen.getByTestId('tile-search'), { target: { value: 'whiz' } });
+    await waitFor(() => expect(screen.queryByText('Core')).not.toBeInTheDocument());
+    expect(screen.getByText("Whizbang's Workshop")).toBeInTheDocument();
+  });
+
   it('shows the launch-game banner when source=empty', async () => {
     mockProgressApi({
       standard: [row({ setCode: 'SET_1810' })],
