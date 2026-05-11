@@ -289,6 +289,15 @@ pub async fn get_collection() -> napi::Result<Option<Vec<reflection::collection:
 }
 
 #[napi]
+pub async fn get_collection_diagnostic() -> napi::Result<reflection::collection::CollectionDiagnostic> {
+    with_runtime_or(
+        reflection::collection::CollectionDiagnostic::zero,
+        |rt| futures::executor::block_on(
+            reflection::collection::get_collection_diagnostic_internal(rt)),
+    )
+}
+
+#[napi]
 pub async fn get_arena_deck() -> napi::Result<Option<reflection::arena::ArenaInfoResult>> {
     with_runtime(|rt| futures::executor::block_on(
         reflection::arena::get_arena_deck_internal(rt)))

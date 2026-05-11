@@ -58,6 +58,20 @@ export interface ChoicesResult {
   general?: ChoiceGroup
 }
 
+/**
+ * Structured diagnostic surfaced to JS consumers. Mirrors `CollectionCounters`
+ * but with napi-compatible field types (`i32` instead of `usize`/`u128`).
+ */
+export interface CollectionDiagnostic {
+  listSize: number
+  parsed: number
+  nonZeroDbfid: number
+  nullPtrs: number
+  fieldMisses: number
+  sampleClass?: string
+  elapsedMs: number
+}
+
 export interface DeckCardResult {
   cardId: string
   count: number
@@ -124,6 +138,8 @@ export declare function getBoundPid(): Promise<number>
 export declare function getChoices(): Promise<ChoicesResult | null>
 
 export declare function getCollection(): Promise<Array<CardResult> | null>
+
+export declare function getCollectionDiagnostic(): Promise<CollectionDiagnostic>
 
 export declare function getDecks(): Promise<Array<DeckResult> | null>
 

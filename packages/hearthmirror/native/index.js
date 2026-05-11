@@ -584,6 +584,7 @@ module.exports.getBoardState = nativeBinding.getBoardState
 module.exports.getBoundPid = nativeBinding.getBoundPid
 module.exports.getChoices = nativeBinding.getChoices
 module.exports.getCollection = nativeBinding.getCollection
+module.exports.getCollectionDiagnostic = nativeBinding.getCollectionDiagnostic
 module.exports.getDecks = nativeBinding.getDecks
 module.exports.getDeckState = nativeBinding.getDeckState
 module.exports.getEditedDeck = nativeBinding.getEditedDeck
