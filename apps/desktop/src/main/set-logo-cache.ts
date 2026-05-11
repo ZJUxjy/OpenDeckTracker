@@ -4,14 +4,22 @@ import path from 'node:path';
 import { CARD_IMAGE_PROTOCOL } from './card-image-cache';
 
 /**
- * Set-logo cache. Hand-curated mapping of HS set codes to Blizzard's
- * marketing CDN URL for the expansion title logo. URLs come from
- * `hearthstone.blizzard.com/en-us/expansions-adventures/<slug>` — they
- * are Akamai-hosted, stable across patches, and CORS-permissive.
+ * Set-logo cache. Hand-curated mapping of HS set codes to expansion-logo
+ * URLs. Two sources, both CORS-permissive:
  *
- * Sets without a known logo (e.g. SET_1810 Core, SET_1941 Event) are
- * simply absent from the map; `ensureSetLogoCached` returns null for
- * those and the renderer falls back to the representative-card cover.
+ * 1. Blizzard's Akamai CMS (`blz-contentstack-images.akamaized.net`) for
+ *    expansions whose `/expansions-adventures/<slug>` page is still live.
+ *    Covers the Standard rotation plus the most recent few Wild sets.
+ *
+ * 2. hearthstone.wiki.gg's MediaWiki image store, accessed through the
+ *    `/images/thumb/<file>/400px-<file>` resizer to keep transfers small.
+ *    Covers older Wild sets whose Blizzard pages 302-redirect (Blizzard
+ *    delists pages after the year they rotate out).
+ *
+ * Sets without a known logo (e.g. SET_1810 Core, SET_1941 Event, the
+ * Legacy/Classic placeholders, Path of Arthas) are simply absent from
+ * the map; `ensureSetLogoCached` returns null for those and the
+ * renderer falls back to the representative-card cover.
  *
  * Cache lives at `<cardImageRoot>/set-logos/<setCode>.png`, served via
  * the same `hdt-card-image://` protocol with hostname `set-logo`.
@@ -19,20 +27,55 @@ import { CARD_IMAGE_PROTOCOL } from './card-image-cache';
 
 const SET_CODE_RE = /^[A-Za-z0-9_]+$/;
 
+const WIKI_BASE = 'https://hearthstone.wiki.gg/images/thumb';
+
+/** Build a wiki.gg 400px thumbnail URL for a given image filename. */
+function wikiThumb(filename: string): string {
+  return `${WIKI_BASE}/${filename}/400px-${filename}`;
+}
+
 export const SET_LOGO_URLS: Record<string, string> = {
-  // ── Standard rotation ─────────────────────────────────────────
+  // ── Standard rotation (Blizzard CMS) ──────────────────────────
   SET_1946: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt10f09c595ce577d9/67ad9eabf887ad6cef9fafb2/HS_32p0_TED_Logo_Launch_enUS_5500x3422.png',
   SET_1952: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltc155dfa7caf0d8c5/6830c93e8c0c5b0a6cfff161/HS_32p0_TED_Logo_Launch_enUS_5500x3422.png',
   SET_1957: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt5525df54955ed8dd/68d2fab6d848545506c3c36b/HS_34p0_AtT_Logo_Launch_enUS.png',
   SET_1980: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltfb9c4943510acbec/697428b3a4d899c3e0ea5e94/HS_35p0_CATA_Logo_Launch_enUS.png',
 
-  // ── Wild — recent rotation (still have a live /expansions-adventures page) ─
+  // ── Recent Wild — Blizzard CMS pages still live ───────────────
   SET_1935: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt932b62c77646094b/67c6539f1d41b823c047b59b/enUS.png', // The Great Dark Beyond
   SET_1905: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltf47e4b4f43c7112c/67c653e1596fa442d7f3c253/enUS.png', // Perils in Paradise
   SET_1897: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt70f8dfc1b94f729c/65b16dd27aa31f5699d29bae/HS_29p0_WBWS_Launch_enUS_5500x3422.png', // Whizbang's Workshop
   SET_1892: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt1e00dbdaf5caa1d8/651d83af903f1f4cb0f8af6a/HS_28p0_Logo_launch_enUS_5500x3422.png', // Showdown in the Badlands
   SET_1858: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltb60e1a588969540b/683e2bd27809205ae5d588ff/HS_27p0_Logo_launch_enUS_5500x3422.png', // TITANS
   SET_1809: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt3c76dcbed75a462a/63ff7de4998e686b2e53b8ef/HS_26p0_Logo_launch_enUS.png', // Festival of Legends
+
+  // ── Older Wild — wiki.gg thumbnails ───────────────────────────
+  SET_1869: wikiThumb('MoLK_Logo.png'), // March of the Lich King
+  SET_1691: wikiThumb('REV_Logo.png'), // Murder at Castle Nathria
+  SET_1658: wikiThumb('VSC_Logo.png'), // Voyage to the Sunken City
+  SET_1626: wikiThumb('Fractured_in_Alterac_Valley_-_logo.png'),
+  SET_1578: wikiThumb('United_in_Stormwind_logo.png'),
+  SET_1525: wikiThumb('Forged_in_the_Barrens_logo.png'),
+  SET_1466: wikiThumb('Madness_at_the_Darkmoon_Faire_logo.png'),
+  SET_1443: wikiThumb('Scholomance_Academy_logo.png'),
+  SET_1414: wikiThumb('Ashes_of_Outland_logo.png'),
+  SET_1347: wikiThumb('Descent_of_Dragons_logo.png'),
+  SET_1158: wikiThumb('Saviors_of_Uldum_logo.png'),
+  SET_1130: wikiThumb('Rise_of_Shadows_logo.png'),
+  SET_1129: wikiThumb('Rastakhan%27s_Rumble_logo.png'),
+  SET_1127: wikiThumb('The_Boomsday_Project_logo.png'),
+  SET_1125: wikiThumb('The_Witchwood_logo.png'),
+  SET_1004: wikiThumb('Kobolds_and_Catacombs_logo.png'),
+  SET_1001: wikiThumb('Knights_of_the_Frozen_Throne_logo.png'),
+  SET_27: wikiThumb('Journey_to_Un%27Goro_logo.png'),
+  SET_25: wikiThumb('Mean_Streets_of_Gadgetzan_logo.png'),
+  SET_23: wikiThumb('One_Night_in_Karazhan_logo.png'),
+  SET_21: wikiThumb('Whispers_of_the_Old_Gods_logo.png'),
+  SET_20: wikiThumb('The_League_of_Explorers_logo.png'),
+  SET_15: wikiThumb('The_Grand_Tournament_logo.png'),
+  SET_14: wikiThumb('Blackrock_Mountain_logo.png'),
+  SET_13: wikiThumb('Goblins_vs_Gnomes_logo.png'),
+  SET_12: wikiThumb('Curse_of_Naxxramas_logo.png'),
 };
 
 export interface CachedSetLogo {
