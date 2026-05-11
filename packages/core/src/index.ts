@@ -114,6 +114,9 @@ export {
 export { computeSetProgress } from './collection/set-progress';
 export type { SetProgress } from './collection/set-progress';
 
+// Rarity → max copies + dust value helpers.
+export { dustValueForRarity, maxCopiesForRarity } from './collection/dust';
+
 // Match recordings.
 export {
   buildMatchRecordingSummary,
