@@ -397,13 +397,18 @@ export function registerIpc(overlay?: OverlayControllers): void {
       collectibleLookup: () => makeCollectibleLookup(db),
       syncFromLive: () => deckSyncHost.syncFromLive(),
     });
-    const collectionSnapshotStore = createCollectionSnapshotStore(
-      join(app.getPath('userData'), 'collection-snapshot.sqlite'),
-    );
+    let collectionSnapshotStore: ReturnType<typeof createCollectionSnapshotStore> | undefined;
+    try {
+      collectionSnapshotStore = createCollectionSnapshotStore(
+        join(app.getPath('userData'), 'collection-snapshot.sqlite'),
+      );
+    } catch (err) {
+      console.error('[collection-progress] cache disabled', err);
+    }
     registerCollectionProgressIpc({
       cardDb: db,
       getCollection: () => hm().getCollection(),
-      snapshotStore: collectionSnapshotStore,
+      ...(collectionSnapshotStore !== undefined ? { snapshotStore: collectionSnapshotStore } : {}),
     });
     popularDecksCardDb = db;
     setCardDbForDeckTracker(db);

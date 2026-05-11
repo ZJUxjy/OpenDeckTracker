@@ -18,6 +18,7 @@ describe('DeckSelectDialog with saved decks', () => {
   let saved: typeof window.hdt;
 
   beforeEach(() => {
+    localStorage.clear();
     saved = window.hdt;
     const savedSummaries = [
       {
@@ -172,6 +173,134 @@ describe('DeckSelectDialog with saved decks', () => {
 
     await waitFor(() => expect(syncFromLive).toHaveBeenCalled());
     expect(screen.getByTestId('saved-deck-row-saved-1')).toBeInTheDocument();
+  });
+
+  it('syncs when the dialog opens, not only when the always-mounted component mounts', async () => {
+    const syncFromLive = vi.fn().mockResolvedValue({
+      ok: true,
+      source: 'live',
+      synced: 1,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 0,
+      finishedAt: 1,
+    });
+    (window.hdt as { decks: typeof window.hdt.decks }).decks = {
+      ...saved.decks,
+      list: vi.fn().mockResolvedValue([]),
+      syncFromLive,
+    };
+    useDeckTrackerStore.setState({
+      snapshot: null,
+      pendingSelection: null,
+      dialogDismissed: false,
+      setSnapshot: () => undefined,
+      applyEvent: () => undefined,
+      clearPendingSelection: () => undefined,
+      markDialogDismissed: () => undefined,
+    });
+
+    await act(async () => {
+      renderDialog();
+    });
+    expect(syncFromLive).not.toHaveBeenCalled();
+
+    act(() => {
+      useDeckTrackerStore.setState({
+        pendingSelection: {
+          decks: [{ id: 1001, name: 'Live Mage', hero: 'HERO_08' }],
+        },
+      });
+    });
+    await waitFor(() => expect(syncFromLive).toHaveBeenCalledTimes(1));
+
+    act(() => {
+      useDeckTrackerStore.setState({
+        pendingSelection: {
+          decks: [{ id: 1001, name: 'Live Mage', hero: 'HERO_08' }],
+        },
+      });
+    });
+    expect(syncFromLive).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      useDeckTrackerStore.setState({ pendingSelection: null });
+    });
+    act(() => {
+      useDeckTrackerStore.setState({
+        pendingSelection: {
+          decks: [{ id: 1002, name: 'Live Hunter', hero: 'HERO_05' }],
+        },
+      });
+    });
+    await waitFor(() => expect(syncFromLive).toHaveBeenCalledTimes(2));
+  });
+
+  it('defaults to the saved deck loaded by the open-time sync before confirming', async () => {
+    const syncedSummaries = [
+      {
+        id: 'synced-1',
+        name: 'Synced Druid',
+        class: 'DRUID' as const,
+        format: 'Standard' as const,
+        version: 5,
+        cardCount: 30,
+        updatedAt: 10,
+      },
+    ];
+    const syncFromLive = vi.fn().mockResolvedValue({
+      ok: true,
+      source: 'live',
+      synced: 1,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 0,
+      finishedAt: 1,
+    });
+    const list = vi.fn().mockResolvedValue(syncedSummaries);
+    const selectSavedDeck = vi.fn().mockResolvedValue(undefined);
+    const selectDeck = vi.fn().mockResolvedValue(undefined);
+    (window as { hdt: typeof window.hdt }).hdt = {
+      ...saved,
+      decks: {
+        ...saved.decks,
+        list,
+        syncFromLive,
+      },
+      deckTracker: { ...saved.deckTracker, selectSavedDeck, selectDeck },
+    };
+    useDecksStore.setState({ decks: [], loading: false, error: null });
+    useDeckTrackerStore.setState({
+      snapshot: null,
+      pendingSelection: null,
+      dialogDismissed: false,
+      setSnapshot: () => undefined,
+      applyEvent: () => undefined,
+      clearPendingSelection: () => undefined,
+      markDialogDismissed: () => undefined,
+    });
+
+    await act(async () => {
+      renderDialog();
+    });
+
+    act(() => {
+      useDeckTrackerStore.setState({
+        pendingSelection: {
+          decks: [{ id: 1001, name: 'Live Mage', hero: 'HERO_08' }],
+        },
+      });
+    });
+
+    await waitFor(() => expect(screen.getByTestId('saved-deck-row-synced-1')).toBeInTheDocument());
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Confirm Selection'));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(selectSavedDeck).toHaveBeenCalledWith('synced-1', 5));
+    expect(selectDeck).not.toHaveBeenCalled();
   });
 
   it('clicking a live deck and confirming preserves the legacy selectDeck call', async () => {

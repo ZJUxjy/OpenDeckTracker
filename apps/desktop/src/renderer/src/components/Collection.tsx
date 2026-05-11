@@ -5,6 +5,8 @@ import type { SetProgress } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
 
+const COLLECTION_PROGRESS_RETRY_DELAYS_MS = [2_000, 5_000, 10_000] as const;
+
 type ProgressResponse = {
   standard: SetProgress[];
   wild: SetProgress[];
@@ -35,12 +37,37 @@ export function Collection() {
 
   useEffect(() => {
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryIndex = 0;
     if (typeof window === 'undefined' || !window.hdt?.collection?.getProgress) return;
-    void window.hdt.collection
-      .getProgress()
-      .then((res) => { if (!cancelled) setProgress(res); })
-      .catch(() => {});
-    return () => { cancelled = true; };
+
+    const scheduleRetry = (): void => {
+      if (cancelled || retryIndex >= COLLECTION_PROGRESS_RETRY_DELAYS_MS.length) return;
+      const delay = COLLECTION_PROGRESS_RETRY_DELAYS_MS[retryIndex]!;
+      retryIndex += 1;
+      retryTimer = setTimeout(() => {
+        void loadProgress();
+      }, delay);
+    };
+
+    const loadProgress = async (): Promise<void> => {
+      try {
+        const res = await window.hdt.collection.getProgress();
+        if (cancelled) return;
+        setProgress(res);
+        if (res.source !== 'live' && !res.mirrorAlive) {
+          scheduleRetry();
+        }
+      } catch {
+        scheduleRetry();
+      }
+    };
+
+    void loadProgress();
+    return () => {
+      cancelled = true;
+      if (retryTimer !== null) clearTimeout(retryTimer);
+    };
   }, []);
 
   // Opening Collection is a natural moment to refresh My Decks from

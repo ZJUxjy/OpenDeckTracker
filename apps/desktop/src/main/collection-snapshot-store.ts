@@ -42,7 +42,9 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
   }
 
   const selectMeta = db.prepare('SELECT key, value FROM collection_meta WHERE key = ?');
-  const selectCards = db.prepare('SELECT dbf_id, count, premium FROM collection_cards');
+  const selectCards = db.prepare(
+    'SELECT dbf_id, count, premium FROM collection_cards ORDER BY dbf_id, premium',
+  );
   const upsertMeta = db.prepare(
     'INSERT INTO collection_meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
   );
@@ -62,11 +64,24 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
     },
   );
 
+  function normalizeCards(rows: readonly CollectionCard[]): CollectionCard[] {
+    const byVariant = new Map<string, CollectionCard>();
+    for (const card of rows) {
+      const key = `${card.dbfId}:${card.premium}`;
+      const existing = byVariant.get(key);
+      if (existing === undefined) {
+        byVariant.set(key, { dbfId: card.dbfId, count: card.count, premium: card.premium });
+      } else {
+        existing.count += card.count;
+      }
+    }
+    return Array.from(byVariant.values()).sort((a, b) =>
+      a.dbfId !== b.dbfId ? a.dbfId - b.dbfId : a.premium - b.premium,
+    );
+  }
+
   function computeCardsHash(rows: readonly CollectionCard[]): string {
-    const sorted = rows
-      .slice()
-      .sort((a, b) => (a.dbfId !== b.dbfId ? a.dbfId - b.dbfId : a.premium - b.premium));
-    return sorted.map((c) => `${c.dbfId}:${c.premium}:${c.count}`).join('|');
+    return normalizeCards(rows).map((c) => `${c.dbfId}:${c.premium}:${c.count}`).join('|');
   }
 
   return {
@@ -88,7 +103,8 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
     },
 
     save(cards, now): CollectionSnapshot {
-      const incomingHash = computeCardsHash(cards);
+      const normalizedCards = normalizeCards(cards);
+      const incomingHash = computeCardsHash(normalizedCards);
       const storedHashRow = selectMeta.get('cardsHash') as MetaRow | undefined;
       const storedLastUpdatedAtRow = selectMeta.get('lastUpdatedAt') as MetaRow | undefined;
       const storedLastUpdatedAt = storedLastUpdatedAtRow
@@ -103,14 +119,14 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
         // timestamp so the user-visible value tracks real changes
         // instead of every successful live read.
         return {
-          cards: cards.map((c) => ({ ...c })),
+          cards: normalizedCards.map((c) => ({ ...c })),
           lastUpdatedAt: storedLastUpdatedAt,
         };
       }
       const lastUpdatedAt = now ?? Date.now();
-      replaceCards(cards, lastUpdatedAt, incomingHash);
+      replaceCards(normalizedCards, lastUpdatedAt, incomingHash);
       return {
-        cards: cards.map((c) => ({ ...c })),
+        cards: normalizedCards.map((c) => ({ ...c })),
         lastUpdatedAt,
       };
     },
@@ -124,13 +140,44 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
 function initializeSchema(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS collection_cards (
-      dbf_id INTEGER NOT NULL PRIMARY KEY,
+      dbf_id INTEGER NOT NULL,
       count INTEGER NOT NULL,
-      premium INTEGER NOT NULL
+      premium INTEGER NOT NULL,
+      PRIMARY KEY (dbf_id, premium)
     );
     CREATE TABLE IF NOT EXISTS collection_meta (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
   `);
+  migrateCollectionCardsPrimaryKey(db);
+}
+
+function migrateCollectionCardsPrimaryKey(db: Database.Database): void {
+  db.exec('DROP TABLE IF EXISTS collection_cards_new');
+  const columns = db.pragma('table_info(collection_cards)') as Array<{
+    name: string;
+    pk: number;
+  }>;
+  const dbfPk = columns.find((c) => c.name === 'dbf_id')?.pk ?? 0;
+  const premiumPk = columns.find((c) => c.name === 'premium')?.pk ?? 0;
+  if (dbfPk === 1 && premiumPk === 2) return;
+
+  const migrate = db.transaction(() => {
+    db.exec(`
+      CREATE TABLE collection_cards_new (
+        dbf_id INTEGER NOT NULL,
+        count INTEGER NOT NULL,
+        premium INTEGER NOT NULL,
+        PRIMARY KEY (dbf_id, premium)
+      );
+      INSERT OR REPLACE INTO collection_cards_new(dbf_id, count, premium)
+        SELECT dbf_id, SUM(count), premium
+        FROM collection_cards
+        GROUP BY dbf_id, premium;
+      DROP TABLE collection_cards;
+      ALTER TABLE collection_cards_new RENAME TO collection_cards;
+    `);
+  });
+  migrate();
 }

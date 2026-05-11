@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SetProgress } from '@hdt/core';
 import { I18nProvider } from '../src/i18n';
@@ -175,6 +175,71 @@ describe('Collection — set progress', () => {
     expect(banner).toHaveAttribute('data-banner-source', 'cache');
     expect(banner).toHaveTextContent(/Showing cached collection/i);
     expect(screen.queryByText(/Launch Hearthstone/i)).not.toBeInTheDocument();
+  });
+
+  it('retries cached collection progress and updates when live data becomes available', async () => {
+    vi.useFakeTimers();
+    try {
+      const getProgress = vi
+        .fn()
+        .mockResolvedValueOnce({
+          standard: [row({ setCode: 'SET_1810', ownedCopies: 1 })],
+          wild: [],
+          mirrorAlive: false,
+          source: 'cache',
+          lastUpdatedAt: 1_000,
+        })
+        .mockResolvedValueOnce({
+          standard: [row({ setCode: 'SET_1897', ownedCopies: 20 })],
+          wild: [],
+          mirrorAlive: true,
+          source: 'live',
+          lastUpdatedAt: 2_000,
+        });
+      (window as unknown as { hdt: typeof window.hdt }).hdt = {
+        ...(window.hdt ?? ({} as typeof window.hdt)),
+        cards: {
+          search: vi.fn(async () => []),
+        } as unknown as typeof window.hdt.cards,
+        collection: {
+          getProgress,
+        } as unknown as typeof window.hdt.collection,
+        decks: {
+          ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+          syncFromLive: vi.fn(async () => ({
+            ok: false,
+            source: 'unavailable' as const,
+            synced: 0,
+            skippedNonCollectible: 0,
+            skippedUnknownClass: 0,
+            startedAt: 0,
+            finishedAt: 0,
+          })),
+        },
+      };
+
+      renderWithLocale('en-US');
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(screen.getByTestId('collection-banner')).toHaveAttribute(
+        'data-banner-source',
+        'cache',
+      );
+
+      await act(async () => {
+        vi.advanceTimersByTime(2_000);
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(screen.getByText("Whizbang's Workshop")).toBeInTheDocument();
+      expect(screen.queryByTestId('collection-banner')).not.toBeInTheDocument();
+      expect(getProgress).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('triggers live deck sync without blocking progress', async () => {

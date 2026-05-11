@@ -42,12 +42,13 @@ export function registerCollectionProgressIpc(deps: CollectionProgressDeps): voi
       mirrorAlive = true;
       owned = liveCollection;
       source = 'live';
-      lastUpdatedAt = Date.now();
       if (deps.snapshotStore !== undefined) {
         try {
+          lastUpdatedAt = Date.now();
           const saved = deps.snapshotStore.save(liveCollection, lastUpdatedAt);
           lastUpdatedAt = saved.lastUpdatedAt;
         } catch (err) {
+          lastUpdatedAt = null;
           console.error('[collection-progress] cache save failed', err);
         }
       }

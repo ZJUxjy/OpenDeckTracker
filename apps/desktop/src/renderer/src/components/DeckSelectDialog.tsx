@@ -1,6 +1,6 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
-import { useDecks } from '../hooks/use-decks';
+import { useDecksStore } from '../stores/decks-store';
 import { useTranslation } from '../i18n';
 
 const STORAGE_KEY_LAST_PICK = 'hdt:deck-tracker:last-deck-id';
@@ -26,10 +26,11 @@ export function DeckSelectDialog() {
   const { t } = useTranslation();
   const pendingSelection = useDeckTrackerStore((s) => s.pendingSelection);
   const markDialogDismissed = useDeckTrackerStore((s) => s.markDialogDismissed);
-  // Sync live decks before presenting saved-deck choices so match
-  // attribution lands on the newest deck version. Failures fall back
-  // to the cached list — match start cannot be blocked on HearthMirror.
-  const { decks: savedDecks } = useDecks({ sync: true });
+  const savedDecks = useDecksStore((s) => s.decks);
+  const syncAndRefreshDecks = useDecksStore((s) => s.syncAndRefresh);
+  const syncedForOpenRef = useRef(false);
+  const userPickedRef = useRef(false);
+  const [syncSettledForOpen, setSyncSettledForOpen] = useState(false);
   const [chosen, setChosen] = useState<Choice | null>(null);
 
   const lastPickedId = useMemo<number | null>(() => {
@@ -50,10 +51,21 @@ export function DeckSelectDialog() {
   useEffect(() => {
     if (!pendingSelection) {
       setChosen(null);
+      syncedForOpenRef.current = false;
+      userPickedRef.current = false;
+      setSyncSettledForOpen(false);
       return;
     }
+    if (!syncedForOpenRef.current) {
+      syncedForOpenRef.current = true;
+      setSyncSettledForOpen(false);
+      void syncAndRefreshDecks().finally(() => {
+        setSyncSettledForOpen(true);
+      });
+    }
+    if (!syncSettledForOpen) return;
     setChosen((prev) => {
-      if (prev !== null) return prev;
+      if (prev !== null && userPickedRef.current) return prev;
       if (lastPickedId !== null && pendingSelection.decks.some((d) => d.id === lastPickedId)) {
         return { kind: 'live', id: lastPickedId };
       }
@@ -65,7 +77,7 @@ export function DeckSelectDialog() {
       }
       return null;
     });
-  }, [pendingSelection, lastPickedId, savedDecks]);
+  }, [pendingSelection, lastPickedId, savedDecks, syncAndRefreshDecks, syncSettledForOpen]);
 
   if (!pendingSelection) return null;
 
@@ -122,7 +134,10 @@ export function DeckSelectDialog() {
                       <li key={`saved-${deck.id}`}>
                         <button
                           type="button"
-                          onClick={() => setChosen(choice)}
+                          onClick={() => {
+                            userPickedRef.current = true;
+                            setChosen(choice);
+                          }}
                           data-testid={`saved-deck-row-${deck.id}`}
                           className={
                             'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
@@ -161,7 +176,10 @@ export function DeckSelectDialog() {
                         <li key={`live-${deck.id}`}>
                           <button
                             type="button"
-                            onClick={() => setChosen(choice)}
+                            onClick={() => {
+                              userPickedRef.current = true;
+                              setChosen(choice);
+                            }}
                             data-testid={`live-deck-row-${deck.id}`}
                             className={
                               'w-full text-left px-3 py-2 rounded transition-colors flex items-center justify-between ' +
