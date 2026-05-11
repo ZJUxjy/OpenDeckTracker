@@ -51,6 +51,7 @@ import type {
   BoardState,
   Choices,
   CollectionCard,
+  CollectionDiagnostic,
   Deck,
   DeckState,
   GameServerInfo,
@@ -166,6 +167,8 @@ const api = {
     getEditedDeck: (): Promise<Deck | null> => ipcRenderer.invoke('hearthmirror:getEditedDeck'),
     getCollection: (): Promise<CollectionCard[] | null> =>
       ipcRenderer.invoke('hearthmirror:getCollection'),
+    getCollectionDiagnostic: (): Promise<CollectionDiagnostic | null> =>
+      ipcRenderer.invoke('hearthmirror:get-collection-diagnostic'),
     getArenaDeck: (): Promise<ArenaInfo | null> => ipcRenderer.invoke('hearthmirror:getArenaDeck'),
     getBattlegroundRatingInfo: (): Promise<BattlegroundRatingInfo | null> =>
       ipcRenderer.invoke('hearthmirror:getBattlegroundRatingInfo'),

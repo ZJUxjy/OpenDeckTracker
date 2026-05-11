@@ -56,6 +56,7 @@ Object.defineProperty(window, 'hdt', {
       getMedalInfo: async () => Promise.resolve(null),
       getDecks: async () => Promise.resolve(null),
       getCollection: async () => Promise.resolve(null),
+      getCollectionDiagnostic: async () => Promise.resolve(null),
       getArenaDeck: async () => Promise.resolve(null),
       getBattlegroundRatingInfo: async () => Promise.resolve(null),
       getServerInfo: async () => Promise.resolve(null),

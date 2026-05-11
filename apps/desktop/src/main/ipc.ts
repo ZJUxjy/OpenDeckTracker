@@ -294,6 +294,10 @@ export function registerIpc(overlay?: OverlayControllers): void {
   ipcMain.handle('hearthmirror:getEditedDeck',
     () => swallow('getEditedDeck', () => hm().getEditedDeck(), null));
   ipcMain.handle('hearthmirror:getCollection', () => swallow('getCollection', () => hm().getCollection(), null));
+  ipcMain.handle(
+    'hearthmirror:get-collection-diagnostic',
+    () => swallow('getCollectionDiagnostic', () => hm().getCollectionDiagnostic(), null),
+  );
   ipcMain.handle('hearthmirror:getArenaDeck', () => swallow('getArenaDeck', () => hm().getArenaDeck(), null));
   ipcMain.handle('hearthmirror:getBattlegroundRatingInfo',
     () => swallow('getBattlegroundRatingInfo', () => hm().getBattlegroundRatingInfo(), null));
