@@ -6,19 +6,20 @@ import { CollectionCardCell } from '../src/components/CollectionCardCell';
 import { I18nProvider } from '../src/i18n';
 
 function card(overrides: Partial<CardDef> & { id: string }): CardDef {
-  return {
+  const base: CardDef = {
     id: overrides.id,
     dbfId: overrides.dbfId ?? 1,
     name: overrides.name ?? 'Test',
     cardClass: overrides.cardClass ?? 'NEUTRAL',
-    rarity: overrides.rarity,
     set: overrides.set ?? 'SET_X',
     type: overrides.type ?? 'MINION',
     collectible: overrides.collectible ?? true,
-    cost: overrides.cost,
-    attack: overrides.attack,
-    health: overrides.health,
   };
+  if (overrides.rarity !== undefined) base.rarity = overrides.rarity;
+  if (overrides.cost !== undefined) base.cost = overrides.cost;
+  if (overrides.attack !== undefined) base.attack = overrides.attack;
+  if (overrides.health !== undefined) base.health = overrides.health;
+  return base;
 }
 
 function setCardImagesMock(impl?: (cardId: string) => Promise<{ url: string } | null>) {

@@ -85,7 +85,26 @@ export function Collection() {
     return all.find((r) => r.setCode === selectedSetCode) ?? null;
   }, [selectedSetCode, progress]);
 
-  const ownedByDbfId = useMemo<Map<number, number>>(() => new Map(), []);
+  // Per-card ownership for the detail view. Aggregates `count` across
+  // premium tiers (normal/golden/diamond/signature) into a single
+  // dbfId → total-copies map. Falls back to an empty map when
+  // HearthMirror is unavailable; the detail view then shows every card
+  // as unowned, which the dim overlay communicates clearly enough.
+  const [ownedByDbfId, setOwnedByDbfId] = useState<Map<number, number>>(new Map());
+  useEffect(() => {
+    let cancelled = false;
+    if (typeof window === 'undefined' || !window.hdt?.hearthmirror?.getCollection) return;
+    void window.hdt.hearthmirror
+      .getCollection()
+      .then((rows) => {
+        if (cancelled || rows === null) return;
+        const map = new Map<number, number>();
+        for (const c of rows) map.set(c.dbfId, (map.get(c.dbfId) ?? 0) + c.count);
+        setOwnedByDbfId(map);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
