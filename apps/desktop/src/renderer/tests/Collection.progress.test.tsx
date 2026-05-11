@@ -352,6 +352,190 @@ describe('Collection — set progress', () => {
     expect(screen.getByText("Whizbang's Workshop")).toBeInTheDocument();
   });
 
+  it('clicking the sync button calls decks.syncFromLive, collection.getProgress, and hearthmirror.getCollection in parallel', async () => {
+    const getProgress = vi.fn(async () => ({
+      standard: [row({ setCode: 'SET_1810', ownedCopies: 5 })],
+      wild: [],
+      mirrorAlive: true,
+      source: 'live' as const,
+      lastUpdatedAt: 1000,
+    }));
+    const syncFromLive = vi.fn().mockResolvedValue({
+      ok: true,
+      source: 'live' as const,
+      synced: 1,
+      skippedNonCollectible: 0,
+      skippedUnknownClass: 0,
+      startedAt: 0,
+      finishedAt: 0,
+    });
+    const getCollection = vi.fn().mockResolvedValue([{ dbfId: 100, count: 1, premium: 0 }]);
+    (window as unknown as { hdt: typeof window.hdt }).hdt = {
+      ...(window.hdt ?? ({} as typeof window.hdt)),
+      cards: { search: vi.fn(async () => []) } as unknown as typeof window.hdt.cards,
+      collection: { getProgress } as unknown as typeof window.hdt.collection,
+      decks: {
+        ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+        syncFromLive,
+      },
+      hearthmirror: {
+        ...(window.hdt?.hearthmirror ?? ({} as typeof window.hdt.hearthmirror)),
+        getCollection,
+      } as unknown as typeof window.hdt.hearthmirror,
+    };
+
+    renderWithLocale('en-US');
+
+    await waitFor(() => expect(screen.getByText('Core')).toBeInTheDocument());
+
+    const initialGetProgressCalls = getProgress.mock.calls.length;
+    const initialGetCollectionCalls = getCollection.mock.calls.length;
+    const initialSyncCalls = syncFromLive.mock.calls.length;
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('collection-sync-button'));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(getProgress.mock.calls.length).toBeGreaterThan(initialGetProgressCalls);
+    expect(getCollection.mock.calls.length).toBeGreaterThan(initialGetCollectionCalls);
+    expect(syncFromLive.mock.calls.length).toBeGreaterThan(initialSyncCalls);
+  });
+
+  it('sync button shows success label when getProgress resolves', async () => {
+    const getProgress = vi.fn(async () => ({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [],
+      mirrorAlive: true,
+      source: 'live' as const,
+      lastUpdatedAt: 1000,
+    }));
+    (window as unknown as { hdt: typeof window.hdt }).hdt = {
+      ...(window.hdt ?? ({} as typeof window.hdt)),
+      cards: { search: vi.fn(async () => []) } as unknown as typeof window.hdt.cards,
+      collection: { getProgress } as unknown as typeof window.hdt.collection,
+      decks: {
+        ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+        syncFromLive: vi.fn(async () => ({
+          ok: true,
+          source: 'live' as const,
+          synced: 0,
+          skippedNonCollectible: 0,
+          skippedUnknownClass: 0,
+          startedAt: 0,
+          finishedAt: 0,
+        })),
+      },
+      hearthmirror: {
+        ...(window.hdt?.hearthmirror ?? ({} as typeof window.hdt.hearthmirror)),
+        getCollection: vi.fn(async () => []),
+      } as unknown as typeof window.hdt.hearthmirror,
+    };
+    renderWithLocale('en-US');
+    await waitFor(() => expect(screen.getByText('Core')).toBeInTheDocument());
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('collection-sync-button'));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('collection-sync-button').getAttribute('data-state')).toBe('success');
+    });
+  });
+
+  it('sync button shows error label when getProgress rejects', async () => {
+    let callCount = 0;
+    const getProgress = vi.fn(async () => {
+      callCount += 1;
+      if (callCount === 1) {
+        return {
+          standard: [row({ setCode: 'SET_1810' })],
+          wild: [],
+          mirrorAlive: true,
+          source: 'live' as const,
+          lastUpdatedAt: 1000,
+        };
+      }
+      throw new Error('boom');
+    });
+    (window as unknown as { hdt: typeof window.hdt }).hdt = {
+      ...(window.hdt ?? ({} as typeof window.hdt)),
+      cards: { search: vi.fn(async () => []) } as unknown as typeof window.hdt.cards,
+      collection: { getProgress } as unknown as typeof window.hdt.collection,
+      decks: {
+        ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+        syncFromLive: vi.fn(async () => ({
+          ok: false,
+          source: 'unavailable' as const,
+          synced: 0,
+          skippedNonCollectible: 0,
+          skippedUnknownClass: 0,
+          startedAt: 0,
+          finishedAt: 0,
+        })),
+      },
+      hearthmirror: {
+        ...(window.hdt?.hearthmirror ?? ({} as typeof window.hdt.hearthmirror)),
+        getCollection: vi.fn(async () => null),
+      } as unknown as typeof window.hdt.hearthmirror,
+    };
+    renderWithLocale('en-US');
+    await waitFor(() => expect(screen.getByText('Core')).toBeInTheDocument());
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('collection-sync-button'));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('collection-sync-button').getAttribute('data-state')).toBe('error');
+    });
+  });
+
+  it('progress tiles re-render after a successful manual sync', async () => {
+    let progressCallCount = 0;
+    const getProgress = vi.fn(async () => {
+      progressCallCount += 1;
+      const newCardSet = progressCallCount === 1 ? 'SET_1810' : 'SET_1897';
+      return {
+        standard: [row({ setCode: newCardSet })],
+        wild: [],
+        mirrorAlive: true,
+        source: 'live' as const,
+        lastUpdatedAt: 1000,
+      };
+    });
+    (window as unknown as { hdt: typeof window.hdt }).hdt = {
+      ...(window.hdt ?? ({} as typeof window.hdt)),
+      cards: { search: vi.fn(async () => []) } as unknown as typeof window.hdt.cards,
+      collection: { getProgress } as unknown as typeof window.hdt.collection,
+      decks: {
+        ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+        syncFromLive: vi.fn(async () => ({
+          ok: true,
+          source: 'live' as const,
+          synced: 0,
+          skippedNonCollectible: 0,
+          skippedUnknownClass: 0,
+          startedAt: 0,
+          finishedAt: 0,
+        })),
+      },
+      hearthmirror: {
+        ...(window.hdt?.hearthmirror ?? ({} as typeof window.hdt.hearthmirror)),
+        getCollection: vi.fn(async () => []),
+      } as unknown as typeof window.hdt.hearthmirror,
+    };
+    renderWithLocale('en-US');
+    await waitFor(() => expect(screen.getByText('Core')).toBeInTheDocument());
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('collection-sync-button'));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    await waitFor(() => expect(screen.getByText("Whizbang's Workshop")).toBeInTheDocument());
+  });
+
   it('shows the launch-game banner when source=empty', async () => {
     mockProgressApi({
       standard: [row({ setCode: 'SET_1810' })],
