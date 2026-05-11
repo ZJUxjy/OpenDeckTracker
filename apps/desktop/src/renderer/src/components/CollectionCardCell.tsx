@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import type { CardDef } from '@hdt/hearthdb';
 import { dustValueForRarity, maxCopiesForRarity } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
+import { useCardImageUrl } from '../hooks/use-card-image-url';
 
 interface CollectionCardCellProps {
   card: CardDef;
@@ -10,21 +10,8 @@ interface CollectionCardCellProps {
 }
 
 export function CollectionCardCell({ card, ownedCount }: CollectionCardCellProps) {
-  const { t, locale } = useTranslation();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (typeof window === 'undefined' || !window.hdt?.cardImages?.get) return;
-    void window.hdt.cardImages
-      .get(card.id, locale)
-      .then((res) => {
-        if (cancelled) return;
-        setImageUrl(res?.url ?? null);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [card.id, locale]);
+  const { t } = useTranslation();
+  const { primary: imageUrl } = useCardImageUrl(card.id);
 
   const rarity = card.rarity ?? 'FREE';
   const max = maxCopiesForRarity(rarity);
@@ -43,7 +30,7 @@ export function CollectionCardCell({ card, ownedCount }: CollectionCardCellProps
       <div className="relative rounded-xl overflow-hidden bg-overlay-surface aspect-[5/6]">
         <img
           data-testid="cell-image"
-          src={imageUrl ?? ''}
+          src={imageUrl}
           alt={card.name}
           loading="lazy"
           className="w-full h-full object-cover"

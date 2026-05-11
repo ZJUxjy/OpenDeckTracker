@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import type { SetProgress } from '@hdt/core';
 import { useTranslation } from '../i18n';
+import { useCardImageUrl } from '../hooks/use-card-image-url';
 
 interface SetTileProps {
   row: SetProgress;
@@ -13,24 +13,9 @@ interface SetTileProps {
 }
 
 export function SetTile({ row, label, mini, accent, coverCardId, selected, onClick }: SetTileProps) {
-  const { t, locale } = useTranslation();
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!coverCardId || typeof window === 'undefined' || !window.hdt?.cardImages?.get) {
-      setCoverUrl(null);
-      return;
-    }
-    void window.hdt.cardImages
-      .get(coverCardId, locale)
-      .then((res) => {
-        if (cancelled) return;
-        setCoverUrl(res?.url ?? null);
-      })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [coverCardId, locale]);
+  const { t } = useTranslation();
+  const { primary } = useCardImageUrl(coverCardId);
+  const coverUrl = coverCardId && primary ? primary : null;
 
   const complete = row.totalCopies > 0 && row.ownedCopies === row.totalCopies;
   const pct = row.totalCards > 0 ? row.ownedUniqueCards / row.totalCards : 0;
@@ -63,7 +48,7 @@ export function SetTile({ row, label, mini, accent, coverCardId, selected, onCli
         className="relative h-[140px] overflow-hidden"
         style={{ backgroundColor: accent }}
       >
-        {coverUrl !== null && (
+        {coverUrl && (
           <img
             src={coverUrl}
             alt=""

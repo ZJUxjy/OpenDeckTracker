@@ -112,18 +112,28 @@ export function getCardImageUrl(
 /**
  * Hook that returns the card image URL for a given cardId.
  * Uses zhCN as primary locale, enUS as fallback.
- * Maintains a module-level cache for in-flight dedup.
+ * Maintains a module-level cache for in-flight dedup. Accepts null /
+ * undefined / empty for callers that may not yet have a cardId — the
+ * hook short-circuits without firing an IPC.
  */
-export function useCardImageUrl(cardId: string): {
+export function useCardImageUrl(cardId: string | null | undefined): {
   primary: string;
   fallback: string;
 } {
   const appLocale = useLocale();
-  const key = cacheKey(cardId, appLocale);
-  const [cachedUrl, setCachedUrl] = useState(() => cachedImageUrls.get(key) ?? null);
+  const safeId = cardId ?? '';
+  const key = cacheKey(safeId, appLocale);
+  const [cachedUrl, setCachedUrl] = useState(() => (safeId ? cachedImageUrls.get(key) ?? null : null));
 
   useEffect(() => {
     let alive = true;
+    if (!safeId) {
+      setCachedUrl(null);
+      return () => {
+        alive = false;
+      };
+    }
+
     const existing = cachedImageUrls.get(key);
     if (existing) {
       setCachedUrl(existing);
@@ -141,7 +151,7 @@ export function useCardImageUrl(cardId: string): {
     }
 
     setCachedUrl(null);
-    void cardImagesApi.get(cardId, appLocale)
+    void cardImagesApi.get(safeId, appLocale)
       .then((cached) => {
         if (!alive || !cached?.url) return;
         cachedImageUrls.set(key, cached.url);
@@ -154,7 +164,7 @@ export function useCardImageUrl(cardId: string): {
     return () => {
       alive = false;
     };
-  }, [appLocale, cardId, key]);
+  }, [appLocale, safeId, key]);
 
   return useMemo(() => {
     if (cachedUrl) {
