@@ -182,6 +182,44 @@ describe('collection:get-progress IPC handler', () => {
     expect(standardSet?.ownedCopies).toBe(3);
   });
 
+  it('collection-progress reports the snapshot\'s lastUpdatedAt unchanged when hash matches', async () => {
+    const owned: CollectionCard[] = [{ dbfId: 1, count: 1, premium: 0 }];
+    let stored: { cards: readonly CollectionCard[]; hash: string; ts: number } | null = null;
+    const computeHash = (cards: readonly CollectionCard[]): string =>
+      cards
+        .slice()
+        .sort((a, b) => (a.dbfId !== b.dbfId ? a.dbfId - b.dbfId : a.premium - b.premium))
+        .map((c) => `${c.dbfId}:${c.premium}:${c.count}`)
+        .join('|');
+    const snapshotStore = {
+      get: vi.fn(() =>
+        stored ? { cards: [...stored.cards], lastUpdatedAt: stored.ts } : null,
+      ),
+      save: vi.fn((cards: readonly CollectionCard[], now?: number) => {
+        const h = computeHash(cards);
+        if (stored && stored.hash === h) {
+          return { cards: [...cards], lastUpdatedAt: stored.ts };
+        }
+        stored = { cards: [...cards], hash: h, ts: now ?? 0 };
+        return { cards: [...cards], lastUpdatedAt: stored.ts };
+      }),
+      close: vi.fn(),
+    };
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection: async () => owned,
+      snapshotStore: snapshotStore as never,
+    });
+
+    const first = (await invoke()) as { lastUpdatedAt: number };
+    // Simulate elapsed time before the second invocation; the IPC
+    // handler stamps `Date.now()` on entry, but the snapshot store
+    // returns the original timestamp when content hasn't changed.
+    await new Promise((r) => setTimeout(r, 5));
+    const second = (await invoke()) as { lastUpdatedAt: number };
+    expect(second.lastUpdatedAt).toBe(first.lastUpdatedAt);
+  });
+
   it('reports source=empty when live fails and no cache exists', async () => {
     const snapshotStore = {
       get: vi.fn(() => null),

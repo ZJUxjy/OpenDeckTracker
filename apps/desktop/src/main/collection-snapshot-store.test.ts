@@ -54,6 +54,65 @@ describe('collection-snapshot-store', () => {
     store.close();
   });
 
+  it('save() preserves lastUpdatedAt when card hash is unchanged', () => {
+    const store = createCollectionSnapshotStore(join(dir, 'collection.sqlite'));
+    try {
+      const T1 = 10_000;
+      const T2 = T1 + 60_000;
+      store.save(
+        [
+          { dbfId: 1, count: 2, premium: 0 },
+          { dbfId: 2, count: 1, premium: 1 },
+        ],
+        T1,
+      );
+      const second = store.save(
+        [
+          { dbfId: 2, count: 1, premium: 1 },
+          { dbfId: 1, count: 2, premium: 0 },
+        ],
+        T2,
+      );
+      expect(second.lastUpdatedAt).toBe(T1);
+      expect(store.get()?.lastUpdatedAt).toBe(T1);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('save() updates lastUpdatedAt when card count changes', () => {
+    const store = createCollectionSnapshotStore(join(dir, 'collection.sqlite'));
+    try {
+      const T1 = 10_000;
+      const T2 = T1 + 60_000;
+      store.save([{ dbfId: 1, count: 2, premium: 0 }], T1);
+      const second = store.save([{ dbfId: 1, count: 3, premium: 0 }], T2);
+      expect(second.lastUpdatedAt).toBe(T2);
+      expect(store.get()?.cards.find((c) => c.dbfId === 1)?.count).toBe(3);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('save() updates lastUpdatedAt when a new card is added', () => {
+    const store = createCollectionSnapshotStore(join(dir, 'collection.sqlite'));
+    try {
+      const T1 = 10_000;
+      const T2 = T1 + 60_000;
+      store.save([{ dbfId: 1, count: 2, premium: 0 }], T1);
+      const second = store.save(
+        [
+          { dbfId: 1, count: 2, premium: 0 },
+          { dbfId: 2, count: 1, premium: 1 },
+        ],
+        T2,
+      );
+      expect(second.lastUpdatedAt).toBe(T2);
+    } finally {
+      store.close();
+    }
+  });
+
   it('returns null gracefully when the underlying db is corrupt', async () => {
     const dbPath = join(dir, 'corrupt.sqlite');
     await writeFile(dbPath, 'not a real sqlite db');
