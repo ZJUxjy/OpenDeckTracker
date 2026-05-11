@@ -100,10 +100,14 @@ pub async fn read_collection_with_counters(
     };
     let mem = &runtime.memory;
 
-    // CollectionManager.m_collectibleCards is a `List<CollectionCardData>`
-    // in Hearthstone 32.x (previously assumed Dictionary<int, ...>; see
-    // diag_field_object.rs verification 2026-04-20). Each element is a
-    // reference (pointer, 4 bytes) to a CollectionCardData object.
+    // CollectionManager.m_collectibleCards is a `List<CollectibleCard>`.
+    // Each element is a reference (pointer, 4 bytes) to a CollectibleCard
+    // object, which exposes `m_CardDbId` (i32), `<OwnedCount>k__BackingField`
+    // (i32 backing for the `OwnedCount` auto-property), and `m_PremiumType`
+    // (Premium enum, i32 underlying). The previous element class
+    // `CollectionCardData` and its `DbfId` / `m_count` / `m_premium` field
+    // names no longer apply — witness: diagnostic counters reported
+    // `field_misses == 3 × parsed` with `sample_class = "CollectibleCard"`.
     let Some(list_ptr) = instance.read_pointer_field(mem, FLD_COLLECTIBLE_CARDS)? else {
         counters.elapsed_ms = start.elapsed().as_millis();
         return Ok((None, counters));

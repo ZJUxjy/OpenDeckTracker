@@ -158,11 +158,11 @@ pub const FLD_DECK_FORMAT_TYPE: &str = "m_formatType";
 pub const FLD_DECK_TYPE: &str = "m_deckType";
 pub const FLD_DECK_SLOTS: &str = "m_slots";
 
-// ── DeckCardData fields ──────────────────────────────────────────────────────
+// ── CollectibleCard fields ───────────────────────────────────────────────────
 
-pub const FLD_CARD_DBF_ID: &str = "DbfId";
-pub const FLD_CARD_COUNT: &str = "m_count";
-pub const FLD_CARD_PREMIUM: &str = "m_premium";
+pub const FLD_CARD_DBF_ID: &str = "m_CardDbId";
+pub const FLD_CARD_COUNT: &str = "<OwnedCount>k__BackingField";
+pub const FLD_CARD_PREMIUM: &str = "m_PremiumType";
 
 // ── getCollection fields ─────────────────────────────────────────────────────
 
