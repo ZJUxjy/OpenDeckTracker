@@ -1,5 +1,7 @@
+import type { MatchPhase } from '@hdt/core';
+
 export interface MatchStartSyncTriggerOptions {
-  onPhase: (cb: (phase: string) => void) => () => void;
+  onPhase: (cb: (phase: MatchPhase) => void) => () => void;
   syncFromLive: () => Promise<unknown>;
   now: () => number;
   /** Minimum interval between successive syncs (default 5000 ms). */
@@ -18,25 +20,16 @@ export function createMatchStartSyncTrigger(
   options: MatchStartSyncTriggerOptions,
 ): () => void {
   const { onPhase, syncFromLive, now, minIntervalMs = 5000 } = options;
-  let previousPhase: string | null = null;
+  let previousPhase: MatchPhase | null = null;
   let lastTriggeredAt = Number.NEGATIVE_INFINITY;
 
-  const unsubscribe = onPhase((phase) => {
+  return onPhase((phase) => {
     const prev = previousPhase;
     previousPhase = phase;
     if (prev !== 'IDLE' || phase !== 'PRE_MATCH') return;
     const t = now();
     if (t - lastTriggeredAt < minIntervalMs) return;
     lastTriggeredAt = t;
-    try {
-      const result = syncFromLive();
-      if (result && typeof (result as Promise<unknown>).catch === 'function') {
-        (result as Promise<unknown>).catch(() => undefined);
-      }
-    } catch {
-      // swallow synchronous failures so the subscription survives
-    }
+    syncFromLive().catch(() => undefined);
   });
-
-  return unsubscribe;
 }

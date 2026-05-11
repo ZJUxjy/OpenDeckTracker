@@ -42,6 +42,9 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
   }
 
   const selectMeta = db.prepare('SELECT key, value FROM collection_meta WHERE key = ?');
+  const selectMetaPair = db.prepare(
+    "SELECT key, value FROM collection_meta WHERE key IN ('cardsHash', 'lastUpdatedAt')",
+  );
   const selectCards = db.prepare(
     'SELECT dbf_id, count, premium FROM collection_cards ORDER BY dbf_id, premium',
   );
@@ -80,8 +83,8 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
     );
   }
 
-  function computeCardsHash(rows: readonly CollectionCard[]): string {
-    return normalizeCards(rows).map((c) => `${c.dbfId}:${c.premium}:${c.count}`).join('|');
+  function hashNormalizedCards(rows: readonly CollectionCard[]): string {
+    return rows.map((c) => `${c.dbfId}:${c.premium}:${c.count}`).join('|');
   }
 
   return {
@@ -104,15 +107,17 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
 
     save(cards, now): CollectionSnapshot {
       const normalizedCards = normalizeCards(cards);
-      const incomingHash = computeCardsHash(normalizedCards);
-      const storedHashRow = selectMeta.get('cardsHash') as MetaRow | undefined;
-      const storedLastUpdatedAtRow = selectMeta.get('lastUpdatedAt') as MetaRow | undefined;
-      const storedLastUpdatedAt = storedLastUpdatedAtRow
-        ? Number(storedLastUpdatedAtRow.value)
-        : NaN;
+      const incomingHash = hashNormalizedCards(normalizedCards);
+      const metaRows = selectMetaPair.all() as MetaRow[];
+      let storedHash: string | undefined;
+      let storedLastUpdatedAt = NaN;
+      for (const row of metaRows) {
+        if (row.key === 'cardsHash') storedHash = row.value;
+        else if (row.key === 'lastUpdatedAt') storedLastUpdatedAt = Number(row.value);
+      }
       if (
-        storedHashRow !== undefined &&
-        storedHashRow.value === incomingHash &&
+        storedHash !== undefined &&
+        storedHash === incomingHash &&
         Number.isFinite(storedLastUpdatedAt)
       ) {
         // No content change — preserve the original "last updated"

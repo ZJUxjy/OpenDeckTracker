@@ -10,6 +10,7 @@ import {
   type HeroClass,
   type HeroVitals,
   type LogDerivedEntityUpdate,
+  type MatchPhase,
   type MinionTags,
   type Zone,
   type WeaponState,
@@ -431,7 +432,7 @@ export function startDeckTracker(): void {
     if (tileIds.length > 0) {
       preloadCardTiles(tileIds);
     }
-    fanoutPhase(phase);
+    if (s?.phase) fanoutPhase(s.phase);
     fanoutSnapshot(event.snapshot);
     broadcast('deck-tracker:state', event.snapshot);
   });
@@ -683,9 +684,9 @@ function hasEntityUpdatePayload(update: LogDerivedEntityUpdate): boolean {
  * Returns an unsubscribe function. The callback fires once
  * immediately with the current phase if a tracker is already running.
  */
-type PhaseListener = (phase: string) => void;
+type PhaseListener = (phase: MatchPhase) => void;
 const phaseListeners = new Set<PhaseListener>();
-let lastBroadcastPhase: string | null = null;
+let lastBroadcastPhase: MatchPhase | null = null;
 
 export function onDeckTrackerPhase(cb: PhaseListener): () => void {
   phaseListeners.add(cb);
@@ -697,7 +698,7 @@ export function onDeckTrackerPhase(cb: PhaseListener): () => void {
   };
 }
 
-function fanoutPhase(phase: string): void {
+function fanoutPhase(phase: MatchPhase): void {
   if (phase === lastBroadcastPhase) return;
   lastBroadcastPhase = phase;
   // Clear the live-match flag whenever the phase machine returns to

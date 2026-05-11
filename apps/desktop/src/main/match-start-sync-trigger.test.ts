@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { MatchPhase } from '@hdt/core';
 import { createMatchStartSyncTrigger } from './match-start-sync-trigger';
 
-type PhaseListener = (phase: string) => void;
+type PhaseListener = (phase: MatchPhase) => void;
 
 function makeOnPhase(): {
   onPhase: (cb: PhaseListener) => () => void;
-  emit: (phase: string) => void;
+  emit: (phase: MatchPhase) => void;
   subscriberCount: () => number;
 } {
   const listeners = new Set<PhaseListener>();
