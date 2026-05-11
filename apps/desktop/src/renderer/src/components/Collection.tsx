@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Database } from 'lucide-react';
 import type { SetProgress } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
 import { CollectionSetGrid } from './CollectionSetGrid';
+import { CollectionSetDetail } from './CollectionSetDetail';
 
 const COLLECTION_PROGRESS_RETRY_DELAYS_MS = [2_000, 5_000, 10_000] as const;
 
@@ -78,6 +79,14 @@ export function Collection() {
     void Promise.resolve(window.hdt.decks.syncFromLive()).catch(() => {});
   }, []);
 
+  const selectedRow = useMemo<SetProgress | null>(() => {
+    if (selectedSetCode === null || progress === null) return null;
+    const all = [...progress.standard, ...progress.wild];
+    return all.find((r) => r.setCode === selectedSetCode) ?? null;
+  }, [selectedSetCode, progress]);
+
+  const ownedByDbfId = useMemo<Map<number, number>>(() => new Map(), []);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
 
@@ -109,17 +118,13 @@ export function Collection() {
               onOpenSet={(code) => setSelectedSetCode(code)}
             />
           )}
-          {progress && selectedSetCode !== null && (
-            <div data-testid="set-detail-placeholder">
-              {/* Filled in by section 4 — CollectionSetDetail */}
-              <button
-                type="button"
-                onClick={() => setSelectedSetCode(null)}
-                data-testid="detail-back-placeholder"
-              >
-                back
-              </button>
-            </div>
+          {progress && selectedSetCode !== null && selectedRow !== null && (
+            <CollectionSetDetail
+              setCode={selectedSetCode}
+              row={selectedRow}
+              ownedByDbfId={ownedByDbfId}
+              onBack={() => setSelectedSetCode(null)}
+            />
           )}
         </div>
       </div>
