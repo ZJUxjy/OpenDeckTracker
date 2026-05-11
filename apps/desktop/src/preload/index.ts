@@ -101,6 +101,10 @@ const api = {
     getTile: (cardId: string): Promise<{ url: string } | null> =>
       ipcRenderer.invoke('card-images:getTile', cardId),
   },
+  setLogos: {
+    get: (setCode: string): Promise<{ url: string } | null> =>
+      ipcRenderer.invoke('set-logos:get', setCode),
+  },
   deck: {
     encode: (blueprint: DeckBlueprint): Promise<string> =>
       ipcRenderer.invoke('deck:encode', blueprint),

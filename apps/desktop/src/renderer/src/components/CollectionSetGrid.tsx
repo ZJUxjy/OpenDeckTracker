@@ -208,7 +208,9 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
               label={label}
               mini={isMiniSet(label)}
               accent={accentFor(row.setCode)}
-              coverCardId={coverCardIds?.get(row.setCode)}
+              {...(coverCardIds?.get(row.setCode) !== undefined
+                ? { coverCardId: coverCardIds.get(row.setCode)! }
+                : {})}
               onClick={onOpenSet}
             />
           );

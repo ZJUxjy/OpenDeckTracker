@@ -22,6 +22,7 @@ import {
   ensureCardTilesCachedBatch,
   guessContentType,
 } from './card-image-cache';
+import { ensureSetLogoCached } from './set-logo-cache';
 import { registerAboutIpc } from './about';
 import { getHearthMirror } from './hearthmirror';
 import {
@@ -253,6 +254,16 @@ export function registerIpc(overlay?: OverlayControllers): void {
     } catch (e) {
       console.error('[ipc card-images:get-tile-batch]', (e as Error).message);
       return cardIds.map(() => null);
+    }
+  });
+
+  ipcMain.handle('set-logos:get', async (_, setCode: string) => {
+    try {
+      const cached = await ensureSetLogoCached(setCode, { root: cardImageRoot });
+      return cached === null ? null : { url: cached.url };
+    } catch (e) {
+      console.error('[ipc set-logos:get]', (e as Error).message);
+      return null;
     }
   });
 

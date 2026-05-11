@@ -137,6 +137,25 @@ export function cardImageCachePathFromUrl(url: string, root: string): string {
     return cardTileCachePath({ root, cardId });
   }
 
+  // Set-logo URL: hdt-card-image://set-logo/<setCode>.png
+  if (parsed.hostname === 'set-logo') {
+    const parts = parsed.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+    if (parts.length !== 1 || !parts[0]!.endsWith('.png')) {
+      throw new Error('invalid set-logo cache URL');
+    }
+    const setCode = parts[0]!.slice(0, -'.png'.length);
+    if (!/^[A-Za-z0-9_]+$/.test(setCode)) {
+      throw new Error(`invalid setCode in cache URL: ${setCode}`);
+    }
+    const rootPath = path.resolve(root);
+    const resolved = path.resolve(rootPath, 'set-logos', `${setCode}.png`);
+    const relative = path.relative(rootPath, resolved);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error('invalid set-logo cache URL');
+    }
+    return resolved;
+  }
+
   // Render URL: hdt-card-image://cache/<locale>/<size>/<cardId>.png
   if (parsed.hostname !== 'cache') {
     throw new Error('invalid card image cache URL');

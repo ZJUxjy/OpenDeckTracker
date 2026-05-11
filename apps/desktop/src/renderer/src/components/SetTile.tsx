@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { SetProgress } from '@hdt/core';
 import { useTranslation } from '../i18n';
 import { useCardImageUrl } from '../hooks/use-card-image-url';
@@ -12,10 +13,41 @@ interface SetTileProps {
   onClick: (setCode: string) => void;
 }
 
+// Module-level memo: an unknown set always resolves to null. Cache that
+// negative result so we don't ping the IPC again on every re-render.
+const setLogoUrls = new Map<string, string | null>();
+
 export function SetTile({ row, label, mini, accent, coverCardId, selected, onClick }: SetTileProps) {
   const { t } = useTranslation();
   const { primary } = useCardImageUrl(coverCardId);
-  const coverUrl = coverCardId && primary ? primary : null;
+  const cardCoverUrl = coverCardId && primary ? primary : null;
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => setLogoUrls.get(row.setCode) ?? null);
+  useEffect(() => {
+    let cancelled = false;
+    const cached = setLogoUrls.get(row.setCode);
+    if (cached !== undefined) {
+      setLogoUrl(cached);
+      return () => { cancelled = true; };
+    }
+    if (typeof window === 'undefined' || !window.hdt?.setLogos?.get) {
+      setLogoUrl(null);
+      return () => { cancelled = true; };
+    }
+    void window.hdt.setLogos.get(row.setCode)
+      .then((res) => {
+        if (cancelled) return;
+        const url = res?.url ?? null;
+        setLogoUrls.set(row.setCode, url);
+        setLogoUrl(url);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLogoUrls.set(row.setCode, null);
+        setLogoUrl(null);
+      });
+    return () => { cancelled = true; };
+  }, [row.setCode]);
 
   const complete = row.totalCopies > 0 && row.ownedCopies === row.totalCopies;
   const pct = row.totalCards > 0 ? row.ownedUniqueCards / row.totalCards : 0;
@@ -42,22 +74,34 @@ export function SetTile({ row, label, mini, accent, coverCardId, selected, onCli
         (selected ? 'ring-2 ring-accent' : '')
       }
     >
-      {/* Cover art band — falls back to the accent color until the image loads */}
+      {/* Cover band — prefer official set logo (transparent PNG, contained
+          and centered against the accent fill), fall back to representative
+          card art (cropped to its illustration). Accent color is always
+          painted underneath so the band is never blank. */}
       <div
         data-testid="tile-cover"
         className="relative h-[140px] overflow-hidden"
         style={{ backgroundColor: accent }}
       >
-        {coverUrl && (
+        {logoUrl ? (
           <img
-            src={coverUrl}
+            data-testid="tile-cover-logo"
+            src={logoUrl}
+            alt=""
+            aria-hidden
+            loading="lazy"
+            className="w-full h-full object-contain p-3"
+          />
+        ) : cardCoverUrl ? (
+          <img
+            src={cardCoverUrl}
             alt=""
             aria-hidden
             loading="lazy"
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 18%' }}
           />
-        )}
+        ) : null}
         {mini && (
           <span
             data-testid="tile-mini-badge"
