@@ -95,54 +95,7 @@ export function Collection() {
     return map;
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-    let retryIndex = 0;
-
-    const tryLoad = async (): Promise<void> => {
-      try {
-        const res = await loadProgress();
-        if (cancelled || res === null) return;
-        if (res.source !== 'live' && !res.mirrorAlive) {
-          if (retryIndex < COLLECTION_PROGRESS_RETRY_DELAYS_MS.length) {
-            const delay = COLLECTION_PROGRESS_RETRY_DELAYS_MS[retryIndex]!;
-            retryIndex += 1;
-            retryTimer = setTimeout(() => { void tryLoad(); }, delay);
-          }
-        }
-      } catch {
-        if (cancelled) return;
-        if (retryIndex < COLLECTION_PROGRESS_RETRY_DELAYS_MS.length) {
-          const delay = COLLECTION_PROGRESS_RETRY_DELAYS_MS[retryIndex]!;
-          retryIndex += 1;
-          retryTimer = setTimeout(() => { void tryLoad(); }, delay);
-        }
-      }
-    };
-
-    void tryLoad();
-    return () => {
-      cancelled = true;
-      if (retryTimer !== null) clearTimeout(retryTimer);
-    };
-  }, [loadProgress]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void loadOwnedByDbfId().catch(() => {});
-    return () => { cancelled = true; void cancelled; };
-  }, [loadOwnedByDbfId]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.hdt?.decks?.syncFromLive) return;
-    // Wrap in Promise.resolve so a stubbed `syncFromLive` that returns
-    // `undefined` (e.g. after `vi.restoreAllMocks()` between tests) still
-    // routes into the catch handler instead of throwing synchronously.
-    void Promise.resolve(window.hdt.decks.syncFromLive()).catch(() => {});
-  }, []);
-
-  const handleSyncClick = useCallback(async (): Promise<void> => {
+  const handleSyncClick = useCallback(async (): Promise<ProgressResponse | null> => {
     if (revertTimerRef.current !== null) {
       clearTimeout(revertTimerRef.current);
       revertTimerRef.current = null;
@@ -174,19 +127,47 @@ export function Collection() {
     console.log('[hearthmirror:collection]', diagnosticResult.status, diagnosticResult.status === 'fulfilled' ? diagnosticResult.value : diagnosticResult.reason);
     console.log('[collection-sync] elapsed', Date.now() - startedAt, 'ms');
 
-    if (!mountedRef.current) return;
+    if (!mountedRef.current) return progressResult.status === 'fulfilled' ? (progressResult.value ?? null) : null;
     if (progressResult.status === 'fulfilled') {
       setSyncState('success');
       revertTimerRef.current = setTimeout(() => {
         if (mountedRef.current) setSyncState('idle');
       }, SYNC_SUCCESS_AUTO_REVERT_MS);
-    } else {
-      setSyncState('error');
-      revertTimerRef.current = setTimeout(() => {
-        if (mountedRef.current) setSyncState('idle');
-      }, SYNC_ERROR_AUTO_REVERT_MS);
+      return progressResult.value ?? null;
     }
+    setSyncState('error');
+    revertTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) setSyncState('idle');
+    }, SYNC_ERROR_AUTO_REVERT_MS);
+    return null;
   }, [loadProgress, loadOwnedByDbfId]);
+
+  // Auto-sync on page mount: same flow as the manual button, plus a
+  // retry schedule for the "HS still launching" case (mirror reports
+  // not-alive on first attempt, becomes live a few seconds later).
+  useEffect(() => {
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let retryIndex = 0;
+
+    const trySync = async (): Promise<void> => {
+      const res = await handleSyncClick();
+      if (cancelled || res === null) return;
+      if (res.source !== 'live' && !res.mirrorAlive) {
+        if (retryIndex < COLLECTION_PROGRESS_RETRY_DELAYS_MS.length) {
+          const delay = COLLECTION_PROGRESS_RETRY_DELAYS_MS[retryIndex]!;
+          retryIndex += 1;
+          retryTimer = setTimeout(() => { void trySync(); }, delay);
+        }
+      }
+    };
+
+    void trySync();
+    return () => {
+      cancelled = true;
+      if (retryTimer !== null) clearTimeout(retryTimer);
+    };
+  }, [handleSyncClick]);
 
   const selectedRow = useMemo<SetProgress | null>(() => {
     if (selectedSetCode === null || progress === null) return null;
