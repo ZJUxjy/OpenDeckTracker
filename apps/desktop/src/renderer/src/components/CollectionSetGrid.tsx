@@ -25,19 +25,11 @@ type ModeFilter = 'all' | 'standard' | 'wild';
 
 const TAB_ORDER: TabId[] = ['cards', 'cardBacks', 'heroes', 'coins', 'packs'];
 
-// Map set codes to a visual accent — falls back to the neutral class token
-// when a set is not explicitly mapped. Used purely for tile art coloring,
-// and only visible around the edges of a logo or beneath card-cover art.
-// Sets with their own dedicated set logo (Standard rotation) intentionally
-// drop their per-set accent so the band reads uniformly across the row.
-const SET_ACCENT: Record<string, string> = {
-  SET_1858: 'var(--class-warlock)',
-  SET_1892: 'var(--class-warrior)',
-  SET_1897: 'var(--class-paladin)',
-  SET_1905: 'var(--class-shaman)',
-  SET_1935: 'var(--class-warlock)',
-  SET_1809: 'var(--class-priest)',
-};
+// Per-set accent override map. Currently empty — every set falls
+// through to var(--class-neutral). Kept as a map so older Wild sets
+// without an official logo can opt back into a class-themed band if
+// the uniform-neutral look ever feels too samey.
+const SET_ACCENT: Record<string, string> = {};
 
 function accentFor(setCode: string): string {
   return SET_ACCENT[setCode] ?? 'var(--class-neutral)';

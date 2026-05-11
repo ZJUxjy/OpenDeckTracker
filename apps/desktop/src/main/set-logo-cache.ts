@@ -20,10 +20,19 @@ import { CARD_IMAGE_PROTOCOL } from './card-image-cache';
 const SET_CODE_RE = /^[A-Za-z0-9_]+$/;
 
 export const SET_LOGO_URLS: Record<string, string> = {
+  // ── Standard rotation ─────────────────────────────────────────
   SET_1946: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt10f09c595ce577d9/67ad9eabf887ad6cef9fafb2/HS_32p0_TED_Logo_Launch_enUS_5500x3422.png',
   SET_1952: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltc155dfa7caf0d8c5/6830c93e8c0c5b0a6cfff161/HS_32p0_TED_Logo_Launch_enUS_5500x3422.png',
   SET_1957: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt5525df54955ed8dd/68d2fab6d848545506c3c36b/HS_34p0_AtT_Logo_Launch_enUS.png',
   SET_1980: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltfb9c4943510acbec/697428b3a4d899c3e0ea5e94/HS_35p0_CATA_Logo_Launch_enUS.png',
+
+  // ── Wild — recent rotation (still have a live /expansions-adventures page) ─
+  SET_1935: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt932b62c77646094b/67c6539f1d41b823c047b59b/enUS.png', // The Great Dark Beyond
+  SET_1905: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltf47e4b4f43c7112c/67c653e1596fa442d7f3c253/enUS.png', // Perils in Paradise
+  SET_1897: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt70f8dfc1b94f729c/65b16dd27aa31f5699d29bae/HS_29p0_WBWS_Launch_enUS_5500x3422.png', // Whizbang's Workshop
+  SET_1892: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt1e00dbdaf5caa1d8/651d83af903f1f4cb0f8af6a/HS_28p0_Logo_launch_enUS_5500x3422.png', // Showdown in the Badlands
+  SET_1858: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/bltb60e1a588969540b/683e2bd27809205ae5d588ff/HS_27p0_Logo_launch_enUS_5500x3422.png', // TITANS
+  SET_1809: 'https://blz-contentstack-images.akamaized.net/v3/assets/bltc965041283bac56c/blt3c76dcbed75a462a/63ff7de4998e686b2e53b8ef/HS_26p0_Logo_launch_enUS.png', // Festival of Legends
 };
 
 export interface CachedSetLogo {
