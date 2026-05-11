@@ -37,7 +37,14 @@ export interface DeckSyncDependencies {
   resolveHeroClass: (cardId: string) => HeroClass | null;
   /** Card collectibility lookup forwarded into `DeckStore.saveFromLive`. */
   collectibleLookup: SaveFromLiveCardLookup;
+  /**
+   * Hearthstone may report an empty m_decks map briefly while the collection
+   * scene is still hydrating. Retry empty reads before treating them as real.
+   */
+  liveReadRetryDelaysMs?: readonly number[];
 }
+
+const DEFAULT_LIVE_READ_RETRY_DELAYS_MS = [250, 750, 1_500] as const;
 
 const FORMAT_BY_TYPE: Record<number, Format> = {
   1: 'Wild',
@@ -60,7 +67,7 @@ export function createDeckSyncService(deps: DeckSyncDependencies): {
 
       let live: readonly LiveDeck[] | null = null;
       try {
-        live = await deps.getLiveDecks();
+        live = await readLiveDecks(deps);
       } catch (err) {
         console.warn('[deck-sync] getLiveDecks failed', err);
         result.source = 'error';
@@ -105,4 +112,21 @@ export function createDeckSyncService(deps: DeckSyncDependencies): {
       return result;
     },
   };
+}
+
+async function readLiveDecks(
+  deps: DeckSyncDependencies,
+): Promise<readonly LiveDeck[] | null> {
+  const delays = deps.liveReadRetryDelaysMs ?? DEFAULT_LIVE_READ_RETRY_DELAYS_MS;
+  for (let attempt = 0; ; attempt += 1) {
+    const live = await deps.getLiveDecks();
+    if (live === null || live.length > 0 || attempt >= delays.length) {
+      return live;
+    }
+    await sleep(delays[attempt]!);
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

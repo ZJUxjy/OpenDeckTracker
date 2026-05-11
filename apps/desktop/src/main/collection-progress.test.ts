@@ -105,6 +105,28 @@ describe('collection:get-progress IPC handler', () => {
     expect(result.standard.length + result.wild.length).toBeGreaterThan(0);
   });
 
+  it('retries an empty live collection before falling back', async () => {
+    const owned: CollectionCard[] = [{ dbfId: 1, count: 1, premium: 0 }];
+    const responses: Array<CollectionCard[] | null> = [[], owned];
+    const getCollection = vi.fn(async () => responses.shift() ?? null);
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection,
+      liveReadRetryDelaysMs: [0],
+    });
+
+    const result = (await invoke()) as {
+      mirrorAlive: boolean;
+      source: string;
+      standard: { setCode: string; ownedCopies: number }[];
+    };
+
+    expect(getCollection).toHaveBeenCalledTimes(2);
+    expect(result.mirrorAlive).toBe(true);
+    expect(result.source).toBe('live');
+    expect(result.standard.find((r) => r.setCode === 'SET_1810')?.ownedCopies).toBe(1);
+  });
+
   it('returns mirrorAlive=false without throwing when getCollection rejects', async () => {
     registerCollectionProgressIpc({
       cardDb: makeCardDb(sampleCards) as never,

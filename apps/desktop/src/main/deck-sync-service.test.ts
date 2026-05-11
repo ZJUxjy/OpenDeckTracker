@@ -109,6 +109,26 @@ describe('deck-sync-service', () => {
     expect(store.saveFromLive).toHaveBeenCalledTimes(2);
   });
 
+  it('retries an empty live deck list before syncing', async () => {
+    const store = makeStore();
+    const reads: Array<readonly LiveDeck[] | null> = [[], [liveDeck({ id: 7 })]];
+    const getLiveDecks = vi.fn(async () => reads.shift() ?? null);
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks,
+      resolveHeroClass: () => 'HUNTER',
+      collectibleLookup: () => ({ collectible: true }),
+      liveReadRetryDelaysMs: [0],
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(getLiveDecks).toHaveBeenCalledTimes(2);
+    expect(result.source).toBe('live');
+    expect(result.synced).toBe(1);
+    expect(store.saveFromLive).toHaveBeenCalledTimes(1);
+  });
+
   it('skips token-only decks without aborting the rest', async () => {
     const store = makeStore();
     const svc = createDeckSyncService({

@@ -19,26 +19,28 @@ export interface CollectionProgressDeps {
   getCollection: () => Promise<CollectionCard[] | null>;
   /** Optional cache; when provided, fall back to cached counts when live read fails. */
   snapshotStore?: CollectionSnapshotStore;
+  /**
+   * Hearthstone can expose CollectionManager before m_collectibleCards is
+   * populated. Empty live reads are treated as "not ready" and retried.
+   */
+  liveReadRetryDelaysMs?: readonly number[];
 }
+
+const DEFAULT_LIVE_READ_RETRY_DELAYS_MS = [250, 750, 1_500] as const;
 
 export function registerCollectionProgressIpc(deps: CollectionProgressDeps): void {
   ipcMain.handle('collection:get-progress', async (): Promise<CollectionProgressResponse> => {
     const allCollectible = deps.cardDb.search({ collectible: true, limit: 100_000 });
 
-    let liveCollection: CollectionCard[] | null = null;
-    let liveOk = true;
-    try {
-      liveCollection = await deps.getCollection();
-    } catch {
-      liveOk = false;
-    }
+    const liveCollection = await readLiveCollection(deps);
+    const liveOk = liveCollection !== null && liveCollection.length > 0;
 
     let source: CollectionProgressSource;
     let owned: readonly CollectionCard[] = [];
     let lastUpdatedAt: number | null = null;
     let mirrorAlive: boolean;
 
-    if (liveOk && liveCollection !== null) {
+    if (liveOk) {
       mirrorAlive = true;
       owned = liveCollection;
       source = 'live';
@@ -79,4 +81,25 @@ export function registerCollectionProgressIpc(deps: CollectionProgressDeps): voi
 
     return { standard, wild, mirrorAlive, source, lastUpdatedAt };
   });
+}
+
+async function readLiveCollection(
+  deps: CollectionProgressDeps,
+): Promise<CollectionCard[] | null> {
+  const delays = deps.liveReadRetryDelaysMs ?? DEFAULT_LIVE_READ_RETRY_DELAYS_MS;
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const live = await deps.getCollection();
+      if (live === null || live.length > 0 || attempt >= delays.length) {
+        return live;
+      }
+    } catch {
+      return null;
+    }
+    await sleep(delays[attempt]!);
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
