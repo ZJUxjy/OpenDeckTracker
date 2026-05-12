@@ -11,6 +11,8 @@ describe('AppearanceApplyEffect', () => {
     document.documentElement.style.removeProperty('--accent-dim');
     document.documentElement.removeAttribute('data-density');
     document.documentElement.removeAttribute('data-ui-style');
+    document.documentElement.classList.remove('dark');
+    document.documentElement.style.colorScheme = '';
   });
 
   it('sets data-density, data-ui-style, and accent custom properties from store state on mount', async () => {
@@ -77,6 +79,28 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
+
+    act(() => {
+      useAppearanceStore.getState().setUiStyle('wechat');
+    });
+
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('wechat');
+  });
+
+  it('forces dark color-scheme while the WeChat UI style is active', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', uiStyle: 'wechat', accent: 'blue', theme: 'light' }),
+    );
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.colorScheme).toBe('dark');
   });
 
   it('inline properties persist after unmount (page-lifetime behavior)', async () => {

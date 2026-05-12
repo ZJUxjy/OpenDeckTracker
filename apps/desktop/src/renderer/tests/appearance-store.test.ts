@@ -44,6 +44,19 @@ describe('appearance store', () => {
     expect(fresh.getState().theme).toBe('dark');
   });
 
+  it('round-trips the WeChat UI style through localStorage', async () => {
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    useAppearanceStore.getState().setUiStyle('wechat');
+
+    const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
+    expect(stored.uiStyle).toBe('wechat');
+
+    vi.resetModules();
+    const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
+    expect(fresh.getState().uiStyle).toBe('wechat');
+  });
+
   it('falls back to defaults on malformed JSON', async () => {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, '{ this is not json');
 

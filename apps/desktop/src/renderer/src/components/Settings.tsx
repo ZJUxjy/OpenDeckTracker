@@ -126,7 +126,7 @@ export function Settings() {
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.uiStyle.description')}</p>
                     </div>
                     <div className="flex rounded-md border border-border bg-overlay-surface p-1">
-                      {(['tavern', 'macos'] as UiStyle[]).map((opt) => (
+                      {(['tavern', 'macos', 'wechat'] as UiStyle[]).map((opt) => (
                         <button
                           key={opt}
                           type="button"

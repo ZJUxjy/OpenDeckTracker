@@ -229,7 +229,8 @@
         "title": "界面风格",
         "description": "切换视觉皮肤，同时保持当前布局不变。",
         "tavern": "酒馆",
-        "macos": "macOS"
+        "macos": "macOS",
+        "wechat": "微信深色"
       },
       "accent": {
         "title": "强调色",

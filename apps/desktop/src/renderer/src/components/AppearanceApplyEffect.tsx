@@ -53,7 +53,7 @@ function applyUiStyle(uiStyle: UiStyle) {
  *     for OS prefers-color-scheme changes when in 'system' mode
  *   • accent — writes --accent / --accent-dim to <html> in the
  *     mode-correct variant
- *   • UI style — writes data-ui-style="tavern|macos"
+ *   • UI style — writes data-ui-style="tavern|macos|wechat"
  *   • density — writes data-density="..."
  *   • initial overlay enable — re-fires the IPC once on app boot if
  *     the user had overlays enabled previously
@@ -75,11 +75,13 @@ export function AppearanceApplyEffect() {
   }, [uiStyle]);
 
   // Theme + accent — accent depends on the resolved dark state, so
-  // they're in the same effect.
+  // they're in the same effect. The WeChat skin is intentionally dark.
   useEffect(() => {
-    const isDark = resolveIsDark(theme);
+    const isDark = uiStyle === 'wechat' ? true : resolveIsDark(theme);
     applyTheme(isDark);
     applyAccent(accent, isDark);
+
+    if (uiStyle === 'wechat') return;
 
     // System mode: listen for OS preference flips
     if (theme !== 'system') return;
@@ -98,7 +100,7 @@ export function AppearanceApplyEffect() {
       if (mq.removeEventListener) mq.removeEventListener('change', handler);
       else mq.removeListener?.(handler);
     };
-  }, [theme, accent]);
+  }, [theme, accent, uiStyle]);
 
   // Boot-time overlay re-enable
   useEffect(() => {

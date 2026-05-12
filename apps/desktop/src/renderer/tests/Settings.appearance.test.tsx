@@ -41,6 +41,7 @@ describe('Settings — Appearance category', () => {
 
     expect(screen.getByText('Tavern')).toBeInTheDocument();
     expect(screen.getByText('macOS')).toBeInTheDocument();
+    expect(screen.getByText('WeChat Dark')).toBeInTheDocument();
 
     expect(screen.getByText('Comfortable')).toBeInTheDocument();
     expect(screen.getByText('Compact')).toBeInTheDocument();
@@ -73,6 +74,15 @@ describe('Settings — Appearance category', () => {
     expect(useAppearanceStore.getState().uiStyle).toBe('macos');
   });
 
+  it('clicking WeChat UI style button updates UI style', async () => {
+    renderSettings();
+
+    fireEvent.click(screen.getByText('WeChat Dark'));
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().uiStyle).toBe('wechat');
+  });
+
   it('clicking Light theme button updates theme to light', async () => {
     renderSettings();
 
@@ -89,6 +99,7 @@ describe('Settings — Appearance category', () => {
     expect(screen.getByText('紧凑')).toBeInTheDocument();
     expect(screen.getByText('酒馆')).toBeInTheDocument();
     expect(screen.getByText('macOS')).toBeInTheDocument();
+    expect(screen.getByText('微信深色')).toBeInTheDocument();
     // Theme picker labels in Chinese
     expect(screen.getByText('浅色')).toBeInTheDocument();
     expect(screen.getByText('深色')).toBeInTheDocument();

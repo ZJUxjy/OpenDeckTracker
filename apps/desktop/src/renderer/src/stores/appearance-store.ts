@@ -5,7 +5,7 @@ export const APPEARANCE_STORAGE_KEY = 'hdt.appearance';
 export type Density = 'comfortable' | 'compact';
 
 /** Visual skin only; layout stays the current top-navigation structure. */
-export type UiStyle = 'tavern' | 'macos';
+export type UiStyle = 'tavern' | 'macos' | 'wechat';
 
 /** macOS Sequoia / iOS system accent colors. */
 export type Accent =
@@ -53,7 +53,7 @@ const DEFAULT_GAME_OVERLAY = false;
 const DEFAULT_GAME_OVERLAY_OPPONENT = false;
 
 const VALID_DENSITIES = new Set<string>(['comfortable', 'compact']);
-const VALID_UI_STYLES = new Set<string>(['tavern', 'macos']);
+const VALID_UI_STYLES = new Set<string>(['tavern', 'macos', 'wechat']);
 const VALID_ACCENTS = new Set<string>(['blue','red','orange','yellow','green','mint','purple','pink']);
 const VALID_THEMES = new Set<string>(['system', 'light', 'dark']);
 

@@ -229,7 +229,8 @@
         "title": "UI style",
         "description": "Switch the visual skin while keeping the current layout.",
         "tavern": "Tavern",
-        "macos": "macOS"
+        "macos": "macOS",
+        "wechat": "WeChat Dark"
       },
       "accent": {
         "title": "Accent color",

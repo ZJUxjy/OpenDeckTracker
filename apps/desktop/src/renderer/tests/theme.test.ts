@@ -141,4 +141,11 @@ describe('macOS Liquid Glass theme tokens', () => {
     expect(themeCss).toMatch(/\.tahoe-card\s*\{/);
     expect(themeCss).toMatch(/\.tahoe-active-pill\s*\{/);
   });
+
+  it('declares the WeChat UI skin without replacing the top-navigation layout', () => {
+    expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s*\{/);
+    expect(themeCss).toMatch(/--wechat-green:\s*#12B76A;/);
+    expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s+\.tavern-topbar\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s+\.tavern-main-surface\s*\{/);
+  });
 });
