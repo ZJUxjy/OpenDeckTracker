@@ -833,3 +833,440 @@ body[data-overlay="true"] .tracker-panel-shell aside > div:last-child:not([data-
   padding-top: 0.375rem;
   padding-bottom: 0.375rem;
 }
+
+/* Hearthstone tavern refresh, adapted from the Figma main window and overlay panels. */
+:root {
+  --tavern-bg: #170d14;
+  --tavern-bg-deep: #0d090f;
+  --tavern-bg-raised: #24121c;
+  --tavern-surface: rgba(23, 13, 20, 0.96);
+  --tavern-surface-strong: rgba(36, 17, 27, 0.98);
+  --tavern-panel: rgba(28, 17, 24, 0.94);
+  --tavern-panel-soft: rgba(37, 25, 34, 0.88);
+  --tavern-row: rgba(30, 20, 29, 0.86);
+  --tavern-row-hover: rgba(65, 41, 50, 0.94);
+  --tavern-row-border: rgba(116, 77, 43, 0.46);
+  --tavern-border: #9a6334;
+  --tavern-border-muted: #563721;
+  --tavern-border-hi: #d08b48;
+  --tavern-gold: #f0c778;
+  --tavern-gold-soft: #f3d28d;
+  --tavern-text: #f7ead2;
+  --tavern-text-dim: #c9b696;
+  --tavern-text-mute: #8d7d69;
+  --tavern-blue: #5da7ff;
+  --tavern-blue-deep: #15385a;
+  --tavern-purple: #b680ff;
+  --tavern-success: #62d66e;
+  --tavern-danger: #ff655e;
+  --tavern-shadow: 0 28px 68px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(240, 199, 120, 0.08);
+}
+
+.tavern-app-shell,
+.tavern-app-shell *,
+body[data-overlay="true"] .tracker-panel-shell,
+body[data-overlay="true"] .tracker-panel-shell * {
+  letter-spacing: 0;
+}
+
+.tavern-app-shell {
+  color: var(--tavern-text);
+  background:
+    linear-gradient(90deg, rgba(240, 199, 120, 0.05) 0 1px, transparent 1px 86px),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 2px, rgba(0, 0, 0, 0.08) 2px 8px),
+    linear-gradient(180deg, #2a101d 0%, var(--tavern-bg) 48%, var(--tavern-bg-deep) 100%);
+}
+
+.tavern-app-frame {
+  height: calc(100% - 20px);
+  margin: 10px;
+  min-height: 0;
+  overflow: hidden;
+  border: 3px solid var(--tavern-border);
+  border-radius: 20px;
+  background: var(--tavern-surface);
+  box-shadow: var(--tavern-shadow);
+}
+
+.tavern-topbar {
+  background:
+    linear-gradient(180deg, rgba(58, 27, 40, 0.98), var(--tavern-surface-strong));
+  border-bottom: 2px solid var(--tavern-border-muted);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 231, 167, 0.12),
+    0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.tavern-brand-plaque {
+  min-width: 244px;
+  height: 52px;
+  padding: 0 16px;
+  color: var(--tavern-gold-soft);
+  border: 2px solid var(--tavern-border-hi);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(67, 34, 43, 0.98), rgba(35, 15, 23, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 231, 167, 0.22),
+    0 6px 16px rgba(0, 0, 0, 0.28);
+}
+
+.tavern-brand-icon {
+  color: var(--tavern-bg);
+  border-radius: 8px;
+  background: linear-gradient(180deg, var(--tavern-gold-soft), var(--tavern-border-hi));
+  box-shadow: 0 0 0 1px rgba(255, 231, 167, 0.36), inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+}
+
+.tavern-main-tabs {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tavern-main-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tavern-nav-tab {
+  min-width: 112px;
+  height: 48px;
+  padding: 0 14px;
+  color: var(--tavern-text-dim);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: rgba(15, 10, 16, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.tavern-nav-tab:hover {
+  color: var(--tavern-text);
+  border-color: rgba(208, 139, 72, 0.55);
+  background: rgba(55, 31, 39, 0.82);
+}
+
+.tavern-nav-tab[data-active="true"] {
+  color: var(--tavern-gold-soft);
+  border-color: var(--tavern-border-hi);
+  background: linear-gradient(180deg, rgba(86, 39, 50, 0.96), rgba(42, 18, 29, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 231, 167, 0.20),
+    0 0 0 1px rgba(240, 199, 120, 0.10),
+    0 8px 18px rgba(0, 0, 0, 0.24);
+}
+
+.tavern-status-pill,
+.tavern-player-pill,
+.tavern-settings-button {
+  height: 42px;
+  border: 1px solid rgba(154, 99, 52, 0.56);
+  border-radius: 9px;
+  background: rgba(18, 11, 17, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 231, 167, 0.08);
+}
+
+.tavern-status-pill {
+  max-width: 190px;
+  padding: 0 12px;
+}
+
+.tavern-player-pill {
+  max-width: 230px;
+  padding: 0 10px;
+}
+
+.tavern-settings-button {
+  color: var(--tavern-text-dim);
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.tavern-settings-button:hover,
+.tavern-settings-button[data-active="true"] {
+  color: var(--tavern-gold-soft);
+  border-color: var(--tavern-border-hi);
+  background: rgba(55, 31, 39, 0.92);
+}
+
+.tavern-avatar-medallion {
+  color: var(--tavern-text);
+  border: 1px solid rgba(208, 139, 72, 0.42);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(118, 80, 168, 0.92), rgba(38, 27, 70, 0.96));
+}
+
+.tavern-main-surface {
+  background:
+    linear-gradient(180deg, rgba(14, 9, 14, 0.42), rgba(13, 9, 15, 0.82)),
+    var(--tavern-bg);
+}
+
+.tavern-app-shell .tahoe-card {
+  color: var(--tavern-text);
+  border: 1px solid var(--tavern-border-muted);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(42, 27, 36, 0.96), rgba(21, 13, 20, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 231, 167, 0.10),
+    0 18px 34px rgba(0, 0, 0, 0.24);
+}
+
+.tavern-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-width: 2px;
+  border-color: var(--tavern-border);
+}
+
+.tavern-hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(240, 199, 120, 0.11), transparent 38%),
+    linear-gradient(180deg, rgba(93, 167, 255, 0.07), transparent 52%);
+  pointer-events: none;
+}
+
+.tavern-hero-card > *,
+.tavern-stat-card > * {
+  position: relative;
+}
+
+.tavern-stat-card {
+  min-height: 136px;
+}
+
+.tavern-stat-card:hover {
+  border-color: var(--tavern-border-hi);
+}
+
+body[data-overlay="true"] .tracker-panel-shell {
+  background:
+    linear-gradient(180deg, rgba(38, 24, 34, 0.90), rgba(20, 13, 22, 0.90)) !important;
+  backdrop-filter: blur(24px) saturate(145%) brightness(94%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%) brightness(94%);
+  border: 3px solid var(--tavern-border) !important;
+  border-radius: 18px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 231, 167, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.38),
+    0 20px 54px rgba(0, 0, 0, 0.45) !important;
+}
+
+body[data-overlay="true"] .tracker-panel-shell::before {
+  display: none;
+}
+
+body[data-overlay="true"] .tracker-panel-shell::after {
+  background:
+    linear-gradient(180deg, rgba(255, 231, 167, 0.14), rgba(255, 231, 167, 0.00) 24%),
+    linear-gradient(90deg, rgba(93, 167, 255, 0.08), transparent 42%) !important;
+}
+
+body[data-overlay="true"] .tracker-panel-tabbar {
+  gap: 6px !important;
+  padding: 9px 10px 7px !important;
+  background: rgba(16, 10, 17, 0.64) !important;
+  border-bottom: 1px solid rgba(154, 99, 52, 0.58) !important;
+}
+
+body[data-overlay="true"] .tracker-tab-pill {
+  min-height: 32px;
+  flex: 1 1 0;
+  justify-content: center;
+  color: var(--tavern-text-dim) !important;
+  border: 1px solid rgba(154, 99, 52, 0.36);
+  border-radius: 8px !important;
+  background: rgba(16, 10, 17, 0.62) !important;
+}
+
+body[data-overlay="true"] .tracker-tab-pill:hover {
+  color: var(--tavern-text) !important;
+  border-color: rgba(208, 139, 72, 0.68);
+  background: rgba(47, 28, 37, 0.88) !important;
+}
+
+body[data-overlay="true"] .tracker-tab-pill[data-active="true"] {
+  color: var(--tavern-gold-soft) !important;
+  border-color: var(--tavern-border-hi);
+  background: linear-gradient(180deg, rgba(91, 39, 52, 0.96), rgba(37, 17, 27, 0.96)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 231, 167, 0.18);
+}
+
+body[data-overlay="true"] [data-testid="tracker-tab-effects-badge"],
+body[data-overlay="true"] [data-testid="tracker-tab-graveyard-badge"] {
+  color: var(--tavern-bg) !important;
+  background: var(--tavern-gold) !important;
+}
+
+body[data-overlay="true"] .tavern-overlay-panel-inner {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body[data-overlay="true"] .tavern-overlay-header {
+  padding: 14px 16px 12px !important;
+  background:
+    linear-gradient(180deg, rgba(42, 23, 34, 0.78), rgba(20, 13, 22, 0.38)) !important;
+  border-bottom: 1px solid rgba(154, 99, 52, 0.42) !important;
+}
+
+body[data-overlay="true"] [data-overlay-list-area] {
+  padding: 10px !important;
+  background: rgba(15, 10, 17, 0.78) !important;
+  border-top: 1px solid rgba(154, 99, 52, 0.34) !important;
+}
+
+body[data-overlay="true"] .tavern-overlay-footer {
+  background: rgba(15, 10, 17, 0.64) !important;
+  border-top: 1px solid rgba(154, 99, 52, 0.42) !important;
+}
+
+body[data-overlay="true"] .tracker-panel-shell h3 {
+  color: var(--tavern-gold) !important;
+}
+
+body[data-overlay="true"] .tavern-board-card {
+  border: 1px solid var(--tavern-border-hi) !important;
+  border-radius: 10px !important;
+  color: var(--tavern-purple) !important;
+  background:
+    linear-gradient(180deg, rgba(59, 36, 54, 0.90), rgba(21, 13, 21, 0.88)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 231, 167, 0.12),
+    0 8px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+body[data-overlay="true"] .tavern-board-card[data-tone="success"] {
+  color: var(--tavern-success) !important;
+  border-color: rgba(98, 214, 110, 0.68) !important;
+  background: linear-gradient(180deg, rgba(38, 75, 44, 0.56), rgba(17, 26, 20, 0.86)) !important;
+}
+
+body[data-overlay="true"] .tavern-board-card[data-tone="danger"] {
+  color: var(--tavern-danger) !important;
+  border-color: rgba(255, 101, 94, 0.72) !important;
+  background: linear-gradient(180deg, rgba(92, 34, 37, 0.62), rgba(26, 14, 18, 0.88)) !important;
+}
+
+body[data-overlay="true"] .tavern-face-chip {
+  border-color: currentColor !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+body[data-overlay="true"] .tavern-card-row {
+  min-height: 38px;
+  margin-bottom: 6px;
+  color: var(--tavern-text);
+  border: 1px solid var(--tavern-row-border) !important;
+  border-radius: 7px !important;
+  background:
+    linear-gradient(90deg, rgba(12, 8, 13, 0.88), var(--tavern-row) 44%, rgba(12, 8, 13, 0.18)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 231, 167, 0.06);
+}
+
+body[data-overlay="true"] .tavern-card-row:hover {
+  border-color: var(--tavern-border-hi) !important;
+  background:
+    linear-gradient(90deg, rgba(33, 21, 29, 0.96), var(--tavern-row-hover) 44%, rgba(33, 21, 29, 0.20)) !important;
+  box-shadow:
+    inset 3px 0 0 var(--tavern-border-hi),
+    inset 0 1px 0 rgba(255, 231, 167, 0.10) !important;
+}
+
+body[data-overlay="true"] .tavern-card-row[data-row-state="exiting"] {
+  border-color: rgba(208, 139, 72, 0.80) !important;
+}
+
+body[data-overlay="true"] .tavern-mana-gem {
+  color: var(--tavern-text) !important;
+  border: 1px solid rgba(240, 199, 120, 0.70) !important;
+  border-radius: 6px !important;
+  background:
+    linear-gradient(180deg, rgba(72, 148, 225, 0.96), var(--tavern-blue-deep)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+body[data-overlay="true"] .tavern-mana-gem-opponent {
+  background: linear-gradient(180deg, rgba(154, 55, 58, 0.96), rgba(72, 23, 31, 0.96)) !important;
+}
+
+body[data-overlay="true"] .tavern-row-count {
+  min-width: 28px;
+  padding: 2px 6px;
+  color: var(--tavern-gold-soft) !important;
+  border: 1px solid rgba(208, 139, 72, 0.54);
+  border-radius: 6px;
+  background: rgba(18, 11, 17, 0.64);
+  text-align: center;
+}
+
+body[data-overlay="true"] .tavern-empty-row {
+  color: var(--tavern-text-dim) !important;
+  border-color: rgba(154, 99, 52, 0.42) !important;
+  background: rgba(18, 11, 17, 0.58) !important;
+}
+
+@media (max-width: 1180px) {
+  .tavern-brand-plaque {
+    min-width: 204px;
+  }
+
+  .tavern-nav-tab {
+    min-width: 96px;
+    padding: 0 10px;
+  }
+
+  .tavern-status-pill {
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 980px) {
+  .tavern-topbar {
+    padding-right: 24px !important;
+  }
+
+  .tavern-brand-plaque {
+    min-width: 52px;
+    padding: 0 8px;
+  }
+
+  .tavern-brand-plaque > span:last-child,
+  .tavern-nav-tab span {
+    display: none;
+  }
+
+  .tavern-nav-tab {
+    min-width: 48px;
+    width: 48px;
+    padding: 0;
+  }
+
+  .tavern-player-pill span {
+    max-width: 96px;
+  }
+}
+
+@media (max-width: 760px) {
+  .tavern-status-pill {
+    display: none;
+  }
+
+  .tavern-player-pill {
+    max-width: 132px;
+  }
+
+  .tavern-app-frame {
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+}

@@ -44,11 +44,11 @@ export function Dashboard() {
     : t('dashboard.watcherDisconnected');
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto p-6 gap-4">
+    <div className="tavern-dashboard flex-1 flex flex-col overflow-y-auto p-6 gap-4">
       {/* Hero card — Outcast DH or whichever deck is active. Wrapped in
           a Tahoe card so the chromatic rim + dual-shadow gives it the
           Tahoe 26 floating-glass look. */}
-      <div className="tahoe-card px-7 py-6">
+      <div className="tahoe-card tavern-hero-card px-7 py-6">
         <div className="flex items-center gap-3 mb-3">
           <span className="bg-accent-translucent text-accent text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-widest">
             {t('dashboard.badge')}
@@ -71,7 +71,7 @@ export function Dashboard() {
       </div>
 
       {/* 4 stat cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="tavern-stat-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label={t('dashboard.cardsLeft')}
           icon={<Layers size={18} className="text-accent" />}
@@ -125,7 +125,7 @@ interface StatCardProps {
 
 function StatCard({ label, icon, value }: StatCardProps) {
   return (
-    <div className="tahoe-card p-5 kpi-card">
+    <div className="tahoe-card tavern-stat-card p-5 kpi-card">
       <div className="flex items-center justify-between mb-3">
         <span className="text-text-tertiary text-[11px] font-semibold uppercase tracking-wider">
           {label}

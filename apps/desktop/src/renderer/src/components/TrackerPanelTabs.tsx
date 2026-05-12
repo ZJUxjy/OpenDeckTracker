@@ -147,7 +147,7 @@ function TabPill({ testId, active, onClick, children }: TabPillProps) {
       onClick={onClick}
       style={NO_DRAG}
       className={clsx(
-        'px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-colors',
+        'tracker-tab-pill px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-colors',
         active
           ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
           : 'text-text-mute hover:text-text hover:bg-overlay-surface',

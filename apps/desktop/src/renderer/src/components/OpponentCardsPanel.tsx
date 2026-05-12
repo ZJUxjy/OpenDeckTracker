@@ -91,10 +91,11 @@ export function OpponentCardsPanel({
   const [predictions, setPredictions] = useState<readonly OpponentDeckPrediction[]>([]);
   useEffect(() => {
     let cancelled = false;
-    void window.hdt.opponentDeckPrediction?.get().then((result) => {
+    const predictionApi = window.hdt?.opponentDeckPrediction;
+    void predictionApi?.get().then((result) => {
       if (!cancelled) setPredictions(result);
     });
-    const off = window.hdt.opponentDeckPrediction?.onUpdate?.((updated) => {
+    const off = predictionApi?.onUpdate?.((updated) => {
       setPredictions(updated);
     });
     return () => {
@@ -108,9 +109,9 @@ export function OpponentCardsPanel({
   );
 
   return (
-    <aside className="w-full bg-overlay-surface border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
+    <aside className="tavern-overlay-panel-inner w-full bg-overlay-surface border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
       <div
-        className="bg-overlay-surface p-3 border-b border-border cursor-move"
+        className="tavern-overlay-header bg-overlay-surface p-3 border-b border-border cursor-move"
         style={{ WebkitAppRegion: 'drag' } as CSSProperties}
       >
         <div className="text-xs text-text-dim font-semibold uppercase tracking-wider mb-1">
@@ -184,7 +185,8 @@ function OpponentBoardAttackSummary({
   return (
     <div
       data-testid="opposing-board-attack-card"
-      className={clsx('mt-3 rounded border px-3 py-2', toneClass)}
+      data-tone={isLethal ? 'danger' : isShort ? 'success' : 'neutral'}
+      className={clsx('tavern-board-card tavern-board-card-opponent mt-3 rounded border px-3 py-2', toneClass)}
       title={t('boardAttack.hint')}
     >
       <div className="text-[11px] font-bold uppercase tracking-wider">
@@ -199,7 +201,7 @@ function OpponentBoardAttackSummary({
         </span>
         <span
           className={clsx(
-            'inline-flex items-baseline gap-1.5 rounded-md border border-current/30 bg-current/10 px-2 py-1',
+            'tavern-face-chip inline-flex items-baseline gap-1.5 rounded-md border border-current/30 bg-current/10 px-2 py-1',
             isInformationalChip ? 'opacity-75' : 'opacity-100',
           )}
           title={t('boardAttack.faceHint')}
@@ -284,7 +286,7 @@ function OpponentCardRow({
     <div
       ref={ref}
       data-testid="opponent-card-row"
-      className="relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-overlay-hover hover:shadow-[inset_3px_0_0_var(--accent)]"
+      className="tavern-card-row relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-overlay-hover hover:shadow-[inset_3px_0_0_var(--accent)]"
       onMouseEnter={() => ref.current && onMouseEnter(card.cardId, ref.current)}
       onMouseLeave={onMouseLeave}
     >
@@ -297,7 +299,7 @@ function OpponentCardRow({
         className="absolute right-0 top-0 h-full w-3/5 object-cover object-right pointer-events-none select-none z-0"
       />
       <div className="relative z-10 flex items-center px-2 py-1.5 w-full">
-        <div className="w-7 h-7 rounded bg-red/15 flex items-center justify-center text-red font-bold text-xs shrink-0">
+        <div className="tavern-mana-gem tavern-mana-gem-opponent w-7 h-7 rounded bg-red/15 flex items-center justify-center text-red font-bold text-xs shrink-0">
           {def?.cost ?? 0}
         </div>
         <div className="flex-1 min-w-0 px-2">
@@ -316,7 +318,7 @@ function OpponentCardRow({
           </div>
         </div>
         {card.count > 1 && (
-          <div className="text-xs text-text font-bold shrink-0">x{card.count}</div>
+          <div className="tavern-row-count text-xs text-text font-bold shrink-0">x{card.count}</div>
         )}
       </div>
     </div>

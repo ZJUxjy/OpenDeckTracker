@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
-import { Monitor, User } from 'lucide-react';
-import { Outlet, useLocation } from 'react-router';
-import { Sidebar } from './components/Sidebar';
+import { useEffect, type CSSProperties } from 'react';
+import { AppWindow, BarChart2, BookOpen, Crown, Layers, Monitor, Settings, User } from 'lucide-react';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { DeckSelectDialog } from './components/DeckSelectDialog';
 import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
@@ -10,8 +9,16 @@ import { useAppearanceStore } from './stores/appearance-store';
 
 import { useHearthWatcherStatus } from './hooks/use-hearthwatcher-status';
 
+const MAIN_NAV_ITEMS = [
+  { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker' },
+  { id: 'decks', icon: Layers, labelKey: 'sidebar.decks' },
+  { id: 'stats', icon: BarChart2, labelKey: 'sidebar.stats' },
+  { id: 'collection', icon: BookOpen, labelKey: 'sidebar.collection' },
+];
+
 export default function App() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const isOverlay =
     location.pathname === '/overlay' ||
@@ -70,43 +77,93 @@ export default function App() {
     );
   }
 
-  return (
-    <div className="flex h-screen text-text font-sans overflow-hidden">
-      {!isOverlay && <Sidebar />}
+  const isActive = (id: string) =>
+    location.pathname === `/${id}` || (id === 'tracker' && location.pathname === '/');
+  const statusIconClass = isAlive ? (battleTag ? 'text-green' : 'text-amber') : 'text-text-mute';
 
-      <div className="flex-1 flex flex-col min-w-0">
+  return (
+    <div className="tavern-app-shell flex h-screen text-text font-sans overflow-hidden">
+      <div className="tavern-app-frame flex h-full min-w-0 flex-1 flex-col">
         <header
-          className="tahoe-topbar h-14 flex items-center justify-between pl-6 pr-[148px] shrink-0 z-50 relative"
-          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+          className="tavern-topbar tahoe-topbar flex h-[72px] shrink-0 items-center gap-4 px-5 pr-[148px] relative z-50"
+          style={{ WebkitAppRegion: 'drag' } as CSSProperties}
         >
-          <div className="flex items-center space-x-4">
-            <span className="text-text-dim text-sm font-medium uppercase tracking-wider flex items-center">
-              <Monitor size={16} className={`mr-2 ${isAlive ? (battleTag ? 'text-green' : 'text-amber') : 'text-text-mute'}`} />
-              {isAlive
-                ? (battleTag ? t('app.status.gameRunning') : t('app.status.notLoggedIn'))
-                : t('app.status.gameNotRunning')}
+          <button
+            type="button"
+            className="tavern-brand-plaque flex shrink-0 items-center gap-3"
+            style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
+            onClick={() => {
+              void navigate('/tracker');
+            }}
+          >
+            <span className="tavern-brand-icon flex h-10 w-10 items-center justify-center">
+              <Crown size={22} />
             </span>
-          </div>
+            <span className="text-lg font-black tracking-wide">OpenDeckTracker</span>
+          </button>
+
+          <nav
+            aria-label="Primary"
+            className="tavern-main-tabs flex min-w-0 flex-1 items-center justify-center gap-2"
+            style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
+          >
+            {MAIN_NAV_ITEMS.map((item) => {
+              const active = isActive(item.id);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-active={active ? 'true' : 'false'}
+                  className="tavern-nav-tab flex items-center justify-center gap-2"
+                  onClick={() => {
+                    void navigate(`/${item.id}`);
+                  }}
+                >
+                  <item.icon size={17} className="shrink-0" />
+                  <span className="truncate">{t(item.labelKey)}</span>
+                </button>
+              );
+            })}
+          </nav>
 
           <div
-            className="flex items-center space-x-4"
-            style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+            className="tavern-topbar-actions flex shrink-0 items-center gap-3"
+            style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
           >
+            <span className="tavern-status-pill text-text-dim flex items-center text-sm font-semibold uppercase">
+              <Monitor size={16} className={`mr-2 ${statusIconClass}`} />
+              <span className="truncate">
+                {isAlive
+                  ? (battleTag ? t('app.status.gameRunning') : t('app.status.notLoggedIn'))
+                  : t('app.status.gameNotRunning')}
+              </span>
+            </span>
             <div
               data-testid="player-identity"
-              className="flex items-center space-x-2 px-3 py-1.5 rounded-md hover:bg-white/5 transition-colors select-none"
+              className="tavern-player-pill flex items-center gap-2 select-none"
             >
-              <div className="w-7 h-7 bg-indigo-500 rounded flex items-center justify-center text-white font-bold text-sm">
+              <div className="tavern-avatar-medallion flex h-8 w-8 items-center justify-center font-bold text-sm">
                 <User size={16} />
               </div>
-              <span className="text-sm font-medium text-text">
+              <span className="max-w-[160px] truncate text-sm font-semibold text-text">
                 {displayBattleTag?.fullBattleTag ?? t('app.playerFallback')}
               </span>
             </div>
+            <button
+              type="button"
+              aria-label={t('sidebar.settings')}
+              data-active={isActive('settings') ? 'true' : 'false'}
+              className="tavern-settings-button flex h-10 w-10 items-center justify-center"
+              onClick={() => {
+                void navigate('/settings');
+              }}
+            >
+              <Settings size={18} />
+            </button>
           </div>
         </header>
 
-        <main className="flex-1 flex overflow-hidden relative">
+        <main className="tavern-main-surface flex-1 flex overflow-hidden relative">
           <Outlet />
         </main>
       </div>
