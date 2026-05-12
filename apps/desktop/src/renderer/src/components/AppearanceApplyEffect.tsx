@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useAppearanceStore, ACCENT_PALETTE, type Theme } from '../stores/appearance-store';
+import { useAppearanceStore, ACCENT_PALETTE, type Theme, type UiStyle } from '../stores/appearance-store';
 
 /** Resolves the effective dark-mode boolean for a given theme preference. */
 function resolveIsDark(theme: Theme): boolean {
@@ -42,18 +42,25 @@ function applyDensity(density: string) {
   document.documentElement.setAttribute('data-density', density);
 }
 
+function applyUiStyle(uiStyle: UiStyle) {
+  if (typeof document === 'undefined') return;
+  document.documentElement.setAttribute('data-ui-style', uiStyle);
+}
+
 /**
  * Bridges the appearance store to the DOM. Handles:
  *   • theme (light / dark / system) — toggles `.dark` class + listens
  *     for OS prefers-color-scheme changes when in 'system' mode
  *   • accent — writes --accent / --accent-dim to <html> in the
  *     mode-correct variant
+ *   • UI style — writes data-ui-style="tavern|macos"
  *   • density — writes data-density="..."
  *   • initial overlay enable — re-fires the IPC once on app boot if
  *     the user had overlays enabled previously
  */
 export function AppearanceApplyEffect() {
   const density = useAppearanceStore((s) => s.density);
+  const uiStyle = useAppearanceStore((s) => s.uiStyle);
   const accent = useAppearanceStore((s) => s.accent);
   const theme = useAppearanceStore((s) => s.theme);
   const bootOverlayFired = useRef(false);
@@ -62,6 +69,10 @@ export function AppearanceApplyEffect() {
   useEffect(() => {
     applyDensity(density);
   }, [density]);
+
+  useEffect(() => {
+    applyUiStyle(uiStyle);
+  }, [uiStyle]);
 
   // Theme + accent — accent depends on the resolved dark state, so
   // they're in the same effect.

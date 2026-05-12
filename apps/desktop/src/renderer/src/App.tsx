@@ -84,8 +84,15 @@ export default function App() {
   return (
     <div className="tavern-app-shell flex h-screen text-text font-sans overflow-hidden">
       <div className="tavern-app-frame flex h-full min-w-0 flex-1 flex-col">
+        <div
+          className="tavern-window-titlebar flex h-8 shrink-0 items-center px-5 pr-[148px]"
+          aria-hidden
+          style={{ WebkitAppRegion: 'drag' } as CSSProperties}
+        >
+          <div className="tavern-titlebar-grip h-px w-full" />
+        </div>
         <header
-          className="tavern-topbar tahoe-topbar flex h-[72px] shrink-0 items-center gap-4 px-5 pr-[148px] relative z-50"
+          className="tavern-topbar tahoe-topbar flex h-16 shrink-0 items-center gap-4 px-5 relative z-50"
           style={{ WebkitAppRegion: 'drag' } as CSSProperties}
         >
           <button

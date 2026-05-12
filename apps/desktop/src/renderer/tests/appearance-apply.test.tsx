@@ -10,12 +10,13 @@ describe('AppearanceApplyEffect', () => {
     document.documentElement.style.removeProperty('--accent');
     document.documentElement.style.removeProperty('--accent-dim');
     document.documentElement.removeAttribute('data-density');
+    document.documentElement.removeAttribute('data-ui-style');
   });
 
-  it('sets data-density and accent custom properties from store state on mount', async () => {
+  it('sets data-density, data-ui-style, and accent custom properties from store state on mount', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'compact', accent: 'purple' }),
+      JSON.stringify({ density: 'compact', uiStyle: 'macos', accent: 'purple' }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -25,6 +26,7 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
     expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.purple.accentDark);
     expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(ACCENT_PALETTE.purple.accentDimDark);
   });
@@ -58,6 +60,23 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
+  });
+
+  it('updates data-ui-style when UI style changes', async () => {
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('tavern');
+
+    act(() => {
+      useAppearanceStore.getState().setUiStyle('macos');
+    });
+
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
   });
 
   it('inline properties persist after unmount (page-lifetime behavior)', async () => {

@@ -225,6 +225,12 @@
         "comfortable": "Comfortable",
         "compact": "Compact"
       },
+      "uiStyle": {
+        "title": "UI style",
+        "description": "Switch the visual skin while keeping the current layout.",
+        "tavern": "Tavern",
+        "macos": "macOS"
+      },
       "accent": {
         "title": "Accent color",
         "description": "Used for buttons, links, and selected items."

@@ -4,6 +4,9 @@ export const APPEARANCE_STORAGE_KEY = 'hdt.appearance';
 
 export type Density = 'comfortable' | 'compact';
 
+/** Visual skin only; layout stays the current top-navigation structure. */
+export type UiStyle = 'tavern' | 'macos';
+
 /** macOS Sequoia / iOS system accent colors. */
 export type Accent =
   | 'blue'
@@ -43,12 +46,14 @@ export const ACCENT_PALETTE: Record<Accent, AccentValues> = {
 };
 
 const DEFAULT_DENSITY: Density = 'comfortable';
+const DEFAULT_UI_STYLE: UiStyle = 'tavern';
 const DEFAULT_ACCENT: Accent = 'blue';
 const DEFAULT_THEME: Theme = 'system';
 const DEFAULT_GAME_OVERLAY = false;
 const DEFAULT_GAME_OVERLAY_OPPONENT = false;
 
 const VALID_DENSITIES = new Set<string>(['comfortable', 'compact']);
+const VALID_UI_STYLES = new Set<string>(['tavern', 'macos']);
 const VALID_ACCENTS = new Set<string>(['blue','red','orange','yellow','green','mint','purple','pink']);
 const VALID_THEMES = new Set<string>(['system', 'light', 'dark']);
 
@@ -62,6 +67,7 @@ const LEGACY_ACCENT_MIGRATION: Record<string, Accent> = {
 
 interface StoredShape {
   density: Density;
+  uiStyle: UiStyle;
   accent: Accent;
   theme: Theme;
   gameOverlay: boolean;
@@ -70,6 +76,7 @@ interface StoredShape {
 
 interface AppearanceState extends StoredShape {
   setDensity: (next: Density) => void;
+  setUiStyle: (next: UiStyle) => void;
   setAccent: (next: Accent) => void;
   setTheme: (next: Theme) => void;
   setGameOverlay: (next: boolean) => void;
@@ -87,6 +94,7 @@ interface AppearanceState extends StoredShape {
 
 const DEFAULTS: StoredShape = {
   density: DEFAULT_DENSITY,
+  uiStyle: DEFAULT_UI_STYLE,
   accent: DEFAULT_ACCENT,
   theme: DEFAULT_THEME,
   gameOverlay: DEFAULT_GAME_OVERLAY,
@@ -109,6 +117,7 @@ function readStored(): StoredShape {
     const parsed = JSON.parse(raw);
     return {
       density: VALID_DENSITIES.has(parsed?.density) ? parsed.density : DEFAULT_DENSITY,
+      uiStyle: VALID_UI_STYLES.has(parsed?.uiStyle) ? parsed.uiStyle : DEFAULT_UI_STYLE,
       accent: coerceAccent(parsed?.accent),
       theme: VALID_THEMES.has(parsed?.theme) ? parsed.theme : DEFAULT_THEME,
       gameOverlay: typeof parsed?.gameOverlay === 'boolean' ? parsed.gameOverlay : DEFAULT_GAME_OVERLAY,
@@ -133,45 +142,51 @@ const initial = readStored();
 
 export const useAppearanceStore = create<AppearanceState>((set) => ({
   density: initial.density,
+  uiStyle: initial.uiStyle,
   accent: initial.accent,
   theme: initial.theme,
   gameOverlay: initial.gameOverlay,
   gameOverlayOpponent: initial.gameOverlayOpponent,
   setDensity: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: next, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    writeStored({ density: next, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
     set({ density: next });
+  },
+  setUiStyle: (next) => {
+    const s = useAppearanceStore.getState();
+    writeStored({ density: s.density, uiStyle: next, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    set({ uiStyle: next });
   },
   setAccent: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, accent: next, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: next, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
     set({ accent: next });
   },
   setTheme: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, accent: s.accent, theme: next, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: next, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
     set({ theme: next });
   },
   setGameOverlay: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, accent: s.accent, theme: s.theme, gameOverlay: next, gameOverlayOpponent: s.gameOverlayOpponent });
+    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: next, gameOverlayOpponent: s.gameOverlayOpponent });
     set({ gameOverlay: next });
     window.hdt?.overlay?.setEnabled?.(next);
   },
   setGameOverlayOpponent: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
+    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
     set({ gameOverlayOpponent: next });
     window.hdt?.overlay?.setEnabledOpponent?.(next);
   },
   silentSetGameOverlay: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, accent: s.accent, theme: s.theme, gameOverlay: next, gameOverlayOpponent: s.gameOverlayOpponent });
+    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: next, gameOverlayOpponent: s.gameOverlayOpponent });
     set({ gameOverlay: next });
   },
   silentSetGameOverlayOpponent: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
+    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
     set({ gameOverlayOpponent: next });
   },
 }));

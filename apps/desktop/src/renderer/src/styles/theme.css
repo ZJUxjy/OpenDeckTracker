@@ -878,14 +878,30 @@ body[data-overlay="true"] .tracker-panel-shell * {
 }
 
 .tavern-app-frame {
-  height: calc(100% - 20px);
-  margin: 10px;
+  height: calc(100% - 10px);
+  margin: 0 10px 10px;
   min-height: 0;
   overflow: hidden;
   border: 3px solid var(--tavern-border);
-  border-radius: 20px;
+  border-top: none;
+  border-radius: 0 0 20px 20px;
   background: var(--tavern-surface);
   box-shadow: var(--tavern-shadow);
+}
+
+.tavern-window-titlebar {
+  background:
+    linear-gradient(180deg, rgba(49, 22, 35, 0.98), rgba(29, 14, 23, 0.98));
+  border-bottom: 1px solid rgba(154, 99, 52, 0.44);
+  box-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 231, 167, 0.08);
+}
+
+.tavern-titlebar-grip {
+  opacity: 0.8;
+  background:
+    linear-gradient(90deg, transparent, rgba(240, 199, 120, 0.18) 24%, rgba(93, 167, 255, 0.12) 50%, rgba(240, 199, 120, 0.18) 76%, transparent);
 }
 
 .tavern-topbar {
@@ -1269,4 +1285,374 @@ body[data-overlay="true"] .tavern-empty-row {
     margin: 0;
     border-radius: 0;
   }
+}
+
+/* macOS skin for the same post-refresh layout. The class names remain
+   tavern-* because they describe layout roles now; data-ui-style controls
+   only visual treatment. */
+:root[data-ui-style="macos"] .tavern-app-shell {
+  color: var(--text);
+  background:
+    linear-gradient(135deg, rgba(0, 122, 255, 0.05), transparent 34%),
+    linear-gradient(315deg, rgba(175, 82, 222, 0.05), transparent 36%);
+}
+
+:root[data-ui-style="macos"].dark .tavern-app-shell {
+  background:
+    linear-gradient(135deg, rgba(10, 132, 255, 0.08), transparent 34%),
+    linear-gradient(315deg, rgba(191, 90, 242, 0.06), transparent 36%);
+}
+
+:root[data-ui-style="macos"] .tavern-app-frame {
+  border: 1px solid var(--border-hairline);
+  border-top: none;
+  border-radius: 0 0 var(--radius-3xl) var(--radius-3xl);
+  background: rgba(250, 250, 252, 0.34);
+  box-shadow: var(--shadow-window);
+  backdrop-filter: blur(42px) saturate(180%);
+  -webkit-backdrop-filter: blur(42px) saturate(180%);
+}
+
+:root[data-ui-style="macos"].dark .tavern-app-frame {
+  background: rgba(28, 28, 30, 0.28);
+}
+
+:root[data-ui-style="macos"] .tavern-window-titlebar {
+  background: rgba(250, 250, 252, 0.38);
+  border-bottom: 1px solid var(--border-separator);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 6px 18px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+}
+
+:root[data-ui-style="macos"].dark .tavern-window-titlebar {
+  background: rgba(28, 28, 30, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+:root[data-ui-style="macos"] .tavern-titlebar-grip {
+  opacity: 0.75;
+  background:
+    linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.18) 28%, rgba(175, 82, 222, 0.14) 50%, rgba(0, 122, 255, 0.18) 72%, transparent);
+}
+
+:root[data-ui-style="macos"] .tavern-topbar {
+  background: rgba(250, 250, 252, 0.32);
+  border-bottom: 1px solid var(--border-separator);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    0 8px 20px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+}
+
+:root[data-ui-style="macos"].dark .tavern-topbar {
+  background: rgba(28, 28, 30, 0.30);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 8px 20px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-ui-style="macos"] .tavern-brand-plaque {
+  color: var(--text);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow:
+    inset 1px 1px 0 rgba(180, 200, 220, 0.24),
+    inset -1px -1px 0 rgba(220, 190, 200, 0.16),
+    var(--shadow-raised);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+:root[data-ui-style="macos"].dark .tavern-brand-plaque {
+  background: rgba(38, 38, 40, 0.36);
+}
+
+:root[data-ui-style="macos"] .tavern-brand-icon {
+  color: var(--text-on-accent);
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+:root[data-ui-style="macos"] .tavern-nav-tab {
+  color: var(--text-dim);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-ui-style="macos"] .tavern-nav-tab:hover {
+  color: var(--text);
+  border-color: var(--border-hairline);
+  background: var(--overlay-hover);
+}
+
+:root[data-ui-style="macos"] .tavern-nav-tab[data-active="true"] {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--overlay-surface);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    var(--shadow-raised);
+}
+
+:root[data-ui-style="macos"].dark .tavern-nav-tab[data-active="true"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    var(--shadow-raised);
+}
+
+:root[data-ui-style="macos"] .tavern-status-pill,
+:root[data-ui-style="macos"] .tavern-player-pill,
+:root[data-ui-style="macos"] .tavern-settings-button {
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.30);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+:root[data-ui-style="macos"].dark .tavern-status-pill,
+:root[data-ui-style="macos"].dark .tavern-player-pill,
+:root[data-ui-style="macos"].dark .tavern-settings-button {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+:root[data-ui-style="macos"] .tavern-settings-button {
+  color: var(--text-dim);
+}
+
+:root[data-ui-style="macos"] .tavern-settings-button:hover,
+:root[data-ui-style="macos"] .tavern-settings-button[data-active="true"] {
+  color: var(--accent);
+  border-color: var(--border-strong);
+  background: var(--overlay-hover);
+}
+
+:root[data-ui-style="macos"] .tavern-avatar-medallion {
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+}
+
+:root[data-ui-style="macos"] .tavern-main-surface {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+}
+
+:root[data-ui-style="macos"].dark .tavern-main-surface {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.10));
+}
+
+:root[data-ui-style="macos"] .tavern-app-shell .tahoe-card {
+  color: var(--text);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-2xl);
+  background: rgba(255, 255, 255, 0.46);
+  box-shadow:
+    inset 1px 1px 0 rgba(180, 200, 220, 0.25),
+    inset -1px -1px 0 rgba(220, 190, 200, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    var(--shadow-elevated);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+:root[data-ui-style="macos"].dark .tavern-app-shell .tahoe-card {
+  background: rgba(38, 38, 40, 0.38);
+  box-shadow:
+    inset 1px 1px 0 rgba(180, 220, 255, 0.30),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    var(--shadow-elevated);
+}
+
+:root[data-ui-style="macos"] .tavern-hero-card {
+  border-width: 1px;
+  border-color: var(--border-hairline);
+}
+
+:root[data-ui-style="macos"] .tavern-hero-card::before {
+  background:
+    linear-gradient(90deg, var(--accent-translucent), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 34%);
+}
+
+:root[data-ui-style="macos"] .tavern-stat-card:hover {
+  border-color: var(--border-strong);
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-shell {
+  background: var(--glass-overlay) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-3xl) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(180, 200, 220, 0.38),
+    inset -1px -1px 0 rgba(220, 190, 200, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50),
+    0 24px 64px -8px rgba(0, 0, 0, 0.20) !important;
+}
+
+:root[data-ui-style="macos"].dark body[data-overlay="true"] .tracker-panel-shell {
+  backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
+  box-shadow:
+    inset 1px 1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 24px 64px -8px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-shell::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.00) 18%
+  ) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-tabbar {
+  gap: 4px !important;
+  padding: 8px 8px 6px !important;
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-separator) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-tab-pill {
+  color: var(--text-mute) !important;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-tab-pill:hover {
+  color: var(--text) !important;
+  border-color: var(--border-hairline);
+  background: var(--overlay-hover) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-tab-pill[data-active="true"] {
+  color: var(--text-on-accent) !important;
+  border-color: transparent;
+  background: var(--accent) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] [data-testid="tracker-tab-effects-badge"],
+:root[data-ui-style="macos"] body[data-overlay="true"] [data-testid="tracker-tab-graveyard-badge"] {
+  color: var(--accent) !important;
+  background: var(--surface-content) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-overlay-panel-inner {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-overlay-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-separator) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] [data-overlay-list-area] {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-top: 1px solid var(--border-separator) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+:root[data-ui-style="macos"].dark body[data-overlay="true"] [data-overlay-list-area] {
+  background: rgba(42, 42, 45, 0.78) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-overlay-footer {
+  background: transparent !important;
+  border-top: 1px solid var(--border-separator) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-shell h3 {
+  color: var(--text-mute) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-board-card {
+  color: var(--accent) !important;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent) !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--accent-dim) !important;
+  box-shadow: var(--shadow-raised) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-board-card[data-tone="success"] {
+  color: var(--green) !important;
+  border-color: color-mix(in srgb, var(--green) 38%, transparent) !important;
+  background: color-mix(in srgb, var(--green) 16%, transparent) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-board-card[data-tone="danger"] {
+  color: var(--red) !important;
+  border-color: color-mix(in srgb, var(--red) 38%, transparent) !important;
+  background: color-mix(in srgb, var(--red) 16%, transparent) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-face-chip {
+  background: color-mix(in srgb, currentColor 10%, transparent) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-card-row {
+  min-height: 36px;
+  color: var(--text);
+  border: 1px solid var(--border-separator) !important;
+  border-radius: var(--radius-sm) !important;
+  background:
+    linear-gradient(90deg, var(--overlay-surface), var(--overlay-surface) 46%, transparent) !important;
+  box-shadow: none;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-card-row:hover {
+  border-color: var(--border-strong) !important;
+  background:
+    linear-gradient(90deg, var(--overlay-hover), var(--overlay-hover) 46%, transparent) !important;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-card-row[data-row-state="exiting"] {
+  border-color: var(--accent) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-mana-gem {
+  color: var(--text-on-accent) !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--accent) !important;
+  box-shadow: var(--shadow-raised);
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-mana-gem-opponent {
+  background: var(--red) !important;
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-row-count {
+  color: var(--text) !important;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-sm);
+  background: var(--overlay-surface);
+}
+
+:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-empty-row {
+  color: var(--text-dim) !important;
+  border-color: var(--border-hairline) !important;
+  background: var(--overlay-surface) !important;
 }

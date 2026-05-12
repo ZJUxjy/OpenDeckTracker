@@ -2,7 +2,7 @@
 import { Info, Monitor, Palette } from 'lucide-react';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
-import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme } from '../stores/appearance-store';
+import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme, type UiStyle } from '../stores/appearance-store';
 
 const ALL_ACCENTS: Accent[] = ['blue', 'red', 'orange', 'yellow', 'green', 'mint', 'purple', 'pink'];
 const ACCENT_LABELS: Record<Accent, string> = {
@@ -34,11 +34,13 @@ export function Settings() {
   const languagePreference = useI18nStore((state) => state.languagePreference);
   const setLanguagePreference = useI18nStore((state) => state.setLanguagePreference);
   const density = useAppearanceStore((state) => state.density);
+  const uiStyle = useAppearanceStore((state) => state.uiStyle);
   const accent = useAppearanceStore((state) => state.accent);
   const theme = useAppearanceStore((state) => state.theme);
   const gameOverlay = useAppearanceStore((state) => state.gameOverlay);
   const gameOverlayOpponent = useAppearanceStore((state) => state.gameOverlayOpponent);
   const setDensity = useAppearanceStore((state) => state.setDensity);
+  const setUiStyle = useAppearanceStore((state) => state.setUiStyle);
   const setAccent = useAppearanceStore((state) => state.setAccent);
   const setTheme = useAppearanceStore((state) => state.setTheme);
   const setGameOverlay = useAppearanceStore((state) => state.setGameOverlay);
@@ -112,6 +114,30 @@ export function Settings() {
                           }`}
                         >
                           {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* UI style */}
+                  <div className="settings-row tahoe-card flex items-center justify-between p-4 gap-4">
+                    <div>
+                      <h3 className="text-text font-medium">{t('settings.appearance.uiStyle.title')}</h3>
+                      <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.uiStyle.description')}</p>
+                    </div>
+                    <div className="flex rounded-md border border-border bg-overlay-surface p-1">
+                      {(['tavern', 'macos'] as UiStyle[]).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setUiStyle(opt)}
+                          className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                            uiStyle === opt
+                              ? 'bg-accent text-text-on-accent'
+                              : 'text-text-dim hover:text-text'
+                          }`}
+                        >
+                          {t(`settings.appearance.uiStyle.${opt}`)}
                         </button>
                       ))}
                     </div>

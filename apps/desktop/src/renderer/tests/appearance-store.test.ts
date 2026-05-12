@@ -7,10 +7,11 @@ describe('appearance store', () => {
     vi.resetModules();
   });
 
-  it('defaults to comfortable density, blue accent, system theme when nothing is stored', async () => {
+  it('defaults to comfortable density, tavern UI style, blue accent, system theme when nothing is stored', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
+    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -19,12 +20,14 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     useAppearanceStore.getState().setDensity('compact');
+    useAppearanceStore.getState().setUiStyle('macos');
     useAppearanceStore.getState().setAccent('purple');
     useAppearanceStore.getState().setTheme('dark');
 
     expect(localStorage.getItem(APPEARANCE_STORAGE_KEY)).toBe(
       JSON.stringify({
         density: 'compact',
+        uiStyle: 'macos',
         accent: 'purple',
         theme: 'dark',
         gameOverlay: false,
@@ -36,6 +39,7 @@ describe('appearance store', () => {
     vi.resetModules();
     const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
     expect(fresh.getState().density).toBe('compact');
+    expect(fresh.getState().uiStyle).toBe('macos');
     expect(fresh.getState().accent).toBe('purple');
     expect(fresh.getState().theme).toBe('dark');
   });
@@ -46,6 +50,7 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
+    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -53,12 +58,13 @@ describe('appearance store', () => {
   it('falls back to defaults on unknown enum values', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'spacious', accent: 'banana', theme: 'sepia' }),
+      JSON.stringify({ density: 'spacious', uiStyle: 'winamp', accent: 'banana', theme: 'sepia' }),
     );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
+    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -109,6 +115,15 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().gameOverlay).toBe(false);
+  });
+
+  it('handles legacy payload without uiStyle gracefully', async () => {
+    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density: 'compact', accent: 'purple' }));
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
+    expect(useAppearanceStore.getState().density).toBe('compact');
   });
 
   it('fires window.hdt.overlay.setEnabled when setGameOverlay is called', async () => {

@@ -225,6 +225,12 @@
         "comfortable": "舒适",
         "compact": "紧凑"
       },
+      "uiStyle": {
+        "title": "界面风格",
+        "description": "切换视觉皮肤，同时保持当前布局不变。",
+        "tavern": "酒馆",
+        "macos": "macOS"
+      },
       "accent": {
         "title": "强调色",
         "description": "用于按钮、链接和选中项。"
