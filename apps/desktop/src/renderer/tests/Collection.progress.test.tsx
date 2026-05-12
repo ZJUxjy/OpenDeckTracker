@@ -1,6 +1,7 @@
 import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SetProgress } from '@hdt/core';
+import type { CardDef } from '@hdt/hearthdb';
 import { I18nProvider } from '../src/i18n';
 import { Collection } from '../src/components/Collection';
 
@@ -10,6 +11,9 @@ interface ProgressResponse {
   mirrorAlive: boolean;
   source?: 'live' | 'cache' | 'empty';
   lastUpdatedAt?: number | null;
+  lastSyncedAt?: number | null;
+  liveReadSkipped?: boolean;
+  ownedCards?: Array<{ dbfId: number; count: number; premium: number }>;
 }
 
 function row(overrides: Partial<SetProgress> & { setCode: string }): SetProgress {
@@ -24,6 +28,14 @@ function row(overrides: Partial<SetProgress> & { setCode: string }): SetProgress
 }
 
 function mockProgressApi(response: ProgressResponse): void {
+  const normalized: ProgressResponse = {
+    source: response.mirrorAlive ? 'live' : 'empty',
+    lastUpdatedAt: null,
+    lastSyncedAt: null,
+    liveReadSkipped: false,
+    ownedCards: [],
+    ...response,
+  };
   (window as unknown as { hdt: typeof window.hdt }).hdt = {
     ...(window.hdt ?? ({} as typeof window.hdt)),
     cards: {
@@ -31,7 +43,7 @@ function mockProgressApi(response: ProgressResponse): void {
       search: vi.fn(async () => []),
     } as unknown as typeof window.hdt.cards,
     collection: {
-      getProgress: vi.fn(async () => response),
+      getProgress: vi.fn(async () => normalized),
     } as unknown as typeof window.hdt.collection,
   };
 }
@@ -269,6 +281,59 @@ describe('Collection — set progress', () => {
     expect(await screen.findByText('Core')).toBeInTheDocument();
   });
 
+  it('uses automatic cooldown cache without syncing live decks or scheduling retries', async () => {
+    vi.useFakeTimers();
+    try {
+      const getProgress = vi.fn(async (_request?: unknown) => ({
+        standard: [row({ setCode: 'SET_1810', ownedCopies: 1 })],
+        wild: [],
+        mirrorAlive: false,
+        source: 'cache' as const,
+        lastUpdatedAt: 1_000,
+        lastSyncedAt: 2_000,
+        liveReadSkipped: true,
+        ownedCards: [{ dbfId: 100, count: 1, premium: 0 }],
+      }));
+      const syncFromLive = vi.fn(async () => ({
+        ok: true,
+        source: 'live' as const,
+        synced: 0,
+        skippedNonCollectible: 0,
+        skippedUnknownClass: 0,
+        startedAt: 0,
+        finishedAt: 0,
+      }));
+      (window as unknown as { hdt: typeof window.hdt }).hdt = {
+        ...(window.hdt ?? ({} as typeof window.hdt)),
+        cards: { search: vi.fn(async () => []) } as unknown as typeof window.hdt.cards,
+        collection: { getProgress } as unknown as typeof window.hdt.collection,
+        decks: {
+          ...(window.hdt.decks ?? ({} as typeof window.hdt.decks)),
+          syncFromLive,
+        },
+      };
+
+      renderWithLocale('en-US');
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(screen.getByText('Core')).toBeInTheDocument();
+      expect(getProgress).toHaveBeenCalledTimes(1);
+      expect(getProgress.mock.calls[0]?.[0]).toEqual({ cooldownMs: 600_000 });
+      expect(syncFromLive).not.toHaveBeenCalled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(2_000);
+        await Promise.resolve();
+      });
+      expect(getProgress).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps showing progress when live deck sync rejects', async () => {
     const syncFromLive = vi.fn().mockRejectedValue(new Error('boom'));
     mockProgressApi({
@@ -352,13 +417,65 @@ describe('Collection — set progress', () => {
     expect(screen.getByText("Whizbang's Workshop")).toBeInTheDocument();
   });
 
-  it('clicking the sync button calls decks.syncFromLive, collection.getProgress, and hearthmirror.getCollection in parallel', async () => {
-    const getProgress = vi.fn(async () => ({
+  it('uses cached ownedCards from collection progress in the set detail view', async () => {
+    const cachedCard = {
+      id: 'CARD_CACHED',
+      dbfId: 100,
+      name: 'Cached Card',
+      cardClass: 'MAGE',
+      type: 'SPELL',
+      collectible: true,
+      rarity: 'COMMON',
+      set: 'SET_1810',
+      cost: 2,
+    } as CardDef;
+    const search = vi.fn(async (filter?: { set?: string }) => {
+      if (filter?.set === 'SET_1810') return [cachedCard];
+      return [cachedCard];
+    });
+    const getProgress = vi.fn(async (_request?: unknown) => ({
+      standard: [
+        row({
+          setCode: 'SET_1810',
+          totalCards: 1,
+          totalCopies: 2,
+          ownedCopies: 1,
+          ownedUniqueCards: 1,
+        }),
+      ],
+      wild: [],
+      mirrorAlive: false,
+      source: 'cache' as const,
+      lastUpdatedAt: 1_000,
+      lastSyncedAt: 2_000,
+      liveReadSkipped: true,
+      ownedCards: [{ dbfId: 100, count: 1, premium: 0 }],
+    }));
+    (window as unknown as { hdt: typeof window.hdt }).hdt = {
+      ...(window.hdt ?? ({} as typeof window.hdt)),
+      cards: { search } as unknown as typeof window.hdt.cards,
+      collection: { getProgress } as unknown as typeof window.hdt.collection,
+    };
+
+    renderWithLocale('en-US');
+
+    await screen.findByText('Core');
+    fireEvent.click(screen.getByTestId('set-tile-SET_1810'));
+
+    expect(await screen.findByText('Cached Card')).toBeInTheDocument();
+    expect(screen.getByTestId('cell-owned-badge')).toHaveTextContent('Owned x1/2');
+  });
+
+  it('clicking the sync button calls decks.syncFromLive and forces collection.getProgress', async () => {
+    const getProgress = vi.fn(async (_request?: unknown) => ({
       standard: [row({ setCode: 'SET_1810', ownedCopies: 5 })],
       wild: [],
       mirrorAlive: true,
       source: 'live' as const,
       lastUpdatedAt: 1000,
+      lastSyncedAt: 1000,
+      liveReadSkipped: false,
+      ownedCards: [{ dbfId: 100, count: 1, premium: 0 }],
     }));
     const syncFromLive = vi.fn().mockResolvedValue({
       ok: true,
@@ -369,7 +486,7 @@ describe('Collection — set progress', () => {
       startedAt: 0,
       finishedAt: 0,
     });
-    const getCollection = vi.fn().mockResolvedValue([{ dbfId: 100, count: 1, premium: 0 }]);
+    const getCollectionDiagnostic = vi.fn().mockResolvedValue(null);
     (window as unknown as { hdt: typeof window.hdt }).hdt = {
       ...(window.hdt ?? ({} as typeof window.hdt)),
       cards: { search: vi.fn(async () => []) } as unknown as typeof window.hdt.cards,
@@ -380,7 +497,7 @@ describe('Collection — set progress', () => {
       },
       hearthmirror: {
         ...(window.hdt?.hearthmirror ?? ({} as typeof window.hdt.hearthmirror)),
-        getCollection,
+        getCollectionDiagnostic,
       } as unknown as typeof window.hdt.hearthmirror,
     };
 
@@ -389,8 +506,8 @@ describe('Collection — set progress', () => {
     await waitFor(() => expect(screen.getByText('Core')).toBeInTheDocument());
 
     const initialGetProgressCalls = getProgress.mock.calls.length;
-    const initialGetCollectionCalls = getCollection.mock.calls.length;
     const initialSyncCalls = syncFromLive.mock.calls.length;
+    const initialDiagnosticCalls = getCollectionDiagnostic.mock.calls.length;
 
     await act(async () => {
       fireEvent.click(screen.getByTestId('collection-sync-button'));
@@ -399,8 +516,9 @@ describe('Collection — set progress', () => {
     });
 
     expect(getProgress.mock.calls.length).toBeGreaterThan(initialGetProgressCalls);
-    expect(getCollection.mock.calls.length).toBeGreaterThan(initialGetCollectionCalls);
+    expect(getProgress.mock.calls.at(-1)?.[0]).toEqual({ force: true });
     expect(syncFromLive.mock.calls.length).toBeGreaterThan(initialSyncCalls);
+    expect(getCollectionDiagnostic.mock.calls.length).toBeGreaterThan(initialDiagnosticCalls);
   });
 
   it('sync button shows success label when getProgress resolves', async () => {

@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 describe('collection-snapshot-store', () => {
-  it('persists cards and lastUpdatedAt across reopen', () => {
+  it('persists cards, lastUpdatedAt, and lastSyncedAt across reopen', () => {
     const dbPath = join(dir, 'collection.sqlite');
     const first = createCollectionSnapshotStore(dbPath);
     first.save(
@@ -32,6 +32,7 @@ describe('collection-snapshot-store', () => {
     const snapshot = second.get();
     expect(snapshot).not.toBeNull();
     expect(snapshot!.lastUpdatedAt).toBe(5_000);
+    expect(snapshot!.lastSyncedAt).toBe(5_000);
     expect(snapshot!.cards).toHaveLength(2);
     expect(snapshot!.cards.find((c) => c.dbfId === 1)?.count).toBe(2);
     expect(snapshot!.cards.find((c) => c.dbfId === 2)?.premium).toBe(1);
@@ -183,7 +184,38 @@ describe('collection-snapshot-store', () => {
         T2,
       );
       expect(second.lastUpdatedAt).toBe(T1);
+      expect(second.lastSyncedAt).toBe(T2);
       expect(store.get()?.lastUpdatedAt).toBe(T1);
+      expect(store.get()?.lastSyncedAt).toBe(T2);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('falls back lastSyncedAt to legacy lastUpdatedAt when the meta key is missing', () => {
+    const dbPath = join(dir, 'legacy-synced-at.sqlite');
+    const db = new Database(dbPath);
+    db.exec(`
+      CREATE TABLE collection_cards (
+        dbf_id INTEGER NOT NULL,
+        count INTEGER NOT NULL,
+        premium INTEGER NOT NULL,
+        PRIMARY KEY (dbf_id, premium)
+      );
+      CREATE TABLE collection_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+      INSERT INTO collection_cards(dbf_id, count, premium) VALUES (1, 2, 0);
+      INSERT INTO collection_meta(key, value) VALUES ('lastUpdatedAt', '5000');
+    `);
+    db.close();
+
+    const store = createCollectionSnapshotStore(dbPath);
+    try {
+      const snapshot = store.get();
+      expect(snapshot?.lastUpdatedAt).toBe(5_000);
+      expect(snapshot?.lastSyncedAt).toBe(5_000);
     } finally {
       store.close();
     }

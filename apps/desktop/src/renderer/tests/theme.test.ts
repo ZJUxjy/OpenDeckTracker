@@ -148,4 +148,10 @@ describe('macOS Liquid Glass theme tokens', () => {
     expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s+\.tavern-topbar\s*\{/);
     expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s+\.tavern-main-surface\s*\{/);
   });
+
+  it('keeps the tavern desktop shell from drawing a full-window gold frame', () => {
+    expect(themeCss).toMatch(
+      /:root\[data-ui-style="tavern"\]\s+\.tavern-app-frame\s*\{[\s\S]*border:\s*0;/,
+    );
+  });
 });

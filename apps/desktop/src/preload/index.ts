@@ -24,6 +24,21 @@ type PopularDecksSyncStartResult =
   | { ok: false; error: string };
 
 type PopularDecksSyncStatus = { inFlight: boolean; lastFetchedAt: string | null };
+type CollectionProgressRequest = {
+  force?: boolean;
+  cooldownMs?: number;
+};
+
+type CollectionProgressResult = {
+  standard: SetProgress[];
+  wild: SetProgress[];
+  mirrorAlive: boolean;
+  source: 'live' | 'cache' | 'empty';
+  lastUpdatedAt: number | null;
+  lastSyncedAt: number | null;
+  liveReadSkipped: boolean;
+  ownedCards: CollectionCard[];
+};
 import type {
   CreateDeckInput,
   DeckTrackerEvent,
@@ -238,13 +253,8 @@ const api = {
     },
   },
   collection: {
-    getProgress: (): Promise<{
-      standard: SetProgress[];
-      wild: SetProgress[];
-      mirrorAlive: boolean;
-      source: 'live' | 'cache' | 'empty';
-      lastUpdatedAt: number | null;
-    }> => ipcRenderer.invoke('collection:get-progress'),
+    getProgress: (request?: CollectionProgressRequest): Promise<CollectionProgressResult> =>
+      ipcRenderer.invoke('collection:get-progress', request),
   },
   overlay: {
     setEnabled: (enabled: boolean): Promise<void> =>

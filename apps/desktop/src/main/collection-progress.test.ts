@@ -24,10 +24,10 @@ function makeCardDb(cards: CardDef[]): { search: () => CardDef[] } {
   return { search: () => cards };
 }
 
-async function invoke(): Promise<unknown> {
+async function invoke(options?: { force?: boolean; cooldownMs?: number }): Promise<unknown> {
   const handler = mocks.handlers.get('collection:get-progress');
   if (!handler) throw new Error('handler not registered');
-  return await handler({});
+  return await handler({}, options);
 }
 
 const sampleCards: CardDef[] = [
@@ -63,6 +63,11 @@ const sampleCards: CardDef[] = [
   },
 ];
 
+const coreGrantedCards: CollectionCard[] = [
+  { dbfId: 1, count: 1, premium: 0 },
+  { dbfId: 2, count: 2, premium: 0 },
+];
+
 describe('collection:get-progress IPC handler', () => {
   it('returns standard + wild buckets and mirrorAlive=true on happy path', async () => {
     const owned: CollectionCard[] = [
@@ -74,9 +79,15 @@ describe('collection:get-progress IPC handler', () => {
       getCollection: async () => owned,
     });
 
-    const result = (await invoke()) as { standard: unknown[]; wild: unknown[]; mirrorAlive: boolean };
+    const result = (await invoke()) as {
+      standard: unknown[];
+      wild: unknown[];
+      mirrorAlive: boolean;
+      ownedCards: CollectionCard[];
+    };
 
     expect(result.mirrorAlive).toBe(true);
+    expect(result.ownedCards).toEqual(owned);
     expect(result.standard).toHaveLength(1);
     expect(result.wild).toHaveLength(1);
     expect(result.standard[0]).toMatchObject({
@@ -87,20 +98,20 @@ describe('collection:get-progress IPC handler', () => {
     expect(result.wild[0]).toMatchObject({ setCode: 'SET_12', ownedCopies: 0 });
   });
 
-  it('returns mirrorAlive=false with zero owned counts when getCollection returns null', async () => {
+  it('returns mirrorAlive=false while treating Core as fully owned when getCollection returns null', async () => {
     registerCollectionProgressIpc({
       cardDb: makeCardDb(sampleCards) as never,
       getCollection: async () => null,
     });
 
     const result = (await invoke()) as {
-      standard: { ownedCopies: number }[];
+      standard: { setCode: string; ownedCopies: number }[];
       wild: { ownedCopies: number }[];
       mirrorAlive: boolean;
     };
 
     expect(result.mirrorAlive).toBe(false);
-    expect(result.standard.every((r) => r.ownedCopies === 0)).toBe(true);
+    expect(result.standard.find((r) => r.setCode === 'SET_1810')?.ownedCopies).toBe(3);
     expect(result.wild.every((r) => r.ownedCopies === 0)).toBe(true);
     expect(result.standard.length + result.wild.length).toBeGreaterThan(0);
   });
@@ -124,7 +135,31 @@ describe('collection:get-progress IPC handler', () => {
     expect(getCollection).toHaveBeenCalledTimes(2);
     expect(result.mirrorAlive).toBe(true);
     expect(result.source).toBe('live');
-    expect(result.standard.find((r) => r.setCode === 'SET_1810')?.ownedCopies).toBe(1);
+    expect(result.standard.find((r) => r.setCode === 'SET_1810')?.ownedCopies).toBe(3);
+  });
+
+  it('caps generated Core ownership at the legal max copies', async () => {
+    const owned: CollectionCard[] = [
+      { dbfId: 2, count: 4, premium: 1 },
+      { dbfId: 3, count: 1, premium: 0 },
+    ];
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection: async () => owned,
+    });
+
+    const result = (await invoke()) as {
+      ownedCards: CollectionCard[];
+      standard: { setCode: string; ownedCopies: number }[];
+      wild: { setCode: string; ownedCopies: number }[];
+    };
+
+    expect(result.ownedCards).toEqual([
+      { dbfId: 3, count: 1, premium: 0 },
+      ...coreGrantedCards,
+    ]);
+    expect(result.standard.find((r) => r.setCode === 'SET_1810')?.ownedCopies).toBe(3);
+    expect(result.wild.find((r) => r.setCode === 'SET_12')?.ownedCopies).toBe(1);
   });
 
   it('returns mirrorAlive=false without throwing when getCollection rejects', async () => {
@@ -156,6 +191,7 @@ describe('collection:get-progress IPC handler', () => {
     const save = vi.fn((cards: readonly CollectionCard[], now?: number) => ({
       cards: [...cards],
       lastUpdatedAt: now ?? 0,
+      lastSyncedAt: now ?? 0,
     }));
     const snapshotStore = {
       get: vi.fn(() => null),
@@ -181,7 +217,7 @@ describe('collection:get-progress IPC handler', () => {
       { dbfId: 2, count: 2, premium: 0 },
     ];
     const snapshotStore = {
-      get: vi.fn(() => ({ cards: cachedCards, lastUpdatedAt: 1234 })),
+      get: vi.fn(() => ({ cards: cachedCards, lastUpdatedAt: 1234, lastSyncedAt: 5678 })),
       save: vi.fn(),
       close: vi.fn(),
     };
@@ -195,11 +231,15 @@ describe('collection:get-progress IPC handler', () => {
       mirrorAlive: boolean;
       source: string;
       lastUpdatedAt: number | null;
+      lastSyncedAt: number | null;
+      ownedCards: CollectionCard[];
       standard: { setCode: string; ownedCopies: number }[];
     };
     expect(result.mirrorAlive).toBe(false);
     expect(result.source).toBe('cache');
     expect(result.lastUpdatedAt).toBe(1234);
+    expect(result.lastSyncedAt).toBe(5678);
+    expect(result.ownedCards).toEqual(cachedCards);
     const standardSet = result.standard.find((s) => s.setCode === 'SET_1810');
     expect(standardSet?.ownedCopies).toBe(3);
   });
@@ -215,15 +255,15 @@ describe('collection:get-progress IPC handler', () => {
         .join('|');
     const snapshotStore = {
       get: vi.fn(() =>
-        stored ? { cards: [...stored.cards], lastUpdatedAt: stored.ts } : null,
+        stored ? { cards: [...stored.cards], lastUpdatedAt: stored.ts, lastSyncedAt: stored.ts } : null,
       ),
       save: vi.fn((cards: readonly CollectionCard[], now?: number) => {
         const h = computeHash(cards);
         if (stored && stored.hash === h) {
-          return { cards: [...cards], lastUpdatedAt: stored.ts };
+          return { cards: [...cards], lastUpdatedAt: stored.ts, lastSyncedAt: now ?? stored.ts };
         }
         stored = { cards: [...cards], hash: h, ts: now ?? 0 };
-        return { cards: [...cards], lastUpdatedAt: stored.ts };
+        return { cards: [...cards], lastUpdatedAt: stored.ts, lastSyncedAt: stored.ts };
       }),
       close: vi.fn(),
     };
@@ -258,11 +298,114 @@ describe('collection:get-progress IPC handler', () => {
       mirrorAlive: boolean;
       source: string;
       lastUpdatedAt: number | null;
-      standard: { ownedCopies: number }[];
+      lastSyncedAt: number | null;
+      ownedCards: CollectionCard[];
+      standard: { setCode: string; ownedCopies: number }[];
     };
     expect(result.mirrorAlive).toBe(false);
     expect(result.source).toBe('empty');
     expect(result.lastUpdatedAt).toBeNull();
-    expect(result.standard.every((r) => r.ownedCopies === 0)).toBe(true);
+    expect(result.lastSyncedAt).toBeNull();
+    expect(result.ownedCards).toEqual(coreGrantedCards);
+    expect(result.standard.find((r) => r.setCode === 'SET_1810')?.ownedCopies).toBe(3);
+  });
+
+  it('skips live reads during the automatic cooldown and returns cached ownership', async () => {
+    const cachedCards: CollectionCard[] = [{ dbfId: 1, count: 1, premium: 0 }];
+    const getCollection = vi.fn(async () => [{ dbfId: 2, count: 2, premium: 0 }]);
+    const snapshotStore = {
+      get: vi.fn(() => ({ cards: cachedCards, lastUpdatedAt: 10_000, lastSyncedAt: 12_000 })),
+      save: vi.fn(),
+      close: vi.fn(),
+    };
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection,
+      snapshotStore: snapshotStore as never,
+      now: () => 13_000,
+    });
+
+    const result = (await invoke({ cooldownMs: 10_000 })) as {
+      source: string;
+      liveReadSkipped: boolean;
+      ownedCards: CollectionCard[];
+      standard: { setCode: string; ownedCopies: number }[];
+    };
+
+    expect(getCollection).not.toHaveBeenCalled();
+    expect(result.source).toBe('cache');
+    expect(result.liveReadSkipped).toBe(true);
+    expect(result.ownedCards).toEqual(coreGrantedCards);
+    expect(result.standard.find((s) => s.setCode === 'SET_1810')?.ownedCopies).toBe(3);
+  });
+
+  it('skips repeated automatic live reads during cooldown even without a cache', async () => {
+    let now = 20_000;
+    const getCollection = vi.fn(async () => null);
+    const snapshotStore = {
+      get: vi.fn(() => null),
+      save: vi.fn(),
+      close: vi.fn(),
+    };
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection,
+      snapshotStore: snapshotStore as never,
+      now: () => now,
+    });
+
+    const first = (await invoke({ cooldownMs: 10_000 })) as {
+      source: string;
+      liveReadSkipped: boolean;
+    };
+    now += 1_000;
+    const second = (await invoke({ cooldownMs: 10_000 })) as {
+      source: string;
+      liveReadSkipped: boolean;
+      ownedCards: CollectionCard[];
+      standard: { setCode: string; ownedCopies: number }[];
+    };
+
+    expect(getCollection).toHaveBeenCalledTimes(1);
+    expect(first.source).toBe('empty');
+    expect(first.liveReadSkipped).toBe(false);
+    expect(second.source).toBe('empty');
+    expect(second.liveReadSkipped).toBe(true);
+    expect(second.ownedCards).toEqual(coreGrantedCards);
+    expect(second.standard.find((r) => r.setCode === 'SET_1810')?.ownedCopies).toBe(3);
+  });
+
+  it('force=true bypasses the automatic cooldown and refreshes from live data', async () => {
+    const cachedCards: CollectionCard[] = [{ dbfId: 1, count: 1, premium: 0 }];
+    const liveCards: CollectionCard[] = [{ dbfId: 2, count: 2, premium: 0 }];
+    const getCollection = vi.fn(async () => liveCards);
+    const snapshotStore = {
+      get: vi.fn(() => ({ cards: cachedCards, lastUpdatedAt: 10_000, lastSyncedAt: 12_000 })),
+      save: vi.fn((cards: readonly CollectionCard[], now?: number) => ({
+        cards: [...cards],
+        lastUpdatedAt: now ?? 0,
+        lastSyncedAt: now ?? 0,
+      })),
+      close: vi.fn(),
+    };
+    registerCollectionProgressIpc({
+      cardDb: makeCardDb(sampleCards) as never,
+      getCollection,
+      snapshotStore: snapshotStore as never,
+      now: () => 13_000,
+    });
+
+    const result = (await invoke({ force: true, cooldownMs: 10_000 })) as {
+      source: string;
+      liveReadSkipped: boolean;
+      ownedCards: CollectionCard[];
+      standard: { setCode: string; ownedCopies: number }[];
+    };
+
+    expect(getCollection).toHaveBeenCalledTimes(1);
+    expect(result.source).toBe('live');
+    expect(result.liveReadSkipped).toBe(false);
+    expect(result.ownedCards).toEqual(coreGrantedCards);
+    expect(result.standard.find((s) => s.setCode === 'SET_1810')?.ownedCopies).toBe(3);
   });
 });

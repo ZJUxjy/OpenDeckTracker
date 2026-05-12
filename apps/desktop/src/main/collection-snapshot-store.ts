@@ -6,6 +6,7 @@ import type { CollectionCard } from '@hdt/hearthmirror';
 export interface CollectionSnapshot {
   cards: CollectionCard[];
   lastUpdatedAt: number;
+  lastSyncedAt: number;
 }
 
 export interface CollectionSnapshotStore {
@@ -43,7 +44,7 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
 
   const selectMeta = db.prepare('SELECT key, value FROM collection_meta WHERE key = ?');
   const selectMetaPair = db.prepare(
-    "SELECT key, value FROM collection_meta WHERE key IN ('cardsHash', 'lastUpdatedAt')",
+    "SELECT key, value FROM collection_meta WHERE key IN ('cardsHash', 'lastUpdatedAt', 'lastSyncedAt')",
   );
   const selectCards = db.prepare(
     'SELECT dbf_id, count, premium FROM collection_cards ORDER BY dbf_id, premium',
@@ -57,12 +58,18 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
   );
 
   const replaceCards = db.transaction(
-    (rows: readonly CollectionCard[], lastUpdatedAt: number, cardsHash: string): void => {
+    (
+      rows: readonly CollectionCard[],
+      lastUpdatedAt: number,
+      lastSyncedAt: number,
+      cardsHash: string,
+    ): void => {
       deleteCards.run();
       for (const c of rows) {
         insertCard.run(c.dbfId, c.count, c.premium);
       }
       upsertMeta.run('lastUpdatedAt', String(lastUpdatedAt));
+      upsertMeta.run('lastSyncedAt', String(lastSyncedAt));
       upsertMeta.run('cardsHash', cardsHash);
     },
   );
@@ -94,9 +101,15 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
         if (meta === undefined) return null;
         const lastUpdatedAt = Number(meta.value);
         if (!Number.isFinite(lastUpdatedAt)) return null;
+        const lastSyncedMeta = selectMeta.get('lastSyncedAt') as MetaRow | undefined;
+        const parsedLastSyncedAt = Number(lastSyncedMeta?.value);
+        const lastSyncedAt = Number.isFinite(parsedLastSyncedAt)
+          ? parsedLastSyncedAt
+          : lastUpdatedAt;
         const rows = selectCards.all() as CardRow[];
         return {
           lastUpdatedAt,
+          lastSyncedAt,
           cards: rows.map((r) => ({ dbfId: r.dbf_id, count: r.count, premium: r.premium })),
         };
       } catch (err) {
@@ -111,6 +124,7 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
       const metaRows = selectMetaPair.all() as MetaRow[];
       let storedHash: string | undefined;
       let storedLastUpdatedAt = NaN;
+      const lastSyncedAt = now ?? Date.now();
       for (const row of metaRows) {
         if (row.key === 'cardsHash') storedHash = row.value;
         else if (row.key === 'lastUpdatedAt') storedLastUpdatedAt = Number(row.value);
@@ -120,19 +134,22 @@ export function createCollectionSnapshotStore(dbPath: string): CollectionSnapsho
         storedHash === incomingHash &&
         Number.isFinite(storedLastUpdatedAt)
       ) {
+        upsertMeta.run('lastSyncedAt', String(lastSyncedAt));
         // No content change — preserve the original "last updated"
         // timestamp so the user-visible value tracks real changes
         // instead of every successful live read.
         return {
           cards: normalizedCards.map((c) => ({ ...c })),
           lastUpdatedAt: storedLastUpdatedAt,
+          lastSyncedAt,
         };
       }
-      const lastUpdatedAt = now ?? Date.now();
-      replaceCards(normalizedCards, lastUpdatedAt, incomingHash);
+      const lastUpdatedAt = lastSyncedAt;
+      replaceCards(normalizedCards, lastUpdatedAt, lastSyncedAt, incomingHash);
       return {
         cards: normalizedCards.map((c) => ({ ...c })),
         lastUpdatedAt,
+        lastSyncedAt,
       };
     },
 

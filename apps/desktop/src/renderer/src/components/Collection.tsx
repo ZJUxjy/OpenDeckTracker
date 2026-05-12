@@ -8,6 +8,7 @@ import { CollectionSetDetail } from './CollectionSetDetail';
 import { CollectionSyncButton, type SyncButtonState } from './CollectionSyncButton';
 
 const COLLECTION_PROGRESS_RETRY_DELAYS_MS = [2_000, 5_000, 10_000] as const;
+const COLLECTION_AUTO_SYNC_COOLDOWN_MS = 10 * 60 * 1000;
 const SYNC_SUCCESS_AUTO_REVERT_MS = 2_000;
 const SYNC_ERROR_AUTO_REVERT_MS = 3_000;
 
@@ -17,7 +18,18 @@ type ProgressResponse = {
   mirrorAlive: boolean;
   source?: 'live' | 'cache' | 'empty';
   lastUpdatedAt?: number | null;
+  lastSyncedAt?: number | null;
+  liveReadSkipped?: boolean;
+  ownedCards?: Array<{ dbfId: number; count: number; premium: number }>;
 };
+
+function aggregateOwnedByDbfId(
+  rows: readonly { dbfId: number; count: number; premium: number }[] | undefined,
+): Map<number, number> {
+  const map = new Map<number, number>();
+  for (const c of rows ?? []) map.set(c.dbfId, (map.get(c.dbfId) ?? 0) + c.count);
+  return map;
+}
 
 export function Collection() {
   const { t } = useTranslation();
@@ -73,26 +85,17 @@ export function Collection() {
     return () => { cancelled = true; };
   }, []);
 
-  const loadProgress = useCallback(async (): Promise<ProgressResponse | null> => {
+  const loadProgress = useCallback(async (request?: {
+    force?: boolean;
+    cooldownMs?: number;
+  }): Promise<ProgressResponse | null> => {
     if (typeof window === 'undefined' || !window.hdt?.collection?.getProgress) return null;
-    const res = await window.hdt.collection.getProgress();
-    if (mountedRef.current) setProgress(res);
+    const res = await window.hdt.collection.getProgress(request);
+    if (mountedRef.current) {
+      setProgress(res);
+      setOwnedByDbfId(aggregateOwnedByDbfId(res.ownedCards));
+    }
     return res;
-  }, []);
-
-  // Per-card ownership for the detail view. Aggregates `count` across
-  // premium tiers (normal/golden/diamond/signature) into a single
-  // dbfId → total-copies map. Falls back to an empty map when
-  // HearthMirror is unavailable; the detail view then shows every card
-  // as unowned, which the dim overlay communicates clearly enough.
-  const loadOwnedByDbfId = useCallback(async (): Promise<Map<number, number> | null> => {
-    if (typeof window === 'undefined' || !window.hdt?.hearthmirror?.getCollection) return null;
-    const rows = await window.hdt.hearthmirror.getCollection();
-    if (rows === null) return null;
-    const map = new Map<number, number>();
-    for (const c of rows) map.set(c.dbfId, (map.get(c.dbfId) ?? 0) + c.count);
-    if (mountedRef.current) setOwnedByDbfId(map);
-    return map;
   }, []);
 
   const handleSyncClick = useCallback(async (): Promise<ProgressResponse | null> => {
@@ -110,10 +113,9 @@ export function Collection() {
       : Promise.resolve(null));
     const startedAt = Date.now();
     console.log('[collection-sync] start');
-    const [decksResult, progressResult, ownedResult, diagnosticResult] = await Promise.allSettled([
+    const [decksResult, progressResult, diagnosticResult] = await Promise.allSettled([
       decksPromise,
-      loadProgress(),
-      loadOwnedByDbfId(),
+      loadProgress({ force: true }),
       diagnosticPromise,
     ]);
     console.log('[collection-sync] decks', decksResult.status, decksResult.status === 'fulfilled' ? decksResult.value : decksResult.reason);
@@ -123,7 +125,7 @@ export function Collection() {
       standardTiles: progressResult.value?.standard.length,
       totalOwned: progressResult.value?.standard.reduce((s, r) => s + r.ownedCopies, 0),
     } : progressResult.reason);
-    console.log('[collection-sync] mirror.getCollection', ownedResult.status, ownedResult.status === 'fulfilled' ? (ownedResult.value === null ? 'null' : `${ownedResult.value.size} dbf-ids`) : ownedResult.reason);
+    console.log('[collection-sync] owned cards', progressResult.status === 'fulfilled' ? `${progressResult.value?.ownedCards?.length ?? 0} rows` : progressResult.reason);
     console.log('[hearthmirror:collection]', diagnosticResult.status, diagnosticResult.status === 'fulfilled' ? diagnosticResult.value : diagnosticResult.reason);
     console.log('[collection-sync] elapsed', Date.now() - startedAt, 'ms');
 
@@ -140,20 +142,37 @@ export function Collection() {
       if (mountedRef.current) setSyncState('idle');
     }, SYNC_ERROR_AUTO_REVERT_MS);
     return null;
-  }, [loadProgress, loadOwnedByDbfId]);
+  }, [loadProgress]);
 
-  // Auto-sync on page mount: same flow as the manual button, plus a
-  // retry schedule for the "HS still launching" case (mirror reports
-  // not-alive on first attempt, becomes live a few seconds later).
+  // Auto-load on page mount. Main-side cooldown skips expensive live
+  // reflection when a recent snapshot exists; retries are only scheduled
+  // for actual live-read misses, not for cooldown cache hits.
   useEffect(() => {
     let cancelled = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
     let retryIndex = 0;
 
     const trySync = async (): Promise<void> => {
-      const res = await handleSyncClick();
+      if (revertTimerRef.current !== null) {
+        clearTimeout(revertTimerRef.current);
+        revertTimerRef.current = null;
+      }
+      setSyncState('syncing');
+      let res: ProgressResponse | null = null;
+      try {
+        res = await loadProgress({ cooldownMs: COLLECTION_AUTO_SYNC_COOLDOWN_MS });
+        if (!cancelled && res !== null && res.source === 'live') {
+          void Promise.resolve(window.hdt?.decks?.syncFromLive?.()).catch((err) => {
+            console.warn('[collection-sync] auto deck sync failed', err);
+          });
+        }
+        if (!cancelled) setSyncState('idle');
+      } catch (err) {
+        console.warn('[collection-sync] auto progress load failed', err);
+        if (!cancelled) setSyncState('error');
+      }
       if (cancelled || res === null) return;
-      if (res.source !== 'live' && !res.mirrorAlive) {
+      if (!res.liveReadSkipped && res.source !== 'live' && !res.mirrorAlive) {
         if (retryIndex < COLLECTION_PROGRESS_RETRY_DELAYS_MS.length) {
           const delay = COLLECTION_PROGRESS_RETRY_DELAYS_MS[retryIndex]!;
           retryIndex += 1;
@@ -167,7 +186,7 @@ export function Collection() {
       cancelled = true;
       if (retryTimer !== null) clearTimeout(retryTimer);
     };
-  }, [handleSyncClick]);
+  }, [loadProgress]);
 
   const selectedRow = useMemo<SetProgress | null>(() => {
     if (selectedSetCode === null || progress === null) return null;
