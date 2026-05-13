@@ -1,320 +1,283 @@
 {
-    "schemaVersion":  2,
-    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
-    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
-    "source":  {
-                   "inputDir":  "data/cards/review/standard-history-sensitive",
-                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
-                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
-                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
-               },
-    "class":  {
-                  "id":  "MAGE",
-                  "name":  {
-                               "enUS":  "Mage",
-                               "zhCN":  "æ³•å¸ˆ"
-                           }
-              },
-    "count":  9,
-    "cards":  [
-                  {
-                      "rank":  2,
-                      "sourceRank":  2,
-                      "cardCode":  "CORE_REV_601",
-                      "cardNameZhCN":  "冰冻之触",
-                      "cardTextZhCN":  "造成$3点伤害。\u003cb\u003e注能（@）：\u003c/b\u003e将一张冰冻之触置入你的\n手牌。",
-                      "cardTextZhCNPlain":  "造成3点伤害。注能（）：将一张冰冻之触置入你的 手牌。",
-                      "cardClass":  "MAGE",
-                      "type":  "SPELL",
-                      "cost":  2,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "infuse_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState",
-                                                               "entityIdScopedCounter"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
-                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
-                                       }
-                  },
-                  {
-                      "rank":  5,
-                      "sourceRank":  5,
-                      "cardCode":  "CORE_REV_514",
-                      "cardNameZhCN":  "天定之灾克尔苏加德",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。@\u003ci\u003e（复活@个）\u003c/i\u003e",
-                      "cardTextZhCNPlain":  "战吼：复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。（复活个）",
-                      "cardClass":  "MAGE",
-                      "type":  "MINION",
-                      "cost":  8,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "specific_minion_graveyard_count",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyUnstableSkeletonDeathsThisGame",
-                                                               "friendlyBoardSpace"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本局死亡不稳定的骷髅：{count}；复活 {summonCount} 个，溢出爆炸 {overflow} 个",
-                                           "reasoningZhCN":  "克尔苏加德只关心特定衍生随从死亡数。"
-                                       }
-                  },
-                  {
-                      "rank":  7,
-                      "sourceRank":  7,
-                      "cardCode":  "EDR_941",
-                      "cardNameZhCN":  "星涌术",
-                      "cardTextZhCN":  "对一个随从造成$@点伤害。\u003ci\u003e（每有一个在本局对战中死亡的友方随从都会提升。）\u003c/i\u003e",
-                      "cardTextZhCNPlain":  "对一个随从造成点伤害。（每有一个在本局对战中死亡的友方随从都会提升。）",
-                      "cardClass":  "MAGE",
-                      "type":  "SPELL",
-                      "cost":  3,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "death_count_scaling_damage",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyMinionDeathsThisGame",
-                                                               "currentSpellDamageValue"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "当前伤害：{damage}（本局死亡友方随从 {friendlyMinionDeathsThisGame}）",
-                                           "reasoningZhCN":  "星涌术伤害随友方随从死亡数提升。"
-                                       }
-                  },
-                  {
-                      "rank":  8,
-                      "sourceRank":  8,
-                      "cardCode":  "FIR_913",
-                      "cardNameZhCN":  "地狱火先锋",
-                      "cardTextZhCN":  "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
-                      "cardTextZhCNPlain":  "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
-                      "cardClass":  "MAGE",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "related_trigger_and_random_pool",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.FIR_913"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  10,
-                      "sourceRank":  10,
-                      "cardCode":  "EDR_430",
-                      "cardNameZhCN":  "艾森娜",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e\n如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。@\u003ci\u003e（还剩{0}个！）\u003c/i\u003e@\u003ci\u003e（已经就绪！）\u003c/i\u003e",
-                      "cardTextZhCNPlain":  "战吼： 如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。（还剩{0}个！）（已经就绪！）",
-                      "cardClass":  "MAGE",
-                      "type":  "MINION",
-                      "cost":  8,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "threshold_death_count",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyMinionDeathsThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "友方随从死亡：{friendlyMinionDeathsThisGame}/20；{readyText}",
-                                           "reasoningZhCN":  "艾森娜需要 20 个友方随从死亡阈值。"
-                                       }
-                  },
-                  {
-                      "rank":  13,
-                      "sourceRank":  13,
-                      "cardCode":  "DINO_409",
-                      "cardNameZhCN":  "科技恐龙",
-                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "嘲讽。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "MAGE",
-                      "type":  "MINION",
-                      "cost":  7,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "TAUNT"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "cost_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardsPlayedNotFromInitialDeckThisGame",
-                                                               "currentCost"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "已使用套牌外卡牌：{count}；预计当前费用：{currentCost}",
-                                           "reasoningZhCN":  "科技恐龙费用由本局套牌外卡牌使用数决定。"
-                                       }
-                  },
-                  {
-                      "rank":  14,
-                      "sourceRank":  14,
-                      "cardCode":  "MEND_506",
-                      "cardNameZhCN":  "秘魔刃豹",
-                      "cardTextZhCN":  "\u003cb\u003e扰魔\u003c/b\u003e。\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你的魔网牌的效果提高1。",
-                      "cardTextZhCNPlain":  "扰魔。战吼：在本局对战中，你的魔网牌的效果提高1。",
-                      "cardClass":  "MAGE",
-                      "type":  "MINION",
-                      "cost":  2,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "global_buff_source",
-                                           "implementationPriority":  "low",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "mendingEffectBonusThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "魔网效果提高：+{mendingEffectBonusThisGame}",
-                                           "reasoningZhCN":  "audit 倾向不在启用器本牌上显示；如保留，只作为魔网全局状态来源。",
-                                           "notesZhCN":  [
-                                                             "audit 倾向移除本牌 hover，状态应展示在被影响的魔网牌上。"
-                                                         ]
-                                       }
-                  },
-                  {
-                      "rank":  15,
-                      "sourceRank":  15,
-                      "cardCode":  "MEND_501",
-                      "cardNameZhCN":  "魔力行者",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你的魔网牌法力值消耗减少（1）点。\u003cb\u003e亡语：\u003c/b\u003e随机获取一张魔网牌。",
-                      "cardTextZhCNPlain":  "战吼：在本局对战中，你的魔网牌法力值消耗减少（1）点。亡语：随机获取一张魔网牌。",
-                      "cardClass":  "MAGE",
-                      "type":  "MINION",
-                      "cost":  3,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "global_buff_source",
-                                           "implementationPriority":  "low",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "mendingCostReductionThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "魔网费用减少：-{mendingCostReductionThisGame}",
-                                           "reasoningZhCN":  "audit 倾向不在启用器本牌上显示；如保留，只作为魔网全局状态来源。",
-                                           "notesZhCN":  [
-                                                             "亡语随机魔网池不展示。"
-                                                         ]
-                                       }
-                  },
-                  {
-                      "rank":  16,
-                      "sourceRank":  16,
-                      "cardCode":  "MEND_503",
-                      "cardNameZhCN":  "湍流之针",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你的魔网牌额外触发一次。",
-                      "cardTextZhCNPlain":  "战吼：在本局对战中，你的魔网牌额外触发一次。",
-                      "cardClass":  "MAGE",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "global_buff_source",
-                                           "implementationPriority":  "low",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "mendingExtraTriggersThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "魔网额外触发：+{mendingExtraTriggersThisGame}",
-                                           "reasoningZhCN":  "audit 倾向不在启用器本牌上显示；如保留，只作为魔网全局状态来源。",
-                                           "notesZhCN":  [
-                                                             "状态应展示在被影响的魔网牌上。"
-                                                         ]
-                                       }
-                  }
-              ],
-    "reviewFields":  [
-                         "extraDisplay.schemaVersion: currently 2",
-                         "extraDisplay.auditDecision: keep for actionable candidates",
-                         "extraDisplay.displayType: canonical UI behavior category",
-                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
-                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
-                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
-                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
-                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
-                     ]
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T17:23:58.7974987Z",
+  "purpose": "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+  "source": {
+    "inputDir": "data/cards/review/standard-history-sensitive",
+    "basedOn": "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+    "exclusionPolicy": "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+    "note": "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+  },
+  "class": {
+    "id": "MAGE",
+    "name": {
+      "enUS": "Mage",
+      "zhCN": "æ³•å¸ˆ"
+    }
+  },
+  "count": 8,
+  "cards": [
+    {
+      "rank": 5,
+      "sourceRank": 5,
+      "cardCode": "CORE_REV_514",
+      "cardNameZhCN": "天定之灾克尔苏加德",
+      "cardTextZhCN": "<b>战吼：</b>复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。@<i>（复活@个）</i>",
+      "cardTextZhCNPlain": "战吼：复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。（复活个）",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "specific_minion_graveyard_count",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyUnstableSkeletonDeathsThisGame",
+          "friendlyBoardSpace"
+        ],
+        "suggestedDisplayTextZhCN": "本局死亡不稳定的骷髅：{count}；复活 {summonCount} 个，溢出爆炸 {overflow} 个",
+        "reasoningZhCN": "克尔苏加德只关心特定衍生随从死亡数。"
+      }
+    },
+    {
+      "rank": 7,
+      "sourceRank": 7,
+      "cardCode": "EDR_941",
+      "cardNameZhCN": "星涌术",
+      "cardTextZhCN": "对一个随从造成$@点伤害。<i>（每有一个在本局对战中死亡的友方随从都会提升。）</i>",
+      "cardTextZhCNPlain": "对一个随从造成点伤害。（每有一个在本局对战中死亡的友方随从都会提升。）",
+      "cardClass": "MAGE",
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "death_count_scaling_damage",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyMinionDeathsThisGame",
+          "currentSpellDamageValue"
+        ],
+        "suggestedDisplayTextZhCN": "当前伤害：{damage}（本局死亡友方随从 {friendlyMinionDeathsThisGame}）",
+        "reasoningZhCN": "星涌术伤害随友方随从死亡数提升。"
+      }
+    },
+    {
+      "rank": 8,
+      "sourceRank": 8,
+      "cardCode": "FIR_913",
+      "cardNameZhCN": "地狱火先锋",
+      "cardTextZhCN": "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
+      "cardTextZhCNPlain": "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "related_trigger_and_random_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.FIR_913"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 10,
+      "sourceRank": 10,
+      "cardCode": "EDR_430",
+      "cardNameZhCN": "艾森娜",
+      "cardTextZhCN": "<b>战吼：</b>\n如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。@<i>（还剩{0}个！）</i>@<i>（已经就绪！）</i>",
+      "cardTextZhCNPlain": "战吼： 如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。（还剩{0}个！）（已经就绪！）",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "threshold_death_count",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyMinionDeathsThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "友方随从死亡：{friendlyMinionDeathsThisGame}/20；{readyText}",
+        "reasoningZhCN": "艾森娜需要 20 个友方随从死亡阈值。"
+      }
+    },
+    {
+      "rank": 13,
+      "sourceRank": 13,
+      "cardCode": "DINO_409",
+      "cardNameZhCN": "科技恐龙",
+      "cardTextZhCN": "<b>嘲讽</b>。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "嘲讽。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "RARE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "cost_progress",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardsPlayedNotFromInitialDeckThisGame",
+          "currentCost"
+        ],
+        "suggestedDisplayTextZhCN": "已使用套牌外卡牌：{count}；预计当前费用：{currentCost}",
+        "reasoningZhCN": "科技恐龙费用由本局套牌外卡牌使用数决定。"
+      }
+    },
+    {
+      "rank": 14,
+      "sourceRank": 14,
+      "cardCode": "MEND_506",
+      "cardNameZhCN": "秘魔刃豹",
+      "cardTextZhCN": "<b>扰魔</b>。<b>战吼：</b>在本局对战中，你的魔网牌的效果提高1。",
+      "cardTextZhCNPlain": "扰魔。战吼：在本局对战中，你的魔网牌的效果提高1。",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "global_buff_source",
+        "implementationPriority": "low",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "mendingEffectBonusThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "魔网效果提高：+{mendingEffectBonusThisGame}",
+        "reasoningZhCN": "audit 倾向不在启用器本牌上显示；如保留，只作为魔网全局状态来源。",
+        "notesZhCN": [
+          "audit 倾向移除本牌 hover，状态应展示在被影响的魔网牌上。"
+        ]
+      }
+    },
+    {
+      "rank": 15,
+      "sourceRank": 15,
+      "cardCode": "MEND_501",
+      "cardNameZhCN": "魔力行者",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，你的魔网牌法力值消耗减少（1）点。<b>亡语：</b>随机获取一张魔网牌。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，你的魔网牌法力值消耗减少（1）点。亡语：随机获取一张魔网牌。",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "global_buff_source",
+        "implementationPriority": "low",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "mendingCostReductionThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "魔网费用减少：-{mendingCostReductionThisGame}",
+        "reasoningZhCN": "audit 倾向不在启用器本牌上显示；如保留，只作为魔网全局状态来源。",
+        "notesZhCN": [
+          "亡语随机魔网池不展示。"
+        ]
+      }
+    },
+    {
+      "rank": 16,
+      "sourceRank": 16,
+      "cardCode": "MEND_503",
+      "cardNameZhCN": "湍流之针",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，你的魔网牌额外触发一次。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，你的魔网牌额外触发一次。",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "global_buff_source",
+        "implementationPriority": "low",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "mendingExtraTriggersThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "魔网额外触发：+{mendingExtraTriggersThisGame}",
+        "reasoningZhCN": "audit 倾向不在启用器本牌上显示；如保留，只作为魔网全局状态来源。",
+        "notesZhCN": [
+          "状态应展示在被影响的魔网牌上。"
+        ]
+      }
+    }
+  ],
+  "reviewFields": [
+    "extraDisplay.schemaVersion: currently 2",
+    "extraDisplay.auditDecision: keep for actionable candidates",
+    "extraDisplay.displayType: canonical UI behavior category",
+    "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+    "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+    "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+    "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+    "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+  ]
 }

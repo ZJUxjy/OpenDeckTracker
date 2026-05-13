@@ -641,13 +641,6 @@ interface Bindings {
   [key: string]: string | number;
 }
 
-type InfuseScope = NonNullable<NonNullable<ExtraDisplayCandidate['extraDisplay']>['infuseConfig']>['scope'];
-
-interface ResolvedInfuseConfig {
-  scope: InfuseScope | 'attack' | 'spell';
-  required: number | null;
-}
-
 function computeBindings(
   cardId: string,
   candidate: ExtraDisplayCandidate,
@@ -732,33 +725,6 @@ function computeBindings(
     bindings.damage = Number(bindings.fireSpellsCastThisTurnByYou ?? 0) > 0 ? 6 : 3;
   }
 
-  // Infuse progress from per-cardId snapshot.
-  const infuseConfig = resolveInfuseConfig(cardId, candidate);
-  if (infuseConfig) {
-    const entry = extraDisplay?.infuseProgressByCardId?.[cardId];
-    const progress = resolveInfuseProgress(entry, infuseConfig.scope);
-    bindings.progress = progress;
-    bindings.required = infuseConfig.required ?? '?';
-    const isInfused = infuseConfig.required !== null && progress >= infuseConfig.required;
-    bindings.infusedText = isInfused ? '已注能' : '未注能';
-    if (cardId === 'CORE_REV_353') {
-      bindings.summonCount = progress >= 8 ? 3 : progress >= 4 ? 2 : 1;
-    } else {
-      bindings.summonCount = isInfused ? 3 : 1;
-    }
-    bindings.cumulativeAttack = entry?.cumulativeAttack ?? 0;
-    bindings.infiniteInfuseStacks = cardId === 'CORE_REV_906' ? progress : bindings.infiniteInfuseStacks ?? 0;
-    bindings.currentBattlecryDamage = cardId === 'CORE_REV_906' ? 5 + progress : bindings.currentBattlecryDamage ?? 0;
-  } else if (cardId === 'CORE_REV_906') {
-    const progress = extraDisplay?.infuseProgressByCardId?.[cardId]?.friendlyDeaths ?? 0;
-    bindings.infiniteInfuseStacks = progress;
-    bindings.currentBattlecryDamage = 5 + progress;
-  } else if (cardId === 'CORE_REV_843') {
-    const entry = extraDisplay?.infuseProgressByCardId?.[cardId];
-    bindings.progress = entry?.friendlyDeaths ?? 0;
-    bindings.cumulativeAttack = entry?.cumulativeAttack ?? 0;
-  }
-
   return bindings;
 }
 
@@ -807,13 +773,6 @@ function buildBadgesFor(
   if (stateNeeded.includes('shadowSpellsCastThisTurn')) {
     const cast = bindings.shadowSpellsCastThisTurn as number;
     out.push({ label: `暗 ${cast}`, title: `本回合已施放暗影法术：${cast}` });
-  }
-  if (resolveInfuseConfig(candidate.cardCode, candidate)) {
-    const progress = bindings.progress as number;
-    const required = bindings.required;
-    const done = typeof required === 'number' && progress >= required;
-    const tone: RowExtraBadge['tone'] = done ? 'highlight' : 'normal';
-    out.push({ label: `注能 ${progress}/${required}`, title: `注能进度 ${progress}/${required}`, tone });
   }
   return out;
 }
@@ -897,7 +856,7 @@ function resolveRequiredNumber(candidate: ExtraDisplayCandidate): number {
   const text = candidate.extraDisplay?.suggestedDisplayTextZhCN ?? '';
   const match = /\/(\d+)/.exec(text);
   if (match) return Number(match[1]);
-  return candidate.extraDisplay?.infuseConfig?.required ?? 0;
+  return 0;
 }
 
 function countStatusText(count: number): string {
@@ -911,59 +870,6 @@ function resolveCostDriver(candidate: ExtraDisplayCandidate, bindings: Bindings)
     if (typeof value === 'number') return value;
   }
   return 0;
-}
-
-const INFUSE_FALLBACKS: Record<string, ResolvedInfuseConfig> = {
-  CORE_REV_336: { scope: 'any', required: 3 },
-  CORE_REV_350: { scope: 'any', required: 3 },
-  CORE_REV_352: { scope: 'any', required: 2 },
-  CORE_MAW_009: { scope: 'beast', required: 3 },
-  CORE_REV_353: { scope: 'any', required: 8 },
-  CORE_REV_601: { scope: 'any', required: 3 },
-  CORE_REV_956: { scope: 'any', required: 3 },
-  CORE_REV_957: { scope: 'any', required: 3 },
-  CORE_REV_019: { scope: 'any', required: 4 },
-  CORE_REV_013: { scope: 'any', required: 2 },
-  CORE_MAW_033: { scope: 'any', required: 7 },
-  CORE_REV_017: { scope: 'any', required: 5 },
-  CORE_REV_958: { scope: 'any', required: 3 },
-  CORE_REV_252: { scope: 'any', required: 4 },
-  CORE_REV_938: { scope: 'any', required: 2 },
-  CORE_REV_920: { scope: 'any', required: 4 },
-  CORE_MAW_003: { scope: 'totem', required: 3 },
-  CORE_REV_935: { scope: 'any', required: 3 },
-  CORE_REV_244: { scope: 'any', required: 3 },
-  CORE_REV_835: { scope: 'any', required: 3 },
-  CORE_REV_933: { scope: 'any', required: 2 },
-};
-
-function resolveInfuseConfig(
-  cardId: string,
-  candidate: ExtraDisplayCandidate,
-): ResolvedInfuseConfig | null {
-  const configured = candidate.extraDisplay?.infuseConfig;
-  if (configured) return configured;
-  const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
-  if (stateNeeded.includes('cumulativeAttackOfFriendlyMinionsDiedWhileThisEntityInHand')) {
-    return { scope: 'attack', required: null };
-  }
-  if (stateNeeded.includes('spellsCastWhileThisEntityInHand')) {
-    return { scope: 'spell', required: 4 };
-  }
-  return INFUSE_FALLBACKS[cardId] ?? null;
-}
-
-function resolveInfuseProgress(
-  entry: NonNullable<DeckTrackerSnapshot['extraDisplay']>['infuseProgressByCardId'][string] | undefined,
-  scope: ResolvedInfuseConfig['scope'],
-): number {
-  if (!entry) return 0;
-  if (scope === 'demon') return entry.friendlyDemonDeaths ?? 0;
-  if (scope === 'beast') return entry.friendlyBeastDeaths ?? 0;
-  if (scope === 'totem') return entry.friendlyTotemDeaths ?? 0;
-  if (scope === 'attack') return entry.cumulativeAttack ?? 0;
-  if (scope === 'spell') return entry.spellsCast ?? 0;
-  return entry.friendlyDeaths ?? 0;
 }
 
 function fallbackBindingText(key: string): string {

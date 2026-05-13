@@ -29,11 +29,6 @@ export interface ExtraDisplayCandidate {
     suggestedDisplayTextZhCN?: string;
     reasoningZhCN?: string;
     emptyWarning?: boolean;
-    /** When the card is an Infuse holder, declares its trigger scope and threshold. */
-    infuseConfig?: {
-      scope: 'any' | 'demon' | 'beast' | 'totem' | 'undead' | 'murloc' | 'dragon';
-      required: number;
-    };
     /** When displayType is `on_board_trigger_highlight`, describes what to highlight. */
     triggerHighlight?: {
       matchSpellSchool?: string;

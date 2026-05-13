@@ -1,215 +1,557 @@
 {
-    "schemaVersion":  1,
-    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
-    "purpose":  "Cards removed from standard-extra-display-candidates by audit cleanup.",
-    "count":  23,
-    "cards":  [
-                  {
-                      "cardCode":  "CORE_UNG_963",
-                      "cardNameZhCN":  "“太阳裂片”莱拉",
-                      "cardTextZhCNPlain":  "每当你施放一个法术，随机将一张牧师法术牌置入你的手牌。",
-                      "cardClass":  "PRIEST",
-                      "sourceFile":  "priest.json",
-                      "rejectionReasonZhCN":  "太阳裂片莱拉使用静态牧师法术池，额外池展示价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-priest.md"
-                  },
-                  {
-                      "cardCode":  "DINO_431",
-                      "cardNameZhCN":  "擎天雷龙",
-                      "cardTextZhCNPlain":  "嘲讽。亡语：随机召唤一个法力值消耗大于或等于（5）点的嘲讽随从。",
-                      "cardClass":  "PRIEST",
-                      "sourceFile":  "priest.json",
-                      "rejectionReasonZhCN":  "擎天雷龙使用静态全局高费嘲讽池，额外展示价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-priest.md"
-                  },
-                  {
-                      "cardCode":  "TLC_240",
-                      "cardNameZhCN":  "填鳃暴龙",
-                      "cardTextZhCNPlain":  "突袭。亡语： 召唤三个2/1的鱼人，使其各获得一项随机额外效果。",
-                      "cardClass":  "PALADIN",
-                      "sourceFile":  "paladin.json",
-                      "rejectionReasonZhCN":  "填鳃暴龙为固定随机额外效果，不依赖历史状态。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-paladin.md"
-                  },
-                  {
-                      "cardCode":  "EDR_264",
-                      "cardNameZhCN":  "圣光护盾",
-                      "cardTextZhCNPlain":  "随机召唤一个法力值消耗为（2）的随从并使其获得嘲讽。灌注你的英雄技能。",
-                      "cardClass":  "PALADIN",
-                      "sourceFile":  "paladin.json",
-                      "rejectionReasonZhCN":  "圣光护盾为静态全局 2 费随从池，额外显示价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-paladin.md"
-                  },
-                  {
-                      "cardCode":  "TLC_477",
-                      "cardNameZhCN":  "蛇颈龙骑手的祝福",
-                      "cardTextZhCNPlain":  "使一个友方随从获得+4/+4和“亡语：随机召唤一个法力值消耗为（4）的随从。”",
-                      "cardClass":  "PALADIN",
-                      "sourceFile":  "paladin.json",
-                      "rejectionReasonZhCN":  "蛇颈龙骑手的祝福为静态全局 4 费随从池，额外显示价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-paladin.md"
-                  },
-                  {
-                      "cardCode":  "CATA_786",
-                      "cardNameZhCN":  "混沌祈求者",
-                      "cardTextZhCNPlain":  "在你施放一个法术后，随机施放一个法力值消耗相同的另一职业的法术。",
-                      "cardClass":  "ROGUE",
-                      "sourceFile":  "rogue.json",
-                      "rejectionReasonZhCN":  "混沌祈求者使用静态同费另一职业法术池，不需要记牌器额外悬停。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-rogue.md"
-                  },
-                  {
-                      "cardCode":  "CORE_FP1_022",
-                      "cardNameZhCN":  "空灵召唤者",
-                      "cardTextZhCNPlain":  "亡语： 随机将一张恶魔牌从你的手牌置入战场。",
-                      "cardClass":  "WARLOCK",
-                      "sourceFile":  "warlock.json",
-                      "rejectionReasonZhCN":  "空灵召唤者候选位于己方手牌且可见，记牌器重复列出价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-warlock.md"
-                  },
-                  {
-                      "cardCode":  "CATA_610",
-                      "cardNameZhCN":  "洛戈什的奋战",
-                      "cardTextZhCNPlain":  "使一个随从获得 “亡语：从你的手牌中随机召唤一个 随从。”",
-                      "cardClass":  "WARRIOR",
-                      "sourceFile":  "warrior.json",
-                      "rejectionReasonZhCN":  "洛戈什的奋战随机召唤任意手牌随从，无筛选条件且信息冗余。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-warrior.md"
-                  },
-                  {
-                      "cardCode":  "CORE_REV_374",
-                      "cardNameZhCN":  "影裔魔",
-                      "cardTextZhCNPlain":  "亡语：使你手牌中法力值消耗最高的暗影法术牌的法力值消耗减少（3）点。",
-                      "cardClass":  "WARLOCK",
-                      "sourceFile":  "warlock.json",
-                      "rejectionReasonZhCN":  "影裔魔目标位于己方手牌且可见，记牌器重复列出价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-warlock.md"
-                  },
-                  {
-                      "cardCode":  "CORE_REV_921",
-                      "cardNameZhCN":  "锻石师",
-                      "cardTextZhCNPlain":  "战吼：在本局对战的剩余时间内，你的图腾拥有+2攻击力。",
-                      "cardClass":  "SHAMAN",
-                      "sourceFile":  "shaman.json",
-                      "rejectionReasonZhCN":  "锻石师为固定场面/全局图腾攻击 buff，不应挂在本牌 hover。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-shaman.md"
-                  },
-                  {
-                      "cardCode":  "TLC_482",
-                      "cardNameZhCN":  "熔爪巨龙",
-                      "cardTextZhCNPlain":  "战吼：召唤两个2/1的炽烈烬火。延系：触发你的炽烈烬火的 亡语。",
-                      "cardClass":  "SHAMAN",
-                      "sourceFile":  "shaman.json",
-                      "rejectionReasonZhCN":  "熔爪巨龙依赖当前可见场面，作为专属悬停价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-shaman.md"
-                  },
-                  {
-                      "cardCode":  "CATA_210",
-                      "cardNameZhCN":  "暮光龙卵",
-                      "cardTextZhCNPlain":  "亡语：召唤一条/的雏龙。（在你的回合开始时获得+1/+1！）",
-                      "cardClass":  "NEUTRAL",
-                      "sourceFile":  "neutral.json",
-                      "rejectionReasonZhCN":  "暮光龙卵没有存储/绑定状态，亡语效果固定。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-neutral.md"
-                  },
-                  {
-                      "cardCode":  "CORE_UNG_800",
-                      "cardNameZhCN":  "恐鳞追猎者",
-                      "cardTextZhCNPlain":  "战吼：触发一个友方随从的亡语。",
-                      "cardClass":  "HUNTER",
-                      "sourceFile":  "hunter.json",
-                      "rejectionReasonZhCN":  "恐鳞追猎者目标来自当前可见场面，不需要额外悬停。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
-                  },
-                  {
-                      "cardCode":  "EDR_853",
-                      "cardNameZhCN":  "布罗尔·熊皮",
-                      "cardTextZhCNPlain":  "在你施放一个法术后，随机召唤一个动物伙伴。",
-                      "cardClass":  "HUNTER",
-                      "sourceFile":  "hunter.json",
-                      "rejectionReasonZhCN":  "布罗尔·熊皮使用固定动物伙伴池，作为额外悬停价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
-                  },
-                  {
-                      "cardCode":  "CORE_FP1_011",
-                      "cardNameZhCN":  "结网蛛",
-                      "cardTextZhCNPlain":  "亡语：随机获取一张野兽牌。",
-                      "cardClass":  "HUNTER",
-                      "sourceFile":  "hunter.json",
-                      "rejectionReasonZhCN":  "结网蛛生成的是静态全局野兽池，池过大且不依赖对局历史。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
-                  },
-                  {
-                      "cardCode":  "EDR_819",
-                      "cardNameZhCN":  "乌索克",
-                      "cardTextZhCNPlain":  "战吼：攻击所有其他随从。亡语：复活本随从消灭的随从。",
-                      "cardClass":  "DEATHKNIGHT",
-                      "sourceFile":  "deathknight.json",
-                      "rejectionReasonZhCN":  "乌索克的复活池在结算时按该实体消灭的随从生成，提前悬停没有稳定候选。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-deathknight.md"
-                  },
-                  {
-                      "cardCode":  "CORE_ICC_052",
-                      "cardNameZhCN":  "装死",
-                      "cardTextZhCNPlain":  "触发一个友方随从的亡语。",
-                      "cardClass":  "HUNTER",
-                      "sourceFile":  "hunter.json",
-                      "rejectionReasonZhCN":  "装死的目标来自当前可见场面，不需要记牌器额外列出。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
-                  },
-                  {
-                      "cardCode":  "DINO_434",
-                      "cardNameZhCN":  "迅猛龙巢护工",
-                      "cardTextZhCNPlain":  "战吼：随机获取一张法力值消耗为（1）的随从牌。亡语：随机获取一张法力值消耗为（1）的法术牌。",
-                      "cardClass":  "HUNTER",
-                      "sourceFile":  "hunter.json",
-                      "rejectionReasonZhCN":  "迅猛龙巢护工使用静态全局 1 费随从/法术池，池过大且不可规划。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
-                  },
-                  {
-                      "cardCode":  "TLC_226",
-                      "cardNameZhCN":  "咒术图书管理员",
-                      "cardTextZhCNPlain":  "亡语：抽一张法术牌。延系：召唤一个本随从的复制。",
-                      "cardClass":  "MAGE",
-                      "sourceFile":  "mage.json",
-                      "rejectionReasonZhCN":  "咒术图书管理员只是普通法术检索和自身复制，不属于额外历史显示。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-mage.md"
-                  },
-                  {
-                      "cardCode":  "CORE_MAW_031",
-                      "cardNameZhCN":  "冥界侍从",
-                      "cardTextZhCNPlain":  "你的注能牌在牌库中也会注能。",
-                      "cardClass":  "NEUTRAL",
-                      "sourceFile":  "neutral.json",
-                      "rejectionReasonZhCN":  "冥界侍从是场上固定光环，其影响应内化进注能计算，而不是本牌独立 hover。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-neutral.md"
-                  },
-                  {
-                      "cardCode":  "CS3_001",
-                      "cardNameZhCN":  "守护者艾格文",
-                      "cardTextZhCNPlain":  "法术伤害+2，亡语：你抽到的下一张随从牌会继承这些能力。",
-                      "cardClass":  "MAGE",
-                      "sourceFile":  "mage.json",
-                      "rejectionReasonZhCN":  "守护者艾格文不是检索池效果，延迟 buff 更适合显示在受影响随从上。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-mage.md"
-                  },
-                  {
-                      "cardCode":  "DINO_422",
-                      "cardNameZhCN":  "甲龙",
-                      "cardTextZhCNPlain":  "嘲讽。亡语：随机召唤两只法力值消耗为（3）的野兽，并使其攻击随机敌人。",
-                      "cardClass":  "HUNTER",
-                      "sourceFile":  "hunter.json",
-                      "rejectionReasonZhCN":  "甲龙使用静态全局 3 费野兽池，池过大且不可规划。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
-                  },
-                  {
-                      "cardCode":  "END_015",
-                      "cardNameZhCN":  "三纪暴龙",
-                      "cardTextZhCNPlain":  "延系，亡语：随机获取一张亡语随从牌，其法力值消耗减少（2）点。",
-                      "cardClass":  "HUNTER",
-                      "sourceFile":  "hunter.json",
-                      "rejectionReasonZhCN":  "三纪暴龙使用静态全局亡语随从池，额外显示价值低。",
-                      "auditSource":  "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
-                  }
-              ]
+  "schemaVersion": 1,
+  "generatedAt": "2026-05-13T17:23:58.7974987Z",
+  "purpose": "Cards removed from standard-extra-display-candidates by audit cleanup.",
+  "count": 61,
+  "cards": [
+    {
+      "cardCode": "CORE_UNG_963",
+      "cardNameZhCN": "“太阳裂片”莱拉",
+      "cardTextZhCNPlain": "每当你施放一个法术，随机将一张牧师法术牌置入你的手牌。",
+      "cardClass": "PRIEST",
+      "sourceFile": "priest.json",
+      "rejectionReasonZhCN": "太阳裂片莱拉使用静态牧师法术池，额外池展示价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-priest.md"
+    },
+    {
+      "cardCode": "DINO_431",
+      "cardNameZhCN": "擎天雷龙",
+      "cardTextZhCNPlain": "嘲讽。亡语：随机召唤一个法力值消耗大于或等于（5）点的嘲讽随从。",
+      "cardClass": "PRIEST",
+      "sourceFile": "priest.json",
+      "rejectionReasonZhCN": "擎天雷龙使用静态全局高费嘲讽池，额外展示价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-priest.md"
+    },
+    {
+      "cardCode": "TLC_240",
+      "cardNameZhCN": "填鳃暴龙",
+      "cardTextZhCNPlain": "突袭。亡语： 召唤三个2/1的鱼人，使其各获得一项随机额外效果。",
+      "cardClass": "PALADIN",
+      "sourceFile": "paladin.json",
+      "rejectionReasonZhCN": "填鳃暴龙为固定随机额外效果，不依赖历史状态。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-paladin.md"
+    },
+    {
+      "cardCode": "EDR_264",
+      "cardNameZhCN": "圣光护盾",
+      "cardTextZhCNPlain": "随机召唤一个法力值消耗为（2）的随从并使其获得嘲讽。灌注你的英雄技能。",
+      "cardClass": "PALADIN",
+      "sourceFile": "paladin.json",
+      "rejectionReasonZhCN": "圣光护盾为静态全局 2 费随从池，额外显示价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-paladin.md"
+    },
+    {
+      "cardCode": "TLC_477",
+      "cardNameZhCN": "蛇颈龙骑手的祝福",
+      "cardTextZhCNPlain": "使一个友方随从获得+4/+4和“亡语：随机召唤一个法力值消耗为（4）的随从。”",
+      "cardClass": "PALADIN",
+      "sourceFile": "paladin.json",
+      "rejectionReasonZhCN": "蛇颈龙骑手的祝福为静态全局 4 费随从池，额外显示价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-paladin.md"
+    },
+    {
+      "cardCode": "CATA_786",
+      "cardNameZhCN": "混沌祈求者",
+      "cardTextZhCNPlain": "在你施放一个法术后，随机施放一个法力值消耗相同的另一职业的法术。",
+      "cardClass": "ROGUE",
+      "sourceFile": "rogue.json",
+      "rejectionReasonZhCN": "混沌祈求者使用静态同费另一职业法术池，不需要记牌器额外悬停。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-rogue.md"
+    },
+    {
+      "cardCode": "CORE_FP1_022",
+      "cardNameZhCN": "空灵召唤者",
+      "cardTextZhCNPlain": "亡语： 随机将一张恶魔牌从你的手牌置入战场。",
+      "cardClass": "WARLOCK",
+      "sourceFile": "warlock.json",
+      "rejectionReasonZhCN": "空灵召唤者候选位于己方手牌且可见，记牌器重复列出价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-warlock.md"
+    },
+    {
+      "cardCode": "CATA_610",
+      "cardNameZhCN": "洛戈什的奋战",
+      "cardTextZhCNPlain": "使一个随从获得 “亡语：从你的手牌中随机召唤一个 随从。”",
+      "cardClass": "WARRIOR",
+      "sourceFile": "warrior.json",
+      "rejectionReasonZhCN": "洛戈什的奋战随机召唤任意手牌随从，无筛选条件且信息冗余。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-warrior.md"
+    },
+    {
+      "cardCode": "CORE_REV_374",
+      "cardNameZhCN": "影裔魔",
+      "cardTextZhCNPlain": "亡语：使你手牌中法力值消耗最高的暗影法术牌的法力值消耗减少（3）点。",
+      "cardClass": "WARLOCK",
+      "sourceFile": "warlock.json",
+      "rejectionReasonZhCN": "影裔魔目标位于己方手牌且可见，记牌器重复列出价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-warlock.md"
+    },
+    {
+      "cardCode": "CORE_REV_921",
+      "cardNameZhCN": "锻石师",
+      "cardTextZhCNPlain": "战吼：在本局对战的剩余时间内，你的图腾拥有+2攻击力。",
+      "cardClass": "SHAMAN",
+      "sourceFile": "shaman.json",
+      "rejectionReasonZhCN": "锻石师为固定场面/全局图腾攻击 buff，不应挂在本牌 hover。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-shaman.md"
+    },
+    {
+      "cardCode": "TLC_482",
+      "cardNameZhCN": "熔爪巨龙",
+      "cardTextZhCNPlain": "战吼：召唤两个2/1的炽烈烬火。延系：触发你的炽烈烬火的 亡语。",
+      "cardClass": "SHAMAN",
+      "sourceFile": "shaman.json",
+      "rejectionReasonZhCN": "熔爪巨龙依赖当前可见场面，作为专属悬停价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-shaman.md"
+    },
+    {
+      "cardCode": "CATA_210",
+      "cardNameZhCN": "暮光龙卵",
+      "cardTextZhCNPlain": "亡语：召唤一条/的雏龙。（在你的回合开始时获得+1/+1！）",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "暮光龙卵没有存储/绑定状态，亡语效果固定。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-neutral.md"
+    },
+    {
+      "cardCode": "CORE_UNG_800",
+      "cardNameZhCN": "恐鳞追猎者",
+      "cardTextZhCNPlain": "战吼：触发一个友方随从的亡语。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "恐鳞追猎者目标来自当前可见场面，不需要额外悬停。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
+    },
+    {
+      "cardCode": "EDR_853",
+      "cardNameZhCN": "布罗尔·熊皮",
+      "cardTextZhCNPlain": "在你施放一个法术后，随机召唤一个动物伙伴。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "布罗尔·熊皮使用固定动物伙伴池，作为额外悬停价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
+    },
+    {
+      "cardCode": "CORE_FP1_011",
+      "cardNameZhCN": "结网蛛",
+      "cardTextZhCNPlain": "亡语：随机获取一张野兽牌。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "结网蛛生成的是静态全局野兽池，池过大且不依赖对局历史。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
+    },
+    {
+      "cardCode": "EDR_819",
+      "cardNameZhCN": "乌索克",
+      "cardTextZhCNPlain": "战吼：攻击所有其他随从。亡语：复活本随从消灭的随从。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "乌索克的复活池在结算时按该实体消灭的随从生成，提前悬停没有稳定候选。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-deathknight.md"
+    },
+    {
+      "cardCode": "CORE_ICC_052",
+      "cardNameZhCN": "装死",
+      "cardTextZhCNPlain": "触发一个友方随从的亡语。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "装死的目标来自当前可见场面，不需要记牌器额外列出。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
+    },
+    {
+      "cardCode": "DINO_434",
+      "cardNameZhCN": "迅猛龙巢护工",
+      "cardTextZhCNPlain": "战吼：随机获取一张法力值消耗为（1）的随从牌。亡语：随机获取一张法力值消耗为（1）的法术牌。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "迅猛龙巢护工使用静态全局 1 费随从/法术池，池过大且不可规划。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
+    },
+    {
+      "cardCode": "TLC_226",
+      "cardNameZhCN": "咒术图书管理员",
+      "cardTextZhCNPlain": "亡语：抽一张法术牌。延系：召唤一个本随从的复制。",
+      "cardClass": "MAGE",
+      "sourceFile": "mage.json",
+      "rejectionReasonZhCN": "咒术图书管理员只是普通法术检索和自身复制，不属于额外历史显示。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-mage.md"
+    },
+    {
+      "cardCode": "CORE_MAW_031",
+      "cardNameZhCN": "冥界侍从",
+      "cardTextZhCNPlain": "你的注能牌在牌库中也会注能。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "冥界侍从是场上固定光环，其影响应内化进注能计算，而不是本牌独立 hover。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-neutral.md"
+    },
+    {
+      "cardCode": "CS3_001",
+      "cardNameZhCN": "守护者艾格文",
+      "cardTextZhCNPlain": "法术伤害+2，亡语：你抽到的下一张随从牌会继承这些能力。",
+      "cardClass": "MAGE",
+      "sourceFile": "mage.json",
+      "rejectionReasonZhCN": "守护者艾格文不是检索池效果，延迟 buff 更适合显示在受影响随从上。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-mage.md"
+    },
+    {
+      "cardCode": "DINO_422",
+      "cardNameZhCN": "甲龙",
+      "cardTextZhCNPlain": "嘲讽。亡语：随机召唤两只法力值消耗为（3）的野兽，并使其攻击随机敌人。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "甲龙使用静态全局 3 费野兽池，池过大且不可规划。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
+    },
+    {
+      "cardCode": "END_015",
+      "cardNameZhCN": "三纪暴龙",
+      "cardTextZhCNPlain": "延系，亡语：随机获取一张亡语随从牌，其法力值消耗减少（2）点。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "三纪暴龙使用静态全局亡语随从池，额外显示价值低。",
+      "auditSource": "data/cards/review/standard-extra-display-candidates/audit/audit-hunter.md"
+    },
+    {
+      "cardCode": "RLK_101",
+      "cardNameZhCN": "解冻",
+      "cardTextZhCNPlain": "抽一张牌。消耗2份残骸，再抽一张。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_RLK_051",
+      "cardNameZhCN": "吸血鬼之血",
+      "cardTextZhCNPlain": "使你的英雄获得+5生命值。消耗3份残骸，多获得5点并抽一张牌。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_RLK_504",
+      "cardNameZhCN": "僵尸新娘",
+      "cardTextZhCNPlain": "战吼：消耗最多10份残骸，召唤一个攻击力和生命值等同于消耗残骸数并具有嘲讽的复活的新郎。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_RLK_035",
+      "cardNameZhCN": "邪爆",
+      "cardTextZhCNPlain": "引爆一份残骸，对所有随从造成1点伤害。如果有随从存活，重复此效果。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "RLK_085",
+      "cardNameZhCN": "玛洛加尔领主",
+      "cardTextZhCNPlain": "战吼：将你的所有残骸复活为1/1并具有突袭的复活的傀儡。每有一个放不下的傀儡，使一个傀儡获得+2/+2。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "RLK_744",
+      "cardNameZhCN": "缝合巨人",
+      "cardTextZhCNPlain": "在本局对战中，你每消耗过一份残骸，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "FIR_951",
+      "cardNameZhCN": "沃尔科罗斯",
+      "cardTextZhCNPlain": "突袭。嘲讽。战吼：选择消耗10份，20份或30份残骸以获得等量属性值。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "TLC_433",
+      "cardNameZhCN": "恐怖再起",
+      "cardTextZhCNPlain": "任务：消耗15份残骸。奖励：泰拉克斯，魔骸暴龙。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "TLC_436",
+      "cardNameZhCN": "重生的翼手龙",
+      "cardTextZhCNPlain": "突袭。吸血 消耗残骸而非 法力值。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "TIME_618",
+      "cardNameZhCN": "永时收割者哈斯克",
+      "cardTextZhCNPlain": "战吼：使你的英雄获得“亡语：消耗最多20份残骸，复活你的英雄并使其具有等量生命值。”",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CATA_465",
+      "cardNameZhCN": "投喂加餐",
+      "cardTextZhCNPlain": "召唤五条5/4的亡灵幼龙。消耗8份残骸，使其获得突袭。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "TLC_434",
+      "cardNameZhCN": "古生物秘术",
+      "cardTextZhCNPlain": "发现一张亡灵牌。消耗5份残骸，改为保留全部三张牌。",
+      "cardClass": "DEATHKNIGHT",
+      "sourceFile": "deathknight.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_MAW_012",
+      "cardNameZhCN": "邪能之乱",
+      "cardTextZhCNPlain": "召唤一个在本局对战中死亡的友方恶魔。 注能（个恶魔）：改为召唤三个。",
+      "cardClass": "DEMONHUNTER",
+      "sourceFile": "demonhunter.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_937",
+      "cardNameZhCN": "圣物匠赛·墨克斯",
+      "cardTextZhCNPlain": "战吼：发现并施放一个圣物。注能（）：改为施放全部三个。",
+      "cardClass": "DEMONHUNTER",
+      "sourceFile": "demonhunter.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_336",
+      "cardNameZhCN": "罪恶谋划",
+      "cardTextZhCNPlain": "召唤两个2/2的树人。注能（）：改为两个5/5的古树。",
+      "cardClass": "DRUID",
+      "sourceFile": "druid.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_350",
+      "cardNameZhCN": "狂暴利齿",
+      "cardTextZhCNPlain": "召唤两只2/1的蝙蝠。注能（）：使其获得+1/+2。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_352",
+      "cardNameZhCN": "石缚加尔贡",
+      "cardTextZhCNPlain": "突袭，注能（）：同时对其攻击目标相邻的随从造成伤害。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_MAW_009",
+      "cardNameZhCN": "影犬",
+      "cardTextZhCNPlain": "每当本随从攻击时，使你的其他野兽获得+2/+2。 注能（只野兽）： 获得突袭。",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_353",
+      "cardNameZhCN": "猎手阿尔迪莫",
+      "cardTextZhCNPlain": "战吼：召唤一个加尔贡伙伴。注能（{0}）：再召唤一个。注能（{1}）：再召唤一个！",
+      "cardClass": "HUNTER",
+      "sourceFile": "hunter.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_601",
+      "cardNameZhCN": "冰冻之触",
+      "cardTextZhCNPlain": "造成3点伤害。注能（）：将一张冰冻之触置入你的 手牌。",
+      "cardClass": "MAGE",
+      "sourceFile": "mage.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_956",
+      "cardNameZhCN": "亡者牧师",
+      "cardTextZhCNPlain": "嘲讽，注能（）：获得+2/+2。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_957",
+      "cardNameZhCN": "鱼人吸血鬼",
+      "cardTextZhCNPlain": "吸血，注能（）：法力值消耗为（0）点。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_019",
+      "cardNameZhCN": "饥饿的愚人",
+      "cardTextZhCNPlain": "战吼：抽一张牌。注能（）：改为抽三张牌。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_013",
+      "cardNameZhCN": "石裔指控者",
+      "cardTextZhCNPlain": "注能（）：获得“战吼：造成5点伤害。”",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_MAW_033",
+      "cardNameZhCN": "被告希尔瓦娜斯",
+      "cardTextZhCNPlain": "战吼：消灭一个敌方随从。注能（）：改为夺取其控制权。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_843",
+      "cardNameZhCN": "罪能魔像",
+      "cardTextZhCNPlain": "注能（）：获得属性值，数值等同于为本随从注能的随从的攻击力。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_017",
+      "cardNameZhCN": "贪食的吞噬者",
+      "cardTextZhCNPlain": "战吼：吞食一个敌方随从并获得其属性值。注能（）：还会吞食相邻随从。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_906",
+      "cardNameZhCN": "德纳修斯大帝",
+      "cardTextZhCNPlain": "吸血，战吼：对所有敌人造成总计5点伤害。无限注能（）：伤害增加1点。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "END_005",
+      "cardNameZhCN": "旧时回响",
+      "cardTextZhCNPlain": "随机召唤一个法力值消耗为（4）的随从。消耗4份残骸以再召唤一个。流放：再召唤一个。",
+      "cardClass": "NEUTRAL",
+      "sourceFile": "neutral.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：残骸相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_958",
+      "cardNameZhCN": "餐会巨仆",
+      "cardTextZhCNPlain": "战吼：召唤两个白银之手新兵。注能（）：使其获得+2攻击力和圣盾。",
+      "cardClass": "PALADIN",
+      "sourceFile": "paladin.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_252",
+      "cardNameZhCN": "净场",
+      "cardTextZhCNPlain": "消灭所有攻击力小于或等于3的随从。注能（）：改为小于或等于6。",
+      "cardClass": "PRIEST",
+      "sourceFile": "priest.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_938",
+      "cardNameZhCN": "暗影之门",
+      "cardTextZhCNPlain": "抽一张法术牌。注能（）：将它的一张临时复制置入你的手牌。",
+      "cardClass": "ROGUE",
+      "sourceFile": "rogue.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_920",
+      "cardNameZhCN": "可信的伪装",
+      "cardTextZhCNPlain": "将一个友方随从变形成为法力值消耗增加（2）点的随从。注能（）：改为变形所有友方随从。",
+      "cardClass": "SHAMAN",
+      "sourceFile": "shaman.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_MAW_003",
+      "cardNameZhCN": "图腾物证",
+      "cardTextZhCNPlain": "选择一个基础图腾并召唤它。 注能（个图腾）：改为召唤全部4个。",
+      "cardClass": "SHAMAN",
+      "sourceFile": "shaman.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_935",
+      "cardNameZhCN": "派对图腾",
+      "cardTextZhCNPlain": "在你的回合结束时，随机召唤一个基础图腾。注能（）：改为召唤两个。",
+      "cardClass": "SHAMAN",
+      "sourceFile": "shaman.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_244",
+      "cardNameZhCN": "调皮的小鬼",
+      "cardTextZhCNPlain": "战吼：召唤一个本随从的复制。注能（）：改为召唤两个复制。",
+      "cardClass": "WARLOCK",
+      "sourceFile": "warlock.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_835",
+      "cardNameZhCN": "小鬼大王拉法姆",
+      "cardTextZhCNPlain": "战吼：复活四个友方小鬼。注能（）：使你的小鬼获得+2/+2。",
+      "cardClass": "WARLOCK",
+      "sourceFile": "warlock.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    },
+    {
+      "cardCode": "CORE_REV_933",
+      "cardNameZhCN": "灌能战斧",
+      "cardTextZhCNPlain": "在你的英雄攻击后，使你受伤的随从获得+1/+2。注能（）：改为+2/+2。",
+      "cardClass": "WARRIOR",
+      "sourceFile": "warrior.json",
+      "rejectionReasonZhCN": "按当前开发范围移除：注能相关增强暂不实现。",
+      "auditSource": "user-scope-update-2026-05-14"
+    }
+  ]
 }

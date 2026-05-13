@@ -388,15 +388,6 @@ export class DeckTracker {
 
       const isFriendly = this.resolveHistoryController(after) === localControllerId;
 
-      if (after.zone === 'HAND' && isFriendly && after.cardId !== '') {
-        this.extraDisplayState.recordEntityEnteredHand({
-          entityId: after.entityId,
-          cardId: after.cardId,
-        });
-      } else if (previousZone === 'HAND' && after.zone !== 'HAND') {
-        this.extraDisplayState.recordEntityLeftHand(after.entityId);
-      }
-
       if (after.cardId === '' || after.zone !== 'GRAVEYARD') continue;
       if (previousZone === 'GRAVEYARD') continue;
       this.extraDisplayState.recordEntityEnteredGraveyard({
@@ -615,9 +606,6 @@ export class DeckTracker {
     // Apply entities from snapshots.
     if (target === 'IN_MATCH' || target === 'PRE_MATCH') {
       this.applyEntitySnapshots({ matchInfo, deckState, handState, boardState });
-    }
-    if (target === 'IN_MATCH' && handState !== null) {
-      this.extraDisplayState.syncFriendlyHandEntities(handState.friendlyHand);
     }
     // Cache latest reflector state so `computeBoardAttack` (called
     // from `buildSnapshot`) sees authoritative minion data.
@@ -1254,7 +1242,7 @@ function isHistoryTrackableCardId(cardId: string): boolean {
 function isHeroOrPowerCardId(cardId: string): boolean {
   if (cardId.startsWith('HERO_')) return true;
   // Hero powers and replacement skills can use non-HERO IDs with a
-  // lowercase "p" suffix, e.g. EDR_850p from Infuse: Best Friend Forever.
+  // lowercase "p" suffix, e.g. EDR_850p.
   return /p\d*$/.test(cardId);
 }
 

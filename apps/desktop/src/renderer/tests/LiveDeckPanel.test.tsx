@@ -52,7 +52,6 @@ function makeSnapshot(overrides: {
         friendlyDeadDemonsThisGameUnique: [],
         friendlyDeadMinionsThisGameUnique: [],
       },
-      infuseProgressByCardId: {},
       friendlyBoard: [],
     },
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
@@ -88,7 +87,6 @@ const CARD_DEFS: Record<string, {
   COST5: { name: 'Right Card', cost: 5, rarity: 'COMMON' },
   COST10: { name: 'Left Card', cost: 10, rarity: 'COMMON' },
   CORE_BT_427: { name: 'Soul Feast', cost: 1, rarity: 'RARE', type: 'SPELL' },
-  CORE_MAW_012: { name: 'Hellfire Infused', cost: 5, rarity: 'FREE', type: 'SPELL' },
   CATA_529: { name: 'Felfused Fel-Fisher', cost: 6, rarity: 'RARE', type: 'MINION' },
   CATA_527: { name: 'Nespirah', cost: 3, rarity: 'LEGENDARY', type: 'LOCATION' },
   FEL_SPELL: { name: 'Fel Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'FEL' },
@@ -369,7 +367,6 @@ describe('LiveDeckPanel sorting', () => {
           friendlyDeadDemonsThisGameUnique: [],
           friendlyDeadMinionsThisGameUnique: [],
         },
-        infuseProgressByCardId: {},
         friendlyBoard: [],
       },
     });
@@ -389,34 +386,6 @@ describe('LiveDeckPanel sorting', () => {
     });
   });
 
-  it('shows demon-scoped Infuse progress on Hellfire Infused', async () => {
-    const snap = makeSnapshot({
-      original: [{ cardId: 'CORE_MAW_012', count: 1 }],
-      friendlyHand: ['CORE_MAW_012'],
-      extraDisplay: {
-        counters: { friendlyDemonDeathsThisGame: 2 },
-        pools: {
-          friendlyDeadDemonsThisGameUnique: [
-            { cardId: 'IMP_TOKEN', count: 2 },
-            { cardId: 'VOIDWALKER', count: 1 },
-          ],
-          friendlyDeadMinionsThisGameUnique: [],
-        },
-        infuseProgressByCardId: {
-          CORE_MAW_012: { friendlyDeaths: 4, friendlyDemonDeaths: 2 },
-        },
-        friendlyBoard: [],
-      },
-    });
-    useDeckTrackerStore.setState({ snapshot: snap });
-
-    render(<LiveDeckPanel />);
-
-    await waitFor(() => {
-      expect(screen.getAllByText('注能 2/3').length).toBeGreaterThan(0);
-    });
-  });
-
   it('renders reviewed deck-pool candidates from extra-display pools', async () => {
     const snap = makeSnapshot({
       original: [{ cardId: 'EDR_226', count: 1 }],
@@ -427,7 +396,6 @@ describe('LiveDeckPanel sorting', () => {
           friendlyDeadMinionsThisGameUnique: [],
           beastsRemainingInDeck: [{ cardId: 'BEAST_CARD', count: 2 }],
         },
-        infuseProgressByCardId: {},
         friendlyBoard: [],
       },
     });
@@ -451,7 +419,6 @@ describe('LiveDeckPanel sorting', () => {
           friendlyDeadDemonsThisGameUnique: [],
           friendlyDeadMinionsThisGameUnique: [],
         },
-        infuseProgressByCardId: {},
         friendlyBoard: [
           {
             entityId: 100,
@@ -486,7 +453,6 @@ describe('LiveDeckPanel sorting', () => {
           friendlyDeadDemonsThisGameUnique: [],
           friendlyDeadMinionsThisGameUnique: [],
         },
-        infuseProgressByCardId: {},
         friendlyBoard: [
           {
             entityId: 101,

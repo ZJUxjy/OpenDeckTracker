@@ -9,11 +9,10 @@ name a real tracker state source, not a generic placeholder such as
 
 ## Naming Rules
 
-- Use concrete counters or pools: `felSpellsCastThisGame`, `corpseCount`,
+- Use concrete counters or pools: `felSpellsCastThisGame`,
   `friendlyDeadDemonsThisGameUnique`.
 - Entity-scoped state must say so in the name: `...WhileThisEntityInHand`,
   `...ForThisEntity`, `...LinkedToThisEntity`.
-- Global history must not be reused for entity-scoped Infuse progress.
 - Pool state must imply owner, scope, and filter. If the filter is card-specific,
   use `graveyardPool.<cardCode>`, `deckPool.<cardCode>`, or
   `cardState.<cardCode>` until a reusable key is promoted.
@@ -24,9 +23,6 @@ name a real tracker state source, not a generic placeholder such as
 
 | Key | Meaning |
 |---|---|
-| `corpseCount` | Current friendly corpse count. |
-| `corpsesSpentThisGame` | Corpses spent by the player this game. |
-| `corpsesSpentForQuest` | Corpses counted toward a corpse-spend Quest. |
 | `friendlyMinionsDiedThisTurn` | Friendly minions that died this turn. |
 | `minionDeathsThisTurnBothPlayers` | Minions from both players that died this turn. |
 | `friendlyMinionDeathsThisGame` | Friendly minion death count this game. |
@@ -43,7 +39,7 @@ name a real tracker state source, not a generic placeholder such as
 | `friendlyTotemsSummonedThisGame` | Friendly Totems summoned this game. |
 | `heroPowerUsesThisGame` | Hero Power uses by the player this game. |
 | `heroPowerUsedThisTurn` | Whether the player used the Hero Power this turn. |
-| `heroPowerInfuseCountThisGame` | Times the player's Hero Power has been infused this game. |
+| `heroPowerImbueCountThisGame` | Times the player's Hero Power has been imbued this game. |
 | `cardsDiscardedThisGame` | Cards discarded by the player this game. |
 | `friendlyCharacterAttacksThisGame` | Friendly character attacks this game. |
 | `lastPlayedCardCost` | Cost of the player's most recently played card. |
@@ -54,10 +50,6 @@ name a real tracker state source, not a generic placeholder such as
 | Key | Meaning |
 |---|---|
 | `entityIdScopedCounter` | Marker that progress is stored per card entity, not per card id. |
-| `infuseProgressByFriendlyDeathsWhileThisEntityInHand` | Standard Infuse progress for one hand entity. Implementation: `extraDisplay.infuseProgressByCardId[cardId].friendlyDeaths`. |
-| `infuseProgressByFriendlyDemonDeathsWhileThisEntityInHand` | Demon-only Infuse progress for one hand entity. Implementation: `extraDisplay.infuseProgressByCardId[cardId].friendlyDemonDeaths`. |
-| `friendlyBeastDeathsWhileThisEntityInHand` | Beast-only Infuse/progress while this entity is in hand. |
-| `friendlyTotemDeathsWhileThisEntityInHand` | Totem-only Infuse progress while this entity is in hand. |
 | `manaSpentWhileThisEntityInHand` | Mana spent while this hand entity has been held. |
 | `minionPlayedWhileThisEntityInHand` | Whether a minion card was played while this hand entity was held. |
 | `natureSpellCastWhileThisEntityInHand` | Whether a Nature spell was cast while this entity was held. |

@@ -1,566 +1,460 @@
 {
-    "schemaVersion":  2,
-    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
-    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
-    "source":  {
-                   "inputDir":  "data/cards/review/standard-history-sensitive",
-                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
-                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
-                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
-               },
-    "class":  {
-                  "id":  "SHAMAN",
-                  "name":  {
-                               "enUS":  "Shaman",
-                               "zhCN":  "è¨æ»¡ç¥­å¸"
-                           }
-              },
-    "count":  17,
-    "cards":  [
-                  {
-                      "rank":  1,
-                      "sourceRank":  1,
-                      "cardCode":  "CORE_REV_920",
-                      "cardNameZhCN":  "可信的伪装",
-                      "cardTextZhCN":  "将一个友方随从变形成为法力值消耗增加（2）点的随从。\u003cb\u003e注能（@）：\u003c/b\u003e改为变形所有友方随从。",
-                      "cardTextZhCNPlain":  "将一个友方随从变形成为法力值消耗增加（2）点的随从。注能（）：改为变形所有友方随从。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "SPELL",
-                      "cost":  1,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "infuse_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState",
-                                                               "entityIdScopedCounter"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
-                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
-                                       }
-                  },
-                  {
-                      "rank":  2,
-                      "sourceRank":  2,
-                      "cardCode":  "CORE_MAW_003",
-                      "cardNameZhCN":  "图腾物证",
-                      "cardTextZhCN":  "选择一个基础图腾并召唤它。\n\u003cb\u003e注能（@个图腾）：\u003c/b\u003e改为召唤全部4个。",
-                      "cardTextZhCNPlain":  "选择一个基础图腾并召唤它。 注能（个图腾）：改为召唤全部4个。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "SPELL",
-                      "cost":  1,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "infuse_progress_by_tribe",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyTotemDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "图腾注能 {progress}/{required}；{effectText}",
-                                           "reasoningZhCN":  "图腾物证只统计在手期间友方图腾死亡。"
-                                       }
-                  },
-                  {
-                      "rank":  3,
-                      "sourceRank":  3,
-                      "cardCode":  "CORE_BT_115",
-                      "cardNameZhCN":  "沼泽之子",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e如果你在上回合施放过法术，\u003cb\u003e发现\u003c/b\u003e一张法术牌。",
-                      "cardTextZhCNPlain":  "战吼：如果你在上回合施放过法术，发现一张法术牌。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  3,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "DISCOVER"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "last_turn_condition",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlySpellCastLastTurn"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "上回合施放法术：{yesNo}",
-                                           "reasoningZhCN":  "沼泽之子战吼依赖上回合己方法术记录。"
-                                       }
-                  },
-                  {
-                      "rank":  4,
-                      "sourceRank":  4,
-                      "cardCode":  "CORE_REV_935",
-                      "cardNameZhCN":  "派对图腾",
-                      "cardTextZhCN":  "在你的回合结束时，随机召唤一个基础图腾。\u003cb\u003e注能（@）：\u003c/b\u003e改为召唤两个。",
-                      "cardTextZhCNPlain":  "在你的回合结束时，随机召唤一个基础图腾。注能（）：改为召唤两个。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  3,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "infuse_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState",
-                                                               "entityIdScopedCounter"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
-                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
-                                       }
-                  },
-                  {
-                      "rank":  6,
-                      "sourceRank":  6,
-                      "cardCode":  "CORE_OG_028",
-                      "cardNameZhCN":  "深渊魔物",
-                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e\n在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "嘲讽 在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  6,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "TAUNT"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "counter",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "counter.CORE_OG_028"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
-                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
-                                       }
-                  },
-                  {
-                      "rank":  7,
-                      "sourceRank":  7,
-                      "cardCode":  "Core_UNG_211",
-                      "cardNameZhCN":  "荒蛮之主卡利莫斯",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
-                      "cardTextZhCNPlain":  "战吼：如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  7,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "last_turn_condition",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "elementalPlayedLastTurn"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "上回合使用元素牌：{yesNo}",
-                                           "reasoningZhCN":  "卡利莫斯战吼依赖上回合元素使用记录。"
-                                       }
-                  },
-                  {
-                      "rank":  8,
-                      "sourceRank":  8,
-                      "cardCode":  "CORE_REV_838",
-                      "cardNameZhCN":  "图腾巨像",
-                      "cardTextZhCN":  "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  10,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "counter",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "counter.CORE_REV_838"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
-                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
-                                       }
-                  },
-                  {
-                      "rank":  9,
-                      "sourceRank":  9,
-                      "cardCode":  "CORE_ICC_090",
-                      "cardNameZhCN":  "雪怒巨人",
-                      "cardTextZhCN":  "在本局对战中，你每\u003cb\u003e过载\u003c/b\u003e一个法力水晶，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  11,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "cost_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "totalOverloadedCrystalsThisGame",
-                                                               "currentCost"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本局过载水晶：{count}；当前费用 {currentCost}",
-                                           "reasoningZhCN":  "雪怒巨人费用由累计过载水晶数决定。"
-                                       }
-                  },
-                  {
-                      "rank":  12,
-                      "sourceRank":  12,
-                      "cardCode":  "EDR_477",
-                      "cardNameZhCN":  "明根捕食花",
-                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "嘲讽。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  6,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "TAUNT"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "counter",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "counter.EDR_477"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
-                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
-                                       }
-                  },
-                  {
-                      "rank":  13,
-                      "sourceRank":  13,
-                      "cardCode":  "EDR_238",
-                      "cardNameZhCN":  "麦琳瑟拉",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e复活所有\n法力值消耗大于或等于（8）点的不同的友方随从。",
-                      "cardTextZhCNPlain":  "战吼：复活所有 法力值消耗大于或等于（8）点的不同的友方随从。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  6,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "graveyard_pool",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "graveyardPool.EDR_238"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "候选池：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "效果依赖本局死亡池，当前牌面无法直接得出候选。"
-                                       }
-                  },
-                  {
-                      "rank":  15,
-                      "sourceRank":  15,
-                      "cardCode":  "TLC_464",
-                      "cardNameZhCN":  "登山地图",
-                      "cardTextZhCN":  "\u003cb\u003e发现\u003c/b\u003e一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
-                      "cardTextZhCNPlain":  "发现一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "SPELL",
-                      "cost":  1,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "DISCOVER"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "played_type_tracker",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.TLC_464"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  18,
-                      "sourceRank":  18,
-                      "cardCode":  "TIME_213",
-                      "cardNameZhCN":  "始源监督者",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
-                      "cardTextZhCNPlain":  "战吼：如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  2,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "while_holding_condition",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.TIME_213"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  19,
-                      "sourceRank":  19,
-                      "cardCode":  "TIME_013",
-                      "cardNameZhCN":  "先知者沃",
-                      "cardTextZhCN":  "\u003cb\u003e扰魔\u003c/b\u003e。在你施放一个法术后，\u003cb\u003e发现\u003c/b\u003e一张来自过去的自然法术牌。",
-                      "cardTextZhCNPlain":  "扰魔。在你施放一个法术后，发现一张来自过去的自然法术牌。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "DISCOVER"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "candidate_pool",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.TIME_013"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  21,
-                      "sourceRank":  21,
-                      "cardCode":  "END_030",
-                      "cardNameZhCN":  "失控龙蛙",
-                      "cardTextZhCN":  "\u003cb\u003e扰魔\u003c/b\u003e。\u003cb\u003e嘲讽\u003c/b\u003e。在本局对战中，你每\u003cb\u003e过载\u003c/b\u003e一个法力水晶，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "扰魔。嘲讽。在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  6,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "TAUNT"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "cost_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "totalOverloadedCrystalsThisGame",
-                                                               "currentCost"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本局过载水晶：{count}；当前费用 {currentCost}",
-                                           "reasoningZhCN":  "失控龙蛙费用由累计过载水晶数决定。"
-                                       }
-                  },
-                  {
-                      "rank":  22,
-                      "sourceRank":  22,
-                      "cardCode":  "CATA_563",
-                      "cardNameZhCN":  "雷鸣流云",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。\u003cb\u003e亡语：\u003c/b\u003e施放该法术。",
-                      "cardTextZhCNPlain":  "战吼：选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。亡语：施放该法术。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "MINION",
-                      "cost":  3,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "stored_card_state",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "play",
-                                                                   "board",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "eligibleSpellsInHandCostLte4",
-                                                               "absorbedSpellEntity"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "可吸收法术：{eligibleSpells}；已吸收：{absorbedSpell}",
-                                           "reasoningZhCN":  "雷鸣流云打出前要知道可吸收目标，打出后要记住亡语法术。",
-                                           "emptyWarning":  true
-                                       }
-                  },
-                  {
-                      "rank":  23,
-                      "sourceRank":  23,
-                      "cardCode":  "CATA_567",
-                      "cardNameZhCN":  "升腾",
-                      "cardTextZhCN":  "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
-                      "cardTextZhCNPlain":  "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "SPELL",
-                      "cost":  4,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "original_mapping",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "play",
-                                                                   "board",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "transformedMinionOriginalEntityMap"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "死亡后召唤原随从：{originalMappings}",
-                                           "reasoningZhCN":  "升腾结算后需要记住每个变形随从对应的原随从。"
-                                       }
-                  },
-                  {
-                      "rank":  25,
-                      "sourceRank":  25,
-                      "cardCode":  "CATA_568",
-                      "cardNameZhCN":  "穆拉丁的奋战",
-                      "cardTextZhCN":  "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "SHAMAN",
-                      "type":  "SPELL",
-                      "cost":  9,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "cost_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyCharacterAttacksThisGame",
-                                                               "currentCost"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本局友方角色攻击：{count}；当前费用 {currentCost}",
-                                           "reasoningZhCN":  "穆拉丁的奋战费用由友方角色攻击次数决定。"
-                                       }
-                  }
-              ],
-    "reviewFields":  [
-                         "extraDisplay.schemaVersion: currently 2",
-                         "extraDisplay.auditDecision: keep for actionable candidates",
-                         "extraDisplay.displayType: canonical UI behavior category",
-                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
-                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
-                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
-                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
-                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
-                     ]
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T17:23:58.7974987Z",
+  "purpose": "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+  "source": {
+    "inputDir": "data/cards/review/standard-history-sensitive",
+    "basedOn": "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+    "exclusionPolicy": "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+    "note": "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+  },
+  "class": {
+    "id": "SHAMAN",
+    "name": {
+      "enUS": "Shaman",
+      "zhCN": "è¨æ»¡ç¥­å¸"
+    }
+  },
+  "count": 14,
+  "cards": [
+    {
+      "rank": 3,
+      "sourceRank": 3,
+      "cardCode": "CORE_BT_115",
+      "cardNameZhCN": "沼泽之子",
+      "cardTextZhCN": "<b>战吼：</b>如果你在上回合施放过法术，<b>发现</b>一张法术牌。",
+      "cardTextZhCNPlain": "战吼：如果你在上回合施放过法术，发现一张法术牌。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DISCOVER"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "last_turn_condition",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlySpellCastLastTurn"
+        ],
+        "suggestedDisplayTextZhCN": "上回合施放法术：{yesNo}",
+        "reasoningZhCN": "沼泽之子战吼依赖上回合己方法术记录。"
+      }
+    },
+    {
+      "rank": 6,
+      "sourceRank": 6,
+      "cardCode": "CORE_OG_028",
+      "cardNameZhCN": "深渊魔物",
+      "cardTextZhCN": "<b>嘲讽</b>\n在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "嘲讽 在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "counter",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "counter.CORE_OG_028"
+        ],
+        "suggestedDisplayTextZhCN": "计数：{count}；当前效果：{currentText}",
+        "reasoningZhCN": "效果数值由对局计数决定，需要显示当前可用数值。"
+      }
+    },
+    {
+      "rank": 7,
+      "sourceRank": 7,
+      "cardCode": "Core_UNG_211",
+      "cardNameZhCN": "荒蛮之主卡利莫斯",
+      "cardTextZhCN": "<b>战吼：</b>如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
+      "cardTextZhCNPlain": "战吼：如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "last_turn_condition",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "elementalPlayedLastTurn"
+        ],
+        "suggestedDisplayTextZhCN": "上回合使用元素牌：{yesNo}",
+        "reasoningZhCN": "卡利莫斯战吼依赖上回合元素使用记录。"
+      }
+    },
+    {
+      "rank": 8,
+      "sourceRank": 8,
+      "cardCode": "CORE_REV_838",
+      "cardNameZhCN": "图腾巨像",
+      "cardTextZhCN": "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 10,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "counter",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "counter.CORE_REV_838"
+        ],
+        "suggestedDisplayTextZhCN": "计数：{count}；当前效果：{currentText}",
+        "reasoningZhCN": "效果数值由对局计数决定，需要显示当前可用数值。"
+      }
+    },
+    {
+      "rank": 9,
+      "sourceRank": 9,
+      "cardCode": "CORE_ICC_090",
+      "cardNameZhCN": "雪怒巨人",
+      "cardTextZhCN": "在本局对战中，你每<b>过载</b>一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 11,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "cost_progress",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "totalOverloadedCrystalsThisGame",
+          "currentCost"
+        ],
+        "suggestedDisplayTextZhCN": "本局过载水晶：{count}；当前费用 {currentCost}",
+        "reasoningZhCN": "雪怒巨人费用由累计过载水晶数决定。"
+      }
+    },
+    {
+      "rank": 12,
+      "sourceRank": 12,
+      "cardCode": "EDR_477",
+      "cardNameZhCN": "明根捕食花",
+      "cardTextZhCN": "<b>嘲讽</b>。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "嘲讽。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "FREE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "counter",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "counter.EDR_477"
+        ],
+        "suggestedDisplayTextZhCN": "计数：{count}；当前效果：{currentText}",
+        "reasoningZhCN": "效果数值由对局计数决定，需要显示当前可用数值。"
+      }
+    },
+    {
+      "rank": 13,
+      "sourceRank": 13,
+      "cardCode": "EDR_238",
+      "cardNameZhCN": "麦琳瑟拉",
+      "cardTextZhCN": "<b>战吼：</b>复活所有\n法力值消耗大于或等于（8）点的不同的友方随从。",
+      "cardTextZhCNPlain": "战吼：复活所有 法力值消耗大于或等于（8）点的不同的友方随从。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "graveyard_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "graveyard",
+          "hover"
+        ],
+        "stateNeeded": [
+          "graveyardPool.EDR_238"
+        ],
+        "suggestedDisplayTextZhCN": "候选池：{cardNames}（{count}）",
+        "reasoningZhCN": "效果依赖本局死亡池，当前牌面无法直接得出候选。"
+      }
+    },
+    {
+      "rank": 15,
+      "sourceRank": 15,
+      "cardCode": "TLC_464",
+      "cardNameZhCN": "登山地图",
+      "cardTextZhCN": "<b>发现</b>一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
+      "cardTextZhCNPlain": "发现一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
+      "cardClass": "SHAMAN",
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "played_type_tracker",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.TLC_464"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 18,
+      "sourceRank": 18,
+      "cardCode": "TIME_213",
+      "cardNameZhCN": "始源监督者",
+      "cardTextZhCN": "<b>战吼：</b>如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
+      "cardTextZhCNPlain": "战吼：如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "while_holding_condition",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.TIME_213"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 19,
+      "sourceRank": 19,
+      "cardCode": "TIME_013",
+      "cardNameZhCN": "先知者沃",
+      "cardTextZhCN": "<b>扰魔</b>。在你施放一个法术后，<b>发现</b>一张来自过去的自然法术牌。",
+      "cardTextZhCNPlain": "扰魔。在你施放一个法术后，发现一张来自过去的自然法术牌。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "candidate_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.TIME_013"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 21,
+      "sourceRank": 21,
+      "cardCode": "END_030",
+      "cardNameZhCN": "失控龙蛙",
+      "cardTextZhCN": "<b>扰魔</b>。<b>嘲讽</b>。在本局对战中，你每<b>过载</b>一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "扰魔。嘲讽。在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "cost_progress",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "totalOverloadedCrystalsThisGame",
+          "currentCost"
+        ],
+        "suggestedDisplayTextZhCN": "本局过载水晶：{count}；当前费用 {currentCost}",
+        "reasoningZhCN": "失控龙蛙费用由累计过载水晶数决定。"
+      }
+    },
+    {
+      "rank": 22,
+      "sourceRank": 22,
+      "cardCode": "CATA_563",
+      "cardNameZhCN": "雷鸣流云",
+      "cardTextZhCN": "<b>战吼：</b>选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。<b>亡语：</b>施放该法术。",
+      "cardTextZhCNPlain": "战吼：选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。亡语：施放该法术。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "stored_card_state",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "play",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "eligibleSpellsInHandCostLte4",
+          "absorbedSpellEntity"
+        ],
+        "suggestedDisplayTextZhCN": "可吸收法术：{eligibleSpells}；已吸收：{absorbedSpell}",
+        "reasoningZhCN": "雷鸣流云打出前要知道可吸收目标，打出后要记住亡语法术。",
+        "emptyWarning": true
+      }
+    },
+    {
+      "rank": 23,
+      "sourceRank": 23,
+      "cardCode": "CATA_567",
+      "cardNameZhCN": "升腾",
+      "cardTextZhCN": "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
+      "cardTextZhCNPlain": "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
+      "cardClass": "SHAMAN",
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "original_mapping",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "play",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "transformedMinionOriginalEntityMap"
+        ],
+        "suggestedDisplayTextZhCN": "死亡后召唤原随从：{originalMappings}",
+        "reasoningZhCN": "升腾结算后需要记住每个变形随从对应的原随从。"
+      }
+    },
+    {
+      "rank": 25,
+      "sourceRank": 25,
+      "cardCode": "CATA_568",
+      "cardNameZhCN": "穆拉丁的奋战",
+      "cardTextZhCN": "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "SHAMAN",
+      "type": "SPELL",
+      "cost": 9,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "cost_progress",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyCharacterAttacksThisGame",
+          "currentCost"
+        ],
+        "suggestedDisplayTextZhCN": "本局友方角色攻击：{count}；当前费用 {currentCost}",
+        "reasoningZhCN": "穆拉丁的奋战费用由友方角色攻击次数决定。"
+      }
+    }
+  ],
+  "reviewFields": [
+    "extraDisplay.schemaVersion: currently 2",
+    "extraDisplay.auditDecision: keep for actionable candidates",
+    "extraDisplay.displayType: canonical UI behavior category",
+    "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+    "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+    "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+    "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+    "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+  ]
 }

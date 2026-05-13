@@ -1,576 +1,525 @@
 {
-    "schemaVersion":  2,
-    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
-    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
-    "source":  {
-                   "inputDir":  "data/cards/review/standard-history-sensitive",
-                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
-                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
-                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
-               },
-    "class":  {
-                  "id":  "DRUID",
-                  "name":  {
-                               "enUS":  "Druid",
-                               "zhCN":  "å¾·é²ä¼Š"
-                           }
-              },
-    "count":  17,
-    "cards":  [
-                  {
-                      "rank":  1,
-                      "sourceRank":  1,
-                      "cardCode":  "CORE_DMF_058",
-                      "cardNameZhCN":  "日蚀",
-                      "cardTextZhCN":  "在本回合中，你施放的下一个法术将施放两次。",
-                      "cardTextZhCNPlain":  "在本回合中，你施放的下一个法术将施放两次。",
-                      "cardClass":  "DRUID",
-                      "type":  "SPELL",
-                      "cost":  2,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "pending_next_spell_effect",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "solarEclipseNextSpellActive",
-                                                               "spellsInHand"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "日蚀待触发：{activeText}；下一个法术将施放两次",
-                                           "reasoningZhCN":  "日蚀是一次性的下一个法术效果，不是本局持续效果。"
-                                       }
-                  },
-                  {
-                      "rank":  4,
-                      "sourceRank":  4,
-                      "cardCode":  "CORE_REV_336",
-                      "cardNameZhCN":  "罪恶谋划",
-                      "cardTextZhCN":  "召唤两个2/2的树人。\u003cb\u003e注能（@）：\u003c/b\u003e改为两个5/5的古树。",
-                      "cardTextZhCNPlain":  "召唤两个2/2的树人。注能（）：改为两个5/5的古树。",
-                      "cardClass":  "DRUID",
-                      "type":  "SPELL",
-                      "cost":  3,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "infuse_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState",
-                                                               "entityIdScopedCounter"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
-                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
-                                       }
-                  },
-                  {
-                      "rank":  6,
-                      "sourceRank":  6,
-                      "cardCode":  "CORE_MAW_024",
-                      "cardNameZhCN":  "私法程序",
-                      "cardTextZhCN":  "在本局对战的剩余时间内，玩家会在其回合开始时额外抽一张牌。",
-                      "cardTextZhCNPlain":  "在本局对战的剩余时间内，玩家会在其回合开始时额外抽一张牌。",
-                      "cardClass":  "DRUID",
-                      "type":  "SPELL",
-                      "cost":  4,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "top_bar_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "dewProcessActiveCount"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "私法程序：{dewProcessActiveCount} 层；双方回合开始额外抽牌 +{dewProcessActiveCount}",
-                                           "reasoningZhCN":  "私法程序离开手牌后成为全局状态，更适合顶栏汇总。"
-                                       }
-                  },
-                  {
-                      "rank":  7,
-                      "sourceRank":  7,
-                      "cardCode":  "CORE_CS3_012",
-                      "cardNameZhCN":  "诺达希尔德鲁伊",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本回合中，你施放的下一个法术的法力值消耗减少（3）点。",
-                      "cardTextZhCNPlain":  "战吼：在本回合中，你施放的下一个法术的法力值消耗减少（3）点。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "pending_next_spell_effect",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "nordrassilNextSpellDiscountActive",
-                                                               "spellsInHand"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "诺达希尔待触发：{activeText}；下一个法术费用 -3",
-                                           "reasoningZhCN":  "该效果是一次性的下一个法术减费。"
-                                       }
-                  },
-                  {
-                      "rank":  12,
-                      "sourceRank":  12,
-                      "cardCode":  "CORE_REV_314",
-                      "cardNameZhCN":  "灌木巨龙托匹奥",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战的剩余时间内，在你施放一个自然法术后，召唤一条3/3并具有\u003cb\u003e突袭\u003c/b\u003e的雏龙。",
-                      "cardTextZhCNPlain":  "战吼：在本局对战的剩余时间内，在你施放一个自然法术后，召唤一条3/3并具有突袭的雏龙。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  7,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "on_board_trigger_highlight",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hand",
-                                                                   "deck",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "topiorEffectActive",
-                                                               "natureSpellsInHand",
-                                                               "natureSpellsInDeck"
-                                                           ],
-                                           "triggerHighlight":  {
-                                                                  "matchSpellSchool":  "NATURE"
-                                                              },
-                                           "suggestedDisplayTextZhCN":  "托匹奥效果：{activeText}；高亮自然法术 {natureSpellCount} 张",
-                                           "reasoningZhCN":  "托匹奥生效后，自然法术会额外召唤雏龙。"
-                                       }
-                  },
-                  {
-                      "rank":  13,
-                      "sourceRank":  13,
-                      "cardCode":  "CORE_DMF_060",
-                      "cardNameZhCN":  "幽影猫头鹰",
-                      "cardTextZhCN":  "\u003cb\u003e突袭\u003c/b\u003e\n在本局对战中，你每施放一个法术，本牌的法力值消耗便减少（1）点。",
-                      "cardTextZhCNPlain":  "突袭 在本局对战中，你每施放一个法术，本牌的法力值消耗便减少（1）点。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  7,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "RUSH"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "cost_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "spellsCastThisGame",
-                                                               "currentCost"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本局已施放法术：{spellsCastThisGame}；当前费用 {currentCost}",
-                                           "reasoningZhCN":  "猫头鹰费用依赖本局施法总数。"
-                                       }
-                  },
-                  {
-                      "rank":  15,
-                      "sourceRank":  15,
-                      "cardCode":  "CORE_ICC_835",
-                      "cardNameZhCN":  "哈多诺克斯",
-                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e召唤所有你在本局对战中死亡的，并具有\u003cb\u003e嘲讽\u003c/b\u003e的随从。",
-                      "cardTextZhCNPlain":  "亡语：召唤所有你在本局对战中死亡的，并具有嘲讽的随从。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  9,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "graveyard_pool",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "graveyardPool.CORE_ICC_835"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "候选池：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "效果依赖本局死亡池，当前牌面无法直接得出候选。"
-                                       }
-                  },
-                  {
-                      "rank":  18,
-                      "sourceRank":  18,
-                      "cardCode":  "EDR_271",
-                      "cardNameZhCN":  "林地塑型者",
-                      "cardTextZhCN":  "在你施放一个自然法术后，召唤一个2/2并具有“\u003cb\u003e亡语：\u003c/b\u003e获取该法术的一张复制”的树人。",
-                      "cardTextZhCNPlain":  "在你施放一个自然法术后，召唤一个2/2并具有“亡语：获取该法术的一张复制”的树人。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  5,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "on_board_trigger_highlight",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "deck",
-                                                                   "board",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "woodlandShaperOnBoard",
-                                                               "natureSpellsInHand",
-                                                               "natureSpellsInDeck"
-                                                           ],
-                                           "triggerHighlight":  {
-                                                                  "matchSpellSchool":  "NATURE"
-                                                              },
-                                           "suggestedDisplayTextZhCN":  "林地塑型者在场：{activeText}；高亮自然法术 {natureSpellCount} 张",
-                                           "reasoningZhCN":  "林地塑型者只有自身在场时才让自然法术产生额外价值。"
-                                       }
-                  },
-                  {
-                      "rank":  19,
-                      "sourceRank":  19,
-                      "cardCode":  "EDR_845",
-                      "cardNameZhCN":  "哈缪尔·符文图腾",
-                      "cardTextZhCN":  "\u003cb\u003e对战开始时：\u003c/b\u003e\n如果你套牌中的每张法术牌均为自然法术，\u003cb\u003e灌注\u003c/b\u003e你的英雄技能。你每施放3个法术，重复此效果。",
-                      "cardTextZhCNPlain":  "对战开始时： 如果你套牌中的每张法术牌均为自然法术，灌注你的英雄技能。你每施放3个法术，重复此效果。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  5,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "modular_spell_count_progress",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hand",
-                                                                   "deck",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "hamuulEffectActive",
-                                                               "spellsCastThisGame",
-                                                               "spellsCastSinceLastHamuulTrigger"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "哈缪尔条件：{activeText}；施法进度 {spellsCastSinceLastTrigger}/3",
-                                           "reasoningZhCN":  "哈缪尔需要按每 3 次施法滚动触发。"
-                                       }
-                  },
-                  {
-                      "rank":  23,
-                      "sourceRank":  23,
-                      "cardCode":  "TLC_257",
-                      "cardNameZhCN":  "洛，在世传奇",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你的随从牌的法力值消耗为（5）点。",
-                      "cardTextZhCNPlain":  "战吼：在本局对战中，你的随从牌的法力值消耗为（5）点。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  9,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "top_bar_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "loRestOfGameEffectActive"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "洛效果：{activeText}；你的随从牌费用视为 5",
-                                           "reasoningZhCN":  "这是本局全局费用覆盖，适合顶栏和受影响随从角标。"
-                                       }
-                  },
-                  {
-                      "rank":  24,
-                      "sourceRank":  24,
-                      "cardCode":  "DINO_421",
-                      "cardNameZhCN":  "震地雷龙",
-                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e。\u003cb\u003e扰魔\u003c/b\u003e\n\u003cb\u003e亡语：\u003c/b\u003e使你的手牌和牌库里的所有随从牌获得+3/+3。",
-                      "cardTextZhCNPlain":  "嘲讽。扰魔 亡语：使你的手牌和牌库里的所有随从牌获得+3/+3。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  9,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "DEATHRATTLE",
-                                        "TAUNT"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "deathrattle_buff_applied_set",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "thundertailBuffedEntityIds",
-                                                               "handAndDeckMinionBuffStats"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "震地雷龙增益：{activeText}；已标记随从 +3/+3",
-                                           "reasoningZhCN":  "该亡语是一次性快照 buff，必须按 entityId 锁定被 buff 的手牌/牌库随从。"
-                                       }
-                  },
-                  {
-                      "rank":  25,
-                      "sourceRank":  25,
-                      "cardCode":  "TIME_702",
-                      "cardNameZhCN":  "潮起潮落",
-                      "cardTextZhCN":  "造成$3点伤害。如果你在本牌在你手中时使用过随从牌，获得5点护甲值。",
-                      "cardTextZhCNPlain":  "造成3点伤害。如果你在本牌在你手中时使用过随从牌，获得5点护甲值。",
-                      "cardClass":  "DRUID",
-                      "type":  "SPELL",
-                      "cost":  2,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "while_holding_condition",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.TIME_702"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  26,
-                      "sourceRank":  26,
-                      "cardCode":  "END_009",
-                      "cardNameZhCN":  "破碎现实",
-                      "cardTextZhCN":  "召唤两个2/2的树人。在本局对战中，每有一个友方树人死亡，使这两个树人获得+1/+1。@\u003ci\u003e（已\n死亡@个）\u003c/i\u003e",
-                      "cardTextZhCNPlain":  "召唤两个2/2的树人。在本局对战中，每有一个友方树人死亡，使这两个树人获得+1/+1。（已 死亡个）",
-                      "cardClass":  "DRUID",
-                      "type":  "SPELL",
-                      "cost":  4,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "death_history_counter",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyTreantDeathsThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本局死亡友方树人：{friendlyTreantDeathsThisGame}；召唤树人 {attack}/{health}",
-                                           "reasoningZhCN":  "破碎现实使用全局友方树人死亡数，不是手牌注能计数。"
-                                       }
-                  },
-                  {
-                      "rank":  27,
-                      "sourceRank":  27,
-                      "cardCode":  "CATA_131",
-                      "cardNameZhCN":  "费伍德树人",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。\u003ci\u003e（还剩{0}点！）\u003c/i\u003e@\u003cb\u003e战吼：\u003c/b\u003e获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。\u003ci\u003e（已经就绪！）\u003c/i\u003e@\u003cb\u003e战吼：\u003c/b\u003e获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。",
-                      "cardTextZhCNPlain":  "战吼：获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。（还剩{0}点！）战吼：获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。（已经就绪！）战吼：获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  2,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "while_holding_progress",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.CATA_131"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  28,
-                      "sourceRank":  28,
-                      "cardCode":  "CATA_132",
-                      "cardNameZhCN":  "护巢龙",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e获取两张3/3并具有\u003cb\u003e嘲讽\u003c/b\u003e的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。\u003ci\u003e（还剩{0}点！）\u003c/i\u003e@\u003cb\u003e战吼：\u003c/b\u003e获取两张3/3并具有\u003cb\u003e嘲讽\u003c/b\u003e的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。\u003ci\u003e（已经就绪！）\u003c/i\u003e@\u003cb\u003e战吼：\u003c/b\u003e获取两张3/3并具有\u003cb\u003e嘲讽\u003c/b\u003e的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。",
-                      "cardTextZhCNPlain":  "战吼：获取两张3/3并具有嘲讽的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。（还剩{0}点！）战吼：获取两张3/3并具有嘲讽的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。（已经就绪！）战吼：获取两张3/3并具有嘲讽的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "while_holding_progress",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.CATA_132"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  31,
-                      "sourceRank":  31,
-                      "cardCode":  "CATA_140",
-                      "cardNameZhCN":  "梦境之龙麦琳瑟拉",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。\u003ci\u003e（还剩{0}点！）\u003c/i\u003e@\u003cb\u003e战吼：\u003c/b\u003e用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。\u003ci\u003e（已经就绪！）\u003c/i\u003e@\u003cb\u003e战吼：\u003c/b\u003e用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。",
-                      "cardTextZhCNPlain":  "战吼：用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。（还剩{0}点！）战吼：用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。（已经就绪！）战吼：用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  8,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "while_holding_progress",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.CATA_140"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  16,
-                      "sourceRank":  16,
-                      "cardCode":  "FIR_908",
-                      "cardNameZhCN":  "火炭变色龙",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e如果你在本回合中使用过英雄技能，使一个友方随从获得+1/+2和\u003cb\u003e突袭\u003c/b\u003e。",
-                      "cardTextZhCNPlain":  "战吼：如果你在本回合中使用过英雄技能，使一个友方随从获得+1/+2和突袭。",
-                      "cardClass":  "DRUID",
-                      "type":  "MINION",
-                      "cost":  1,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "condition_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.FIR_908"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  }
-              ],
-    "reviewFields":  [
-                         "extraDisplay.schemaVersion: currently 2",
-                         "extraDisplay.auditDecision: keep for actionable candidates",
-                         "extraDisplay.displayType: canonical UI behavior category",
-                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
-                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
-                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
-                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
-                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
-                     ]
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T17:23:58.7974987Z",
+  "purpose": "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+  "source": {
+    "inputDir": "data/cards/review/standard-history-sensitive",
+    "basedOn": "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+    "exclusionPolicy": "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+    "note": "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+  },
+  "class": {
+    "id": "DRUID",
+    "name": {
+      "enUS": "Druid",
+      "zhCN": "å¾·é²ä¼Š"
+    }
+  },
+  "count": 16,
+  "cards": [
+    {
+      "rank": 1,
+      "sourceRank": 1,
+      "cardCode": "CORE_DMF_058",
+      "cardNameZhCN": "日蚀",
+      "cardTextZhCN": "在本回合中，你施放的下一个法术将施放两次。",
+      "cardTextZhCNPlain": "在本回合中，你施放的下一个法术将施放两次。",
+      "cardClass": "DRUID",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "pending_next_spell_effect",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "solarEclipseNextSpellActive",
+          "spellsInHand"
+        ],
+        "suggestedDisplayTextZhCN": "日蚀待触发：{activeText}；下一个法术将施放两次",
+        "reasoningZhCN": "日蚀是一次性的下一个法术效果，不是本局持续效果。"
+      }
+    },
+    {
+      "rank": 6,
+      "sourceRank": 6,
+      "cardCode": "CORE_MAW_024",
+      "cardNameZhCN": "私法程序",
+      "cardTextZhCN": "在本局对战的剩余时间内，玩家会在其回合开始时额外抽一张牌。",
+      "cardTextZhCNPlain": "在本局对战的剩余时间内，玩家会在其回合开始时额外抽一张牌。",
+      "cardClass": "DRUID",
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "top_bar_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "dewProcessActiveCount"
+        ],
+        "suggestedDisplayTextZhCN": "私法程序：{dewProcessActiveCount} 层；双方回合开始额外抽牌 +{dewProcessActiveCount}",
+        "reasoningZhCN": "私法程序离开手牌后成为全局状态，更适合顶栏汇总。"
+      }
+    },
+    {
+      "rank": 7,
+      "sourceRank": 7,
+      "cardCode": "CORE_CS3_012",
+      "cardNameZhCN": "诺达希尔德鲁伊",
+      "cardTextZhCN": "<b>战吼：</b>在本回合中，你施放的下一个法术的法力值消耗减少（3）点。",
+      "cardTextZhCNPlain": "战吼：在本回合中，你施放的下一个法术的法力值消耗减少（3）点。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "pending_next_spell_effect",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "nordrassilNextSpellDiscountActive",
+          "spellsInHand"
+        ],
+        "suggestedDisplayTextZhCN": "诺达希尔待触发：{activeText}；下一个法术费用 -3",
+        "reasoningZhCN": "该效果是一次性的下一个法术减费。"
+      }
+    },
+    {
+      "rank": 12,
+      "sourceRank": 12,
+      "cardCode": "CORE_REV_314",
+      "cardNameZhCN": "灌木巨龙托匹奥",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战的剩余时间内，在你施放一个自然法术后，召唤一条3/3并具有<b>突袭</b>的雏龙。",
+      "cardTextZhCNPlain": "战吼：在本局对战的剩余时间内，在你施放一个自然法术后，召唤一条3/3并具有突袭的雏龙。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "on_board_trigger_highlight",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "top_bar",
+          "hand",
+          "deck",
+          "hover"
+        ],
+        "stateNeeded": [
+          "topiorEffectActive",
+          "natureSpellsInHand",
+          "natureSpellsInDeck"
+        ],
+        "triggerHighlight": {
+          "matchSpellSchool": "NATURE"
+        },
+        "suggestedDisplayTextZhCN": "托匹奥效果：{activeText}；高亮自然法术 {natureSpellCount} 张",
+        "reasoningZhCN": "托匹奥生效后，自然法术会额外召唤雏龙。"
+      }
+    },
+    {
+      "rank": 13,
+      "sourceRank": 13,
+      "cardCode": "CORE_DMF_060",
+      "cardNameZhCN": "幽影猫头鹰",
+      "cardTextZhCN": "<b>突袭</b>\n在本局对战中，你每施放一个法术，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "突袭 在本局对战中，你每施放一个法术，本牌的法力值消耗便减少（1）点。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "RARE",
+      "mechanics": [
+        "RUSH"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "cost_progress",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "spellsCastThisGame",
+          "currentCost"
+        ],
+        "suggestedDisplayTextZhCN": "本局已施放法术：{spellsCastThisGame}；当前费用 {currentCost}",
+        "reasoningZhCN": "猫头鹰费用依赖本局施法总数。"
+      }
+    },
+    {
+      "rank": 15,
+      "sourceRank": 15,
+      "cardCode": "CORE_ICC_835",
+      "cardNameZhCN": "哈多诺克斯",
+      "cardTextZhCN": "<b>亡语：</b>召唤所有你在本局对战中死亡的，并具有<b>嘲讽</b>的随从。",
+      "cardTextZhCNPlain": "亡语：召唤所有你在本局对战中死亡的，并具有嘲讽的随从。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "graveyard_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "graveyard",
+          "hover"
+        ],
+        "stateNeeded": [
+          "graveyardPool.CORE_ICC_835"
+        ],
+        "suggestedDisplayTextZhCN": "候选池：{cardNames}（{count}）",
+        "reasoningZhCN": "效果依赖本局死亡池，当前牌面无法直接得出候选。"
+      }
+    },
+    {
+      "rank": 18,
+      "sourceRank": 18,
+      "cardCode": "EDR_271",
+      "cardNameZhCN": "林地塑型者",
+      "cardTextZhCN": "在你施放一个自然法术后，召唤一个2/2并具有“<b>亡语：</b>获取该法术的一张复制”的树人。",
+      "cardTextZhCNPlain": "在你施放一个自然法术后，召唤一个2/2并具有“亡语：获取该法术的一张复制”的树人。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "on_board_trigger_highlight",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "deck",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "woodlandShaperOnBoard",
+          "natureSpellsInHand",
+          "natureSpellsInDeck"
+        ],
+        "triggerHighlight": {
+          "matchSpellSchool": "NATURE"
+        },
+        "suggestedDisplayTextZhCN": "林地塑型者在场：{activeText}；高亮自然法术 {natureSpellCount} 张",
+        "reasoningZhCN": "林地塑型者只有自身在场时才让自然法术产生额外价值。"
+      }
+    },
+    {
+      "rank": 19,
+      "sourceRank": 19,
+      "cardCode": "EDR_845",
+      "cardNameZhCN": "哈缪尔·符文图腾",
+      "cardTextZhCN": "<b>对战开始时：</b>\n如果你套牌中的每张法术牌均为自然法术，<b>灌注</b>你的英雄技能。你每施放3个法术，重复此效果。",
+      "cardTextZhCNPlain": "对战开始时： 如果你套牌中的每张法术牌均为自然法术，灌注你的英雄技能。你每施放3个法术，重复此效果。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "modular_spell_count_progress",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hand",
+          "deck",
+          "hover"
+        ],
+        "stateNeeded": [
+          "hamuulEffectActive",
+          "spellsCastThisGame",
+          "spellsCastSinceLastHamuulTrigger"
+        ],
+        "suggestedDisplayTextZhCN": "哈缪尔条件：{activeText}；施法进度 {spellsCastSinceLastTrigger}/3",
+        "reasoningZhCN": "哈缪尔需要按每 3 次施法滚动触发。"
+      }
+    },
+    {
+      "rank": 23,
+      "sourceRank": 23,
+      "cardCode": "TLC_257",
+      "cardNameZhCN": "洛，在世传奇",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，你的随从牌的法力值消耗为（5）点。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，你的随从牌的法力值消耗为（5）点。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "top_bar_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "loRestOfGameEffectActive"
+        ],
+        "suggestedDisplayTextZhCN": "洛效果：{activeText}；你的随从牌费用视为 5",
+        "reasoningZhCN": "这是本局全局费用覆盖，适合顶栏和受影响随从角标。"
+      }
+    },
+    {
+      "rank": 24,
+      "sourceRank": 24,
+      "cardCode": "DINO_421",
+      "cardNameZhCN": "震地雷龙",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>扰魔</b>\n<b>亡语：</b>使你的手牌和牌库里的所有随从牌获得+3/+3。",
+      "cardTextZhCNPlain": "嘲讽。扰魔 亡语：使你的手牌和牌库里的所有随从牌获得+3/+3。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "deathrattle_buff_applied_set",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "graveyard",
+          "hover"
+        ],
+        "stateNeeded": [
+          "thundertailBuffedEntityIds",
+          "handAndDeckMinionBuffStats"
+        ],
+        "suggestedDisplayTextZhCN": "震地雷龙增益：{activeText}；已标记随从 +3/+3",
+        "reasoningZhCN": "该亡语是一次性快照 buff，必须按 entityId 锁定被 buff 的手牌/牌库随从。"
+      }
+    },
+    {
+      "rank": 25,
+      "sourceRank": 25,
+      "cardCode": "TIME_702",
+      "cardNameZhCN": "潮起潮落",
+      "cardTextZhCN": "造成$3点伤害。如果你在本牌在你手中时使用过随从牌，获得5点护甲值。",
+      "cardTextZhCNPlain": "造成3点伤害。如果你在本牌在你手中时使用过随从牌，获得5点护甲值。",
+      "cardClass": "DRUID",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "while_holding_condition",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.TIME_702"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 26,
+      "sourceRank": 26,
+      "cardCode": "END_009",
+      "cardNameZhCN": "破碎现实",
+      "cardTextZhCN": "召唤两个2/2的树人。在本局对战中，每有一个友方树人死亡，使这两个树人获得+1/+1。@<i>（已\n死亡@个）</i>",
+      "cardTextZhCNPlain": "召唤两个2/2的树人。在本局对战中，每有一个友方树人死亡，使这两个树人获得+1/+1。（已 死亡个）",
+      "cardClass": "DRUID",
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "death_history_counter",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyTreantDeathsThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "本局死亡友方树人：{friendlyTreantDeathsThisGame}；召唤树人 {attack}/{health}",
+        "reasoningZhCN": "破碎现实使用全局友方树人死亡数，不是手牌实体计数。"
+      }
+    },
+    {
+      "rank": 27,
+      "sourceRank": 27,
+      "cardCode": "CATA_131",
+      "cardNameZhCN": "费伍德树人",
+      "cardTextZhCN": "<b>战吼：</b>获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。<i>（还剩{0}点！）</i>@<b>战吼：</b>获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。<i>（已经就绪！）</i>@<b>战吼：</b>获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。",
+      "cardTextZhCNPlain": "战吼：获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。（还剩{0}点！）战吼：获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。（已经就绪！）战吼：获得一个临时的法力水晶。如果你在本牌在你手中时消耗过4点法力值，该法力水晶变为永久获得。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "while_holding_progress",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.CATA_131"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 28,
+      "sourceRank": 28,
+      "cardCode": "CATA_132",
+      "cardNameZhCN": "护巢龙",
+      "cardTextZhCN": "<b>战吼：</b>获取两张3/3并具有<b>嘲讽</b>的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。<i>（还剩{0}点！）</i>@<b>战吼：</b>获取两张3/3并具有<b>嘲讽</b>的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。<i>（已经就绪！）</i>@<b>战吼：</b>获取两张3/3并具有<b>嘲讽</b>的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。",
+      "cardTextZhCNPlain": "战吼：获取两张3/3并具有嘲讽的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。（还剩{0}点！）战吼：获取两张3/3并具有嘲讽的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。（已经就绪！）战吼：获取两张3/3并具有嘲讽的雏龙。如果你在本牌在你手中时消耗过8点法力值，召唤这两条雏龙。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "while_holding_progress",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.CATA_132"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 31,
+      "sourceRank": 31,
+      "cardCode": "CATA_140",
+      "cardNameZhCN": "梦境之龙麦琳瑟拉",
+      "cardTextZhCN": "<b>战吼：</b>用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。<i>（还剩{0}点！）</i>@<b>战吼：</b>用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。<i>（已经就绪！）</i>@<b>战吼：</b>用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。",
+      "cardTextZhCNPlain": "战吼：用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。（还剩{0}点！）战吼：用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。（已经就绪！）战吼：用随机的龙牌填满你的手牌。如果你在本牌在你手中时消耗过25点法力值，这些龙牌的法力值消耗为（1）点。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "while_holding_progress",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.CATA_140"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 16,
+      "sourceRank": 16,
+      "cardCode": "FIR_908",
+      "cardNameZhCN": "火炭变色龙",
+      "cardTextZhCN": "<b>战吼：</b>如果你在本回合中使用过英雄技能，使一个友方随从获得+1/+2和<b>突袭</b>。",
+      "cardTextZhCNPlain": "战吼：如果你在本回合中使用过英雄技能，使一个友方随从获得+1/+2和突袭。",
+      "cardClass": "DRUID",
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "condition_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.FIR_908"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    }
+  ],
+  "reviewFields": [
+    "extraDisplay.schemaVersion: currently 2",
+    "extraDisplay.auditDecision: keep for actionable candidates",
+    "extraDisplay.displayType: canonical UI behavior category",
+    "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+    "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+    "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+    "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+    "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+  ]
 }

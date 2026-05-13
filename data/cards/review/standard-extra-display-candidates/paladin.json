@@ -1,405 +1,365 @@
 {
-    "schemaVersion":  2,
-    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
-    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
-    "source":  {
-                   "inputDir":  "data/cards/review/standard-history-sensitive",
-                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
-                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
-                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
-               },
-    "class":  {
-                  "id":  "PALADIN",
-                  "name":  {
-                               "enUS":  "Paladin",
-                               "zhCN":  "åœ£éª‘å£«"
-                           }
-              },
-    "count":  12,
-    "cards":  [
-                  {
-                      "rank":  4,
-                      "sourceRank":  4,
-                      "cardCode":  "CORE_CS3_029",
-                      "cardNameZhCN":  "正义追击",
-                      "cardTextZhCN":  "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
-                      "cardTextZhCNPlain":  "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
-                      "cardClass":  "PALADIN",
-                      "type":  "SPELL",
-                      "cost":  2,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "silver_hand_recruit_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "silverHandRecruitBaseAttack",
-                                                               "silverHandRecruitBaseHealth",
-                                                               "silverHandRecruitBuffSources"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
-                                           "reasoningZhCN":  "圣骑士新兵永久增益需要合并显示，不应逐张分散。"
-                                       }
-                  },
-                  {
-                      "rank":  5,
-                      "sourceRank":  5,
-                      "cardCode":  "CORE_DMF_194",
-                      "cardNameZhCN":  "赤鳞驯龙者",
-                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e抽一张龙牌。",
-                      "cardTextZhCNPlain":  "亡语：抽一张龙牌。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  2,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "deck_pool",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "deckPool.CORE_DMF_194"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
-                                       }
-                  },
-                  {
-                      "rank":  6,
-                      "sourceRank":  6,
-                      "cardCode":  "CORE_REV_955",
-                      "cardNameZhCN":  "执事者斯图尔特",
-                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e\n使你召唤的下一个白银之手新兵获得+3/+3以及此\u003cb\u003e亡语\u003c/b\u003e。",
-                      "cardTextZhCNPlain":  "亡语： 使你召唤的下一个白银之手新兵获得+3/+3以及此亡语。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  3,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "silver_hand_recruit_pending_buff",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "stewartNextRecruitBuffStacks"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "待应用：下一个白银之手新兵 +3/+3 及亡语（{stacks} 层）",
-                                           "reasoningZhCN":  "斯图尔特是新兵汇总组件的待应用状态。"
-                                       }
-                  },
-                  {
-                      "rank":  8,
-                      "sourceRank":  8,
-                      "cardCode":  "CORE_REV_958",
-                      "cardNameZhCN":  "餐会巨仆",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e召唤两个白银之手新兵。\u003cb\u003e注能（@）：\u003c/b\u003e使其获得+2攻击力和\u003cb\u003e圣盾\u003c/b\u003e。",
-                      "cardTextZhCNPlain":  "战吼：召唤两个白银之手新兵。注能（）：使其获得+2攻击力和圣盾。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "infuse_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState",
-                                                               "entityIdScopedCounter"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
-                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
-                                       }
-                  },
-                  {
-                      "rank":  10,
-                      "sourceRank":  10,
-                      "cardCode":  "CORE_DMF_240",
-                      "cardNameZhCN":  "救赎者洛萨克森",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得\u003cb\u003e圣盾\u003c/b\u003e。",
-                      "cardTextZhCNPlain":  "战吼：在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得圣盾。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  5,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "silver_hand_recruit_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "lothraxionEffectActive",
-                                                               "silverHandRecruitBuffSources"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "白银之手新兵获得圣盾：{activeText}",
-                                           "reasoningZhCN":  "洛萨克森属于新兵汇总状态。"
-                                       }
-                  },
-                  {
-                      "rank":  11,
-                      "sourceRank":  11,
-                      "cardCode":  "CORE_BT_334",
-                      "cardNameZhCN":  "女伯爵莉亚德琳",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
-                      "cardTextZhCNPlain":  "战吼：将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  7,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "played_spell_pool",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "spellsCastOnFriendlyCharactersThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "将加入手牌的法术：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "莉亚德琳依赖本局对友方角色施放过的法术。",
-                                           "emptyWarning":  true
-                                       }
-                  },
-                  {
-                      "rank":  14,
-                      "sourceRank":  14,
-                      "cardCode":  "TLC_430",
-                      "cardNameZhCN":  "圣窟生物",
-                      "cardTextZhCN":  "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术\u003ci\u003e（尽可能以本随从为目标）\u003c/i\u003e。",
-                      "cardTextZhCNPlain":  "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术（尽可能以本随从为目标）。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "current_turn_holy_spells_cast",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "holySpellsCastThisTurn"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本回合神圣法术：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "圣窟生物需要本回合神圣法术池。"
-                                       }
-                  },
-                  {
-                      "rank":  18,
-                      "sourceRank":  18,
-                      "cardCode":  "MEND_800",
-                      "cardNameZhCN":  "莽撞的战场军官",
-                      "cardTextZhCN":  "\u003cb\u003e突袭\u003c/b\u003e。\u003cb\u003e亡语：\u003c/b\u003e在本局对战中，使你的白银之手新兵获得+1\n攻击力。",
-                      "cardTextZhCNPlain":  "突袭。亡语：在本局对战中，使你的白银之手新兵获得+1 攻击力。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  2,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "silver_hand_recruit_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "silverHandRecruitBaseAttack",
-                                                               "silverHandRecruitBuffSources"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
-                                           "reasoningZhCN":  "莽撞的战场军官并入新兵汇总组件。"
-                                       }
-                  },
-                  {
-                      "rank":  19,
-                      "sourceRank":  19,
-                      "cardCode":  "CATA_472",
-                      "cardNameZhCN":  "灵感之槌",
-                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e随机触发一个友方随从的回合结束效果。",
-                      "cardTextZhCNPlain":  "亡语：随机触发一个友方随从的回合结束效果。",
-                      "cardClass":  "PALADIN",
-                      "type":  "WEAPON",
-                      "cost":  2,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "related_target_pool",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardState.CATA_472"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "状态：{value}",
-                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
-                                       }
-                  },
-                  {
-                      "rank":  20,
-                      "sourceRank":  20,
-                      "cardCode":  "MEND_805",
-                      "cardNameZhCN":  "捐助",
-                      "cardTextZhCN":  "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
-                      "cardTextZhCNPlain":  "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
-                      "cardClass":  "PALADIN",
-                      "type":  "SPELL",
-                      "cost":  3,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "turn_graveyard_pool",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyMinionsDiedThisTurn"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本回合死亡友方随从：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "捐助依赖本回合友方随从死亡池。",
-                                           "emptyWarning":  true
-                                       }
-                  },
-                  {
-                      "rank":  21,
-                      "sourceRank":  21,
-                      "cardCode":  "MEND_801",
-                      "cardNameZhCN":  "坚定的救援者",
-                      "cardTextZhCN":  "\u003cb\u003e圣盾\u003c/b\u003e。在本随从失去\u003cb\u003e圣盾\u003c/b\u003e后，在本局对战中，使你的白银之手新兵获得+1生命值。",
-                      "cardTextZhCNPlain":  "圣盾。在本随从失去圣盾后，在本局对战中，使你的白银之手新兵获得+1生命值。",
-                      "cardClass":  "PALADIN",
-                      "type":  "MINION",
-                      "cost":  3,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-                                        "DIVINE_SHIELD"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "silver_hand_recruit_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "silverHandRecruitBaseHealth",
-                                                               "silverHandRecruitBuffSources"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
-                                           "reasoningZhCN":  "坚定的救援者并入新兵汇总组件。"
-                                       }
-                  },
-                  {
-                      "rank":  22,
-                      "sourceRank":  22,
-                      "cardCode":  "MEND_803",
-                      "cardNameZhCN":  "砺胆重剑",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，使你的白银之手新兵获得+1/+1。",
-                      "cardTextZhCNPlain":  "战吼：在本局对战中，使你的白银之手新兵获得+1/+1。",
-                      "cardClass":  "PALADIN",
-                      "type":  "WEAPON",
-                      "cost":  5,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "silver_hand_recruit_status",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "top_bar",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "silverHandRecruitBaseAttack",
-                                                               "silverHandRecruitBaseHealth",
-                                                               "silverHandRecruitBuffSources"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
-                                           "reasoningZhCN":  "砺胆重剑并入新兵汇总组件。"
-                                       }
-                  }
-              ],
-    "reviewFields":  [
-                         "extraDisplay.schemaVersion: currently 2",
-                         "extraDisplay.auditDecision: keep for actionable candidates",
-                         "extraDisplay.displayType: canonical UI behavior category",
-                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
-                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
-                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
-                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
-                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
-                     ]
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T17:23:58.7974987Z",
+  "purpose": "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+  "source": {
+    "inputDir": "data/cards/review/standard-history-sensitive",
+    "basedOn": "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+    "exclusionPolicy": "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+    "note": "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+  },
+  "class": {
+    "id": "PALADIN",
+    "name": {
+      "enUS": "Paladin",
+      "zhCN": "åœ£éª‘å£«"
+    }
+  },
+  "count": 11,
+  "cards": [
+    {
+      "rank": 4,
+      "sourceRank": 4,
+      "cardCode": "CORE_CS3_029",
+      "cardNameZhCN": "正义追击",
+      "cardTextZhCN": "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
+      "cardTextZhCNPlain": "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
+      "cardClass": "PALADIN",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "silver_hand_recruit_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "silverHandRecruitBaseAttack",
+          "silverHandRecruitBaseHealth",
+          "silverHandRecruitBuffSources"
+        ],
+        "suggestedDisplayTextZhCN": "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
+        "reasoningZhCN": "圣骑士新兵永久增益需要合并显示，不应逐张分散。"
+      }
+    },
+    {
+      "rank": 5,
+      "sourceRank": 5,
+      "cardCode": "CORE_DMF_194",
+      "cardNameZhCN": "赤鳞驯龙者",
+      "cardTextZhCN": "<b>亡语：</b>抽一张龙牌。",
+      "cardTextZhCNPlain": "亡语：抽一张龙牌。",
+      "cardClass": "PALADIN",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "deck_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "hover"
+        ],
+        "stateNeeded": [
+          "deckPool.CORE_DMF_194"
+        ],
+        "suggestedDisplayTextZhCN": "牌库候选：{cardNames}（{count}）",
+        "reasoningZhCN": "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+      }
+    },
+    {
+      "rank": 6,
+      "sourceRank": 6,
+      "cardCode": "CORE_REV_955",
+      "cardNameZhCN": "执事者斯图尔特",
+      "cardTextZhCN": "<b>亡语：</b>\n使你召唤的下一个白银之手新兵获得+3/+3以及此<b>亡语</b>。",
+      "cardTextZhCNPlain": "亡语： 使你召唤的下一个白银之手新兵获得+3/+3以及此亡语。",
+      "cardClass": "PALADIN",
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "silver_hand_recruit_pending_buff",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "stewartNextRecruitBuffStacks"
+        ],
+        "suggestedDisplayTextZhCN": "待应用：下一个白银之手新兵 +3/+3 及亡语（{stacks} 层）",
+        "reasoningZhCN": "斯图尔特是新兵汇总组件的待应用状态。"
+      }
+    },
+    {
+      "rank": 10,
+      "sourceRank": 10,
+      "cardCode": "CORE_DMF_240",
+      "cardNameZhCN": "救赎者洛萨克森",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得<b>圣盾</b>。",
+      "cardTextZhCNPlain": "战吼：在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得圣盾。",
+      "cardClass": "PALADIN",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "silver_hand_recruit_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "lothraxionEffectActive",
+          "silverHandRecruitBuffSources"
+        ],
+        "suggestedDisplayTextZhCN": "白银之手新兵获得圣盾：{activeText}",
+        "reasoningZhCN": "洛萨克森属于新兵汇总状态。"
+      }
+    },
+    {
+      "rank": 11,
+      "sourceRank": 11,
+      "cardCode": "CORE_BT_334",
+      "cardNameZhCN": "女伯爵莉亚德琳",
+      "cardTextZhCN": "<b>战吼：</b>将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
+      "cardTextZhCNPlain": "战吼：将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
+      "cardClass": "PALADIN",
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "played_spell_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "spellsCastOnFriendlyCharactersThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "将加入手牌的法术：{cardNames}（{count}）",
+        "reasoningZhCN": "莉亚德琳依赖本局对友方角色施放过的法术。",
+        "emptyWarning": true
+      }
+    },
+    {
+      "rank": 14,
+      "sourceRank": 14,
+      "cardCode": "TLC_430",
+      "cardNameZhCN": "圣窟生物",
+      "cardTextZhCN": "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术<i>（尽可能以本随从为目标）</i>。",
+      "cardTextZhCNPlain": "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术（尽可能以本随从为目标）。",
+      "cardClass": "PALADIN",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "current_turn_holy_spells_cast",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "holySpellsCastThisTurn"
+        ],
+        "suggestedDisplayTextZhCN": "本回合神圣法术：{cardNames}（{count}）",
+        "reasoningZhCN": "圣窟生物需要本回合神圣法术池。"
+      }
+    },
+    {
+      "rank": 18,
+      "sourceRank": 18,
+      "cardCode": "MEND_800",
+      "cardNameZhCN": "莽撞的战场军官",
+      "cardTextZhCN": "<b>突袭</b>。<b>亡语：</b>在本局对战中，使你的白银之手新兵获得+1\n攻击力。",
+      "cardTextZhCNPlain": "突袭。亡语：在本局对战中，使你的白银之手新兵获得+1 攻击力。",
+      "cardClass": "PALADIN",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "silver_hand_recruit_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "silverHandRecruitBaseAttack",
+          "silverHandRecruitBuffSources"
+        ],
+        "suggestedDisplayTextZhCN": "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
+        "reasoningZhCN": "莽撞的战场军官并入新兵汇总组件。"
+      }
+    },
+    {
+      "rank": 19,
+      "sourceRank": 19,
+      "cardCode": "CATA_472",
+      "cardNameZhCN": "灵感之槌",
+      "cardTextZhCN": "<b>亡语：</b>随机触发一个友方随从的回合结束效果。",
+      "cardTextZhCNPlain": "亡语：随机触发一个友方随从的回合结束效果。",
+      "cardClass": "PALADIN",
+      "type": "WEAPON",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "related_target_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardState.CATA_472"
+        ],
+        "suggestedDisplayTextZhCN": "状态：{value}",
+        "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 20,
+      "sourceRank": 20,
+      "cardCode": "MEND_805",
+      "cardNameZhCN": "捐助",
+      "cardTextZhCN": "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
+      "cardTextZhCNPlain": "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
+      "cardClass": "PALADIN",
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "turn_graveyard_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "graveyard",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyMinionsDiedThisTurn"
+        ],
+        "suggestedDisplayTextZhCN": "本回合死亡友方随从：{cardNames}（{count}）",
+        "reasoningZhCN": "捐助依赖本回合友方随从死亡池。",
+        "emptyWarning": true
+      }
+    },
+    {
+      "rank": 21,
+      "sourceRank": 21,
+      "cardCode": "MEND_801",
+      "cardNameZhCN": "坚定的救援者",
+      "cardTextZhCN": "<b>圣盾</b>。在本随从失去<b>圣盾</b>后，在本局对战中，使你的白银之手新兵获得+1生命值。",
+      "cardTextZhCNPlain": "圣盾。在本随从失去圣盾后，在本局对战中，使你的白银之手新兵获得+1生命值。",
+      "cardClass": "PALADIN",
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DIVINE_SHIELD"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "silver_hand_recruit_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "silverHandRecruitBaseHealth",
+          "silverHandRecruitBuffSources"
+        ],
+        "suggestedDisplayTextZhCN": "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
+        "reasoningZhCN": "坚定的救援者并入新兵汇总组件。"
+      }
+    },
+    {
+      "rank": 22,
+      "sourceRank": 22,
+      "cardCode": "MEND_803",
+      "cardNameZhCN": "砺胆重剑",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，使你的白银之手新兵获得+1/+1。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，使你的白银之手新兵获得+1/+1。",
+      "cardClass": "PALADIN",
+      "type": "WEAPON",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "silver_hand_recruit_status",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "top_bar",
+          "hover"
+        ],
+        "stateNeeded": [
+          "silverHandRecruitBaseAttack",
+          "silverHandRecruitBaseHealth",
+          "silverHandRecruitBuffSources"
+        ],
+        "suggestedDisplayTextZhCN": "白银之手新兵：{attack}/{health}（来源：{buffSourceList}）",
+        "reasoningZhCN": "砺胆重剑并入新兵汇总组件。"
+      }
+    }
+  ],
+  "reviewFields": [
+    "extraDisplay.schemaVersion: currently 2",
+    "extraDisplay.auditDecision: keep for actionable candidates",
+    "extraDisplay.displayType: canonical UI behavior category",
+    "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+    "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+    "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+    "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+    "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+  ]
 }

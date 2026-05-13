@@ -33,7 +33,6 @@ export type {
 export type {
   ExtraDisplayCardLookup,
   ExtraDisplayCardMetadata,
-  ExtraDisplayInfuseProgress,
   ExtraDisplayPoolEntry,
   ExtraDisplaySnapshot,
 } from './tracker/extra-display-state';

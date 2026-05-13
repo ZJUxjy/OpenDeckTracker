@@ -1,478 +1,406 @@
 {
-    "schemaVersion":  2,
-    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
-    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
-    "source":  {
-                   "inputDir":  "data/cards/review/standard-history-sensitive",
-                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
-                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
-                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
-               },
-    "class":  {
-                  "id":  "WARLOCK",
-                  "name":  {
-                               "enUS":  "Warlock",
-                               "zhCN":  "æœ¯å£«"
-                           }
-              },
-    "count":  14,
-    "cards":  [
-                  {
-                      "rank":  4,
-                      "sourceRank":  4,
-                      "cardCode":  "CORE_MAW_002",
-                      "cardNameZhCN":  "尸身保护令",
-                      "cardTextZhCN":  "\u003cb\u003e发现\u003c/b\u003e并复活一个友方随从，使其获得\u003cb\u003e突袭\u003c/b\u003e。该随从会在回合结束时死亡。",
-                      "cardTextZhCNPlain":  "发现并复活一个友方随从，使其获得突袭。该随从会在回合结束时死亡。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "SPELL",
-                      "cost":  3,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "DISCOVER"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "graveyard_pool",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyDeadMinionPoolThisGameUnique"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "可发现复活：{cardNames}",
-                                           "reasoningZhCN":  "尸身保护令发现池来自本局死亡友方随从。",
-                                           "emptyWarning":  true
-                                       }
-                  },
-                  {
-                      "rank":  6,
-                      "sourceRank":  6,
-                      "cardCode":  "CORE_REV_244",
-                      "cardNameZhCN":  "调皮的小鬼",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e召唤一个本随从的复制。\u003cb\u003e注能（@）：\u003c/b\u003e改为召唤两个复制。",
-                      "cardTextZhCNPlain":  "战吼：召唤一个本随从的复制。注能（）：改为召唤两个复制。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "infuse_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState",
-                                                               "entityIdScopedCounter"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
-                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
-                                       }
-                  },
-                  {
-                      "rank":  8,
-                      "sourceRank":  8,
-                      "cardCode":  "CORE_ICC_841",
-                      "cardNameZhCN":  "鲜血女王兰娜瑟尔",
-                      "cardTextZhCN":  "\u003cb\u003e吸血\u003c/b\u003e\n在本局对战中，你每弃掉一张牌，便拥有+1攻击力。",
-                      "cardTextZhCNPlain":  "吸血 在本局对战中，你每弃掉一张牌，便拥有+1攻击力。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  5,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "LIFESTEAL"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "attribute_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardsDiscardedThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "已弃牌：{cardsDiscardedThisGame}；当前攻击力加成 +{cardsDiscardedThisGame}",
-                                           "reasoningZhCN":  "兰娜瑟尔攻击力依赖本局弃牌次数。"
-                                       }
-                  },
-                  {
-                      "rank":  9,
-                      "sourceRank":  9,
-                      "cardCode":  "CORE_CS3_003",
-                      "cardNameZhCN":  "邪魂狱卒",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e使你的对手弃掉一张随从牌。\u003cb\u003e亡语：\u003c/b\u003e移回弃掉的牌。",
-                      "cardTextZhCNPlain":  "战吼：使你的对手弃掉一张随从牌。亡语：移回弃掉的牌。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  5,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "linked_card",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "play",
-                                                                   "board",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "linkedCard.CORE_CS3_003"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "绑定牌：{linkedCardName}",
-                                           "reasoningZhCN":  "效果绑定具体实体，后续亡语或回归需要查看该绑定。"
-                                       }
-                  },
-                  {
-                      "rank":  10,
-                      "sourceRank":  10,
-                      "cardCode":  "CORE_REV_373",
-                      "cardNameZhCN":  "暗脉女勋爵",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e召唤两个2/1的阴影。每个阴影获得一个\u003cb\u003e亡语\u003c/b\u003e以施放你的上一个暗影法术。",
-                      "cardTextZhCNPlain":  "战吼：召唤两个2/1的阴影。每个阴影获得一个亡语以施放你的上一个暗影法术。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  5,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "last_relevant_card",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "play",
-                                                                   "board",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "lastShadowSpellCastByYou",
-                                                               "shadowWaltzTokenDeathrattleSpell"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "上一个暗影法术：{cardName}",
-                                           "reasoningZhCN":  "暗脉女勋爵生成的阴影亡语会施放上一个暗影法术。"
-                                       }
-                  },
-                  {
-                      "rank":  11,
-                      "sourceRank":  11,
-                      "cardCode":  "CORE_REV_372",
-                      "cardNameZhCN":  "暗影华尔兹",
-                      "cardTextZhCN":  "召唤一个3/5并具有\u003cb\u003e嘲讽\u003c/b\u003e的影子。如果在本回合中有随从死亡，再召唤一个。",
-                      "cardTextZhCNPlain":  "召唤一个3/5并具有嘲讽的影子。如果在本回合中有随从死亡，再召唤一个。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "SPELL",
-                      "cost":  5,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "turn_condition",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "minionDeathsThisTurnBothPlayers"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "本回合已有随从死亡：{yesNo}；预计召唤 {summonCount} 个影子",
-                                           "reasoningZhCN":  "暗影华尔兹的额外召唤依赖本回合是否有随从死亡。"
-                                       }
-                  },
-                  {
-                      "rank":  12,
-                      "sourceRank":  12,
-                      "cardCode":  "CORE_REV_835",
-                      "cardNameZhCN":  "小鬼大王拉法姆",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e复活四个友方小鬼。\u003cb\u003e注能（@）：\u003c/b\u003e使你的小鬼获得+2/+2。",
-                      "cardTextZhCNPlain":  "战吼：复活四个友方小鬼。注能（）：使你的小鬼获得+2/+2。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  6,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "INFUSE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "graveyard_pool_and_infuse_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyDeadImpsThisGameUnique",
-                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
-                                                               "infuseRequired",
-                                                               "infusedState"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "可复活小鬼：{impCount}；注能 {progress}/{required}",
-                                           "reasoningZhCN":  "小鬼大王拉法姆需要分离小鬼墓地池和实体注能进度。",
-                                           "emptyWarning":  true
-                                       }
-                  },
-                  {
-                      "rank":  14,
-                      "sourceRank":  14,
-                      "cardCode":  "EDR_485",
-                      "cardNameZhCN":  "腐心树妖",
-                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e抽一张法力值消耗大于或等于（7）点的随从牌。",
-                      "cardTextZhCNPlain":  "亡语：抽一张法力值消耗大于或等于（7）点的随从牌。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  1,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "deck_pool",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "deckPool.EDR_485"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
-                                       }
-                  },
-                  {
-                      "rank":  15,
-                      "sourceRank":  15,
-                      "cardCode":  "EDR_491",
-                      "cardNameZhCN":  "荆棘大德鲁伊",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e获得在本回合中死亡的你的随从的\u003cb\u003e亡语\u003c/b\u003e。",
-                      "cardTextZhCNPlain":  "战吼：获得在本回合中死亡的你的随从的亡语。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  2,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "turn_graveyard_deathrattle_pool",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "hand",
-                                                                   "graveyard",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "friendlyMinionsDiedThisTurnWithDeathrattles"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "将获得亡语：{deathrattleTexts}",
-                                           "reasoningZhCN":  "荆棘大德鲁伊获得本回合死亡己方随从亡语。",
-                                           "emptyWarning":  true
-                                       }
-                  },
-                  {
-                      "rank":  17,
-                      "sourceRank":  17,
-                      "cardCode":  "EDR_494",
-                      "cardNameZhCN":  "饥饿古树",
-                      "cardTextZhCN":  "在你的回合结束时，吞食一个你的牌库中的随从，并获得其属性值。\u003cb\u003e亡语：\u003c/b\u003e将被吞食的随从置入手牌。",
-                      "cardTextZhCNPlain":  "在你的回合结束时，吞食一个你的牌库中的随从，并获得其属性值。亡语：将被吞食的随从置入手牌。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  8,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "deck_pool",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "deckPool.EDR_494"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
-                                       }
-                  },
-                  {
-                      "rank":  19,
-                      "sourceRank":  19,
-                      "cardCode":  "DINO_131",
-                      "cardNameZhCN":  "着魔的动物术师",
-                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e随机从你的牌库中召唤一只野兽。使其获得\u003cb\u003e吸血\u003c/b\u003e。",
-                      "cardTextZhCNPlain":  "亡语：随机从你的牌库中召唤一只野兽。使其获得吸血。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  5,
-                      "rarity":  "RARE",
-                      "mechanics":  [
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "deck_pool",
-                                           "implementationPriority":  "medium",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "deckPool.DINO_131"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
-                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
-                                       }
-                  },
-                  {
-                      "rank":  22,
-                      "sourceRank":  22,
-                      "cardCode":  "END_018",
-                      "cardNameZhCN":  "无穷助祭",
-                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e将你手牌中一张随机卡牌的法力值消耗变为无穷大！\u003cb\u003e亡语：\u003c/b\u003e将其变回原本消耗。",
-                      "cardTextZhCNPlain":  "战吼：将你手牌中一张随机卡牌的法力值消耗变为无穷大！亡语：将其变回原本消耗。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  3,
-                      "rarity":  "FREE",
-                      "mechanics":  [
-                                        "BATTLECRY",
-                                        "DEATHRATTLE"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "linked_card",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "play",
-                                                                   "board",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "infiniteCostLinkedHandCard",
-                                                               "linkedCardOriginalCost"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "绑定牌：{linkedCardName}；原始费用 {originalCost}",
-                                           "reasoningZhCN":  "无穷助祭亡语恢复战吼绑定的手牌费用。"
-                                       }
-                  },
-                  {
-                      "rank":  23,
-                      "sourceRank":  23,
-                      "cardCode":  "TIME_005",
-                      "cardNameZhCN":  "时空大盗拉法姆",
-                      "cardTextZhCN":  "\u003cb\u003e奇闻+\u003c/b\u003e\n你的套牌容量为40，但其中有10张拉法姆！\u003cb\u003e战吼：\u003c/b\u003e如果你使用过其余拉法姆，消灭敌方英雄。@\u003ci\u003e（还剩{0}个！）\u003c/i\u003e@\u003ci\u003e（已经就绪！）\u003c/i\u003e",
-                      "cardTextZhCNPlain":  "奇闻+ 你的套牌容量为40，但其中有10张拉法姆！战吼：如果你使用过其余拉法姆，消灭敌方英雄。（还剩{0}个！）（已经就绪！）",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  10,
-                      "rarity":  "LEGENDARY",
-                      "mechanics":  [
-                                        "BATTLECRY"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "counter",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "counter.TIME_005"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
-                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
-                                       }
-                  },
-                  {
-                      "rank":  25,
-                      "sourceRank":  25,
-                      "cardCode":  "CATA_493",
-                      "cardNameZhCN":  "地狱公爵",
-                      "cardTextZhCN":  "\u003cb\u003e突袭\u003c/b\u003e。在本局对战中，你每弃掉一张牌，便拥有+2/+2。",
-                      "cardTextZhCNPlain":  "突袭。在本局对战中，你每弃掉一张牌，便拥有+2/+2。",
-                      "cardClass":  "WARLOCK",
-                      "type":  "MINION",
-                      "cost":  4,
-                      "rarity":  "EPIC",
-                      "mechanics":  [
-                                        "RUSH"
-                                    ],
-                      "extraDisplay":  {
-                                           "schemaVersion":  2,
-                                           "auditDecision":  "keep",
-                                           "displayType":  "attribute_progress",
-                                           "implementationPriority":  "high",
-                                           "displaySurfaces":  [
-                                                                   "deck",
-                                                                   "hand",
-                                                                   "hover"
-                                                               ],
-                                           "stateNeeded":  [
-                                                               "cardsDiscardedThisGame"
-                                                           ],
-                                           "suggestedDisplayTextZhCN":  "已弃牌：{cardsDiscardedThisGame}；当前加成 +{buff}/+{buff}",
-                                           "reasoningZhCN":  "地狱公爵身材由本局弃牌次数决定。"
-                                       }
-                  }
-              ],
-    "reviewFields":  [
-                         "extraDisplay.schemaVersion: currently 2",
-                         "extraDisplay.auditDecision: keep for actionable candidates",
-                         "extraDisplay.displayType: canonical UI behavior category",
-                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
-                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
-                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
-                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
-                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
-                     ]
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T17:23:58.7974987Z",
+  "purpose": "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+  "source": {
+    "inputDir": "data/cards/review/standard-history-sensitive",
+    "basedOn": "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+    "exclusionPolicy": "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+    "note": "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+  },
+  "class": {
+    "id": "WARLOCK",
+    "name": {
+      "enUS": "Warlock",
+      "zhCN": "æœ¯å£«"
+    }
+  },
+  "count": 12,
+  "cards": [
+    {
+      "rank": 4,
+      "sourceRank": 4,
+      "cardCode": "CORE_MAW_002",
+      "cardNameZhCN": "尸身保护令",
+      "cardTextZhCN": "<b>发现</b>并复活一个友方随从，使其获得<b>突袭</b>。该随从会在回合结束时死亡。",
+      "cardTextZhCNPlain": "发现并复活一个友方随从，使其获得突袭。该随从会在回合结束时死亡。",
+      "cardClass": "WARLOCK",
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "graveyard_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "graveyard",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyDeadMinionPoolThisGameUnique"
+        ],
+        "suggestedDisplayTextZhCN": "可发现复活：{cardNames}",
+        "reasoningZhCN": "尸身保护令发现池来自本局死亡友方随从。",
+        "emptyWarning": true
+      }
+    },
+    {
+      "rank": 8,
+      "sourceRank": 8,
+      "cardCode": "CORE_ICC_841",
+      "cardNameZhCN": "鲜血女王兰娜瑟尔",
+      "cardTextZhCN": "<b>吸血</b>\n在本局对战中，你每弃掉一张牌，便拥有+1攻击力。",
+      "cardTextZhCNPlain": "吸血 在本局对战中，你每弃掉一张牌，便拥有+1攻击力。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "LIFESTEAL"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "attribute_progress",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardsDiscardedThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "已弃牌：{cardsDiscardedThisGame}；当前攻击力加成 +{cardsDiscardedThisGame}",
+        "reasoningZhCN": "兰娜瑟尔攻击力依赖本局弃牌次数。"
+      }
+    },
+    {
+      "rank": 9,
+      "sourceRank": 9,
+      "cardCode": "CORE_CS3_003",
+      "cardNameZhCN": "邪魂狱卒",
+      "cardTextZhCN": "<b>战吼：</b>使你的对手弃掉一张随从牌。<b>亡语：</b>移回弃掉的牌。",
+      "cardTextZhCNPlain": "战吼：使你的对手弃掉一张随从牌。亡语：移回弃掉的牌。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "linked_card",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "play",
+          "board",
+          "graveyard",
+          "hover"
+        ],
+        "stateNeeded": [
+          "linkedCard.CORE_CS3_003"
+        ],
+        "suggestedDisplayTextZhCN": "绑定牌：{linkedCardName}",
+        "reasoningZhCN": "效果绑定具体实体，后续亡语或回归需要查看该绑定。"
+      }
+    },
+    {
+      "rank": 10,
+      "sourceRank": 10,
+      "cardCode": "CORE_REV_373",
+      "cardNameZhCN": "暗脉女勋爵",
+      "cardTextZhCN": "<b>战吼：</b>召唤两个2/1的阴影。每个阴影获得一个<b>亡语</b>以施放你的上一个暗影法术。",
+      "cardTextZhCNPlain": "战吼：召唤两个2/1的阴影。每个阴影获得一个亡语以施放你的上一个暗影法术。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "last_relevant_card",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "play",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "lastShadowSpellCastByYou",
+          "shadowWaltzTokenDeathrattleSpell"
+        ],
+        "suggestedDisplayTextZhCN": "上一个暗影法术：{cardName}",
+        "reasoningZhCN": "暗脉女勋爵生成的阴影亡语会施放上一个暗影法术。"
+      }
+    },
+    {
+      "rank": 11,
+      "sourceRank": 11,
+      "cardCode": "CORE_REV_372",
+      "cardNameZhCN": "暗影华尔兹",
+      "cardTextZhCN": "召唤一个3/5并具有<b>嘲讽</b>的影子。如果在本回合中有随从死亡，再召唤一个。",
+      "cardTextZhCNPlain": "召唤一个3/5并具有嘲讽的影子。如果在本回合中有随从死亡，再召唤一个。",
+      "cardClass": "WARLOCK",
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "turn_condition",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "minionDeathsThisTurnBothPlayers"
+        ],
+        "suggestedDisplayTextZhCN": "本回合已有随从死亡：{yesNo}；预计召唤 {summonCount} 个影子",
+        "reasoningZhCN": "暗影华尔兹的额外召唤依赖本回合是否有随从死亡。"
+      }
+    },
+    {
+      "rank": 14,
+      "sourceRank": 14,
+      "cardCode": "EDR_485",
+      "cardNameZhCN": "腐心树妖",
+      "cardTextZhCN": "<b>亡语：</b>抽一张法力值消耗大于或等于（7）点的随从牌。",
+      "cardTextZhCNPlain": "亡语：抽一张法力值消耗大于或等于（7）点的随从牌。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "deck_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "hover"
+        ],
+        "stateNeeded": [
+          "deckPool.EDR_485"
+        ],
+        "suggestedDisplayTextZhCN": "牌库候选：{cardNames}（{count}）",
+        "reasoningZhCN": "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+      }
+    },
+    {
+      "rank": 15,
+      "sourceRank": 15,
+      "cardCode": "EDR_491",
+      "cardNameZhCN": "荆棘大德鲁伊",
+      "cardTextZhCN": "<b>战吼：</b>获得在本回合中死亡的你的随从的<b>亡语</b>。",
+      "cardTextZhCNPlain": "战吼：获得在本回合中死亡的你的随从的亡语。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "turn_graveyard_deathrattle_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "graveyard",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyMinionsDiedThisTurnWithDeathrattles"
+        ],
+        "suggestedDisplayTextZhCN": "将获得亡语：{deathrattleTexts}",
+        "reasoningZhCN": "荆棘大德鲁伊获得本回合死亡己方随从亡语。",
+        "emptyWarning": true
+      }
+    },
+    {
+      "rank": 17,
+      "sourceRank": 17,
+      "cardCode": "EDR_494",
+      "cardNameZhCN": "饥饿古树",
+      "cardTextZhCN": "在你的回合结束时，吞食一个你的牌库中的随从，并获得其属性值。<b>亡语：</b>将被吞食的随从置入手牌。",
+      "cardTextZhCNPlain": "在你的回合结束时，吞食一个你的牌库中的随从，并获得其属性值。亡语：将被吞食的随从置入手牌。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "deck_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "hover"
+        ],
+        "stateNeeded": [
+          "deckPool.EDR_494"
+        ],
+        "suggestedDisplayTextZhCN": "牌库候选：{cardNames}（{count}）",
+        "reasoningZhCN": "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+      }
+    },
+    {
+      "rank": 19,
+      "sourceRank": 19,
+      "cardCode": "DINO_131",
+      "cardNameZhCN": "着魔的动物术师",
+      "cardTextZhCN": "<b>亡语：</b>随机从你的牌库中召唤一只野兽。使其获得<b>吸血</b>。",
+      "cardTextZhCNPlain": "亡语：随机从你的牌库中召唤一只野兽。使其获得吸血。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "deck_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "hover"
+        ],
+        "stateNeeded": [
+          "deckPool.DINO_131"
+        ],
+        "suggestedDisplayTextZhCN": "牌库候选：{cardNames}（{count}）",
+        "reasoningZhCN": "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+      }
+    },
+    {
+      "rank": 22,
+      "sourceRank": 22,
+      "cardCode": "END_018",
+      "cardNameZhCN": "无穷助祭",
+      "cardTextZhCN": "<b>战吼：</b>将你手牌中一张随机卡牌的法力值消耗变为无穷大！<b>亡语：</b>将其变回原本消耗。",
+      "cardTextZhCNPlain": "战吼：将你手牌中一张随机卡牌的法力值消耗变为无穷大！亡语：将其变回原本消耗。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "linked_card",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "play",
+          "board",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "infiniteCostLinkedHandCard",
+          "linkedCardOriginalCost"
+        ],
+        "suggestedDisplayTextZhCN": "绑定牌：{linkedCardName}；原始费用 {originalCost}",
+        "reasoningZhCN": "无穷助祭亡语恢复战吼绑定的手牌费用。"
+      }
+    },
+    {
+      "rank": 23,
+      "sourceRank": 23,
+      "cardCode": "TIME_005",
+      "cardNameZhCN": "时空大盗拉法姆",
+      "cardTextZhCN": "<b>奇闻+</b>\n你的套牌容量为40，但其中有10张拉法姆！<b>战吼：</b>如果你使用过其余拉法姆，消灭敌方英雄。@<i>（还剩{0}个！）</i>@<i>（已经就绪！）</i>",
+      "cardTextZhCNPlain": "奇闻+ 你的套牌容量为40，但其中有10张拉法姆！战吼：如果你使用过其余拉法姆，消灭敌方英雄。（还剩{0}个！）（已经就绪！）",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 10,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "counter",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "counter.TIME_005"
+        ],
+        "suggestedDisplayTextZhCN": "计数：{count}；当前效果：{currentText}",
+        "reasoningZhCN": "效果数值由对局计数决定，需要显示当前可用数值。"
+      }
+    },
+    {
+      "rank": 25,
+      "sourceRank": 25,
+      "cardCode": "CATA_493",
+      "cardNameZhCN": "地狱公爵",
+      "cardTextZhCN": "<b>突袭</b>。在本局对战中，你每弃掉一张牌，便拥有+2/+2。",
+      "cardTextZhCNPlain": "突袭。在本局对战中，你每弃掉一张牌，便拥有+2/+2。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "RUSH"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "attribute_progress",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "cardsDiscardedThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "已弃牌：{cardsDiscardedThisGame}；当前加成 +{buff}/+{buff}",
+        "reasoningZhCN": "地狱公爵身材由本局弃牌次数决定。"
+      }
+    }
+  ],
+  "reviewFields": [
+    "extraDisplay.schemaVersion: currently 2",
+    "extraDisplay.auditDecision: keep for actionable candidates",
+    "extraDisplay.displayType: canonical UI behavior category",
+    "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+    "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+    "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+    "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+    "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+  ]
 }

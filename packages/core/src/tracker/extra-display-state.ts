@@ -18,23 +18,6 @@ export interface ExtraDisplayPoolEntry {
   count: number;
 }
 
-/**
- * Per-card-id Infuse progress, aggregated across all friendly hand
- * instances of that card. Each entry stores how many friendly minion
- * (and demon) deaths have been credited to the *best* in-hand instance
- * of that cardId. If two copies are in hand and one has 2 credits while
- * the other has 0, the entry reports 2 — the player only needs to know
- * "can I infuse if I play this card".
- */
-export interface ExtraDisplayInfuseProgress {
-  friendlyDeaths: number;
-  friendlyDemonDeaths: number;
-  friendlyBeastDeaths?: number;
-  friendlyTotemDeaths?: number;
-  cumulativeAttack?: number;
-  spellsCast?: number;
-}
-
 export interface ExtraDisplaySnapshot {
   /** Stable scalar states keyed by the review vocabulary names where possible. */
   counters: Record<string, number>;
@@ -44,8 +27,6 @@ export interface ExtraDisplaySnapshot {
     friendlyDeadMinionsThisGameUnique: ExtraDisplayPoolEntry[];
     [key: string]: ExtraDisplayPoolEntry[];
   };
-  /** Best Infuse progress for each cardId currently in the local hand. */
-  infuseProgressByCardId: Record<string, ExtraDisplayInfuseProgress>;
 }
 
 export type ExtraDisplayCardLookup = (cardId: string) => ExtraDisplayCardMetadata | null;
@@ -69,13 +50,7 @@ export function createEmptyExtraDisplaySnapshot(): ExtraDisplaySnapshot {
       friendlyDeadDemonsThisGameUnique: [],
       friendlyDeadMinionsThisGameUnique: [],
     },
-    infuseProgressByCardId: {},
   };
-}
-
-interface HandEntityTracking {
-  cardId: string;
-  credits: ExtraDisplayInfuseProgress;
 }
 
 export class MatchExtraDisplayState {
@@ -86,10 +61,6 @@ export class MatchExtraDisplayState {
   private readonly friendlyDeadMinions = new Map<string, number>();
   private readonly poolMaps = new Map<string, Map<string, number>>();
   private readonly friendlyDeadUndeadCosts = new Map<string, number>();
-  /** Friendly entities currently held in the local hand, with accumulated Infuse credits. */
-  private readonly handEntities = new Map<number, HandEntityTracking>();
-  /** Persisted credits for friendly entities that have left and may return to hand. */
-  private readonly persistedHandCredits = new Map<number, ExtraDisplayInfuseProgress>();
 
   reset(): void {
     this.currentTurn = null;
@@ -99,8 +70,6 @@ export class MatchExtraDisplayState {
     this.friendlyDeadMinions.clear();
     this.poolMaps.clear();
     this.friendlyDeadUndeadCosts.clear();
-    this.handEntities.clear();
-    this.persistedHandCredits.clear();
   }
 
   recordTurnChange(turn: number): void {
@@ -162,15 +131,12 @@ export class MatchExtraDisplayState {
     }
 
     if (doesImbueHeroPower(metadata)) {
-      this.increment('heroPowerInfuseCountThisGame', 1);
+      this.increment('heroPowerImbueCountThisGame', 1);
     }
 
     if (metadata.type !== 'SPELL') return;
     this.increment('spellsCastThisGame', 1);
     this.increment('friendlySpellsCastThisTurn', 1);
-    for (const tracking of this.handEntities.values()) {
-      tracking.credits.spellsCast = (tracking.credits.spellsCast ?? 0) + 1;
-    }
 
     const school = normalizeToken(metadata.spellSchool);
     if (school === 'FEL') this.increment('felSpellsCastThisGame', 1);
@@ -233,7 +199,6 @@ export class MatchExtraDisplayState {
 
     const isDemon = hasRace(metadata, 'DEMON');
     const isBeast = hasRace(metadata, 'BEAST');
-    const isTotem = hasRace(metadata, 'TOTEM');
     const isDragon = hasRace(metadata, 'DRAGON');
     const isUndead = hasRace(metadata, 'UNDEAD');
     if (isDemon) {
@@ -254,16 +219,6 @@ export class MatchExtraDisplayState {
     if (isUnstableSkeleton(args.entity.cardId)) this.increment('friendlyUnstableSkeletonDeathsThisGame', 1);
     if (isTreant(metadata)) this.increment('friendlyTreantDeathsThisGame', 1);
     if (args.entity.cardId === 'EDR_465') this.increment('ysendraDeathsThisGame', 1);
-
-    for (const tracking of this.handEntities.values()) {
-      tracking.credits.friendlyDeaths += 1;
-      if (isDemon) tracking.credits.friendlyDemonDeaths += 1;
-      if (isBeast) tracking.credits.friendlyBeastDeaths = (tracking.credits.friendlyBeastDeaths ?? 0) + 1;
-      if (isTotem) tracking.credits.friendlyTotemDeaths = (tracking.credits.friendlyTotemDeaths ?? 0) + 1;
-      if (metadata.attack !== undefined && metadata.attack !== 0) {
-        tracking.credits.cumulativeAttack = (tracking.credits.cumulativeAttack ?? 0) + metadata.attack;
-      }
-    }
   }
 
   recordEntityTagValue(args: {
@@ -279,65 +234,7 @@ export class MatchExtraDisplayState {
     this.setCounter(`cardState.${args.entity.cardId}`, args.value);
   }
 
-  /** Track a friendly entity entering the local hand zone. */
-  recordEntityEnteredHand(args: { entityId: number; cardId: string }): void {
-    if (this.handEntities.has(args.entityId)) {
-      const existing = this.handEntities.get(args.entityId)!;
-      existing.cardId = args.cardId;
-      return;
-    }
-    const persisted = this.persistedHandCredits.get(args.entityId);
-    this.handEntities.set(args.entityId, {
-      cardId: args.cardId,
-      credits: persisted
-        ? { ...persisted }
-        : { friendlyDeaths: 0, friendlyDemonDeaths: 0 },
-    });
-  }
-
-  syncFriendlyHandEntities(cards: readonly { entityId: number; cardId: string }[]): void {
-    const liveEntityIds = new Set<number>();
-    for (const card of cards) {
-      if (card.cardId === '') continue;
-      liveEntityIds.add(card.entityId);
-      this.recordEntityEnteredHand(card);
-    }
-    for (const entityId of this.handEntities.keys()) {
-      if (!liveEntityIds.has(entityId)) {
-        this.recordEntityLeftHand(entityId);
-      }
-    }
-  }
-
-  /** Track a friendly entity leaving the local hand zone (played, discarded, bounced). */
-  recordEntityLeftHand(entityId: number): void {
-    const tracking = this.handEntities.get(entityId);
-    if (!tracking) return;
-    this.handEntities.delete(entityId);
-    if (hasAnyCredit(tracking.credits)) {
-      this.persistedHandCredits.set(entityId, { ...tracking.credits });
-    }
-  }
-
   snapshot(): ExtraDisplaySnapshot {
-    const infuseProgressByCardId: Record<string, ExtraDisplayInfuseProgress> = {};
-    for (const tracking of this.handEntities.values()) {
-      const existing = infuseProgressByCardId[tracking.cardId];
-      if (!existing) {
-        infuseProgressByCardId[tracking.cardId] = { ...tracking.credits };
-        continue;
-      }
-      if (tracking.credits.friendlyDeaths > existing.friendlyDeaths) {
-        existing.friendlyDeaths = tracking.credits.friendlyDeaths;
-      }
-      if (tracking.credits.friendlyDemonDeaths > existing.friendlyDemonDeaths) {
-        existing.friendlyDemonDeaths = tracking.credits.friendlyDemonDeaths;
-      }
-      mergeOptionalMax(existing, tracking.credits, 'friendlyBeastDeaths');
-      mergeOptionalMax(existing, tracking.credits, 'friendlyTotemDeaths');
-      mergeOptionalMax(existing, tracking.credits, 'cumulativeAttack');
-      mergeOptionalMax(existing, tracking.credits, 'spellsCast');
-    }
     const pools: ExtraDisplaySnapshot['pools'] = {
       friendlyDeadDemonsThisGameUnique: entriesFromCountMap(this.friendlyDeadDemons),
       friendlyDeadMinionsThisGameUnique: entriesFromCountMap(this.friendlyDeadMinions),
@@ -354,7 +251,6 @@ export class MatchExtraDisplayState {
     return {
       counters: Object.fromEntries([...this.counters.entries()].sort(([a], [b]) => a.localeCompare(b))),
       pools,
-      infuseProgressByCardId,
     };
   }
 
@@ -404,25 +300,6 @@ function metadataForPlayedEvent(
     ...(event.spellSchool !== undefined ? { spellSchool: event.spellSchool } : {}),
     ...(event.races !== undefined ? { races: event.races } : {}),
   };
-}
-
-function mergeOptionalMax(
-  target: ExtraDisplayInfuseProgress,
-  source: ExtraDisplayInfuseProgress,
-  key: 'friendlyBeastDeaths' | 'friendlyTotemDeaths' | 'cumulativeAttack' | 'spellsCast',
-): void {
-  const value = source[key];
-  if (value === undefined) return;
-  target[key] = Math.max(target[key] ?? 0, value);
-}
-
-function hasAnyCredit(credits: ExtraDisplayInfuseProgress): boolean {
-  return credits.friendlyDeaths > 0 ||
-    credits.friendlyDemonDeaths > 0 ||
-    (credits.friendlyBeastDeaths ?? 0) > 0 ||
-    (credits.friendlyTotemDeaths ?? 0) > 0 ||
-    (credits.cumulativeAttack ?? 0) > 0 ||
-    (credits.spellsCast ?? 0) > 0;
 }
 
 function hasRace(metadata: ExtraDisplayCardMetadata, race: string): boolean {
