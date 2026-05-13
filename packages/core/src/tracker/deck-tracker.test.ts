@@ -979,6 +979,28 @@ describe('DeckTracker', () => {
     ).toBe(1);
   });
 
+  it('records friendly script tag counters for reviewed dynamic counter cards', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 80, cardId: 'RLK_101', zone: 'HAND', controllerId: 1 },
+    ]);
+    tracker.recordExtraDisplayEntityTag({
+      entityId: 80,
+      tag: 'TAG_SCRIPT_DATA_NUM_1',
+      value: 3,
+    });
+
+    expect(tracker.getSnapshot().extraDisplay?.counters['counter.RLK_101']).toBe(3);
+    expect(tracker.getSnapshot().extraDisplay?.counters['cardState.RLK_101']).toBe(3);
+  });
+
   it('builds extra-display deck pools from remaining deck metadata', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

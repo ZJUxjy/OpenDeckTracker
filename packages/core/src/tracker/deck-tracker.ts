@@ -413,6 +413,19 @@ export class DeckTracker {
     this.currentSnapshot = this.buildSnapshot();
   }
 
+  recordExtraDisplayEntityTag(args: { entityId: number; tag: string; value: number }): void {
+    const entity = this.game.entities.get(args.entityId);
+    if (!entity) return;
+    const isFriendly = this.resolveHistoryController(entity) === this.game.localPlayer.controllerId;
+    this.extraDisplayState.recordEntityTagValue({
+      entity: { entityId: entity.entityId, cardId: entity.cardId },
+      isFriendly,
+      tag: args.tag,
+      value: args.value,
+    });
+    this.currentSnapshot = this.buildSnapshot();
+  }
+
   /**
    * Drop all active global effects. Called automatically on
    * IDLE → PRE_MATCH and POST_MATCH → IDLE transitions; exposed

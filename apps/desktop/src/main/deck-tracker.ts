@@ -606,6 +606,9 @@ export function forwardPowerEventToDeckTracker(
   if (logUpdates.length > 0) {
     tracker?.applyLogDerivedEntityUpdates(logUpdates);
   }
+  for (const tagUpdate of extraDisplayTagUpdatesFromPowerEvent(event)) {
+    tracker?.recordExtraDisplayEntityTag(tagUpdate);
+  }
   cardPlayedDetector?.handle(event);
   reducePowerEvent(boardAttackState, event);
   // Phase is currently informational — every consumer above wants
@@ -613,6 +616,53 @@ export function forwardPowerEventToDeckTracker(
   // (match-recording-recorder, power-match-recorder) are gated
   // upstream in `hearthwatcher-host.ts`.
   void phase;
+}
+
+function extraDisplayTagUpdatesFromPowerEvent(
+  event: PowerEvent,
+): { entityId: number; tag: string; value: number }[] {
+  switch (event.type) {
+    case 'full-entity':
+      return scriptValueTagUpdates(event.entityId, event.tags);
+    case 'show-entity':
+    case 'change-entity':
+    case 'hide-entity': {
+      const entityId = numericEntityRef(event.entity);
+      return entityId === null ? [] : scriptValueTagUpdates(entityId, event.tags);
+    }
+    case 'tag-change': {
+      const entityId = numericEntityRef(event.entity);
+      const value = numericTag(event.value);
+      if (entityId === null || value === undefined || !isScriptValueTag(event.tag)) return [];
+      return [{ entityId, tag: event.tag, value }];
+    }
+    case 'create-game':
+    case 'block-start':
+    case 'block-end':
+    case 'shuffle-deck':
+      return [];
+  }
+}
+
+function scriptValueTagUpdates(
+  entityId: number,
+  tags: Readonly<Record<string, unknown>>,
+): { entityId: number; tag: string; value: number }[] {
+  const out: { entityId: number; tag: string; value: number }[] = [];
+  for (const [tag, rawValue] of Object.entries(tags)) {
+    if (!isScriptValueTag(tag)) continue;
+    const value = numericTag(rawValue);
+    if (value !== undefined) out.push({ entityId, tag, value });
+  }
+  return out;
+}
+
+function isScriptValueTag(tag: string): boolean {
+  const normalized = tag.toUpperCase();
+  return normalized === 'TAG_SCRIPT_DATA_NUM_1' ||
+    normalized === 'TAG_SCRIPT_DATA_NUM_2' ||
+    normalized === 'SCRIPT_DATA_NUM_1' ||
+    normalized === 'SCRIPT_DATA_NUM_2';
 }
 
 function logUpdatesFromPowerEvent(event: PowerEvent): LogDerivedEntityUpdate[] {

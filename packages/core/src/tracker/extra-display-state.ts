@@ -55,6 +55,11 @@ interface GraveyardEntity {
   cardId: string;
 }
 
+interface TaggedEntity {
+  entityId: number;
+  cardId: string;
+}
+
 const EMPTY_COUNTERS: Readonly<Record<string, number>> = Object.freeze({});
 
 export function createEmptyExtraDisplaySnapshot(): ExtraDisplaySnapshot {
@@ -261,6 +266,19 @@ export class MatchExtraDisplayState {
     }
   }
 
+  recordEntityTagValue(args: {
+    entity: TaggedEntity;
+    isFriendly: boolean;
+    tag: string;
+    value: number;
+  }): void {
+    if (!args.isFriendly) return;
+    if (args.entity.cardId === '') return;
+    if (!isScriptValueTag(args.tag)) return;
+    this.setCounter(`counter.${args.entity.cardId}`, args.value);
+    this.setCounter(`cardState.${args.entity.cardId}`, args.value);
+  }
+
   /** Track a friendly entity entering the local hand zone. */
   recordEntityEnteredHand(args: { entityId: number; cardId: string }): void {
     if (this.handEntities.has(args.entityId)) {
@@ -433,6 +451,14 @@ function isTreant(metadata: ExtraDisplayCardMetadata): boolean {
 
 function isUnstableSkeleton(cardId: string): boolean {
   return cardId === 'REV_845' || cardId === 'CORE_REV_845';
+}
+
+function isScriptValueTag(tag: string): boolean {
+  const normalized = normalizeToken(tag);
+  return normalized === 'TAG_SCRIPT_DATA_NUM_1' ||
+    normalized === 'TAG_SCRIPT_DATA_NUM_2' ||
+    normalized === 'SCRIPT_DATA_NUM_1' ||
+    normalized === 'SCRIPT_DATA_NUM_2';
 }
 
 function normalizeToken(value: string | undefined): string {

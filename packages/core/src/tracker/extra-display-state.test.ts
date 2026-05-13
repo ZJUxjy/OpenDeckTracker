@@ -38,6 +38,20 @@ describe('MatchExtraDisplayState', () => {
     expect(state.snapshot().counters.spellsCastThisGame).toBe(1);
   });
 
+  it('records friendly script-value tags as card counter and state entries', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordEntityTagValue({
+      entity: { entityId: 12, cardId: 'RLK_101' },
+      isFriendly: true,
+      tag: 'TAG_SCRIPT_DATA_NUM_1',
+      value: 2,
+    });
+
+    const counters = state.snapshot().counters;
+    expect(counters['counter.RLK_101']).toBe(2);
+    expect(counters['cardState.RLK_101']).toBe(2);
+  });
+
   it('uses metadata carried on the played-card event when CardDb lookup is unavailable', () => {
     const state = new MatchExtraDisplayState();
     state.recordCardPlayed({
