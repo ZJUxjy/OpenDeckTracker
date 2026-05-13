@@ -190,6 +190,33 @@ describe('match-history-store', () => {
     store.close();
   });
 
+  it('merges deck-tracker unknown and power result with shared live fingerprint', () => {
+    const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'match-v2-1000-1',
+        result: 'unknown',
+        opponentClass: null,
+      }),
+    );
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'match-v2-1000-1',
+        result: 'win',
+        opponentClass: 'MAGE',
+      }),
+    );
+
+    const records = store.getAllForFilter({ filter: 'all-time' });
+    expect(records).toHaveLength(1);
+    expect(records[0]).toMatchObject({
+      fingerprint: 'match-v2-1000-1',
+      result: 'win',
+      opponentClass: 'MAGE',
+    });
+    store.close();
+  });
+
   it('does not downgrade a known result or non-null fields', () => {
     const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
     store.record(

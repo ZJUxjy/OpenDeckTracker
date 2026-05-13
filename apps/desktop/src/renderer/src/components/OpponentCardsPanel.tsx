@@ -21,7 +21,6 @@ const ART_MASK_STYLE: CSSProperties = {
 
 interface OpponentCardsPanelProps {
   revealed: OpponentCardRecord[];
-  graveyard: OpponentCardRecord[];
   /** Total board attack on the opposing side; rendered in the header. */
   boardAttack?: number;
   /**
@@ -49,18 +48,14 @@ interface GroupedOpponentCard {
 
 export function OpponentCardsPanel({
   revealed,
-  graveyard,
   boardAttack = 0,
   faceDamage,
   targetEffectiveHealth = null,
 }: OpponentCardsPanelProps) {
   const resolvedFaceDamage = faceDamage ?? boardAttack;
   const { t } = useTranslation();
-  // `revealed` is now cumulative (includes graveyard entries), so we no
-  // longer need to merge the graveyard array into the lookup pool. The
-  // `graveyard` prop is still accepted for prop-shape compatibility but
-  // doesn't drive any UI of its own.
-  void graveyard;
+  // `revealed` is cumulative history; the dedicated graveyard tab is
+  // wired at the overlay level from `opponent.graveyard`.
   const cardIds = useMemo(
     () => [...new Set(revealed.map((record) => record.cardId))],
     [revealed],

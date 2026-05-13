@@ -868,6 +868,112 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('keeps a local played card out of opponent history even if a later update has the opposing controller', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.getGame().setPlayers({
+      localControllerId: 2,
+      localName: 'Local',
+      opposingControllerId: 1,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 28, cardId: 'MEND_300', zone: 'DECK', controllerId: 1 },
+    ]);
+    tracker.recordCardPlayed({
+      entityId: 28,
+      cardId: 'MEND_300',
+      controllerId: 2,
+      timestamp: 1,
+    });
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 28, cardId: 'MEND_300', zone: 'GRAVEYARD', controllerId: 1 },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.opponent.revealed.map((record) => record.cardId)).not.toContain('MEND_300');
+    expect(snapshot.friendlyGraveyard.map((record) => record.cardId)).toEqual(['MEND_300']);
+  });
+
+  it('keeps SETASIDE effect pool candidates out of the friendly graveyard', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      {
+        entityId: 78,
+        cardId: 'NEW1_034',
+        zone: 'SETASIDE',
+        controllerId: 1,
+        info: { created: true },
+      },
+      {
+        entityId: 79,
+        cardId: 'NEW1_033',
+        zone: 'SETASIDE',
+        controllerId: 1,
+        info: { created: true },
+      },
+    ]);
+    tracker.getGame().applyEntitySnapshot([]);
+    tracker.applyLogDerivedEntityUpdates([]);
+
+    expect(tracker.getSnapshot().friendlyGraveyard).toEqual([]);
+  });
+
+  it('keeps hero power replacement entities out of graveyard and opponent history', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 87, cardId: 'EDR_850p', zone: 'GRAVEYARD', controllerId: 1 },
+      { entityId: 88, cardId: 'EDR_850p', zone: 'PLAY', controllerId: 2 },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyGraveyard).toEqual([]);
+    expect(snapshot.opponent.revealed.map((record) => record.cardId)).not.toContain('EDR_850p');
+    expect(snapshot.opponent.graveyard).toEqual([]);
+  });
+
+  it('keeps an opponent played card out of the friendly graveyard even if a later update has the local controller', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.getGame().setPlayers({
+      localControllerId: 2,
+      localName: 'Local',
+      opposingControllerId: 1,
+      opposingName: 'Opponent',
+    });
+
+    tracker.recordCardPlayed({
+      entityId: 30,
+      cardId: 'CS2_029',
+      controllerId: 1,
+      timestamp: 1,
+    });
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 30, cardId: 'CS2_029', zone: 'GRAVEYARD', controllerId: 2 },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyGraveyard.map((record) => record.cardId)).not.toContain('CS2_029');
+    expect(snapshot.opponent.graveyard.map((record) => record.cardId)).toEqual(['CS2_029']);
+  });
+
   it('does not synthesize opponent card identities from hidden hand or deck counts', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

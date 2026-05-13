@@ -2,6 +2,7 @@ import { useEffect, type CSSProperties } from 'react';
 import { OpponentCardsPanel } from './OpponentCardsPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
 import { GlobalEffectsPanel } from './GlobalEffectsPanel';
+import { OpponentGraveyardPanel } from './FriendlyGraveyardPanel';
 import {
   useDeckTrackerStore,
   useOpposingEffects,
@@ -13,7 +14,7 @@ const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
 /**
  * Opponent overlay route. Wraps `OpponentCardsPanel` in a
  * TrackerPanelTabs container so the user can pivot between revealed
- * opponent cards and the opposing side's active global effects.
+ * opponent cards, opposing graveyard cards, and active global effects.
  */
 export function OpponentOverlayView() {
   useEffect(() => {
@@ -47,7 +48,6 @@ export function OpponentOverlayView() {
         deckSlot={
           <OpponentCardsPanel
             revealed={opponent?.revealed ?? []}
-            graveyard={opponent?.graveyard ?? []}
             boardAttack={opposingBoardAttack}
             faceDamage={opposingFaceDamage}
             targetEffectiveHealth={friendlyEffectiveHealth}
@@ -56,6 +56,8 @@ export function OpponentOverlayView() {
         effectsSlot={
           <GlobalEffectsPanel side="opponent" effects={opposingEffects} />
         }
+        graveyardSlot={<OpponentGraveyardPanel records={opponent?.graveyard ?? []} />}
+        graveyardCount={opponent?.graveyard.length ?? 0}
       />
       <button
         type="button"

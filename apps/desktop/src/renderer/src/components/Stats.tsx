@@ -126,13 +126,10 @@ export function Stats() {
     };
   }, [selectedSavedDeckId, timeFilter, formatFilter]);
 
-  // Build a quick lookup so each match row can find its recording (joined on
-  // `endedAt` since the recordings store doesn't carry the match fingerprint
-  // — see add-stats-analytics-deepening design D7 follow-up note).
-  const recordingByEndedAt = useMemo(() => {
-    const m = new Map<number, string>();
+  const recordingByFingerprint = useMemo(() => {
+    const m = new Map<string, string>();
     for (const r of recordings) {
-      if (r.endedAt !== null) m.set(r.endedAt, r.recordingId);
+      if (r.matchFingerprint !== undefined) m.set(r.matchFingerprint, r.recordingId);
     }
     return m;
   }, [recordings]);
@@ -148,35 +145,37 @@ export function Stats() {
   }));
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto">
-      {/* Header */}
-      <div className="px-8 pt-7 pb-4 flex items-center justify-between sticky top-0 z-10">
-        <div>
-          <h1 className="text-2xl font-bold text-text mb-1">{t('stats.title')}</h1>
-          <p className="text-text-secondary text-sm">{t('stats.subtitle')}</p>
-        </div>
-
-        <div className="flex flex-col items-end space-y-2">
-          <div className="flex bg-overlay-surface dark:bg-black/20 rounded-md p-1 border border-border-hairline">
-            {FILTERS.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setTimeFilter(filter)}
-                className={`px-3 py-1.5 rounded text-sm font-semibold transition-colors ${
-                  timeFilter === filter
-                    ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
-                    : 'text-text-secondary hover:text-text'
-                }`}
-              >
-                {t(`stats.timeFilter.${filter}`)}
-              </button>
-            ))}
+    <div className="flex-1 overflow-y-auto">
+      <div className="px-8 py-7 space-y-5 max-w-7xl mx-auto w-full">
+        {/* Header */}
+        <div
+          className="flex flex-wrap items-start justify-between gap-4"
+          data-testid="stats-page-header"
+        >
+          <div>
+            <h1 className="text-2xl font-bold text-text mb-1">{t('stats.title')}</h1>
+            <p className="text-text-secondary text-sm">{t('stats.subtitle')}</p>
           </div>
-          <FormatFilterPills value={formatFilter} onChange={setFormatFilter} />
-        </div>
-      </div>
 
-      <div className="px-8 pb-8 space-y-5 max-w-7xl mx-auto w-full">
+          <div className="flex flex-col items-end space-y-2">
+            <div className="flex bg-overlay-surface dark:bg-black/20 rounded-md p-1 border border-border-hairline">
+              {FILTERS.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setTimeFilter(filter)}
+                  className={`px-3 py-1.5 rounded text-sm font-semibold transition-colors ${
+                    timeFilter === filter
+                      ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+                      : 'text-text-secondary hover:text-text'
+                  }`}
+                >
+                  {t(`stats.timeFilter.${filter}`)}
+                </button>
+              ))}
+            </div>
+            <FormatFilterPills value={formatFilter} onChange={setFormatFilter} />
+          </div>
+        </div>
 
         {/* Top Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -357,7 +356,9 @@ export function Stats() {
                 </div>
               ) : (
                 recentMatches.map((match) => {
-                  const recordingId = recordingByEndedAt.get(match.endedAt) ?? null;
+                  const recordingId = recordingByFingerprint.has(match.fingerprint)
+                    ? match.fingerprint
+                    : null;
                   return (
                     <div
                       key={match.id}

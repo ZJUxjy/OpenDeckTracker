@@ -38,6 +38,7 @@ export function Dashboard() {
   const totalOriginal = deck?.original.reduce((sum, card) => sum + card.count, 0) ?? 0;
   const totalRemaining = deck?.remaining.reduce((sum, card) => sum + card.count, 0) ?? 0;
   const phase = snapshot?.phase ?? 'IDLE';
+  const phaseLabel = t(`dashboard.phaseKind.${phase}`);
   const rankLabel = useRankLabel(medalInfo?.standard);
 
   const watcherKindLabel = watcherStatus
@@ -74,7 +75,7 @@ export function Dashboard() {
           <div className="tahoe-card tavern-hero-card px-7 py-6">
             <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
               <span className="text-base font-bold text-amber">{t('fallout.dashboard.liveBadge')}</span>
-              <span className="text-xs text-text-mute">{t('dashboard.phase', { phase })}</span>
+              <span className="text-xs text-text-mute">{t('dashboard.phase', { phase: phaseLabel })}</span>
             </div>
             <h2 className="text-[32px] leading-tight font-black text-text tracking-tight mb-3">
               {deck ? deck.name || t('dashboard.unnamedDeck') : t('dashboard.noActiveDeck')}

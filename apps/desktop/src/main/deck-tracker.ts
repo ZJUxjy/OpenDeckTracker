@@ -1,4 +1,6 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
+import { appendFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import {
   CardPlayedDetector,
   DeckTracker,
@@ -12,6 +14,7 @@ import {
   type LogDerivedEntityUpdate,
   type MatchPhase,
   type MinionTags,
+  type NormalizedCompletedMatch,
   type Zone,
   type WeaponState,
   zoneFromNumber,
@@ -29,6 +32,7 @@ import {
   ensureCardTileCached,
 } from './card-image-cache';
 import { getHearthMirror } from './hearthmirror';
+import { liveMatchIdentity } from './match-identity';
 import { recordCompletedMatch } from './stats-host';
 
 /**
@@ -62,6 +66,8 @@ import { recordCompletedMatch } from './stats-host';
  */
 
 let tracker: DeckTracker | null = null;
+let lastTrackerTraceSignature: string | null = null;
+let trackerTraceErrorLogged = false;
 
 /**
  * CardDb reference used by `cardClassLookup` to resolve `HERO_*` cardIds
@@ -74,6 +80,44 @@ const HERO_CLASS_VALUES: ReadonlySet<string> = new Set<HeroClass>([
   'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE', 'PALADIN',
   'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK', 'WARRIOR',
 ]);
+
+function maybeWriteTrackerTrace(snapshot: DeckTrackerSnapshot): void {
+  if (process.env.HDT_TRACKER_TRACE !== '1') return;
+
+  const payload = {
+    phase: snapshot.phase,
+    deck: snapshot.deck === null ? null : {
+      id: snapshot.deck.id,
+      name: snapshot.deck.name,
+      remainingTotal: snapshot.deck.remaining.reduce((sum, card) => sum + card.count, 0),
+    },
+    friendlyDeckCount: snapshot.friendlyDeckCount,
+    opposingHandCount: snapshot.opposingHandCount,
+    opponent: {
+      revealed: snapshot.opponent.revealed,
+      graveyard: snapshot.opponent.graveyard,
+    },
+    friendlyGraveyard: snapshot.friendlyGraveyard,
+    friendlyEffects: snapshot.friendlyEffects,
+    opposingEffects: snapshot.opposingEffects,
+  };
+  const signature = JSON.stringify(payload);
+  if (signature === lastTrackerTraceSignature) return;
+  lastTrackerTraceSignature = signature;
+
+  const file = process.env.HDT_TRACKER_TRACE_FILE && process.env.HDT_TRACKER_TRACE_FILE.length > 0
+    ? process.env.HDT_TRACKER_TRACE_FILE
+    : resolve(process.cwd(), '.codex', 'runlogs', 'tracker-trace.jsonl');
+  try {
+    mkdirSync(dirname(file), { recursive: true });
+    appendFileSync(file, `${JSON.stringify({ ts: new Date().toISOString(), ...payload })}\n`, 'utf8');
+  } catch (err) {
+    if (!trackerTraceErrorLogged) {
+      trackerTraceErrorLogged = true;
+      console.error('[deck-tracker] tracker trace write failed', err);
+    }
+  }
+}
 
 /**
  * Lazily-built `HERO_<NN> prefix → HeroClass` map. Hero portrait cardIds
@@ -434,6 +478,7 @@ export function startDeckTracker(): void {
     }
     if (s?.phase) fanoutPhase(s.phase);
     fanoutSnapshot(event.snapshot);
+    maybeWriteTrackerTrace(event.snapshot);
     broadcast('deck-tracker:state', event.snapshot);
   });
   tracker.on('match-started', (event: DeckTrackerEvent) => {
@@ -443,13 +488,17 @@ export function startDeckTracker(): void {
   });
   tracker.on('match-ended', (event: DeckTrackerEvent) => {
     console.log(`[deck-tracker] match-ended completed=${event.completedMatch !== undefined}`);
-    if (event.completedMatch !== undefined) {
-      recordCompletedMatch(event.completedMatch);
+    const completedMatch =
+      event.completedMatch !== undefined
+        ? withLiveMatchFingerprint(event.completedMatch)
+        : undefined;
+    if (completedMatch !== undefined) {
+      recordCompletedMatch(completedMatch);
     }
     broadcast('deck-tracker:event', {
       type: event.type,
       snapshot: event.snapshot,
-      ...(event.completedMatch !== undefined ? { completedMatch: event.completedMatch } : {}),
+      ...(completedMatch !== undefined ? { completedMatch } : {}),
     });
   });
   tracker.on('error', (event: DeckTrackerEvent) => {
@@ -476,6 +525,11 @@ export function startDeckTracker(): void {
     tracker = null;
     cardPlayedDetector = null;
   });
+}
+
+function withLiveMatchFingerprint(match: NormalizedCompletedMatch): NormalizedCompletedMatch {
+  const identity = liveMatchIdentity.current();
+  return identity === null ? match : { ...match, fingerprint: identity.fingerprint };
 }
 
 export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {

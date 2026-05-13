@@ -13,6 +13,7 @@ export interface PowerMatchRecorder {
 
 export function createPowerMatchRecorder(args: {
   getSnapshot: () => DeckTrackerSnapshot | null;
+  getMatchFingerprint?: () => string | null;
   record: (match: NormalizedCompletedMatch) => void;
   now?: () => number;
 }): PowerMatchRecorder {
@@ -67,29 +68,33 @@ export function createPowerMatchRecorder(args: {
       const inferred = inferPowerResult(playstates);
 
       const endedAt = now();
+      const normalized = normalizeCompletedMatch({
+        fingerprint: '',
+        startedAt: startedAt ?? snapshot.updatedAt,
+        endedAt,
+        result: inferred.result,
+        playOrder: 'unknown',
+        deckId: snapshot.deck?.id ?? null,
+        deckName: snapshot.deck?.name ?? null,
+        opponentName: matchInfo?.opposingPlayer?.name ?? inferred.opponentName,
+        opponentClass: snapshot.opponentClass ?? null,
+        playerClass: snapshot.playerClass ?? null,
+        ...(snapshot.savedDeckId !== undefined && snapshot.savedDeckVersion !== undefined
+          ? {
+              savedDeckId: snapshot.savedDeckId,
+              savedDeckVersion: snapshot.savedDeckVersion,
+            }
+          : {}),
+        gameType: classification.gameType,
+        formatType: classification.formatType,
+        missionId: classification.missionId,
+        source: 'deck-tracker',
+      });
+      const matchFingerprint = args.getMatchFingerprint?.() ?? null;
       args.record(
-        normalizeCompletedMatch({
-          fingerprint: '',
-          startedAt: startedAt ?? snapshot.updatedAt,
-          endedAt,
-          result: inferred.result,
-          playOrder: 'unknown',
-          deckId: snapshot.deck?.id ?? null,
-          deckName: snapshot.deck?.name ?? null,
-          opponentName: matchInfo?.opposingPlayer?.name ?? inferred.opponentName,
-          opponentClass: snapshot.opponentClass ?? null,
-          playerClass: snapshot.playerClass ?? null,
-          ...(snapshot.savedDeckId !== undefined && snapshot.savedDeckVersion !== undefined
-            ? {
-                savedDeckId: snapshot.savedDeckId,
-                savedDeckVersion: snapshot.savedDeckVersion,
-              }
-            : {}),
-          gameType: classification.gameType,
-          formatType: classification.formatType,
-          missionId: classification.missionId,
-          source: 'deck-tracker',
-        }),
+        matchFingerprint !== null
+          ? { ...normalized, fingerprint: matchFingerprint }
+          : normalized,
       );
       recordedCurrentGame = true;
     },

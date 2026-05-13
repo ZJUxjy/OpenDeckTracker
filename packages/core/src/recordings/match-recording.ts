@@ -23,6 +23,7 @@ export interface RecordedEntityState {
 }
 
 export interface MatchRecordingMetadata {
+  matchFingerprint?: string;
   deckId: number | null;
   deckName: string | null;
   opponentName: string | null;
@@ -104,6 +105,7 @@ export type MatchTimelineEvent =
 
 export interface MatchRecordingSummary {
   recordingId: string;
+  matchFingerprint?: string;
   status: MatchRecordingStatus;
   startedAt: number;
   endedAt: number | null;
@@ -134,6 +136,7 @@ export interface MatchRecordingDetail extends MatchRecording {
 export function createEmptyMatchRecording(args: {
   recordingId: string;
   startedAt: number;
+  matchFingerprint?: string;
 }): MatchRecording {
   return {
     recordingId: args.recordingId,
@@ -141,6 +144,7 @@ export function createEmptyMatchRecording(args: {
     startedAt: args.startedAt,
     endedAt: null,
     metadata: {
+      ...(args.matchFingerprint !== undefined ? { matchFingerprint: args.matchFingerprint } : {}),
       deckId: null,
       deckName: null,
       opponentName: null,
@@ -164,6 +168,9 @@ export function createEmptyMatchRecording(args: {
 export function buildMatchRecordingSummary(recording: MatchRecording): MatchRecordingSummary {
   return {
     recordingId: recording.recordingId,
+    ...(recording.metadata.matchFingerprint !== undefined
+      ? { matchFingerprint: recording.metadata.matchFingerprint }
+      : {}),
     status: recording.status,
     startedAt: recording.startedAt,
     endedAt: recording.endedAt,

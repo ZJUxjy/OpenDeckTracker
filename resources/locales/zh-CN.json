@@ -420,7 +420,18 @@
   },
   "tracker": {
     "tabGraveyard": "墓地",
-    "graveyardEmpty": "你的墓地还是空的。"
+    "graveyardEmpty": "你的墓地还是空的。",
+    "opponentGraveyardEmpty": "对手墓地还是空的。",
+    "graveyardSearchLabel": "搜索墓地卡牌",
+    "graveyardSearchPlaceholder": "搜索名称或描述…",
+    "graveyardTypeFilterLabel": "墓地卡牌种类筛选",
+    "graveyardNoResults": "没有符合筛选的墓地牌。",
+    "graveyardType": {
+      "ALL": "全部",
+      "MINION": "随从",
+      "SPELL": "法术",
+      "WEAPON": "武器"
+    }
   },
   "globalEffects": {
     "tabDeck": "牌库",
@@ -599,6 +610,12 @@
   "dashboard": {
     "badge": "记牌器",
     "phase": "状态：{phase}",
+    "phaseKind": {
+      "IDLE": "空闲",
+      "PRE_MATCH": "准备中",
+      "IN_MATCH": "对局中",
+      "POST_MATCH": "对局结束"
+    },
     "unnamedDeck": "未命名卡组",
     "noActiveDeck": "暂无活动卡组",
     "rank": "段位：{rank}",

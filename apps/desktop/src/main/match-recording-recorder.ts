@@ -28,6 +28,7 @@ export function createDefaultMatchRecordingStore(userDataPath: string): MatchRec
 export function createMatchRecordingRecorder(args: {
   store: MatchRecordingStore;
   getSnapshot: () => DeckTrackerSnapshot | null;
+  getMatchFingerprint?: () => string | null;
   now?: () => number;
   createRecordingId?: (startedAt: number) => string;
 }): MatchRecordingRecorder {
@@ -42,10 +43,18 @@ export function createMatchRecordingRecorder(args: {
     }
   }
 
+  function applyMatchFingerprint(recording: MatchRecording): void {
+    const matchFingerprint = args.getMatchFingerprint?.() ?? null;
+    if (matchFingerprint !== null) {
+      recording.metadata.matchFingerprint = matchFingerprint;
+    }
+  }
+
   function startRecording(): void {
     if (current !== null && current.status === 'in-progress') {
       current.status = 'incomplete';
       current.endedAt = now();
+      applyMatchFingerprint(current);
       current.finalSummary = buildMatchRecordingSummary(current);
       persist();
     }
@@ -59,11 +68,14 @@ export function createMatchRecordingRecorder(args: {
       opponentControllerId,
       originalDeck: snapshot?.deck?.original ?? [],
     });
+    const matchFingerprint = args.getMatchFingerprint?.() ?? null;
     current = createEmptyMatchRecording({
       recordingId: createRecordingId(startedAt),
       startedAt,
+      ...(matchFingerprint !== null ? { matchFingerprint } : {}),
     });
     applySnapshotMetadata(current, snapshot);
+    applyMatchFingerprint(current);
     current.timeline.push({ kind: 'game-started', sourceEventIndex: 0 });
     persist();
   }
@@ -84,6 +96,7 @@ export function createMatchRecordingRecorder(args: {
 
       const snapshot = args.getSnapshot();
       applySnapshotMetadata(current, snapshot);
+      applyMatchFingerprint(current);
       const localControllerId = state.localControllerId ?? localControllerFromSnapshot(snapshot);
       const currentEntities = toRecordingEntities(state);
       current.timeline.push(
@@ -103,6 +116,7 @@ export function createMatchRecordingRecorder(args: {
       if (isPowerGameComplete(event)) {
         current.status = 'completed';
         current.endedAt = now();
+        applyMatchFingerprint(current);
         current.timeline.push({ kind: 'game-completed', sourceEventIndex });
         current.finalSummary = buildMatchRecordingSummary(current);
       }

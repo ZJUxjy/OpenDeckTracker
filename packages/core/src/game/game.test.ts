@@ -167,6 +167,21 @@ describe('Game.applyEntitySnapshot', () => {
     expect(g.localPlayer.graveyard.map((entity) => entity.cardId)).toEqual(['A', 'B']);
   });
 
+  it('does not promote missing SETASIDE effect candidates to graveyard', () => {
+    const g = new Game();
+    g.applyLogDerivedEntityUpdate({
+      entityId: 78,
+      cardId: 'NEW1_034',
+      zone: 'SETASIDE',
+      controllerId: 1,
+      info: { created: true },
+    });
+    g.applyEntitySnapshot([]);
+
+    expect(g.entities.has(78)).toBe(false);
+    expect(g.localPlayer.graveyard).toEqual([]);
+  });
+
   it('does NOT downgrade a revealed cardId back to empty', () => {
     const g = new Game();
     g.applyEntitySnapshot([{ entityId: 1, cardId: 'A', zone: 'HAND', controllerId: 1 }]);

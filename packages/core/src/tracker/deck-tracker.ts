@@ -335,6 +335,12 @@ export class DeckTracker {
    * effects only matter mid-match.
    */
   recordCardPlayed(event: CardPlayedEvent): void {
+    this.game.applyLogDerivedEntityUpdate({
+      entityId: event.entityId,
+      cardId: event.cardId,
+      controllerId: event.controllerId,
+      info: { playedByController: event.controllerId },
+    });
     this.registry.handleCardPlayed(event);
     this.currentSnapshot = this.buildSnapshot();
   }
@@ -855,12 +861,14 @@ export class DeckTracker {
     // Killing a played minion no longer makes it vanish from the
     // opponent panel.
     const localControllerId = this.game.localPlayer.controllerId;
-    const records = this.game.opposingPlayer.entities
+    const opposingControllerId = this.game.opposingPlayer.controllerId;
+    const records = Array.from(this.game.entities.values())
       .filter((entity) => {
         if (!entity.isRevealed) return false;
         if (!isOpponentHistoryCardId(entity.cardId)) return false;
         if (!(entity.isInPlay || entity.isInGraveyard || entity.isInSecret)) return false;
         if (this.opponentCardSuppressor?.(entity.cardId) === true) return false;
+        if (this.resolveHistoryController(entity) !== opposingControllerId) return false;
         // Strict ownership filter: an entity that originated in the LOCAL
         // player's deck zone and was not later created on opposing side
         // (`info.created !== true`) is the local player's card, even if
@@ -900,13 +908,13 @@ export class DeckTracker {
    */
   private buildFriendlyGraveyard(): OpponentCardRecord[] {
     const localControllerId = this.game.localPlayer.controllerId;
-    return this.game.localPlayer.entities
+    return Array.from(this.game.entities.values())
       .filter(
         (entity) =>
           entity.isRevealed &&
           isOpponentHistoryCardId(entity.cardId) &&
           entity.isInGraveyard &&
-          entity.controllerId === localControllerId,
+          this.resolveHistoryController(entity) === localControllerId,
       )
       .map((entity) => ({
         entityId: entity.entityId,
@@ -916,6 +924,21 @@ export class DeckTracker {
         created: entity.info.created === true,
       }))
       .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
+  }
+
+  private resolveHistoryController(entity: {
+    controllerId: number;
+    info: {
+      playedByController?: number;
+      originalController?: number;
+      created?: boolean;
+    };
+  }): number {
+    if (entity.info.playedByController !== undefined) return entity.info.playedByController;
+    if (entity.info.originalController !== undefined && entity.info.created !== true) {
+      return entity.info.originalController;
+    }
+    return entity.controllerId;
   }
 
   /**
@@ -1044,7 +1067,7 @@ function countVisibleFriendlyCards(state: {
 
 function isDeckIdentityCardId(cardId: string): boolean {
   if (cardId === '') return false;
-  if (cardId.startsWith('HERO_')) return false;
+  if (isHeroOrPowerCardId(cardId)) return false;
   if (cardId === 'GAME_005' || cardId.endsWith('_COIN') || cardId.includes('COIN')) {
     return false;
   }
@@ -1053,8 +1076,15 @@ function isDeckIdentityCardId(cardId: string): boolean {
 
 function isOpponentHistoryCardId(cardId: string): boolean {
   if (cardId === '') return false;
-  if (cardId.startsWith('HERO_')) return false;
+  if (isHeroOrPowerCardId(cardId)) return false;
   return true;
+}
+
+function isHeroOrPowerCardId(cardId: string): boolean {
+  if (cardId.startsWith('HERO_')) return true;
+  // Hero powers and replacement skills can use non-HERO IDs with a
+  // lowercase "p" suffix, e.g. EDR_850p from Infuse: Best Friend Forever.
+  return /p\d*$/.test(cardId);
 }
 
 function deckContainsVisibleCards(deck: Deck, visibleCounts: Map<string, number>): boolean {

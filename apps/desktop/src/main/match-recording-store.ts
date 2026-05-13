@@ -41,13 +41,15 @@ export function createMatchRecordingStore(rootDir: string): MatchRecordingStore 
         .sort((a, b) => (b.endedAt ?? 0) - (a.endedAt ?? 0));
     },
 
-    loadRecording(recordingId) {
-      const recording = readRecordingFile(rootDir, recordingId);
+    loadRecording(idOrFingerprint) {
+      const resolvedRecordingId = resolveRecordingId(rootDir, idOrFingerprint);
+      if (resolvedRecordingId === null) return null;
+      const recording = readRecordingFile(rootDir, resolvedRecordingId);
       if (recording === null) return null;
       return {
         ...recording,
         finalSummary: recording.finalSummary ?? buildMatchRecordingSummary(recording),
-        rawEvents: readRawEvents(rootDir, recordingId),
+        rawEvents: readRawEvents(rootDir, resolvedRecordingId),
       };
     },
   };
@@ -74,6 +76,17 @@ function readRecordingFile(rootDir: string, recordingId: string): MatchRecording
   } catch {
     return null;
   }
+}
+
+function resolveRecordingId(rootDir: string, idOrFingerprint: string): string | null {
+  if (readRecordingFile(rootDir, idOrFingerprint) !== null) return idOrFingerprint;
+  for (const recordingId of readRecordingDirs(rootDir)) {
+    const recording = readRecordingFile(rootDir, recordingId);
+    if (recording === null) continue;
+    if (recording.status !== 'completed' && recording.status !== 'incomplete') continue;
+    if (recording.metadata.matchFingerprint === idOrFingerprint) return recording.recordingId;
+  }
+  return null;
 }
 
 function readRawEvents(rootDir: string, recordingId: string): unknown[] {

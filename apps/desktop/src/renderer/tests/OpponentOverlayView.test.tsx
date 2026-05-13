@@ -1,10 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { OpponentOverlayView } from '../src/components/OpponentOverlayView';
 import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
 import type { DeckTrackerSnapshot, OpponentCardRecord } from '@hdt/core';
 
-function makeSnapshot(opponentRevealed: OpponentCardRecord[] = []): DeckTrackerSnapshot {
+function makeSnapshot(
+  opponentRevealed: OpponentCardRecord[] = [],
+  opponentGraveyard: OpponentCardRecord[] = [],
+): DeckTrackerSnapshot {
   return {
     phase: 'IN_MATCH',
     matchInfo: {
@@ -29,7 +33,7 @@ function makeSnapshot(opponentRevealed: OpponentCardRecord[] = []): DeckTrackerS
     opposingHandCount: 0,
     opponent: {
       revealed: opponentRevealed,
-      graveyard: [],
+      graveyard: opponentGraveyard,
     },
     opponentClass: null,
     friendlyGraveyard: [],
@@ -45,6 +49,7 @@ function makeSnapshot(opponentRevealed: OpponentCardRecord[] = []): DeckTrackerS
 
 const CARD_DEFS: Record<string, { name: string; cost?: number; rarity?: string }> = {
   CS2_029: { name: 'Fireball', cost: 4, rarity: 'COMMON' },
+  CORE_CS1_130: { name: 'Holy Smite', cost: 1, rarity: 'COMMON' },
 };
 
 vi.mock('../src/hooks/use-card-def', () => ({
@@ -116,5 +121,22 @@ describe('OpponentOverlayView', () => {
     expect(root).not.toBeNull();
     expect(root?.className ?? '').toMatch(/w-full/);
     expect(root?.className ?? '').toMatch(/h-full/);
+  });
+
+  it('renders opponent graveyard records in the graveyard tab', async () => {
+    const user = userEvent.setup();
+    const graveyard: OpponentCardRecord[] = [
+      { entityId: 48, cardId: 'CORE_CS1_130', zone: 'GRAVEYARD', order: 2, created: false },
+    ];
+    useDeckTrackerStore.setState({ snapshot: makeSnapshot([], graveyard) });
+
+    render(<OpponentOverlayView />);
+
+    expect(screen.getByTestId('tracker-tab-graveyard-badge')).toHaveTextContent('1');
+    await user.click(screen.getByTestId('tracker-tab-graveyard'));
+    expect(screen.getByTestId('tracker-tab-graveyard')).toHaveAttribute('data-active', 'true');
+    const row = screen.getByTestId('opponent-graveyard-row');
+    expect(row).toHaveAttribute('data-card-id', 'CORE_CS1_130');
+    expect(row).toHaveTextContent('Holy Smite');
   });
 });

@@ -54,7 +54,6 @@ describe('OpponentCardsPanel', () => {
     render(
       <OpponentCardsPanel
         revealed={[record({ entityId: 20, cardId: 'CS2_029' })]}
-        graveyard={[]}
       />,
     );
 
@@ -72,7 +71,6 @@ describe('OpponentCardsPanel', () => {
     render(
       <OpponentCardsPanel
         revealed={[record({ entityId: 21, cardId: 'CS2_024', zone: 'GRAVEYARD' })]}
-        graveyard={[record({ entityId: 21, cardId: 'CS2_024', zone: 'GRAVEYARD' })]}
       />,
     );
 
@@ -87,7 +85,7 @@ describe('OpponentCardsPanel', () => {
     // "Hearthstone not running" copy rather than the generic
     // "no opponent cards" string. Both are valid empty states; this
     // assertion mirrors the default test environment.
-    render(<OpponentCardsPanel revealed={[]} graveyard={[]} />);
+    render(<OpponentCardsPanel revealed={[]} />);
 
     expect(screen.getByText('Hearthstone not running')).toBeInTheDocument();
   });
@@ -96,7 +94,6 @@ describe('OpponentCardsPanel', () => {
     render(
       <OpponentCardsPanel
         revealed={[]}
-        graveyard={[]}
         boardAttack={8}
         targetEffectiveHealth={15}
       />,
@@ -112,7 +109,6 @@ describe('OpponentCardsPanel', () => {
     render(
       <OpponentCardsPanel
         revealed={[]}
-        graveyard={[]}
         boardAttack={15}
         targetEffectiveHealth={15}
       />,
@@ -128,7 +124,6 @@ describe('OpponentCardsPanel', () => {
           record({ entityId: 20, cardId: 'CS2_029' }),
           record({ entityId: 21, cardId: 'CS2_024' }),
         ]}
-        graveyard={[]}
       />,
     );
 
@@ -150,7 +145,6 @@ describe('OpponentCardsPanel', () => {
           record({ entityId: 20, cardId: 'CS2_029', order: 1 }),
           record({ entityId: 21, cardId: 'CS2_029', order: 2 }),
         ]}
-        graveyard={[]}
       />,
     );
 
@@ -178,7 +172,6 @@ describe('OpponentCardsPanel', () => {
       render(
         <OpponentCardsPanel
           revealed={[record({ entityId: 20, cardId: 'CS2_029' })]}
-          graveyard={[]}
         />,
       );
 

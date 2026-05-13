@@ -67,4 +67,6 @@ export interface EntityInfo {
   originalController?: number;
   /** Zone the entity was originally placed in at game start. */
   originalZone?: Zone;
+  /** Player id that actually played this entity, derived from Power.log PLAY blocks. */
+  playedByController?: number;
 }

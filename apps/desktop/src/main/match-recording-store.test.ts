@@ -95,6 +95,34 @@ describe('match-recording-store', () => {
     });
   });
 
+  it('loads recording detail by match fingerprint', () => {
+    const store = createMatchRecordingStore(dir);
+    const base = completedRecording({ recordingId: 'rec-1' });
+    const recording: MatchRecording = {
+      ...base,
+      metadata: {
+        ...base.metadata,
+        matchFingerprint: 'match-v2-1000-1',
+      },
+      finalSummary: null,
+    };
+    store.writeRecording(recording);
+
+    expect(store.loadRecording('match-v2-1000-1')?.recordingId).toBe('rec-1');
+  });
+
+  it('does not load by endedAt-only key', () => {
+    const store = createMatchRecordingStore(dir);
+    store.writeRecording(
+      completedRecording({
+        recordingId: 'rec-1',
+        endedAt: 5_000,
+      }),
+    );
+
+    expect(store.loadRecording('match-v2-1000-1')).toBeNull();
+  });
+
   it('skips malformed recording directories', async () => {
     const store = createMatchRecordingStore(dir);
     await mkdir(join(dir, 'bad'), { recursive: true });

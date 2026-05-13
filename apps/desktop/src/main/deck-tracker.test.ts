@@ -28,6 +28,9 @@ const mocks = vi.hoisted(() => {
     DeckTracker: vi.fn(() => tracker),
     getHearthMirror: vi.fn(() => ({ })),
     recordCompletedMatch: vi.fn(),
+    liveMatchIdentity: {
+      current: vi.fn((): { fingerprint: string; startedAt: number } | null => null),
+    },
     ipcMain: { handle: vi.fn() },
     app: { on: vi.fn() },
     send: vi.fn(),
@@ -47,6 +50,10 @@ vi.mock('./hearthmirror', () => ({
 
 vi.mock('./stats-host', () => ({
   recordCompletedMatch: mocks.recordCompletedMatch,
+}));
+
+vi.mock('./match-identity', () => ({
+  liveMatchIdentity: mocks.liveMatchIdentity,
 }));
 
 vi.mock('electron', () => ({
@@ -82,6 +89,7 @@ describe('deck-tracker main host', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.handlers.clear();
+    mocks.liveMatchIdentity.current.mockReturnValue(null);
     vi.resetModules();
   });
 
@@ -101,6 +109,30 @@ describe('deck-tracker main host', () => {
       'deck-tracker:event',
       expect.objectContaining({ type: 'match-ended', completedMatch }),
     );
+  });
+
+  it('records match-ended with live fingerprint override', async () => {
+    mocks.liveMatchIdentity.current.mockReturnValue({
+      fingerprint: 'match-v2-1000-1',
+      startedAt: 1_000,
+    });
+    const { startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker();
+
+    const event: DeckTrackerEvent = {
+      type: 'match-ended',
+      snapshot: { phase: 'POST_MATCH' } as DeckTrackerEvent['snapshot'],
+      completedMatch: {
+        ...completedMatch,
+        fingerprint: 'legacy-fingerprint',
+      },
+    };
+    mocks.handlers.get('match-ended' satisfies DeckTrackerEventName)?.(event);
+
+    expect(mocks.recordCompletedMatch).toHaveBeenCalledWith({
+      ...completedMatch,
+      fingerprint: 'match-v2-1000-1',
+    });
   });
 
   it('registers deck tracker IPC handlers', async () => {

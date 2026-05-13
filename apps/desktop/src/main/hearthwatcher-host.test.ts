@@ -28,6 +28,11 @@ const mocks = vi.hoisted(() => {
     createMatchRecordingRecorder: vi.fn(() => matchRecordingRecorder),
     getLatestDeckTrackerSnapshot: vi.fn(() => null),
     recordCompletedMatch: vi.fn(),
+    liveMatchIdentity: {
+      beginLiveMatch: vi.fn(),
+      current: vi.fn((): { fingerprint: string; startedAt: number } | null => null),
+      clear: vi.fn(),
+    },
     powerRecorder,
     matchRecordingRecorder,
     ipcMain: { handle: vi.fn() },
@@ -58,6 +63,10 @@ vi.mock('./stats-host', () => ({
   recordCompletedMatch: mocks.recordCompletedMatch,
 }));
 
+vi.mock('./match-identity', () => ({
+  liveMatchIdentity: mocks.liveMatchIdentity,
+}));
+
 vi.mock('electron', () => ({
   app: mocks.app,
   ipcMain: mocks.ipcMain,
@@ -76,6 +85,7 @@ describe('hearthwatcher-host', () => {
     vi.clearAllMocks();
     mocks.statusHandlers.length = 0;
     mocks.eventHandlers.length = 0;
+    mocks.liveMatchIdentity.current.mockReturnValue(null);
     vi.resetModules();
   });
 
@@ -139,6 +149,7 @@ describe('hearthwatcher-host', () => {
 
     expect(mocks.createPowerMatchRecorder).toHaveBeenCalledWith({
       getSnapshot: mocks.getLatestDeckTrackerSnapshot,
+      getMatchFingerprint: expect.any(Function),
       record: mocks.recordCompletedMatch,
     });
     expect(mocks.createDefaultMatchRecordingStore).toHaveBeenCalledWith(
@@ -147,10 +158,75 @@ describe('hearthwatcher-host', () => {
     expect(mocks.createMatchRecordingRecorder).toHaveBeenCalledWith({
       store: { kind: 'store' },
       getSnapshot: mocks.getLatestDeckTrackerSnapshot,
+      getMatchFingerprint: expect.any(Function),
     });
     expect(mocks.powerRecorder.handleEvent).toHaveBeenCalledWith(event);
     expect(mocks.matchRecordingRecorder.handleEvent).toHaveBeenCalledWith(event);
     expect(mocks.send).toHaveBeenCalledWith('hearthwatcher:event', event);
+  });
+
+  it('passes live match fingerprint callbacks to durable recorders', async () => {
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const powerCalls = mocks.createPowerMatchRecorder.mock.calls as unknown as Array<[{
+      getMatchFingerprint: () => string | null;
+    }]>;
+    const recordingCalls = mocks.createMatchRecordingRecorder.mock.calls as unknown as Array<[{
+      getMatchFingerprint: () => string | null;
+    }]>;
+    const powerArgs = powerCalls[0]![0];
+    const recordingArgs = recordingCalls[0]![0];
+
+    mocks.liveMatchIdentity.current.mockReturnValue({
+      fingerprint: 'match-v2-1000-1',
+      startedAt: 1_000,
+    });
+    expect(powerArgs.getMatchFingerprint()).toBe('match-v2-1000-1');
+    expect(recordingArgs.getMatchFingerprint()).toBe('match-v2-1000-1');
+
+    mocks.liveMatchIdentity.current.mockReturnValue(null);
+    expect(powerArgs.getMatchFingerprint()).toBeNull();
+    expect(recordingArgs.getMatchFingerprint()).toBeNull();
+  });
+
+  it('starts live match identity before live recorders handle create-game', async () => {
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const event: PowerEvent = { type: 'create-game', raw: '', content: '' };
+    mocks.eventHandlers[0]?.(event, 'live');
+
+    expect(mocks.liveMatchIdentity.beginLiveMatch).toHaveBeenCalledWith(expect.any(Number));
+    expect(
+      mocks.liveMatchIdentity.beginLiveMatch.mock.invocationCallOrder[0],
+    ).toBeLessThan(mocks.powerRecorder.handleEvent.mock.invocationCallOrder[0]!);
+    expect(
+      mocks.liveMatchIdentity.beginLiveMatch.mock.invocationCallOrder[0],
+    ).toBeLessThan(mocks.matchRecordingRecorder.handleEvent.mock.invocationCallOrder[0]!);
+  });
+
+  it('clears live match identity after live recorders handle game completion', async () => {
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const event: PowerEvent = {
+      type: 'tag-change',
+      entity: 'GameEntity',
+      tag: 'STATE',
+      value: 'COMPLETE',
+      raw: '',
+      content: '',
+    };
+    mocks.eventHandlers[0]?.(event, 'live');
+
+    expect(mocks.liveMatchIdentity.clear).toHaveBeenCalledTimes(1);
+    expect(
+      mocks.powerRecorder.handleEvent.mock.invocationCallOrder[0],
+    ).toBeLessThan(mocks.liveMatchIdentity.clear.mock.invocationCallOrder[0]!);
+    expect(
+      mocks.matchRecordingRecorder.handleEvent.mock.invocationCallOrder[0],
+    ).toBeLessThan(mocks.liveMatchIdentity.clear.mock.invocationCallOrder[0]!);
   });
 
   it('skips recorders and broadcast for replay events', async () => {

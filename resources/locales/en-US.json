@@ -420,7 +420,18 @@
   },
   "tracker": {
     "tabGraveyard": "Graveyard",
-    "graveyardEmpty": "Nothing in your graveyard yet."
+    "graveyardEmpty": "Nothing in your graveyard yet.",
+    "opponentGraveyardEmpty": "Nothing in the opponent graveyard yet.",
+    "graveyardSearchLabel": "Search graveyard cards",
+    "graveyardSearchPlaceholder": "Search name or text…",
+    "graveyardTypeFilterLabel": "Graveyard card type filter",
+    "graveyardNoResults": "No graveyard cards match the filters.",
+    "graveyardType": {
+      "ALL": "All",
+      "MINION": "Minion",
+      "SPELL": "Spell",
+      "WEAPON": "Weapon"
+    }
   },
   "globalEffects": {
     "tabDeck": "Deck",
@@ -599,6 +610,12 @@
   "dashboard": {
     "badge": "Deck Tracker",
     "phase": "Phase: {phase}",
+    "phaseKind": {
+      "IDLE": "Idle",
+      "PRE_MATCH": "Preparing",
+      "IN_MATCH": "In Match",
+      "POST_MATCH": "Match Ended"
+    },
     "unnamedDeck": "Unnamed Deck",
     "noActiveDeck": "No Active Deck",
     "rank": "Rank: {rank}",

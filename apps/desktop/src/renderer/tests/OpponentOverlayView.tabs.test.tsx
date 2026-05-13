@@ -21,7 +21,7 @@ afterEach(() => {
 });
 
 describe('OpponentOverlayView tabs', () => {
-  it('renders both Deck and Effects tabs', () => {
+  it('renders Deck, Effects, and Graveyard tabs', () => {
     render(
       <I18nProvider preference="en-US">
         <OpponentOverlayView />
@@ -29,5 +29,6 @@ describe('OpponentOverlayView tabs', () => {
     );
     expect(screen.getByTestId('tracker-tab-deck')).toBeInTheDocument();
     expect(screen.getByTestId('tracker-tab-effects')).toBeInTheDocument();
+    expect(screen.getByTestId('tracker-tab-graveyard')).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { DeckTrackerSnapshot, NormalizedCompletedMatch } from '@hdt/core';
+import { buildMatchFingerprint, type DeckTrackerSnapshot, type NormalizedCompletedMatch } from '@hdt/core';
 import type { PowerEvent } from '@hdt/hearthwatcher';
 import { createPowerMatchRecorder } from './power-match-recorder';
 
@@ -213,6 +213,60 @@ describe('power-match-recorder', () => {
         deckName: 'Recorded Real Deck',
       }),
     );
+  });
+
+  it('uses live match fingerprint when available', () => {
+    const record = vi.fn<(match: NormalizedCompletedMatch) => void>();
+    const recorder = createPowerMatchRecorder({
+      getSnapshot: () => snapshot({ opponentClass: 'MAGE' }),
+      getMatchFingerprint: () => 'match-v2-1000-1',
+      record,
+      now: () => 2_000,
+    });
+
+    recorder.handleEvent({ type: 'create-game', raw: '', content: '' });
+    recorder.handleEvent({
+      type: 'tag-change',
+      raw: '',
+      content: '',
+      entity: 'TestPlayer#1',
+      tag: 'PLAYSTATE',
+      value: 'WON',
+    });
+    recorder.handleEvent({
+      type: 'tag-change',
+      raw: '',
+      content: '',
+      entity: 'UNKNOWN HUMAN PLAYER',
+      tag: 'PLAYSTATE',
+      value: 'LOST',
+    });
+    recorder.handleEvent(tagChange('STATE', 'COMPLETE'));
+
+    expect(record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fingerprint: 'match-v2-1000-1',
+        result: 'win',
+        opponentClass: 'MAGE',
+      }),
+    );
+  });
+
+  it('falls back to normalized fingerprint without live identity', () => {
+    const record = vi.fn<(match: NormalizedCompletedMatch) => void>();
+    const recorder = createPowerMatchRecorder({
+      getSnapshot: () => snapshot(),
+      getMatchFingerprint: () => null,
+      record,
+      now: () => 2_000,
+    });
+
+    recorder.handleEvent({ type: 'create-game', raw: '', content: '' });
+    recorder.handleEvent(tagChange('STATE', 'COMPLETE'));
+
+    const recordedMatch = record.mock.calls[0]?.[0];
+    expect(recordedMatch).toBeDefined();
+    expect(recordedMatch!.fingerprint).toBe(buildMatchFingerprint(recordedMatch!));
   });
 
   it('uses human Power.log classification when HearthMirror reports a mission id for a human match', () => {

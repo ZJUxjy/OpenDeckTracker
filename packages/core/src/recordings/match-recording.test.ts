@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyMatchRecording } from './match-recording';
+import { buildMatchRecordingSummary, createEmptyMatchRecording } from './match-recording';
 
 describe('createEmptyMatchRecording', () => {
   it('creates an in-progress recording with empty state', () => {
@@ -27,5 +27,16 @@ describe('createEmptyMatchRecording', () => {
       rawEventRefs: [],
     });
     expect(recording.endedAt).toBeNull();
+  });
+
+  it('stores match fingerprint metadata on recordings and summaries', () => {
+    const recording = createEmptyMatchRecording({
+      recordingId: 'rec-1',
+      startedAt: 1_000,
+      matchFingerprint: 'match-v2-1000-1',
+    });
+
+    expect(recording.metadata.matchFingerprint).toBe('match-v2-1000-1');
+    expect(buildMatchRecordingSummary(recording).matchFingerprint).toBe('match-v2-1000-1');
   });
 });

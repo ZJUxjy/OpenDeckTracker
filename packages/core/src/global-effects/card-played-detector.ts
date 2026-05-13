@@ -86,6 +86,7 @@ export class CardPlayedDetector {
       const id = entityIdOf(event.entity);
       if (id === null) return;
       this.maybeBackfillFromRef(id, event.entity);
+      this.maybeBackfillFromRef(id, event.content, { overwriteController: true });
       this.tryFire(id);
       return;
     }
@@ -93,6 +94,9 @@ export class CardPlayedDetector {
       const id = entityIdOf(event.entity);
       if (id === null) return;
       this.maybeBackfillFromRef(id, event.entity);
+      this.maybeBackfillFromRef(id, event.content, {
+        overwriteController: event.tag === 'ZONE' && (event.value === 'PLAY' || event.value === 1),
+      });
       if (event.tag === 'CONTROLLER') {
         const known = this.entities.get(id);
         const ctrl = numberOf(event.value);
@@ -147,6 +151,7 @@ export class CardPlayedDetector {
   private maybeBackfillFromRef(
     entityId: number,
     ref: number | string | null | undefined,
+    options: { overwriteController?: boolean } = {},
   ): void {
     if (typeof ref !== 'string') return;
     const cardIdMatch = /\bcardId=([A-Za-z0-9_]+)/.exec(ref);
@@ -158,7 +163,7 @@ export class CardPlayedDetector {
       zone: null,
     };
     if (existing.cardId === '' && cardIdMatch) existing.cardId = cardIdMatch[1] ?? '';
-    if (existing.controllerId === 0 && playerMatch) {
+    if ((existing.controllerId === 0 || options.overwriteController === true) && playerMatch) {
       existing.controllerId = Number(playerMatch[1]);
     }
     this.entities.set(entityId, existing);

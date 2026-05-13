@@ -153,6 +153,36 @@ describe('CardPlayedDetector', () => {
     });
   });
 
+  it('uses BLOCK_START entity ref player over a stale tracked controller', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle({
+      type: 'show-entity',
+      entity: '[entityName=UNKNOWN ENTITY id=28 zone=DECK zonePos=0 cardId= player=1]',
+      cardId: 'MEND_300',
+      tags: { ZONE: 'DECK', PLAYER_ID: 1 },
+      ...empty,
+    });
+    det.handle({
+      type: 'block-start',
+      blockType: 'PLAY',
+      entity: 28,
+      effectCardId: '',
+      target: null,
+      subOption: null,
+      raw: '',
+      content:
+        'BLOCK_START BlockType=PLAY Entity=[entityName=驯服宠物 id=28 zone=HAND zonePos=1 cardId=MEND_300 player=2] EffectCardId= EffectIndex=0 Target=0 SubOption=-1',
+    });
+
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toMatchObject({
+      cardId: 'MEND_300',
+      controllerId: 2,
+      entityId: 28,
+    });
+  });
+
   it('does not double-fire when BLOCK_START is followed by TAG_CHANGE ZONE=PLAY', () => {
     const emit = vi.fn();
     const det = new CardPlayedDetector({ emit });

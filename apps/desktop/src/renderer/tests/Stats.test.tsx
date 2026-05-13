@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type {
   DeckSummary,
   MatchHistoryRecord,
+  MatchRecordingSummary,
   SavedDeckMatchupStats,
   StatsSummary,
 } from '@hdt/core';
@@ -20,7 +21,7 @@ const emptyStatsSummary = (): StatsSummary => ({
   recentMatches: [],
 });
 
-const recentWin = (): MatchHistoryRecord => ({
+const recentWin = (overrides: Partial<MatchHistoryRecord> = {}): MatchHistoryRecord => ({
   id: 1,
   fingerprint: 'real-match',
   startedAt: Date.parse('2026-04-27T10:00:00Z'),
@@ -35,11 +36,14 @@ const recentWin = (): MatchHistoryRecord => ({
   gameType: 3,
   formatType: 2,
   source: 'deck-tracker',
+  ...overrides,
 });
 
 function mockStatsApi(args: {
   summary: StatsSummary;
   recent: MatchHistoryRecord[];
+  recordings?: MatchRecordingSummary[];
+  recordingGet?: ReturnType<typeof vi.fn>;
   decks?: DeckSummary[];
   matchups?: SavedDeckMatchupStats[];
   getSavedDeckMatchups?: ReturnType<typeof vi.fn>;
@@ -55,6 +59,11 @@ function mockStatsApi(args: {
     decks: {
       ...window.hdt.decks,
       list: vi.fn(async () => args.decks ?? []),
+    },
+    recordings: {
+      ...window.hdt.recordings,
+      list: vi.fn(async () => args.recordings ?? []),
+      get: args.recordingGet ?? vi.fn(async () => null),
     },
   };
 }
@@ -169,5 +178,70 @@ describe('Stats', () => {
     render(<Stats />);
 
     expect(await screen.findByText(/save a deck to see its matchups/i)).toBeInTheDocument();
+  });
+
+  it('opens recording viewer by match fingerprint', async () => {
+    const recordingGet = vi.fn(async () => null);
+    mockStatsApi({
+      summary: {
+        ...emptyStatsSummary(),
+        recentMatches: [recentWin({ fingerprint: 'match-v2-1000-1' })],
+      },
+      recent: [recentWin({ fingerprint: 'match-v2-1000-1' })],
+      recordings: [{
+        recordingId: 'rec-1',
+        matchFingerprint: 'match-v2-1000-1',
+        status: 'completed',
+        startedAt: 1_000,
+        endedAt: null,
+        deckId: 42,
+        deckName: 'Recorded Real Deck',
+        opponentName: 'Opponent',
+        result: 'win',
+        timelineEventCount: 1,
+      }],
+      recordingGet,
+    });
+
+    render(<Stats />);
+
+    const button = await screen.findByTestId('view-recording-1');
+    expect(button).toBeEnabled();
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(recordingGet).toHaveBeenCalledWith('match-v2-1000-1');
+    });
+  });
+
+  it('does not enable recording action from endedAt-only recording', async () => {
+    const recordingGet = vi.fn(async () => null);
+    const match = recentWin({ fingerprint: 'match-v2-1000-1' });
+    mockStatsApi({
+      summary: {
+        ...emptyStatsSummary(),
+        recentMatches: [match],
+      },
+      recent: [match],
+      recordings: [{
+        recordingId: 'rec-1',
+        status: 'completed',
+        startedAt: match.startedAt,
+        endedAt: match.endedAt,
+        deckId: 42,
+        deckName: 'Recorded Real Deck',
+        opponentName: 'Opponent',
+        result: 'win',
+        timelineEventCount: 1,
+      }],
+      recordingGet,
+    });
+
+    render(<Stats />);
+
+    const button = await screen.findByTestId('view-recording-1');
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(recordingGet).not.toHaveBeenCalled();
   });
 });

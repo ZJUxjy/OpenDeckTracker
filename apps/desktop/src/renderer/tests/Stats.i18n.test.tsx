@@ -59,4 +59,17 @@ describe('Stats i18n', () => {
     expect(within(pills).getByText('标准')).toBeInTheDocument();
     expect(within(pills).getByText('狂野')).toBeInTheDocument();
   });
+
+  it('keeps the page header in normal document flow', async () => {
+    mockStatsApi();
+
+    render(
+      <I18nProvider preference="zh-CN">
+        <Stats />
+      </I18nProvider>,
+    );
+
+    await screen.findByText(/暂无已记录对局/);
+    expect(screen.getByTestId('stats-page-header').className).not.toContain('sticky');
+  });
 });

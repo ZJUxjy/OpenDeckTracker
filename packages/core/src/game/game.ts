@@ -162,12 +162,22 @@ export class Game {
       }
     }
     // Entities that fall out of the reflected HAND/PLAY/SECRET snapshot
-    // have usually been consumed or destroyed. Keep them in GRAVEYARD so
-    // they still count as seen and do not reappear in the remaining deck.
+    // have usually been consumed or destroyed. Keep only those zones in
+    // GRAVEYARD so they still count as seen and do not reappear in the
+    // remaining deck. Existing GRAVEYARD records are kept across later
+    // snapshots. SETASIDE/REMOVEDFROMGAME entities are often effect
+    // candidate pools (e.g. Tame Pet's beasts) and must not be promoted
+    // into visible graveyard history just because Mirror does not surface
+    // them.
     for (const [id, entity] of this.entities) {
       if (!seen.has(id)) {
-        if (entity.isRevealed && !entity.isInDeck) {
+        if (
+          entity.isRevealed &&
+          (entity.isInHand || entity.isInPlay || entity.isInSecret)
+        ) {
           entity.zone = 'GRAVEYARD';
+        } else if (entity.isRevealed && entity.isInGraveyard) {
+          continue;
         } else {
           this.entities.delete(id);
         }

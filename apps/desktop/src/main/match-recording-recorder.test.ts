@@ -208,6 +208,30 @@ describe('match-recording-recorder', () => {
     });
   });
 
+  it('stores live match fingerprint on recording summary', () => {
+    const store = createMemoryStore();
+    const recorder = createMatchRecordingRecorder({
+      store,
+      getSnapshot: () => snapshot(),
+      getMatchFingerprint: () => 'match-v2-1000-1',
+      now: vi.fn().mockReturnValueOnce(1_000).mockReturnValueOnce(2_000),
+      createRecordingId: () => 'rec-a',
+    });
+
+    recorder.handleEvent(createGame);
+    recorder.handleEvent(completeState);
+
+    expect(store.recordings.get('rec-a')).toMatchObject({
+      status: 'completed',
+      metadata: {
+        matchFingerprint: 'match-v2-1000-1',
+      },
+      finalSummary: {
+        matchFingerprint: 'match-v2-1000-1',
+      },
+    });
+  });
+
   it('closes an existing recording as incomplete when a new game starts', () => {
     const store = createMemoryStore();
     const recorder = createMatchRecordingRecorder({

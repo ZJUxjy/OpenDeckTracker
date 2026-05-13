@@ -18,18 +18,18 @@ interface TrackerPanelTabsProps {
   effectsSlot: ReactNode;
   effectsCount: number;
   /**
-   * Optional third tab for the local-side tracker showing this match's
-   * friendly graveyard. Strictly local — never carries opponent data.
+   * Optional third tab showing this side's match graveyard. Player and
+   * opponent callers pass their own side-specific records.
    * When `graveyardSlot` is omitted, the third tab is not rendered.
    */
   graveyardSlot?: ReactNode;
-  /** Number of cards in the friendly graveyard, rendered as a count badge. */
+  /** Number of cards in this side's graveyard, rendered as a count badge. */
   graveyardCount?: number;
 }
 
 /**
- * Two-tab vertical container used to wrap the deck panel + global
- * effects panel on each side. Both slots stay mounted across tab
+ * Tabbed vertical container used to wrap the deck panel, global
+ * effects panel, and optional graveyard panel on each side. Slots stay mounted across tab
  * switches (the inactive one is `hidden`) so per-row state — hover
  * targets, draw animations, image refs — survives a toggle.
  */

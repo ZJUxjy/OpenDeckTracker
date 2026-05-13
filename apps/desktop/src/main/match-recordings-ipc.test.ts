@@ -45,4 +45,17 @@ describe('match-recordings-ipc', () => {
     expect(mocks.handlers.get('recordings:get')?.({}, 'rec-a')).toBe(detail);
     expect(mocks.handlers.get('recordings:get')?.({}, 'missing')).toBeNull();
   });
+
+  it('recordings:get accepts match fingerprint', () => {
+    const detail = { recordingId: 'rec-a', rawEvents: [] } as unknown as MatchRecordingDetail;
+    const store = {
+      listCompleted: vi.fn(() => []),
+      loadRecording: vi.fn(() => detail),
+    };
+
+    registerMatchRecordingsIpc({ store });
+
+    expect(mocks.handlers.get('recordings:get')?.({}, 'match-v2-1000-1')).toBe(detail);
+    expect(store.loadRecording).toHaveBeenCalledWith('match-v2-1000-1');
+  });
 });

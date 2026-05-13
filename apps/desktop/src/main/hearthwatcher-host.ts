@@ -13,6 +13,7 @@ import {
   createDefaultMatchRecordingStore,
   createMatchRecordingRecorder,
 } from './match-recording-recorder';
+import { liveMatchIdentity } from './match-identity';
 import { createPowerMatchRecorder } from './power-match-recorder';
 import { recordCompletedMatch } from './stats-host';
 
@@ -30,13 +31,17 @@ function broadcast(channel: string, payload: unknown): void {
 export function startHearthWatcher(): void {
   if (watcher !== null) return;
   watcher = createHearthWatcher();
+  const getMatchFingerprint = (): string | null =>
+    liveMatchIdentity.current()?.fingerprint ?? null;
   const matchRecorder = createPowerMatchRecorder({
     getSnapshot: getLatestDeckTrackerSnapshot,
+    getMatchFingerprint,
     record: recordCompletedMatch,
   });
   const recordingRecorder = createMatchRecordingRecorder({
     store: createDefaultMatchRecordingStore(app.getPath('userData')),
     getSnapshot: getLatestDeckTrackerSnapshot,
+    getMatchFingerprint,
   });
   watcher.onStatus((status) => {
     logHearthWatcherStatus(status);
@@ -51,8 +56,14 @@ export function startHearthWatcher(): void {
     // NOT trigger recorders that write durable artifacts — that
     // would double-record the match every time the tracker restarts.
     if (phase === 'live') {
+      if (event.type === 'create-game') {
+        liveMatchIdentity.beginLiveMatch(Date.now());
+      }
       matchRecorder.handleEvent(event);
       recordingRecorder.handleEvent(event);
+      if (isPowerGameComplete(event)) {
+        liveMatchIdentity.clear();
+      }
     }
     forwardPowerEventToDeckTracker(event, phase);
     if (phase === 'live') {
@@ -73,6 +84,15 @@ export function startHearthWatcher(): void {
     watcher?.stop();
     watcher = null;
   });
+}
+
+function isPowerGameComplete(event: PowerEvent): boolean {
+  return (
+    event.type === 'tag-change' &&
+    event.entity === 'GameEntity' &&
+    ((event.tag === 'STATE' && event.value === 'COMPLETE') ||
+      (event.tag === 'STEP' && event.value === 'FINAL_GAMEOVER'))
+  );
 }
 
 function logHearthWatcherStatus(status: HearthWatcherDiagnostic): void {
