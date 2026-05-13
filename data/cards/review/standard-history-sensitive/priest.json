@@ -1,0 +1,1082 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "PRIEST",
+    "name": {
+      "enUS": "Priest",
+      "zhCN": "牧师"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 21,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_REV_250",
+      "cardNameZhCN": "裴拉戈斯",
+      "cardTextZhCN": "在你对一个友方随从施放法术后，将其生命值和攻击力变为两者中的高值。",
+      "cardTextZhCNPlain": "在你对一个友方随从施放法术后，将其生命值和攻击力变为两者中的高值。",
+      "id": "CORE_REV_250",
+      "dbfId": 118070,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "裴拉戈斯",
+        "enUS": "Pelagos"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你对一个友方随从施放法术后，将其生命值和攻击力变为两者中的高值。",
+        "enUS": "[x]After you cast a spell \non a friendly minion, set \nits Attack and Health to \nthe higher of the two.",
+        "zhCNPlain": "在你对一个友方随从施放法术后，将其生命值和攻击力变为两者中的高值。",
+        "enUSPlain": "[x]After you cast a spell on a friendly minion, set its Attack and Health to the higher of the two."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CS3_013",
+      "cardNameZhCN": "暗影之灵",
+      "cardTextZhCN": "<b>亡语：</b>对敌方英雄造成3点伤害。",
+      "cardTextZhCNPlain": "亡语：对敌方英雄造成3点伤害。",
+      "id": "CS3_013",
+      "dbfId": 62497,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "暗影之灵",
+        "enUS": "Shadowed Spirit"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>对敌方英雄造成3点伤害。",
+        "enUS": "[x]<b>Deathrattle:</b> Deal 3\ndamage to the\nenemy hero.",
+        "zhCNPlain": "亡语：对敌方英雄造成3点伤害。",
+        "enUSPlain": "[x]Deathrattle: Deal 3 damage to the enemy hero."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CORE_ICC_213",
+      "cardNameZhCN": "永恒奴役",
+      "cardTextZhCN": "<b>发现</b>一个在本局对战中死亡的友方随从，并召唤该随从。",
+      "cardTextZhCNPlain": "发现一个在本局对战中死亡的友方随从，并召唤该随从。",
+      "id": "CORE_ICC_213",
+      "dbfId": 95699,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "永恒奴役",
+        "enUS": "Eternal Servitude"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>发现</b>一个在本局对战中死亡的友方随从，并召唤该随从。",
+        "enUS": "<b>Discover</b> a friendly minion that died this game. Summon it.",
+        "zhCNPlain": "发现一个在本局对战中死亡的友方随从，并召唤该随从。",
+        "enUSPlain": "Discover a friendly minion that died this game. Summon it."
+      },
+      "categories": [
+        "graveyard_pool",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_MAW_022",
+      "cardNameZhCN": "控罪心灵密探",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>随机复制你对手的两张手牌。",
+      "cardTextZhCNPlain": "嘲讽。亡语：随机复制你对手的两张手牌。",
+      "id": "CORE_MAW_022",
+      "dbfId": 118032,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "控罪心灵密探",
+        "enUS": "Incriminating Psychic"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>随机复制你对手的两张手牌。",
+        "enUS": "[x]<b>Taunt</b>\n <b>Deathrattle:</b> Copy two\n random cards from your\nopponent's hand.",
+        "zhCNPlain": "嘲讽。亡语：随机复制你对手的两张手牌。",
+        "enUSPlain": "[x]Taunt Deathrattle: Copy two random cards from your opponent's hand."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CORE_UNG_963",
+      "cardNameZhCN": "“太阳裂片”莱拉",
+      "cardTextZhCN": "每当你施放一个法术，随机将一张牧师法术牌置入你的手牌。",
+      "cardTextZhCNPlain": "每当你施放一个法术，随机将一张牧师法术牌置入你的手牌。",
+      "id": "CORE_UNG_963",
+      "dbfId": 76275,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "“太阳裂片”莱拉",
+        "enUS": "Lyra the Sunshard"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你施放一个法术，随机将一张牧师法术牌置入你的手牌。",
+        "enUS": "Whenever you cast a spell, add a random Priest spell to your hand.",
+        "zhCNPlain": "每当你施放一个法术，随机将一张牧师法术牌置入你的手牌。",
+        "enUSPlain": "Whenever you cast a spell, add a random Priest spell to your hand."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "CORE_REV_252",
+      "cardNameZhCN": "净场",
+      "cardTextZhCN": "消灭所有攻击力小于或等于3的随从。<b>注能（@）：</b>改为小于或等于6。",
+      "cardTextZhCNPlain": "消灭所有攻击力小于或等于3的随从。注能（）：改为小于或等于6。",
+      "id": "CORE_REV_252",
+      "dbfId": 118072,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "净场",
+        "enUS": "Clean the Scene"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "消灭所有攻击力小于或等于3的随从。<b>注能（@）：</b>改为小于或等于6。",
+        "enUS": "Destroy all minions with 3 or less Attack. <b>Infuse (@):</b> 6 or less.",
+        "zhCNPlain": "消灭所有攻击力小于或等于3的随从。注能（）：改为小于或等于6。",
+        "enUSPlain": "Destroy all minions with 3 or less Attack. Infuse (): 6 or less."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "CORE_AV_328",
+      "cardNameZhCN": "灵魂向导",
+      "cardTextZhCN": "<b>嘲讽</b>，<b>亡语：</b>抽一张神圣法术牌和一张暗影法术牌。",
+      "cardTextZhCNPlain": "嘲讽，亡语：抽一张神圣法术牌和一张暗影法术牌。",
+      "id": "CORE_AV_328",
+      "dbfId": 118267,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "灵魂向导",
+        "enUS": "Spirit Guide"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>，<b>亡语：</b>抽一张神圣法术牌和一张暗影法术牌。",
+        "enUS": "[x]<b>Taunt</b>\n<b>Deathrattle:</b> Draw a\nHoly spell and a\nShadow spell.",
+        "zhCNPlain": "嘲讽，亡语：抽一张神圣法术牌和一张暗影法术牌。",
+        "enUSPlain": "[x]Taunt Deathrattle: Draw a Holy spell and a Shadow spell."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "CORE_DAL_721",
+      "cardNameZhCN": "亡者卡特琳娜",
+      "cardTextZhCN": "在你的回合结束时，复活另一个友方亡灵随从。",
+      "cardTextZhCNPlain": "在你的回合结束时，复活另一个友方亡灵随从。",
+      "id": "CORE_DAL_721",
+      "dbfId": 102199,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "亡者卡特琳娜",
+        "enUS": "Catrina Muerte"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你的回合结束时，复活另一个友方亡灵随从。",
+        "enUS": "At the end of your turn, resurrect another friendly Undead minion.",
+        "zhCNPlain": "在你的回合结束时，复活另一个友方亡灵随从。",
+        "enUSPlain": "At the end of your turn, resurrect another friendly Undead minion."
+      },
+      "categories": [
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "CORE_LOOT_507",
+      "cardNameZhCN": "小型法术钻石",
+      "cardTextZhCN": "复活两个不同的友方随从。@<i>（施放四个法术后升级。）</i>",
+      "cardTextZhCNPlain": "复活两个不同的友方随从。（施放四个法术后升级。）",
+      "id": "CORE_LOOT_507",
+      "dbfId": 111371,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "小型法术钻石",
+        "enUS": "Lesser Diamond Spellstone"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 7,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "复活两个不同的友方随从。@<i>（施放四个法术后升级。）</i>",
+        "enUS": "Resurrect 2 different friendly minions. @<i>(Cast 4 spells to upgrade.)</i>",
+        "zhCNPlain": "复活两个不同的友方随从。（施放四个法术后升级。）",
+        "enUSPlain": "Resurrect 2 different friendly minions. (Cast 4 spells to upgrade.)"
+      },
+      "categories": [
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "CORE_DRG_090",
+      "cardNameZhCN": "永恒巨龙姆诺兹多",
+      "cardTextZhCN": "<b>战吼：</b>使用你的对手上个回合使用的所有卡牌。",
+      "cardTextZhCNPlain": "战吼：使用你的对手上个回合使用的所有卡牌。",
+      "id": "CORE_DRG_090",
+      "dbfId": 86536,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "永恒巨龙姆诺兹多",
+        "enUS": "Murozond the Infinite"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>使用你的对手上个回合使用的所有卡牌。",
+        "enUS": "<b>Battlecry:</b> Play all cards your opponent played last_turn.",
+        "zhCNPlain": "战吼：使用你的对手上个回合使用的所有卡牌。",
+        "enUSPlain": "Battlecry: Play all cards your opponent played last_turn."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "EDR_449",
+      "cardNameZhCN": "月翼信使",
+      "cardTextZhCN": "<b>吸血</b>。<b>战吼：</b><b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "吸血。战吼：灌注你的英雄技能。",
+      "id": "EDR_449",
+      "dbfId": 114080,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "月翼信使",
+        "enUS": "Lunarwing Messenger"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "LIFESTEAL"
+      ],
+      "text": {
+        "zhCN": "<b>吸血</b>。<b>战吼：</b><b>灌注</b>你的英雄技能。",
+        "enUS": "<b>Lifesteal</b>\n<b>Battlecry:</b> <b>Imbue</b> your Hero_Power.",
+        "zhCNPlain": "吸血。战吼：灌注你的英雄技能。",
+        "enUSPlain": "Lifesteal Battlecry: Imbue your Hero_Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "FIR_777",
+      "cardNameZhCN": "卡多雷精魂",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>吸血</b>。<b>战吼：</b>如果你在本回合中使用过英雄技能，获得+3/+3。",
+      "cardTextZhCNPlain": "嘲讽。吸血。战吼：如果你在本回合中使用过英雄技能，获得+3/+3。",
+      "id": "FIR_777",
+      "dbfId": 117292,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "卡多雷精魂",
+        "enUS": "Spirit of the Kaldorei"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "LIFESTEAL",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>吸血</b>。<b>战吼：</b>如果你在本回合中使用过英雄技能，获得+3/+3。",
+        "enUS": "<b>Taunt</b>, <b>Lifesteal</b>\n<b>Battlecry:</b> If you used\nyour Hero Power this\nturn, gain +3/+3.",
+        "zhCNPlain": "嘲讽。吸血。战吼：如果你在本回合中使用过英雄技能，获得+3/+3。",
+        "enUSPlain": "Taunt, Lifesteal Battlecry: If you used your Hero Power this turn, gain +3/+3."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "EDR_970",
+      "cardNameZhCN": "卡多雷女祭司",
+      "cardTextZhCN": "<b>战吼：</b>直到你的下个回合，使所有敌方随从获得-2攻击力。<b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "战吼：直到你的下个回合，使所有敌方随从获得-2攻击力。灌注你的英雄技能。",
+      "id": "EDR_970",
+      "dbfId": 115461,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "卡多雷女祭司",
+        "enUS": "Kaldorei Priestess"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>直到你的下个回合，使所有敌方随从获得-2攻击力。<b>灌注</b>你的英雄技能。",
+        "enUS": "[x]<b>Battlecry:</b> Give all enemy\nminions -2 Attack until\nyour next turn. <b>Imbue</b>\nyour Hero Power.",
+        "zhCNPlain": "战吼：直到你的下个回合，使所有敌方随从获得-2攻击力。灌注你的英雄技能。",
+        "enUSPlain": "[x]Battlecry: Give all enemy minions -2 Attack until your next turn. Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "EDR_895",
+      "cardNameZhCN": "艾维娜，艾露恩钦选者",
+      "cardTextZhCN": "<b>战吼：</b>开启为期三回合的月相演变。当满月升起时，在本局对战中你的卡牌法力值消耗为（1）点。",
+      "cardTextZhCNPlain": "战吼：开启为期三回合的月相演变。当满月升起时，在本局对战中你的卡牌法力值消耗为（1）点。",
+      "id": "EDR_895",
+      "dbfId": 115264,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "艾维娜，艾露恩钦选者",
+        "enUS": "Aviana, Elune's Chosen"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>开启为期三回合的月相演变。当满月升起时，在本局对战中你的卡牌法力值消耗为（1）点。",
+        "enUS": "[x]<b>Battlecry:</b> Start a three\nturn lunar cycle. When the\nFull_Moon rises, your cards\ncost (1) this game.",
+        "zhCNPlain": "战吼：开启为期三回合的月相演变。当满月升起时，在本局对战中你的卡牌法力值消耗为（1）点。",
+        "enUSPlain": "[x]Battlecry: Start a three turn lunar cycle. When the Full_Moon rises, your cards cost (1) this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "TLC_820",
+      "cardNameZhCN": "林地生态学者",
+      "cardTextZhCN": "<b>亡语：</b>获取一张法力值消耗为（1）的神圣法术牌，该牌可以使一个随从获得+2或-2生命值。",
+      "cardTextZhCNPlain": "亡语：获取一张法力值消耗为（1）的神圣法术牌，该牌可以使一个随从获得+2或-2生命值。",
+      "id": "TLC_820",
+      "dbfId": 117565,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "林地生态学者",
+        "enUS": "Glade Ecologist"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>获取一张法力值消耗为（1）的神圣法术牌，该牌可以使一个随从获得+2或-2生命值。",
+        "enUS": "[x]<b>Deathrattle:</b> Get a 1-Cost\nHoly spell that gives a\nminion +2 or -2 Health.",
+        "zhCNPlain": "亡语：获取一张法力值消耗为（1）的神圣法术牌，该牌可以使一个随从获得+2或-2生命值。",
+        "enUSPlain": "[x]Deathrattle: Get a 1-Cost Holy spell that gives a minion +2 or -2 Health."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "TLC_814",
+      "cardNameZhCN": "暮光治愈者",
+      "cardTextZhCN": "<b>亡语：</b>随机获取神圣和暗影法术牌各一张。",
+      "cardTextZhCNPlain": "亡语：随机获取神圣和暗影法术牌各一张。",
+      "id": "TLC_814",
+      "dbfId": 117312,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "暮光治愈者",
+        "enUS": "Twilight Mender"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机获取神圣和暗影法术牌各一张。",
+        "enUS": "<b>Deathrattle:</b> Get a random Holy and Shadow spell.",
+        "zhCNPlain": "亡语：随机获取神圣和暗影法术牌各一张。",
+        "enUSPlain": "Deathrattle: Get a random Holy and Shadow spell."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 17,
+      "cardRank": 17,
+      "cardCode": "TLC_819",
+      "cardNameZhCN": "林歌海妖",
+      "cardTextZhCN": "<b>吸血</b>。如果你在本回合中使用过神圣和暗影法术牌，本牌的法力值消耗为（1）点。",
+      "cardTextZhCNPlain": "吸血。如果你在本回合中使用过神圣和暗影法术牌，本牌的法力值消耗为（1）点。",
+      "id": "TLC_819",
+      "dbfId": 117563,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "林歌海妖",
+        "enUS": "Gladesong Siren"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "<b>吸血</b>。如果你在本回合中使用过神圣和暗影法术牌，本牌的法力值消耗为（1）点。",
+        "enUS": "<b>Lifesteal</b>\nCosts (1) if you've\nplayed a Holy and Shadow spell this turn.",
+        "zhCNPlain": "吸血。如果你在本回合中使用过神圣和暗影法术牌，本牌的法力值消耗为（1）点。",
+        "enUSPlain": "Lifesteal Costs (1) if you've played a Holy and Shadow spell this turn."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 18,
+      "cardRank": 18,
+      "cardCode": "TLC_818",
+      "cardNameZhCN": "轮回转生",
+      "cardTextZhCN": "复活法力值消耗为1，2，3的随从各一个，使其获得<b>复生</b>。",
+      "cardTextZhCNPlain": "复活法力值消耗为1，2，3的随从各一个，使其获得复生。",
+      "id": "TLC_818",
+      "dbfId": 117557,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "轮回转生",
+        "enUS": "Resuscitate"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "SPELL",
+      "cost": 6,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "复活法力值消耗为1，2，3的随从各一个，使其获得<b>复生</b>。",
+        "enUS": "Resurrect a 1, 2,\nand 3-Cost minion.\nGive them <b>Reborn</b>.",
+        "zhCNPlain": "复活法力值消耗为1，2，3的随从各一个，使其获得复生。",
+        "enUSPlain": "Resurrect a 1, 2, and 3-Cost minion. Give them Reborn."
+      },
+      "categories": [
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 19,
+      "cardRank": 19,
+      "cardCode": "DINO_431",
+      "cardNameZhCN": "擎天雷龙",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>随机召唤一个法力值消耗大于或等于（5）点的<b>嘲讽</b>随从。",
+      "cardTextZhCNPlain": "嘲讽。亡语：随机召唤一个法力值消耗大于或等于（5）点的嘲讽随从。",
+      "id": "DINO_431",
+      "dbfId": 118656,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "擎天雷龙",
+        "enUS": "Atlasaurus"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>随机召唤一个法力值消耗大于或等于（5）点的<b>嘲讽</b>随从。",
+        "enUS": "<b>Taunt</b>. <b>Deathrattle:</b> Summon a random <b>Taunt</b> minion that costs (5) or more.",
+        "zhCNPlain": "嘲讽。亡语：随机召唤一个法力值消耗大于或等于（5）点的嘲讽随从。",
+        "enUSPlain": "Taunt. Deathrattle: Summon a random Taunt minion that costs (5) or more."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 20,
+      "cardRank": 20,
+      "cardCode": "CATA_303",
+      "cardNameZhCN": "净化吐息",
+      "cardTextZhCN": "对一个随从造成$5点伤害。如果该随从死亡，则为敌方英雄恢复#5点生命值。",
+      "cardTextZhCNPlain": "对一个随从造成5点伤害。如果该随从死亡，则为敌方英雄恢复5点生命值。",
+      "id": "CATA_303",
+      "dbfId": 122774,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "净化吐息",
+        "enUS": "Purifying Breath"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对一个随从造成$5点伤害。如果该随从死亡，则为敌方英雄恢复#5点生命值。",
+        "enUS": "[x]Deal $5 damage\nto a minion. If it dies,\nrestore #5 Health to\nthe enemy hero.",
+        "zhCNPlain": "对一个随从造成5点伤害。如果该随从死亡，则为敌方英雄恢复5点生命值。",
+        "enUSPlain": "[x]Deal 5 damage to a minion. If it dies, restore 5 Health to the enemy hero."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 21,
+      "cardRank": 21,
+      "cardCode": "CATA_216",
+      "cardNameZhCN": "净化祭司",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，你的治疗效果恢复的生命值增加2点。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，你的治疗效果恢复的生命值增加2点。",
+      "id": "CATA_216",
+      "dbfId": 123426,
+      "cardClass": "PRIEST",
+      "sourceCardClass": "PRIEST",
+      "rawClassValue": 6,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "净化祭司",
+        "enUS": "Cleansing Cleric"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本局对战中，你的治疗效果恢复的生命值增加2点。",
+        "enUS": "<b>Battlecry:</b> Your healing effects restore 2 more Health this game.",
+        "zhCNPlain": "战吼：在本局对战中，你的治疗效果恢复的生命值增加2点。",
+        "enUSPlain": "Battlecry: Your healing effects restore 2 more Health this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

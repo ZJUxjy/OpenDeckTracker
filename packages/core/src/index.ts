@@ -30,6 +30,13 @@ export type {
   DeckTrackerEventName,
   OpponentCardRecord,
 } from './tracker/deck-tracker';
+export type {
+  ExtraDisplayCardLookup,
+  ExtraDisplayCardMetadata,
+  ExtraDisplayInfuseProgress,
+  ExtraDisplayPoolEntry,
+  ExtraDisplaySnapshot,
+} from './tracker/extra-display-state';
 
 // Opponent deck prediction.
 export { predictOpponentDecks } from './tracker/opponent-deck-prediction';

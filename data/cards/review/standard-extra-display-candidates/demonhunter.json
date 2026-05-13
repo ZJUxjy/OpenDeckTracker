@@ -1,0 +1,307 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
+    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+    "source":  {
+                   "inputDir":  "data/cards/review/standard-history-sensitive",
+                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+               },
+    "class":  {
+                  "id":  "DEMONHUNTER",
+                  "name":  {
+                               "enUS":  "Demon Hunter",
+                               "zhCN":  "æ¶é­”çŒŽæ‰‹"
+                           }
+              },
+    "count":  8,
+    "cards":  [
+                  {
+                      "rank":  1,
+                      "sourceRank":  1,
+                      "cardCode":  "CORE_BT_427",
+                      "cardNameZhCN":  "灵魂盛宴",
+                      "cardTextZhCN":  "在本回合中每有一个友方随从死亡，抽一张牌。@\u003ci\u003e（抽@张牌）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "在本回合中每有一个友方随从死亡，抽一张牌。（抽张牌）",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "SPELL",
+                      "cost":  1,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "turn_death_counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyMinionsDiedThisTurn"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合友方随从死亡：{friendlyMinionsDiedThisTurn}；预计抽牌：{drawCount}",
+                                           "reasoningZhCN":  "灵魂盛宴完全依赖本回合友方随从死亡数。"
+                                       }
+                  },
+                  {
+                      "rank":  5,
+                      "sourceRank":  5,
+                      "cardCode":  "CORE_MAW_012",
+                      "cardNameZhCN":  "邪能之乱",
+                      "cardTextZhCN":  "召唤一个在本局对战中死亡的友方恶魔。\n\u003cb\u003e注能（@个恶魔）：\u003c/b\u003e改为召唤三个。",
+                      "cardTextZhCNPlain":  "召唤一个在本局对战中死亡的友方恶魔。 注能（个恶魔）：改为召唤三个。",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "SPELL",
+                      "cost":  5,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool_and_infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyDeadDemonsThisGameUnique",
+                                                               "infuseProgressByFriendlyDemonDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState"
+                                                           ],
+                                           "infuseConfig":  {
+                                                                "scope":  "demon",
+                                                                "required":  3
+                                                            },
+                                           "suggestedDisplayTextZhCN":  "死亡友方恶魔：{demonNames}；恶魔注能 {progress}/{required}；预计召唤 {summonCount} 个",
+                                           "reasoningZhCN":  "邪能之乱同时需要本局恶魔墓地池和在手恶魔注能进度，二者必须分开。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  7,
+                      "sourceRank":  7,
+                      "cardCode":  "CORE_REV_937",
+                      "cardNameZhCN":  "圣物匠赛·墨克斯",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e\u003cb\u003e发现\u003c/b\u003e并施放一个圣物。\u003cb\u003e注能（@）：\u003c/b\u003e改为施放全部三个。",
+                      "cardTextZhCNPlain":  "战吼：发现并施放一个圣物。注能（）：改为施放全部三个。",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "MINION",
+                      "cost":  8,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "DISCOVER",
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "infuseConfig":  {
+                                                                "scope":  "any",
+                                                                "required":  5
+                                                            },
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  8,
+                      "sourceRank":  8,
+                      "cardCode":  "FIR_904",
+                      "cardNameZhCN":  "邪火爆焰",
+                      "cardTextZhCN":  "在你施放一个邪能\n法术后，消灭本随从并对所有敌人造成\n2点伤害。",
+                      "cardTextZhCNPlain":  "在你施放一个邪能 法术后，消灭本随从并对所有敌人造成 2点伤害。",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "MINION",
+                      "cost":  2,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "on_board_trigger_highlight",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "board",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "selfOnBoard",
+                                                               "felSpellsInHand",
+                                                               "felSpellsInDeck"
+                                                           ],
+                                           "triggerHighlight":  {
+                                                                    "matchSpellSchool":  "FEL"
+                                                                },
+                                           "suggestedDisplayTextZhCN":  "邪能法术高亮：将触发邪火爆焰",
+                                           "reasoningZhCN":  "邪火爆焰是在场触发，必须高亮手牌/牌库中的邪能法术。"
+                                       }
+                  },
+                  {
+                      "rank":  11,
+                      "sourceRank":  11,
+                      "cardCode":  "EDR_891",
+                      "cardNameZhCN":  "贪婪的地狱猎犬",
+                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e复活一个法力值消耗小于或等于（4）点的友方\u003cb\u003e亡语\u003c/b\u003e随从，并召唤一个它的复制。",
+                      "cardTextZhCNPlain":  "亡语：复活一个法力值消耗小于或等于（4）点的友方亡语随从，并召唤一个它的复制。",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "graveyardPool.EDR_891"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "候选池：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果依赖本局死亡池，当前牌面无法直接得出候选。"
+                                       }
+                  },
+                  {
+                      "rank":  12,
+                      "sourceRank":  12,
+                      "cardCode":  "EDR_892",
+                      "cardNameZhCN":  "残暴的魔蝠",
+                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e复活一个不同的法力值消耗大于或等于（5）点的友方\u003cb\u003e亡语\u003c/b\u003e随从，并召唤一个它的复制。",
+                      "cardTextZhCNPlain":  "亡语：复活一个不同的法力值消耗大于或等于（5）点的友方亡语随从，并召唤一个它的复制。",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "graveyardPool.EDR_892"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "候选池：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果依赖本局死亡池，当前牌面无法直接得出候选。"
+                                       }
+                  },
+                  {
+                      "rank":  17,
+                      "sourceRank":  17,
+                      "cardCode":  "CATA_527",
+                      "cardNameZhCN":  "奈瑟匹拉，蒙难古灵",
+                      "cardTextZhCN":  "造成1点伤害。在你施放一个邪能法术后，重新开启。\u003cb\u003e亡语：\u003c/b\u003e召唤奈瑟匹拉，脱困古灵。",
+                      "cardTextZhCNPlain":  "造成1点伤害。在你施放一个邪能法术后，重新开启。亡语：召唤奈瑟匹拉，脱困古灵。",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "LOCATION",
+                      "cost":  3,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "on_board_trigger_highlight",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "deck",
+                                                                   "board",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "selfOnBoard",
+                                                               "felSpellsInHand",
+                                                               "felSpellsInDeck"
+                                                           ],
+                                           "triggerHighlight":  {
+                                                                    "matchSpellSchool":  "FEL"
+                                                                },
+                                           "suggestedDisplayTextZhCN":  "奈瑟匹拉在场：高亮所有邪能法术",
+                                           "reasoningZhCN":  "邪能法术会重新开启奈瑟匹拉。"
+                                       }
+                  },
+                  {
+                      "rank":  18,
+                      "sourceRank":  18,
+                      "cardCode":  "CATA_529",
+                      "cardNameZhCN":  "贪婪的邪能钓鱼者",
+                      "cardTextZhCN":  "在本局对战中，你每施放一个邪能法术，本牌的法力值消耗便减少（1）点。",
+                      "cardTextZhCNPlain":  "在本局对战中，你每施放一个邪能法术，本牌的法力值消耗便减少（1）点。",
+                      "cardClass":  "DEMONHUNTER",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "cost_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "felSpellsCastThisGame",
+                                                               "currentCost"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本局已施放邪能法术：{felSpellsCastThisGame}；费用减少 {discount}；当前费用 {currentCost}",
+                                           "reasoningZhCN":  "邪能钓鱼者费用是全局邪能法术计数，不按实体追踪。"
+                                       }
+                  }
+              ],
+    "reviewFields":  [
+                         "extraDisplay.schemaVersion: currently 2",
+                         "extraDisplay.auditDecision: keep for actionable candidates",
+                         "extraDisplay.displayType: canonical UI behavior category",
+                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+                     ]
+}

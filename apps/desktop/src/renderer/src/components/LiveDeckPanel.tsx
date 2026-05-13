@@ -5,12 +5,17 @@ import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
-import { expandDeckToCopies, type DeckCopy } from '@hdt/core';
+import { expandDeckToCopies, type DeckCopy, type DeckTrackerSnapshot } from '@hdt/core';
 import { clsx } from 'clsx';
 import { useCardPreview } from '../hooks/use-card-preview';
 import { getRarityCostBg } from '../lib/rarity';
-import type { Rarity } from '@hdt/hearthdb';
+import type { CardDef, Rarity } from '@hdt/hearthdb';
 import { useLocale, useTranslation } from '../i18n';
+import {
+  getExtraDisplayCandidate,
+  getOnBoardTriggerCandidates,
+  type ExtraDisplayCandidate,
+} from '../lib/extra-display-candidates';
 
 const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
 
@@ -240,6 +245,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                 onAnimationEnd={handleAnimationEnd}
                 onMouseEnter={handleRowMouseEnter}
                 onMouseLeave={handleRowMouseLeave}
+                extraDisplay={snapshot.extraDisplay}
               />
             ))}
             {[...exitingCopyKeys]
@@ -255,6 +261,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                     onAnimationEnd={handleAnimationEnd}
                     onMouseEnter={handleRowMouseEnter}
                     onMouseLeave={handleRowMouseLeave}
+                    extraDisplay={snapshot.extraDisplay}
                   />
                 );
               })}
@@ -292,6 +299,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                   onAnimationEnd={handleHandAnimationEnd}
                   onMouseEnter={handleRowMouseEnter}
                   onMouseLeave={handleRowMouseLeave}
+                  extraDisplay={snapshot.extraDisplay}
                 />
               ))}
             </div>
@@ -471,6 +479,7 @@ interface CardCopyRowProps {
   cardId: string;
   exiting: boolean;
   testId?: string;
+  extraDisplay?: DeckTrackerSnapshot['extraDisplay'];
   onAnimationEnd: (copyKey: string) => void;
   onMouseEnter: (cardId: string, el: HTMLDivElement) => void;
   onMouseLeave: () => void;
@@ -481,6 +490,7 @@ function CardCopyRow({
   cardId,
   exiting,
   testId = 'card-copy-row',
+  extraDisplay,
   onAnimationEnd,
   onMouseEnter,
   onMouseLeave,
@@ -491,16 +501,23 @@ function CardCopyRow({
   const rarity = def?.rarity as Rarity | undefined;
   const tileUrl = useCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
+  const rowExtra = buildRowExtraDisplay(cardId, def, extraDisplay);
+  const rowTitle = rowExtra.titleLines.length > 0
+    ? [name, ...rowExtra.titleLines].join('\n')
+    : cardId;
 
   return (
     <div
       ref={ref}
       data-testid={testId}
+      data-extra-display={rowExtra.badges.length > 0 || rowExtra.highlight ? 'active' : 'none'}
       data-row-state={exiting ? 'exiting' : 'ready'}
       className={clsx(
         'tavern-card-row relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-overlay-elevated hover:shadow-[inset_3px_0_0_var(--accent)]',
         exiting ? 'animate-deck-exit' : '',
+        rowExtra.highlight ? 'ring-1 ring-accent/70 bg-accent-dim/20 shadow-[inset_3px_0_0_var(--accent)]' : '',
       )}
+      title={rowTitle}
       onAnimationEnd={() => onAnimationEnd(copyKey)}
       onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
       onMouseLeave={onMouseLeave}
@@ -532,12 +549,243 @@ function CardCopyRow({
               !rarity || rarity === 'COMMON' || rarity === 'FREE' ? 'text-text' : '',
             )}
             style={NAME_TEXT_SHADOW}
-            title={cardId}
           >
             {name}
           </div>
+          {rowExtra.summary ? (
+            <div className="mt-0.5 truncate text-[10px] leading-none text-accent/90">
+              {rowExtra.summary}
+            </div>
+          ) : null}
         </div>
+        {rowExtra.badges.length > 0 ? (
+          <div className="flex shrink-0 items-center gap-1">
+            {rowExtra.badges.map((badge) => (
+              <span
+                key={badge.label}
+                data-testid="card-extra-display-badge"
+                className={clsx(
+                  'rounded border px-1.5 py-0.5 text-[10px] font-bold leading-none shadow-sm',
+                  badge.tone === 'highlight'
+                    ? 'border-accent/60 bg-accent/25 text-accent'
+                    : badge.tone === 'warning'
+                      ? 'border-red/60 bg-red/25 text-red'
+                      : 'border-green/40 bg-green/20 text-green',
+                )}
+                title={badge.title}
+              >
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>
   );
+}
+
+interface RowExtraBadge {
+  label: string;
+  title: string;
+  tone?: 'normal' | 'highlight' | 'warning';
+}
+
+interface RowExtraDisplay {
+  badges: RowExtraBadge[];
+  titleLines: string[];
+  summary: string | null;
+  highlight: boolean;
+}
+
+function buildRowExtraDisplay(
+  cardId: string,
+  def: CardDef | null | undefined,
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): RowExtraDisplay {
+  const candidate = getExtraDisplayCandidate(cardId);
+  const counters = extraDisplay?.counters ?? {};
+  const badges: RowExtraBadge[] = [];
+  const titleLines: string[] = [];
+  let summary: string | null = null;
+  let highlight = false;
+
+  // 1. On-board trigger highlight — data-driven from candidate JSON.
+  const triggerHit = matchOnBoardTrigger(def, extraDisplay?.friendlyBoard ?? []);
+  if (triggerHit) {
+    const triggerText = `将触发：${triggerHit.triggerNames.join('、')}`;
+    badges.push({ label: triggerHit.label, title: triggerText, tone: 'highlight' });
+    titleLines.push(triggerText);
+    summary = triggerText;
+    highlight = true;
+  }
+
+  // 2. State-driven row for this card's own candidate spec.
+  const stateNeeded = candidate?.extraDisplay?.stateNeeded ?? [];
+  const template = candidate?.extraDisplay?.suggestedDisplayTextZhCN;
+  if (candidate && stateNeeded.length > 0) {
+    const bindings = computeBindings(cardId, candidate, def, extraDisplay);
+    const expanded = template ? expandTemplate(template, bindings) : null;
+    for (const badge of buildBadgesFor(candidate, bindings, extraDisplay)) {
+      badges.push(badge);
+    }
+    if (expanded) {
+      titleLines.push(expanded);
+      summary = summary ?? expanded;
+    }
+  }
+
+  return { badges, titleLines, summary, highlight };
+}
+
+interface Bindings {
+  [key: string]: string | number;
+}
+
+function computeBindings(
+  cardId: string,
+  candidate: ExtraDisplayCandidate,
+  def: CardDef | null | undefined,
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): Bindings {
+  const counters = extraDisplay?.counters ?? {};
+  const bindings: Bindings = { ...counters };
+
+  // Pool views.
+  const demonPool = extraDisplay?.pools.friendlyDeadDemonsThisGameUnique ?? [];
+  bindings.demonNames = demonPool.map((p) => prettyCardName(p.cardId)).join('、');
+  bindings.demonCount = demonPool.length;
+  bindings.demonInstances = demonPool.reduce((s, p) => s + p.count, 0);
+
+  // Cost-progress (Fel spell cost).
+  if (candidate.extraDisplay?.stateNeeded?.includes('felSpellsCastThisGame')) {
+    const cast = bindings.felSpellsCastThisGame as number | undefined ?? 0;
+    const baseCost = def?.cost ?? candidate.cost ?? 0;
+    bindings.discount = Math.min(baseCost, cast);
+    bindings.currentCost = Math.max(0, baseCost - cast);
+  }
+
+  // Soul-feast: predicted draws equal friendlyMinionsDiedThisTurn.
+  if (cardId === 'CORE_BT_427') {
+    bindings.drawCount = bindings.friendlyMinionsDiedThisTurn ?? 0;
+  }
+
+  // Infuse progress from per-cardId snapshot.
+  const infuseConfig = candidate.extraDisplay?.infuseConfig;
+  if (infuseConfig) {
+    const entry = extraDisplay?.infuseProgressByCardId?.[cardId];
+    const progress = entry
+      ? infuseConfig.scope === 'demon'
+        ? entry.friendlyDemonDeaths
+        : entry.friendlyDeaths
+      : 0;
+    bindings.progress = progress;
+    bindings.required = infuseConfig.required;
+    bindings.infusedText = progress >= infuseConfig.required ? '已注能' : '未注能';
+    bindings.summonCount = progress >= infuseConfig.required ? 3 : 1;
+  }
+
+  return bindings;
+}
+
+function buildBadgesFor(
+  candidate: ExtraDisplayCandidate,
+  bindings: Bindings,
+  _extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): RowExtraBadge[] {
+  const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
+  const emptyWarning = candidate.extraDisplay?.emptyWarning === true;
+  const out: RowExtraBadge[] = [];
+
+  if (stateNeeded.includes('felSpellsCastThisGame')) {
+    const currentCost = bindings.currentCost as number;
+    out.push({ label: `${currentCost}费`, title: `当前邪能费用 ${currentCost}` });
+  }
+  if (stateNeeded.includes('friendlyDeadDemonsThisGameUnique')) {
+    const count = bindings.demonCount as number;
+    const tone: RowExtraBadge['tone'] = emptyWarning && count === 0 ? 'warning' : 'normal';
+    out.push({ label: `恶魔 ${count}`, title: `本局死亡友方恶魔：${count} 种`, tone });
+  }
+  if (stateNeeded.includes('friendlyMinionsDiedThisTurn')) {
+    const died = bindings.friendlyMinionsDiedThisTurn as number;
+    out.push({ label: `死 ${died}`, title: `本回合友方随从死亡：${died}` });
+  }
+  if (stateNeeded.includes('fireSpellsCastThisTurnByYou')) {
+    const cast = bindings.fireSpellsCastThisTurnByYou as number;
+    out.push({ label: `火 ${cast}`, title: `本回合已施放火焰法术：${cast}` });
+  }
+  if (stateNeeded.includes('holySpellsCastThisTurn')) {
+    const cast = bindings.holySpellsCastThisTurn as number;
+    out.push({ label: `神 ${cast}`, title: `本回合已施放神圣法术：${cast}` });
+  }
+  if (candidate.extraDisplay?.infuseConfig) {
+    const progress = bindings.progress as number;
+    const required = bindings.required as number;
+    const tone: RowExtraBadge['tone'] = progress >= required ? 'highlight' : 'normal';
+    out.push({ label: `注能 ${progress}/${required}`, title: `注能进度 ${progress}/${required}`, tone });
+  }
+  return out;
+}
+
+function expandTemplate(template: string, bindings: Bindings): string {
+  return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
+    const value = bindings[key];
+    if (value === undefined || value === null) return `{${key}}`;
+    return String(value);
+  });
+}
+
+interface OnBoardTriggerHit {
+  label: string;
+  triggerNames: string[];
+}
+
+function spellSchoolLabel(spellSchool: string): string {
+  switch (spellSchool) {
+    case 'FEL':
+      return '邪能';
+    case 'FIRE':
+      return '火焰';
+    case 'FROST':
+      return '冰霜';
+    case 'HOLY':
+      return '神圣';
+    case 'NATURE':
+      return '自然';
+    case 'SHADOW':
+      return '暗影';
+    case 'ARCANE':
+      return '奥术';
+    default:
+      return spellSchool;
+  }
+}
+
+function matchOnBoardTrigger(
+  def: CardDef | null | undefined,
+  friendlyBoard: readonly { cardId: string }[],
+): OnBoardTriggerHit | null {
+  if (!def || friendlyBoard.length === 0) return null;
+  const candidates = getOnBoardTriggerCandidates();
+  if (candidates.length === 0) return null;
+
+  const boardCardIds = new Set(friendlyBoard.map((r) => r.cardId));
+  const matched: string[] = [];
+  let label: string | null = null;
+  for (const cand of candidates) {
+    if (!boardCardIds.has(cand.cardCode)) continue;
+    const th = cand.extraDisplay?.triggerHighlight;
+    if (!th) continue;
+    if (th.matchSpellSchool && (def.type !== 'SPELL' || def.spellSchool !== th.matchSpellSchool)) continue;
+    if (th.matchRace && !(def.races ?? []).some((r) => r === th.matchRace)) continue;
+    matched.push(cand.cardNameZhCN);
+    if (label === null && th.matchSpellSchool) {
+      label = spellSchoolLabel(th.matchSpellSchool);
+    }
+  }
+  if (matched.length === 0) return null;
+  return { label: label ?? '触发', triggerNames: matched };
+}
+
+function prettyCardName(cardId: string): string {
+  return getExtraDisplayCandidate(cardId)?.cardNameZhCN ?? cardId;
 }

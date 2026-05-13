@@ -1,0 +1,864 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "MAGE",
+    "name": {
+      "enUS": "Mage",
+      "zhCN": "法师"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 16,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_LOOT_231",
+      "cardNameZhCN": "奥术工匠",
+      "cardTextZhCN": "每当你施放一个法术，便获得等同于其法力值消耗的护甲值。",
+      "cardTextZhCNPlain": "每当你施放一个法术，便获得等同于其法力值消耗的护甲值。",
+      "id": "CORE_LOOT_231",
+      "dbfId": 97374,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "奥术工匠",
+        "enUS": "Arcane Artificer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你施放一个法术，便获得等同于其法力值消耗的护甲值。",
+        "enUS": "Whenever you cast a spell, gain Armor equal to its_Cost.",
+        "zhCNPlain": "每当你施放一个法术，便获得等同于其法力值消耗的护甲值。",
+        "enUSPlain": "Whenever you cast a spell, gain Armor equal to its_Cost."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CORE_REV_601",
+      "cardNameZhCN": "冰冻之触",
+      "cardTextZhCN": "造成$3点伤害。<b>注能（@）：</b>将一张冰冻之触置入你的\n手牌。",
+      "cardTextZhCNPlain": "造成3点伤害。注能（）：将一张冰冻之触置入你的 手牌。",
+      "id": "CORE_REV_601",
+      "dbfId": 118123,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "冰冻之触",
+        "enUS": "Frozen Touch"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "造成$3点伤害。<b>注能（@）：</b>将一张冰冻之触置入你的\n手牌。",
+        "enUS": "Deal $3 damage.\n<b>Infuse (@):</b> Add a Frozen Touch to your hand.",
+        "zhCNPlain": "造成3点伤害。注能（）：将一张冰冻之触置入你的 手牌。",
+        "enUSPlain": "Deal 3 damage. Infuse (): Add a Frozen Touch to your hand."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CS3_001",
+      "cardNameZhCN": "守护者艾格文",
+      "cardTextZhCN": "<b>法术伤害+2</b>，<b>亡语：</b>你抽到的下一张随从牌会继承这些能力。",
+      "cardTextZhCNPlain": "法术伤害+2，亡语：你抽到的下一张随从牌会继承这些能力。",
+      "id": "CS3_001",
+      "dbfId": 62347,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "守护者艾格文",
+        "enUS": "Aegwynn, the Guardian"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>法术伤害+2</b>，<b>亡语：</b>你抽到的下一张随从牌会继承这些能力。",
+        "enUS": "<b>Spell Damage +2</b>\n<b>Deathrattle:</b> The next minion_you draw inherits these powers.",
+        "zhCNPlain": "法术伤害+2，亡语：你抽到的下一张随从牌会继承这些能力。",
+        "enUSPlain": "Spell Damage +2 Deathrattle: The next minion_you draw inherits these powers."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_REV_840",
+      "cardNameZhCN": "死神之躯",
+      "cardTextZhCN": "对所有随从造成$2点伤害。每消灭一个随从，召唤一个2/2的不稳定的骷髅。",
+      "cardTextZhCNPlain": "对所有随从造成2点伤害。每消灭一个随从，召唤一个2/2的不稳定的骷髅。",
+      "id": "CORE_REV_840",
+      "dbfId": 118136,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "死神之躯",
+        "enUS": "Deathborne"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对所有随从造成$2点伤害。每消灭一个随从，召唤一个2/2的不稳定的骷髅。",
+        "enUS": "Deal $2 damage to all minions. Summon a 2/2 Volatile Skeleton \nfor each killed.",
+        "zhCNPlain": "对所有随从造成2点伤害。每消灭一个随从，召唤一个2/2的不稳定的骷髅。",
+        "enUSPlain": "Deal 2 damage to all minions. Summon a 2/2 Volatile Skeleton for each killed."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CORE_REV_514",
+      "cardNameZhCN": "天定之灾克尔苏加德",
+      "cardTextZhCN": "<b>战吼：</b>复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。@<i>（复活@个）</i>",
+      "cardTextZhCNPlain": "战吼：复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。（复活个）",
+      "id": "CORE_REV_514",
+      "dbfId": 118119,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "天定之灾克尔苏加德",
+        "enUS": "Kel'Thuzad, the Inevitable"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。@<i>（复活@个）</i>",
+        "enUS": "[x]<b>Battlecry:</b> Resurrect your \nVolatile Skeletons. Any that \ncan't fit on the battlefield \ninstantly explode! @<i>(@)</i>",
+        "zhCNPlain": "战吼：复活你的不稳定的骷髅。战场上放不下的骷髅会立即爆炸。（复活个）",
+        "enUSPlain": "[x]Battlecry: Resurrect your Volatile Skeletons. Any that can't fit on the battlefield instantly explode! ()"
+      },
+      "categories": [
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "EDR_871",
+      "cardNameZhCN": "灵体采集者",
+      "cardTextZhCN": "<b>战吼：</b>获取\n一张小精灵。<b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "战吼：获取 一张小精灵。灌注你的英雄技能。",
+      "id": "EDR_871",
+      "dbfId": 116462,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "灵体采集者",
+        "enUS": "Spirit Gatherer"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>获取\n一张小精灵。<b>灌注</b>你的英雄技能。",
+        "enUS": "<b>Battlecry:</b> Get a Wisp. <b>Imbue</b> your Hero Power.",
+        "zhCNPlain": "战吼：获取 一张小精灵。灌注你的英雄技能。",
+        "enUSPlain": "Battlecry: Get a Wisp. Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "EDR_941",
+      "cardNameZhCN": "星涌术",
+      "cardTextZhCN": "对一个随从造成$@点伤害。<i>（每有一个在本局对战中死亡的友方随从都会提升。）</i>",
+      "cardTextZhCNPlain": "对一个随从造成点伤害。（每有一个在本局对战中死亡的友方随从都会提升。）",
+      "id": "EDR_941",
+      "dbfId": 115866,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "星涌术",
+        "enUS": "Starsurge"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对一个随从造成$@点伤害。<i>（每有一个在本局对战中死亡的友方随从都会提升。）</i>",
+        "enUS": "Deal $@ damage to a minion. <i>(Improved by each friendly minion that died this game.)</i>",
+        "zhCNPlain": "对一个随从造成点伤害。（每有一个在本局对战中死亡的友方随从都会提升。）",
+        "enUSPlain": "Deal damage to a minion. (Improved by each friendly minion that died this game.)"
+      },
+      "categories": [
+        "graveyard_pool",
+        "death_event_trigger",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text reacts to death/destruction events",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "death_event_stream_this_turn",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "FIR_913",
+      "cardNameZhCN": "地狱火先锋",
+      "cardTextZhCN": "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
+      "cardTextZhCNPlain": "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
+      "id": "FIR_913",
+      "dbfId": 115637,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "地狱火先锋",
+        "enUS": "Inferno Herald"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
+        "enUS": "[x]After you cast a Fire spell,\nget a random Elemental and\nreduce its Cost by (3).",
+        "zhCNPlain": "在你施放一个火焰法术后，随机获取一张元素牌，其法力值消耗减少（3）点。",
+        "enUSPlain": "[x]After you cast a Fire spell, get a random Elemental and reduce its Cost by (3)."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "EDR_519",
+      "cardNameZhCN": "小精灵驾驭者",
+      "cardTextZhCN": "<b>战吼：</b><b>灌注</b>并触发你的英雄技能。",
+      "cardTextZhCNPlain": "战吼：灌注并触发你的英雄技能。",
+      "id": "EDR_519",
+      "dbfId": 114292,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "小精灵驾驭者",
+        "enUS": "Wisprider"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b><b>灌注</b>并触发你的英雄技能。",
+        "enUS": "<b>Battlecry:</b> <b>Imbue</b> your Hero Power, then trigger it.",
+        "zhCNPlain": "战吼：灌注并触发你的英雄技能。",
+        "enUSPlain": "Battlecry: Imbue your Hero Power, then trigger it."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "EDR_430",
+      "cardNameZhCN": "艾森娜",
+      "cardTextZhCN": "<b>战吼：</b>\n如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。@<i>（还剩{0}个！）</i>@<i>（已经就绪！）</i>",
+      "cardTextZhCNPlain": "战吼： 如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。（还剩{0}个！）（已经就绪！）",
+      "id": "EDR_430",
+      "dbfId": 113700,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "艾森娜",
+        "enUS": "Aessina"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>\n如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。@<i>（还剩{0}个！）</i>@<i>（已经就绪！）</i>",
+        "enUS": "[x]<b>Battlecry:</b> If 20 friendly\nminions have died this game,\ndeal 20 damage split among\nall enemies.@ <i>({0} left!)</i>@ <i>(Ready!)</i>",
+        "zhCNPlain": "战吼： 如果在本局对战中已有20个友方随从死亡，造成20点伤害，随机分配到所有敌人身上。（还剩{0}个！）（已经就绪！）",
+        "enUSPlain": "[x]Battlecry: If 20 friendly minions have died this game, deal 20 damage split among all enemies. ({0} left!) (Ready!)"
+      },
+      "categories": [
+        "graveyard_pool",
+        "death_event_trigger",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text reacts to death/destruction events",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "death_event_stream_this_turn",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "TLC_226",
+      "cardNameZhCN": "咒术图书管理员",
+      "cardTextZhCN": "<b>亡语：</b>抽一张法术牌。<b>延系：</b>召唤一个本随从的复制。",
+      "cardTextZhCNPlain": "亡语：抽一张法术牌。延系：召唤一个本随从的复制。",
+      "id": "TLC_226",
+      "dbfId": 117535,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "咒术图书管理员",
+        "enUS": "Conjured Bookkeeper"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽一张法术牌。<b>延系：</b>召唤一个本随从的复制。",
+        "enUS": "<b>Deathrattle:</b> Draw a spell. <b>Kindred:</b> Summon a copy of this.",
+        "zhCNPlain": "亡语：抽一张法术牌。延系：召唤一个本随从的复制。",
+        "enUSPlain": "Deathrattle: Draw a spell. Kindred: Summon a copy of this."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "DINO_429",
+      "cardNameZhCN": "绵羊面具",
+      "cardTextZhCN": "将一个随从的属性值变为1/1并使其获得“<b>亡语：</b>对所有随从造成2点伤害。”",
+      "cardTextZhCNPlain": "将一个随从的属性值变为1/1并使其获得“亡语：对所有随从造成2点伤害。”",
+      "id": "DINO_429",
+      "dbfId": 118651,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "绵羊面具",
+        "enUS": "Sheep Mask"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "将一个随从的属性值变为1/1并使其获得“<b>亡语：</b>对所有随从造成2点伤害。”",
+        "enUS": "Set a minion's stats to 1/1 and give it \"<b>Deathrattle:</b> Deal 2 damage to all minions.\"",
+        "zhCNPlain": "将一个随从的属性值变为1/1并使其获得“亡语：对所有随从造成2点伤害。”",
+        "enUSPlain": "Set a minion's stats to 1/1 and give it \"Deathrattle: Deal 2 damage to all minions.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "DINO_409",
+      "cardNameZhCN": "科技恐龙",
+      "cardTextZhCN": "<b>嘲讽</b>。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "嘲讽。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
+      "id": "DINO_409",
+      "dbfId": 118485,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "科技恐龙",
+        "enUS": "Techysaurus"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "RARE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
+        "enUS": "[x]<b>Taunt</b>. Costs (1) less for\neach card you played this\ngame that didn't start\nin your deck.",
+        "zhCNPlain": "嘲讽。在本局对战中，你每使用一张你的套牌之外的卡牌，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "[x]Taunt. Costs (1) less for each card you played this game that didn't start in your deck."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "MEND_506",
+      "cardNameZhCN": "秘魔刃豹",
+      "cardTextZhCN": "<b>扰魔</b>。<b>战吼：</b>在本局对战中，你的魔网牌的效果提高1。",
+      "cardTextZhCNPlain": "扰魔。战吼：在本局对战中，你的魔网牌的效果提高1。",
+      "id": "MEND_506",
+      "dbfId": 123515,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "秘魔刃豹",
+        "enUS": "Mystic Runesaber"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>扰魔</b>。<b>战吼：</b>在本局对战中，你的魔网牌的效果提高1。",
+        "enUS": "[x]<b>Elusive</b>\n<b>Battlecry:</b> Increase the\neffects of your Leylines\nby 1 this game.",
+        "zhCNPlain": "扰魔。战吼：在本局对战中，你的魔网牌的效果提高1。",
+        "enUSPlain": "[x]Elusive Battlecry: Increase the effects of your Leylines by 1 this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "MEND_501",
+      "cardNameZhCN": "魔力行者",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，你的魔网牌法力值消耗减少（1）点。<b>亡语：</b>随机获取一张魔网牌。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，你的魔网牌法力值消耗减少（1）点。亡语：随机获取一张魔网牌。",
+      "id": "MEND_501",
+      "dbfId": 123496,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "魔力行者",
+        "enUS": "Ley Walker"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本局对战中，你的魔网牌法力值消耗减少（1）点。<b>亡语：</b>随机获取一张魔网牌。",
+        "enUS": "[x]<b>Battlecry:</b> Your Leylines\ncost (1) less this game.\n<b>Deathrattle:</b> Get a\nrandom Leyline.",
+        "zhCNPlain": "战吼：在本局对战中，你的魔网牌法力值消耗减少（1）点。亡语：随机获取一张魔网牌。",
+        "enUSPlain": "[x]Battlecry: Your Leylines cost (1) less this game. Deathrattle: Get a random Leyline."
+      },
+      "categories": [
+        "deathrattle",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "MEND_503",
+      "cardNameZhCN": "湍流之针",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，你的魔网牌额外触发一次。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，你的魔网牌额外触发一次。",
+      "id": "MEND_503",
+      "dbfId": 123507,
+      "cardClass": "MAGE",
+      "sourceCardClass": "MAGE",
+      "rawClassValue": 4,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "湍流之针",
+        "enUS": "Surge Needle"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本局对战中，你的魔网牌额外触发一次。",
+        "enUS": "[x]<b>Battlecry:</b> Your Leylines\ntrigger an additional\ntime this game.",
+        "zhCNPlain": "战吼：在本局对战中，你的魔网牌额外触发一次。",
+        "enUSPlain": "[x]Battlecry: Your Leylines trigger an additional time this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

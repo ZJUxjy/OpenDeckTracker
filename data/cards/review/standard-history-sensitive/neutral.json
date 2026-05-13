@@ -1,0 +1,4660 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "NEUTRAL",
+    "name": {
+      "enUS": "Neutral",
+      "zhCN": "中立"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 98,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_KAR_036",
+      "cardNameZhCN": "奥术畸体",
+      "cardTextZhCN": "在你施放一个法术后，使本随从获得+1生命值。",
+      "cardTextZhCNPlain": "在你施放一个法术后，使本随从获得+1生命值。",
+      "id": "CORE_KAR_036",
+      "dbfId": 69722,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "奥术畸体",
+        "enUS": "Arcane Anomaly"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你施放一个法术后，使本随从获得+1生命值。",
+        "enUS": "After you cast a spell, give this minion +1 Health.",
+        "zhCNPlain": "在你施放一个法术后，使本随从获得+1生命值。",
+        "enUSPlain": "After you cast a spell, give this minion +1 Health."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CORE_CFM_120",
+      "cardNameZhCN": "亡灵药剂师",
+      "cardTextZhCN": "<b>亡语：</b>为每个英雄恢复#4点生命值。",
+      "cardTextZhCNPlain": "亡语：为每个英雄恢复4点生命值。",
+      "id": "CORE_CFM_120",
+      "dbfId": 76315,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "亡灵药剂师",
+        "enUS": "Mistress of Mixtures"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>为每个英雄恢复#4点生命值。",
+        "enUS": "<b>Deathrattle:</b> Restore #4 Health to each hero.",
+        "zhCNPlain": "亡语：为每个英雄恢复4点生命值。",
+        "enUSPlain": "Deathrattle: Restore 4 Health to each hero."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CORE_TSC_827",
+      "cardNameZhCN": "凶恶的滑矛纳迦",
+      "cardTextZhCN": "在你施放一个法术后，直到你的下个回合，获得+1攻击力。",
+      "cardTextZhCNPlain": "在你施放一个法术后，直到你的下个回合，获得+1攻击力。",
+      "id": "CORE_TSC_827",
+      "dbfId": 113111,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "凶恶的滑矛纳迦",
+        "enUS": "Vicious Slitherspear"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你施放一个法术后，直到你的下个回合，获得+1攻击力。",
+        "enUS": "[x]After you cast a spell,\ngain +1 Attack until\nyour next turn.",
+        "zhCNPlain": "在你施放一个法术后，直到你的下个回合，获得+1攻击力。",
+        "enUSPlain": "[x]After you cast a spell, gain +1 Attack until your next turn."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_GVG_076",
+      "cardNameZhCN": "自爆绵羊",
+      "cardTextZhCN": "<b>亡语：</b>对所有随从造成2点伤害。",
+      "cardTextZhCNPlain": "亡语：对所有随从造成2点伤害。",
+      "id": "CORE_GVG_076",
+      "dbfId": 69717,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "自爆绵羊",
+        "enUS": "Explosive Sheep"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>对所有随从造成2点伤害。",
+        "enUS": "<b>Deathrattle:</b> Deal 2 damage to all minions.",
+        "zhCNPlain": "亡语：对所有随从造成2点伤害。",
+        "enUSPlain": "Deathrattle: Deal 2 damage to all minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CORE_FP1_007",
+      "cardNameZhCN": "蛛魔之卵",
+      "cardTextZhCN": "<b>亡语：</b>召唤一个4/4的蛛魔。",
+      "cardTextZhCNPlain": "亡语：召唤一个4/4的蛛魔。",
+      "id": "CORE_FP1_007",
+      "dbfId": 69713,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "蛛魔之卵",
+        "enUS": "Nerubian Egg"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>召唤一个4/4的蛛魔。",
+        "enUS": "<b>Deathrattle:</b> Summon a 4/4 Nerubian.",
+        "zhCNPlain": "亡语：召唤一个4/4的蛛魔。",
+        "enUSPlain": "Deathrattle: Summon a 4/4 Nerubian."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "CORE_REV_956",
+      "cardNameZhCN": "亡者牧师",
+      "cardTextZhCN": "<b>嘲讽</b>，<b>注能（@）：</b>获得+2/+2。",
+      "cardTextZhCNPlain": "嘲讽，注能（）：获得+2/+2。",
+      "id": "CORE_REV_956",
+      "dbfId": 118170,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "亡者牧师",
+        "enUS": "Priest of the Deceased"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "INFUSE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>，<b>注能（@）：</b>获得+2/+2。",
+        "enUS": "<b>Taunt</b>\n<b>Infuse (@):</b> Gain +2/+2.",
+        "zhCNPlain": "嘲讽，注能（）：获得+2/+2。",
+        "enUSPlain": "Taunt Infuse (): Gain +2/+2."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "CORE_REV_845",
+      "cardNameZhCN": "不稳定的骷髅",
+      "cardTextZhCN": "<b>亡语：</b>随机对一个敌人造成2点伤害。",
+      "cardTextZhCNPlain": "亡语：随机对一个敌人造成2点伤害。",
+      "id": "CORE_REV_845",
+      "dbfId": 118140,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "不稳定的骷髅",
+        "enUS": "Volatile Skeleton"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机对一个敌人造成2点伤害。",
+        "enUS": "<b>Deathrattle:</b> Deal 2 damage to a random enemy.",
+        "zhCNPlain": "亡语：随机对一个敌人造成2点伤害。",
+        "enUSPlain": "Deathrattle: Deal 2 damage to a random enemy."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "CORE_MAW_031",
+      "cardNameZhCN": "冥界侍从",
+      "cardTextZhCN": "你的<b>注能</b>牌在牌库中也会<b>注能</b>。",
+      "cardTextZhCNPlain": "你的注能牌在牌库中也会注能。",
+      "id": "CORE_MAW_031",
+      "dbfId": 118041,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "冥界侍从",
+        "enUS": "Afterlife Attendant"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "AURA",
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "你的<b>注能</b>牌在牌库中也会<b>注能</b>。",
+        "enUS": "Your <b>Infuse</b> cards also <b>Infuse</b> while in your deck.",
+        "zhCNPlain": "你的注能牌在牌库中也会注能。",
+        "enUSPlain": "Your Infuse cards also Infuse while in your deck."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "CORE_REV_916",
+      "cardNameZhCN": "诡异的画像",
+      "cardTextZhCN": "在另一个随从死亡后，成为它的复制。",
+      "cardTextZhCNPlain": "在另一个随从死亡后，成为它的复制。",
+      "id": "CORE_REV_916",
+      "dbfId": 118144,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "诡异的画像",
+        "enUS": "Creepy Painting"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在另一个随从死亡后，成为它的复制。",
+        "enUS": "After another minion dies, become a copy of it.",
+        "zhCNPlain": "在另一个随从死亡后，成为它的复制。",
+        "enUSPlain": "After another minion dies, become a copy of it."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "CORE_tt_004",
+      "cardNameZhCN": "腐肉食尸鬼",
+      "cardTextZhCN": "每当一个随从死亡，便获得+1攻击力。",
+      "cardTextZhCNPlain": "每当一个随从死亡，便获得+1攻击力。",
+      "id": "CORE_tt_004",
+      "dbfId": 69680,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "腐肉食尸鬼",
+        "enUS": "Flesheating Ghoul"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当一个随从死亡，便获得+1攻击力。",
+        "enUS": "Whenever a minion dies, gain +1 Attack.",
+        "zhCNPlain": "每当一个随从死亡，便获得+1攻击力。",
+        "enUSPlain": "Whenever a minion dies, gain +1 Attack."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "CORE_ICC_702",
+      "cardNameZhCN": "孱弱的掘墓者",
+      "cardTextZhCN": "<b>亡语：</b>随机将一个具有<b>亡语</b>的随从置入你的手牌。",
+      "cardTextZhCNPlain": "亡语：随机将一个具有亡语的随从置入你的手牌。",
+      "id": "CORE_ICC_702",
+      "dbfId": 95750,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "孱弱的掘墓者",
+        "enUS": "Shallow Gravedigger"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机将一个具有<b>亡语</b>的随从置入你的手牌。",
+        "enUS": "<b>Deathrattle:</b> Add a random <b>Deathrattle</b> minion to your_hand.",
+        "zhCNPlain": "亡语：随机将一个具有亡语的随从置入你的手牌。",
+        "enUSPlain": "Deathrattle: Add a random Deathrattle minion to your_hand."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "CORE_ICC_067",
+      "cardNameZhCN": "维库食尸鬼",
+      "cardTextZhCN": "<b>亡语：</b>如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+      "cardTextZhCNPlain": "亡语：如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+      "id": "CORE_ICC_067",
+      "dbfId": 95780,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "维库食尸鬼",
+        "enUS": "Vryghoul"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+        "enUS": "[x]<b>Deathrattle:</b> If it's your\nopponent's turn,\nsummon a 2/2 Ghoul.",
+        "zhCNPlain": "亡语：如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+        "enUSPlain": "[x]Deathrattle: If it's your opponent's turn, summon a 2/2 Ghoul."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "CORE_ICC_854",
+      "cardNameZhCN": "阿尔福斯",
+      "cardTextZhCN": "<b>亡语：</b>随机将一张<b>巫妖王</b>牌置入你的\n手牌。",
+      "cardTextZhCNPlain": "亡语：随机将一张巫妖王牌置入你的 手牌。",
+      "id": "CORE_ICC_854",
+      "dbfId": 95638,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "阿尔福斯",
+        "enUS": "Arfus"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机将一张<b>巫妖王</b>牌置入你的\n手牌。",
+        "enUS": "[x]<b>Deathrattle:</b> Add a random\n<b>Lich King</b> card to your_hand.",
+        "zhCNPlain": "亡语：随机将一张巫妖王牌置入你的 手牌。",
+        "enUSPlain": "[x]Deathrattle: Add a random Lich King card to your_hand."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "CORE_FP1_031",
+      "cardNameZhCN": "瑞文戴尔男爵",
+      "cardTextZhCN": "你的随从的<b>亡语</b>将触发两次。",
+      "cardTextZhCNPlain": "你的随从的亡语将触发两次。",
+      "id": "CORE_FP1_031",
+      "dbfId": 69714,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "瑞文戴尔男爵",
+        "enUS": "Baron Rivendare"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "AURA"
+      ],
+      "text": {
+        "zhCN": "你的随从的<b>亡语</b>将触发两次。",
+        "enUS": "Your minions trigger their <b>Deathrattles</b> twice.",
+        "zhCNPlain": "你的随从的亡语将触发两次。",
+        "enUSPlain": "Your minions trigger their Deathrattles twice."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "CORE_ICC_097",
+      "cardNameZhCN": "墓地蹒跚者",
+      "cardTextZhCN": "每当你的武器被摧毁时，便获得+1/+1。",
+      "cardTextZhCNPlain": "每当你的武器被摧毁时，便获得+1/+1。",
+      "id": "CORE_ICC_097",
+      "dbfId": 95711,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "墓地蹒跚者",
+        "enUS": "Grave Shambler"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你的武器被摧毁时，便获得+1/+1。",
+        "enUS": "Whenever your weapon is destroyed, gain +1/+1.",
+        "zhCNPlain": "每当你的武器被摧毁时，便获得+1/+1。",
+        "enUSPlain": "Whenever your weapon is destroyed, gain +1/+1."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "CORE_ICC_812",
+      "cardNameZhCN": "绞肉车",
+      "cardTextZhCN": "<b>亡语：</b>从你的牌库中召唤一个攻击力小于本随从攻击力的随从。",
+      "cardTextZhCNPlain": "亡语：从你的牌库中召唤一个攻击力小于本随从攻击力的随从。",
+      "id": "CORE_ICC_812",
+      "dbfId": 95725,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "绞肉车",
+        "enUS": "Meat Wagon"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>从你的牌库中召唤一个攻击力小于本随从攻击力的随从。",
+        "enUS": "[x]<b>Deathrattle:</b> Summon a\nminion from your deck\nwith less Attack than\nthis minion.",
+        "zhCNPlain": "亡语：从你的牌库中召唤一个攻击力小于本随从攻击力的随从。",
+        "enUSPlain": "[x]Deathrattle: Summon a minion from your deck with less Attack than this minion."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 17,
+      "cardRank": 17,
+      "cardCode": "CORE_REV_957",
+      "cardNameZhCN": "鱼人吸血鬼",
+      "cardTextZhCN": "<b>吸血</b>，<b>注能（@）：</b>法力值消耗为（0）点。",
+      "cardTextZhCNPlain": "吸血，注能（）：法力值消耗为（0）点。",
+      "id": "CORE_REV_957",
+      "dbfId": 118171,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "鱼人吸血鬼",
+        "enUS": "Murlocula"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "INFUSE",
+        "LIFESTEAL"
+      ],
+      "text": {
+        "zhCN": "<b>吸血</b>，<b>注能（@）：</b>法力值消耗为（0）点。",
+        "enUS": "<b>Lifesteal</b>\n<b>Infuse (@):</b> This costs (0).",
+        "zhCNPlain": "吸血，注能（）：法力值消耗为（0）点。",
+        "enUSPlain": "Lifesteal Infuse (): This costs (0)."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 18,
+      "cardRank": 18,
+      "cardCode": "CORE_ICC_025",
+      "cardNameZhCN": "骷髅捣蛋鬼",
+      "cardTextZhCN": "<b>战吼：</b>召唤一个5/5的骷髅。\n<b>亡语：</b>为你的对手召唤一个5/5的骷髅。",
+      "cardTextZhCNPlain": "战吼：召唤一个5/5的骷髅。 亡语：为你的对手召唤一个5/5的骷髅。",
+      "id": "CORE_ICC_025",
+      "dbfId": 95739,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "骷髅捣蛋鬼",
+        "enUS": "Rattling Rascal"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>召唤一个5/5的骷髅。\n<b>亡语：</b>为你的对手召唤一个5/5的骷髅。",
+        "enUS": "[x]<b>Battlecry:</b> Summon a\n5/5 Skeleton.\n<b>Deathrattle:</b> Summon one\nfor your opponent.",
+        "zhCNPlain": "战吼：召唤一个5/5的骷髅。 亡语：为你的对手召唤一个5/5的骷髅。",
+        "enUSPlain": "[x]Battlecry: Summon a 5/5 Skeleton. Deathrattle: Summon one for your opponent."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 19,
+      "cardRank": 19,
+      "cardCode": "CORE_BOT_312",
+      "cardNameZhCN": "量产型恐吓机",
+      "cardTextZhCN": "<b>磁力</b>\n<b>亡语：</b>召唤三个1/1的微型机器人。",
+      "cardTextZhCNPlain": "磁力 亡语：召唤三个1/1的微型机器人。",
+      "id": "CORE_BOT_312",
+      "dbfId": 102969,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "量产型恐吓机",
+        "enUS": "Replicating Menace"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>磁力</b>\n<b>亡语：</b>召唤三个1/1的微型机器人。",
+        "enUS": "<b>Magnetic</b>\n<b>Deathrattle:</b> Summon three 1/1 Microbots.",
+        "zhCNPlain": "磁力 亡语：召唤三个1/1的微型机器人。",
+        "enUSPlain": "Magnetic Deathrattle: Summon three 1/1 Microbots."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 20,
+      "cardRank": 20,
+      "cardCode": "CORE_ICC_099",
+      "cardNameZhCN": "自爆憎恶",
+      "cardTextZhCN": "<b>亡语：</b>对你所有的随从造成5点伤害。",
+      "cardTextZhCNPlain": "亡语：对你所有的随从造成5点伤害。",
+      "id": "CORE_ICC_099",
+      "dbfId": 95767,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "自爆憎恶",
+        "enUS": "Ticking Abomination"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>对你所有的随从造成5点伤害。",
+        "enUS": "<b>Deathrattle:</b> Deal 5 damage to your minions.",
+        "zhCNPlain": "亡语：对你所有的随从造成5点伤害。",
+        "enUSPlain": "Deathrattle: Deal 5 damage to your minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 21,
+      "cardRank": 21,
+      "cardCode": "CORE_NEW1_026",
+      "cardNameZhCN": "紫罗兰教师",
+      "cardTextZhCN": "每当你施放一个法术，召唤一个1/1的紫罗兰学徒。",
+      "cardTextZhCNPlain": "每当你施放一个法术，召唤一个1/1的紫罗兰学徒。",
+      "id": "CORE_NEW1_026",
+      "dbfId": 69678,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "紫罗兰教师",
+        "enUS": "Violet Teacher"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你施放一个法术，召唤一个1/1的紫罗兰学徒。",
+        "enUS": "Whenever you cast a spell, summon a 1/1 Violet Apprentice.",
+        "zhCNPlain": "每当你施放一个法术，召唤一个1/1的紫罗兰学徒。",
+        "enUSPlain": "Whenever you cast a spell, summon a 1/1 Violet Apprentice."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 22,
+      "cardRank": 22,
+      "cardCode": "CORE_ICC_904",
+      "cardNameZhCN": "邪骨骷髅",
+      "cardTextZhCN": "<b>战吼：</b>在本回合中每有一个随从死亡，便获得+1/+1。",
+      "cardTextZhCNPlain": "战吼：在本回合中每有一个随从死亡，便获得+1/+1。",
+      "id": "CORE_ICC_904",
+      "dbfId": 95782,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "邪骨骷髅",
+        "enUS": "Wicked Skeleton"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本回合中每有一个随从死亡，便获得+1/+1。",
+        "enUS": "<b>Battlecry:</b> Gain +1/+1 for_each minion that died_this turn.",
+        "zhCNPlain": "战吼：在本回合中每有一个随从死亡，便获得+1/+1。",
+        "enUSPlain": "Battlecry: Gain +1/+1 for_each minion that died_this turn."
+      },
+      "categories": [
+        "graveyard_pool",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 23,
+      "cardRank": 23,
+      "cardCode": "CORE_ICC_257",
+      "cardNameZhCN": "唤尸者",
+      "cardTextZhCN": "<b>战吼：</b>使一个友方随从获得“<b>亡语：</b>再次召唤该随从。”",
+      "cardTextZhCNPlain": "战吼：使一个友方随从获得“亡语：再次召唤该随从。”",
+      "id": "CORE_ICC_257",
+      "dbfId": 95675,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "唤尸者",
+        "enUS": "Corpse Raiser"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>使一个友方随从获得“<b>亡语：</b>再次召唤该随从。”",
+        "enUS": "[x]<b>Battlecry:</b> Give a friendly\nminion \"<b>Deathrattle:</b>\n  Resummon this minion.\"",
+        "zhCNPlain": "战吼：使一个友方随从获得“亡语：再次召唤该随从。”",
+        "enUSPlain": "[x]Battlecry: Give a friendly minion \"Deathrattle: Resummon this minion.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 24,
+      "cardRank": 24,
+      "cardCode": "CORE_REV_019",
+      "cardNameZhCN": "饥饿的愚人",
+      "cardTextZhCN": "<b>战吼：</b>抽一张牌。<b>注能（@）：</b>改为抽三张牌。",
+      "cardTextZhCNPlain": "战吼：抽一张牌。注能（）：改为抽三张牌。",
+      "id": "CORE_REV_019",
+      "dbfId": 118056,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "饥饿的愚人",
+        "enUS": "Famished Fool"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY",
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>抽一张牌。<b>注能（@）：</b>改为抽三张牌。",
+        "enUS": "<b>Battlecry:</b> Draw a card.\n<b>Infuse (@):</b> Draw 3 instead.",
+        "zhCNPlain": "战吼：抽一张牌。注能（）：改为抽三张牌。",
+        "enUSPlain": "Battlecry: Draw a card. Infuse (): Draw 3 instead."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 25,
+      "cardRank": 25,
+      "cardCode": "CORE_GIL_667",
+      "cardNameZhCN": "腐烂的苹果树",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>为你的英雄恢复#6点生命值。",
+      "cardTextZhCNPlain": "嘲讽。亡语：为你的英雄恢复6点生命值。",
+      "id": "CORE_GIL_667",
+      "dbfId": 102229,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "腐烂的苹果树",
+        "enUS": "Rotten Applebaum"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>为你的英雄恢复#6点生命值。",
+        "enUS": "<b>Taunt</b>\n<b>Deathrattle:</b> Restore #6 Health to your hero.",
+        "zhCNPlain": "嘲讽。亡语：为你的英雄恢复6点生命值。",
+        "enUSPlain": "Taunt Deathrattle: Restore 6 Health to your hero."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 26,
+      "cardRank": 26,
+      "cardCode": "CORE_REV_251",
+      "cardNameZhCN": "罪奔者",
+      "cardTextZhCN": "<b>亡语：</b>随机消灭一个敌方随从。",
+      "cardTextZhCNPlain": "亡语：随机消灭一个敌方随从。",
+      "id": "CORE_REV_251",
+      "dbfId": 118071,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "罪奔者",
+        "enUS": "Sinrunner"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机消灭一个敌方随从。",
+        "enUS": "<b>Deathrattle:</b> Destroy a random enemy minion.",
+        "zhCNPlain": "亡语：随机消灭一个敌方随从。",
+        "enUSPlain": "Deathrattle: Destroy a random enemy minion."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 27,
+      "cardRank": 27,
+      "cardCode": "CORE_ICC_019",
+      "cardNameZhCN": "骷髅法师",
+      "cardTextZhCN": "<b>亡语：</b>如果此时是你对手的回合，则召唤一个8/8的骷髅。",
+      "cardTextZhCNPlain": "亡语：如果此时是你对手的回合，则召唤一个8/8的骷髅。",
+      "id": "CORE_ICC_019",
+      "dbfId": 95753,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "骷髅法师",
+        "enUS": "Skelemancer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>如果此时是你对手的回合，则召唤一个8/8的骷髅。",
+        "enUS": "<b>Deathrattle:</b> If it's your opponent's turn, summon an 8/8 Skeleton.",
+        "zhCNPlain": "亡语：如果此时是你对手的回合，则召唤一个8/8的骷髅。",
+        "enUSPlain": "Deathrattle: If it's your opponent's turn, summon an 8/8 Skeleton."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 28,
+      "cardRank": 28,
+      "cardCode": "CORE_REV_013",
+      "cardNameZhCN": "石裔指控者",
+      "cardTextZhCN": "<b>注能（@）：</b>获得“<b>战吼：</b>造成5点伤害。”",
+      "cardTextZhCNPlain": "注能（）：获得“战吼：造成5点伤害。”",
+      "id": "CORE_REV_013",
+      "dbfId": 118051,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "石裔指控者",
+        "enUS": "Stoneborn Accuser"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "<b>注能（@）：</b>获得“<b>战吼：</b>造成5点伤害。”",
+        "enUS": "[x]<b>Infuse (@):</b> Gain\n\"<b>Battlecry:</b> Deal 5\ndamage.\"",
+        "zhCNPlain": "注能（）：获得“战吼：造成5点伤害。”",
+        "enUSPlain": "[x]Infuse (): Gain \"Battlecry: Deal 5 damage.\""
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 29,
+      "cardRank": 29,
+      "cardCode": "CORE_ICC_098",
+      "cardNameZhCN": "墓穴潜伏者",
+      "cardTextZhCN": "<b>战吼：</b>随机将一个在本局对战中死亡并具有<b>亡语</b>的随从置入你的手牌。",
+      "cardTextZhCNPlain": "战吼：随机将一个在本局对战中死亡并具有亡语的随从置入你的手牌。",
+      "id": "CORE_ICC_098",
+      "dbfId": 95768,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "墓穴潜伏者",
+        "enUS": "Tomb Lurker"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>随机将一个在本局对战中死亡并具有<b>亡语</b>的随从置入你的手牌。",
+        "enUS": "[x]<b>Battlecry:</b> Add a random\n<b>Deathrattle</b> minion that died\nthis game to your hand.",
+        "zhCNPlain": "战吼：随机将一个在本局对战中死亡并具有亡语的随从置入你的手牌。",
+        "enUSPlain": "[x]Battlecry: Add a random Deathrattle minion that died this game to your hand."
+      },
+      "categories": [
+        "graveyard_pool",
+        "deathrattle",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 30,
+      "cardRank": 30,
+      "cardCode": "CORE_REV_012",
+      "cardNameZhCN": "沼泽兽",
+      "cardTextZhCN": "<b>嘲讽</b>，<b>亡语：</b>召唤一滩2/4并具有<b>嘲讽</b>的泥浆。",
+      "cardTextZhCNPlain": "嘲讽，亡语：召唤一滩2/4并具有嘲讽的泥浆。",
+      "id": "CORE_REV_012",
+      "dbfId": 118050,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "沼泽兽",
+        "enUS": "Bog Beast"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>，<b>亡语：</b>召唤一滩2/4并具有<b>嘲讽</b>的泥浆。",
+        "enUS": "[x]<b><b>Taunt</b></b> \n<b>Deathrattle:</b> Summon a 2/4 \nMuckmare with <b>Taunt</b>.",
+        "zhCNPlain": "嘲讽，亡语：召唤一滩2/4并具有嘲讽的泥浆。",
+        "enUSPlain": "[x]Taunt Deathrattle: Summon a 2/4 Muckmare with Taunt."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 31,
+      "cardRank": 31,
+      "cardCode": "CORE_ICC_027",
+      "cardNameZhCN": "白骨幼龙",
+      "cardTextZhCN": "<b>亡语：</b>随机将一张龙牌置入你的手牌。",
+      "cardTextZhCNPlain": "亡语：随机将一张龙牌置入你的手牌。",
+      "id": "CORE_ICC_027",
+      "dbfId": 95648,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "白骨幼龙",
+        "enUS": "Bone Drake"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机将一张龙牌置入你的手牌。",
+        "enUS": "<b>Deathrattle:</b> Add a random Dragon to your hand.",
+        "zhCNPlain": "亡语：随机将一张龙牌置入你的手牌。",
+        "enUSPlain": "Deathrattle: Add a random Dragon to your hand."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 32,
+      "cardRank": 32,
+      "cardCode": "CORE_TOY_100",
+      "cardNameZhCN": "侏儒飞行员诺莉亚",
+      "cardTextZhCN": "<b>突袭</b>。同时对其攻击目标相邻的随从造成伤害。<b>亡语：</b>对所有敌人造成2点伤害。",
+      "cardTextZhCNPlain": "突袭。同时对其攻击目标相邻的随从造成伤害。亡语：对所有敌人造成2点伤害。",
+      "id": "CORE_TOY_100",
+      "dbfId": 112097,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "侏儒飞行员诺莉亚",
+        "enUS": "Gnomelia, S.A.F.E. Pilot"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE",
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>。同时对其攻击目标相邻的随从造成伤害。<b>亡语：</b>对所有敌人造成2点伤害。",
+        "enUS": "[x]<b>Rush</b>. Also damages minions\nnext to whomever this attacks.\n<b>Deathrattle:</b> Deal 2 damage\nto all enemies.",
+        "zhCNPlain": "突袭。同时对其攻击目标相邻的随从造成伤害。亡语：对所有敌人造成2点伤害。",
+        "enUSPlain": "[x]Rush. Also damages minions next to whomever this attacks. Deathrattle: Deal 2 damage to all enemies."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 33,
+      "cardRank": 33,
+      "cardCode": "CORE_EX1_190",
+      "cardNameZhCN": "大检察官怀特迈恩",
+      "cardTextZhCN": "<b>战吼：</b>召唤所有在本回合中死亡的友方\n随从。",
+      "cardTextZhCNPlain": "战吼：召唤所有在本回合中死亡的友方 随从。",
+      "id": "CORE_EX1_190",
+      "dbfId": 69673,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "大检察官怀特迈恩",
+        "enUS": "High Inquisitor Whitemane"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>召唤所有在本回合中死亡的友方\n随从。",
+        "enUS": "<b>Battlecry:</b> Summon all friendly minions that died_this turn.",
+        "zhCNPlain": "战吼：召唤所有在本回合中死亡的友方 随从。",
+        "enUSPlain": "Battlecry: Summon all friendly minions that died_this turn."
+      },
+      "categories": [
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 34,
+      "cardRank": 34,
+      "cardCode": "CORE_REV_015",
+      "cardNameZhCN": "假面狂欢者",
+      "cardTextZhCN": "<b>突袭</b>，<b>亡语：</b>召唤你牌库中另一个随从的2/2的复制。",
+      "cardTextZhCNPlain": "突袭，亡语：召唤你牌库中另一个随从的2/2的复制。",
+      "id": "CORE_REV_015",
+      "dbfId": 118053,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "假面狂欢者",
+        "enUS": "Masked Reveler"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>，<b>亡语：</b>召唤你牌库中另一个随从的2/2的复制。",
+        "enUS": "[x]<b>Rush</b>\n<b>Deathrattle:</b> Summon\na 2/2 copy of another\nminion in your deck.",
+        "zhCNPlain": "突袭，亡语：召唤你牌库中另一个随从的2/2的复制。",
+        "enUSPlain": "[x]Rush Deathrattle: Summon a 2/2 copy of another minion in your deck."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 35,
+      "cardRank": 35,
+      "cardCode": "CORE_ICC_900",
+      "cardNameZhCN": "死灵恶鬼",
+      "cardTextZhCN": "每当你的其他随从死亡时，召唤一个2/2的食尸鬼。",
+      "cardTextZhCNPlain": "每当你的其他随从死亡时，召唤一个2/2的食尸鬼。",
+      "id": "CORE_ICC_900",
+      "dbfId": 95729,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "死灵恶鬼",
+        "enUS": "Necrotic Geist"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你的其他随从死亡时，召唤一个2/2的食尸鬼。",
+        "enUS": "Whenever one of your other minions dies, summon a 2/2 Ghoul.",
+        "zhCNPlain": "每当你的其他随从死亡时，召唤一个2/2的食尸鬼。",
+        "enUSPlain": "Whenever one of your other minions dies, summon a 2/2 Ghoul."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 36,
+      "cardRank": 36,
+      "cardCode": "CORE_EX1_016",
+      "cardNameZhCN": "希尔瓦娜斯·风行者",
+      "cardTextZhCN": "<b>亡语：</b>随机夺取一个敌方随从的控制权。",
+      "cardTextZhCNPlain": "亡语：随机夺取一个敌方随从的控制权。",
+      "id": "CORE_EX1_016",
+      "dbfId": 111463,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "希尔瓦娜斯·风行者",
+        "enUS": "Sylvanas Windrunner"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机夺取一个敌方随从的控制权。",
+        "enUS": "<b>Deathrattle:</b> Take\ncontrol of a random\nenemy minion.",
+        "zhCNPlain": "亡语：随机夺取一个敌方随从的控制权。",
+        "enUSPlain": "Deathrattle: Take control of a random enemy minion."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 37,
+      "cardRank": 37,
+      "cardCode": "CORE_MAW_033",
+      "cardNameZhCN": "被告希尔瓦娜斯",
+      "cardTextZhCN": "<b>战吼：</b>消灭一个敌方随从。<b>注能（@）：</b>改为夺取其控制权。",
+      "cardTextZhCNPlain": "战吼：消灭一个敌方随从。注能（）：改为夺取其控制权。",
+      "id": "CORE_MAW_033",
+      "dbfId": 118043,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "被告希尔瓦娜斯",
+        "enUS": "Sylvanas, the Accused"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>消灭一个敌方随从。<b>注能（@）：</b>改为夺取其控制权。",
+        "enUS": "[x]<b>Battlecry:</b> Destroy\nan enemy minion.\n<b>Infuse (@):</b> Take control\nof it instead.",
+        "zhCNPlain": "战吼：消灭一个敌方随从。注能（）：改为夺取其控制权。",
+        "enUSPlain": "[x]Battlecry: Destroy an enemy minion. Infuse (): Take control of it instead."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 38,
+      "cardRank": 38,
+      "cardCode": "CORE_EX1_095",
+      "cardNameZhCN": "加基森拍卖师",
+      "cardTextZhCN": "每当你施放一个法术，抽一张牌。",
+      "cardTextZhCNPlain": "每当你施放一个法术，抽一张牌。",
+      "id": "CORE_EX1_095",
+      "dbfId": 69664,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "加基森拍卖师",
+        "enUS": "Gadgetzan Auctioneer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你施放一个法术，抽一张牌。",
+        "enUS": "Whenever you cast a spell, draw a card.",
+        "zhCNPlain": "每当你施放一个法术，抽一张牌。",
+        "enUSPlain": "Whenever you cast a spell, draw a card."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 39,
+      "cardRank": 39,
+      "cardCode": "CORE_REV_843",
+      "cardNameZhCN": "罪能魔像",
+      "cardTextZhCN": "<b>注能（@）：</b>获得属性值，数值等同于为本随从<b>注能</b>的随从的攻击力。",
+      "cardTextZhCNPlain": "注能（）：获得属性值，数值等同于为本随从注能的随从的攻击力。",
+      "id": "CORE_REV_843",
+      "dbfId": 118139,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "罪能魔像",
+        "enUS": "Sinfueled Golem"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "EPIC",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "<b>注能（@）：</b>获得属性值，数值等同于为本随从<b>注能</b>的随从的攻击力。",
+        "enUS": "<b>Infuse (@):</b> Gain stats equal to the Attack of the minions that <b>Infused</b> this.",
+        "zhCNPlain": "注能（）：获得属性值，数值等同于为本随从注能的随从的攻击力。",
+        "enUSPlain": "Infuse (): Gain stats equal to the Attack of the minions that Infused this."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 40,
+      "cardRank": 40,
+      "cardCode": "CORE_EX1_187",
+      "cardNameZhCN": "奥术吞噬者",
+      "cardTextZhCN": "每当你施放一个法术，便获得+2/+2。",
+      "cardTextZhCNPlain": "每当你施放一个法术，便获得+2/+2。",
+      "id": "CORE_EX1_187",
+      "dbfId": 69670,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "奥术吞噬者",
+        "enUS": "Arcane Devourer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你施放一个法术，便获得+2/+2。",
+        "enUS": "Whenever you cast a spell, gain +2/+2.",
+        "zhCNPlain": "每当你施放一个法术，便获得+2/+2。",
+        "enUSPlain": "Whenever you cast a spell, gain +2/+2."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 41,
+      "cardRank": 41,
+      "cardCode": "CORE_ULD_177",
+      "cardNameZhCN": "八爪巨怪",
+      "cardTextZhCN": "<b>亡语：</b>抽八张牌。",
+      "cardTextZhCNPlain": "亡语：抽八张牌。",
+      "id": "CORE_ULD_177",
+      "dbfId": 120576,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "八爪巨怪",
+        "enUS": "Octosari"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽八张牌。",
+        "enUS": "<b>Deathrattle:</b> Draw 8 cards.",
+        "zhCNPlain": "亡语：抽八张牌。",
+        "enUSPlain": "Deathrattle: Draw 8 cards."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 42,
+      "cardRank": 42,
+      "cardCode": "CORE_REV_017",
+      "cardNameZhCN": "贪食的吞噬者",
+      "cardTextZhCN": "<b>战吼：</b>吞食一个敌方随从并获得其属性值。<b>注能（@）：</b>还会吞食相邻随从。",
+      "cardTextZhCNPlain": "战吼：吞食一个敌方随从并获得其属性值。注能（）：还会吞食相邻随从。",
+      "id": "CORE_REV_017",
+      "dbfId": 118055,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "贪食的吞噬者",
+        "enUS": "Insatiable Devourer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>吞食一个敌方随从并获得其属性值。<b>注能（@）：</b>还会吞食相邻随从。",
+        "enUS": "[x]<b>Battlecry:</b> Devour an enemy \nminion and gain its stats. \n_<b>Infuse (@):</b> And its neighbors.",
+        "zhCNPlain": "战吼：吞食一个敌方随从并获得其属性值。注能（）：还会吞食相邻随从。",
+        "enUSPlain": "[x]Battlecry: Devour an enemy minion and gain its stats. _Infuse (): And its neighbors."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 43,
+      "cardRank": 43,
+      "cardCode": "CS3_036",
+      "cardNameZhCN": "灭世巨龙死亡之翼",
+      "cardTextZhCN": "<b>战吼：</b>消灭所有其他随从。每消灭一个随从，便弃一张牌。",
+      "cardTextZhCNPlain": "战吼：消灭所有其他随从。每消灭一个随从，便弃一张牌。",
+      "id": "CS3_036",
+      "dbfId": 66872,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "灭世巨龙死亡之翼",
+        "enUS": "Deathwing the Destroyer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 10,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>消灭所有其他随从。每消灭一个随从，便弃一张牌。",
+        "enUS": "<b>Battlecry:</b> Destroy all other minions. Discard a card for each destroyed.",
+        "zhCNPlain": "战吼：消灭所有其他随从。每消灭一个随从，便弃一张牌。",
+        "enUSPlain": "Battlecry: Destroy all other minions. Discard a card for each destroyed."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 44,
+      "cardRank": 44,
+      "cardCode": "CORE_REV_906",
+      "cardNameZhCN": "德纳修斯大帝",
+      "cardTextZhCN": "<b>吸血</b>，<b>战吼：</b>对所有敌人造成总计5点伤害。<b>无限注能（@）：</b>伤害增加1点。",
+      "cardTextZhCNPlain": "吸血，战吼：对所有敌人造成总计5点伤害。无限注能（）：伤害增加1点。",
+      "id": "CORE_REV_906",
+      "dbfId": 118143,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "德纳修斯大帝",
+        "enUS": "Sire Denathrius"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 10,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "INFUSE",
+        "LIFESTEAL"
+      ],
+      "text": {
+        "zhCN": "<b>吸血</b>，<b>战吼：</b>对所有敌人造成总计5点伤害。<b>无限注能（@）：</b>伤害增加1点。",
+        "enUS": "<b><b>Lifesteal</b>.</b> <b>Battlecry:</b> Deal 5 damage amongst enemies. <b>Endlessly Infuse (@):</b> Deal 1 more.",
+        "zhCNPlain": "吸血，战吼：对所有敌人造成总计5点伤害。无限注能（）：伤害增加1点。",
+        "enUSPlain": "Lifesteal. Battlecry: Deal 5 damage amongst enemies. Endlessly Infuse (): Deal 1 more."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 45,
+      "cardRank": 45,
+      "cardCode": "CORE_REV_375",
+      "cardNameZhCN": "石裔干将",
+      "cardTextZhCN": "<b>突袭</b>，<b>亡语：</b>召唤一只8/8并具有<b>突袭</b>的墓翼蝠。",
+      "cardTextZhCNPlain": "突袭，亡语：召唤一只8/8并具有突袭的墓翼蝠。",
+      "id": "CORE_REV_375",
+      "dbfId": 118107,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "石裔干将",
+        "enUS": "Stoneborn General"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 10,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>，<b>亡语：</b>召唤一只8/8并具有<b>突袭</b>的墓翼蝠。",
+        "enUS": "[x]<b>Rush</b> \n__<b>Deathrattle:</b> Summon an \n___8/8 Gravewing with <b>Rush</b>._",
+        "zhCNPlain": "突袭，亡语：召唤一只8/8并具有突袭的墓翼蝠。",
+        "enUSPlain": "[x]Rush __Deathrattle: Summon an ___8/8 Gravewing with Rush._"
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 46,
+      "cardRank": 46,
+      "cardCode": "TIME_EVENT_997",
+      "cardNameZhCN": "欢迎回家",
+      "cardTextZhCN": "重新开启一个地标，使其获得“<b>亡语：</b>随机召唤一个法力值消耗为（3）的随从。”",
+      "cardTextZhCNPlain": "重新开启一个地标，使其获得“亡语：随机召唤一个法力值消耗为（3）的随从。”",
+      "id": "TIME_EVENT_997",
+      "dbfId": 123416,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "欢迎回家",
+        "enUS": "Welcome Home!"
+      },
+      "set": "SET_1941",
+      "setName": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      },
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "重新开启一个地标，使其获得“<b>亡语：</b>随机召唤一个法力值消耗为（3）的随从。”",
+        "enUS": "Reopen a location. Give it \"<b>Deathrattle:</b> Summon a random\n3-Cost minion.\"",
+        "zhCNPlain": "重新开启一个地标，使其获得“亡语：随机召唤一个法力值消耗为（3）的随从。”",
+        "enUSPlain": "Reopen a location. Give it \"Deathrattle: Summon a random 3-Cost minion.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 47,
+      "cardRank": 47,
+      "cardCode": "TIME_EVENT_300",
+      "cardNameZhCN": "黑铁先驱",
+      "cardTextZhCN": "<b>亡语：</b>召唤一个0/7的末日预言者。末日预言者会在你的回合开始时消灭所有随从。",
+      "cardTextZhCNPlain": "亡语：召唤一个0/7的末日预言者。末日预言者会在你的回合开始时消灭所有随从。",
+      "id": "TIME_EVENT_300",
+      "dbfId": 129894,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "黑铁先驱",
+        "enUS": "Dark Iron Harbinger"
+      },
+      "set": "SET_1941",
+      "setName": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>召唤一个0/7的末日预言者。末日预言者会在你的回合开始时消灭所有随从。",
+        "enUS": "[x]<b>Deathrattle:</b> Summon a\n0/7 Doomsayer that\ndestroys ALL minions at\nthe start of your turn.",
+        "zhCNPlain": "亡语：召唤一个0/7的末日预言者。末日预言者会在你的回合开始时消灭所有随从。",
+        "enUSPlain": "[x]Deathrattle: Summon a 0/7 Doomsayer that destroys ALL minions at the start of your turn."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 48,
+      "cardRank": 48,
+      "cardCode": "EDR_852",
+      "cardNameZhCN": "苦花骑士",
+      "cardTextZhCN": "<b>战吼：</b><b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "战吼：灌注你的英雄技能。",
+      "id": "EDR_852",
+      "dbfId": 114935,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "苦花骑士",
+        "enUS": "Bitterbloom Knight"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b><b>灌注</b>你的英雄技能。",
+        "enUS": "<b>Battlecry:</b> <b>Imbue</b> your\nHero Power.",
+        "zhCNPlain": "战吼：灌注你的英雄技能。",
+        "enUSPlain": "Battlecry: Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 49,
+      "cardRank": 49,
+      "cardCode": "FIR_929",
+      "cardNameZhCN": "活体烈焰",
+      "cardTextZhCN": "<b>亡语：</b>抽一张火焰法术牌。",
+      "cardTextZhCNPlain": "亡语：抽一张火焰法术牌。",
+      "id": "FIR_929",
+      "dbfId": 115655,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "活体烈焰",
+        "enUS": "Living Flame"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽一张火焰法术牌。",
+        "enUS": "<b>Deathrattle:</b> Draw a\nFire spell.",
+        "zhCNPlain": "亡语：抽一张火焰法术牌。",
+        "enUSPlain": "Deathrattle: Draw a Fire spell."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 50,
+      "cardRank": 50,
+      "cardCode": "EDR_861",
+      "cardNameZhCN": "宁静树人",
+      "cardTextZhCN": "<b>亡语：</b>双方玩家\n各获得一个空的\n法力水晶。",
+      "cardTextZhCNPlain": "亡语：双方玩家 各获得一个空的 法力水晶。",
+      "id": "EDR_861",
+      "dbfId": 116292,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "宁静树人",
+        "enUS": "Tranquil Treant"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>双方玩家\n各获得一个空的\n法力水晶。",
+        "enUS": "<b>Deathrattle:</b> Both\nplayers gain an empty Mana Crystal.",
+        "zhCNPlain": "亡语：双方玩家 各获得一个空的 法力水晶。",
+        "enUSPlain": "Deathrattle: Both players gain an empty Mana Crystal."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 51,
+      "cardRank": 51,
+      "cardCode": "EDR_495",
+      "cardNameZhCN": "扭曲的树人",
+      "cardTextZhCN": "<b>亡语：</b>使每个玩家手牌中的随机一张随从牌获得-2攻击力。",
+      "cardTextZhCNPlain": "亡语：使每个玩家手牌中的随机一张随从牌获得-2攻击力。",
+      "id": "EDR_495",
+      "dbfId": 115027,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "扭曲的树人",
+        "enUS": "Twisted Treant"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>使每个玩家手牌中的随机一张随从牌获得-2攻击力。",
+        "enUS": "<b>Deathrattle:</b> Give a random minion in each player's hand -2 Attack.",
+        "zhCNPlain": "亡语：使每个玩家手牌中的随机一张随从牌获得-2攻击力。",
+        "enUSPlain": "Deathrattle: Give a random minion in each player's hand -2 Attack."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 52,
+      "cardRank": 52,
+      "cardCode": "EDR_254",
+      "cardNameZhCN": "活化月亮井",
+      "cardTextZhCN": "在你施放一个法术后，获得等同于其法力值消耗的攻击力。",
+      "cardTextZhCNPlain": "在你施放一个法术后，获得等同于其法力值消耗的攻击力。",
+      "id": "EDR_254",
+      "dbfId": 114533,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "活化月亮井",
+        "enUS": "Animated Moonwell"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你施放一个法术后，获得等同于其法力值消耗的攻击力。",
+        "enUS": "After you cast a spell, gain Attack equal to its Cost.",
+        "zhCNPlain": "在你施放一个法术后，获得等同于其法力值消耗的攻击力。",
+        "enUSPlain": "After you cast a spell, gain Attack equal to its Cost."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 53,
+      "cardRank": 53,
+      "cardCode": "EDR_571",
+      "cardNameZhCN": "法夜欺诈者",
+      "cardTextZhCN": "<b>亡语：</b>抽一张法力值消耗大于或等于（5）点的法术牌。",
+      "cardTextZhCNPlain": "亡语：抽一张法力值消耗大于或等于（5）点的法术牌。",
+      "id": "EDR_571",
+      "dbfId": 116672,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "法夜欺诈者",
+        "enUS": "Fae Trickster"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽一张法力值消耗大于或等于（5）点的法术牌。",
+        "enUS": "<b>Deathrattle:</b> Draw a spell that costs (5) or more.",
+        "zhCNPlain": "亡语：抽一张法力值消耗大于或等于（5）点的法术牌。",
+        "enUSPlain": "Deathrattle: Draw a spell that costs (5) or more."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 54,
+      "cardRank": 54,
+      "cardCode": "FIR_921",
+      "cardNameZhCN": "花木护侍",
+      "cardTextZhCN": "<b>战吼：</b>如果你已<b>灌注</b>过你的英雄技能两次，抽两张牌。",
+      "cardTextZhCNPlain": "战吼：如果你已灌注过你的英雄技能两次，抽两张牌。",
+      "id": "FIR_921",
+      "dbfId": 115648,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "花木护侍",
+        "enUS": "Petal Picker"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>如果你已<b>灌注</b>过你的英雄技能两次，抽两张牌。",
+        "enUS": "[x]<b>Battlecry:</b> If you've <b>Imbued</b>\nyour Hero Power twice,\ndraw 2 cards.",
+        "zhCNPlain": "战吼：如果你已灌注过你的英雄技能两次，抽两张牌。",
+        "enUSPlain": "[x]Battlecry: If you've Imbued your Hero Power twice, draw 2 cards."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 55,
+      "cardRank": 55,
+      "cardCode": "EDR_800",
+      "cardNameZhCN": "振翅守卫",
+      "cardTextZhCN": "<b><b>嘲讽</b>。圣盾</b>\n<b>战吼：</b><b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "嘲讽。圣盾 战吼：灌注你的英雄技能。",
+      "id": "EDR_800",
+      "dbfId": 114006,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "振翅守卫",
+        "enUS": "Flutterwing Guardian"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DIVINE_SHIELD",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b><b>嘲讽</b>。圣盾</b>\n<b>战吼：</b><b>灌注</b>你的英雄技能。",
+        "enUS": "<b><b>Taunt</b>, Divine Shield</b>\n<b>Battlecry:</b> <b>Imbue</b> your Hero_Power.",
+        "zhCNPlain": "嘲讽。圣盾 战吼：灌注你的英雄技能。",
+        "enUSPlain": "Taunt, Divine Shield Battlecry: Imbue your Hero_Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 56,
+      "cardRank": 56,
+      "cardCode": "EDR_260",
+      "cardNameZhCN": "幻影绿翼龙",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>\n将两张<b>抽到时召唤</b>的4/5并具有<b>嘲讽</b>的龙洗入你的牌库。",
+      "cardTextZhCNPlain": "嘲讽。亡语： 将两张抽到时召唤的4/5并具有嘲讽的龙洗入你的牌库。",
+      "id": "EDR_260",
+      "dbfId": 114884,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "幻影绿翼龙",
+        "enUS": "Illusory Greenwing"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>\n将两张<b>抽到时召唤</b>的4/5并具有<b>嘲讽</b>的龙洗入你的牌库。",
+        "enUS": "[x]<b>Taunt</b>. <b>Deathrattle:</b>\nShuffle two 4/5 Dragons with\n<b>Taunt</b> into your deck. They're\n___<b>Summoned When Drawn</b>.",
+        "zhCNPlain": "嘲讽。亡语： 将两张抽到时召唤的4/5并具有嘲讽的龙洗入你的牌库。",
+        "enUSPlain": "[x]Taunt. Deathrattle: Shuffle two 4/5 Dragons with Taunt into your deck. They're ___Summoned When Drawn."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 57,
+      "cardRank": 57,
+      "cardCode": "EDR_860",
+      "cardNameZhCN": "明耀织梦者",
+      "cardTextZhCN": "<b>吸血</b>。<b>战吼：</b>如果你已<b>灌注</b>过你的英雄技能两次，对一个随从造成4点伤害。",
+      "cardTextZhCNPlain": "吸血。战吼：如果你已灌注过你的英雄技能两次，对一个随从造成4点伤害。",
+      "id": "EDR_860",
+      "dbfId": 114076,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "明耀织梦者",
+        "enUS": "Resplendent Dreamweaver"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "LIFESTEAL"
+      ],
+      "text": {
+        "zhCN": "<b>吸血</b>。<b>战吼：</b>如果你已<b>灌注</b>过你的英雄技能两次，对一个随从造成4点伤害。",
+        "enUS": "[x]<b>Lifesteal</b>\n<b>Battlecry:</b> If you've <b>Imbued</b>\nyour Hero Power twice, deal\n4 damage to a minion.",
+        "zhCNPlain": "吸血。战吼：如果你已灌注过你的英雄技能两次，对一个随从造成4点伤害。",
+        "enUSPlain": "[x]Lifesteal Battlecry: If you've Imbued your Hero Power twice, deal 4 damage to a minion."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 58,
+      "cardRank": 58,
+      "cardCode": "FIR_958",
+      "cardNameZhCN": "丁达尔·迅贤",
+      "cardTextZhCN": "<b>亡语：</b>对所有敌人造成1点伤害。如果此时是你对手的回合，改为造成4点。",
+      "cardTextZhCNPlain": "亡语：对所有敌人造成1点伤害。如果此时是你对手的回合，改为造成4点。",
+      "id": "FIR_958",
+      "dbfId": 115759,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "丁达尔·迅贤",
+        "enUS": "Tindral Sageswift"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>对所有敌人造成1点伤害。如果此时是你对手的回合，改为造成4点。",
+        "enUS": "[x]<b>Deathrattle:</b> Deal 1 damage\nto all enemies. If it's your\nopponent's turn, deal\n4 damage instead.",
+        "zhCNPlain": "亡语：对所有敌人造成1点伤害。如果此时是你对手的回合，改为造成4点。",
+        "enUSPlain": "[x]Deathrattle: Deal 1 damage to all enemies. If it's your opponent's turn, deal 4 damage instead."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 59,
+      "cardRank": 59,
+      "cardCode": "EDR_110",
+      "cardNameZhCN": "孢子尖牙怪",
+      "cardTextZhCN": "<b>剧毒</b>。<b>亡语：</b>随机对一个敌方随从造成1点伤害。",
+      "cardTextZhCNPlain": "剧毒。亡语：随机对一个敌方随从造成1点伤害。",
+      "id": "EDR_110",
+      "dbfId": 115652,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "孢子尖牙怪",
+        "enUS": "Sporegnasher"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "POISONOUS"
+      ],
+      "text": {
+        "zhCN": "<b>剧毒</b>。<b>亡语：</b>随机对一个敌方随从造成1点伤害。",
+        "enUS": "<b>Poisonous</b>\n<b>Deathrattle:</b> Deal 1\ndamage to a random\nenemy minion.",
+        "zhCNPlain": "剧毒。亡语：随机对一个敌方随从造成1点伤害。",
+        "enUSPlain": "Poisonous Deathrattle: Deal 1 damage to a random enemy minion."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 60,
+      "cardRank": 60,
+      "cardCode": "EDR_572",
+      "cardNameZhCN": "受难的恐翼巨龙",
+      "cardTextZhCN": "<b>亡语：</b>抽两张龙牌，其法力值消耗减少（1）点。",
+      "cardTextZhCNPlain": "亡语：抽两张龙牌，其法力值消耗减少（1）点。",
+      "id": "EDR_572",
+      "dbfId": 116673,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "受难的恐翼巨龙",
+        "enUS": "Tormented Dreadwing"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽两张龙牌，其法力值消耗减少（1）点。",
+        "enUS": "<b>Deathrattle:</b> Draw 2 Dragons. Reduce their Costs by (1).",
+        "zhCNPlain": "亡语：抽两张龙牌，其法力值消耗减少（1）点。",
+        "enUSPlain": "Deathrattle: Draw 2 Dragons. Reduce their Costs by (1)."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 61,
+      "cardRank": 61,
+      "cardCode": "EDR_484",
+      "cardNameZhCN": "食腐捕蝇草",
+      "cardTextZhCN": "在一个随从死亡后，获得其攻击力。",
+      "cardTextZhCNPlain": "在一个随从死亡后，获得其攻击力。",
+      "id": "EDR_484",
+      "dbfId": 115037,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "食腐捕蝇草",
+        "enUS": "Scavenging Flytrap"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在一个随从死亡后，获得其攻击力。",
+        "enUS": "After a minion dies,\ngain its Attack.",
+        "zhCNPlain": "在一个随从死亡后，获得其攻击力。",
+        "enUSPlain": "After a minion dies, gain its Attack."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 62,
+      "cardRank": 62,
+      "cardCode": "EDR_888",
+      "cardNameZhCN": "护路者玛洛恩",
+      "cardTextZhCN": "<b>战吼：</b><b>发现</b>一张<b>传说</b>荒野之神。如果你已<b>灌注</b>过你的英雄技能4次，则将发现的荒野之神的法力值消耗变为（1）点。",
+      "cardTextZhCNPlain": "战吼：发现一张传说荒野之神。如果你已灌注过你的英雄技能4次，则将发现的荒野之神的法力值消耗变为（1）点。",
+      "id": "EDR_888",
+      "dbfId": 115186,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "护路者玛洛恩",
+        "enUS": "Malorne the Waywatcher"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b><b>发现</b>一张<b>传说</b>荒野之神。如果你已<b>灌注</b>过你的英雄技能4次，则将发现的荒野之神的法力值消耗变为（1）点。",
+        "enUS": "[x]<b>Battlecry:</b> <b>Discover</b> a <b>Legendary</b>\nWild God. If you've <b>Imbued</b>\nyour Hero Power 4 times,\nset its Cost to (1).",
+        "zhCNPlain": "战吼：发现一张传说荒野之神。如果你已灌注过你的英雄技能4次，则将发现的荒野之神的法力值消耗变为（1）点。",
+        "enUSPlain": "[x]Battlecry: Discover a Legendary Wild God. If you've Imbued your Hero Power 4 times, set its Cost to (1)."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 63,
+      "cardRank": 63,
+      "cardCode": "EDR_978",
+      "cardNameZhCN": "踏青驼鹿",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>将一张踏青驼鹿置于你的牌库底，其法力值消耗为（1）点。",
+      "cardTextZhCNPlain": "嘲讽。亡语：将一张踏青驼鹿置于你的牌库底，其法力值消耗为（1）点。",
+      "id": "EDR_978",
+      "dbfId": 117511,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "踏青驼鹿",
+        "enUS": "Meadowstrider"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>将一张踏青驼鹿置于你的牌库底，其法力值消耗为（1）点。",
+        "enUS": "<b>Taunt</b>. <b>Deathrattle:</b> Put\na Meadowstrider on the bottom of your deck. It costs (1).",
+        "zhCNPlain": "嘲讽。亡语：将一张踏青驼鹿置于你的牌库底，其法力值消耗为（1）点。",
+        "enUSPlain": "Taunt. Deathrattle: Put a Meadowstrider on the bottom of your deck. It costs (1)."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 64,
+      "cardRank": 64,
+      "cardCode": "EDR_846",
+      "cardNameZhCN": "莎拉达希尔",
+      "cardTextZhCN": "获取全部5张梦境牌。如果你在本牌在你手中时使用过法力值消耗更高的牌，腐蚀这些梦境牌！",
+      "cardTextZhCNPlain": "获取全部5张梦境牌。如果你在本牌在你手中时使用过法力值消耗更高的牌，腐蚀这些梦境牌！",
+      "id": "EDR_846",
+      "dbfId": 115090,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "莎拉达希尔",
+        "enUS": "Shaladrassil"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "SPELL",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "text": {
+        "zhCN": "获取全部5张梦境牌。如果你在本牌在你手中时使用过法力值消耗更高的牌，腐蚀这些梦境牌！",
+        "enUS": "[x]Get all 5 Dream cards.\nIf you've played a higher\nCost card while holding\nthis, corrupt them!",
+        "zhCNPlain": "获取全部5张梦境牌。如果你在本牌在你手中时使用过法力值消耗更高的牌，腐蚀这些梦境牌！",
+        "enUSPlain": "[x]Get all 5 Dream cards. If you've played a higher Cost card while holding this, corrupt them!"
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 65,
+      "cardRank": 65,
+      "cardCode": "TLC_603",
+      "cardNameZhCN": "栉龙",
+      "cardTextZhCN": "<b>战吼：</b>抽一张牌。<b>亡语：</b>弃掉该牌。",
+      "cardTextZhCNPlain": "战吼：抽一张牌。亡语：弃掉该牌。",
+      "id": "TLC_603",
+      "dbfId": 117719,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "栉龙",
+        "enUS": "Platysaur"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>抽一张牌。<b>亡语：</b>弃掉该牌。",
+        "enUS": "<b>Battlecry:</b> Draw a card. <b>Deathrattle:</b> Discard it.",
+        "zhCNPlain": "战吼：抽一张牌。亡语：弃掉该牌。",
+        "enUSPlain": "Battlecry: Draw a card. Deathrattle: Discard it."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 66,
+      "cardRank": 66,
+      "cardCode": "TLC_249",
+      "cardNameZhCN": "炽烈烬火",
+      "cardTextZhCN": "<b>亡语：</b>造成2点伤害，随机分配到所有敌人身上。",
+      "cardTextZhCNPlain": "亡语：造成2点伤害，随机分配到所有敌人身上。",
+      "id": "TLC_249",
+      "dbfId": 118222,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "炽烈烬火",
+        "enUS": "Sizzling Cinder"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>造成2点伤害，随机分配到所有敌人身上。",
+        "enUS": "<b>Deathrattle:</b> Deal 2 damage randomly split among all enemies.",
+        "zhCNPlain": "亡语：造成2点伤害，随机分配到所有敌人身上。",
+        "enUSPlain": "Deathrattle: Deal 2 damage randomly split among all enemies."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 67,
+      "cardRank": 67,
+      "cardCode": "TLC_245",
+      "cardNameZhCN": "远古迅猛龙",
+      "cardTextZhCN": "<b>战吼：</b>从+3攻击力，<b>圣盾</b>或“<b>亡语：</b>召唤两个1/1的植物”中选择一项并获得。",
+      "cardTextZhCNPlain": "战吼：从+3攻击力，圣盾或“亡语：召唤两个1/1的植物”中选择一项并获得。",
+      "id": "TLC_245",
+      "dbfId": 118224,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "远古迅猛龙",
+        "enUS": "Ancient Raptor"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>从+3攻击力，<b>圣盾</b>或“<b>亡语：</b>召唤两个1/1的植物”中选择一项并获得。",
+        "enUS": "[x]<b>Battlecry:</b> Choose to gain\n+3 Attack, <b>Divine Shield</b>,\nor \"<b>Deathrattle:</b> Summon\ntwo 1/1 Plants.\"",
+        "zhCNPlain": "战吼：从+3攻击力，圣盾或“亡语：召唤两个1/1的植物”中选择一项并获得。",
+        "enUSPlain": "[x]Battlecry: Choose to gain +3 Attack, Divine Shield, or \"Deathrattle: Summon two 1/1 Plants.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 68,
+      "cardRank": 68,
+      "cardCode": "TLC_244",
+      "cardNameZhCN": "好奇的探险者",
+      "cardTextZhCN": "<b>亡语：</b>使你对手的手牌中一张随从牌的\n法力值消耗减少（2）点。",
+      "cardTextZhCNPlain": "亡语：使你对手的手牌中一张随从牌的 法力值消耗减少（2）点。",
+      "id": "TLC_244",
+      "dbfId": 118223,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "好奇的探险者",
+        "enUS": "Curious Explorer"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>使你对手的手牌中一张随从牌的\n法力值消耗减少（2）点。",
+        "enUS": "[x]<b>Deathrattle:</b> Reduce the\nCost of a minion in your\n_opponent's hand by (2).",
+        "zhCNPlain": "亡语：使你对手的手牌中一张随从牌的 法力值消耗减少（2）点。",
+        "enUSPlain": "[x]Deathrattle: Reduce the Cost of a minion in your _opponent's hand by (2)."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 69,
+      "cardRank": 69,
+      "cardCode": "TLC_987",
+      "cardNameZhCN": "任务助理",
+      "cardTextZhCN": "<b>战吼：</b>如果你在本局对战中使用过<b>任务</b>牌，对一个敌方随从造成3点伤害。",
+      "cardTextZhCNPlain": "战吼：如果你在本局对战中使用过任务牌，对一个敌方随从造成3点伤害。",
+      "id": "TLC_987",
+      "dbfId": 118177,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "任务助理",
+        "enUS": "Questing Assistant"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>如果你在本局对战中使用过<b>任务</b>牌，对一个敌方随从造成3点伤害。",
+        "enUS": "[x]<b>Battlecry:</b> If you played\na <b>Quest</b> this game,\ndeal 3 damage to an\nenemy minion.",
+        "zhCNPlain": "战吼：如果你在本局对战中使用过任务牌，对一个敌方随从造成3点伤害。",
+        "enUSPlain": "[x]Battlecry: If you played a Quest this game, deal 3 damage to an enemy minion."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 70,
+      "cardRank": 70,
+      "cardCode": "TLC_256",
+      "cardNameZhCN": "沼地蛇颈龙",
+      "cardTextZhCN": "在你施放一个法术后，获得<b>圣盾</b>。",
+      "cardTextZhCNPlain": "在你施放一个法术后，获得圣盾。",
+      "id": "TLC_256",
+      "dbfId": 118260,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "沼地蛇颈龙",
+        "enUS": "Marshland Thresher"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你施放一个法术后，获得<b>圣盾</b>。",
+        "enUS": "After you cast a spell,\ngain <b>Divine Shield</b>.",
+        "zhCNPlain": "在你施放一个法术后，获得圣盾。",
+        "enUSPlain": "After you cast a spell, gain Divine Shield."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 71,
+      "cardRank": 71,
+      "cardCode": "TLC_831",
+      "cardNameZhCN": "翼手龙蛋",
+      "cardTextZhCN": "<b>亡语：</b>召唤一只3/3并会从所有其他随从处\n偷取1点生命值的翼手龙。",
+      "cardTextZhCNPlain": "亡语：召唤一只3/3并会从所有其他随从处 偷取1点生命值的翼手龙。",
+      "id": "TLC_831",
+      "dbfId": 117674,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "翼手龙蛋",
+        "enUS": "Pterrordax Egg"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>召唤一只3/3并会从所有其他随从处\n偷取1点生命值的翼手龙。",
+        "enUS": "[x]<b>Deathrattle:</b> Summon\na 3/3 Pterrordax that\nsteals 1 Health from\nall other minions.",
+        "zhCNPlain": "亡语：召唤一只3/3并会从所有其他随从处 偷取1点生命值的翼手龙。",
+        "enUSPlain": "[x]Deathrattle: Summon a 3/3 Pterrordax that steals 1 Health from all other minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 72,
+      "cardRank": 72,
+      "cardCode": "TLC_465",
+      "cardNameZhCN": "绞缠血藤",
+      "cardTextZhCN": "<b>亡语：</b>使一个随机友方随从获得一项随机<b>额外效果</b>以及此<b>亡语</b>。",
+      "cardTextZhCNPlain": "亡语：使一个随机友方随从获得一项随机额外效果以及此亡语。",
+      "id": "TLC_465",
+      "dbfId": 118241,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "绞缠血藤",
+        "enUS": "Stranglevine"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "<b>亡语：</b>使一个随机友方随从获得一项随机<b>额外效果</b>以及此<b>亡语</b>。",
+        "enUS": "<b>Deathrattle:</b> Give a random\nfriendly minion a random\n<b>Bonus Effect</b> and this <b>Deathrattle</b>.",
+        "zhCNPlain": "亡语：使一个随机友方随从获得一项随机额外效果以及此亡语。",
+        "enUSPlain": "Deathrattle: Give a random friendly minion a random Bonus Effect and this Deathrattle."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 73,
+      "cardRank": 73,
+      "cardCode": "DINO_410",
+      "cardNameZhCN": "凯洛斯的蛋",
+      "cardTextZhCN": "<b>亡语：</b>召唤一枚轻微开裂的蛋。<i>（破壳5次即可孵化为一只20/20并具有<b>嘲讽</b>的野兽！）</i>",
+      "cardTextZhCNPlain": "亡语：召唤一枚轻微开裂的蛋。（破壳5次即可孵化为一只20/20并具有嘲讽的野兽！）",
+      "id": "DINO_410",
+      "dbfId": 118487,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "凯洛斯的蛋",
+        "enUS": "The Egg of Khelos"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>召唤一枚轻微开裂的蛋。<i>（破壳5次即可孵化为一只20/20并具有<b>嘲讽</b>的野兽！）</i>",
+        "enUS": "[x]<b>Deathrattle:</b> Summon a\nslightly cracked Egg. <i>(Break\n5 times to hatch a 20/20\nBeast with <b>Taunt</b>!)</i>",
+        "zhCNPlain": "亡语：召唤一枚轻微开裂的蛋。（破壳5次即可孵化为一只20/20并具有嘲讽的野兽！）",
+        "enUSPlain": "[x]Deathrattle: Summon a slightly cracked Egg. (Break 5 times to hatch a 20/20 Beast with Taunt!)"
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 74,
+      "cardRank": 74,
+      "cardCode": "TLC_621",
+      "cardNameZhCN": "固执的守护者",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>摧毁你牌库顶的三张牌。",
+      "cardTextZhCNPlain": "嘲讽。亡语：摧毁你牌库顶的三张牌。",
+      "id": "TLC_621",
+      "dbfId": 117916,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "固执的守护者",
+        "enUS": "Willful Watcher"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>摧毁你牌库顶的三张牌。",
+        "enUS": "[x]<b>Taunt</b>\n<b>Deathrattle:</b> Destroy the\n_top 3 cards of your deck.",
+        "zhCNPlain": "嘲讽。亡语：摧毁你牌库顶的三张牌。",
+        "enUSPlain": "[x]Taunt Deathrattle: Destroy the _top 3 cards of your deck."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 75,
+      "cardRank": 75,
+      "cardCode": "TLC_468",
+      "cardNameZhCN": "黏团焦油",
+      "cardTextZhCN": "<b>剧毒</b>。<b>嘲讽</b>。<b>亡语：</b>召唤一个2/2并具有<b>剧毒</b>的黏团，以及一个2/2并具有<b>嘲讽</b>的黏团。",
+      "cardTextZhCNPlain": "剧毒。嘲讽。亡语：召唤一个2/2并具有剧毒的黏团，以及一个2/2并具有嘲讽的黏团。",
+      "id": "TLC_468",
+      "dbfId": 118279,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "黏团焦油",
+        "enUS": "Blob of Tar"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "POISONOUS",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>剧毒</b>。<b>嘲讽</b>。<b>亡语：</b>召唤一个2/2并具有<b>剧毒</b>的黏团，以及一个2/2并具有<b>嘲讽</b>的黏团。",
+        "enUS": "[x]<b>Poisonous</b>, <b>Taunt</b>\n<b>Deathrattle:</b> Summon a 2/2\nBlob with <b>Poisonous</b> and a\n2/2 Blob with <b>Taunt</b>.",
+        "zhCNPlain": "剧毒。嘲讽。亡语：召唤一个2/2并具有剧毒的黏团，以及一个2/2并具有嘲讽的黏团。",
+        "enUSPlain": "[x]Poisonous, Taunt Deathrattle: Summon a 2/2 Blob with Poisonous and a 2/2 Blob with Taunt."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 76,
+      "cardRank": 76,
+      "cardCode": "DINO_430",
+      "cardNameZhCN": "兽语者塔卡",
+      "cardTextZhCN": "<b>战吼：</b><b>发现</b>一只任意职业的<b>传说</b>野兽并获得其属性值。<b>亡语：</b>召唤该野兽。",
+      "cardTextZhCNPlain": "战吼：发现一只任意职业的传说野兽并获得其属性值。亡语：召唤该野兽。",
+      "id": "DINO_430",
+      "dbfId": 118653,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "兽语者塔卡",
+        "enUS": "Beast Speaker Taka"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE",
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b><b>发现</b>一只任意职业的<b>传说</b>野兽并获得其属性值。<b>亡语：</b>召唤该野兽。",
+        "enUS": "[x]<b>Battlecry:</b> <b>Discover</b> a\n___<b>Legendary</b> Beast from any___\n_class to gain its stats.\n__<b>Deathrattle:</b> Summon it.",
+        "zhCNPlain": "战吼：发现一只任意职业的传说野兽并获得其属性值。亡语：召唤该野兽。",
+        "enUSPlain": "[x]Battlecry: Discover a ___Legendary Beast from any___ _class to gain its stats. __Deathrattle: Summon it."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 77,
+      "cardRank": 77,
+      "cardCode": "TLC_106",
+      "cardNameZhCN": "末日使者安布拉",
+      "cardTextZhCN": "<b>战吼：</b>触发本局对战中死亡的5个友方随从的<b>亡语</b>。",
+      "cardTextZhCNPlain": "战吼：触发本局对战中死亡的5个友方随从的亡语。",
+      "id": "TLC_106",
+      "dbfId": 117877,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "末日使者安布拉",
+        "enUS": "Endbringer Umbra"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>触发本局对战中死亡的5个友方随从的<b>亡语</b>。",
+        "enUS": "[x]<b>Battlecry:</b> Trigger the\n<b>Deathrattles</b> of 5\nfriendly minions that\ndied this game.",
+        "zhCNPlain": "战吼：触发本局对战中死亡的5个友方随从的亡语。",
+        "enUSPlain": "[x]Battlecry: Trigger the Deathrattles of 5 friendly minions that died this game."
+      },
+      "categories": [
+        "graveyard_pool",
+        "deathrattle",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 78,
+      "cardRank": 78,
+      "cardCode": "END_020",
+      "cardNameZhCN": "永时困苦",
+      "cardTextZhCN": "对一个随从造成$1点伤害。如果该随从依然存活，抽一张牌。如果该随从死亡，随机召唤一个法力值消耗为（1）的随从。",
+      "cardTextZhCNPlain": "对一个随从造成1点伤害。如果该随从依然存活，抽一张牌。如果该随从死亡，随机召唤一个法力值消耗为（1）的随从。",
+      "id": "END_020",
+      "dbfId": 121168,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "永时困苦",
+        "enUS": "Eternal Toil"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对一个随从造成$1点伤害。如果该随从依然存活，抽一张牌。如果该随从死亡，随机召唤一个法力值消耗为（1）的随从。",
+        "enUS": "[x]Deal $1 damage to a\nminion. If it survives, draw\na card. If it dies, summon\na random 1-Cost minion.",
+        "zhCNPlain": "对一个随从造成1点伤害。如果该随从依然存活，抽一张牌。如果该随从死亡，随机召唤一个法力值消耗为（1）的随从。",
+        "enUSPlain": "[x]Deal 1 damage to a minion. If it survives, draw a card. If it dies, summon a random 1-Cost minion."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 79,
+      "cardRank": 79,
+      "cardCode": "TIME_058",
+      "cardNameZhCN": "渺小的振翅蝶",
+      "cardTextZhCN": "<b>亡语：</b>随机召唤一个\n法力值消耗为（2）并<b>休眠</b>2回合的随从。",
+      "cardTextZhCNPlain": "亡语：随机召唤一个 法力值消耗为（2）并休眠2回合的随从。",
+      "id": "TIME_058",
+      "dbfId": 120964,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "渺小的振翅蝶",
+        "enUS": "Paltry Flutterwing"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机召唤一个\n法力值消耗为（2）并<b>休眠</b>2回合的随从。",
+        "enUS": "[x]<b>Deathrattle:</b> Summon a\nrandom 2-Cost minion that\nis <b>Dormant</b> for 2 turns.",
+        "zhCNPlain": "亡语：随机召唤一个 法力值消耗为（2）并休眠2回合的随从。",
+        "enUSPlain": "[x]Deathrattle: Summon a random 2-Cost minion that is Dormant for 2 turns."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 80,
+      "cardRank": 80,
+      "cardCode": "END_025",
+      "cardNameZhCN": "永时火焰箭",
+      "cardTextZhCN": "<b>吸血</b>。对一个随从造成$3点伤害。如果该随从死亡，在你的回合结束时将本牌移回你的手牌。",
+      "cardTextZhCNPlain": "吸血。对一个随从造成3点伤害。如果该随从死亡，在你的回合结束时将本牌移回你的手牌。",
+      "id": "END_025",
+      "dbfId": 121188,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "永时火焰箭",
+        "enUS": "Eternal Firebolt"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "LIFESTEAL"
+      ],
+      "text": {
+        "zhCN": "<b>吸血</b>。对一个随从造成$3点伤害。如果该随从死亡，在你的回合结束时将本牌移回你的手牌。",
+        "enUS": "<b>Lifesteal</b>\nDeal $3 damage to a minion. If it dies, return this to your hand at the end of your turn.",
+        "zhCNPlain": "吸血。对一个随从造成3点伤害。如果该随从死亡，在你的回合结束时将本牌移回你的手牌。",
+        "enUSPlain": "Lifesteal Deal 3 damage to a minion. If it dies, return this to your hand at the end of your turn."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 81,
+      "cardRank": 81,
+      "cardCode": "END_001",
+      "cardNameZhCN": "时光锯刃",
+      "cardTextZhCN": "<b>战吼：</b><b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "战吼：灌注你的英雄技能。",
+      "id": "END_001",
+      "dbfId": 121274,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "时光锯刃",
+        "enUS": "Jagged Edge of Time"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "WEAPON",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b><b>灌注</b>你的英雄技能。",
+        "enUS": "<b>Battlecry:</b> <b>Imbue</b> your Hero Power.",
+        "zhCNPlain": "战吼：灌注你的英雄技能。",
+        "enUSPlain": "Battlecry: Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 82,
+      "cardRank": 82,
+      "cardCode": "TIME_434",
+      "cardNameZhCN": "时空旅行者",
+      "cardTextZhCN": "<b>亡语：</b>召唤一个4/1的影子，并使其随机攻击一个敌方随从。",
+      "cardTextZhCNPlain": "亡语：召唤一个4/1的影子，并使其随机攻击一个敌方随从。",
+      "id": "TIME_434",
+      "dbfId": 120527,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "时空旅行者",
+        "enUS": "Temporal Traveler"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>召唤一个4/1的影子，并使其随机攻击一个敌方随从。",
+        "enUS": "[x]<b>Deathrattle:</b> Summon a\n4/1 Shadow that attacks a\nrandom enemy minion.",
+        "zhCNPlain": "亡语：召唤一个4/1的影子，并使其随机攻击一个敌方随从。",
+        "enUSPlain": "[x]Deathrattle: Summon a 4/1 Shadow that attacks a random enemy minion."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 83,
+      "cardRank": 83,
+      "cardCode": "TIME_040",
+      "cardNameZhCN": "消散的回忆",
+      "cardTextZhCN": "<b>亡语：</b>随机获取一张来自过去的法力值消耗为（5）的随从牌。",
+      "cardTextZhCNPlain": "亡语：随机获取一张来自过去的法力值消耗为（5）的随从牌。",
+      "id": "TIME_040",
+      "dbfId": 120782,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "消散的回忆",
+        "enUS": "Fading Memory"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机获取一张来自过去的法力值消耗为（5）的随从牌。",
+        "enUS": "<b>Deathrattle:</b> Get a\nrandom 5-Cost minion from the past.",
+        "zhCNPlain": "亡语：随机获取一张来自过去的法力值消耗为（5）的随从牌。",
+        "enUSPlain": "Deathrattle: Get a random 5-Cost minion from the past."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 84,
+      "cardRank": 84,
+      "cardCode": "END_026",
+      "cardNameZhCN": "虚无残遗",
+      "cardTextZhCN": "在你对随从施放法术后，抽一张牌。",
+      "cardTextZhCNPlain": "在你对随从施放法术后，抽一张牌。",
+      "id": "END_026",
+      "dbfId": 121189,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "虚无残遗",
+        "enUS": "Fragment of Nothing"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你对随从施放法术后，抽一张牌。",
+        "enUS": "After you cast a spell on a minion, draw a card.",
+        "zhCNPlain": "在你对随从施放法术后，抽一张牌。",
+        "enUSPlain": "After you cast a spell on a minion, draw a card."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 85,
+      "cardRank": 85,
+      "cardCode": "END_014",
+      "cardNameZhCN": "协作火花",
+      "cardTextZhCN": "对一个敌人造成$3点伤害。如果该角色死亡，随机使一个友方随从获得+3/+3。",
+      "cardTextZhCNPlain": "对一个敌人造成3点伤害。如果该角色死亡，随机使一个友方随从获得+3/+3。",
+      "id": "END_014",
+      "dbfId": 121154,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "协作火花",
+        "enUS": "Synchronized Spark"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对一个敌人造成$3点伤害。如果该角色死亡，随机使一个友方随从获得+3/+3。",
+        "enUS": "[x]Deal $3 damage to\nan enemy. If it dies,\ngive a random friendly\nminion +3/+3.",
+        "zhCNPlain": "对一个敌人造成3点伤害。如果该角色死亡，随机使一个友方随从获得+3/+3。",
+        "enUSPlain": "[x]Deal 3 damage to an enemy. If it dies, give a random friendly minion +3/+3."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 86,
+      "cardRank": 86,
+      "cardCode": "END_002",
+      "cardNameZhCN": "邪恶荒裔怪",
+      "cardTextZhCN": "<b>复生</b>。<b>亡语：</b>装备一把1/2的匕首。如果你已经装备了武器，改为使其获得+2攻击力。",
+      "cardTextZhCNPlain": "复生。亡语：装备一把1/2的匕首。如果你已经装备了武器，改为使其获得+2攻击力。",
+      "id": "END_002",
+      "dbfId": 121057,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "邪恶荒裔怪",
+        "enUS": "Wicked Blightspawn"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "REBORN"
+      ],
+      "text": {
+        "zhCN": "<b>复生</b>。<b>亡语：</b>装备一把1/2的匕首。如果你已经装备了武器，改为使其获得+2攻击力。",
+        "enUS": "[x]<b>Reborn</b>. <b>Deathrattle:</b> Equip a\n1/2 Dagger. If you already\nhave a weapon equipped, give\nit +2 Attack instead.",
+        "zhCNPlain": "复生。亡语：装备一把1/2的匕首。如果你已经装备了武器，改为使其获得+2攻击力。",
+        "enUSPlain": "[x]Reborn. Deathrattle: Equip a 1/2 Dagger. If you already have a weapon equipped, give it +2 Attack instead."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 87,
+      "cardRank": 87,
+      "cardCode": "END_005",
+      "cardNameZhCN": "旧时回响",
+      "cardTextZhCN": "随机召唤一个法力值消耗为（4）的随从。消耗4份<b>残骸</b>以再召唤一个。<b>流放：</b>再召唤一个。",
+      "cardTextZhCNPlain": "随机召唤一个法力值消耗为（4）的随从。消耗4份残骸以再召唤一个。流放：再召唤一个。",
+      "id": "END_005",
+      "dbfId": 121060,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "旧时回响",
+        "enUS": "Bygone Echoes"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "OUTCAST"
+      ],
+      "text": {
+        "zhCN": "随机召唤一个法力值消耗为（4）的随从。消耗4份<b>残骸</b>以再召唤一个。<b>流放：</b>再召唤一个。",
+        "enUS": "Summon a random 4-Cost minion. Spend 4\n<b>Corpses</b> to summon another.\n<b>Outcast:</b> And another.",
+        "zhCNPlain": "随机召唤一个法力值消耗为（4）的随从。消耗4份残骸以再召唤一个。流放：再召唤一个。",
+        "enUSPlain": "Summon a random 4-Cost minion. Spend 4 Corpses to summon another. Outcast: And another."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 88,
+      "cardRank": 88,
+      "cardCode": "TIME_048",
+      "cardNameZhCN": "钟表发条暴怒者",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，你每进行过一个回合，便获得+1生命值。@<i>（已进行过@个回合）</i>",
+      "cardTextZhCNPlain": "战吼：在本局对战中，你每进行过一个回合，便获得+1生命值。（已进行过个回合）",
+      "id": "TIME_048",
+      "dbfId": 120860,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "钟表发条暴怒者",
+        "enUS": "Clockwork Rager"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本局对战中，你每进行过一个回合，便获得+1生命值。@<i>（已进行过@个回合）</i>",
+        "enUS": "[x]<b>Battlecry:</b> Gain +1 Health\nfor each turn you've taken\nthis game.@ <i>(@ |4(turn, turns))</i>",
+        "zhCNPlain": "战吼：在本局对战中，你每进行过一个回合，便获得+1生命值。（已进行过个回合）",
+        "enUSPlain": "[x]Battlecry: Gain +1 Health for each turn you've taken this game. ( |4(turn, turns))"
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 89,
+      "cardRank": 89,
+      "cardCode": "TIME_103",
+      "cardNameZhCN": "克罗米",
+      "cardTextZhCN": "<b>亡语：</b>抽取你在本局对战中使用过的每张牌的另一张复制。@<i>（抽@张牌）</i>",
+      "cardTextZhCNPlain": "亡语：抽取你在本局对战中使用过的每张牌的另一张复制。（抽张牌）",
+      "id": "TIME_103",
+      "dbfId": 121672,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "克罗米",
+        "enUS": "Chromie"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽取你在本局对战中使用过的每张牌的另一张复制。@<i>（抽@张牌）</i>",
+        "enUS": "<b>Deathrattle:</b> Draw another copy of cards you've played this game.@ <i>(@ |4(card,cards))</i>",
+        "zhCNPlain": "亡语：抽取你在本局对战中使用过的每张牌的另一张复制。（抽张牌）",
+        "enUSPlain": "Deathrattle: Draw another copy of cards you've played this game. ( |4(card,cards))"
+      },
+      "categories": [
+        "deathrattle",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 90,
+      "cardRank": 90,
+      "cardCode": "TIME_035",
+      "cardNameZhCN": "时间机器",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>随机获取一张<b>回溯</b>牌。",
+      "cardTextZhCNPlain": "嘲讽。亡语：随机获取一张回溯牌。",
+      "id": "TIME_035",
+      "dbfId": 120506,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "时间机器",
+        "enUS": "Time Machine"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>随机获取一张<b>回溯</b>牌。",
+        "enUS": "<b>Taunt</b>\n<b>Deathrattle:</b> Get a random <b>Rewind</b> card.",
+        "zhCNPlain": "嘲讽。亡语：随机获取一张回溯牌。",
+        "enUSPlain": "Taunt Deathrattle: Get a random Rewind card."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 91,
+      "cardRank": 91,
+      "cardCode": "TIME_064",
+      "cardNameZhCN": "时空领主戴欧斯",
+      "cardTextZhCN": "你的<b>战吼</b>，<b>亡语</b>，英雄技能和回合结束效果会触发两次。",
+      "cardTextZhCNPlain": "你的战吼，亡语，英雄技能和回合结束效果会触发两次。",
+      "id": "TIME_064",
+      "dbfId": 120985,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "时空领主戴欧斯",
+        "enUS": "Chrono-Lord Deios"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "AURA"
+      ],
+      "text": {
+        "zhCN": "你的<b>战吼</b>，<b>亡语</b>，英雄技能和回合结束效果会触发两次。",
+        "enUS": "[x]Your <b>Battlecries</b>,\n<b>Deathrattles</b>, Hero Power,\nand end of turn effects\ntrigger twice.",
+        "zhCNPlain": "你的战吼，亡语，英雄技能和回合结束效果会触发两次。",
+        "enUSPlain": "[x]Your Battlecries, Deathrattles, Hero Power, and end of turn effects trigger twice."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 92,
+      "cardRank": 92,
+      "cardCode": "END_004",
+      "cardNameZhCN": "愤怒残魂",
+      "cardTextZhCN": "在本回合中每有一个随从死亡，本牌的法力值消耗便减少（1）点。<b>战吼：</b>抽两张牌。",
+      "cardTextZhCNPlain": "在本回合中每有一个随从死亡，本牌的法力值消耗便减少（1）点。战吼：抽两张牌。",
+      "id": "END_004",
+      "dbfId": 121058,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": null,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "愤怒残魂",
+        "enUS": "Remnant of Rage"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "在本回合中每有一个随从死亡，本牌的法力值消耗便减少（1）点。<b>战吼：</b>抽两张牌。",
+        "enUS": "[x]Costs (1) less for each\nminion that died this turn.\n_<b>Battlecry:</b> Draw 2 cards.",
+        "zhCNPlain": "在本回合中每有一个随从死亡，本牌的法力值消耗便减少（1）点。战吼：抽两张牌。",
+        "enUSPlain": "[x]Costs (1) less for each minion that died this turn. _Battlecry: Draw 2 cards."
+      },
+      "categories": [
+        "graveyard_pool",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 93,
+      "cardRank": 93,
+      "cardCode": "TIME_052",
+      "cardNameZhCN": "琥珀守卫",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>随机召唤一个来自过去的\n随从。",
+      "cardTextZhCNPlain": "嘲讽。亡语：随机召唤一个来自过去的 随从。",
+      "id": "TIME_052",
+      "dbfId": 120951,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "琥珀守卫",
+        "enUS": "Amber Warden"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>随机召唤一个来自过去的\n随从。",
+        "enUS": "[x]<b>Taunt</b>\n<b>Deathrattle:</b> Summon a\nrandom minion from\nthe past.",
+        "zhCNPlain": "嘲讽。亡语：随机召唤一个来自过去的 随从。",
+        "enUSPlain": "[x]Taunt Deathrattle: Summon a random minion from the past."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 94,
+      "cardRank": 94,
+      "cardCode": "CATA_210",
+      "cardNameZhCN": "暮光龙卵",
+      "cardTextZhCN": "<b>亡语：</b>召唤一条@/@的雏龙。<i>（在你的回合开始时获得+1/+1！）</i>",
+      "cardTextZhCNPlain": "亡语：召唤一条/的雏龙。（在你的回合开始时获得+1/+1！）",
+      "id": "CATA_210",
+      "dbfId": 123126,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "暮光龙卵",
+        "enUS": "Twilight Egg"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>召唤一条@/@的雏龙。<i>（在你的回合开始时获得+1/+1！）</i>",
+        "enUS": "[x]<b>Deathrattle:</b> Summon a\n@/@ Whelp. <i>(Gains +1/+1\n__at the start of your turns!)__</i>",
+        "zhCNPlain": "亡语：召唤一条/的雏龙。（在你的回合开始时获得+1/+1！）",
+        "enUSPlain": "[x]Deathrattle: Summon a / Whelp. (Gains +1/+1 __at the start of your turns!)__"
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 95,
+      "cardRank": 95,
+      "cardCode": "CATA_185",
+      "cardNameZhCN": "无面复制者",
+      "cardTextZhCN": "<b>扰魔。亡语：</b>将消灭本随从的随从变形成为无面复制者。",
+      "cardTextZhCNPlain": "扰魔。亡语：将消灭本随从的随从变形成为无面复制者。",
+      "id": "CATA_185",
+      "dbfId": 123779,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "无面复制者",
+        "enUS": "Faceless Replicator"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>扰魔。亡语：</b>将消灭本随从的随从变形成为无面复制者。",
+        "enUS": "[x]<b>Elusive\nDeathrattle:</b> Transform the\nminion that killed this into\n_a Faceless Replicator.",
+        "zhCNPlain": "扰魔。亡语：将消灭本随从的随从变形成为无面复制者。",
+        "enUSPlain": "[x]Elusive Deathrattle: Transform the minion that killed this into _a Faceless Replicator."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 96,
+      "cardRank": 96,
+      "cardCode": "CATA_897",
+      "cardNameZhCN": "宝石囤积者",
+      "cardTextZhCN": "<b>战吼：</b>选择你手牌中的一张牌并弃掉。<b>亡语：</b>重新获取弃掉的牌，其法力值消耗减少（1）点。",
+      "cardTextZhCNPlain": "战吼：选择你手牌中的一张牌并弃掉。亡语：重新获取弃掉的牌，其法力值消耗减少（1）点。",
+      "id": "CATA_897",
+      "dbfId": 123660,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "宝石囤积者",
+        "enUS": "Gemstone Hoarder"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>选择你手牌中的一张牌并弃掉。<b>亡语：</b>重新获取弃掉的牌，其法力值消耗减少（1）点。",
+        "enUS": "[x]<b>Battlecry:</b> Choose a card in\nyour hand to discard.\n<b>Deathrattle:</b> Get it back.\nIt costs (1) less.",
+        "zhCNPlain": "战吼：选择你手牌中的一张牌并弃掉。亡语：重新获取弃掉的牌，其法力值消耗减少（1）点。",
+        "enUSPlain": "[x]Battlecry: Choose a card in your hand to discard. Deathrattle: Get it back. It costs (1) less."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 97,
+      "cardRank": 97,
+      "cardCode": "CATA_723",
+      "cardNameZhCN": "龙脉混血兽",
+      "cardTextZhCN": "<b>亡语：</b>随机召唤两个法力值消耗为（4）的随从。",
+      "cardTextZhCNPlain": "亡语：随机召唤两个法力值消耗为（4）的随从。",
+      "id": "CATA_723",
+      "dbfId": 122641,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "龙脉混血兽",
+        "enUS": "Drakeadon Mongrel"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机召唤两个法力值消耗为（4）的随从。",
+        "enUS": "<b>Deathrattle:</b> Summon two random 4-Cost minions.",
+        "zhCNPlain": "亡语：随机召唤两个法力值消耗为（4）的随从。",
+        "enUSPlain": "Deathrattle: Summon two random 4-Cost minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 98,
+      "cardRank": 98,
+      "cardCode": "CATA_616",
+      "cardNameZhCN": "戈隆巨人",
+      "cardTextZhCN": "本随从的法力值消耗会随你使用的上一张牌的法力值消耗而\n降低。",
+      "cardTextZhCNPlain": "本随从的法力值消耗会随你使用的上一张牌的法力值消耗而 降低。",
+      "id": "CATA_616",
+      "dbfId": 123440,
+      "cardClass": "NEUTRAL",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 12,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "戈隆巨人",
+        "enUS": "Gronn Giant"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "本随从的法力值消耗会随你使用的上一张牌的法力值消耗而\n降低。",
+        "enUS": "[x]This minion's Cost is\nreduced by the Cost of the\nlast card you played.",
+        "zhCNPlain": "本随从的法力值消耗会随你使用的上一张牌的法力值消耗而 降低。",
+        "enUSPlain": "[x]This minion's Cost is reduced by the Cost of the last card you played."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

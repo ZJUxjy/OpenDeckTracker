@@ -949,6 +949,36 @@ describe('DeckTracker', () => {
     expect(snapshot.opponent.graveyard).toEqual([]);
   });
 
+  it('tracks hand entities when their card id arrives after the hand zone', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) => (
+        cardId === 'BEAST_MINION'
+          ? { type: 'MINION', races: ['BEAST'] }
+          : null
+      ),
+    });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 70, zone: 'HAND', controllerId: 1 },
+    ]);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 70, cardId: 'INFUSE_CARD', zone: 'HAND', controllerId: 1 },
+      { entityId: 71, cardId: 'BEAST_MINION', zone: 'GRAVEYARD', controllerId: 1 },
+    ]);
+
+    expect(
+      tracker.getSnapshot().extraDisplay?.infuseProgressByCardId.INFUSE_CARD?.friendlyDeaths,
+    ).toBe(1);
+  });
+
   it('keeps an opponent played card out of the friendly graveyard even if a later update has the local controller', () => {
     const { mirror } = makeMirror();
     const tracker = new DeckTracker({ mirror });

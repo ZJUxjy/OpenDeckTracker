@@ -1,0 +1,809 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "WARRIOR",
+    "name": {
+      "enUS": "Warrior",
+      "zhCN": "战士"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 15,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_GIL_653",
+      "cardNameZhCN": "樵夫之斧",
+      "cardTextZhCN": "<b>亡语：</b>随机使一个友方随从获得+2/+1。",
+      "cardTextZhCNPlain": "亡语：随机使一个友方随从获得+2/+1。",
+      "id": "CORE_GIL_653",
+      "dbfId": 102215,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "樵夫之斧",
+        "enUS": "Woodcutter's Axe"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "WEAPON",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机使一个友方随从获得+2/+1。",
+        "enUS": "<b>Deathrattle:</b> Give +2/+1 to a random friendly minion.",
+        "zhCNPlain": "亡语：随机使一个友方随从获得+2/+1。",
+        "enUSPlain": "Deathrattle: Give +2/+1 to a random friendly minion."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CORE_REV_933",
+      "cardNameZhCN": "灌能战斧",
+      "cardTextZhCN": "在你的英雄攻击后，使你受伤的随从获得+1/+2。<b>注能（@）：</b>改为+2/+2。",
+      "cardTextZhCNPlain": "在你的英雄攻击后，使你受伤的随从获得+1/+2。注能（）：改为+2/+2。",
+      "id": "CORE_REV_933",
+      "dbfId": 118152,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "灌能战斧",
+        "enUS": "Imbued Axe"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "WEAPON",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "在你的英雄攻击后，使你受伤的随从获得+1/+2。<b>注能（@）：</b>改为+2/+2。",
+        "enUS": "[x]After your hero attacks,\ngive your damaged minions\n+1/+2. <b>Infuse (@):</b>\n+2/+2 instead.",
+        "zhCNPlain": "在你的英雄攻击后，使你受伤的随从获得+1/+2。注能（）：改为+2/+2。",
+        "enUSPlain": "[x]After your hero attacks, give your damaged minions +1/+2. Infuse (): +2/+2 instead."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CORE_ICC_062",
+      "cardNameZhCN": "熔甲卫士",
+      "cardTextZhCN": "<b>亡语：</b>如果此时是你对手的回合，则获得\n6点护甲值。",
+      "cardTextZhCNPlain": "亡语：如果此时是你对手的回合，则获得 6点护甲值。",
+      "id": "CORE_ICC_062",
+      "dbfId": 95728,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "熔甲卫士",
+        "enUS": "Mountainfire Armor"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>如果此时是你对手的回合，则获得\n6点护甲值。",
+        "enUS": "<b>Deathrattle:</b> If it's your opponent's turn,\ngain 6 Armor.",
+        "zhCNPlain": "亡语：如果此时是你对手的回合，则获得 6点护甲值。",
+        "enUSPlain": "Deathrattle: If it's your opponent's turn, gain 6 Armor."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_ICC_064",
+      "cardNameZhCN": "血刃剃刀",
+      "cardTextZhCN": "<b>战吼，亡语：</b>\n对所有随从造成1点伤害。",
+      "cardTextZhCNPlain": "战吼，亡语： 对所有随从造成1点伤害。",
+      "id": "CORE_ICC_064",
+      "dbfId": 95642,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "血刃剃刀",
+        "enUS": "Blood Razor"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "WEAPON",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼，亡语：</b>\n对所有随从造成1点伤害。",
+        "enUS": "<b>Battlecry and Deathrattle:</b>\nDeal 1 damage to all_minions.",
+        "zhCNPlain": "战吼，亡语： 对所有随从造成1点伤害。",
+        "enUSPlain": "Battlecry and Deathrattle: Deal 1 damage to all_minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CATA_EVENT_002",
+      "cardNameZhCN": "怨毒焰魔",
+      "cardTextZhCN": "<b>战吼：</b>如果你在本回合中施放过火焰法术，消灭一个随从。",
+      "cardTextZhCNPlain": "战吼：如果你在本回合中施放过火焰法术，消灭一个随从。",
+      "id": "CATA_EVENT_002",
+      "dbfId": 126847,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "怨毒焰魔",
+        "enUS": "Baleful Blazer"
+      },
+      "set": "SET_1941",
+      "setName": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>如果你在本回合中施放过火焰法术，消灭一个随从。",
+        "enUS": "<b>Battlecry:</b> If you've played a Fire spell this turn, destroy a minion.",
+        "zhCNPlain": "战吼：如果你在本回合中施放过火焰法术，消灭一个随从。",
+        "enUSPlain": "Battlecry: If you've played a Fire spell this turn, destroy a minion."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "EDR_455",
+      "cardNameZhCN": "屈从疯狂",
+      "cardTextZhCN": "<b>发现</b>一条在本局对战中死亡的友方的龙，并再次召唤它。",
+      "cardTextZhCNPlain": "发现一条在本局对战中死亡的友方的龙，并再次召唤它。",
+      "id": "EDR_455",
+      "dbfId": 114217,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "屈从疯狂",
+        "enUS": "Succumb to Madness"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>发现</b>一条在本局对战中死亡的友方的龙，并再次召唤它。",
+        "enUS": "<b>Discover</b> a friendly Dragon that died this game. Resummon it.",
+        "zhCNPlain": "发现一条在本局对战中死亡的友方的龙，并再次召唤它。",
+        "enUSPlain": "Discover a friendly Dragon that died this game. Resummon it."
+      },
+      "categories": [
+        "graveyard_pool",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "EDR_459",
+      "cardNameZhCN": "受难的毁灭者",
+      "cardTextZhCN": "<b>战吼：</b>对所有其他友方随从造成3点伤害。<b>亡语：</b>对所有敌方随从造成3点伤害。",
+      "cardTextZhCNPlain": "战吼：对所有其他友方随从造成3点伤害。亡语：对所有敌方随从造成3点伤害。",
+      "id": "EDR_459",
+      "dbfId": 114243,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "受难的毁灭者",
+        "enUS": "Afflicted Devastator"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>对所有其他友方随从造成3点伤害。<b>亡语：</b>对所有敌方随从造成3点伤害。",
+        "enUS": "[x]<b>Battlecry:</b> Deal 3 damage\nto all other friendly minions.\n<b>Deathrattle:</b> Deal 3 damage\nto all enemy minions.",
+        "zhCNPlain": "战吼：对所有其他友方随从造成3点伤害。亡语：对所有敌方随从造成3点伤害。",
+        "enUSPlain": "[x]Battlecry: Deal 3 damage to all other friendly minions. Deathrattle: Deal 3 damage to all enemy minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "EDR_465",
+      "cardNameZhCN": "伊森德雷",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>在本局对战中伊森德雷每死亡过一次，随机召唤一条龙。",
+      "cardTextZhCNPlain": "嘲讽。亡语：在本局对战中伊森德雷每死亡过一次，随机召唤一条龙。",
+      "id": "EDR_465",
+      "dbfId": 114340,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "伊森德雷",
+        "enUS": "Ysondre"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>在本局对战中伊森德雷每死亡过一次，随机召唤一条龙。",
+        "enUS": "[x]<b>Taunt</b>. <b>Deathrattle:</b> Summon\na random Dragon for each\ntime Ysondre has died\nthis game.",
+        "zhCNPlain": "嘲讽。亡语：在本局对战中伊森德雷每死亡过一次，随机召唤一条龙。",
+        "enUSPlain": "[x]Taunt. Deathrattle: Summon a random Dragon for each time Ysondre has died this game."
+      },
+      "categories": [
+        "graveyard_pool",
+        "deathrattle",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "TLC_606",
+      "cardNameZhCN": "拉特维亚护甲师",
+      "cardTextZhCN": "<b>战吼：</b>对一个敌方随从造成2点伤害。如果该随从死亡，获得5点护甲值。",
+      "cardTextZhCNPlain": "战吼：对一个敌方随从造成2点伤害。如果该随从死亡，获得5点护甲值。",
+      "id": "TLC_606",
+      "dbfId": 117771,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "拉特维亚护甲师",
+        "enUS": "Latorvian Armorer"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>对一个敌方随从造成2点伤害。如果该随从死亡，获得5点护甲值。",
+        "enUS": "<b>Battlecry:</b> Deal 2 damage to an enemy minion. If it dies, gain 5 Armor.",
+        "zhCNPlain": "战吼：对一个敌方随从造成2点伤害。如果该随从死亡，获得5点护甲值。",
+        "enUSPlain": "Battlecry: Deal 2 damage to an enemy minion. If it dies, gain 5 Armor."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "TIME_714",
+      "cardNameZhCN": "时光领主埃博克",
+      "cardTextZhCN": "<b>战吼：</b>消灭你的对手上回合使用的\n所有随从。",
+      "cardTextZhCNPlain": "战吼：消灭你的对手上回合使用的 所有随从。",
+      "id": "TIME_714",
+      "dbfId": 120817,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "时光领主埃博克",
+        "enUS": "Chrono-Lord Epoch"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>消灭你的对手上回合使用的\n所有随从。",
+        "enUS": "<b>Battlecry:</b> Destroy all minions that your opponent played last turn.",
+        "zhCNPlain": "战吼：消灭你的对手上回合使用的 所有随从。",
+        "enUSPlain": "Battlecry: Destroy all minions that your opponent played last turn."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "TIME_850",
+      "cardNameZhCN": "血斗士洛戈什",
+      "cardTextZhCN": "<b>奇闻</b>\n<b>突袭</b>。<b>亡语：</b>从你的手牌中召唤一位血斗士，使其获得+5/+5并随机攻击一个敌人。",
+      "cardTextZhCNPlain": "奇闻 突袭。亡语：从你的手牌中召唤一位血斗士，使其获得+5/+5并随机攻击一个敌人。",
+      "id": "TIME_850",
+      "dbfId": 119451,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "血斗士洛戈什",
+        "enUS": "Lo'Gosh, Blood Fighter"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE",
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>奇闻</b>\n<b>突袭</b>。<b>亡语：</b>从你的手牌中召唤一位血斗士，使其获得+5/+5并随机攻击一个敌人。",
+        "enUS": "[x]<b>Fabled</b>, <b>Rush</b>. <b>Deathrattle:</b>\nSummon a Blood Fighter from\nyour hand. It gains +5/+5 and\nattacks a random enemy.",
+        "zhCNPlain": "奇闻 突袭。亡语：从你的手牌中召唤一位血斗士，使其获得+5/+5并随机攻击一个敌人。",
+        "enUSPlain": "[x]Fabled, Rush. Deathrattle: Summon a Blood Fighter from your hand. It gains +5/+5 and attacks a random enemy."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "CATA_584",
+      "cardNameZhCN": "喷发火山",
+      "cardTextZhCN": "造成3点伤害，随机分配到所有敌人身上。如果你在本回合中使用过火焰法术牌，再造成3点。",
+      "cardTextZhCNPlain": "造成3点伤害，随机分配到所有敌人身上。如果你在本回合中使用过火焰法术牌，再造成3点。",
+      "id": "CATA_584",
+      "dbfId": 123163,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "喷发火山",
+        "enUS": "Erupting Volcano"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "LOCATION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "造成3点伤害，随机分配到所有敌人身上。如果你在本回合中使用过火焰法术牌，再造成3点。",
+        "enUS": "[x]Deal 3 damage randomly\nsplit among enemies.\nIf you've played a Fire spell\nthis turn, deal 3 more.",
+        "zhCNPlain": "造成3点伤害，随机分配到所有敌人身上。如果你在本回合中使用过火焰法术牌，再造成3点。",
+        "enUSPlain": "[x]Deal 3 damage randomly split among enemies. If you've played a Fire spell this turn, deal 3 more."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "CATA_586",
+      "cardNameZhCN": "毁灭之焰",
+      "cardTextZhCN": "在本随从受到伤害并存活下来后，召唤一个毁灭之焰。<b>亡语：</b>随机对一个敌人造成2点伤害。",
+      "cardTextZhCNPlain": "在本随从受到伤害并存活下来后，召唤一个毁灭之焰。亡语：随机对一个敌人造成2点伤害。",
+      "id": "CATA_586",
+      "dbfId": 123166,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "毁灭之焰",
+        "enUS": "Destructive Blaze"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "在本随从受到伤害并存活下来后，召唤一个毁灭之焰。<b>亡语：</b>随机对一个敌人造成2点伤害。",
+        "enUS": "[x]After this survives damage,\nsummon a Destructive Blaze.\n<b>Deathrattle:</b> Deal 2 damage\nto a random enemy.",
+        "zhCNPlain": "在本随从受到伤害并存活下来后，召唤一个毁灭之焰。亡语：随机对一个敌人造成2点伤害。",
+        "enUSPlain": "[x]After this survives damage, summon a Destructive Blaze. Deathrattle: Deal 2 damage to a random enemy."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "CATA_610",
+      "cardNameZhCN": "洛戈什的奋战",
+      "cardTextZhCN": "使一个随从获得\n“<b>亡语：</b>从你的手牌中随机召唤一个\n随从。”",
+      "cardTextZhCNPlain": "使一个随从获得 “亡语：从你的手牌中随机召唤一个 随从。”",
+      "id": "CATA_610",
+      "dbfId": 123382,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "洛戈什的奋战",
+        "enUS": "Lo'Gosh's Last Stand"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "使一个随从获得\n“<b>亡语：</b>从你的手牌中随机召唤一个\n随从。”",
+        "enUS": "[x]Give a minion\n\"<b>Deathrattle:</b> Summon\na random minion from\nyour hand.\"",
+        "zhCNPlain": "使一个随从获得 “亡语：从你的手牌中随机召唤一个 随从。”",
+        "enUSPlain": "[x]Give a minion \"Deathrattle: Summon a random minion from your hand.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "CATA_150",
+      "cardNameZhCN": "拉格纳罗斯，绝世烈火",
+      "cardTextZhCN": "<b>巨型+2</b>\n在你的回合结束时，触发你的随从的\n<b>亡语</b>。",
+      "cardTextZhCNPlain": "巨型+2 在你的回合结束时，触发你的随从的 亡语。",
+      "id": "CATA_150",
+      "dbfId": 124110,
+      "cardClass": "WARRIOR",
+      "sourceCardClass": "WARRIOR",
+      "rawClassValue": 10,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "拉格纳罗斯，绝世烈火",
+        "enUS": "Ragnaros, the Great Fire"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "text": {
+        "zhCN": "<b>巨型+2</b>\n在你的回合结束时，触发你的随从的\n<b>亡语</b>。",
+        "enUS": "[x]<b>Colossal +2</b>\nAt the end of your turn, trigger\n___your minions' <b>Deathrattles</b>.",
+        "zhCNPlain": "巨型+2 在你的回合结束时，触发你的随从的 亡语。",
+        "enUSPlain": "[x]Colossal +2 At the end of your turn, trigger ___your minions' Deathrattles."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

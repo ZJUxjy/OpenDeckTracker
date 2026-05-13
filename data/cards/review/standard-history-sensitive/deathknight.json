@@ -1,0 +1,1952 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "DEATHKNIGHT",
+    "name": {
+      "enUS": "Death Knight",
+      "zhCN": "死亡骑士"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 40,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "RLK_034",
+      "cardNameZhCN": "心脏打击",
+      "cardTextZhCN": "对一个随从造成$3点伤害。如果该随从死亡，获得一份<b>残骸</b>。",
+      "cardTextZhCNPlain": "对一个随从造成3点伤害。如果该随从死亡，获得一份残骸。",
+      "id": "RLK_034",
+      "dbfId": 78332,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "心脏打击",
+        "enUS": "Heart Strike"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对一个随从造成$3点伤害。如果该随从死亡，获得一份<b>残骸</b>。",
+        "enUS": "Deal $3 damage to a minion. If it dies, gain a <b>Corpse</b>.",
+        "zhCNPlain": "对一个随从造成3点伤害。如果该随从死亡，获得一份残骸。",
+        "enUSPlain": "Deal 3 damage to a minion. If it dies, gain a Corpse."
+      },
+      "categories": [
+        "corpse_resource",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "RLK_039",
+      "cardNameZhCN": "天灾谷物",
+      "cardTextZhCN": "获得4份<b>残骸</b>。将四个谷物箱洗入你的牌库，当抽到谷物箱时，召唤一个2/2的亡灵。",
+      "cardTextZhCNPlain": "获得4份残骸。将四个谷物箱洗入你的牌库，当抽到谷物箱时，召唤一个2/2的亡灵。",
+      "id": "RLK_039",
+      "dbfId": 78335,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "天灾谷物",
+        "enUS": "Plagued Grain"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "获得4份<b>残骸</b>。将四个谷物箱洗入你的牌库，当抽到谷物箱时，召唤一个2/2的亡灵。",
+        "enUS": "Gain 4 <b>Corpses</b>. Shuffle four Crates into your deck that summon a 2/2 Undead when drawn.",
+        "zhCNPlain": "获得4份残骸。将四个谷物箱洗入你的牌库，当抽到谷物箱时，召唤一个2/2的亡灵。",
+        "enUSPlain": "Gain 4 Corpses. Shuffle four Crates into your deck that summon a 2/2 Undead when drawn."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "RLK_715",
+      "cardNameZhCN": "符文熔铸",
+      "cardTextZhCN": "抽一张武器牌。消耗一份<b>残骸</b>，使其法力值消耗减少（1）点。",
+      "cardTextZhCNPlain": "抽一张武器牌。消耗一份残骸，使其法力值消耗减少（1）点。",
+      "id": "RLK_715",
+      "dbfId": 80736,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "符文熔铸",
+        "enUS": "Runeforging"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "抽一张武器牌。消耗一份<b>残骸</b>，使其法力值消耗减少（1）点。",
+        "enUS": "Draw a weapon.\nSpend a <b>Corpse</b> to reduce its Cost by (1).",
+        "zhCNPlain": "抽一张武器牌。消耗一份残骸，使其法力值消耗减少（1）点。",
+        "enUSPlain": "Draw a weapon. Spend a Corpse to reduce its Cost by (1)."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "RLK_753",
+      "cardNameZhCN": "掘骨恶鬼",
+      "cardTextZhCN": "<b>战吼：</b>消耗一份<b>残骸</b>，获得+1/+2。",
+      "cardTextZhCNPlain": "战吼：消耗一份残骸，获得+1/+2。",
+      "id": "RLK_753",
+      "dbfId": 82269,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "掘骨恶鬼",
+        "enUS": "Bonedigger Geist"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>消耗一份<b>残骸</b>，获得+1/+2。",
+        "enUS": "<b>Battlecry:</b> Spend a <b>Corpse</b> to gain +1/+2.",
+        "zhCNPlain": "战吼：消耗一份残骸，获得+1/+2。",
+        "enUSPlain": "Battlecry: Spend a Corpse to gain +1/+2."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "RLK_101",
+      "cardNameZhCN": "解冻",
+      "cardTextZhCN": "抽一张牌。消耗2份<b>残骸</b>，再抽一张。",
+      "cardTextZhCNPlain": "抽一张牌。消耗2份残骸，再抽一张。",
+      "id": "RLK_101",
+      "dbfId": 79569,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "解冻",
+        "enUS": "Defrost"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "抽一张牌。消耗2份<b>残骸</b>，再抽一张。",
+        "enUS": "Draw a card.\nSpend 2 <b>Corpses</b> to draw another.",
+        "zhCNPlain": "抽一张牌。消耗2份残骸，再抽一张。",
+        "enUSPlain": "Draw a card. Spend 2 Corpses to draw another."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "CORE_RLK_051",
+      "cardNameZhCN": "吸血鬼之血",
+      "cardTextZhCN": "使你的英雄获得+5生命值。消耗3份<b>残骸</b>，多获得5点并抽一张牌。",
+      "cardTextZhCNPlain": "使你的英雄获得+5生命值。消耗3份残骸，多获得5点并抽一张牌。",
+      "id": "CORE_RLK_051",
+      "dbfId": 111327,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "吸血鬼之血",
+        "enUS": "Vampiric Blood"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "使你的英雄获得+5生命值。消耗3份<b>残骸</b>，多获得5点并抽一张牌。",
+        "enUS": "[x]Give your hero +5 Health.\nSpend 3 <b>Corpses</b> to gain\n5 more and draw a card.",
+        "zhCNPlain": "使你的英雄获得+5生命值。消耗3份残骸，多获得5点并抽一张牌。",
+        "enUSPlain": "[x]Give your hero +5 Health. Spend 3 Corpses to gain 5 more and draw a card."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "CORE_RLK_012",
+      "cardNameZhCN": "断魂",
+      "cardTextZhCN": "在你的英雄攻击并消灭一个随从后，获得2份\n<b>残骸</b>。",
+      "cardTextZhCNPlain": "在你的英雄攻击并消灭一个随从后，获得2份 残骸。",
+      "id": "CORE_RLK_012",
+      "dbfId": 111332,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "断魂",
+        "enUS": "Soulbreaker"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "WEAPON",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你的英雄攻击并消灭一个随从后，获得2份\n<b>残骸</b>。",
+        "enUS": "After your hero attacks and kills a minion, gain 2 <b>Corpses</b>.",
+        "zhCNPlain": "在你的英雄攻击并消灭一个随从后，获得2份 残骸。",
+        "enUSPlain": "After your hero attacks and kills a minion, gain 2 Corpses."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "RLK_226",
+      "cardNameZhCN": "伊米亚死亡使者",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>消耗3份<b>残骸</b>，召唤一个3/3并具有<b>嘲讽</b>的复活的伊米亚人。",
+      "cardTextZhCNPlain": "嘲讽。亡语：消耗3份残骸，召唤一个3/3并具有嘲讽的复活的伊米亚人。",
+      "id": "RLK_226",
+      "dbfId": 86735,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "伊米亚死亡使者",
+        "enUS": "Ymirjar Deathbringer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>消耗3份<b>残骸</b>，召唤一个3/3并具有<b>嘲讽</b>的复活的伊米亚人。",
+        "enUS": "[x]<b>Taunt</b>. <b>Deathrattle:</b> Spend 3\n<b>Corpses</b> to summon a 3/3\nRisen Ymirjar with <b>Taunt</b>.",
+        "zhCNPlain": "嘲讽。亡语：消耗3份残骸，召唤一个3/3并具有嘲讽的复活的伊米亚人。",
+        "enUSPlain": "[x]Taunt. Deathrattle: Spend 3 Corpses to summon a 3/3 Risen Ymirjar with Taunt."
+      },
+      "categories": [
+        "corpse_resource",
+        "graveyard_pool",
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "CORE_RLK_740",
+      "cardNameZhCN": "米奈希尔之力",
+      "cardTextZhCN": "<b>战吼：</b>消耗最多3份<b>残骸</b>，<b>冻结</b>等量的敌方随从。",
+      "cardTextZhCNPlain": "战吼：消耗最多3份残骸，冻结等量的敌方随从。",
+      "id": "CORE_RLK_740",
+      "dbfId": 111324,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "米奈希尔之力",
+        "enUS": "Might of Menethil"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "WEAPON",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>消耗最多3份<b>残骸</b>，<b>冻结</b>等量的敌方随从。",
+        "enUS": "<b>Battlecry:</b> Spend\nup to 3 <b>Corpses</b>.\n<b>Freeze</b> that many\nenemy minions.",
+        "zhCNPlain": "战吼：消耗最多3份残骸，冻结等量的敌方随从。",
+        "enUSPlain": "Battlecry: Spend up to 3 Corpses. Freeze that many enemy minions."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "CORE_RLK_504",
+      "cardNameZhCN": "僵尸新娘",
+      "cardTextZhCN": "<b>战吼：</b>消耗最多10份<b>残骸</b>，召唤一个攻击力和生命值等同于消耗残骸数并具有<b>嘲讽</b>的复活的新郎。",
+      "cardTextZhCNPlain": "战吼：消耗最多10份残骸，召唤一个攻击力和生命值等同于消耗残骸数并具有嘲讽的复活的新郎。",
+      "id": "CORE_RLK_504",
+      "dbfId": 111315,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "僵尸新娘",
+        "enUS": "Corpse Bride"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>消耗最多10份<b>残骸</b>，召唤一个攻击力和生命值等同于消耗残骸数并具有<b>嘲讽</b>的复活的新郎。",
+        "enUS": "[x]<b>Battlecry:</b> Spend up to 10\n_<b>Corpses</b> to summon a Risen_\nGroom with <b>Taunt</b> and that\n_much Attack and Health.",
+        "zhCNPlain": "战吼：消耗最多10份残骸，召唤一个攻击力和生命值等同于消耗残骸数并具有嘲讽的复活的新郎。",
+        "enUSPlain": "[x]Battlecry: Spend up to 10 _Corpses to summon a Risen_ Groom with Taunt and that _much Attack and Health."
+      },
+      "categories": [
+        "corpse_resource",
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "CORE_RLK_035",
+      "cardNameZhCN": "邪爆",
+      "cardTextZhCN": "引爆一份<b>残骸</b>，对所有随从造成$1点伤害。如果有随从存活，重复此效果。",
+      "cardTextZhCNPlain": "引爆一份残骸，对所有随从造成1点伤害。如果有随从存活，重复此效果。",
+      "id": "CORE_RLK_035",
+      "dbfId": 111334,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "邪爆",
+        "enUS": "Corpse Explosion"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "引爆一份<b>残骸</b>，对所有随从造成$1点伤害。如果有随从存活，重复此效果。",
+        "enUS": "Detonate a <b>Corpse</b> to deal $1 damage to all minions. If any are still alive, repeat this.",
+        "zhCNPlain": "引爆一份残骸，对所有随从造成1点伤害。如果有随从存活，重复此效果。",
+        "enUSPlain": "Detonate a Corpse to deal 1 damage to all minions. If any are still alive, repeat this."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "RLK_082",
+      "cardNameZhCN": "死亡使者萨鲁法尔",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>将本随从移回你的手牌，且本牌消耗生命值，而非法力值。",
+      "cardTextZhCNPlain": "嘲讽。亡语：将本随从移回你的手牌，且本牌消耗生命值，而非法力值。",
+      "id": "RLK_082",
+      "dbfId": 78644,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "死亡使者萨鲁法尔",
+        "enUS": "Deathbringer Saurfang"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>将本随从移回你的手牌，且本牌消耗生命值，而非法力值。",
+        "enUS": "[x]<b>Taunt</b>\n<b>Deathrattle:</b> Return this to\nyour hand. It costs Health\ninstead of Mana.",
+        "zhCNPlain": "嘲讽。亡语：将本随从移回你的手牌，且本牌消耗生命值，而非法力值。",
+        "enUSPlain": "[x]Taunt Deathrattle: Return this to your hand. It costs Health instead of Mana."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "RLK_752",
+      "cardNameZhCN": "霜雪塑形师",
+      "cardTextZhCN": "<b>战吼：</b>召唤两个2/1且具有“<b>亡语：</b>随机对一个敌人造成2点伤害。”的白霜元素。",
+      "cardTextZhCNPlain": "战吼：召唤两个2/1且具有“亡语：随机对一个敌人造成2点伤害。”的白霜元素。",
+      "id": "RLK_752",
+      "dbfId": 82116,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "霜雪塑形师",
+        "enUS": "Rime Sculptor"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>召唤两个2/1且具有“<b>亡语：</b>随机对一个敌人造成2点伤害。”的白霜元素。",
+        "enUS": "[x]<b>Battlecry:</b> Summon two\n2/1 Rime Elementals with\n\"<b>Deathrattle:</b> Deal 2 damage\nto a random enemy.\"",
+        "zhCNPlain": "战吼：召唤两个2/1且具有“亡语：随机对一个敌人造成2点伤害。”的白霜元素。",
+        "enUSPlain": "[x]Battlecry: Summon two 2/1 Rime Elementals with \"Deathrattle: Deal 2 damage to a random enemy.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "RLK_085",
+      "cardNameZhCN": "玛洛加尔领主",
+      "cardTextZhCN": "<b>战吼：</b>将你的所有<b>残骸</b>复活为1/1并具有<b>突袭</b>的复活的傀儡。每有一个放不下的傀儡，使一个傀儡获得+2/+2。",
+      "cardTextZhCNPlain": "战吼：将你的所有残骸复活为1/1并具有突袭的复活的傀儡。每有一个放不下的傀儡，使一个傀儡获得+2/+2。",
+      "id": "RLK_085",
+      "dbfId": 79480,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "玛洛加尔领主",
+        "enUS": "Lord Marrowgar"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>将你的所有<b>残骸</b>复活为1/1并具有<b>突袭</b>的复活的傀儡。每有一个放不下的傀儡，使一个傀儡获得+2/+2。",
+        "enUS": "[x]<b>Battlecry:</b> Raise ALL of your\n<b>Corpses</b> as 1/1 Risen Golems\nwith <b>Rush</b>. For each that can't\nfit, give one +2/+2.",
+        "zhCNPlain": "战吼：将你的所有残骸复活为1/1并具有突袭的复活的傀儡。每有一个放不下的傀儡，使一个傀儡获得+2/+2。",
+        "enUSPlain": "[x]Battlecry: Raise ALL of your Corpses as 1/1 Risen Golems with Rush. For each that can't fit, give one +2/+2."
+      },
+      "categories": [
+        "corpse_resource",
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "CORE_RLK_741",
+      "cardNameZhCN": "窃魂者",
+      "cardTextZhCN": "<b>战吼：</b>\n消灭所有其他随从。每消灭一个敌方随从，获得1份<b>残骸</b>。",
+      "cardTextZhCNPlain": "战吼： 消灭所有其他随从。每消灭一个敌方随从，获得1份残骸。",
+      "id": "CORE_RLK_741",
+      "dbfId": 111322,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "窃魂者",
+        "enUS": "Soulstealer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>\n消灭所有其他随从。每消灭一个敌方随从，获得1份<b>残骸</b>。",
+        "enUS": "[x]<b>Battlecry:</b> Destroy all other\nminions. Gain 1 <b>Corpse</b> for\neach enemy destroyed.",
+        "zhCNPlain": "战吼： 消灭所有其他随从。每消灭一个敌方随从，获得1份残骸。",
+        "enUSPlain": "[x]Battlecry: Destroy all other minions. Gain 1 Corpse for each enemy destroyed."
+      },
+      "categories": [
+        "corpse_resource",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "RLK_744",
+      "cardNameZhCN": "缝合巨人",
+      "cardTextZhCN": "在本局对战中，你每消耗过一份<b>残骸</b>，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "在本局对战中，你每消耗过一份残骸，本牌的法力值消耗便减少（1）点。",
+      "id": "RLK_744",
+      "dbfId": 82072,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "缝合巨人",
+        "enUS": "Stitched Giant"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在本局对战中，你每消耗过一份<b>残骸</b>，本牌的法力值消耗便减少（1）点。",
+        "enUS": "[x]Costs (1) less for each\n<b>Corpse</b> you've spent\nthis game.",
+        "zhCNPlain": "在本局对战中，你每消耗过一份残骸，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "[x]Costs (1) less for each Corpse you've spent this game."
+      },
+      "categories": [
+        "corpse_resource",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 17,
+      "cardRank": 17,
+      "cardCode": "TLC_EVENT_402",
+      "cardNameZhCN": "末日使者之杖",
+      "cardTextZhCN": "<b>亡语：</b>消灭所有随从。",
+      "cardTextZhCNPlain": "亡语：消灭所有随从。",
+      "id": "TLC_EVENT_402",
+      "dbfId": 120658,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "末日使者之杖",
+        "enUS": "Staff of the Endbringer"
+      },
+      "set": "SET_1941",
+      "setName": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      },
+      "type": "WEAPON",
+      "cost": 3,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>消灭所有随从。",
+        "enUS": "<b>Deathrattle:</b> Destroy all minions.",
+        "zhCNPlain": "亡语：消灭所有随从。",
+        "enUSPlain": "Deathrattle: Destroy all minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 18,
+      "cardRank": 18,
+      "cardCode": "EDR_813",
+      "cardNameZhCN": "病变虫群",
+      "cardTextZhCN": "<b>抉择：</b>召唤两只1/1的蚂蚁；或者消耗2份<b>残骸</b>，对一个随从造成$4点伤害。",
+      "cardTextZhCNPlain": "抉择：召唤两只1/1的蚂蚁；或者消耗2份残骸，对一个随从造成4点伤害。",
+      "id": "EDR_813",
+      "dbfId": 114967,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "病变虫群",
+        "enUS": "Morbid Swarm"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "CHOOSE_ONE"
+      ],
+      "text": {
+        "zhCN": "<b>抉择：</b>召唤两只1/1的蚂蚁；或者消耗2份<b>残骸</b>，对一个随从造成$4点伤害。",
+        "enUS": "<b>Choose One -</b> Summon two 1/1 Ants; or Spend 2 <b>Corpses</b> to deal $4_damage to a minion.",
+        "zhCNPlain": "抉择：召唤两只1/1的蚂蚁；或者消耗2份残骸，对一个随从造成4点伤害。",
+        "enUSPlain": "Choose One - Summon two 1/1 Ants; or Spend 2 Corpses to deal 4_damage to a minion."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 19,
+      "cardRank": 19,
+      "cardCode": "EDR_811",
+      "cardNameZhCN": "暴行祭礼",
+      "cardTextZhCN": "<b>发现</b>一张亡灵牌。消耗2份<b>残骸</b>，使其获得<b>黑暗之赐</b>。",
+      "cardTextZhCNPlain": "发现一张亡灵牌。消耗2份残骸，使其获得黑暗之赐。",
+      "id": "EDR_811",
+      "dbfId": 114303,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "暴行祭礼",
+        "enUS": "Rite of Atrocity"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>发现</b>一张亡灵牌。消耗2份<b>残骸</b>，使其获得<b>黑暗之赐</b>。",
+        "enUS": "<b>Discover</b> an Undead. Spend 2 <b>Corpses</b> to give it a <b>Dark Gift</b>.",
+        "zhCNPlain": "发现一张亡灵牌。消耗2份残骸，使其获得黑暗之赐。",
+        "enUSPlain": "Discover an Undead. Spend 2 Corpses to give it a Dark Gift."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 20,
+      "cardRank": 20,
+      "cardCode": "EDR_815",
+      "cardNameZhCN": "尸魔花",
+      "cardTextZhCN": "在你的对手召唤一个随从后，消耗2份<b>残骸</b>以对其造成3点伤害。",
+      "cardTextZhCNPlain": "在你的对手召唤一个随从后，消耗2份残骸以对其造成3点伤害。",
+      "id": "EDR_815",
+      "dbfId": 114306,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "尸魔花",
+        "enUS": "Corpse Flower"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你的对手召唤一个随从后，消耗2份<b>残骸</b>以对其造成3点伤害。",
+        "enUS": "After your opponent summons a minion,\nspend 2 <b>Corpses</b> to deal 3 damage to it.",
+        "zhCNPlain": "在你的对手召唤一个随从后，消耗2份残骸以对其造成3点伤害。",
+        "enUSPlain": "After your opponent summons a minion, spend 2 Corpses to deal 3 damage to it."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 21,
+      "cardRank": 21,
+      "cardCode": "EDR_818",
+      "cardNameZhCN": "尼珊德拉",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>亡语：</b>分裂为1/1的甲虫。在你的回合开始时，剩余的甲虫会重组为尼珊德拉。",
+      "cardTextZhCNPlain": "嘲讽。亡语：分裂为1/1的甲虫。在你的回合开始时，剩余的甲虫会重组为尼珊德拉。",
+      "id": "EDR_818",
+      "dbfId": 114307,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "尼珊德拉",
+        "enUS": "Nythendra"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。<b>亡语：</b>分裂为1/1的甲虫。在你的回合开始时，剩余的甲虫会重组为尼珊德拉。",
+        "enUS": "[x]<b>Taunt</b>. <b>Deathrattle:</b> Split\ninto 1/1 Beetles. At the\nstart of your turn, reform\nwith any remaining.",
+        "zhCNPlain": "嘲讽。亡语：分裂为1/1的甲虫。在你的回合开始时，剩余的甲虫会重组为尼珊德拉。",
+        "enUSPlain": "[x]Taunt. Deathrattle: Split into 1/1 Beetles. At the start of your turn, reform with any remaining."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 22,
+      "cardRank": 22,
+      "cardCode": "FIR_951",
+      "cardNameZhCN": "沃尔科罗斯",
+      "cardTextZhCN": "<b>突袭。嘲讽</b>。<b>战吼：</b>选择消耗10份，20份或30份<b>残骸</b>以获得等量属性值。",
+      "cardTextZhCNPlain": "突袭。嘲讽。战吼：选择消耗10份，20份或30份残骸以获得等量属性值。",
+      "id": "FIR_951",
+      "dbfId": 115748,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "沃尔科罗斯",
+        "enUS": "Volcoross"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "RUSH",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>突袭。嘲讽</b>。<b>战吼：</b>选择消耗10份，20份或30份<b>残骸</b>以获得等量属性值。",
+        "enUS": "[x]<b>Rush, Taunt</b>\n<b>Battlecry:</b> Choose to spend\n10, 20, or 30 <b>Corpses</b> to\ngain that many stats.",
+        "zhCNPlain": "突袭。嘲讽。战吼：选择消耗10份，20份或30份残骸以获得等量属性值。",
+        "enUSPlain": "[x]Rush, Taunt Battlecry: Choose to spend 10, 20, or 30 Corpses to gain that many stats."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 23,
+      "cardRank": 23,
+      "cardCode": "EDR_819",
+      "cardNameZhCN": "乌索克",
+      "cardTextZhCN": "<b>战吼：</b>攻击所有其他随从。<b>亡语：</b>复活本随从消灭的随从。",
+      "cardTextZhCNPlain": "战吼：攻击所有其他随从。亡语：复活本随从消灭的随从。",
+      "id": "EDR_819",
+      "dbfId": 116018,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "乌索克",
+        "enUS": "Ursoc"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>攻击所有其他随从。<b>亡语：</b>复活本随从消灭的随从。",
+        "enUS": "<b>Battlecry:</b> Attack ALL\nother minions.\n<b>Deathrattle:</b> Resurrect any this killed.",
+        "zhCNPlain": "战吼：攻击所有其他随从。亡语：复活本随从消灭的随从。",
+        "enUSPlain": "Battlecry: Attack ALL other minions. Deathrattle: Resurrect any this killed."
+      },
+      "categories": [
+        "graveyard_pool",
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 24,
+      "cardRank": 24,
+      "cardCode": "TLC_433",
+      "cardNameZhCN": "恐怖再起",
+      "cardTextZhCN": "<b>任务：</b>消耗15份<b>残骸</b>。<b>奖励：</b>泰拉克斯，魔骸暴龙。",
+      "cardTextZhCNPlain": "任务：消耗15份残骸。奖励：泰拉克斯，魔骸暴龙。",
+      "id": "TLC_433",
+      "dbfId": 117427,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "恐怖再起",
+        "enUS": "Reanimate the Terror"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "QUEST"
+      ],
+      "text": {
+        "zhCN": "<b>任务：</b>消耗15份<b>残骸</b>。<b>奖励：</b>泰拉克斯，魔骸暴龙。",
+        "enUS": "[x]<b>Quest:</b> Spend 15 <b>Corpses</b>.\n<b>Reward:</b> Tyrax, Bone Terror.",
+        "zhCNPlain": "任务：消耗15份残骸。奖励：泰拉克斯，魔骸暴龙。",
+        "enUSPlain": "[x]Quest: Spend 15 Corpses. Reward: Tyrax, Bone Terror."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 25,
+      "cardRank": 25,
+      "cardCode": "TLC_434",
+      "cardNameZhCN": "古生物秘术",
+      "cardTextZhCN": "<b>发现</b>一张亡灵牌。消耗5份<b>残骸</b>，改为保留全部三张牌。",
+      "cardTextZhCNPlain": "发现一张亡灵牌。消耗5份残骸，改为保留全部三张牌。",
+      "id": "TLC_434",
+      "dbfId": 117430,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "古生物秘术",
+        "enUS": "Paleomancy"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>发现</b>一张亡灵牌。消耗5份<b>残骸</b>，改为保留全部三张牌。",
+        "enUS": "<b>Discover</b> an Undead. Spend 5 <b>Corpses</b> to keep all 3 instead.",
+        "zhCNPlain": "发现一张亡灵牌。消耗5份残骸，改为保留全部三张牌。",
+        "enUSPlain": "Discover an Undead. Spend 5 Corpses to keep all 3 instead."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 26,
+      "cardRank": 26,
+      "cardCode": "TLC_443",
+      "cardNameZhCN": "不情愿的饲养员",
+      "cardTextZhCN": "<b>复生</b>。<b>亡语：</b>召唤一只2/2并具有<b>嘲讽</b>的亡灵野兽。",
+      "cardTextZhCNPlain": "复生。亡语：召唤一只2/2并具有嘲讽的亡灵野兽。",
+      "id": "TLC_443",
+      "dbfId": 117666,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "不情愿的饲养员",
+        "enUS": "Reluctant Wrangler"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "REBORN"
+      ],
+      "text": {
+        "zhCN": "<b>复生</b>。<b>亡语：</b>召唤一只2/2并具有<b>嘲讽</b>的亡灵野兽。",
+        "enUS": "[x]<b>Reborn</b>\n<b>Deathrattle:</b> Summon a 2/2\nUndead Beast with <b>Taunt</b>.",
+        "zhCNPlain": "复生。亡语：召唤一只2/2并具有嘲讽的亡灵野兽。",
+        "enUSPlain": "[x]Reborn Deathrattle: Summon a 2/2 Undead Beast with Taunt."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 27,
+      "cardRank": 27,
+      "cardCode": "TLC_432",
+      "cardNameZhCN": "恐惧迅猛龙",
+      "cardTextZhCN": "<b>战吼：</b>抽一张法力值消耗小于或等于（3）点的<b>亡语</b>随从牌。<b>延系：</b>其法力值消耗变为（0）点。",
+      "cardTextZhCNPlain": "战吼：抽一张法力值消耗小于或等于（3）点的亡语随从牌。延系：其法力值消耗变为（0）点。",
+      "id": "TLC_432",
+      "dbfId": 117423,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "恐惧迅猛龙",
+        "enUS": "Dread Raptor"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>抽一张法力值消耗小于或等于（3）点的<b>亡语</b>随从牌。<b>延系：</b>其法力值消耗变为（0）点。",
+        "enUS": "<b>Battlecry:</b> Draw a <b>Deathrattle</b> minion that costs (3) or less. <b>Kindred:</b> It costs (0).",
+        "zhCNPlain": "战吼：抽一张法力值消耗小于或等于（3）点的亡语随从牌。延系：其法力值消耗变为（0）点。",
+        "enUSPlain": "Battlecry: Draw a Deathrattle minion that costs (3) or less. Kindred: It costs (0)."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 28,
+      "cardRank": 28,
+      "cardCode": "DINO_416",
+      "cardNameZhCN": "空角恐角龙",
+      "cardTextZhCN": "<b>突袭</b>。在一个友方随从死亡后，消耗3份<b>残骸</b>以获得<b>复生</b>。",
+      "cardTextZhCNPlain": "突袭。在一个友方随从死亡后，消耗3份残骸以获得复生。",
+      "id": "DINO_416",
+      "dbfId": 118558,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "空角恐角龙",
+        "enUS": "Hollow Direhorn"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>。在一个友方随从死亡后，消耗3份<b>残骸</b>以获得<b>复生</b>。",
+        "enUS": "<b>Rush</b>\nAfter a friendly minion dies, spend 3 <b>Corpses</b> to gain <b>Reborn</b>.",
+        "zhCNPlain": "突袭。在一个友方随从死亡后，消耗3份残骸以获得复生。",
+        "enUSPlain": "Rush After a friendly minion dies, spend 3 Corpses to gain Reborn."
+      },
+      "categories": [
+        "corpse_resource",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 29,
+      "cardRank": 29,
+      "cardCode": "TLC_436",
+      "cardNameZhCN": "重生的翼手龙",
+      "cardTextZhCN": "<b><b>突袭</b>。吸血</b>\n消耗<b>残骸</b>而非\n法力值。",
+      "cardTextZhCNPlain": "突袭。吸血 消耗残骸而非 法力值。",
+      "id": "TLC_436",
+      "dbfId": 117434,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "重生的翼手龙",
+        "enUS": "Reanimated Pterrordax"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [
+        "LIFESTEAL",
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b><b>突袭</b>。吸血</b>\n消耗<b>残骸</b>而非\n法力值。",
+        "enUS": "<b><b>Rush</b>, Lifesteal</b>\nCosts <b>Corpses</b> instead\nof Mana.",
+        "zhCNPlain": "突袭。吸血 消耗残骸而非 法力值。",
+        "enUSPlain": "Rush, Lifesteal Costs Corpses instead of Mana."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 30,
+      "cardRank": 30,
+      "cardCode": "TLC_401",
+      "cardNameZhCN": "寒骨剑龙",
+      "cardTextZhCN": "<b>亡语：</b>随机对三个敌人造成6点伤害。",
+      "cardTextZhCNPlain": "亡语：随机对三个敌人造成6点伤害。",
+      "id": "TLC_401",
+      "dbfId": 116376,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "寒骨剑龙",
+        "enUS": "Bonechill Stegodon"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机对三个敌人造成6点伤害。",
+        "enUS": "<b>Deathrattle:</b> Deal\n6 damage to three\nrandom enemies.",
+        "zhCNPlain": "亡语：随机对三个敌人造成6点伤害。",
+        "enUSPlain": "Deathrattle: Deal 6 damage to three random enemies."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 31,
+      "cardRank": 31,
+      "cardCode": "DINO_415",
+      "cardNameZhCN": "安布拉的故事",
+      "cardTextZhCN": "<b>发现</b>一个法力值消耗大于或等于（5）点的<b>亡语</b>随从，召唤该随从并触发其<b>亡语</b>。",
+      "cardTextZhCNPlain": "发现一个法力值消耗大于或等于（5）点的亡语随从，召唤该随从并触发其亡语。",
+      "id": "DINO_415",
+      "dbfId": 118555,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "安布拉的故事",
+        "enUS": "Story of Umbra"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "SPELL",
+      "cost": 7,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>发现</b>一个法力值消耗大于或等于（5）点的<b>亡语</b>随从，召唤该随从并触发其<b>亡语</b>。",
+        "enUS": "[x]<b>Discover</b> a <b>Deathrattle</b>\nminion that costs (5) or\nmore. Summon it and\ntrigger its <b>Deathrattle</b>.",
+        "zhCNPlain": "发现一个法力值消耗大于或等于（5）点的亡语随从，召唤该随从并触发其亡语。",
+        "enUSPlain": "[x]Discover a Deathrattle minion that costs (5) or more. Summon it and trigger its Deathrattle."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 32,
+      "cardRank": 32,
+      "cardCode": "TLC_810",
+      "cardNameZhCN": "高阶教徒赫雷恩",
+      "cardTextZhCN": "<b>战吼：</b>从你的牌库中召唤两个<b>亡语</b>随从，并使其互相攻击！",
+      "cardTextZhCNPlain": "战吼：从你的牌库中召唤两个亡语随从，并使其互相攻击！",
+      "id": "TLC_810",
+      "dbfId": 117231,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "高阶教徒赫雷恩",
+        "enUS": "High Cultist Herenn"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>从你的牌库中召唤两个<b>亡语</b>随从，并使其互相攻击！",
+        "enUS": "[x]<b>Battlecry:</b> Summon two\n<b>Deathrattle</b> minions from\nyour deck. They fight!",
+        "zhCNPlain": "战吼：从你的牌库中召唤两个亡语随从，并使其互相攻击！",
+        "enUSPlain": "[x]Battlecry: Summon two Deathrattle minions from your deck. They fight!"
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 33,
+      "cardRank": 33,
+      "cardCode": "TIME_613",
+      "cardNameZhCN": "时空冰封勇士",
+      "cardTextZhCN": "<b>亡语：</b>随机获取一张<b>传说</b>随从牌，其法力值消耗减少（1）点。",
+      "cardTextZhCNPlain": "亡语：随机获取一张传说随从牌，其法力值消耗减少（1）点。",
+      "id": "TIME_613",
+      "dbfId": 120481,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "时空冰封勇士",
+        "enUS": "Cryofrozen Champion"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机获取一张<b>传说</b>随从牌，其法力值消耗减少（1）点。",
+        "enUS": "<b>Deathrattle:</b> Get a random\n<b>Legendary</b> minion. Reduce its Cost by (1).",
+        "zhCNPlain": "亡语：随机获取一张传说随从牌，其法力值消耗减少（1）点。",
+        "enUSPlain": "Deathrattle: Get a random Legendary minion. Reduce its Cost by (1)."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 34,
+      "cardRank": 34,
+      "cardCode": "END_003",
+      "cardNameZhCN": "最终定局",
+      "cardTextZhCN": "抽一张亡灵牌。<b>灌注</b>你的英雄技能两次。",
+      "cardTextZhCNPlain": "抽一张亡灵牌。灌注你的英雄技能两次。",
+      "id": "END_003",
+      "dbfId": 121271,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "最终定局",
+        "enUS": "Finality"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "抽一张亡灵牌。<b>灌注</b>你的英雄技能两次。",
+        "enUS": "Draw an Undead. <b>Imbue</b> your Hero\nPower twice.",
+        "zhCNPlain": "抽一张亡灵牌。灌注你的英雄技能两次。",
+        "enUSPlain": "Draw an Undead. Imbue your Hero Power twice."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 35,
+      "cardRank": 35,
+      "cardCode": "TIME_618",
+      "cardNameZhCN": "永时收割者哈斯克",
+      "cardTextZhCN": "<b>战吼：</b>使你的英雄获得“<b>亡语：</b>消耗最多20份<b>残骸</b>，复活你的英雄并使其具有等量生命值。”",
+      "cardTextZhCNPlain": "战吼：使你的英雄获得“亡语：消耗最多20份残骸，复活你的英雄并使其具有等量生命值。”",
+      "id": "TIME_618",
+      "dbfId": 121000,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "永时收割者哈斯克",
+        "enUS": "Husk, Eternal Reaper"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>使你的英雄获得“<b>亡语：</b>消耗最多20份<b>残骸</b>，复活你的英雄并使其具有等量生命值。”",
+        "enUS": "[x]<b>Battlecry:</b> Give your hero\n\"<b>Deathrattle:</b> Spend up to\n20 <b>Corpses</b> to resurrect with\nthat much Health.\"",
+        "zhCNPlain": "战吼：使你的英雄获得“亡语：消耗最多20份残骸，复活你的英雄并使其具有等量生命值。”",
+        "enUSPlain": "[x]Battlecry: Give your hero \"Deathrattle: Spend up to 20 Corpses to resurrect with that much Health.\""
+      },
+      "categories": [
+        "corpse_resource",
+        "graveyard_pool",
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸",
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "corpse_count",
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 36,
+      "cardRank": 36,
+      "cardCode": "TIME_616",
+      "cardNameZhCN": "悼念成真",
+      "cardTextZhCN": "召唤在本局对战中死亡的法力值消耗最高的友方亡灵。",
+      "cardTextZhCNPlain": "召唤在本局对战中死亡的法力值消耗最高的友方亡灵。",
+      "id": "TIME_616",
+      "dbfId": 120209,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "悼念成真",
+        "enUS": "Memoriam Manifest"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "召唤在本局对战中死亡的法力值消耗最高的友方亡灵。",
+        "enUS": "Summon the highest Cost friendly Undead that died this game.",
+        "zhCNPlain": "召唤在本局对战中死亡的法力值消耗最高的友方亡灵。",
+        "enUSPlain": "Summon the highest Cost friendly Undead that died this game."
+      },
+      "categories": [
+        "graveyard_pool",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 37,
+      "cardRank": 37,
+      "cardCode": "TIME_619",
+      "cardNameZhCN": "墓地尊主塔兰吉",
+      "cardTextZhCN": "<b>奇闻</b>\n<b>战吼：</b>抽取邦桑迪<i>（如果他已经死亡则将其复活）</i>，选择并使其获得一项恩泽。",
+      "cardTextZhCNPlain": "奇闻 战吼：抽取邦桑迪（如果他已经死亡则将其复活），选择并使其获得一项恩泽。",
+      "id": "TIME_619",
+      "dbfId": 120183,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "墓地尊主塔兰吉",
+        "enUS": "Talanji of the Graves"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>奇闻</b>\n<b>战吼：</b>抽取邦桑迪<i>（如果他已经死亡则将其复活）</i>，选择并使其获得一项恩泽。",
+        "enUS": "[x]<b>Fabled.</b> <b>Battlecry:</b> Draw\nBwonsamdi <i>(or resurrect\nhim if he has died)</i>. Choose\na Boon to give him.",
+        "zhCNPlain": "奇闻 战吼：抽取邦桑迪（如果他已经死亡则将其复活），选择并使其获得一项恩泽。",
+        "enUSPlain": "[x]Fabled. Battlecry: Draw Bwonsamdi (or resurrect him if he has died). Choose a Boon to give him."
+      },
+      "categories": [
+        "graveyard_pool",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 38,
+      "cardRank": 38,
+      "cardCode": "CATA_464",
+      "cardNameZhCN": "黑翼实验品",
+      "cardTextZhCN": "<b>亡语：</b>获取一张法力值消耗为（2）的法术，该法术可以造成等同于本随从攻击力的伤害。",
+      "cardTextZhCNPlain": "亡语：获取一张法力值消耗为（2）的法术，该法术可以造成等同于本随从攻击力的伤害。",
+      "id": "CATA_464",
+      "dbfId": 122759,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "黑翼实验品",
+        "enUS": "Blackwing Experiment"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>获取一张法力值消耗为（2）的法术，该法术可以造成等同于本随从攻击力的伤害。",
+        "enUS": "[x]<b>Deathrattle:</b> Get a\n2-Cost spell that deals\nthis minion's Attack\ndamage.",
+        "zhCNPlain": "亡语：获取一张法力值消耗为（2）的法术，该法术可以造成等同于本随从攻击力的伤害。",
+        "enUSPlain": "[x]Deathrattle: Get a 2-Cost spell that deals this minion's Attack damage."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 39,
+      "cardRank": 39,
+      "cardCode": "CATA_471",
+      "cardNameZhCN": "塔兰吉的奋战",
+      "cardTextZhCN": "使你的随从获得\n“<b>亡语：</b>随机召唤一个法力值消耗为（4）的随从。”",
+      "cardTextZhCNPlain": "使你的随从获得 “亡语：随机召唤一个法力值消耗为（4）的随从。”",
+      "id": "CATA_471",
+      "dbfId": 122879,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "塔兰吉的奋战",
+        "enUS": "Talanji's Last Stand"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "使你的随从获得\n“<b>亡语：</b>随机召唤一个法力值消耗为（4）的随从。”",
+        "enUS": "[x]Give your minions\n\"<b>Deathrattle:</b> Summon a\nrandom 4-Cost minion.\"",
+        "zhCNPlain": "使你的随从获得 “亡语：随机召唤一个法力值消耗为（4）的随从。”",
+        "enUSPlain": "[x]Give your minions \"Deathrattle: Summon a random 4-Cost minion.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 40,
+      "cardRank": 40,
+      "cardCode": "CATA_465",
+      "cardNameZhCN": "投喂加餐",
+      "cardTextZhCN": "召唤五条5/4的亡灵幼龙。消耗8份<b>残骸</b>，使其获得<b>突袭</b>。",
+      "cardTextZhCNPlain": "召唤五条5/4的亡灵幼龙。消耗8份残骸，使其获得突袭。",
+      "id": "CATA_465",
+      "dbfId": 122760,
+      "cardClass": "DEATHKNIGHT",
+      "sourceCardClass": "NEUTRAL",
+      "rawClassValue": 1,
+      "classCorrection": "NEUTRAL -> DEATHKNIGHT",
+      "name": {
+        "zhCN": "投喂加餐",
+        "enUS": "Chow Down"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 8,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "召唤五条5/4的亡灵幼龙。消耗8份<b>残骸</b>，使其获得<b>突袭</b>。",
+        "enUS": "[x]Summon five 5/4 Undead\nDrakes. Spend 8 <b>Corpses</b>\nto give them <b>Rush</b>.",
+        "zhCNPlain": "召唤五条5/4的亡灵幼龙。消耗8份残骸，使其获得突袭。",
+        "enUSPlain": "[x]Summon five 5/4 Undead Drakes. Spend 8 Corpses to give them Rush."
+      },
+      "categories": [
+        "corpse_resource"
+      ],
+      "matchReasons": [
+        "text/mechanics references Corpse/残骸"
+      ],
+      "trackingHints": [
+        "corpse_count"
+      ],
+      "reviewPriority": "high"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

@@ -52,6 +52,10 @@ export interface CardPlayedEvent {
   entityId: number;
   /** Wall-clock ms; the registry stamps `triggeredAt` from this. */
   timestamp: number;
+  /** Optional CardDb / Power.log metadata for match-state counters. */
+  cardType?: string;
+  spellSchool?: string;
+  races?: readonly string[];
 }
 
 /**

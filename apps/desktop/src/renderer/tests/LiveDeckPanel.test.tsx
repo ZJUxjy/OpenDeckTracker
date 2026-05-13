@@ -16,6 +16,7 @@ function makeSnapshot(overrides: {
   friendlyHand?: string[];
   boardAttack?: DeckTrackerSnapshot['boardAttack'];
   opposingHero?: DeckTrackerSnapshot['opposingHero'];
+  extraDisplay?: DeckTrackerSnapshot['extraDisplay'];
 }): DeckTrackerSnapshot {
   return {
     phase: 'IN_MATCH',
@@ -45,6 +46,15 @@ function makeSnapshot(overrides: {
     },
     opponentClass: null,
     friendlyGraveyard: [],
+    extraDisplay: overrides.extraDisplay ?? {
+      counters: {},
+      pools: {
+        friendlyDeadDemonsThisGameUnique: [],
+        friendlyDeadMinionsThisGameUnique: [],
+      },
+      infuseProgressByCardId: {},
+      friendlyBoard: [],
+    },
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
     friendlyEffects: [],
     opposingEffects: [],
@@ -57,7 +67,13 @@ function makeSnapshot(overrides: {
 }
 
 /** Card definition stubs keyed by cardId. */
-const CARD_DEFS: Record<string, { name: string; cost?: number; rarity?: string }> = {
+const CARD_DEFS: Record<string, {
+  name: string;
+  cost?: number;
+  rarity?: string;
+  type?: string;
+  spellSchool?: string;
+}> = {
   CS2_106: { name: 'Fen Creeper', cost: 5, rarity: 'COMMON' },
   CS2_024: { name: 'Frostbolt', cost: 2, rarity: 'COMMON' },
   CS2_029: { name: 'Fireball', cost: 4, rarity: 'COMMON' },
@@ -71,6 +87,12 @@ const CARD_DEFS: Record<string, { name: string; cost?: number; rarity?: string }
   COST1: { name: 'Middle Card', cost: 1, rarity: 'COMMON' },
   COST5: { name: 'Right Card', cost: 5, rarity: 'COMMON' },
   COST10: { name: 'Left Card', cost: 10, rarity: 'COMMON' },
+  CORE_BT_427: { name: 'Soul Feast', cost: 1, rarity: 'RARE', type: 'SPELL' },
+  CORE_MAW_012: { name: 'Hellfire Infused', cost: 5, rarity: 'FREE', type: 'SPELL' },
+  CATA_529: { name: 'Felfused Fel-Fisher', cost: 6, rarity: 'RARE', type: 'MINION' },
+  CATA_527: { name: 'Nespirah', cost: 3, rarity: 'LEGENDARY', type: 'LOCATION' },
+  FEL_SPELL: { name: 'Fel Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'FEL' },
+  NATURE_SPELL: { name: 'Nature Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'NATURE' },
 };
 
 // Mock useCardDef to return stubs from CARD_DEFS.
@@ -86,7 +108,8 @@ vi.mock('../src/hooks/use-card-def', () => ({
       cardClass: 'MAGE',
       ...(def.rarity ? { rarity: def.rarity } : {}),
       set: 'TEST',
-      type: 'SPELL',
+      type: def.type ?? 'SPELL',
+      ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
       collectible: true,
     };
   },
@@ -111,7 +134,8 @@ describe('LiveDeckPanel sorting', () => {
             cardClass: 'MAGE',
             ...(def.rarity ? { rarity: def.rarity } : {}),
             set: 'TEST',
-            type: 'SPELL',
+            type: def.type ?? 'SPELL',
+            ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
             collectible: true,
           };
         }),
@@ -229,7 +253,7 @@ describe('LiveDeckPanel sorting', () => {
     // Mock card defs for the filler cards
     for (let i = 0; i < 18; i++) {
       const id = `CARD_${String(i).padStart(3, '0')}`;
-      (CARD_DEFS as Record<string, { name: string; cost: number; rarity: string }>)[id] = {
+      CARD_DEFS[id] = {
         name: `Filler ${i}`,
         cost: i + 1,
         rarity: 'COMMON',
@@ -328,6 +352,140 @@ describe('LiveDeckPanel sorting', () => {
     });
   });
 
+  it('renders reviewed extra-display counters on deck and hand rows', async () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'CATA_529', count: 1 },
+        { cardId: 'CORE_BT_427', count: 1 },
+      ],
+      friendlyHand: ['CORE_BT_427'],
+      extraDisplay: {
+        counters: {
+          felSpellsCastThisGame: 3,
+          friendlyMinionsDiedThisTurn: 2,
+        },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        infuseProgressByCardId: {},
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('3费').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('死 2').length).toBeGreaterThan(0);
+      expect(
+        screen.getByText('本局已施放邪能法术：3；费用减少 3；当前费用 3'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getAllByText('本回合友方随从死亡：2；预计抽牌：2').length,
+      ).toBeGreaterThan(0);
+    });
+  });
+
+  it('shows demon-scoped Infuse progress on Hellfire Infused', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CORE_MAW_012', count: 1 }],
+      friendlyHand: ['CORE_MAW_012'],
+      extraDisplay: {
+        counters: { friendlyDemonDeathsThisGame: 2 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [
+            { cardId: 'IMP_TOKEN', count: 2 },
+            { cardId: 'VOIDWALKER', count: 1 },
+          ],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        infuseProgressByCardId: {
+          CORE_MAW_012: { friendlyDeaths: 4, friendlyDemonDeaths: 2 },
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText('注能 2/3').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('highlights Fel spells when a friendly Fel trigger is on board', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'FEL_SPELL', count: 1 }],
+      friendlyHand: ['FEL_SPELL'],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        infuseProgressByCardId: {},
+        friendlyBoard: [
+          {
+            entityId: 100,
+            cardId: 'CATA_527',
+            zone: 'PLAY',
+            order: 1,
+            created: false,
+          },
+        ],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      const handRow = within(screen.getByTestId('friendly-hand-section'))
+        .getAllByTestId('friendly-hand-row')[0]!;
+      expect(handRow).toHaveAttribute('data-extra-display', 'active');
+      expect(within(handRow).getByText('邪能')).toBeInTheDocument();
+      expect(handRow).toHaveTextContent('将触发：奈瑟匹拉，蒙难古灵');
+    });
+  });
+
+  it('highlights Nature spells when a friendly Nature trigger is on board', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'NATURE_SPELL', count: 1 }],
+      friendlyHand: ['NATURE_SPELL'],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        infuseProgressByCardId: {},
+        friendlyBoard: [
+          {
+            entityId: 101,
+            cardId: 'CORE_REV_314',
+            zone: 'PLAY',
+            order: 1,
+            created: false,
+          },
+        ],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      const handRow = within(screen.getByTestId('friendly-hand-section'))
+        .getAllByTestId('friendly-hand-row')[0]!;
+      expect(handRow).toHaveAttribute('data-extra-display', 'active');
+      expect(within(handRow).getByText('自然')).toBeInTheDocument();
+      expect(handRow).toHaveTextContent('将触发：灌木巨龙托匹奥');
+    });
+  });
+
   it('highlights friendly board attack in green when it is below opposing hero effective health', () => {
     const snap = makeSnapshot({
       original: [{ cardId: 'CS2_029', count: 1 }],
@@ -373,7 +531,8 @@ describe('LiveDeckPanel row rarity + portrait', () => {
             cardClass: 'MAGE',
             ...(def.rarity ? { rarity: def.rarity } : {}),
             set: 'TEST',
-            type: 'SPELL',
+            type: def.type ?? 'SPELL',
+            ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
             collectible: true,
           };
         }),

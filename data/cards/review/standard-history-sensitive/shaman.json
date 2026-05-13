@@ -1,0 +1,1271 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "SHAMAN",
+    "name": {
+      "enUS": "Shaman",
+      "zhCN": "萨满祭司"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 25,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_REV_920",
+      "cardNameZhCN": "可信的伪装",
+      "cardTextZhCN": "将一个友方随从变形成为法力值消耗增加（2）点的随从。<b>注能（@）：</b>改为变形所有友方随从。",
+      "cardTextZhCNPlain": "将一个友方随从变形成为法力值消耗增加（2）点的随从。注能（）：改为变形所有友方随从。",
+      "id": "CORE_REV_920",
+      "dbfId": 118146,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "可信的伪装",
+        "enUS": "Convincing Disguise"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "将一个友方随从变形成为法力值消耗增加（2）点的随从。<b>注能（@）：</b>改为变形所有友方随从。",
+        "enUS": "[x]Transform a friendly minion\ninto one that costs (2) more.\n<b>Infuse (@):</b> Transform all\nfriendly minions instead.",
+        "zhCNPlain": "将一个友方随从变形成为法力值消耗增加（2）点的随从。注能（）：改为变形所有友方随从。",
+        "enUSPlain": "[x]Transform a friendly minion into one that costs (2) more. Infuse (): Transform all friendly minions instead."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CORE_MAW_003",
+      "cardNameZhCN": "图腾物证",
+      "cardTextZhCN": "选择一个基础图腾并召唤它。\n<b>注能（@个图腾）：</b>改为召唤全部4个。",
+      "cardTextZhCNPlain": "选择一个基础图腾并召唤它。 注能（个图腾）：改为召唤全部4个。",
+      "id": "CORE_MAW_003",
+      "dbfId": 118014,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "图腾物证",
+        "enUS": "Totemic Evidence"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "选择一个基础图腾并召唤它。\n<b>注能（@个图腾）：</b>改为召唤全部4个。",
+        "enUS": "Choose a basic Totem and summon it.\n<b>Infuse (@ Totems):</b>\nSummon all 4 instead.",
+        "zhCNPlain": "选择一个基础图腾并召唤它。 注能（个图腾）：改为召唤全部4个。",
+        "enUSPlain": "Choose a basic Totem and summon it. Infuse ( Totems): Summon all 4 instead."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CORE_BT_115",
+      "cardNameZhCN": "沼泽之子",
+      "cardTextZhCN": "<b>战吼：</b>如果你在上回合施放过法术，<b>发现</b>一张法术牌。",
+      "cardTextZhCNPlain": "战吼：如果你在上回合施放过法术，发现一张法术牌。",
+      "id": "CORE_BT_115",
+      "dbfId": 120464,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "沼泽之子",
+        "enUS": "Marshspawn"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>如果你在上回合施放过法术，<b>发现</b>一张法术牌。",
+        "enUS": "<b>Battlecry:</b> If you cast\na spell last turn,\n<b>Discover</b> a spell.",
+        "zhCNPlain": "战吼：如果你在上回合施放过法术，发现一张法术牌。",
+        "enUSPlain": "Battlecry: If you cast a spell last turn, Discover a spell."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_REV_935",
+      "cardNameZhCN": "派对图腾",
+      "cardTextZhCN": "在你的回合结束时，随机召唤一个基础图腾。<b>注能（@）：</b>改为召唤两个。",
+      "cardTextZhCNPlain": "在你的回合结束时，随机召唤一个基础图腾。注能（）：改为召唤两个。",
+      "id": "CORE_REV_935",
+      "dbfId": 118154,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "派对图腾",
+        "enUS": "Party Favor Totem"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "在你的回合结束时，随机召唤一个基础图腾。<b>注能（@）：</b>改为召唤两个。",
+        "enUS": "[x]At the end of your turn, \nsummon a random basic \nTotem. <b>Infuse (@):</b> \nSummon two instead.",
+        "zhCNPlain": "在你的回合结束时，随机召唤一个基础图腾。注能（）：改为召唤两个。",
+        "enUSPlain": "[x]At the end of your turn, summon a random basic Totem. Infuse (): Summon two instead."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CORE_REV_921",
+      "cardNameZhCN": "锻石师",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战的剩余时间内，你的图腾拥有+2攻击力。",
+      "cardTextZhCNPlain": "战吼：在本局对战的剩余时间内，你的图腾拥有+2攻击力。",
+      "id": "CORE_REV_921",
+      "dbfId": 118147,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "锻石师",
+        "enUS": "The Stonewright"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本局对战的剩余时间内，你的图腾拥有+2攻击力。",
+        "enUS": "<b>Battlecry:</b> For the rest of the game, your Totems have +2 Attack.",
+        "zhCNPlain": "战吼：在本局对战的剩余时间内，你的图腾拥有+2攻击力。",
+        "enUSPlain": "Battlecry: For the rest of the game, your Totems have +2 Attack."
+      },
+      "categories": [
+        "persistent_global_effect"
+      ],
+      "matchReasons": [
+        "text creates a rest-of-game effect"
+      ],
+      "trackingHints": [
+        "rest_of_game_effect_registry"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "CORE_OG_028",
+      "cardNameZhCN": "深渊魔物",
+      "cardTextZhCN": "<b>嘲讽</b>\n在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "嘲讽 在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "id": "CORE_OG_028",
+      "dbfId": 102209,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "深渊魔物",
+        "enUS": "Thing from Below"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>\n在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+        "enUS": "[x]<b>Taunt</b>\nCosts (1) less for each\nTotem you've summoned\nthis game.",
+        "zhCNPlain": "嘲讽 在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "[x]Taunt Costs (1) less for each Totem you've summoned this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "Core_UNG_211",
+      "cardNameZhCN": "荒蛮之主卡利莫斯",
+      "cardTextZhCN": "<b>战吼：</b>如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
+      "cardTextZhCNPlain": "战吼：如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
+      "id": "Core_UNG_211",
+      "dbfId": 111381,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "荒蛮之主卡利莫斯",
+        "enUS": "Kalimos, Primal Lord"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
+        "enUS": "[x]<b>Battlecry:</b> If you played an\nElemental last turn, cast an\nElemental Invocation.",
+        "zhCNPlain": "战吼：如果你在上个回合使用过元素牌，则施放一个元素祈咒。",
+        "enUSPlain": "[x]Battlecry: If you played an Elemental last turn, cast an Elemental Invocation."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "CORE_REV_838",
+      "cardNameZhCN": "图腾巨像",
+      "cardTextZhCN": "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+      "id": "CORE_REV_838",
+      "dbfId": 118134,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "图腾巨像",
+        "enUS": "Gigantotem"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 10,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+        "enUS": "Costs (1) less for each Totem you've summoned this game.",
+        "zhCNPlain": "在本局对战中，你每召唤一个图腾，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "Costs (1) less for each Totem you've summoned this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "CORE_ICC_090",
+      "cardNameZhCN": "雪怒巨人",
+      "cardTextZhCN": "在本局对战中，你每<b>过载</b>一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "id": "CORE_ICC_090",
+      "dbfId": 95756,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "雪怒巨人",
+        "enUS": "Snowfury Giant"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 11,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在本局对战中，你每<b>过载</b>一个法力水晶，本牌的法力值消耗便减少（1）点。",
+        "enUS": "Costs (1) less for each Mana Crystal you've <b><b>Overload</b>ed</b> this game.",
+        "zhCNPlain": "在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "Costs (1) less for each Mana Crystal you've Overloaded this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "EDR_231",
+      "cardNameZhCN": "守护巨龙之拥",
+      "cardTextZhCN": "恢复#4点生命值。抽一张牌。<b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "恢复4点生命值。抽一张牌。灌注你的英雄技能。",
+      "id": "EDR_231",
+      "dbfId": 114367,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "守护巨龙之拥",
+        "enUS": "Aspect's Embrace"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "恢复#4点生命值。抽一张牌。<b>灌注</b>你的英雄技能。",
+        "enUS": "[x]Restore #4 Health.\nDraw a card.\n<b>Imbue</b> your Hero Power.",
+        "zhCNPlain": "恢复4点生命值。抽一张牌。灌注你的英雄技能。",
+        "enUSPlain": "[x]Restore 4 Health. Draw a card. Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "EDR_518",
+      "cardNameZhCN": "活体园林",
+      "cardTextZhCN": "<b>战吼：</b><b>灌注</b>你的英雄技能。使你手牌中一张随从牌的法力值消耗减少（1）点。",
+      "cardTextZhCNPlain": "战吼：灌注你的英雄技能。使你手牌中一张随从牌的法力值消耗减少（1）点。",
+      "id": "EDR_518",
+      "dbfId": 114289,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "活体园林",
+        "enUS": "Living Garden"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b><b>灌注</b>你的英雄技能。使你手牌中一张随从牌的法力值消耗减少（1）点。",
+        "enUS": "[x]<b>Battlecry:</b> <b>Imbue</b> your Hero\nPower. Reduce the Cost of a\n_minion in your hand by (1).",
+        "zhCNPlain": "战吼：灌注你的英雄技能。使你手牌中一张随从牌的法力值消耗减少（1）点。",
+        "enUSPlain": "[x]Battlecry: Imbue your Hero Power. Reduce the Cost of a _minion in your hand by (1)."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "EDR_477",
+      "cardNameZhCN": "明根捕食花",
+      "cardTextZhCN": "<b>嘲讽</b>。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "嘲讽。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
+      "id": "EDR_477",
+      "dbfId": 114920,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "明根捕食花",
+        "enUS": "Glowroot Lure"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "FREE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
+        "enUS": "[x]<b>Taunt</b>. Costs (1) less for\neach time you used your\nHero_Power this game.",
+        "zhCNPlain": "嘲讽。在本局对战中，你每使用一次英雄技能，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "[x]Taunt. Costs (1) less for each time you used your Hero_Power this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "EDR_238",
+      "cardNameZhCN": "麦琳瑟拉",
+      "cardTextZhCN": "<b>战吼：</b>复活所有\n法力值消耗大于或等于（8）点的不同的友方随从。",
+      "cardTextZhCNPlain": "战吼：复活所有 法力值消耗大于或等于（8）点的不同的友方随从。",
+      "id": "EDR_238",
+      "dbfId": 114284,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "麦琳瑟拉",
+        "enUS": "Merithra"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>复活所有\n法力值消耗大于或等于（8）点的不同的友方随从。",
+        "enUS": "[x]<b>Battlecry:</b> Resurrect all\ndifferent friendly minions\nthat cost (8) or more.",
+        "zhCNPlain": "战吼：复活所有 法力值消耗大于或等于（8）点的不同的友方随从。",
+        "enUSPlain": "[x]Battlecry: Resurrect all different friendly minions that cost (8) or more."
+      },
+      "categories": [
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "FIR_778",
+      "cardNameZhCN": "毁灭化身",
+      "cardTextZhCN": "<b>嘲讽</b>\n<b>亡语：</b>对所有敌方随从造成9点伤害。",
+      "cardTextZhCNPlain": "嘲讽 亡语：对所有敌方随从造成9点伤害。",
+      "id": "FIR_778",
+      "dbfId": 117294,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "毁灭化身",
+        "enUS": "Avatar of Destruction"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 9,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>嘲讽</b>\n<b>亡语：</b>对所有敌方随从造成9点伤害。",
+        "enUS": "[x]<b>Taunt</b>\n<b>Deathrattle:</b> Deal 9 damage\nto all enemy minions.",
+        "zhCNPlain": "嘲讽 亡语：对所有敌方随从造成9点伤害。",
+        "enUSPlain": "[x]Taunt Deathrattle: Deal 9 damage to all enemy minions."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "TLC_464",
+      "cardNameZhCN": "登山地图",
+      "cardTextZhCN": "<b>发现</b>一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
+      "cardTextZhCNPlain": "发现一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
+      "id": "TLC_464",
+      "dbfId": 118225,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "登山地图",
+        "enUS": "Mountain Map"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>发现</b>一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
+        "enUS": "[x]<b>Discover</b> a minion with\na type you haven't played.\nIf you play it this turn, also\npick one of the others.",
+        "zhCNPlain": "发现一张你未使用过的类型的随从牌，如果你在本回合中使用该牌，再从其余选项中选择一张。",
+        "enUSPlain": "[x]Discover a minion with a type you haven't played. If you play it this turn, also pick one of the others."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "TLC_225",
+      "cardNameZhCN": "烬鳍鱼人",
+      "cardTextZhCN": "<b>亡语：</b>召唤一个2/1的炽烈烬火。",
+      "cardTextZhCNPlain": "亡语：召唤一个2/1的炽烈烬火。",
+      "id": "TLC_225",
+      "dbfId": 117612,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "烬鳍鱼人",
+        "enUS": "Cinderfin"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>召唤一个2/1的炽烈烬火。",
+        "enUS": "<b>Deathrattle:</b> Summon a 2/1 Sizzling Cinder.",
+        "zhCNPlain": "亡语：召唤一个2/1的炽烈烬火。",
+        "enUSPlain": "Deathrattle: Summon a 2/1 Sizzling Cinder."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 17,
+      "cardRank": 17,
+      "cardCode": "TLC_482",
+      "cardNameZhCN": "熔爪巨龙",
+      "cardTextZhCN": "<b>战吼：</b>召唤两个2/1的炽烈烬火。<b>延系：</b>触发你的炽烈烬火的\n<b>亡语</b>。",
+      "cardTextZhCNPlain": "战吼：召唤两个2/1的炽烈烬火。延系：触发你的炽烈烬火的 亡语。",
+      "id": "TLC_482",
+      "dbfId": 120344,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "熔爪巨龙",
+        "enUS": "Slagclaw"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>召唤两个2/1的炽烈烬火。<b>延系：</b>触发你的炽烈烬火的\n<b>亡语</b>。",
+        "enUS": "[x]<b>Battlecry:</b> Summon two\n2/1 Sizzling Cinders.\n<b>Kindred:</b> Trigger your Sizzling\nCinders' <b>Deathrattles.</b>",
+        "zhCNPlain": "战吼：召唤两个2/1的炽烈烬火。延系：触发你的炽烈烬火的 亡语。",
+        "enUSPlain": "[x]Battlecry: Summon two 2/1 Sizzling Cinders. Kindred: Trigger your Sizzling Cinders' Deathrattles."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 18,
+      "cardRank": 18,
+      "cardCode": "TIME_213",
+      "cardNameZhCN": "始源监督者",
+      "cardTextZhCN": "<b>战吼：</b>如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
+      "cardTextZhCNPlain": "战吼：如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
+      "id": "TIME_213",
+      "dbfId": 120437,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "始源监督者",
+        "enUS": "Primordial Overseer"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
+        "enUS": "[x]<b>Battlecry:</b> If you've cast a\nNature spell while holding\nthis, gain +1/+1 and\ndraw a card.",
+        "zhCNPlain": "战吼：如果你在本牌在你手中时施放过自然法术，获得+1/+1并抽一张牌。",
+        "enUSPlain": "[x]Battlecry: If you've cast a Nature spell while holding this, gain +1/+1 and draw a card."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 19,
+      "cardRank": 19,
+      "cardCode": "TIME_013",
+      "cardNameZhCN": "先知者沃",
+      "cardTextZhCN": "<b>扰魔</b>。在你施放一个法术后，<b>发现</b>一张来自过去的自然法术牌。",
+      "cardTextZhCNPlain": "扰魔。在你施放一个法术后，发现一张来自过去的自然法术牌。",
+      "id": "TIME_013",
+      "dbfId": 119686,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "先知者沃",
+        "enUS": "Farseer Wo"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "text": {
+        "zhCN": "<b>扰魔</b>。在你施放一个法术后，<b>发现</b>一张来自过去的自然法术牌。",
+        "enUS": "[x]<b>Elusive</b>\nAfter you cast a spell,\n<b>Discover</b> a Nature spell\nfrom the past.",
+        "zhCNPlain": "扰魔。在你施放一个法术后，发现一张来自过去的自然法术牌。",
+        "enUSPlain": "[x]Elusive After you cast a spell, Discover a Nature spell from the past."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 20,
+      "cardRank": 20,
+      "cardCode": "TIME_209",
+      "cardNameZhCN": "高山之王穆拉丁",
+      "cardTextZhCN": "<b>奇闻</b>\n<b>突袭</b>。<b>战吼：</b>为本随从装备高山之王的战锤！<b>亡语：</b>将该战锤置入你的手牌。",
+      "cardTextZhCNPlain": "奇闻 突袭。战吼：为本随从装备高山之王的战锤！亡语：将该战锤置入你的手牌。",
+      "id": "TIME_209",
+      "dbfId": 119643,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "高山之王穆拉丁",
+        "enUS": "Muradin, High King"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE",
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>奇闻</b>\n<b>突袭</b>。<b>战吼：</b>为本随从装备高山之王的战锤！<b>亡语：</b>将该战锤置入你的手牌。",
+        "enUS": "[x]<b>Fabled</b>, <b>Rush</b>. <b>Battlecry:</b>\nBring the High King's\nHammer to ME! <b>Deathrattle:</b>\nAdd it to your hand.",
+        "zhCNPlain": "奇闻 突袭。战吼：为本随从装备高山之王的战锤！亡语：将该战锤置入你的手牌。",
+        "enUSPlain": "[x]Fabled, Rush. Battlecry: Bring the High King's Hammer to ME! Deathrattle: Add it to your hand."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 21,
+      "cardRank": 21,
+      "cardCode": "END_030",
+      "cardNameZhCN": "失控龙蛙",
+      "cardTextZhCN": "<b>扰魔</b>。<b>嘲讽</b>。在本局对战中，你每<b>过载</b>一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "扰魔。嘲讽。在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
+      "id": "END_030",
+      "dbfId": 121193,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "失控龙蛙",
+        "enUS": "Haywire Hornswog"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "text": {
+        "zhCN": "<b>扰魔</b>。<b>嘲讽</b>。在本局对战中，你每<b>过载</b>一个法力水晶，本牌的法力值消耗便减少（1）点。",
+        "enUS": "[x]<b>Elusive,</b> <b>Taunt</b>\nCosts (1) less for each\nMana Crystal you've\n_<b>Overloaded</b> this game.",
+        "zhCNPlain": "扰魔。嘲讽。在本局对战中，你每过载一个法力水晶，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "[x]Elusive, Taunt Costs (1) less for each Mana Crystal you've _Overloaded this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 22,
+      "cardRank": 22,
+      "cardCode": "CATA_563",
+      "cardNameZhCN": "雷鸣流云",
+      "cardTextZhCN": "<b>战吼：</b>选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。<b>亡语：</b>施放该法术。",
+      "cardTextZhCNPlain": "战吼：选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。亡语：施放该法术。",
+      "id": "CATA_563",
+      "dbfId": 122950,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "雷鸣流云",
+        "enUS": "Crackling Cloudstrider"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。<b>亡语：</b>施放该法术。",
+        "enUS": "[x]<b>Battlecry:</b> Choose a spell\nin your hand that costs\n(4) or less to absorb. \n<b>Deathrattle:</b> Cast it.",
+        "zhCNPlain": "战吼：选择并吸收你手牌中一张法力值消耗小于或等于（4）点的法术牌。亡语：施放该法术。",
+        "enUSPlain": "[x]Battlecry: Choose a spell in your hand that costs (4) or less to absorb. Deathrattle: Cast it."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 23,
+      "cardRank": 23,
+      "cardCode": "CATA_567",
+      "cardNameZhCN": "升腾",
+      "cardTextZhCN": "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
+      "cardTextZhCNPlain": "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
+      "id": "CATA_567",
+      "dbfId": 122963,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "升腾",
+        "enUS": "Ascendance"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
+        "enUS": "[x]Transform all friendly\nminions into ones that cost\n(1) more. They summon\nthe originals when they die.",
+        "zhCNPlain": "将所有友方随从变形成为法力值消耗增加（1）点的随从。当这些随从死亡时，召唤原随从。",
+        "enUSPlain": "[x]Transform all friendly minions into ones that cost (1) more. They summon the originals when they die."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 24,
+      "cardRank": 24,
+      "cardCode": "CATA_724",
+      "cardNameZhCN": "缚风者",
+      "cardTextZhCN": "<b>亡语：</b>解锁你<b>过载</b>的法力水晶。\n<b>过载：</b>（3）",
+      "cardTextZhCNPlain": "亡语：解锁你过载的法力水晶。 过载：（3）",
+      "id": "CATA_724",
+      "dbfId": 122642,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "缚风者",
+        "enUS": "Stormbinder"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "OVERLOAD"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>解锁你<b>过载</b>的法力水晶。\n<b>过载：</b>（3）",
+        "enUS": "[x]<b>Deathrattle:</b> Unlock your\n<b>Overloaded</b> Mana Crystals.\n<b>Overload:</b> (3)",
+        "zhCNPlain": "亡语：解锁你过载的法力水晶。 过载：（3）",
+        "enUSPlain": "[x]Deathrattle: Unlock your Overloaded Mana Crystals. Overload: (3)"
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 25,
+      "cardRank": 25,
+      "cardCode": "CATA_568",
+      "cardNameZhCN": "穆拉丁的奋战",
+      "cardTextZhCN": "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
+      "id": "CATA_568",
+      "dbfId": 122999,
+      "cardClass": "SHAMAN",
+      "sourceCardClass": "SHAMAN",
+      "rawClassValue": 8,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "穆拉丁的奋战",
+        "enUS": "Muradin's Last Stand"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 9,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
+        "enUS": "Draw 2 cards. Costs (1) less for each time a friendly character attacked this game.",
+        "zhCNPlain": "抽两张牌。在本局对战中，友方角色每攻击过一次，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "Draw 2 cards. Costs (1) less for each time a friendly character attacked this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

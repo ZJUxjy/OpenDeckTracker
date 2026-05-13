@@ -8,6 +8,7 @@ import {
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
   type ExtractCtx,
+  type ExtraDisplayCardMetadata,
   type HeroAttackState,
   type HeroClass,
   type HeroVitals,
@@ -98,6 +99,7 @@ function maybeWriteTrackerTrace(snapshot: DeckTrackerSnapshot): void {
       graveyard: snapshot.opponent.graveyard,
     },
     friendlyGraveyard: snapshot.friendlyGraveyard,
+    extraDisplay: snapshot.extraDisplay,
     friendlyEffects: snapshot.friendlyEffects,
     opposingEffects: snapshot.opposingEffects,
   };
@@ -164,6 +166,19 @@ function cardClassLookup(cardId: string): HeroClass | null {
     return heroPrefixCache.get(m[1]!) ?? null;
   }
   return null;
+}
+
+function cardMetadataLookup(cardId: string): ExtraDisplayCardMetadata | null {
+  if (!cachedCardDb) return null;
+  const card = cachedCardDb.findById(cardId);
+  if (!card) return null;
+  return {
+    type: card.type,
+    ...(card.spellSchool !== undefined ? { spellSchool: card.spellSchool } : {}),
+    ...(card.races !== undefined ? { races: card.races } : {}),
+    ...(card.mechanics !== undefined ? { mechanics: card.mechanics } : {}),
+    ...(card.cost !== undefined ? { cost: card.cost } : {}),
+  };
 }
 
 /**
@@ -447,6 +462,7 @@ export function startDeckTracker(): void {
     boardAttackContextProvider: buildBoardAttackContext,
     cardClassLookup,
     opponentCardSuppressor: isStartOfGameDisappearCard,
+    cardMetadataLookup,
   });
   // Live detector that turns the upstream PowerEvent stream into
   // `card:played` calls on the tracker's global-effects registry.
@@ -575,6 +591,10 @@ export function forwardPowerEventToDeckTracker(
     if (phase === 'live') {
       setLiveMatchActive(true);
     }
+  }
+  if (event.type === 'tag-change' && event.entity === 'GameEntity' && event.tag === 'TURN') {
+    const turn = numericTag(event.value);
+    if (turn !== undefined) tracker?.recordTurnChange(turn);
   }
   pushPowerEvent(event);
   const logUpdates = logUpdatesFromPowerEvent(event);

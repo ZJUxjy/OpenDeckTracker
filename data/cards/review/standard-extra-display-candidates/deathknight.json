@@ -1,0 +1,469 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
+    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+    "source":  {
+                   "inputDir":  "data/cards/review/standard-history-sensitive",
+                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+               },
+    "class":  {
+                  "id":  "DEATHKNIGHT",
+                  "name":  {
+                               "enUS":  "Death Knight",
+                               "zhCN":  "æ­»äº¡éª‘å£«"
+                           }
+              },
+    "count":  14,
+    "cards":  [
+                  {
+                      "rank":  5,
+                      "sourceRank":  5,
+                      "cardCode":  "RLK_101",
+                      "cardNameZhCN":  "解冻",
+                      "cardTextZhCN":  "抽一张牌。消耗2份\u003cb\u003e残骸\u003c/b\u003e，再抽一张。",
+                      "cardTextZhCNPlain":  "抽一张牌。消耗2份残骸，再抽一张。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "SPELL",
+                      "cost":  2,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.RLK_101"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  6,
+                      "sourceRank":  6,
+                      "cardCode":  "CORE_RLK_051",
+                      "cardNameZhCN":  "吸血鬼之血",
+                      "cardTextZhCN":  "使你的英雄获得+5生命值。消耗3份\u003cb\u003e残骸\u003c/b\u003e，多获得5点并抽一张牌。",
+                      "cardTextZhCNPlain":  "使你的英雄获得+5生命值。消耗3份残骸，多获得5点并抽一张牌。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "SPELL",
+                      "cost":  2,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CORE_RLK_051"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  10,
+                      "sourceRank":  10,
+                      "cardCode":  "CORE_RLK_504",
+                      "cardNameZhCN":  "僵尸新娘",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e消耗最多10份\u003cb\u003e残骸\u003c/b\u003e，召唤一个攻击力和生命值等同于消耗残骸数并具有\u003cb\u003e嘲讽\u003c/b\u003e的复活的新郎。",
+                      "cardTextZhCNPlain":  "战吼：消耗最多10份残骸，召唤一个攻击力和生命值等同于消耗残骸数并具有嘲讽的复活的新郎。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CORE_RLK_504"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  11,
+                      "sourceRank":  11,
+                      "cardCode":  "CORE_RLK_035",
+                      "cardNameZhCN":  "邪爆",
+                      "cardTextZhCN":  "引爆一份\u003cb\u003e残骸\u003c/b\u003e，对所有随从造成$1点伤害。如果有随从存活，重复此效果。",
+                      "cardTextZhCNPlain":  "引爆一份残骸，对所有随从造成1点伤害。如果有随从存活，重复此效果。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "SPELL",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CORE_RLK_035"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  14,
+                      "sourceRank":  14,
+                      "cardCode":  "RLK_085",
+                      "cardNameZhCN":  "玛洛加尔领主",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e将你的所有\u003cb\u003e残骸\u003c/b\u003e复活为1/1并具有\u003cb\u003e突袭\u003c/b\u003e的复活的傀儡。每有一个放不下的傀儡，使一个傀儡获得+2/+2。",
+                      "cardTextZhCNPlain":  "战吼：将你的所有残骸复活为1/1并具有突袭的复活的傀儡。每有一个放不下的傀儡，使一个傀儡获得+2/+2。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "MINION",
+                      "cost":  8,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.RLK_085"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  16,
+                      "sourceRank":  16,
+                      "cardCode":  "RLK_744",
+                      "cardNameZhCN":  "缝合巨人",
+                      "cardTextZhCN":  "在本局对战中，你每消耗过一份\u003cb\u003e残骸\u003c/b\u003e，本牌的法力值消耗便减少（1）点。",
+                      "cardTextZhCNPlain":  "在本局对战中，你每消耗过一份残骸，本牌的法力值消耗便减少（1）点。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "MINION",
+                      "cost":  9,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "cost_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "corpsesSpentThisGame",
+                                                               "currentCost"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本局已消耗残骸：{corpsesSpentThisGame}；当前费用：{currentCost}",
+                                           "reasoningZhCN":  "缝合巨人的费用依赖累计消耗残骸，而不是当前残骸。"
+                                       }
+                  },
+                  {
+                      "rank":  22,
+                      "sourceRank":  22,
+                      "cardCode":  "FIR_951",
+                      "cardNameZhCN":  "沃尔科罗斯",
+                      "cardTextZhCN":  "\u003cb\u003e突袭。嘲讽\u003c/b\u003e。\u003cb\u003e战吼：\u003c/b\u003e选择消耗10份，20份或30份\u003cb\u003e残骸\u003c/b\u003e以获得等量属性值。",
+                      "cardTextZhCNPlain":  "突袭。嘲讽。战吼：选择消耗10份，20份或30份残骸以获得等量属性值。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "MINION",
+                      "cost":  8,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "RUSH",
+                                        "TAUNT"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.FIR_951"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  24,
+                      "sourceRank":  24,
+                      "cardCode":  "TLC_433",
+                      "cardNameZhCN":  "恐怖再起",
+                      "cardTextZhCN":  "\u003cb\u003e任务：\u003c/b\u003e消耗15份\u003cb\u003e残骸\u003c/b\u003e。\u003cb\u003e奖励：\u003c/b\u003e泰拉克斯，魔骸暴龙。",
+                      "cardTextZhCNPlain":  "任务：消耗15份残骸。奖励：泰拉克斯，魔骸暴龙。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "SPELL",
+                      "cost":  1,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "QUEST"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "quest_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "corpsesSpentForQuest"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "任务进度：{corpsesSpentForQuest}/15；还需 {remaining}",
+                                           "reasoningZhCN":  "任务推进依赖累计消耗残骸。"
+                                       }
+                  },
+                  {
+                      "rank":  29,
+                      "sourceRank":  29,
+                      "cardCode":  "TLC_436",
+                      "cardNameZhCN":  "重生的翼手龙",
+                      "cardTextZhCN":  "\u003cb\u003e\u003cb\u003e突袭\u003c/b\u003e。吸血\u003c/b\u003e\n消耗\u003cb\u003e残骸\u003c/b\u003e而非\n法力值。",
+                      "cardTextZhCNPlain":  "突袭。吸血 消耗残骸而非 法力值。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "LIFESTEAL",
+                                        "RUSH"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "resource_playability",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.TLC_436"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  35,
+                      "sourceRank":  35,
+                      "cardCode":  "TIME_618",
+                      "cardNameZhCN":  "永时收割者哈斯克",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e使你的英雄获得“\u003cb\u003e亡语：\u003c/b\u003e消耗最多20份\u003cb\u003e残骸\u003c/b\u003e，复活你的英雄并使其具有等量生命值。”",
+                      "cardTextZhCNPlain":  "战吼：使你的英雄获得“亡语：消耗最多20份残骸，复活你的英雄并使其具有等量生命值。”",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "top_bar_status",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.TIME_618"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  36,
+                      "sourceRank":  36,
+                      "cardCode":  "TIME_616",
+                      "cardNameZhCN":  "悼念成真",
+                      "cardTextZhCN":  "召唤在本局对战中死亡的法力值消耗最高的友方亡灵。",
+                      "cardTextZhCNPlain":  "召唤在本局对战中死亡的法力值消耗最高的友方亡灵。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "SPELL",
+                      "cost":  4,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyDeadUndeadHighestCostPoolThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "最高费死亡友方亡灵：{cardNames}",
+                                           "reasoningZhCN":  "悼念成真只看死亡友方亡灵中的最高费候选。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  37,
+                      "sourceRank":  37,
+                      "cardCode":  "TIME_619",
+                      "cardNameZhCN":  "墓地尊主塔兰吉",
+                      "cardTextZhCN":  "\u003cb\u003e奇闻\u003c/b\u003e\n\u003cb\u003e战吼：\u003c/b\u003e抽取邦桑迪\u003ci\u003e（如果他已经死亡则将其复活）\u003c/i\u003e，选择并使其获得一项恩泽。",
+                      "cardTextZhCNPlain":  "奇闻 战吼：抽取邦桑迪（如果他已经死亡则将其复活），选择并使其获得一项恩泽。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "linked_card_location",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "bwonsamdiLocation",
+                                                               "bwonsamdiDiedThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "邦桑迪：{location}；战吼将{drawOrResurrect}",
+                                           "reasoningZhCN":  "塔兰吉只绑定邦桑迪的位置/死亡状态。"
+                                       }
+                  },
+                  {
+                      "rank":  40,
+                      "sourceRank":  40,
+                      "cardCode":  "CATA_465",
+                      "cardNameZhCN":  "投喂加餐",
+                      "cardTextZhCN":  "召唤五条5/4的亡灵幼龙。消耗8份\u003cb\u003e残骸\u003c/b\u003e，使其获得\u003cb\u003e突袭\u003c/b\u003e。",
+                      "cardTextZhCNPlain":  "召唤五条5/4的亡灵幼龙。消耗8份残骸，使其获得突袭。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "SPELL",
+                      "cost":  8,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CATA_465"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  25,
+                      "sourceRank":  25,
+                      "cardCode":  "TLC_434",
+                      "cardNameZhCN":  "古生物秘术",
+                      "cardTextZhCN":  "\u003cb\u003e发现\u003c/b\u003e一张亡灵牌。消耗5份\u003cb\u003e残骸\u003c/b\u003e，改为保留全部三张牌。",
+                      "cardTextZhCNPlain":  "发现一张亡灵牌。消耗5份残骸，改为保留全部三张牌。",
+                      "cardClass":  "DEATHKNIGHT",
+                      "type":  "SPELL",
+                      "cost":  3,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "DISCOVER"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.TLC_434"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  }
+              ],
+    "reviewFields":  [
+                         "extraDisplay.schemaVersion: currently 2",
+                         "extraDisplay.auditDecision: keep for actionable candidates",
+                         "extraDisplay.displayType: canonical UI behavior category",
+                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+                     ]
+}

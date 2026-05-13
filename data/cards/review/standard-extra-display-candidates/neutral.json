@@ -1,0 +1,954 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
+    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+    "source":  {
+                   "inputDir":  "data/cards/review/standard-history-sensitive",
+                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+               },
+    "class":  {
+                  "id":  "NEUTRAL",
+                  "name":  {
+                               "enUS":  "Neutral",
+                               "zhCN":  "ä¸­ç«‹"
+                           }
+              },
+    "count":  29,
+    "cards":  [
+                  {
+                      "rank":  6,
+                      "sourceRank":  6,
+                      "cardCode":  "CORE_REV_956",
+                      "cardNameZhCN":  "亡者牧师",
+                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e，\u003cb\u003e注能（@）：\u003c/b\u003e获得+2/+2。",
+                      "cardTextZhCNPlain":  "嘲讽，注能（）：获得+2/+2。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  2,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "INFUSE",
+                                        "TAUNT"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  16,
+                      "sourceRank":  16,
+                      "cardCode":  "CORE_ICC_812",
+                      "cardNameZhCN":  "绞肉车",
+                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e从你的牌库中召唤一个攻击力小于本随从攻击力的随从。",
+                      "cardTextZhCNPlain":  "亡语：从你的牌库中召唤一个攻击力小于本随从攻击力的随从。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "deck_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "deckPool.CORE_ICC_812"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+                                       }
+                  },
+                  {
+                      "rank":  17,
+                      "sourceRank":  17,
+                      "cardCode":  "CORE_REV_957",
+                      "cardNameZhCN":  "鱼人吸血鬼",
+                      "cardTextZhCN":  "\u003cb\u003e吸血\u003c/b\u003e，\u003cb\u003e注能（@）：\u003c/b\u003e法力值消耗为（0）点。",
+                      "cardTextZhCNPlain":  "吸血，注能（）：法力值消耗为（0）点。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "INFUSE",
+                                        "LIFESTEAL"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  22,
+                      "sourceRank":  22,
+                      "cardCode":  "CORE_ICC_904",
+                      "cardNameZhCN":  "邪骨骷髅",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本回合中每有一个随从死亡，便获得+1/+1。",
+                      "cardTextZhCNPlain":  "战吼：在本回合中每有一个随从死亡，便获得+1/+1。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "turn_death_counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "minionDeathsThisTurnBothPlayers"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合死亡随从：{count}；战吼加成 +{count}/+{count}",
+                                           "reasoningZhCN":  "邪骨骷髅统计双方本回合死亡随从。"
+                                       }
+                  },
+                  {
+                      "rank":  24,
+                      "sourceRank":  24,
+                      "cardCode":  "CORE_REV_019",
+                      "cardNameZhCN":  "饥饿的愚人",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e抽一张牌。\u003cb\u003e注能（@）：\u003c/b\u003e改为抽三张牌。",
+                      "cardTextZhCNPlain":  "战吼：抽一张牌。注能（）：改为抽三张牌。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  28,
+                      "sourceRank":  28,
+                      "cardCode":  "CORE_REV_013",
+                      "cardNameZhCN":  "石裔指控者",
+                      "cardTextZhCN":  "\u003cb\u003e注能（@）：\u003c/b\u003e获得“\u003cb\u003e战吼：\u003c/b\u003e造成5点伤害。”",
+                      "cardTextZhCNPlain":  "注能（）：获得“战吼：造成5点伤害。”",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  29,
+                      "sourceRank":  29,
+                      "cardCode":  "CORE_ICC_098",
+                      "cardNameZhCN":  "墓穴潜伏者",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e随机将一个在本局对战中死亡并具有\u003cb\u003e亡语\u003c/b\u003e的随从置入你的手牌。",
+                      "cardTextZhCNPlain":  "战吼：随机将一个在本局对战中死亡并具有亡语的随从置入你的手牌。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "graveyardDeathrattleMinionsBothPlayers"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本局已死亡亡语随从：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "墓穴潜伏者候选来自本局死亡亡语随从，需标出双方池。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  33,
+                      "sourceRank":  33,
+                      "cardCode":  "CORE_EX1_190",
+                      "cardNameZhCN":  "大检察官怀特迈恩",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e召唤所有在本回合中死亡的友方\n随从。",
+                      "cardTextZhCNPlain":  "战吼：召唤所有在本回合中死亡的友方 随从。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "turn_graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyGraveyardThisTurn"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合死亡友方随从：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "怀特迈恩只复活本回合死亡友方随从。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  34,
+                      "sourceRank":  34,
+                      "cardCode":  "CORE_REV_015",
+                      "cardNameZhCN":  "假面狂欢者",
+                      "cardTextZhCN":  "\u003cb\u003e突袭\u003c/b\u003e，\u003cb\u003e亡语：\u003c/b\u003e召唤你牌库中另一个随从的2/2的复制。",
+                      "cardTextZhCNPlain":  "突袭，亡语：召唤你牌库中另一个随从的2/2的复制。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "DEATHRATTLE",
+                                        "RUSH"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "deck_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "deckPool.CORE_REV_015"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+                                       }
+                  },
+                  {
+                      "rank":  37,
+                      "sourceRank":  37,
+                      "cardCode":  "CORE_MAW_033",
+                      "cardNameZhCN":  "被告希尔瓦娜斯",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e消灭一个敌方随从。\u003cb\u003e注能（@）：\u003c/b\u003e改为夺取其控制权。",
+                      "cardTextZhCNPlain":  "战吼：消灭一个敌方随从。注能（）：改为夺取其控制权。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  39,
+                      "sourceRank":  39,
+                      "cardCode":  "CORE_REV_843",
+                      "cardNameZhCN":  "罪能魔像",
+                      "cardTextZhCN":  "\u003cb\u003e注能（@）：\u003c/b\u003e获得属性值，数值等同于为本随从\u003cb\u003e注能\u003c/b\u003e的随从的攻击力。",
+                      "cardTextZhCNPlain":  "注能（）：获得属性值，数值等同于为本随从注能的随从的攻击力。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "attribute_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cumulativeAttackOfFriendlyMinionsDiedWhileThisEntityInHand",
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能累计：+{cumulativeAttack}/+{cumulativeAttack}（友方死亡 {progress} 次）",
+                                           "reasoningZhCN":  "罪能魔像关键是累计死亡随从攻击力，而非简单进度。"
+                                       }
+                  },
+                  {
+                      "rank":  42,
+                      "sourceRank":  42,
+                      "cardCode":  "CORE_REV_017",
+                      "cardNameZhCN":  "贪食的吞噬者",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e吞食一个敌方随从并获得其属性值。\u003cb\u003e注能（@）：\u003c/b\u003e还会吞食相邻随从。",
+                      "cardTextZhCNPlain":  "战吼：吞食一个敌方随从并获得其属性值。注能（）：还会吞食相邻随从。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  9,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  44,
+                      "sourceRank":  44,
+                      "cardCode":  "CORE_REV_906",
+                      "cardNameZhCN":  "德纳修斯大帝",
+                      "cardTextZhCN":  "\u003cb\u003e吸血\u003c/b\u003e，\u003cb\u003e战吼：\u003c/b\u003e对所有敌人造成总计5点伤害。\u003cb\u003e无限注能（@）：\u003c/b\u003e伤害增加1点。",
+                      "cardTextZhCNPlain":  "吸血，战吼：对所有敌人造成总计5点伤害。无限注能（）：伤害增加1点。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  10,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "INFUSE",
+                                        "LIFESTEAL"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infinite_infuse_counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infiniteInfuseStacks",
+                                                               "currentBattlecryDamage"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "无限注能累计：{infiniteInfuseStacks} 次；当前总伤害 {currentBattlecryDamage}",
+                                           "reasoningZhCN":  "德纳修斯是无限注能，没有 required 上限。"
+                                       }
+                  },
+                  {
+                      "rank":  53,
+                      "sourceRank":  53,
+                      "cardCode":  "EDR_571",
+                      "cardNameZhCN":  "法夜欺诈者",
+                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e抽一张法力值消耗大于或等于（5）点的法术牌。",
+                      "cardTextZhCNPlain":  "亡语：抽一张法力值消耗大于或等于（5）点的法术牌。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  3,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "deck_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "deckPool.EDR_571"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+                                       }
+                  },
+                  {
+                      "rank":  54,
+                      "sourceRank":  54,
+                      "cardCode":  "FIR_921",
+                      "cardNameZhCN":  "花木护侍",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e如果你已\u003cb\u003e灌注\u003c/b\u003e过你的英雄技能两次，抽两张牌。",
+                      "cardTextZhCNPlain":  "战吼：如果你已灌注过你的英雄技能两次，抽两张牌。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  3,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "hero_power_infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "heroPowerInfuseCountThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "已灌注英雄技能：{heroPowerInfuseCountThisGame}/2；达成后抽 2 张",
+                                           "reasoningZhCN":  "该条件依赖英雄技能灌注次数，不是手牌注能死亡数。"
+                                       }
+                  },
+                  {
+                      "rank":  57,
+                      "sourceRank":  57,
+                      "cardCode":  "EDR_860",
+                      "cardNameZhCN":  "明耀织梦者",
+                      "cardTextZhCN":  "\u003cb\u003e吸血\u003c/b\u003e。\u003cb\u003e战吼：\u003c/b\u003e如果你已\u003cb\u003e灌注\u003c/b\u003e过你的英雄技能两次，对一个随从造成4点伤害。",
+                      "cardTextZhCNPlain":  "吸血。战吼：如果你已灌注过你的英雄技能两次，对一个随从造成4点伤害。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "LIFESTEAL"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "hero_power_infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "heroPowerInfuseCountThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "已灌注英雄技能：{heroPowerInfuseCountThisGame}/2；达成后造成 4 点伤害",
+                                           "reasoningZhCN":  "该条件依赖英雄技能灌注次数。"
+                                       }
+                  },
+                  {
+                      "rank":  60,
+                      "sourceRank":  60,
+                      "cardCode":  "EDR_572",
+                      "cardNameZhCN":  "受难的恐翼巨龙",
+                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e抽两张龙牌，其法力值消耗减少（1）点。",
+                      "cardTextZhCNPlain":  "亡语：抽两张龙牌，其法力值消耗减少（1）点。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "deck_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "deckPool.EDR_572"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+                                       }
+                  },
+                  {
+                      "rank":  62,
+                      "sourceRank":  62,
+                      "cardCode":  "EDR_888",
+                      "cardNameZhCN":  "护路者玛洛恩",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e\u003cb\u003e发现\u003c/b\u003e一张\u003cb\u003e传说\u003c/b\u003e荒野之神。如果你已\u003cb\u003e灌注\u003c/b\u003e过你的英雄技能4次，则将发现的荒野之神的法力值消耗变为（1）点。",
+                      "cardTextZhCNPlain":  "战吼：发现一张传说荒野之神。如果你已灌注过你的英雄技能4次，则将发现的荒野之神的法力值消耗变为（1）点。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  8,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "DISCOVER"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "hero_power_infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "heroPowerInfuseCountThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "已灌注英雄技能：{heroPowerInfuseCountThisGame}/4；达成后发现牌费用变为 1",
+                                           "reasoningZhCN":  "护路者玛洛恩阈值是英雄技能灌注 4 次。"
+                                       }
+                  },
+                  {
+                      "rank":  64,
+                      "sourceRank":  64,
+                      "cardCode":  "EDR_846",
+                      "cardNameZhCN":  "莎拉达希尔",
+                      "cardTextZhCN":  "获取全部5张梦境牌。如果你在本牌在你手中时使用过法力值消耗更高的牌，腐蚀这些梦境牌！",
+                      "cardTextZhCNPlain":  "获取全部5张梦境牌。如果你在本牌在你手中时使用过法力值消耗更高的牌，腐蚀这些梦境牌！",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "SPELL",
+                      "cost":  8,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "corrupt_condition",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.EDR_846"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  65,
+                      "sourceRank":  65,
+                      "cardCode":  "TLC_603",
+                      "cardNameZhCN":  "栉龙",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e抽一张牌。\u003cb\u003e亡语：\u003c/b\u003e弃掉该牌。",
+                      "cardTextZhCNPlain":  "战吼：抽一张牌。亡语：弃掉该牌。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  1,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "linked_card",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "play",
+                                                                   "board",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "linkedDrawnCardForThisEntity"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "战吼抽到：{linkedCardName}；亡语会弃掉该牌",
+                                           "reasoningZhCN":  "栉龙亡语绑定战吼抽到的具体牌。"
+                                       }
+                  },
+                  {
+                      "rank":  69,
+                      "sourceRank":  69,
+                      "cardCode":  "TLC_987",
+                      "cardNameZhCN":  "任务助理",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e如果你在本局对战中使用过\u003cb\u003e任务\u003c/b\u003e牌，对一个敌方随从造成3点伤害。",
+                      "cardTextZhCNPlain":  "战吼：如果你在本局对战中使用过任务牌，对一个敌方随从造成3点伤害。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  2,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "played_history_flag",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.TLC_987"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  76,
+                      "sourceRank":  76,
+                      "cardCode":  "DINO_430",
+                      "cardNameZhCN":  "兽语者塔卡",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e\u003cb\u003e发现\u003c/b\u003e一只任意职业的\u003cb\u003e传说\u003c/b\u003e野兽并获得其属性值。\u003cb\u003e亡语：\u003c/b\u003e召唤该野兽。",
+                      "cardTextZhCNPlain":  "战吼：发现一只任意职业的传说野兽并获得其属性值。亡语：召唤该野兽。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "DEATHRATTLE",
+                                        "DISCOVER"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "linked_card",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "play",
+                                                                   "board",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "linkedLegendaryBeastForThisEntity"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "已绑定野兽：{linkedCardName}（{attack}/{health}）；亡语召唤该牌",
+                                           "reasoningZhCN":  "塔卡亡语召唤战吼发现并绑定的具体野兽。"
+                                       }
+                  },
+                  {
+                      "rank":  77,
+                      "sourceRank":  77,
+                      "cardCode":  "TLC_106",
+                      "cardNameZhCN":  "末日使者安布拉",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e触发本局对战中死亡的5个友方随从的\u003cb\u003e亡语\u003c/b\u003e。",
+                      "cardTextZhCNPlain":  "战吼：触发本局对战中死亡的5个友方随从的亡语。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_deathrattle_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyGraveyardDeathrattleMinionsThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "死亡友方亡语随从：{cardNames}（{count}，将触发最多 5 个）",
+                                           "reasoningZhCN":  "安布拉战吼质量由友方亡语墓地池决定。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  87,
+                      "sourceRank":  87,
+                      "cardCode":  "END_005",
+                      "cardNameZhCN":  "旧时回响",
+                      "cardTextZhCN":  "随机召唤一个法力值消耗为（4）的随从。消耗4份\u003cb\u003e残骸\u003c/b\u003e以再召唤一个。\u003cb\u003e流放：\u003c/b\u003e再召唤一个。",
+                      "cardTextZhCNPlain":  "随机召唤一个法力值消耗为（4）的随从。消耗4份残骸以再召唤一个。流放：再召唤一个。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "SPELL",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "OUTCAST"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.END_005"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  88,
+                      "sourceRank":  88,
+                      "cardCode":  "TIME_048",
+                      "cardNameZhCN":  "钟表发条暴怒者",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你每进行过一个回合，便获得+1生命值。@\u003ci\u003e（已进行过@个回合）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "战吼：在本局对战中，你每进行过一个回合，便获得+1生命值。（已进行过个回合）",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.TIME_048"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  89,
+                      "sourceRank":  89,
+                      "cardCode":  "TIME_103",
+                      "cardNameZhCN":  "克罗米",
+                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e抽取你在本局对战中使用过的每张牌的另一张复制。@\u003ci\u003e（抽@张牌）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "亡语：抽取你在本局对战中使用过的每张牌的另一张复制。（抽张牌）",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "played_cards_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.TIME_103"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  92,
+                      "sourceRank":  92,
+                      "cardCode":  "END_004",
+                      "cardNameZhCN":  "愤怒残魂",
+                      "cardTextZhCN":  "在本回合中每有一个随从死亡，本牌的法力值消耗便减少（1）点。\u003cb\u003e战吼：\u003c/b\u003e抽两张牌。",
+                      "cardTextZhCNPlain":  "在本回合中每有一个随从死亡，本牌的法力值消耗便减少（1）点。战吼：抽两张牌。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "cost_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "minionDeathsThisTurnBothPlayers",
+                                                               "currentCost"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合死亡随从：{count}；当前费用 {currentCost}",
+                                           "reasoningZhCN":  "愤怒残魂费用由双方本回合死亡随从数降低。"
+                                       }
+                  },
+                  {
+                      "rank":  96,
+                      "sourceRank":  96,
+                      "cardCode":  "CATA_897",
+                      "cardNameZhCN":  "宝石囤积者",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e选择你手牌中的一张牌并弃掉。\u003cb\u003e亡语：\u003c/b\u003e重新获取弃掉的牌，其法力值消耗减少（1）点。",
+                      "cardTextZhCNPlain":  "战吼：选择你手牌中的一张牌并弃掉。亡语：重新获取弃掉的牌，其法力值消耗减少（1）点。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  3,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "linked_card",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "play",
+                                                                   "board",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "discardedCardLinkedToThisEntity"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "已弃掉：{linkedCardName}；亡语回收并费用 -1",
+                                           "reasoningZhCN":  "宝石囤储者亡语返还战吼选中的具体弃牌。"
+                                       }
+                  },
+                  {
+                      "rank":  98,
+                      "sourceRank":  98,
+                      "cardCode":  "CATA_616",
+                      "cardNameZhCN":  "戈隆巨人",
+                      "cardTextZhCN":  "本随从的法力值消耗会随你使用的上一张牌的法力值消耗而\n降低。",
+                      "cardTextZhCNPlain":  "本随从的法力值消耗会随你使用的上一张牌的法力值消耗而 降低。",
+                      "cardClass":  "NEUTRAL",
+                      "type":  "MINION",
+                      "cost":  9,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "cost_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "lastPlayedCardCost",
+                                                               "currentCost"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "上一张已使用牌费用：{lastCost}；当前费用 {currentCost}",
+                                           "reasoningZhCN":  "戈隆巨人费用由上一张使用牌的费用决定。"
+                                       }
+                  }
+              ],
+    "reviewFields":  [
+                         "extraDisplay.schemaVersion: currently 2",
+                         "extraDisplay.auditDecision: keep for actionable candidates",
+                         "extraDisplay.displayType: canonical UI behavior category",
+                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+                     ]
+}

@@ -1,0 +1,386 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
+    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+    "source":  {
+                   "inputDir":  "data/cards/review/standard-history-sensitive",
+                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+               },
+    "class":  {
+                  "id":  "PRIEST",
+                  "name":  {
+                               "enUS":  "Priest",
+                               "zhCN":  "ç‰§å¸ˆ"
+                           }
+              },
+    "count":  11,
+    "cards":  [
+                  {
+                      "rank":  3,
+                      "sourceRank":  3,
+                      "cardCode":  "CORE_ICC_213",
+                      "cardNameZhCN":  "永恒奴役",
+                      "cardTextZhCN":  "\u003cb\u003e发现\u003c/b\u003e一个在本局对战中死亡的友方随从，并召唤该随从。",
+                      "cardTextZhCNPlain":  "发现一个在本局对战中死亡的友方随从，并召唤该随从。",
+                      "cardClass":  "PRIEST",
+                      "type":  "SPELL",
+                      "cost":  4,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "DISCOVER"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyDeadMinionPoolThisGameUnique"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "发现候选（本局死亡友方随从，去重）：{cardNames}；共 {distinctCount} 种",
+                                           "reasoningZhCN":  "永恒奴役发现池来自本局死亡友方随从。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  6,
+                      "sourceRank":  6,
+                      "cardCode":  "CORE_REV_252",
+                      "cardNameZhCN":  "净场",
+                      "cardTextZhCN":  "消灭所有攻击力小于或等于3的随从。\u003cb\u003e注能（@）：\u003c/b\u003e改为小于或等于6。",
+                      "cardTextZhCNPlain":  "消灭所有攻击力小于或等于3的随从。注能（）：改为小于或等于6。",
+                      "cardClass":  "PRIEST",
+                      "type":  "SPELL",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  7,
+                      "sourceRank":  7,
+                      "cardCode":  "CORE_AV_328",
+                      "cardNameZhCN":  "灵魂向导",
+                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e，\u003cb\u003e亡语：\u003c/b\u003e抽一张神圣法术牌和一张暗影法术牌。",
+                      "cardTextZhCNPlain":  "嘲讽，亡语：抽一张神圣法术牌和一张暗影法术牌。",
+                      "cardClass":  "PRIEST",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "DEATHRATTLE",
+                                        "TAUNT"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "deck_school_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "holySpellsRemainingInDeck",
+                                                               "shadowSpellsRemainingInDeck"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "牌库剩余神圣法术 {holyCount} 张 / 暗影法术 {shadowCount} 张",
+                                           "reasoningZhCN":  "灵魂向导按法术派系定向抽牌。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  8,
+                      "sourceRank":  8,
+                      "cardCode":  "CORE_DAL_721",
+                      "cardNameZhCN":  "亡者卡特琳娜",
+                      "cardTextZhCN":  "在你的回合结束时，复活另一个友方亡灵随从。",
+                      "cardTextZhCNPlain":  "在你的回合结束时，复活另一个友方亡灵随从。",
+                      "cardClass":  "PRIEST",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "graveyardPool.CORE_DAL_721"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "候选池：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果依赖本局死亡池，当前牌面无法直接得出候选。"
+                                       }
+                  },
+                  {
+                      "rank":  9,
+                      "sourceRank":  9,
+                      "cardCode":  "CORE_LOOT_507",
+                      "cardNameZhCN":  "小型法术钻石",
+                      "cardTextZhCN":  "复活两个不同的友方随从。@\u003ci\u003e（施放四个法术后升级。）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "复活两个不同的友方随从。（施放四个法术后升级。）",
+                      "cardClass":  "PRIEST",
+                      "type":  "SPELL",
+                      "cost":  7,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool_and_upgrade_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "spellsCastWhileThisEntityInHand",
+                                                               "spellstoneUpgradeState",
+                                                               "distinctFriendlyDeadMinionsThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "升级 {progress}/4；可复活不同随从：{cardNames}",
+                                           "reasoningZhCN":  "小型法术钻石同时依赖手牌升级进度和不同死亡随从池。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  10,
+                      "sourceRank":  10,
+                      "cardCode":  "CORE_DRG_090",
+                      "cardNameZhCN":  "永恒巨龙姆诺兹多",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e使用你的对手上个回合使用的所有卡牌。",
+                      "cardTextZhCNPlain":  "战吼：使用你的对手上个回合使用的所有卡牌。",
+                      "cardClass":  "PRIEST",
+                      "type":  "MINION",
+                      "cost":  8,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CORE_DRG_090"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  12,
+                      "sourceRank":  12,
+                      "cardCode":  "FIR_777",
+                      "cardNameZhCN":  "卡多雷精魂",
+                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e。\u003cb\u003e吸血\u003c/b\u003e。\u003cb\u003e战吼：\u003c/b\u003e如果你在本回合中使用过英雄技能，获得+3/+3。",
+                      "cardTextZhCNPlain":  "嘲讽。吸血。战吼：如果你在本回合中使用过英雄技能，获得+3/+3。",
+                      "cardClass":  "PRIEST",
+                      "type":  "MINION",
+                      "cost":  2,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "LIFESTEAL",
+                                        "TAUNT"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "condition_status",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.FIR_777"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  14,
+                      "sourceRank":  14,
+                      "cardCode":  "EDR_895",
+                      "cardNameZhCN":  "艾维娜，艾露恩钦选者",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e开启为期三回合的月相演变。当满月升起时，在本局对战中你的卡牌法力值消耗为（1）点。",
+                      "cardTextZhCNPlain":  "战吼：开启为期三回合的月相演变。当满月升起时，在本局对战中你的卡牌法力值消耗为（1）点。",
+                      "cardClass":  "PRIEST",
+                      "type":  "MINION",
+                      "cost":  9,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "top_bar_status",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.EDR_895"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  17,
+                      "sourceRank":  17,
+                      "cardCode":  "TLC_819",
+                      "cardNameZhCN":  "林歌海妖",
+                      "cardTextZhCN":  "\u003cb\u003e吸血\u003c/b\u003e。如果你在本回合中使用过神圣和暗影法术牌，本牌的法力值消耗为（1）点。",
+                      "cardTextZhCNPlain":  "吸血。如果你在本回合中使用过神圣和暗影法术牌，本牌的法力值消耗为（1）点。",
+                      "cardClass":  "PRIEST",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "cost_condition_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "holySpellsCastThisTurn",
+                                                               "shadowSpellsCastThisTurn",
+                                                               "currentCost"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合：神圣 {holyYesNo} / 暗影 {shadowYesNo}；当前费用 {currentCost}",
+                                           "reasoningZhCN":  "林歌海妖需要同回合神圣和暗影两个布尔条件。"
+                                       }
+                  },
+                  {
+                      "rank":  18,
+                      "sourceRank":  18,
+                      "cardCode":  "TLC_818",
+                      "cardNameZhCN":  "轮回转生",
+                      "cardTextZhCN":  "复活法力值消耗为1，2，3的随从各一个，使其获得\u003cb\u003e复生\u003c/b\u003e。",
+                      "cardTextZhCNPlain":  "复活法力值消耗为1，2，3的随从各一个，使其获得复生。",
+                      "cardClass":  "PRIEST",
+                      "type":  "SPELL",
+                      "cost":  6,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool_by_cost",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyDeadMinionsCost1",
+                                                               "friendlyDeadMinionsCost2",
+                                                               "friendlyDeadMinionsCost3"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "1费：{cost1Names}；2费：{cost2Names}；3费：{cost3Names}",
+                                           "reasoningZhCN":  "轮回转生必须分 1/2/3 费三桶，空桶需要警告。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  21,
+                      "sourceRank":  21,
+                      "cardCode":  "CATA_216",
+                      "cardNameZhCN":  "净化祭司",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你的治疗效果恢复的生命值增加2点。",
+                      "cardTextZhCNPlain":  "战吼：在本局对战中，你的治疗效果恢复的生命值增加2点。",
+                      "cardClass":  "PRIEST",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CATA_216"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  }
+              ],
+    "reviewFields":  [
+                         "extraDisplay.schemaVersion: currently 2",
+                         "extraDisplay.auditDecision: keep for actionable candidates",
+                         "extraDisplay.displayType: canonical UI behavior category",
+                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+                     ]
+}

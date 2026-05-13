@@ -3,7 +3,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SaxesParser, type SaxesTag } from 'saxes';
-import type { CardClass, CardDef, CardType, Rarity } from '@hdt/hearthdb';
+import type {
+  CardClass,
+  CardDef,
+  CardRace,
+  CardType,
+  Rarity,
+  SpellSchool,
+} from '@hdt/hearthdb';
 
 const DEFAULT_INPUT = 'data/cards/hsdata/CardDefs.xml';
 const DEFAULT_OUT_DIR = 'data/cards/generated';
@@ -55,6 +62,42 @@ const RARITY_BY_VALUE: Record<number, Rarity> = {
   5: 'LEGENDARY',
 };
 
+const SPELL_SCHOOL_BY_VALUE: Record<number, SpellSchool> = {
+  1: 'ARCANE',
+  2: 'FIRE',
+  3: 'FROST',
+  4: 'NATURE',
+  5: 'HOLY',
+  6: 'SHADOW',
+  7: 'FEL',
+};
+
+const RACE_BY_VALUE: Record<number, CardRace> = {
+  1: 'BLOODELF',
+  2: 'DRAENEI',
+  3: 'DWARF',
+  4: 'GNOME',
+  5: 'GOBLIN',
+  6: 'HUMAN',
+  7: 'NIGHTELF',
+  8: 'ORC',
+  9: 'TAUREN',
+  10: 'TROLL',
+  11: 'UNDEAD',
+  12: 'WORGEN',
+  14: 'MURLOC',
+  15: 'DEMON',
+  17: 'MECHANICAL',
+  18: 'ELEMENTAL',
+  20: 'BEAST',
+  21: 'TOTEM',
+  23: 'PIRATE',
+  24: 'DRAGON',
+  26: 'ALL',
+  43: 'QUILBOAR',
+  92: 'NAGA',
+};
+
 const MECHANIC_TAGS = new Set([
   'ADAPT',
   'AURA',
@@ -102,6 +145,8 @@ interface RawEntity {
   dbfId: number;
   loc: Record<string, Record<string, string>>;
   ints: Record<string, number>;
+  /** All CARDRACE tag values (multi-race cards repeat this tag). */
+  raceValues: number[];
   mechanics: Set<string>;
 }
 
@@ -156,6 +201,27 @@ function mapEnum<T extends string>(
   return mapped;
 }
 
+function mapOptionalEnum<T extends string>(
+  table: Record<number, T>,
+  value: number | undefined,
+): T | undefined {
+  if (value === undefined || value === 0) return undefined;
+  return table[value];
+}
+
+function collectRaces(values: readonly number[]): CardRace[] {
+  const seen = new Set<CardRace>();
+  const result: CardRace[] = [];
+  for (const v of values) {
+    if (v === 0) continue;
+    const race = RACE_BY_VALUE[v];
+    if (race === undefined || seen.has(race)) continue;
+    seen.add(race);
+    result.push(race);
+  }
+  return result;
+}
+
 function chooseLoc(
   loc: Record<string, Record<string, string>>,
   tagName: string,
@@ -197,6 +263,10 @@ function normalizeCard(entity: RawEntity, locale: Locale): CardDef {
   if (entity.ints.HEALTH !== undefined) card.health = entity.ints.HEALTH;
   if (entity.ints.ARMOR !== undefined) card.armor = entity.ints.ARMOR;
   if (rarity !== undefined) card.rarity = rarity;
+  const spellSchool = mapOptionalEnum(SPELL_SCHOOL_BY_VALUE, entity.ints.SPELL_SCHOOL);
+  if (spellSchool !== undefined) card.spellSchool = spellSchool;
+  const races = collectRaces(entity.raceValues);
+  if (races.length > 0) card.races = races;
   if (entity.mechanics.size > 0) card.mechanics = [...entity.mechanics].sort();
 
   return card;
@@ -217,6 +287,8 @@ function stableCard(card: CardDef): CardDef {
   if (card.rarity !== undefined) out.rarity = card.rarity;
   out.set = card.set;
   out.type = card.type;
+  if (card.spellSchool !== undefined) out.spellSchool = card.spellSchool;
+  if (card.races !== undefined) out.races = card.races;
   if (card.mechanics !== undefined) out.mechanics = card.mechanics;
   out.collectible = card.collectible;
   return out;
@@ -268,7 +340,7 @@ async function parseHsdataXml(inputPath: string): Promise<{ build: string; entit
     if (node.name === 'Entity') {
       const id = attr(node, 'CardID') ?? '';
       const dbfId = parseInteger(attr(node, 'ID'), `${id || '<missing CardID>'}: ID`);
-      currentEntity = { id, dbfId, loc: {}, ints: {}, mechanics: new Set() };
+      currentEntity = { id, dbfId, loc: {}, ints: {}, raceValues: [], mechanics: new Set() };
       return;
     }
 
@@ -287,6 +359,9 @@ async function parseHsdataXml(inputPath: string): Promise<{ build: string; entit
       if (type === 'Int') {
         const value = parseInteger(attr(node, 'value'), `${currentEntity.id}: ${tagName}`);
         currentEntity.ints[tagName] = value;
+        if ((tagName === 'CARDRACE' || tagName === 'RACE') && value !== 0) {
+          currentEntity.raceValues.push(value);
+        }
         if (value !== 0 && MECHANIC_TAGS.has(tagName)) {
           currentEntity.mechanics.add(tagName);
         }

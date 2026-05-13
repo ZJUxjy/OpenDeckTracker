@@ -34,6 +34,40 @@ export type CardType =
   | 'BATTLEGROUND_ANOMALY'
   | 'PET';
 
+export type SpellSchool =
+  | 'ARCANE'
+  | 'FIRE'
+  | 'FROST'
+  | 'NATURE'
+  | 'HOLY'
+  | 'SHADOW'
+  | 'FEL';
+
+export type CardRace =
+  | 'BLOODELF'
+  | 'DRAENEI'
+  | 'DWARF'
+  | 'GNOME'
+  | 'GOBLIN'
+  | 'HUMAN'
+  | 'NIGHTELF'
+  | 'ORC'
+  | 'TAUREN'
+  | 'TROLL'
+  | 'UNDEAD'
+  | 'WORGEN'
+  | 'MURLOC'
+  | 'DEMON'
+  | 'MECHANICAL'
+  | 'ELEMENTAL'
+  | 'BEAST'
+  | 'TOTEM'
+  | 'PIRATE'
+  | 'DRAGON'
+  | 'ALL'
+  | 'QUILBOAR'
+  | 'NAGA';
+
 export interface CardDef {
   id: string;
   dbfId: number;
@@ -47,6 +81,8 @@ export interface CardDef {
   rarity?: Rarity;
   set: string;
   type: CardType;
+  spellSchool?: SpellSchool;
+  races?: CardRace[];
   mechanics?: string[];
   collectible: boolean;
 }

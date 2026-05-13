@@ -1,0 +1,1122 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "PALADIN",
+    "name": {
+      "enUS": "Paladin",
+      "zhCN": "圣骑士"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 22,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_FP1_020",
+      "cardNameZhCN": "复仇",
+      "cardTextZhCN": "<b>奥秘：</b>当你的随从死亡时，随机使一个友方随从获得+3/+2。",
+      "cardTextZhCNPlain": "奥秘：当你的随从死亡时，随机使一个友方随从获得+3/+2。",
+      "id": "CORE_FP1_020",
+      "dbfId": 69704,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "复仇",
+        "enUS": "Avenge"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "SECRET"
+      ],
+      "text": {
+        "zhCN": "<b>奥秘：</b>当你的随从死亡时，随机使一个友方随从获得+3/+2。",
+        "enUS": "<b>Secret:</b> When one of your minions dies, give a random friendly minion +3/+2.",
+        "zhCNPlain": "奥秘：当你的随从死亡时，随机使一个友方随从获得+3/+2。",
+        "enUSPlain": "Secret: When one of your minions dies, give a random friendly minion +3/+2."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CORE_REV_952",
+      "cardNameZhCN": "罪恶的副厨师长",
+      "cardTextZhCN": "<b>亡语：</b>\n将2张“白银之手新兵”置入你的手牌。",
+      "cardTextZhCNPlain": "亡语： 将2张“白银之手新兵”置入你的手牌。",
+      "id": "CORE_REV_952",
+      "dbfId": 118168,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "罪恶的副厨师长",
+        "enUS": "Sinful Sous Chef"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>\n将2张“白银之手新兵”置入你的手牌。",
+        "enUS": "<b>Deathrattle:</b> Add 2\nSilver Hand Recruits\nto your hand.",
+        "zhCNPlain": "亡语： 将2张“白银之手新兵”置入你的手牌。",
+        "enUSPlain": "Deathrattle: Add 2 Silver Hand Recruits to your hand."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CORE_ICC_244",
+      "cardNameZhCN": "殊死一搏",
+      "cardTextZhCN": "使一个随从获得“<b>亡语：</b>回到战场，并具有1点生命值。”",
+      "cardTextZhCNPlain": "使一个随从获得“亡语：回到战场，并具有1点生命值。”",
+      "id": "CORE_ICC_244",
+      "dbfId": 95689,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "殊死一搏",
+        "enUS": "Desperate Stand"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "使一个随从获得“<b>亡语：</b>回到战场，并具有1点生命值。”",
+        "enUS": "Give a minion \"<b>Deathrattle:</b> Return this to life with 1 Health.\"",
+        "zhCNPlain": "使一个随从获得“亡语：回到战场，并具有1点生命值。”",
+        "enUSPlain": "Give a minion \"Deathrattle: Return this to life with 1 Health.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_CS3_029",
+      "cardNameZhCN": "正义追击",
+      "cardTextZhCN": "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
+      "cardTextZhCNPlain": "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
+      "id": "CORE_CS3_029",
+      "dbfId": 66862,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "正义追击",
+        "enUS": "Pursuit of Justice"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
+        "enUS": "Give +1 Attack to Silver Hand Recruits you summon this game.",
+        "zhCNPlain": "使你本局对战中召唤的白银之手新兵获得+1攻击力。",
+        "enUSPlain": "Give +1 Attack to Silver Hand Recruits you summon this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CORE_DMF_194",
+      "cardNameZhCN": "赤鳞驯龙者",
+      "cardTextZhCN": "<b>亡语：</b>抽一张龙牌。",
+      "cardTextZhCNPlain": "亡语：抽一张龙牌。",
+      "id": "CORE_DMF_194",
+      "dbfId": 120456,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "赤鳞驯龙者",
+        "enUS": "Redscale Dragontamer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽一张龙牌。",
+        "enUS": "<b>Deathrattle:</b> Draw a Dragon.",
+        "zhCNPlain": "亡语：抽一张龙牌。",
+        "enUSPlain": "Deathrattle: Draw a Dragon."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "CORE_REV_955",
+      "cardNameZhCN": "执事者斯图尔特",
+      "cardTextZhCN": "<b>亡语：</b>\n使你召唤的下一个白银之手新兵获得+3/+3以及此<b>亡语</b>。",
+      "cardTextZhCNPlain": "亡语： 使你召唤的下一个白银之手新兵获得+3/+3以及此亡语。",
+      "id": "CORE_REV_955",
+      "dbfId": 118169,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "执事者斯图尔特",
+        "enUS": "Stewart the Steward"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>\n使你召唤的下一个白银之手新兵获得+3/+3以及此<b>亡语</b>。",
+        "enUS": "[x]<b>Deathrattle:</b> Give the next\nSilver Hand Recruit you\nsummon +3/+3 and\nthis <b>Deathrattle</b>.",
+        "zhCNPlain": "亡语： 使你召唤的下一个白银之手新兵获得+3/+3以及此亡语。",
+        "enUSPlain": "[x]Deathrattle: Give the next Silver Hand Recruit you summon +3/+3 and this Deathrattle."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "CORE_ICC_034",
+      "cardNameZhCN": "傲慢的十字军",
+      "cardTextZhCN": "<b>亡语：</b>如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+      "cardTextZhCNPlain": "亡语：如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+      "id": "CORE_ICC_034",
+      "dbfId": 95639,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "傲慢的十字军",
+        "enUS": "Arrogant Crusader"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+        "enUS": "<b>Deathrattle:</b> If it's your opponent's turn, summon a 2/2 Ghoul.",
+        "zhCNPlain": "亡语：如果此时是你对手的回合，则召唤一个2/2的食尸鬼。",
+        "enUSPlain": "Deathrattle: If it's your opponent's turn, summon a 2/2 Ghoul."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "CORE_REV_958",
+      "cardNameZhCN": "餐会巨仆",
+      "cardTextZhCN": "<b>战吼：</b>召唤两个白银之手新兵。<b>注能（@）：</b>使其获得+2攻击力和<b>圣盾</b>。",
+      "cardTextZhCNPlain": "战吼：召唤两个白银之手新兵。注能（）：使其获得+2攻击力和圣盾。",
+      "id": "CORE_REV_958",
+      "dbfId": 118172,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "餐会巨仆",
+        "enUS": "Buffet Biggun"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>召唤两个白银之手新兵。<b>注能（@）：</b>使其获得+2攻击力和<b>圣盾</b>。",
+        "enUS": "[x]<b>Battlecry:</b> Summon two Silver \nHand Recruits. <b>Infuse (@):</b> \nGive them +2 Attack \nand <b>Divine Shield</b>.",
+        "zhCNPlain": "战吼：召唤两个白银之手新兵。注能（）：使其获得+2攻击力和圣盾。",
+        "enUSPlain": "[x]Battlecry: Summon two Silver Hand Recruits. Infuse (): Give them +2 Attack and Divine Shield."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "CORE_ICC_071",
+      "cardNameZhCN": "光之悲恸",
+      "cardTextZhCN": "在一个友方随从失去<b>圣盾</b>后，获得+1攻击力。",
+      "cardTextZhCNPlain": "在一个友方随从失去圣盾后，获得+1攻击力。",
+      "id": "CORE_ICC_071",
+      "dbfId": 95722,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "光之悲恸",
+        "enUS": "Light's Sorrow"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "WEAPON",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在一个友方随从失去<b>圣盾</b>后，获得+1攻击力。",
+        "enUS": "After a friendly minion loses <b>Divine Shield</b>, gain +1 Attack.",
+        "zhCNPlain": "在一个友方随从失去圣盾后，获得+1攻击力。",
+        "enUSPlain": "After a friendly minion loses Divine Shield, gain +1 Attack."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "CORE_DMF_240",
+      "cardNameZhCN": "救赎者洛萨克森",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得<b>圣盾</b>。",
+      "cardTextZhCNPlain": "战吼：在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得圣盾。",
+      "id": "CORE_DMF_240",
+      "dbfId": 102198,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "救赎者洛萨克森",
+        "enUS": "Lothraxion the Redeemed"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得<b>圣盾</b>。",
+        "enUS": "[x]<b>Battlecry:</b> For the rest of the\ngame, after you summon\na Silver Hand Recruit,\ngive it <b>Divine Shield</b>.",
+        "zhCNPlain": "战吼：在本局对战的剩余时间内，在你召唤一个白银之手新兵后，使其获得圣盾。",
+        "enUSPlain": "[x]Battlecry: For the rest of the game, after you summon a Silver Hand Recruit, give it Divine Shield."
+      },
+      "categories": [
+        "persistent_global_effect"
+      ],
+      "matchReasons": [
+        "text creates a rest-of-game effect"
+      ],
+      "trackingHints": [
+        "rest_of_game_effect_registry"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "CORE_BT_334",
+      "cardNameZhCN": "女伯爵莉亚德琳",
+      "cardTextZhCN": "<b>战吼：</b>将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
+      "cardTextZhCNPlain": "战吼：将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
+      "id": "CORE_BT_334",
+      "dbfId": 111368,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "女伯爵莉亚德琳",
+        "enUS": "Lady Liadrin"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
+        "enUS": "[x]<b>Battlecry:</b> Add a copy of\neach spell you cast on\nfriendly characters this\ngame to your hand.",
+        "zhCNPlain": "战吼：将你在本局对战中施放在友方角色上的所有法术的复制置入你的手牌。",
+        "enUSPlain": "[x]Battlecry: Add a copy of each spell you cast on friendly characters this game to your hand."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "EDR_264",
+      "cardNameZhCN": "圣光护盾",
+      "cardTextZhCN": "随机召唤一个法力值消耗为（2）的随从并使其获得<b>嘲讽</b>。<b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "随机召唤一个法力值消耗为（2）的随从并使其获得嘲讽。灌注你的英雄技能。",
+      "id": "EDR_264",
+      "dbfId": 116675,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "圣光护盾",
+        "enUS": "Aegis of Light"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "随机召唤一个法力值消耗为（2）的随从并使其获得<b>嘲讽</b>。<b>灌注</b>你的英雄技能。",
+        "enUS": "Summon a random\n2-Cost minion and\ngive it <b>Taunt</b>. <b>Imbue</b>\nyour Hero Power.",
+        "zhCNPlain": "随机召唤一个法力值消耗为（2）的随从并使其获得嘲讽。灌注你的英雄技能。",
+        "enUSPlain": "Summon a random 2-Cost minion and give it Taunt. Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "EDR_451",
+      "cardNameZhCN": "金萼幼龙",
+      "cardTextZhCN": "<b>战吼，亡语：</b><b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "战吼，亡语：灌注你的英雄技能。",
+      "id": "EDR_451",
+      "dbfId": 114081,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "金萼幼龙",
+        "enUS": "Goldpetal Drake"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼，亡语：</b><b>灌注</b>你的英雄技能。",
+        "enUS": "[x]<b>Battlecry and Deathrattle:</b>\n<b>Imbue</b> your Hero Power.",
+        "zhCNPlain": "战吼，亡语：灌注你的英雄技能。",
+        "enUSPlain": "[x]Battlecry and Deathrattle: Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter",
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand",
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "TLC_430",
+      "cardNameZhCN": "圣窟生物",
+      "cardTextZhCN": "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术<i>（尽可能以本随从为目标）</i>。",
+      "cardTextZhCNPlain": "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术（尽可能以本随从为目标）。",
+      "id": "TLC_430",
+      "dbfId": 117384,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "圣窟生物",
+        "enUS": "Creature of the Sacred Cave"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术<i>（尽可能以本随从为目标）</i>。",
+        "enUS": "[x]At the end of your turn,\nrecast a random Holy spell\nyou cast this turn <i>(targets\nthis if possible)</i>.",
+        "zhCNPlain": "在你的回合结束时，再次施放本回合中你施放过的一个随机神圣法术（尽可能以本随从为目标）。",
+        "enUSPlain": "[x]At the end of your turn, recast a random Holy spell you cast this turn (targets this if possible)."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "TLC_477",
+      "cardNameZhCN": "蛇颈龙骑手的祝福",
+      "cardTextZhCN": "使一个友方随从获得+4/+4和“<b>亡语：</b>随机召唤一个法力值消耗为（4）的随从。”",
+      "cardTextZhCNPlain": "使一个友方随从获得+4/+4和“亡语：随机召唤一个法力值消耗为（4）的随从。”",
+      "id": "TLC_477",
+      "dbfId": 119587,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "蛇颈龙骑手的祝福",
+        "enUS": "Threshrider's Blessing"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "使一个友方随从获得+4/+4和“<b>亡语：</b>随机召唤一个法力值消耗为（4）的随从。”",
+        "enUS": "Give a friendly minion +4/+4 and \"<b>Deathrattle:</b> Summon a random 4-Cost minion.\"",
+        "zhCNPlain": "使一个友方随从获得+4/+4和“亡语：随机召唤一个法力值消耗为（4）的随从。”",
+        "enUSPlain": "Give a friendly minion +4/+4 and \"Deathrattle: Summon a random 4-Cost minion.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "TLC_240",
+      "cardNameZhCN": "填鳃暴龙",
+      "cardTextZhCN": "<b>突袭</b>。<b>亡语：</b>\n召唤三个2/1的鱼人，使其各获得一项随机<b>额外效果</b>。",
+      "cardTextZhCNPlain": "突袭。亡语： 召唤三个2/1的鱼人，使其各获得一项随机额外效果。",
+      "id": "TLC_240",
+      "dbfId": 117949,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "填鳃暴龙",
+        "enUS": "Tyrannogill"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>。<b>亡语：</b>\n召唤三个2/1的鱼人，使其各获得一项随机<b>额外效果</b>。",
+        "enUS": "[x]<b>Rush</b>\n<b>Deathrattle:</b> Summon three\n2/1 Murlocs. Give them each\na random <b>Bonus Effect</b>.",
+        "zhCNPlain": "突袭。亡语： 召唤三个2/1的鱼人，使其各获得一项随机额外效果。",
+        "enUSPlain": "[x]Rush Deathrattle: Summon three 2/1 Murlocs. Give them each a random Bonus Effect."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 17,
+      "cardRank": 17,
+      "cardCode": "TIME_017",
+      "cardNameZhCN": "坦克机械师",
+      "cardTextZhCN": "<b>圣盾</b>。<b>亡语：</b>召唤一辆7/7并具有<b>圣盾</b>\n的坦克。",
+      "cardTextZhCNPlain": "圣盾。亡语：召唤一辆7/7并具有圣盾 的坦克。",
+      "id": "TIME_017",
+      "dbfId": 119965,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "坦克机械师",
+        "enUS": "Tankgineer"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE",
+        "DIVINE_SHIELD"
+      ],
+      "text": {
+        "zhCN": "<b>圣盾</b>。<b>亡语：</b>召唤一辆7/7并具有<b>圣盾</b>\n的坦克。",
+        "enUS": "[x]<b>Divine Shield</b>\n<b>Deathrattle:</b> Summon a 7/7\nTank with <b>Divine Shield</b>.",
+        "zhCNPlain": "圣盾。亡语：召唤一辆7/7并具有圣盾 的坦克。",
+        "enUSPlain": "[x]Divine Shield Deathrattle: Summon a 7/7 Tank with Divine Shield."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 18,
+      "cardRank": 18,
+      "cardCode": "MEND_800",
+      "cardNameZhCN": "莽撞的战场军官",
+      "cardTextZhCN": "<b>突袭</b>。<b>亡语：</b>在本局对战中，使你的白银之手新兵获得+1\n攻击力。",
+      "cardTextZhCNPlain": "突袭。亡语：在本局对战中，使你的白银之手新兵获得+1 攻击力。",
+      "id": "MEND_800",
+      "dbfId": 123620,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "莽撞的战场军官",
+        "enUS": "Brash Battlemaster"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>。<b>亡语：</b>在本局对战中，使你的白银之手新兵获得+1\n攻击力。",
+        "enUS": "[x]<b>Rush</b>\n <b>Deathrattle:</b> Give your\nSilver Hand Recruits\n+1 Attack this game.",
+        "zhCNPlain": "突袭。亡语：在本局对战中，使你的白银之手新兵获得+1 攻击力。",
+        "enUSPlain": "[x]Rush Deathrattle: Give your Silver Hand Recruits +1 Attack this game."
+      },
+      "categories": [
+        "deathrattle",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 19,
+      "cardRank": 19,
+      "cardCode": "CATA_472",
+      "cardNameZhCN": "灵感之槌",
+      "cardTextZhCN": "<b>亡语：</b>随机触发一个友方随从的回合结束效果。",
+      "cardTextZhCNPlain": "亡语：随机触发一个友方随从的回合结束效果。",
+      "id": "CATA_472",
+      "dbfId": 123106,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "灵感之槌",
+        "enUS": "Inspiring Maul"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "WEAPON",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机触发一个友方随从的回合结束效果。",
+        "enUS": "<b>Deathrattle:</b> Trigger a random friendly minion's end of turn effect.",
+        "zhCNPlain": "亡语：随机触发一个友方随从的回合结束效果。",
+        "enUSPlain": "Deathrattle: Trigger a random friendly minion's end of turn effect."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 20,
+      "cardRank": 20,
+      "cardCode": "MEND_805",
+      "cardNameZhCN": "捐助",
+      "cardTextZhCN": "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
+      "cardTextZhCNPlain": "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
+      "id": "MEND_805",
+      "dbfId": 123625,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "捐助",
+        "enUS": "Charity"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
+        "enUS": "Get copies of all friendly minions that died this turn. Give them +3/+3.",
+        "zhCNPlain": "获取在本回合中死亡的所有友方随从的复制，并使其获得+3/+3。",
+        "enUSPlain": "Get copies of all friendly minions that died this turn. Give them +3/+3."
+      },
+      "categories": [
+        "graveyard_pool"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 21,
+      "cardRank": 21,
+      "cardCode": "MEND_801",
+      "cardNameZhCN": "坚定的救援者",
+      "cardTextZhCN": "<b>圣盾</b>。在本随从失去<b>圣盾</b>后，在本局对战中，使你的白银之手新兵获得+1生命值。",
+      "cardTextZhCNPlain": "圣盾。在本随从失去圣盾后，在本局对战中，使你的白银之手新兵获得+1生命值。",
+      "id": "MEND_801",
+      "dbfId": 123621,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "坚定的救援者",
+        "enUS": "Resilient Savior"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DIVINE_SHIELD"
+      ],
+      "text": {
+        "zhCN": "<b>圣盾</b>。在本随从失去<b>圣盾</b>后，在本局对战中，使你的白银之手新兵获得+1生命值。",
+        "enUS": "[x]<b>Divine Shield</b>\nAfter this loses <b>Divine Shield</b>,\ngive your Silver Hand Recruits\n+1 Health this game.",
+        "zhCNPlain": "圣盾。在本随从失去圣盾后，在本局对战中，使你的白银之手新兵获得+1生命值。",
+        "enUSPlain": "[x]Divine Shield After this loses Divine Shield, give your Silver Hand Recruits +1 Health this game."
+      },
+      "categories": [
+        "death_event_trigger",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 22,
+      "cardRank": 22,
+      "cardCode": "MEND_803",
+      "cardNameZhCN": "砺胆重剑",
+      "cardTextZhCN": "<b>战吼：</b>在本局对战中，使你的白银之手新兵获得+1/+1。",
+      "cardTextZhCNPlain": "战吼：在本局对战中，使你的白银之手新兵获得+1/+1。",
+      "id": "MEND_803",
+      "dbfId": 123623,
+      "cardClass": "PALADIN",
+      "sourceCardClass": "PALADIN",
+      "rawClassValue": 5,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "砺胆重剑",
+        "enUS": "Emboldening Blade"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "WEAPON",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>在本局对战中，使你的白银之手新兵获得+1/+1。",
+        "enUS": "[x]<b>Battlecry:</b> Give your\nSilver Hand Recruits\n+1/+1 this game.",
+        "zhCNPlain": "战吼：在本局对战中，使你的白银之手新兵获得+1/+1。",
+        "enUSPlain": "[x]Battlecry: Give your Silver Hand Recruits +1/+1 this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

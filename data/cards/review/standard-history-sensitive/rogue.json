@@ -1,0 +1,1217 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "ROGUE",
+    "name": {
+      "enUS": "Rogue",
+      "zhCN": "潜行者"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 24,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_REV_938",
+      "cardNameZhCN": "暗影之门",
+      "cardTextZhCN": "抽一张法术牌。<b>注能（@）：</b>将它的一张<b>临时</b>复制置入你的手牌。",
+      "cardTextZhCNPlain": "抽一张法术牌。注能（）：将它的一张临时复制置入你的手牌。",
+      "id": "CORE_REV_938",
+      "dbfId": 118157,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "暗影之门",
+        "enUS": "Door of Shadows"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "抽一张法术牌。<b>注能（@）：</b>将它的一张<b>临时</b>复制置入你的手牌。",
+        "enUS": "[x]Draw a spell. <b>Infuse_(@):</b>\nAdd a <b>Temporary</b> copy\nof it to your hand.",
+        "zhCNPlain": "抽一张法术牌。注能（）：将它的一张临时复制置入你的手牌。",
+        "enUSPlain": "[x]Draw a spell. Infuse_(): Add a Temporary copy of it to your hand."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CORE_LOOT_204",
+      "cardNameZhCN": "诈死",
+      "cardTextZhCN": "<b>奥秘：</b>当一个友方随从死亡时，将其移回你的手牌，它的法力值消耗减少（2）点。",
+      "cardTextZhCNPlain": "奥秘：当一个友方随从死亡时，将其移回你的手牌，它的法力值消耗减少（2）点。",
+      "id": "CORE_LOOT_204",
+      "dbfId": 102203,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "诈死",
+        "enUS": "[CORE 2024] Cheat Death"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "SECRET"
+      ],
+      "text": {
+        "zhCN": "<b>奥秘：</b>当一个友方随从死亡时，将其移回你的手牌，它的法力值消耗减少（2）点。",
+        "enUS": "<b>Secret:</b> When a friendly minion dies, return it to your hand.\nIt costs (2) less.",
+        "zhCNPlain": "奥秘：当一个友方随从死亡时，将其移回你的手牌，它的法力值消耗减少（2）点。",
+        "enUSPlain": "Secret: When a friendly minion dies, return it to your hand. It costs (2) less."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CORE_MAW_019",
+      "cardNameZhCN": "谋杀指控",
+      "cardTextZhCN": "选择一个随从，在另一个敌方随从死亡后将其消灭。",
+      "cardTextZhCNPlain": "选择一个随从，在另一个敌方随从死亡后将其消灭。",
+      "id": "CORE_MAW_019",
+      "dbfId": 118029,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "谋杀指控",
+        "enUS": "Murder Accusation"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "选择一个随从，在另一个敌方随从死亡后将其消灭。",
+        "enUS": "Choose a minion. Destroy it after another enemy minion dies.",
+        "zhCNPlain": "选择一个随从，在另一个敌方随从死亡后将其消灭。",
+        "enUSPlain": "Choose a minion. Destroy it after another enemy minion dies."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_ICC_201",
+      "cardNameZhCN": "命运骨骰",
+      "cardTextZhCN": "抽一张牌。如果这张牌有<b>亡语</b>，则再次施放本法术。",
+      "cardTextZhCNPlain": "抽一张牌。如果这张牌有亡语，则再次施放本法术。",
+      "id": "CORE_ICC_201",
+      "dbfId": 95740,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "命运骨骰",
+        "enUS": "Roll the Bones"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "抽一张牌。如果这张牌有<b>亡语</b>，则再次施放本法术。",
+        "enUS": "Draw a card.\nIf it has <b>Deathrattle</b>, cast this again.",
+        "zhCNPlain": "抽一张牌。如果这张牌有亡语，则再次施放本法术。",
+        "enUSPlain": "Draw a card. If it has Deathrattle, cast this again."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CORE_REV_939",
+      "cardNameZhCN": "锯齿骨刺",
+      "cardTextZhCN": "对一个随从造成$3点伤害。如果该随从死亡，在本回合中，你的下一张牌法力值消耗减少（2）点。",
+      "cardTextZhCNPlain": "对一个随从造成3点伤害。如果该随从死亡，在本回合中，你的下一张牌法力值消耗减少（2）点。",
+      "id": "CORE_REV_939",
+      "dbfId": 118158,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "锯齿骨刺",
+        "enUS": "Serrated Bone Spike"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对一个随从造成$3点伤害。如果该随从死亡，在本回合中，你的下一张牌法力值消耗减少（2）点。",
+        "enUS": "[x]Deal $3 damage to a \nminion. If it dies, your \nnext card this turn \ncosts (2) less.",
+        "zhCNPlain": "对一个随从造成3点伤害。如果该随从死亡，在本回合中，你的下一张牌法力值消耗减少（2）点。",
+        "enUSPlain": "[x]Deal 3 damage to a minion. If it dies, your next card this turn costs (2) less."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "CORE_OG_330",
+      "cardNameZhCN": "幽暗城商贩",
+      "cardTextZhCN": "<b>亡语：</b>\n随机获取一张<i>（你对手职业的）</i>卡牌。",
+      "cardTextZhCNPlain": "亡语： 随机获取一张（你对手职业的）卡牌。",
+      "id": "CORE_OG_330",
+      "dbfId": 120880,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "幽暗城商贩",
+        "enUS": "Undercity Huckster"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>\n随机获取一张<i>（你对手职业的）</i>卡牌。",
+        "enUS": "<b>Deathrattle:</b> Get a\nrandom card <i>(from your\nopponent's class)</i>.",
+        "zhCNPlain": "亡语： 随机获取一张（你对手职业的）卡牌。",
+        "enUSPlain": "Deathrattle: Get a random card (from your opponent's class)."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "CORE_REV_750",
+      "cardNameZhCN": "罪碑坟场",
+      "cardTextZhCN": "召唤一个@/@的幽灵。<i>（在本回合中每有一张其他牌被使用，拥有+1/+1！）</i>",
+      "cardTextZhCNPlain": "召唤一个/的幽灵。（在本回合中每有一张其他牌被使用，拥有+1/+1！）",
+      "id": "CORE_REV_750",
+      "dbfId": 118125,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "罪碑坟场",
+        "enUS": "Sinstone Graveyard"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "LOCATION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "召唤一个@/@的幽灵。<i>（在本回合中每有一张其他牌被使用，拥有+1/+1！）</i>",
+        "enUS": "[x]Summon a @/@ Ghost.\n<i>(Has +1/+1 for each other\ncard you played this turn!)</i>",
+        "zhCNPlain": "召唤一个/的幽灵。（在本回合中每有一张其他牌被使用，拥有+1/+1！）",
+        "enUSPlain": "[x]Summon a / Ghost. (Has +1/+1 for each other card you played this turn!)"
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "CORE_REV_829",
+      "cardNameZhCN": "哈尔吉亚斯",
+      "cardTextZhCN": "<b>潜行</b>。<b>亡语：</b>将哈尔吉亚斯的灵魂储存在一个友方<b>奥秘</b>中。当其被触发时，重新召唤哈尔吉亚斯。",
+      "cardTextZhCNPlain": "潜行。亡语：将哈尔吉亚斯的灵魂储存在一个友方奥秘中。当其被触发时，重新召唤哈尔吉亚斯。",
+      "id": "CORE_REV_829",
+      "dbfId": 118130,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "哈尔吉亚斯",
+        "enUS": "Halkias"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE",
+        "STEALTH"
+      ],
+      "text": {
+        "zhCN": "<b>潜行</b>。<b>亡语：</b>将哈尔吉亚斯的灵魂储存在一个友方<b>奥秘</b>中。当其被触发时，重新召唤哈尔吉亚斯。",
+        "enUS": "[x]<b>Stealth</b>. <b>Deathrattle:</b> Store\nHalkias's soul inside of a\nfriendly <b>Secret</b>. It resummons\nHalkias when triggered.",
+        "zhCNPlain": "潜行。亡语：将哈尔吉亚斯的灵魂储存在一个友方奥秘中。当其被触发时，重新召唤哈尔吉亚斯。",
+        "enUSPlain": "[x]Stealth. Deathrattle: Store Halkias's soul inside of a friendly Secret. It resummons Halkias when triggered."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "CORE_LOE_012",
+      "cardNameZhCN": "盗墓匪贼",
+      "cardTextZhCN": "<b>亡语：</b>获取一张\n幸运币。",
+      "cardTextZhCNPlain": "亡语：获取一张 幸运币。",
+      "id": "CORE_LOE_012",
+      "dbfId": 69738,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "盗墓匪贼",
+        "enUS": "Tomb Pillager"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>获取一张\n幸运币。",
+        "enUS": "<b>Deathrattle:</b> Get a Coin.",
+        "zhCNPlain": "亡语：获取一张 幸运币。",
+        "enUSPlain": "Deathrattle: Get a Coin."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "CORE_ICC_065",
+      "cardNameZhCN": "白骨大亨",
+      "cardTextZhCN": "<b>亡语：</b>\n将两张1/1的“骷髅”置入你的手牌。",
+      "cardTextZhCNPlain": "亡语： 将两张1/1的“骷髅”置入你的手牌。",
+      "id": "CORE_ICC_065",
+      "dbfId": 95647,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "白骨大亨",
+        "enUS": "Bone Baron"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>\n将两张1/1的“骷髅”置入你的手牌。",
+        "enUS": "<b>Deathrattle:</b> Add two 1/1 Skeletons to your hand.",
+        "zhCNPlain": "亡语： 将两张1/1的“骷髅”置入你的手牌。",
+        "enUSPlain": "Deathrattle: Add two 1/1 Skeletons to your hand."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "CORE_REV_940",
+      "cardNameZhCN": "通灵领主德拉卡",
+      "cardTextZhCN": "<b>战吼：</b>装备一把@/3的匕首。<i>（在本回合中你每使用一张其他牌便+1攻击力，\n最高10点！）</i>",
+      "cardTextZhCNPlain": "战吼：装备一把/3的匕首。（在本回合中你每使用一张其他牌便+1攻击力， 最高10点！）",
+      "id": "CORE_REV_940",
+      "dbfId": 118159,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "通灵领主德拉卡",
+        "enUS": "Necrolord Draka"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>装备一把@/3的匕首。<i>（在本回合中你每使用一张其他牌便+1攻击力，\n最高10点！）</i>",
+        "enUS": "[x]<b>Battlecry:</b> Equip a @/3\nDagger. <i>(+1 Attack for\neach other card you played\nthis turn, up to 10!)</i>",
+        "zhCNPlain": "战吼：装备一把/3的匕首。（在本回合中你每使用一张其他牌便+1攻击力， 最高10点！）",
+        "enUSPlain": "[x]Battlecry: Equip a /3 Dagger. (+1 Attack for each other card you played this turn, up to 10!)"
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "CORE_MAW_020",
+      "cardNameZhCN": "潦草的书记员",
+      "cardTextZhCN": "<b>突袭</b>。在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "突袭。在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。",
+      "id": "CORE_MAW_020",
+      "dbfId": 118030,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "潦草的书记员",
+        "enUS": "Scribbling Stenographer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [
+        "RUSH"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>。在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。",
+        "enUS": "<b>Rush</b>. Costs (1) less for each card you've played this turn.",
+        "zhCNPlain": "突袭。在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "Rush. Costs (1) less for each card you've played this turn."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "CORE_ICC_910",
+      "cardNameZhCN": "鬼灵匪贼",
+      "cardTextZhCN": "<b>连击：</b>造成伤害，数值等同于在本回合中你使用的其他牌的\n数量。",
+      "cardTextZhCNPlain": "连击：造成伤害，数值等同于在本回合中你使用的其他牌的 数量。",
+      "id": "CORE_ICC_910",
+      "dbfId": 95757,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "鬼灵匪贼",
+        "enUS": "Spectral Pillager"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "EPIC",
+      "mechanics": [
+        "COMBO"
+      ],
+      "text": {
+        "zhCN": "<b>连击：</b>造成伤害，数值等同于在本回合中你使用的其他牌的\n数量。",
+        "enUS": "[x]<b>Combo:</b> Deal damage equal\nto the number of other cards\nyou've played this turn.",
+        "zhCNPlain": "连击：造成伤害，数值等同于在本回合中你使用的其他牌的 数量。",
+        "enUSPlain": "[x]Combo: Deal damage equal to the number of other cards you've played this turn."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "CORE_GIL_598",
+      "cardNameZhCN": "苔丝·格雷迈恩",
+      "cardTextZhCN": "<b>战吼：</b>重新使用在本局对战中你所使用过的另一职业的卡牌<i>（目标随机而定）</i>。",
+      "cardTextZhCNPlain": "战吼：重新使用在本局对战中你所使用过的另一职业的卡牌（目标随机而定）。",
+      "id": "CORE_GIL_598",
+      "dbfId": 86539,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "苔丝·格雷迈恩",
+        "enUS": "Tess Greymane"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>重新使用在本局对战中你所使用过的另一职业的卡牌<i>（目标随机而定）</i>。",
+        "enUS": "[x]<b>Battlecry:</b> Replay every card\nfrom another class you've\nplayed this game <i>(targets\nchosen randomly)</i>.",
+        "zhCNPlain": "战吼：重新使用在本局对战中你所使用过的另一职业的卡牌（目标随机而定）。",
+        "enUSPlain": "[x]Battlecry: Replay every card from another class you've played this game (targets chosen randomly)."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "EDR_540",
+      "cardNameZhCN": "扭曲的织网蛛",
+      "cardTextZhCN": "每当你使用其他的你已经使用过的随从牌，抽一张牌。",
+      "cardTextZhCNPlain": "每当你使用其他的你已经使用过的随从牌，抽一张牌。",
+      "id": "EDR_540",
+      "dbfId": 115612,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "扭曲的织网蛛",
+        "enUS": "Twisted Webweaver"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "每当你使用其他的你已经使用过的随从牌，抽一张牌。",
+        "enUS": "[x]Whenever you play another\nminion you've already\nplayed, draw a card.",
+        "zhCNPlain": "每当你使用其他的你已经使用过的随从牌，抽一张牌。",
+        "enUSPlain": "[x]Whenever you play another minion you've already played, draw a card."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "EDR_525",
+      "cardNameZhCN": "倒刺荆棘",
+      "cardTextZhCN": "<b>抉择：</b>获得在本回合中的<b>剧毒</b>；或者获得“<b>亡语：</b>对所有敌人造成2点伤害。”",
+      "cardTextZhCNPlain": "抉择：获得在本回合中的剧毒；或者获得“亡语：对所有敌人造成2点伤害。”",
+      "id": "EDR_525",
+      "dbfId": 114517,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "倒刺荆棘",
+        "enUS": "Barbed Thorn"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "WEAPON",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "CHOOSE_ONE"
+      ],
+      "text": {
+        "zhCN": "<b>抉择：</b>获得在本回合中的<b>剧毒</b>；或者获得“<b>亡语：</b>对所有敌人造成2点伤害。”",
+        "enUS": "[x]<b>Choose One -</b> Gain\n<b>Poisonous</b> this turn; or Gain\n\"<b>Deathrattle:</b> Deal 2 damage\nto all enemies.\"",
+        "zhCNPlain": "抉择：获得在本回合中的剧毒；或者获得“亡语：对所有敌人造成2点伤害。”",
+        "enUSPlain": "[x]Choose One - Gain Poisonous this turn; or Gain \"Deathrattle: Deal 2 damage to all enemies.\""
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 17,
+      "cardRank": 17,
+      "cardCode": "EDR_526",
+      "cardNameZhCN": "雷弗拉尔，恶念巨蛛",
+      "cardTextZhCN": "<b>战吼：</b>随机使你对手手牌中的@张牌困住一回合。\n<i>（你每使用过一次本随从都会提升。）</i>",
+      "cardTextZhCNPlain": "战吼：随机使你对手手牌中的张牌困住一回合。 （你每使用过一次本随从都会提升。）",
+      "id": "EDR_526",
+      "dbfId": 114518,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "雷弗拉尔，恶念巨蛛",
+        "enUS": "Renferal, the Malignant"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>随机使你对手手牌中的@张牌困住一回合。\n<i>（你每使用过一次本随从都会提升。）</i>",
+        "enUS": "[x]<b>Battlecry:</b> Trap @ random |4(card, cards)\nin your opponent's hand for a\nturn. <i>(Improved for each time\nyou've played this.)</i>",
+        "zhCNPlain": "战吼：随机使你对手手牌中的张牌困住一回合。 （你每使用过一次本随从都会提升。）",
+        "enUSPlain": "[x]Battlecry: Trap random |4(card, cards) in your opponent's hand for a turn. (Improved for each time you've played this.)"
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 18,
+      "cardRank": 18,
+      "cardCode": "FIR_919",
+      "cardNameZhCN": "永燃火凤",
+      "cardTextZhCN": "在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。<b>亡语：</b>在回合结束时，获取另一张永燃火凤。",
+      "cardTextZhCNPlain": "在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。亡语：在回合结束时，获取另一张永燃火凤。",
+      "id": "FIR_919",
+      "dbfId": 115646,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "永燃火凤",
+        "enUS": "Everburning Phoenix"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。<b>亡语：</b>在回合结束时，获取另一张永燃火凤。",
+        "enUS": "[x]Costs (1) less for each card\nyou've played this turn.\n<b>Deathrattle: </b>At end of turn,\nget another Phoenix.",
+        "zhCNPlain": "在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。亡语：在回合结束时，获取另一张永燃火凤。",
+        "enUSPlain": "[x]Costs (1) less for each card you've played this turn. Deathrattle: At end of turn, get another Phoenix."
+      },
+      "categories": [
+        "deathrattle",
+        "played_history"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 19,
+      "cardRank": 19,
+      "cardCode": "DINO_408",
+      "cardNameZhCN": "棱晶獠牙",
+      "cardTextZhCN": "<b>战吼：</b>将你最左边的手牌洗入你的牌库。<b>亡语：</b>抽两张牌。",
+      "cardTextZhCNPlain": "战吼：将你最左边的手牌洗入你的牌库。亡语：抽两张牌。",
+      "id": "DINO_408",
+      "dbfId": 118484,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "棱晶獠牙",
+        "enUS": "Crystal Tusk"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "WEAPON",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>将你最左边的手牌洗入你的牌库。<b>亡语：</b>抽两张牌。",
+        "enUS": "[x]<b>Battlecry:</b> Shuffle the left-\nmost card in your hand into\nyour deck. <b>Deathrattle:</b>\nDraw 2 cards.",
+        "zhCNPlain": "战吼：将你最左边的手牌洗入你的牌库。亡语：抽两张牌。",
+        "enUSPlain": "[x]Battlecry: Shuffle the left- most card in your hand into your deck. Deathrattle: Draw 2 cards."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 20,
+      "cardRank": 20,
+      "cardCode": "TLC_522",
+      "cardNameZhCN": "潜踪大师奥普",
+      "cardTextZhCN": "<b><b>潜行</b>。</b><b>战吼，连击，亡语：</b>施放刀扇。",
+      "cardTextZhCNPlain": "潜行。战吼，连击，亡语：施放刀扇。",
+      "id": "TLC_522",
+      "dbfId": 119532,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "潜踪大师奥普",
+        "enUS": "Opu the Unseen"
+      },
+      "set": "SET_1952",
+      "setName": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE",
+        "STEALTH"
+      ],
+      "text": {
+        "zhCN": "<b><b>潜行</b>。</b><b>战吼，连击，亡语：</b>施放刀扇。",
+        "enUS": "<b><b>Stealth</b>.</b> <b>Battlecry, Combo,\nand Deathrattle:</b> Cast\n'Fan of Knives'.",
+        "zhCNPlain": "潜行。战吼，连击，亡语：施放刀扇。",
+        "enUSPlain": "Stealth. Battlecry, Combo, and Deathrattle: Cast 'Fan of Knives'."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 21,
+      "cardRank": 21,
+      "cardCode": "END_000",
+      "cardNameZhCN": "不测之变",
+      "cardTextZhCN": "造成$2点伤害。<b>灌注</b>你的英雄技能。",
+      "cardTextZhCNPlain": "造成2点伤害。灌注你的英雄技能。",
+      "id": "END_000",
+      "dbfId": 121242,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "不测之变",
+        "enUS": "Eventuality"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "造成$2点伤害。<b>灌注</b>你的英雄技能。",
+        "enUS": "[x]Deal $2 damage.\n<b>Imbue</b> your Hero Power.",
+        "zhCNPlain": "造成2点伤害。灌注你的英雄技能。",
+        "enUSPlain": "[x]Deal 2 damage. Imbue your Hero Power."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 22,
+      "cardRank": 22,
+      "cardCode": "CATA_158",
+      "cardNameZhCN": "癫狂的追随者",
+      "cardTextZhCN": "<b>潜行</b>。<b>亡语：</b><b>兆示</b>{0}。",
+      "cardTextZhCNPlain": "潜行。亡语：兆示{0}。",
+      "id": "CATA_158",
+      "dbfId": 123549,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "癫狂的追随者",
+        "enUS": "Maniacal Follower"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE",
+        "STEALTH"
+      ],
+      "text": {
+        "zhCN": "<b>潜行</b>。<b>亡语：</b><b>兆示</b>{0}。",
+        "enUS": "<b>Stealth</b>\n<b>Deathrattle:</b> <b>Herald</b> {0}.",
+        "zhCNPlain": "潜行。亡语：兆示{0}。",
+        "enUSPlain": "Stealth Deathrattle: Herald {0}."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 23,
+      "cardRank": 23,
+      "cardCode": "CATA_786",
+      "cardNameZhCN": "混沌祈求者",
+      "cardTextZhCN": "在你施放一个法术后，随机施放一个法力值消耗相同的另一职业的法术。",
+      "cardTextZhCNPlain": "在你施放一个法术后，随机施放一个法力值消耗相同的另一职业的法术。",
+      "id": "CATA_786",
+      "dbfId": 123606,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "混沌祈求者",
+        "enUS": "Chaos Supplicant"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你施放一个法术后，随机施放一个法力值消耗相同的另一职业的法术。",
+        "enUS": "[x]After you cast a spell, cast a\nrandom spell of the same\nCost from another class.",
+        "zhCNPlain": "在你施放一个法术后，随机施放一个法力值消耗相同的另一职业的法术。",
+        "enUSPlain": "[x]After you cast a spell, cast a random spell of the same Cost from another class."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 24,
+      "cardRank": 24,
+      "cardCode": "CATA_481",
+      "cardNameZhCN": "厄索拉斯",
+      "cardTextZhCN": "<b>战吼：</b>随机吞食对手的两张手牌，然后<b>休眠</b>2回合。<b>亡语：</b>吐回吞食的牌。",
+      "cardTextZhCNPlain": "战吼：随机吞食对手的两张手牌，然后休眠2回合。亡语：吐回吞食的牌。",
+      "id": "CATA_481",
+      "dbfId": 123332,
+      "cardClass": "ROGUE",
+      "sourceCardClass": "ROGUE",
+      "rawClassValue": 7,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "厄索拉斯",
+        "enUS": "Iso'rath"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>随机吞食对手的两张手牌，然后<b>休眠</b>2回合。<b>亡语：</b>吐回吞食的牌。",
+        "enUS": "[x]<b>Battlecry:</b> Devour 2 random\ncards from the opponent's hand,\nthen go <b>Dormant</b> for 2 turns.\n<b>Deathrattle:</b> Return them.",
+        "zhCNPlain": "战吼：随机吞食对手的两张手牌，然后休眠2回合。亡语：吐回吞食的牌。",
+        "enUSPlain": "[x]Battlecry: Devour 2 random cards from the opponent's hand, then go Dormant for 2 turns. Deathrattle: Return them."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

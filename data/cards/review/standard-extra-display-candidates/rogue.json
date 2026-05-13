@@ -1,0 +1,407 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
+    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+    "source":  {
+                   "inputDir":  "data/cards/review/standard-history-sensitive",
+                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+               },
+    "class":  {
+                  "id":  "ROGUE",
+                  "name":  {
+                               "enUS":  "Rogue",
+                               "zhCN":  "æ½œè¡Œè€…"
+                           }
+              },
+    "count":  12,
+    "cards":  [
+                  {
+                      "rank":  1,
+                      "sourceRank":  1,
+                      "cardCode":  "CORE_REV_938",
+                      "cardNameZhCN":  "暗影之门",
+                      "cardTextZhCN":  "抽一张法术牌。\u003cb\u003e注能（@）：\u003c/b\u003e将它的一张\u003cb\u003e临时\u003c/b\u003e复制置入你的手牌。",
+                      "cardTextZhCNPlain":  "抽一张法术牌。注能（）：将它的一张临时复制置入你的手牌。",
+                      "cardClass":  "ROGUE",
+                      "type":  "SPELL",
+                      "cost":  1,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  4,
+                      "sourceRank":  4,
+                      "cardCode":  "CORE_ICC_201",
+                      "cardNameZhCN":  "命运骨骰",
+                      "cardTextZhCN":  "抽一张牌。如果这张牌有\u003cb\u003e亡语\u003c/b\u003e，则再次施放本法术。",
+                      "cardTextZhCNPlain":  "抽一张牌。如果这张牌有亡语，则再次施放本法术。",
+                      "cardClass":  "ROGUE",
+                      "type":  "SPELL",
+                      "cost":  2,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "deck_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "deckPool.CORE_ICC_201"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "牌库候选：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "效果命中牌库中的特定子集，显示剩余候选能辅助规划。"
+                                       }
+                  },
+                  {
+                      "rank":  7,
+                      "sourceRank":  7,
+                      "cardCode":  "CORE_REV_750",
+                      "cardNameZhCN":  "罪碑坟场",
+                      "cardTextZhCN":  "召唤一个@/@的幽灵。\u003ci\u003e（在本回合中每有一张其他牌被使用，拥有+1/+1！）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "召唤一个/的幽灵。（在本回合中每有一张其他牌被使用，拥有+1/+1！）",
+                      "cardClass":  "ROGUE",
+                      "type":  "LOCATION",
+                      "cost":  3,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "current_turn_stat_preview",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "otherCardsPlayedThisTurn"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合其他牌：{count}；幽灵 {attack}/{health}",
+                                           "reasoningZhCN":  "罪碑坟场身材由本回合其他出牌数决定。"
+                                       }
+                  },
+                  {
+                      "rank":  8,
+                      "sourceRank":  8,
+                      "cardCode":  "CORE_REV_829",
+                      "cardNameZhCN":  "哈尔吉亚斯",
+                      "cardTextZhCN":  "\u003cb\u003e潜行\u003c/b\u003e。\u003cb\u003e亡语：\u003c/b\u003e将哈尔吉亚斯的灵魂储存在一个友方\u003cb\u003e奥秘\u003c/b\u003e中。当其被触发时，重新召唤哈尔吉亚斯。",
+                      "cardTextZhCNPlain":  "潜行。亡语：将哈尔吉亚斯的灵魂储存在一个友方奥秘中。当其被触发时，重新召唤哈尔吉亚斯。",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "DEATHRATTLE",
+                                        "STEALTH"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "linked_card",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "play",
+                                                                   "board",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "linkedCard.CORE_REV_829"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "绑定牌：{linkedCardName}",
+                                           "reasoningZhCN":  "效果绑定具体实体，后续亡语或回归需要查看该绑定。"
+                                       }
+                  },
+                  {
+                      "rank":  11,
+                      "sourceRank":  11,
+                      "cardCode":  "CORE_REV_940",
+                      "cardNameZhCN":  "通灵领主德拉卡",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e装备一把@/3的匕首。\u003ci\u003e（在本回合中你每使用一张其他牌便+1攻击力，\n最高10点！）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "战吼：装备一把/3的匕首。（在本回合中你每使用一张其他牌便+1攻击力， 最高10点！）",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "current_turn_stat_preview",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "otherCardsPlayedThisTurn"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合其他牌：{count}；匕首 {attack}/3",
+                                           "reasoningZhCN":  "德拉卡武器攻击力由本回合其他出牌数决定。"
+                                       }
+                  },
+                  {
+                      "rank":  12,
+                      "sourceRank":  12,
+                      "cardCode":  "CORE_MAW_020",
+                      "cardNameZhCN":  "潦草的书记员",
+                      "cardTextZhCN":  "\u003cb\u003e突袭\u003c/b\u003e。在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。",
+                      "cardTextZhCNPlain":  "突袭。在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "RUSH"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CORE_MAW_020"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  13,
+                      "sourceRank":  13,
+                      "cardCode":  "CORE_ICC_910",
+                      "cardNameZhCN":  "鬼灵匪贼",
+                      "cardTextZhCN":  "\u003cb\u003e连击：\u003c/b\u003e造成伤害，数值等同于在本回合中你使用的其他牌的\n数量。",
+                      "cardTextZhCNPlain":  "连击：造成伤害，数值等同于在本回合中你使用的其他牌的 数量。",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "COMBO"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.CORE_ICC_910"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  14,
+                      "sourceRank":  14,
+                      "cardCode":  "CORE_GIL_598",
+                      "cardNameZhCN":  "苔丝·格雷迈恩",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e重新使用在本局对战中你所使用过的另一职业的卡牌\u003ci\u003e（目标随机而定）\u003c/i\u003e。",
+                      "cardTextZhCNPlain":  "战吼：重新使用在本局对战中你所使用过的另一职业的卡牌（目标随机而定）。",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "played_history_list",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "otherClassCardsPlayedThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "将重放另一职业牌：{cardNames}",
+                                           "reasoningZhCN":  "苔丝依赖本局已使用另一职业牌列表。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  15,
+                      "sourceRank":  15,
+                      "cardCode":  "EDR_540",
+                      "cardNameZhCN":  "扭曲的织网蛛",
+                      "cardTextZhCN":  "每当你使用其他的你已经使用过的随从牌，抽一张牌。",
+                      "cardTextZhCNPlain":  "每当你使用其他的你已经使用过的随从牌，抽一张牌。",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  2,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "hand_card_history_highlight",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyMinionCardsPlayedThisGame",
+                                                               "matchingMinionsInHand"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "手牌中已使用过的随从：{cardNames}",
+                                           "reasoningZhCN":  "织网蛛抽牌触发依赖随从牌名是否已使用过。"
+                                       }
+                  },
+                  {
+                      "rank":  17,
+                      "sourceRank":  17,
+                      "cardCode":  "EDR_526",
+                      "cardNameZhCN":  "雷弗拉尔，恶念巨蛛",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e随机使你对手手牌中的@张牌困住一回合。\n\u003ci\u003e（你每使用过一次本随从都会提升。）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "战吼：随机使你对手手牌中的张牌困住一回合。 （你每使用过一次本随从都会提升。）",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  3,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "self_play_count",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.EDR_526"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  18,
+                      "sourceRank":  18,
+                      "cardCode":  "FIR_919",
+                      "cardNameZhCN":  "永燃火凤",
+                      "cardTextZhCN":  "在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。\u003cb\u003e亡语：\u003c/b\u003e在回合结束时，获取另一张永燃火凤。",
+                      "cardTextZhCNPlain":  "在本回合中你每使用过一张牌，本牌的法力值消耗便减少（1）点。亡语：在回合结束时，获取另一张永燃火凤。",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "counter.FIR_919"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "计数：{count}；当前效果：{currentText}",
+                                           "reasoningZhCN":  "效果数值由对局计数决定，需要显示当前可用数值。"
+                                       }
+                  },
+                  {
+                      "rank":  24,
+                      "sourceRank":  24,
+                      "cardCode":  "CATA_481",
+                      "cardNameZhCN":  "厄索拉斯",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e随机吞食对手的两张手牌，然后\u003cb\u003e休眠\u003c/b\u003e2回合。\u003cb\u003e亡语：\u003c/b\u003e吐回吞食的牌。",
+                      "cardTextZhCNPlain":  "战吼：随机吞食对手的两张手牌，然后休眠2回合。亡语：吐回吞食的牌。",
+                      "cardClass":  "ROGUE",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "stored_opponent_cards",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "play",
+                                                                   "board",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "ursolathDevouredOpponentCardCount",
+                                                               "ursolathDormantTurnsRemaining",
+                                                               "knownDevouredOpponentCardsIfRevealed"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "吞食数量：{count}；已知牌：{knownCardNames}；休眠剩余 {turns} 回合",
+                                           "reasoningZhCN":  "被吞食的对手手牌默认不可见，只能展示数量和已知信息。"
+                                       }
+                  }
+              ],
+    "reviewFields":  [
+                         "extraDisplay.schemaVersion: currently 2",
+                         "extraDisplay.auditDecision: keep for actionable candidates",
+                         "extraDisplay.displayType: canonical UI behavior category",
+                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+                     ]
+}

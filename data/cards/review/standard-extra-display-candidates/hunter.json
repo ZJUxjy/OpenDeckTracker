@@ -1,0 +1,508 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
+    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+    "source":  {
+                   "inputDir":  "data/cards/review/standard-history-sensitive",
+                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+               },
+    "class":  {
+                  "id":  "HUNTER",
+                  "name":  {
+                               "enUS":  "Hunter",
+                               "zhCN":  "çŒŽäºº"
+                           }
+              },
+    "count":  15,
+    "cards":  [
+                  {
+                      "rank":  4,
+                      "sourceRank":  4,
+                      "cardCode":  "CORE_REV_350",
+                      "cardNameZhCN":  "狂暴利齿",
+                      "cardTextZhCN":  "召唤两只2/1的蝙蝠。\u003cb\u003e注能（@）：\u003c/b\u003e使其获得+1/+2。",
+                      "cardTextZhCNPlain":  "召唤两只2/1的蝙蝠。注能（）：使其获得+1/+2。",
+                      "cardClass":  "HUNTER",
+                      "type":  "SPELL",
+                      "cost":  2,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  8,
+                      "sourceRank":  8,
+                      "cardCode":  "CORE_REV_352",
+                      "cardNameZhCN":  "石缚加尔贡",
+                      "cardTextZhCN":  "\u003cb\u003e突袭\u003c/b\u003e，\u003cb\u003e注能（@）：\u003c/b\u003e同时对其攻击目标相邻的随从造成伤害。",
+                      "cardTextZhCNPlain":  "突袭，注能（）：同时对其攻击目标相邻的随从造成伤害。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  4,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "INFUSE",
+                                        "RUSH"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  9,
+                      "sourceRank":  9,
+                      "cardCode":  "CORE_ICC_243",
+                      "cardNameZhCN":  "巨型尸蛛",
+                      "cardTextZhCN":  "你的\u003cb\u003e亡语\u003c/b\u003e牌的法力值消耗减少（2）点。",
+                      "cardTextZhCNPlain":  "你的亡语牌的法力值消耗减少（2）点。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "AURA"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "related_card_highlight",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "relatedCards.CORE_ICC_243"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "高亮相关牌：{cardNames}",
+                                           "reasoningZhCN":  "相关牌会触发或受本牌影响，需要在手牌/牌库中高亮。"
+                                       }
+                  },
+                  {
+                      "rank":  10,
+                      "sourceRank":  10,
+                      "cardCode":  "CORE_MAW_009",
+                      "cardNameZhCN":  "影犬",
+                      "cardTextZhCN":  "每当本随从攻击时，使你的其他野兽获得+2/+2。\n\u003cb\u003e注能（@只野兽）：\u003c/b\u003e\n获得\u003cb\u003e突袭\u003c/b\u003e。",
+                      "cardTextZhCNPlain":  "每当本随从攻击时，使你的其他野兽获得+2/+2。 注能（只野兽）： 获得突袭。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress_by_tribe",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyBeastDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "野兽注能 {progress}/{required}；{infusedText}",
+                                           "reasoningZhCN":  "影犬注能只统计友方野兽死亡。"
+                                       }
+                  },
+                  {
+                      "rank":  11,
+                      "sourceRank":  11,
+                      "cardCode":  "CORE_MAW_011",
+                      "cardNameZhCN":  "辩护律师纳萨诺斯",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e\u003cb\u003e发现\u003c/b\u003e一个在本局对战中死亡的友方\u003cb\u003e亡语\u003c/b\u003e随从，获得其\u003cb\u003e亡语\u003c/b\u003e，然后触发。",
+                      "cardTextZhCNPlain":  "战吼：发现一个在本局对战中死亡的友方亡语随从，获得其亡语，然后触发。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "DISCOVER"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyDeadDeathrattleMinionsThisGameUnique"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "发现池：死亡友方亡语随从 {cardNames}",
+                                           "reasoningZhCN":  "纳萨诺斯发现池来自友方死亡亡语随从。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  13,
+                      "sourceRank":  13,
+                      "cardCode":  "CORE_ICC_825",
+                      "cardNameZhCN":  "憎恶弓箭手",
+                      "cardTextZhCN":  "\u003cb\u003e亡语：\u003c/b\u003e随机召唤一个在本局对战中死亡的友方野兽。",
+                      "cardTextZhCNPlain":  "亡语：随机召唤一个在本局对战中死亡的友方野兽。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "DEATHRATTLE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyDeadBeastsThisGameWeighted"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "复活野兽池：{cardNames}",
+                                           "reasoningZhCN":  "憎恶弓箭手只看友方野兽墓地。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  14,
+                      "sourceRank":  14,
+                      "cardCode":  "CORE_REV_353",
+                      "cardNameZhCN":  "猎手阿尔迪莫",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e召唤一个加尔贡伙伴。\u003cb\u003e注能（{0}）：\u003c/b\u003e再召唤一个。\u003cb\u003e注能（{1}）：\u003c/b\u003e再召唤一个！",
+                      "cardTextZhCNPlain":  "战吼：召唤一个加尔贡伙伴。注能（{0}）：再召唤一个。注能（{1}）：再召唤一个！",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY",
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  16,
+                      "sourceRank":  16,
+                      "cardCode":  "EDR_226",
+                      "cardNameZhCN":  "奇异训犬师",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e\n抽一张野兽牌。\u003cb\u003e灌注\u003c/b\u003e你的英雄技能。",
+                      "cardTextZhCNPlain":  "战吼： 抽一张野兽牌。灌注你的英雄技能。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  2,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "deck_pool",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "beastsRemainingInDeck"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "牌库中可抽野兽：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "奇异训犬师不是注能牌，只需要牌库野兽候选。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  22,
+                      "sourceRank":  22,
+                      "cardCode":  "TLC_836",
+                      "cardNameZhCN":  "环形山的尼利",
+                      "cardTextZhCN":  "每当你使用一张法力值消耗为（1）的随从牌，使其属性值翻倍。每当你施放一个法力值消耗为（1）的法术，施放两次。",
+                      "cardTextZhCNPlain":  "每当你使用一张法力值消耗为（1）的随从牌，使其属性值翻倍。每当你施放一个法力值消耗为（1）的法术，施放两次。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  3,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "related_card_highlight",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "relatedCards.TLC_836"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "高亮相关牌：{cardNames}",
+                                           "reasoningZhCN":  "相关牌会触发或受本牌影响，需要在手牌/牌库中高亮。"
+                                       }
+                  },
+                  {
+                      "rank":  25,
+                      "sourceRank":  25,
+                      "cardCode":  "TIME_620",
+                      "cardNameZhCN":  "失时往生",
+                      "cardTextZhCN":  "\u003cb\u003e奥秘：\u003c/b\u003e当一个友方随从在被使用的下一回合死亡时，再次召唤该随从。",
+                      "cardTextZhCNPlain":  "奥秘：当一个友方随从在被使用的下一回合死亡时，再次召唤该随从。",
+                      "cardClass":  "HUNTER",
+                      "type":  "SPELL",
+                      "cost":  2,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "SECRET"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "secret_eligible_minion_tracker",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "play",
+                                                                   "board",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlySecretActiveLostInTime",
+                                                               "friendlyMinionsPlayedPreviousTurnStillTrackable"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "可被奥秘复活的随从：{cardNames}",
+                                           "reasoningZhCN":  "失时往生需要追踪己方奥秘与上回合使用的随从标记。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  26,
+                      "sourceRank":  26,
+                      "cardCode":  "TIME_609",
+                      "cardNameZhCN":  "游侠将军希尔瓦娜斯",
+                      "cardTextZhCN":  "\u003cb\u003e奇闻\u003c/b\u003e\n\u003cb\u003e战吼：\u003c/b\u003e对所有敌人造成2点伤害。如果你使用过奥蕾莉亚或温蕾萨，每使用过一位，重复一次。",
+                      "cardTextZhCNPlain":  "奇闻 战吼：对所有敌人造成2点伤害。如果你使用过奥蕾莉亚或温蕾萨，每使用过一位，重复一次。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  3,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "played_history_count",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.TIME_609"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  28,
+                      "sourceRank":  28,
+                      "cardCode":  "CATA_557",
+                      "cardNameZhCN":  "希尔瓦娜斯的胜利",
+                      "cardTextZhCN":  "造成$3点伤害。如果你使用过本牌的其他复制，改为对所有敌人造成伤害。",
+                      "cardTextZhCNPlain":  "造成3点伤害。如果你使用过本牌的其他复制，改为对所有敌人造成伤害。",
+                      "cardClass":  "HUNTER",
+                      "type":  "SPELL",
+                      "cost":  2,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "played_copy_status",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.CATA_557"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  29,
+                      "sourceRank":  29,
+                      "cardCode":  "CATA_560",
+                      "cardNameZhCN":  "直面托维尔",
+                      "cardTextZhCN":  "再次使用你在本局对战中使用过的每一张法力值消耗为（1）的牌\u003ci\u003e（尽可能以敌人为目标）\u003c/i\u003e。",
+                      "cardTextZhCNPlain":  "再次使用你在本局对战中使用过的每一张法力值消耗为（1）的牌（尽可能以敌人为目标）。",
+                      "cardClass":  "HUNTER",
+                      "type":  "SPELL",
+                      "cost":  3,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "replay_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "oneCostCardsPlayedThisGameDistinct"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "将再次使用的 1 费牌：{cardNames}",
+                                           "reasoningZhCN":  "直面托维尔重放池来自本局已使用过的 1 费牌。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  31,
+                      "sourceRank":  31,
+                      "cardCode":  "MEND_304",
+                      "cardNameZhCN":  "塔雅·陆行",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你的召唤动物伙伴的卡牌多召唤一个\n伙伴。",
+                      "cardTextZhCNPlain":  "战吼：在本局对战中，你的召唤动物伙伴的卡牌多召唤一个 伙伴。",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  5,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "top_bar_status",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.MEND_304"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  },
+                  {
+                      "rank":  32,
+                      "sourceRank":  32,
+                      "cardCode":  "CATA_553",
+                      "cardNameZhCN":  "艾比西安",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e在本局对战中，你的龙拥有\u003cb\u003e突袭\u003c/b\u003e。\u003ci\u003e（当本牌在你手中时，使用一张龙牌即可将本牌变为12/12的龙！）\u003c/i\u003e",
+                      "cardTextZhCNPlain":  "战吼：在本局对战中，你的龙拥有突袭。（当本牌在你手中时，使用一张龙牌即可将本牌变为12/12的龙！）",
+                      "cardClass":  "HUNTER",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "while_holding_condition",
+                                           "implementationPriority":  "medium",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "cardState.CATA_553"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "状态：{value}",
+                                           "reasoningZhCN":  "audit 后保留；实现侧按本卡专属状态键读取。"
+                                       }
+                  }
+              ],
+    "reviewFields":  [
+                         "extraDisplay.schemaVersion: currently 2",
+                         "extraDisplay.auditDecision: keep for actionable candidates",
+                         "extraDisplay.displayType: canonical UI behavior category",
+                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+                     ]
+}

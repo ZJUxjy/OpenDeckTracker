@@ -1,4 +1,11 @@
-export type { CardClass, Rarity, CardType, CardDef } from './card-defs';
+export type {
+  CardClass,
+  CardDef,
+  CardRace,
+  CardType,
+  Rarity,
+  SpellSchool,
+} from './card-defs';
 export { CardDb } from './card-db';
 export { loadCards } from './card-loader';
 export { matches, type SearchFilter } from './card-search';

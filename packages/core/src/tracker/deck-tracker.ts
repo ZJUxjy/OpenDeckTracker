@@ -39,6 +39,12 @@ import type {
   ExtractCtx,
 } from '../global-effects/types';
 import type { HeroClass } from '../deck/deck-types';
+import {
+  createEmptyExtraDisplaySnapshot,
+  MatchExtraDisplayState,
+  type ExtraDisplayCardLookup,
+  type ExtraDisplaySnapshot,
+} from './extra-display-state';
 
 // ── Polling intervals (per design D6) ────────────────────────────────
 const INTERVAL_IDLE_MS = 2_000;
@@ -115,6 +121,13 @@ export interface DeckTrackerSnapshot {
    * routed through the opposing controller by game effects.
    */
   friendlyGraveyard: OpponentCardRecord[];
+  /** Match-state counters and pools used by card-specific extra displays.
+   *  Always populated by `buildSnapshot`/`blankSnapshot`; declared optional only
+   *  to spare existing test fixtures from re-declaring an empty default. */
+  extraDisplay?: ExtraDisplaySnapshot & {
+    /** Friendly cards currently on board, used to activate related-card highlights. */
+    friendlyBoard: OpponentCardRecord[];
+  };
   /** Friendly remaining deck count (for header summary). */
   friendlyDeckCount: number;
   /** Global effects whose caster is the local player (per-match scope). */
@@ -260,6 +273,8 @@ export class DeckTracker {
    * Returning `true` excludes the card from the opponent record list.
    */
   private readonly opponentCardSuppressor: ((cardId: string) => boolean) | null;
+  private readonly cardMetadataLookup: ExtraDisplayCardLookup | null;
+  private readonly extraDisplayState = new MatchExtraDisplayState();
   /**
    * Once-per-match memoised opponent class. Cleared on PRE_MATCH entry
    * and POST_MATCH → IDLE. Avoids UI flicker if the hero entity is
@@ -294,11 +309,14 @@ export class DeckTracker {
      * opposing controller (e.g. start-of-game-disappear / 奇闻 cards).
      */
     opponentCardSuppressor?: (cardId: string) => boolean;
+    /** Optional CardDb-backed metadata lookup for card-specific extra displays. */
+    cardMetadataLookup?: ExtraDisplayCardLookup;
   }) {
     this.mirror = args.mirror;
     this.boardAttackContextProvider = args.boardAttackContextProvider ?? null;
     this.cardClassLookup = args.cardClassLookup ?? null;
     this.opponentCardSuppressor = args.opponentCardSuppressor ?? null;
+    this.cardMetadataLookup = args.cardMetadataLookup ?? null;
     // In-game memory-field identifier ONLY. The dialog fallback flow
     // is intentionally NOT wired in here as a "blocking identifier"
     // (which would deadlock against the dialog event being shown):
@@ -341,6 +359,11 @@ export class DeckTracker {
       controllerId: event.controllerId,
       info: { playedByController: event.controllerId },
     });
+    this.extraDisplayState.recordCardPlayed({
+      event,
+      localControllerId: this.game.localPlayer.controllerId,
+      cardLookup: this.cardMetadataLookup,
+    });
     this.registry.handleCardPlayed(event);
     this.currentSnapshot = this.buildSnapshot();
   }
@@ -353,7 +376,38 @@ export class DeckTracker {
    * coherent snapshot after the backfill has settled.
    */
   applyLogDerivedEntityUpdates(updates: readonly LogDerivedEntityUpdate[]): void {
-    this.game.applyLogDerivedEntityUpdates(updates);
+    const localControllerId = this.game.localPlayer.controllerId;
+    for (const update of updates) {
+      const before = this.game.entities.get(update.entityId);
+      const previousZone = before?.zone;
+      this.game.applyLogDerivedEntityUpdate(update);
+      const after = this.game.entities.get(update.entityId);
+      if (!after) continue;
+
+      const isFriendly = this.resolveHistoryController(after) === localControllerId;
+
+      if (after.zone === 'HAND' && isFriendly && after.cardId !== '') {
+        this.extraDisplayState.recordEntityEnteredHand({
+          entityId: after.entityId,
+          cardId: after.cardId,
+        });
+      } else if (previousZone === 'HAND' && after.zone !== 'HAND') {
+        this.extraDisplayState.recordEntityLeftHand(after.entityId);
+      }
+
+      if (after.cardId === '' || after.zone !== 'GRAVEYARD') continue;
+      if (previousZone === 'GRAVEYARD') continue;
+      this.extraDisplayState.recordEntityEnteredGraveyard({
+        entity: { entityId: after.entityId, cardId: after.cardId },
+        isFriendly,
+        cardLookup: this.cardMetadataLookup,
+      });
+    }
+    this.currentSnapshot = this.buildSnapshot();
+  }
+
+  recordTurnChange(turn: number): void {
+    this.extraDisplayState.recordTurnChange(turn);
     this.currentSnapshot = this.buildSnapshot();
   }
 
@@ -364,6 +418,7 @@ export class DeckTracker {
    */
   resetGlobalEffects(): void {
     this.registry.reset();
+    this.extraDisplayState.reset();
     this.currentSnapshot = this.buildSnapshot();
   }
 
@@ -529,6 +584,7 @@ export class DeckTracker {
       this.previousFriendlyHandSize = 0;
       this.resetOpponentRecords();
       this.registry.reset();
+      this.extraDisplayState.reset();
       this.awaitingDeckSelection = false;
       this.lastKnownSelectedDeckId = null;
       this.identifiedDeck = null;
@@ -544,6 +600,9 @@ export class DeckTracker {
     // Apply entities from snapshots.
     if (target === 'IN_MATCH' || target === 'PRE_MATCH') {
       this.applyEntitySnapshots({ matchInfo, deckState, handState, boardState });
+    }
+    if (target === 'IN_MATCH' && handState !== null) {
+      this.extraDisplayState.syncFriendlyHandEntities(handState.friendlyHand);
     }
     // Cache latest reflector state so `computeBoardAttack` (called
     // from `buildSnapshot`) sees authoritative minion data.
@@ -777,6 +836,10 @@ export class DeckTracker {
       opponent: this.buildOpponentRecords(),
       opponentClass: this.resolveOpponentClass(),
       friendlyGraveyard: this.buildFriendlyGraveyard(),
+      extraDisplay: {
+        ...this.extraDisplayState.snapshot(),
+        friendlyBoard: this.buildFriendlyBoard(),
+      },
       friendlyDeckCount: deckState?.friendlyDeck.length ?? this.game.localPlayer.deck.length,
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
@@ -865,7 +928,7 @@ export class DeckTracker {
     const records = Array.from(this.game.entities.values())
       .filter((entity) => {
         if (!entity.isRevealed) return false;
-        if (!isOpponentHistoryCardId(entity.cardId)) return false;
+        if (!isHistoryTrackableCardId(entity.cardId)) return false;
         if (!(entity.isInPlay || entity.isInGraveyard || entity.isInSecret)) return false;
         if (this.opponentCardSuppressor?.(entity.cardId) === true) return false;
         if (this.resolveHistoryController(entity) !== opposingControllerId) return false;
@@ -912,8 +975,28 @@ export class DeckTracker {
       .filter(
         (entity) =>
           entity.isRevealed &&
-          isOpponentHistoryCardId(entity.cardId) &&
+          isHistoryTrackableCardId(entity.cardId) &&
           entity.isInGraveyard &&
+          this.resolveHistoryController(entity) === localControllerId,
+      )
+      .map((entity) => ({
+        entityId: entity.entityId,
+        cardId: entity.cardId,
+        zone: entity.zone,
+        order: this.ensureOpponentRecordOrder(entity.entityId),
+        created: entity.info.created === true,
+      }))
+      .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
+  }
+
+  private buildFriendlyBoard(): OpponentCardRecord[] {
+    const localControllerId = this.game.localPlayer.controllerId;
+    return Array.from(this.game.entities.values())
+      .filter(
+        (entity) =>
+          entity.isRevealed &&
+          isHistoryTrackableCardId(entity.cardId) &&
+          entity.isInPlay &&
           this.resolveHistoryController(entity) === localControllerId,
       )
       .map((entity) => ({
@@ -1074,7 +1157,7 @@ function isDeckIdentityCardId(cardId: string): boolean {
   return true;
 }
 
-function isOpponentHistoryCardId(cardId: string): boolean {
+function isHistoryTrackableCardId(cardId: string): boolean {
   if (cardId === '') return false;
   if (isHeroOrPowerCardId(cardId)) return false;
   return true;
@@ -1177,6 +1260,10 @@ function blankSnapshot(): DeckTrackerSnapshot {
     },
     opponentClass: null,
     friendlyGraveyard: [],
+    extraDisplay: {
+      ...createEmptyExtraDisplaySnapshot(),
+      friendlyBoard: [],
+    },
     friendlyDeckCount: 0,
     friendlyEffects: [],
     opposingEffects: [],

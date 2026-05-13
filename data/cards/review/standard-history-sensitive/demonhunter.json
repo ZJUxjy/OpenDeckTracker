@@ -1,0 +1,946 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-13T16:07:01.947Z",
+  "purpose": "Manual review list for Standard cards whose effects may require deck-tracker history state beyond remaining deck count.",
+  "source": {
+    "cardData": "data/cards/generated/cards.collectible.{zhCN,enUS}.json",
+    "hsdataBuild": "241170",
+    "hsdataVersion": "35.4.0.241170",
+    "hsdataGeneratedAt": "2026-05-07T04:33:03.148Z",
+    "standardRotationVerifiedWith": "https://hearthcard.io/standard-rotation",
+    "note": "Death Knight class is corrected from raw hsdata CLASS=1 because generated CardDef currently maps CLASS=1 to NEUTRAL."
+  },
+  "standardSets": [
+    {
+      "code": "SET_1810",
+      "name": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      }
+    },
+    {
+      "code": "SET_1941",
+      "name": {
+        "enUS": "Event",
+        "zhCN": "活动"
+      }
+    },
+    {
+      "code": "SET_1946",
+      "name": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      }
+    },
+    {
+      "code": "SET_1952",
+      "name": {
+        "enUS": "The Lost City of Un'Goro",
+        "zhCN": "安戈洛龟途"
+      }
+    },
+    {
+      "code": "SET_1957",
+      "name": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      }
+    },
+    {
+      "code": "SET_1980",
+      "name": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      }
+    }
+  ],
+  "class": {
+    "id": "DEMONHUNTER",
+    "name": {
+      "enUS": "Demon Hunter",
+      "zhCN": "恶魔猎手"
+    }
+  },
+  "criteria": {
+    "includedTypes": [
+      "MINION",
+      "SPELL",
+      "WEAPON",
+      "LOCATION"
+    ],
+    "includedCategories": [
+      "corpse_resource",
+      "infuse_death_counter",
+      "graveyard_pool",
+      "deathrattle",
+      "death_event_trigger",
+      "played_history",
+      "persistent_global_effect"
+    ],
+    "caveat": "This is an intentionally inclusive candidate list for human review; medium-priority Deathrattle/death-event rows may not all require special tracker logic."
+  },
+  "count": 18,
+  "cards": [
+    {
+      "rank": 1,
+      "cardRank": 1,
+      "cardCode": "CORE_BT_427",
+      "cardNameZhCN": "灵魂盛宴",
+      "cardTextZhCN": "在本回合中每有一个友方随从死亡，抽一张牌。@<i>（抽@张牌）</i>",
+      "cardTextZhCNPlain": "在本回合中每有一个友方随从死亡，抽一张牌。（抽张牌）",
+      "id": "CORE_BT_427",
+      "dbfId": 69590,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "灵魂盛宴",
+        "enUS": "Feast of Souls"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在本回合中每有一个友方随从死亡，抽一张牌。@<i>（抽@张牌）</i>",
+        "enUS": "Draw a card for each friendly minion that died this turn.@ <i>(@)</i>",
+        "zhCNPlain": "在本回合中每有一个友方随从死亡，抽一张牌。（抽张牌）",
+        "enUSPlain": "Draw a card for each friendly minion that died this turn. ()"
+      },
+      "categories": [
+        "graveyard_pool",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 2,
+      "cardRank": 2,
+      "cardCode": "CORE_BAR_330",
+      "cardNameZhCN": "獠牙锥刃",
+      "cardTextZhCN": "<b>亡语：</b>抽一张<b>亡语</b>随从牌。",
+      "cardTextZhCNPlain": "亡语：抽一张亡语随从牌。",
+      "id": "CORE_BAR_330",
+      "dbfId": 120785,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "獠牙锥刃",
+        "enUS": "Tuskpiercer"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "WEAPON",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>抽一张<b>亡语</b>随从牌。",
+        "enUS": "[x]<b>Deathrattle:</b> Draw a\n<b>Deathrattle</b> minion.",
+        "zhCNPlain": "亡语：抽一张亡语随从牌。",
+        "enUSPlain": "[x]Deathrattle: Draw a Deathrattle minion."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 3,
+      "cardRank": 3,
+      "cardCode": "CORE_BT_355",
+      "cardNameZhCN": "怒鳞纳迦",
+      "cardTextZhCN": "在一个友方随从死亡后，随机对一个敌人造成3点伤害。",
+      "cardTextZhCNPlain": "在一个友方随从死亡后，随机对一个敌人造成3点伤害。",
+      "id": "CORE_BT_355",
+      "dbfId": 86547,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "怒鳞纳迦",
+        "enUS": "Wrathscale Naga"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在一个友方随从死亡后，随机对一个敌人造成3点伤害。",
+        "enUS": "After a friendly minion dies, deal 3 damage to a_random enemy.",
+        "zhCNPlain": "在一个友方随从死亡后，随机对一个敌人造成3点伤害。",
+        "enUSPlain": "After a friendly minion dies, deal 3 damage to a_random enemy."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 4,
+      "cardRank": 4,
+      "cardCode": "CORE_REV_510",
+      "cardNameZhCN": "贪食的克里克西斯",
+      "cardTextZhCN": "<b>战吼：</b>弃掉你的手牌。<b>亡语：</b>抽三张牌。",
+      "cardTextZhCNPlain": "战吼：弃掉你的手牌。亡语：抽三张牌。",
+      "id": "CORE_REV_510",
+      "dbfId": 118116,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "贪食的克里克西斯",
+        "enUS": "Kryxis the Voracious"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>弃掉你的手牌。<b>亡语：</b>抽三张牌。",
+        "enUS": "[x]<b>Battlecry</b>: Discard\nyour hand. <b>Deathrattle:</b>\nDraw 3 cards.",
+        "zhCNPlain": "战吼：弃掉你的手牌。亡语：抽三张牌。",
+        "enUSPlain": "[x]Battlecry: Discard your hand. Deathrattle: Draw 3 cards."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 5,
+      "cardRank": 5,
+      "cardCode": "CORE_MAW_012",
+      "cardNameZhCN": "邪能之乱",
+      "cardTextZhCN": "召唤一个在本局对战中死亡的友方恶魔。\n<b>注能（@个恶魔）：</b>改为召唤三个。",
+      "cardTextZhCNPlain": "召唤一个在本局对战中死亡的友方恶魔。 注能（个恶魔）：改为召唤三个。",
+      "id": "CORE_MAW_012",
+      "dbfId": 118022,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "邪能之乱",
+        "enUS": "All Fel Breaks Loose"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "FREE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "召唤一个在本局对战中死亡的友方恶魔。\n<b>注能（@个恶魔）：</b>改为召唤三个。",
+        "enUS": "[x]Summon a friendly Demon\nthat died this game.\n<b>Infuse (@ Demons):</b>\nSummon three instead.",
+        "zhCNPlain": "召唤一个在本局对战中死亡的友方恶魔。 注能（个恶魔）：改为召唤三个。",
+        "enUSPlain": "[x]Summon a friendly Demon that died this game. Infuse ( Demons): Summon three instead."
+      },
+      "categories": [
+        "infuse_death_counter",
+        "graveyard_pool",
+        "played_history"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand",
+        "text references died/dead/resurrected card pools",
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity",
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 6,
+      "cardRank": 6,
+      "cardCode": "CORE_DMF_224",
+      "cardNameZhCN": "演员大接力",
+      "cardTextZhCN": "召唤七个1/1并具有<b>突袭</b>的伊利达雷。在本回合中，如果他们全部死亡，再召唤七个。",
+      "cardTextZhCNPlain": "召唤七个1/1并具有突袭的伊利达雷。在本回合中，如果他们全部死亡，再召唤七个。",
+      "id": "CORE_DMF_224",
+      "dbfId": 111350,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "演员大接力",
+        "enUS": "Expendable Performers"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "SPELL",
+      "cost": 7,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "text": {
+        "zhCN": "召唤七个1/1并具有<b>突袭</b>的伊利达雷。在本回合中，如果他们全部死亡，再召唤七个。",
+        "enUS": "Summon seven 1/1 Illidari with <b>Rush</b>. If_they all die this turn, summon seven more.",
+        "zhCNPlain": "召唤七个1/1并具有突袭的伊利达雷。在本回合中，如果他们全部死亡，再召唤七个。",
+        "enUSPlain": "Summon seven 1/1 Illidari with Rush. If_they all die this turn, summon seven more."
+      },
+      "categories": [
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 7,
+      "cardRank": 7,
+      "cardCode": "CORE_REV_937",
+      "cardNameZhCN": "圣物匠赛·墨克斯",
+      "cardTextZhCN": "<b>战吼：</b><b>发现</b>并施放一个圣物。<b>注能（@）：</b>改为施放全部三个。",
+      "cardTextZhCNPlain": "战吼：发现并施放一个圣物。注能（）：改为施放全部三个。",
+      "id": "CORE_REV_937",
+      "dbfId": 118156,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "圣物匠赛·墨克斯",
+        "enUS": "Artificer Xy'mox"
+      },
+      "set": "SET_1810",
+      "setName": {
+        "enUS": "Core",
+        "zhCN": "核心"
+      },
+      "type": "MINION",
+      "cost": 8,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY",
+        "DISCOVER",
+        "INFUSE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b><b>发现</b>并施放一个圣物。<b>注能（@）：</b>改为施放全部三个。",
+        "enUS": "[x]<b>Battlecry:</b> <b>Discover</b> and \ncast a Relic. <b>Infuse (@):</b> \nCast all three instead.",
+        "zhCNPlain": "战吼：发现并施放一个圣物。注能（）：改为施放全部三个。",
+        "enUSPlain": "[x]Battlecry: Discover and cast a Relic. Infuse (): Cast all three instead."
+      },
+      "categories": [
+        "infuse_death_counter"
+      ],
+      "matchReasons": [
+        "Infuse/灌注/注能 depends on friendly deaths while the card is in hand"
+      ],
+      "trackingHints": [
+        "friendly_death_events_while_in_hand",
+        "infuse_state_by_entity"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 8,
+      "cardRank": 8,
+      "cardCode": "FIR_904",
+      "cardNameZhCN": "邪火爆焰",
+      "cardTextZhCN": "在你施放一个邪能\n法术后，消灭本随从并对所有敌人造成\n2点伤害。",
+      "cardTextZhCNPlain": "在你施放一个邪能 法术后，消灭本随从并对所有敌人造成 2点伤害。",
+      "id": "FIR_904",
+      "dbfId": 115628,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "邪火爆焰",
+        "enUS": "Felfire Blaze"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在你施放一个邪能\n法术后，消灭本随从并对所有敌人造成\n2点伤害。",
+        "enUS": "[x]After you cast a Fel spell,\ndestroy this and deal 2\ndamage to all enemies.",
+        "zhCNPlain": "在你施放一个邪能 法术后，消灭本随从并对所有敌人造成 2点伤害。",
+        "enUSPlain": "[x]After you cast a Fel spell, destroy this and deal 2 damage to all enemies."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 9,
+      "cardRank": 9,
+      "cardCode": "EDR_890",
+      "cardNameZhCN": "梦魇龙裔",
+      "cardTextZhCN": "<b>亡语：</b>使你最右边的手牌法力值消耗减少（2）点。",
+      "cardTextZhCNPlain": "亡语：使你最右边的手牌法力值消耗减少（2）点。",
+      "id": "EDR_890",
+      "dbfId": 114496,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "梦魇龙裔",
+        "enUS": "Nightmare Dragonkin"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>使你最右边的手牌法力值消耗减少（2）点。",
+        "enUS": "<b>Deathrattle:</b> Reduce the\nCost of the right-most card in your hand by (2).",
+        "zhCNPlain": "亡语：使你最右边的手牌法力值消耗减少（2）点。",
+        "enUSPlain": "Deathrattle: Reduce the Cost of the right-most card in your hand by (2)."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 10,
+      "cardRank": 10,
+      "cardCode": "EDR_841",
+      "cardNameZhCN": "恐魂腐蚀者",
+      "cardTextZhCN": "<b>战吼，亡语：</b>随机召唤一个<b>休眠</b>的魔种。",
+      "cardTextZhCNPlain": "战吼，亡语：随机召唤一个休眠的魔种。",
+      "id": "EDR_841",
+      "dbfId": 114663,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "恐魂腐蚀者",
+        "enUS": "Dreadsoul Corrupter"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼，亡语：</b>随机召唤一个<b>休眠</b>的魔种。",
+        "enUS": "[x]<b>Battlecry and Deathrattle:</b>\nSummon a random\n<b>Dormant</b> Dreadseed.",
+        "zhCNPlain": "战吼，亡语：随机召唤一个休眠的魔种。",
+        "enUSPlain": "[x]Battlecry and Deathrattle: Summon a random Dormant Dreadseed."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 11,
+      "cardRank": 11,
+      "cardCode": "EDR_891",
+      "cardNameZhCN": "贪婪的地狱猎犬",
+      "cardTextZhCN": "<b>亡语：</b>复活一个法力值消耗小于或等于（4）点的友方<b>亡语</b>随从，并召唤一个它的复制。",
+      "cardTextZhCNPlain": "亡语：复活一个法力值消耗小于或等于（4）点的友方亡语随从，并召唤一个它的复制。",
+      "id": "EDR_891",
+      "dbfId": 114497,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "贪婪的地狱猎犬",
+        "enUS": "Ravenous Felhunter"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>复活一个法力值消耗小于或等于（4）点的友方<b>亡语</b>随从，并召唤一个它的复制。",
+        "enUS": "<b>Deathrattle:</b> Resurrect a friendly <b>Deathrattle</b> minion that costs (4) or less. Summon a copy of it.",
+        "zhCNPlain": "亡语：复活一个法力值消耗小于或等于（4）点的友方亡语随从，并召唤一个它的复制。",
+        "enUSPlain": "Deathrattle: Resurrect a friendly Deathrattle minion that costs (4) or less. Summon a copy of it."
+      },
+      "categories": [
+        "graveyard_pool",
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 12,
+      "cardRank": 12,
+      "cardCode": "EDR_892",
+      "cardNameZhCN": "残暴的魔蝠",
+      "cardTextZhCN": "<b>亡语：</b>复活一个不同的法力值消耗大于或等于（5）点的友方<b>亡语</b>随从，并召唤一个它的复制。",
+      "cardTextZhCNPlain": "亡语：复活一个不同的法力值消耗大于或等于（5）点的友方亡语随从，并召唤一个它的复制。",
+      "id": "EDR_892",
+      "dbfId": 114498,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "残暴的魔蝠",
+        "enUS": "Ferocious Felbat"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>复活一个不同的法力值消耗大于或等于（5）点的友方<b>亡语</b>随从，并召唤一个它的复制。",
+        "enUS": "[x]<b>Deathrattle:</b> Resurrect a\ndifferent friendly <b>Deathrattle</b>\nminion that costs (5) or more.\nSummon a copy of it.",
+        "zhCNPlain": "亡语：复活一个不同的法力值消耗大于或等于（5）点的友方亡语随从，并召唤一个它的复制。",
+        "enUSPlain": "[x]Deathrattle: Resurrect a different friendly Deathrattle minion that costs (5) or more. Summon a copy of it."
+      },
+      "categories": [
+        "graveyard_pool",
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 13,
+      "cardRank": 13,
+      "cardCode": "EDR_421",
+      "cardNameZhCN": "年兽",
+      "cardTextZhCN": "<b>突袭</b>。<b>风怒</b>\n<b>亡语：</b>对所有敌人造成@点伤害。<i>（在本随从攻击后提升！）</i>",
+      "cardTextZhCNPlain": "突袭。风怒 亡语：对所有敌人造成点伤害。（在本随从攻击后提升！）",
+      "id": "EDR_421",
+      "dbfId": 113606,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "年兽",
+        "enUS": "Omen"
+      },
+      "set": "SET_1946",
+      "setName": {
+        "enUS": "Into the Emerald Dream",
+        "zhCN": "漫游翡翠梦境"
+      },
+      "type": "MINION",
+      "cost": 10,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "DEATHRATTLE",
+        "RUSH",
+        "WINDFURY"
+      ],
+      "text": {
+        "zhCN": "<b>突袭</b>。<b>风怒</b>\n<b>亡语：</b>对所有敌人造成@点伤害。<i>（在本随从攻击后提升！）</i>",
+        "enUS": "[x]<b>Rush</b>, <b>Windfury</b>\n<b>Deathrattle:</b> Deal @ damage\nto all enemies. <i>(Improves\nafter this attacks!)</i>",
+        "zhCNPlain": "突袭。风怒 亡语：对所有敌人造成点伤害。（在本随从攻击后提升！）",
+        "enUSPlain": "[x]Rush, Windfury Deathrattle: Deal damage to all enemies. (Improves after this attacks!)"
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 14,
+      "cardRank": 14,
+      "cardCode": "TIME_444",
+      "cardNameZhCN": "迷时战刃",
+      "cardTextZhCN": "<b>亡语：</b>随机获取\n一张来自过去的恶魔牌。",
+      "cardTextZhCNPlain": "亡语：随机获取 一张来自过去的恶魔牌。",
+      "id": "TIME_444",
+      "dbfId": 120993,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "迷时战刃",
+        "enUS": "Time-Lost Glaive"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "WEAPON",
+      "cost": 1,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>亡语：</b>随机获取\n一张来自过去的恶魔牌。",
+        "enUS": "<b>Deathrattle:</b> Get a random Demon\nfrom the past.",
+        "zhCNPlain": "亡语：随机获取 一张来自过去的恶魔牌。",
+        "enUSPlain": "Deathrattle: Get a random Demon from the past."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 15,
+      "cardRank": 15,
+      "cardCode": "TIME_442",
+      "cardNameZhCN": "时间流守望者",
+      "cardTextZhCN": "<b>战吼：</b>囚禁一个敌方随从，使其<b>休眠</b>10000回合。<b>亡语：</b>唤醒该随从。",
+      "cardTextZhCNPlain": "战吼：囚禁一个敌方随从，使其休眠10000回合。亡语：唤醒该随从。",
+      "id": "TIME_442",
+      "dbfId": 120988,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "时间流守望者",
+        "enUS": "Timeway Warden"
+      },
+      "set": "SET_1957",
+      "setName": {
+        "enUS": "Across the Timeways",
+        "zhCN": "穿越时间流"
+      },
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "DEATHRATTLE"
+      ],
+      "text": {
+        "zhCN": "<b>战吼：</b>囚禁一个敌方随从，使其<b>休眠</b>10000回合。<b>亡语：</b>唤醒该随从。",
+        "enUS": "[x]<b>Battlecry:</b> Imprison an\nenemy minion. It goes\n<b>Dormant</b> for 10,000 turns.\n___<b>Deathrattle:</b> Awaken it.",
+        "zhCNPlain": "战吼：囚禁一个敌方随从，使其休眠10000回合。亡语：唤醒该随从。",
+        "enUSPlain": "[x]Battlecry: Imprison an enemy minion. It goes Dormant for 10,000 turns. ___Deathrattle: Awaken it."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 16,
+      "cardRank": 16,
+      "cardCode": "CATA_526",
+      "cardNameZhCN": "布洛克斯加的奋战",
+      "cardTextZhCN": "对所有随从造成$1点伤害。每有一个随从死亡，抽一\n张牌。",
+      "cardTextZhCNPlain": "对所有随从造成1点伤害。每有一个随从死亡，抽一 张牌。",
+      "id": "CATA_526",
+      "dbfId": 122770,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "布洛克斯加的奋战",
+        "enUS": "Broxigar's Last Stand"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "对所有随从造成$1点伤害。每有一个随从死亡，抽一\n张牌。",
+        "enUS": "[x]Deal $1 damage to all\nminions. Draw a card\nfor each that died.",
+        "zhCNPlain": "对所有随从造成1点伤害。每有一个随从死亡，抽一 张牌。",
+        "enUSPlain": "[x]Deal 1 damage to all minions. Draw a card for each that died."
+      },
+      "categories": [
+        "graveyard_pool",
+        "death_event_trigger"
+      ],
+      "matchReasons": [
+        "text references died/dead/resurrected card pools",
+        "text reacts to death/destruction events"
+      ],
+      "trackingHints": [
+        "friendly_graveyard",
+        "opponent_graveyard_when_text_allows_opponent_scope",
+        "death_history_by_card_type_tribe_cost_keyword",
+        "death_event_stream_this_turn"
+      ],
+      "reviewPriority": "high"
+    },
+    {
+      "rank": 17,
+      "cardRank": 17,
+      "cardCode": "CATA_527",
+      "cardNameZhCN": "奈瑟匹拉，蒙难古灵",
+      "cardTextZhCN": "造成1点伤害。在你施放一个邪能法术后，重新开启。<b>亡语：</b>召唤奈瑟匹拉，脱困古灵。",
+      "cardTextZhCNPlain": "造成1点伤害。在你施放一个邪能法术后，重新开启。亡语：召唤奈瑟匹拉，脱困古灵。",
+      "id": "CATA_527",
+      "dbfId": 122772,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "奈瑟匹拉，蒙难古灵",
+        "enUS": "Nespirah, Enthralled"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "LOCATION",
+      "cost": 3,
+      "rarity": "LEGENDARY",
+      "mechanics": [],
+      "text": {
+        "zhCN": "造成1点伤害。在你施放一个邪能法术后，重新开启。<b>亡语：</b>召唤奈瑟匹拉，脱困古灵。",
+        "enUS": "[x]Deal 1 damage. After you\ncast a Fel spell, reopen.\n<b>Deathrattle:</b> Summon\nNespirah, Unshackled.",
+        "zhCNPlain": "造成1点伤害。在你施放一个邪能法术后，重新开启。亡语：召唤奈瑟匹拉，脱困古灵。",
+        "enUSPlain": "[x]Deal 1 damage. After you cast a Fel spell, reopen. Deathrattle: Summon Nespirah, Unshackled."
+      },
+      "categories": [
+        "deathrattle"
+      ],
+      "matchReasons": [
+        "text/mechanics includes or interacts with Deathrattle/亡语"
+      ],
+      "trackingHints": [
+        "deathrattle_card_locations",
+        "deathrattle_trigger_events"
+      ],
+      "reviewPriority": "medium"
+    },
+    {
+      "rank": 18,
+      "cardRank": 18,
+      "cardCode": "CATA_529",
+      "cardNameZhCN": "贪婪的邪能钓鱼者",
+      "cardTextZhCN": "在本局对战中，你每施放一个邪能法术，本牌的法力值消耗便减少（1）点。",
+      "cardTextZhCNPlain": "在本局对战中，你每施放一个邪能法术，本牌的法力值消耗便减少（1）点。",
+      "id": "CATA_529",
+      "dbfId": 122775,
+      "cardClass": "DEMONHUNTER",
+      "sourceCardClass": "DEMONHUNTER",
+      "rawClassValue": 14,
+      "classCorrection": null,
+      "name": {
+        "zhCN": "贪婪的邪能钓鱼者",
+        "enUS": "Ravenous Felfisher"
+      },
+      "set": "SET_1980",
+      "setName": {
+        "enUS": "Cataclysm",
+        "zhCN": "大地的裂变"
+      },
+      "type": "MINION",
+      "cost": 6,
+      "rarity": "RARE",
+      "mechanics": [],
+      "text": {
+        "zhCN": "在本局对战中，你每施放一个邪能法术，本牌的法力值消耗便减少（1）点。",
+        "enUS": "[x]Costs (1) less for\neach Fel spell you've\ncast this game.",
+        "zhCNPlain": "在本局对战中，你每施放一个邪能法术，本牌的法力值消耗便减少（1）点。",
+        "enUSPlain": "[x]Costs (1) less for each Fel spell you've cast this game."
+      },
+      "categories": [
+        "played_history"
+      ],
+      "matchReasons": [
+        "text depends on cards/actions used, played, cast, summoned, discarded, overloaded, or spent"
+      ],
+      "trackingHints": [
+        "cards_played_this_turn",
+        "cards_played_last_turn",
+        "cards_played_this_game",
+        "spells_cast_this_game",
+        "summons_discards_overloads_and_spends_this_game"
+      ],
+      "reviewPriority": "high"
+    }
+  ],
+  "reviewFields": {
+    "rank": "1-based order within this class JSON file after the current sort.",
+    "cardRank": "Alias of rank for manual review tools that expect cardRank.",
+    "cardCode": "Hearthstone card id/code.",
+    "cardNameZhCN": "Simplified Chinese card name.",
+    "cardTextZhCN": "Original Simplified Chinese rules text, including markup.",
+    "cardTextZhCNPlain": "Simplified Chinese rules text with markup stripped for easier reading."
+  }
+}

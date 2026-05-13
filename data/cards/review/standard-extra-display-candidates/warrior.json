@@ -1,0 +1,254 @@
+{
+    "schemaVersion":  2,
+    "generatedAt":  "2026-05-13T17:23:58.7974987Z",
+    "purpose":  "Actionable Standard extra-display candidate list after audit cleanup. Rejected cards are moved to rejected.json.",
+    "source":  {
+                   "inputDir":  "data/cards/review/standard-history-sensitive",
+                   "basedOn":  "User audit under data/cards/review/standard-extra-display-candidates/audit plus follow-up cleanup.",
+                   "exclusionPolicy":  "Remove cards whose extra display was explicitly rejected by audit; keep low-priority edge cases with audit notes.",
+                   "note":  "The card names and Chinese rules text are copied from the source review JSON; extraDisplay is a recommendation for manual review, not a final implementation contract."
+               },
+    "class":  {
+                  "id":  "WARRIOR",
+                  "name":  {
+                               "enUS":  "Warrior",
+                               "zhCN":  "æˆ˜å£«"
+                           }
+              },
+    "count":  7,
+    "cards":  [
+                  {
+                      "rank":  2,
+                      "sourceRank":  2,
+                      "cardCode":  "CORE_REV_933",
+                      "cardNameZhCN":  "灌能战斧",
+                      "cardTextZhCN":  "在你的英雄攻击后，使你受伤的随从获得+1/+2。\u003cb\u003e注能（@）：\u003c/b\u003e改为+2/+2。",
+                      "cardTextZhCNPlain":  "在你的英雄攻击后，使你受伤的随从获得+1/+2。注能（）：改为+2/+2。",
+                      "cardClass":  "WARRIOR",
+                      "type":  "WEAPON",
+                      "cost":  3,
+                      "rarity":  "FREE",
+                      "mechanics":  [
+                                        "INFUSE"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "infuse_progress",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "infuseProgressByFriendlyDeathsWhileThisEntityInHand",
+                                                               "infuseRequired",
+                                                               "infusedState",
+                                                               "entityIdScopedCounter"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "注能 {progress}/{required}（{infusedText}）",
+                                           "reasoningZhCN":  "注能按手牌实体独立推进，需要显示当前进度和完成效果。"
+                                       }
+                  },
+                  {
+                      "rank":  5,
+                      "sourceRank":  5,
+                      "cardCode":  "CATA_EVENT_002",
+                      "cardNameZhCN":  "怨毒焰魔",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e如果你在本回合中施放过火焰法术，消灭一个随从。",
+                      "cardTextZhCNPlain":  "战吼：如果你在本回合中施放过火焰法术，消灭一个随从。",
+                      "cardClass":  "WARRIOR",
+                      "type":  "MINION",
+                      "cost":  3,
+                      "rarity":  "EPIC",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "turn_condition",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "fireSpellsCastThisTurnByYou"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合已施放火焰法术：{yesNo}；战吼消灭：{readyText}",
+                                           "reasoningZhCN":  "怨毒焰魔战吼依赖本回合火焰法术状态。"
+                                       }
+                  },
+                  {
+                      "rank":  6,
+                      "sourceRank":  6,
+                      "cardCode":  "EDR_455",
+                      "cardNameZhCN":  "屈从疯狂",
+                      "cardTextZhCN":  "\u003cb\u003e发现\u003c/b\u003e一条在本局对战中死亡的友方的龙，并再次召唤它。",
+                      "cardTextZhCNPlain":  "发现一条在本局对战中死亡的友方的龙，并再次召唤它。",
+                      "cardClass":  "WARRIOR",
+                      "type":  "SPELL",
+                      "cost":  3,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+                                        "DISCOVER"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "graveyard_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "friendlyDeadDragonsThisGameUnique"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "可发现龙：{cardNames}",
+                                           "reasoningZhCN":  "屈从疯狂发现池来自本局死亡友方龙。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  8,
+                      "sourceRank":  8,
+                      "cardCode":  "EDR_465",
+                      "cardNameZhCN":  "伊森德雷",
+                      "cardTextZhCN":  "\u003cb\u003e嘲讽\u003c/b\u003e。\u003cb\u003e亡语：\u003c/b\u003e在本局对战中伊森德雷每死亡过一次，随机召唤一条龙。",
+                      "cardTextZhCNPlain":  "嘲讽。亡语：在本局对战中伊森德雷每死亡过一次，随机召唤一条龙。",
+                      "cardClass":  "WARRIOR",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "DEATHRATTLE",
+                                        "TAUNT"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "specific_minion_death_counter",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "deck",
+                                                                   "hand",
+                                                                   "graveyard",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "ysendraDeathsThisGame"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "伊森德雷已死亡：{count} 次；将召唤 {count} 条龙",
+                                           "reasoningZhCN":  "伊森德雷亡语规模随自身死亡次数增长。"
+                                       }
+                  },
+                  {
+                      "rank":  10,
+                      "sourceRank":  10,
+                      "cardCode":  "TIME_714",
+                      "cardNameZhCN":  "时光领主埃博克",
+                      "cardTextZhCN":  "\u003cb\u003e战吼：\u003c/b\u003e消灭你的对手上回合使用的\n所有随从。",
+                      "cardTextZhCNPlain":  "战吼：消灭你的对手上回合使用的 所有随从。",
+                      "cardClass":  "WARRIOR",
+                      "type":  "MINION",
+                      "cost":  6,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "BATTLECRY"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "last_turn_history",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "opponentMinionsPlayedLastTurnStillInPlay"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "可消灭：{cardNames}",
+                                           "reasoningZhCN":  "埃博克只消灭对手上回合打出且仍在场的随从。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  11,
+                      "sourceRank":  11,
+                      "cardCode":  "TIME_850",
+                      "cardNameZhCN":  "血斗士洛戈什",
+                      "cardTextZhCN":  "\u003cb\u003e奇闻\u003c/b\u003e\n\u003cb\u003e突袭\u003c/b\u003e。\u003cb\u003e亡语：\u003c/b\u003e从你的手牌中召唤一位血斗士，使其获得+5/+5并随机攻击一个敌人。",
+                      "cardTextZhCNPlain":  "奇闻 突袭。亡语：从你的手牌中召唤一位血斗士，使其获得+5/+5并随机攻击一个敌人。",
+                      "cardClass":  "WARRIOR",
+                      "type":  "MINION",
+                      "cost":  7,
+                      "rarity":  "LEGENDARY",
+                      "mechanics":  [
+                                        "DEATHRATTLE",
+                                        "RUSH"
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "hand_pool",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "play",
+                                                                   "board",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "bloodsportMinionsInHand"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "手牌中的血斗士：{cardNames}（{count}）",
+                                           "reasoningZhCN":  "血斗士洛戈什亡语需要按 BLOODSPORT 标签筛选手牌。",
+                                           "emptyWarning":  true
+                                       }
+                  },
+                  {
+                      "rank":  12,
+                      "sourceRank":  12,
+                      "cardCode":  "CATA_584",
+                      "cardNameZhCN":  "喷发火山",
+                      "cardTextZhCN":  "造成3点伤害，随机分配到所有敌人身上。如果你在本回合中使用过火焰法术牌，再造成3点。",
+                      "cardTextZhCNPlain":  "造成3点伤害，随机分配到所有敌人身上。如果你在本回合中使用过火焰法术牌，再造成3点。",
+                      "cardClass":  "WARRIOR",
+                      "type":  "LOCATION",
+                      "cost":  3,
+                      "rarity":  "RARE",
+                      "mechanics":  [
+
+                                    ],
+                      "extraDisplay":  {
+                                           "schemaVersion":  2,
+                                           "auditDecision":  "keep",
+                                           "displayType":  "turn_condition",
+                                           "implementationPriority":  "high",
+                                           "displaySurfaces":  [
+                                                                   "hand",
+                                                                   "hover"
+                                                               ],
+                                           "stateNeeded":  [
+                                                               "fireSpellsCastThisTurnByYou"
+                                                           ],
+                                           "suggestedDisplayTextZhCN":  "本回合已施放火焰法术：{yesNo}；当前伤害 {damage}",
+                                           "reasoningZhCN":  "喷发火山与怨毒焰魔共用本回合火焰法术状态。"
+                                       }
+                  }
+              ],
+    "reviewFields":  [
+                         "extraDisplay.schemaVersion: currently 2",
+                         "extraDisplay.auditDecision: keep for actionable candidates",
+                         "extraDisplay.displayType: canonical UI behavior category",
+                         "extraDisplay.implementationPriority: high/medium/low for implementation ordering",
+                         "extraDisplay.displaySurfaces: top_bar/hand/deck/play/board/graveyard/hover surfaces where state should appear",
+                         "extraDisplay.stateNeeded: concrete state keys from data/cards/schema/stateNeeded-vocabulary.md",
+                         "extraDisplay.emptyWarning: pool displays should warn when count is zero",
+                         "extraDisplay.notesZhCN: audit caveats and low-priority notes"
+                     ]
+}
