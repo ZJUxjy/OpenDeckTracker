@@ -979,6 +979,47 @@ describe('DeckTracker', () => {
     ).toBe(1);
   });
 
+  it('builds extra-display deck pools from remaining deck metadata', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'A', [
+        { cardId: 'BEAST_CARD', count: 2 },
+        { cardId: 'DRAGON_CARD', count: 1 },
+        { cardId: 'HOLY_SPELL', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [
+        { entityId: 1, cardId: 'BEAST_CARD' },
+        { entityId: 2, cardId: 'BEAST_CARD' },
+        { entityId: 3, cardId: 'DRAGON_CARD' },
+        { entityId: 4, cardId: 'HOLY_SPELL' },
+      ],
+      opposingDeckCount: 20,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 5 };
+    state.boardState = { friendly: [], opposing: [] };
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      cardMetadataLookup: (cardId) => {
+        if (cardId === 'BEAST_CARD') return { type: 'MINION', races: ['BEAST'], cost: 2 };
+        if (cardId === 'DRAGON_CARD') return { type: 'MINION', races: ['DRAGON'], cost: 5 };
+        if (cardId === 'HOLY_SPELL') return { type: 'SPELL', spellSchool: 'HOLY', cost: 3 };
+        return null;
+      },
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    const pools = tracker.getSnapshot().extraDisplay!.pools;
+    expect(pools.beastsRemainingInDeck).toEqual([{ cardId: 'BEAST_CARD', count: 2 }]);
+    expect(pools['deckPool.CORE_DMF_194']).toEqual([{ cardId: 'DRAGON_CARD', count: 1 }]);
+    expect(pools.holySpellsRemainingInDeck).toEqual([{ cardId: 'HOLY_SPELL', count: 1 }]);
+    tracker.stop();
+  });
+
   it('keeps an opponent played card out of the friendly graveyard even if a later update has the local controller', () => {
     const { mirror } = makeMirror();
     const tracker = new DeckTracker({ mirror });

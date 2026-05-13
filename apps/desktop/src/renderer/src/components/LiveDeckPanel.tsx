@@ -560,9 +560,9 @@ function CardCopyRow({
         </div>
         {rowExtra.badges.length > 0 ? (
           <div className="flex shrink-0 items-center gap-1">
-            {rowExtra.badges.map((badge) => (
+            {rowExtra.badges.map((badge, index) => (
               <span
-                key={badge.label}
+                key={`${badge.label}:${index}`}
                 data-testid="card-extra-display-badge"
                 className={clsx(
                   'rounded border px-1.5 py-0.5 text-[10px] font-bold leading-none shadow-sm',
@@ -641,6 +641,13 @@ interface Bindings {
   [key: string]: string | number;
 }
 
+type InfuseScope = NonNullable<NonNullable<ExtraDisplayCandidate['extraDisplay']>['infuseConfig']>['scope'];
+
+interface ResolvedInfuseConfig {
+  scope: InfuseScope | 'attack' | 'spell';
+  required: number | null;
+}
+
 function computeBindings(
   cardId: string,
   candidate: ExtraDisplayCandidate,
@@ -648,40 +655,108 @@ function computeBindings(
   extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
 ): Bindings {
   const counters = extraDisplay?.counters ?? {};
+  const pools = (extraDisplay?.pools ?? {}) as NonNullable<DeckTrackerSnapshot['extraDisplay']>['pools'];
+  const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
   const bindings: Bindings = { ...counters };
 
-  // Pool views.
+  const primaryPool = resolvePrimaryPool(candidate, extraDisplay);
+  const primaryPoolCount = countPoolCards(primaryPool);
+  if (primaryPool.length > 0 || stateNeeded.some((key) => poolForStateKey(key, extraDisplay).length > 0)) {
+    bindings.cardNames = formatPoolNames(primaryPool);
+    bindings.count = primaryPoolCount;
+    bindings.distinctCount = primaryPool.length;
+  }
+
   const demonPool = extraDisplay?.pools.friendlyDeadDemonsThisGameUnique ?? [];
-  bindings.demonNames = demonPool.map((p) => prettyCardName(p.cardId)).join('、');
+  bindings.demonNames = formatPoolNames(demonPool);
   bindings.demonCount = demonPool.length;
   bindings.demonInstances = demonPool.reduce((s, p) => s + p.count, 0);
 
-  // Cost-progress (Fel spell cost).
-  if (candidate.extraDisplay?.stateNeeded?.includes('felSpellsCastThisGame')) {
-    const cast = bindings.felSpellsCastThisGame as number | undefined ?? 0;
-    const baseCost = def?.cost ?? candidate.cost ?? 0;
-    bindings.discount = Math.min(baseCost, cast);
-    bindings.currentCost = Math.max(0, baseCost - cast);
-  }
+  bindings.natureSpellCount = countPoolCards(pools.natureSpellsInHand ?? []) + countPoolCards(pools.natureSpellsInDeck ?? []);
+  bindings.holyCount = countPoolCards(pools.holySpellsRemainingInDeck ?? []);
+  bindings.shadowCount = countPoolCards(pools.shadowSpellsRemainingInDeck ?? []);
+  bindings.cost1Names = formatPoolNames(pools.friendlyDeadMinionsCost1 ?? []);
+  bindings.cost2Names = formatPoolNames(pools.friendlyDeadMinionsCost2 ?? []);
+  bindings.cost3Names = formatPoolNames(pools.friendlyDeadMinionsCost3 ?? []);
+  bindings.impCount = countPoolCards(pools.friendlyDeadImpsThisGameUnique ?? []);
+
+  const count = resolvePrimaryCount(candidate, bindings, primaryPool);
+  bindings.count = bindings.count ?? count;
+  bindings.value = bindings.value ?? count;
+  bindings.currentText = bindings.currentText ?? countStatusText(count);
+  bindings.yesNo = count > 0 ? '是' : '否';
+  bindings.activeText = count > 0 ? '已生效' : '未生效';
+  bindings.readyText = count > 0 ? '已就绪' : '未就绪';
+  bindings.remaining = Math.max(0, resolveRequiredNumber(candidate) - count);
+  bindings.lastCost = counters.lastPlayedCardCost ?? 0;
+
+  const costDriver = resolveCostDriver(candidate, bindings);
+  const baseCost = def?.cost ?? candidate.cost ?? 0;
+  bindings.discount = Math.min(baseCost, costDriver);
+  bindings.currentCost = Math.max(0, baseCost - costDriver);
 
   // Soul-feast: predicted draws equal friendlyMinionsDiedThisTurn.
   if (cardId === 'CORE_BT_427') {
     bindings.drawCount = bindings.friendlyMinionsDiedThisTurn ?? 0;
   }
+  if (cardId === 'CORE_REV_750') {
+    const stat = Math.max(1, Number(bindings.otherCardsPlayedThisTurn ?? 0));
+    bindings.attack = stat;
+    bindings.health = stat;
+  }
+  if (cardId === 'CORE_REV_940') {
+    bindings.attack = Math.min(10, Number(bindings.otherCardsPlayedThisTurn ?? 0));
+    bindings.health = 3;
+  }
+  if (cardId === 'CORE_REV_514') {
+    const skeletons = Number(bindings.friendlyUnstableSkeletonDeathsThisGame ?? 0);
+    const boardSpace = Number(bindings.friendlyBoardSpace ?? 7);
+    bindings.count = skeletons;
+    bindings.summonCount = Math.min(skeletons, boardSpace);
+    bindings.overflow = Math.max(0, skeletons - boardSpace);
+  }
+  if (cardId === 'EDR_941') {
+    bindings.damage = Number(bindings.friendlyMinionDeathsThisGame ?? 0);
+  }
+  if (cardId === 'EDR_430') {
+    const deaths = Number(bindings.friendlyMinionDeathsThisGame ?? 0);
+    bindings.readyText = deaths >= 20 ? '已就绪' : `还差 ${20 - deaths}`;
+  }
+  if (cardId === 'CORE_REV_372') {
+    bindings.summonCount = Number(bindings.minionDeathsThisTurnBothPlayers ?? 0) > 0 ? 2 : 1;
+  }
+  if (cardId === 'CATA_EVENT_002') {
+    bindings.readyText = Number(bindings.fireSpellsCastThisTurnByYou ?? 0) > 0 ? '可消灭' : '未触发';
+  }
+  if (cardId === 'CATA_584') {
+    bindings.damage = Number(bindings.fireSpellsCastThisTurnByYou ?? 0) > 0 ? 6 : 3;
+  }
 
   // Infuse progress from per-cardId snapshot.
-  const infuseConfig = candidate.extraDisplay?.infuseConfig;
+  const infuseConfig = resolveInfuseConfig(cardId, candidate);
   if (infuseConfig) {
     const entry = extraDisplay?.infuseProgressByCardId?.[cardId];
-    const progress = entry
-      ? infuseConfig.scope === 'demon'
-        ? entry.friendlyDemonDeaths
-        : entry.friendlyDeaths
-      : 0;
+    const progress = resolveInfuseProgress(entry, infuseConfig.scope);
     bindings.progress = progress;
-    bindings.required = infuseConfig.required;
-    bindings.infusedText = progress >= infuseConfig.required ? '已注能' : '未注能';
-    bindings.summonCount = progress >= infuseConfig.required ? 3 : 1;
+    bindings.required = infuseConfig.required ?? '?';
+    const isInfused = infuseConfig.required !== null && progress >= infuseConfig.required;
+    bindings.infusedText = isInfused ? '已注能' : '未注能';
+    if (cardId === 'CORE_REV_353') {
+      bindings.summonCount = progress >= 8 ? 3 : progress >= 4 ? 2 : 1;
+    } else {
+      bindings.summonCount = isInfused ? 3 : 1;
+    }
+    bindings.cumulativeAttack = entry?.cumulativeAttack ?? 0;
+    bindings.infiniteInfuseStacks = cardId === 'CORE_REV_906' ? progress : bindings.infiniteInfuseStacks ?? 0;
+    bindings.currentBattlecryDamage = cardId === 'CORE_REV_906' ? 5 + progress : bindings.currentBattlecryDamage ?? 0;
+  } else if (cardId === 'CORE_REV_906') {
+    const progress = extraDisplay?.infuseProgressByCardId?.[cardId]?.friendlyDeaths ?? 0;
+    bindings.infiniteInfuseStacks = progress;
+    bindings.currentBattlecryDamage = 5 + progress;
+  } else if (cardId === 'CORE_REV_843') {
+    const entry = extraDisplay?.infuseProgressByCardId?.[cardId];
+    bindings.progress = entry?.friendlyDeaths ?? 0;
+    bindings.cumulativeAttack = entry?.cumulativeAttack ?? 0;
   }
 
   return bindings;
@@ -690,11 +765,23 @@ function computeBindings(
 function buildBadgesFor(
   candidate: ExtraDisplayCandidate,
   bindings: Bindings,
-  _extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
 ): RowExtraBadge[] {
   const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
   const emptyWarning = candidate.extraDisplay?.emptyWarning === true;
   const out: RowExtraBadge[] = [];
+  const primaryPool = resolvePrimaryPool(candidate, extraDisplay);
+  const poolCount = countPoolCards(primaryPool);
+
+  if (primaryPool.length > 0 || stateNeeded.some((key) => isPoolStateKey(key))) {
+    const tone: RowExtraBadge['tone'] = emptyWarning && poolCount === 0 ? 'warning' : 'normal';
+    out.push({ label: `池 ${poolCount}`, title: `候选池：${formatPoolNames(primaryPool) || '无'}`, tone });
+  }
+
+  if (stateNeeded.includes('currentCost')) {
+    const currentCost = bindings.currentCost as number;
+    out.push({ label: `${currentCost}费`, title: `预计当前费用 ${currentCost}` });
+  }
 
   if (stateNeeded.includes('felSpellsCastThisGame')) {
     const currentCost = bindings.currentCost as number;
@@ -717,10 +804,15 @@ function buildBadgesFor(
     const cast = bindings.holySpellsCastThisTurn as number;
     out.push({ label: `神 ${cast}`, title: `本回合已施放神圣法术：${cast}` });
   }
-  if (candidate.extraDisplay?.infuseConfig) {
+  if (stateNeeded.includes('shadowSpellsCastThisTurn')) {
+    const cast = bindings.shadowSpellsCastThisTurn as number;
+    out.push({ label: `暗 ${cast}`, title: `本回合已施放暗影法术：${cast}` });
+  }
+  if (resolveInfuseConfig(candidate.cardCode, candidate)) {
     const progress = bindings.progress as number;
-    const required = bindings.required as number;
-    const tone: RowExtraBadge['tone'] = progress >= required ? 'highlight' : 'normal';
+    const required = bindings.required;
+    const done = typeof required === 'number' && progress >= required;
+    const tone: RowExtraBadge['tone'] = done ? 'highlight' : 'normal';
     out.push({ label: `注能 ${progress}/${required}`, title: `注能进度 ${progress}/${required}`, tone });
   }
   return out;
@@ -729,9 +821,155 @@ function buildBadgesFor(
 function expandTemplate(template: string, bindings: Bindings): string {
   return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
     const value = bindings[key];
-    if (value === undefined || value === null) return `{${key}}`;
+    if (value === undefined || value === null) return fallbackBindingText(key);
     return String(value);
   });
+}
+
+function resolvePrimaryPool(
+  candidate: ExtraDisplayCandidate,
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): { cardId: string; count: number }[] {
+  for (const key of candidate.extraDisplay?.stateNeeded ?? []) {
+    const pool = poolForStateKey(key, extraDisplay);
+    if (pool.length > 0) return pool;
+  }
+  const fallbackKey = primaryPoolKeyForDisplayType(candidate.extraDisplay?.displayType);
+  return fallbackKey ? poolForStateKey(fallbackKey, extraDisplay) : [];
+}
+
+function poolForStateKey(
+  key: string,
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): { cardId: string; count: number }[] {
+  const pools = extraDisplay?.pools;
+  if (!pools) return [];
+  if (key === 'friendlyMinionsDiedThisTurn') return pools.friendlyGraveyardThisTurn ?? [];
+  return pools[key] ?? [];
+}
+
+function primaryPoolKeyForDisplayType(displayType: string | undefined): string | null {
+  if (displayType === 'graveyard_pool') return 'friendlyDeadMinionPoolThisGameUnique';
+  if (displayType === 'deck_pool') return 'deckMinionsRemaining';
+  return null;
+}
+
+function isPoolStateKey(key: string): boolean {
+  if (key.includes('WhileThisEntityInHand')) return false;
+  return key.includes('Pool') ||
+    key.includes('pool') ||
+    key.includes('Remaining') ||
+    key.includes('InDeck') ||
+    key.includes('InHand') ||
+    key.includes('Graveyard') ||
+    key.includes('Dead');
+}
+
+function countPoolCards(pool: readonly { count: number }[]): number {
+  return pool.reduce((sum, entry) => sum + entry.count, 0);
+}
+
+function formatPoolNames(pool: readonly { cardId: string; count: number }[]): string {
+  if (pool.length === 0) return '无';
+  return pool
+    .slice(0, 8)
+    .map((p) => `${prettyCardName(p.cardId)}${p.count > 1 ? ` x${p.count}` : ''}`)
+    .join('、');
+}
+
+function resolvePrimaryCount(
+  candidate: ExtraDisplayCandidate,
+  bindings: Bindings,
+  primaryPool: readonly { count: number }[],
+): number {
+  const poolCount = countPoolCards(primaryPool);
+  if (poolCount > 0) return poolCount;
+  for (const key of candidate.extraDisplay?.stateNeeded ?? []) {
+    const value = bindings[key];
+    if (typeof value === 'number') return value;
+    if (key.startsWith('counter.')) return 0;
+    if (key.startsWith('cardState.')) return 0;
+  }
+  return 0;
+}
+
+function resolveRequiredNumber(candidate: ExtraDisplayCandidate): number {
+  const text = candidate.extraDisplay?.suggestedDisplayTextZhCN ?? '';
+  const match = /\/(\d+)/.exec(text);
+  if (match) return Number(match[1]);
+  return candidate.extraDisplay?.infuseConfig?.required ?? 0;
+}
+
+function countStatusText(count: number): string {
+  return count > 0 ? `已记录 ${count}` : '暂无记录';
+}
+
+function resolveCostDriver(candidate: ExtraDisplayCandidate, bindings: Bindings): number {
+  for (const key of candidate.extraDisplay?.stateNeeded ?? []) {
+    if (key === 'currentCost') continue;
+    const value = bindings[key];
+    if (typeof value === 'number') return value;
+  }
+  return 0;
+}
+
+const INFUSE_FALLBACKS: Record<string, ResolvedInfuseConfig> = {
+  CORE_REV_336: { scope: 'any', required: 3 },
+  CORE_REV_350: { scope: 'any', required: 3 },
+  CORE_REV_352: { scope: 'any', required: 2 },
+  CORE_MAW_009: { scope: 'beast', required: 3 },
+  CORE_REV_353: { scope: 'any', required: 8 },
+  CORE_REV_601: { scope: 'any', required: 3 },
+  CORE_REV_956: { scope: 'any', required: 3 },
+  CORE_REV_957: { scope: 'any', required: 3 },
+  CORE_REV_019: { scope: 'any', required: 4 },
+  CORE_REV_013: { scope: 'any', required: 2 },
+  CORE_MAW_033: { scope: 'any', required: 7 },
+  CORE_REV_017: { scope: 'any', required: 5 },
+  CORE_REV_958: { scope: 'any', required: 3 },
+  CORE_REV_252: { scope: 'any', required: 4 },
+  CORE_REV_938: { scope: 'any', required: 2 },
+  CORE_REV_920: { scope: 'any', required: 4 },
+  CORE_MAW_003: { scope: 'totem', required: 3 },
+  CORE_REV_935: { scope: 'any', required: 3 },
+  CORE_REV_244: { scope: 'any', required: 3 },
+  CORE_REV_835: { scope: 'any', required: 3 },
+  CORE_REV_933: { scope: 'any', required: 2 },
+};
+
+function resolveInfuseConfig(
+  cardId: string,
+  candidate: ExtraDisplayCandidate,
+): ResolvedInfuseConfig | null {
+  const configured = candidate.extraDisplay?.infuseConfig;
+  if (configured) return configured;
+  const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
+  if (stateNeeded.includes('cumulativeAttackOfFriendlyMinionsDiedWhileThisEntityInHand')) {
+    return { scope: 'attack', required: null };
+  }
+  if (stateNeeded.includes('spellsCastWhileThisEntityInHand')) {
+    return { scope: 'spell', required: 4 };
+  }
+  return INFUSE_FALLBACKS[cardId] ?? null;
+}
+
+function resolveInfuseProgress(
+  entry: NonNullable<DeckTrackerSnapshot['extraDisplay']>['infuseProgressByCardId'][string] | undefined,
+  scope: ResolvedInfuseConfig['scope'],
+): number {
+  if (!entry) return 0;
+  if (scope === 'demon') return entry.friendlyDemonDeaths ?? 0;
+  if (scope === 'beast') return entry.friendlyBeastDeaths ?? 0;
+  if (scope === 'totem') return entry.friendlyTotemDeaths ?? 0;
+  if (scope === 'attack') return entry.cumulativeAttack ?? 0;
+  if (scope === 'spell') return entry.spellsCast ?? 0;
+  return entry.friendlyDeaths ?? 0;
+}
+
+function fallbackBindingText(key: string): string {
+  if (/Names|Card|card|Texts|Mappings|Spells/.test(key)) return '无';
+  if (/Text|State|active|ready|effect|value|location/i.test(key)) return '未知';
+  return '0';
 }
 
 interface OnBoardTriggerHit {

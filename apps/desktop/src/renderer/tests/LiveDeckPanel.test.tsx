@@ -93,6 +93,7 @@ const CARD_DEFS: Record<string, {
   CATA_527: { name: 'Nespirah', cost: 3, rarity: 'LEGENDARY', type: 'LOCATION' },
   FEL_SPELL: { name: 'Fel Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'FEL' },
   NATURE_SPELL: { name: 'Nature Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'NATURE' },
+  EDR_226: { name: 'Pet Trainer', cost: 4, rarity: 'RARE', type: 'MINION' },
 };
 
 // Mock useCardDef to return stubs from CARD_DEFS.
@@ -413,6 +414,30 @@ describe('LiveDeckPanel sorting', () => {
 
     await waitFor(() => {
       expect(screen.getAllByText('注能 2/3').length).toBeGreaterThan(0);
+    });
+  });
+
+  it('renders reviewed deck-pool candidates from extra-display pools', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'EDR_226', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          beastsRemainingInDeck: [{ cardId: 'BEAST_CARD', count: 2 }],
+        },
+        infuseProgressByCardId: {},
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      expect(screen.getByText('池 2')).toBeInTheDocument();
+      expect(screen.getByText('牌库中可抽野兽：BEAST_CARD x2（2）')).toBeInTheDocument();
     });
   });
 

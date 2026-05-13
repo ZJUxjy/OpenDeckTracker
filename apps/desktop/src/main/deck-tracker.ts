@@ -173,11 +173,16 @@ function cardMetadataLookup(cardId: string): ExtraDisplayCardMetadata | null {
   const card = cachedCardDb.findById(cardId);
   if (!card) return null;
   return {
+    id: card.id,
+    name: card.name,
     type: card.type,
     ...(card.spellSchool !== undefined ? { spellSchool: card.spellSchool } : {}),
     ...(card.races !== undefined ? { races: card.races } : {}),
     ...(card.mechanics !== undefined ? { mechanics: card.mechanics } : {}),
     ...(card.cost !== undefined ? { cost: card.cost } : {}),
+    ...(card.attack !== undefined ? { attack: card.attack } : {}),
+    ...(card.health !== undefined ? { health: card.health } : {}),
+    ...(card.text !== undefined ? { text: card.text } : {}),
   };
 }
 

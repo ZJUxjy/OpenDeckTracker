@@ -6,9 +6,14 @@ const lookup: ExtraDisplayCardLookup = (cardId) => {
   if (cardId === 'FIRE_SPELL') return { type: 'SPELL', spellSchool: 'FIRE', cost: 2 };
   if (cardId === 'HOLY_SPELL') return { type: 'SPELL', spellSchool: 'HOLY', cost: 2 };
   if (cardId === 'SHADOW_SPELL') return { type: 'SPELL', spellSchool: 'SHADOW', cost: 2 };
-  if (cardId === 'DEMON_MINION') return { type: 'MINION', races: ['DEMON'], cost: 3 };
+  if (cardId === 'DEMON_MINION') return { type: 'MINION', races: ['DEMON'], cost: 3, attack: 3, name: 'Demon Minion' };
   if (cardId === 'NAGA_DEMON') return { type: 'MINION', races: ['NAGA', 'DEMON'], cost: 4 };
-  if (cardId === 'BEAST_MINION') return { type: 'MINION', races: ['BEAST'], cost: 3 };
+  if (cardId === 'BEAST_MINION') return { type: 'MINION', races: ['BEAST'], cost: 3, attack: 2 };
+  if (cardId === 'TOTEM_MINION') return { type: 'MINION', races: ['TOTEM'], cost: 1, attack: 0 };
+  if (cardId === 'DRAGON_MINION') return { type: 'MINION', races: ['DRAGON'], cost: 8, attack: 8 };
+  if (cardId === 'UNDEAD_DEATHRATTLE') return { type: 'MINION', races: ['UNDEAD'], mechanics: ['DEATHRATTLE'], cost: 6 };
+  if (cardId === 'TAUNT_MINION') return { type: 'MINION', mechanics: ['TAUNT'], cost: 2 };
+  if (cardId === 'IMP_MINION') return { type: 'MINION', races: ['DEMON'], cost: 1, name: 'Imp Minion' };
   if (cardId === 'FEL_RAGE') return { type: 'SPELL', spellSchool: 'FEL', cost: 5 };
   return null;
 };
@@ -112,6 +117,29 @@ describe('MatchExtraDisplayState', () => {
     ]);
   });
 
+  it('builds race, deathrattle, taunt, cost and turn graveyard pools', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordTurnChange(1);
+    for (const [idx, cardId] of ['DRAGON_MINION', 'UNDEAD_DEATHRATTLE', 'TAUNT_MINION', 'IMP_MINION'].entries()) {
+      state.recordEntityEnteredGraveyard({
+        entity: { entityId: 200 + idx, cardId },
+        isFriendly: true,
+        cardLookup: lookup,
+      });
+    }
+
+    const snap = state.snapshot();
+    expect(snap.pools.friendlyDeadDragonsThisGameUnique).toEqual([{ cardId: 'DRAGON_MINION', count: 1 }]);
+    expect(snap.pools.friendlyDeadUndeadHighestCostPoolThisGame).toEqual([{ cardId: 'UNDEAD_DEATHRATTLE', count: 1 }]);
+    expect(snap.pools.friendlyDeadDeathrattleMinionsThisGameUnique).toEqual([{ cardId: 'UNDEAD_DEATHRATTLE', count: 1 }]);
+    expect(snap.pools.friendlyDeadTauntMinionsThisGameUnique).toEqual([{ cardId: 'TAUNT_MINION', count: 1 }]);
+    expect(snap.pools.friendlyDeadMinionsCost1).toEqual([{ cardId: 'IMP_MINION', count: 1 }]);
+    expect(snap.pools.friendlyGraveyardThisTurn).toHaveLength(4);
+
+    state.recordTurnChange(2);
+    expect(state.snapshot().pools.friendlyGraveyardThisTurn ?? []).toEqual([]);
+  });
+
   it('does not place opposing-side deaths into the friendly pool', () => {
     const state = new MatchExtraDisplayState();
     state.recordEntityEnteredGraveyard({
@@ -170,6 +198,31 @@ describe('MatchExtraDisplayState', () => {
     expect(snap.infuseProgressByCardId.FEL_RAGE).toEqual({
       friendlyDeaths: 2,
       friendlyDemonDeaths: 1,
+      friendlyBeastDeaths: 1,
+      cumulativeAttack: 5,
+    });
+  });
+
+  it('tracks race-scoped and attack-sum hand progress', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordEntityEnteredHand({ entityId: 73, cardId: 'HAND_INFUSE' });
+    state.recordEntityEnteredGraveyard({
+      entity: { entityId: 74, cardId: 'BEAST_MINION' },
+      isFriendly: true,
+      cardLookup: lookup,
+    });
+    state.recordEntityEnteredGraveyard({
+      entity: { entityId: 75, cardId: 'TOTEM_MINION' },
+      isFriendly: true,
+      cardLookup: lookup,
+    });
+
+    expect(state.snapshot().infuseProgressByCardId.HAND_INFUSE).toEqual({
+      friendlyDeaths: 2,
+      friendlyDemonDeaths: 0,
+      friendlyBeastDeaths: 1,
+      friendlyTotemDeaths: 1,
+      cumulativeAttack: 2,
     });
   });
 
@@ -197,6 +250,7 @@ describe('MatchExtraDisplayState', () => {
     expect(state.snapshot().infuseProgressByCardId.FEL_RAGE).toEqual({
       friendlyDeaths: 1,
       friendlyDemonDeaths: 1,
+      cumulativeAttack: 3,
     });
   });
 

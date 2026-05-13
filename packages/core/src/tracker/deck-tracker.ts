@@ -43,6 +43,8 @@ import {
   createEmptyExtraDisplaySnapshot,
   MatchExtraDisplayState,
   type ExtraDisplayCardLookup,
+  type ExtraDisplayCardMetadata,
+  type ExtraDisplayPoolEntry,
   type ExtraDisplaySnapshot,
 } from './extra-display-state';
 
@@ -836,10 +838,7 @@ export class DeckTracker {
       opponent: this.buildOpponentRecords(),
       opponentClass: this.resolveOpponentClass(),
       friendlyGraveyard: this.buildFriendlyGraveyard(),
-      extraDisplay: {
-        ...this.extraDisplayState.snapshot(),
-        friendlyBoard: this.buildFriendlyBoard(),
-      },
+      extraDisplay: this.buildExtraDisplaySnapshot(deck, friendlyHand),
       friendlyDeckCount: deckState?.friendlyDeck.length ?? this.game.localPlayer.deck.length,
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
@@ -987,6 +986,82 @@ export class DeckTracker {
         created: entity.info.created === true,
       }))
       .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
+  }
+
+  private buildExtraDisplaySnapshot(
+    deck: DeckTrackerSnapshot['deck'],
+    friendlyHand: readonly string[],
+  ): NonNullable<DeckTrackerSnapshot['extraDisplay']> {
+    const base = this.extraDisplayState.snapshot();
+    const pools: ExtraDisplaySnapshot['pools'] = {
+      ...base.pools,
+      ...this.buildDeckAndHandPools(deck, friendlyHand),
+    };
+    return {
+      ...base,
+      pools,
+      friendlyBoard: this.buildFriendlyBoard(),
+    };
+  }
+
+  private buildDeckAndHandPools(
+    deck: DeckTrackerSnapshot['deck'],
+    friendlyHand: readonly string[],
+  ): ExtraDisplaySnapshot['pools'] {
+    const pools: ExtraDisplaySnapshot['pools'] = {
+      friendlyDeadDemonsThisGameUnique: [],
+      friendlyDeadMinionsThisGameUnique: [],
+    };
+    if (this.cardMetadataLookup === null) return pools;
+
+    const remaining = deck?.remaining ?? [];
+    const deckCards = expandPoolEntries(remaining);
+    const handCards = friendlyHand.map((cardId) => ({ cardId, count: 1 }));
+    const handAndDeck = [...deckCards, ...handCards];
+
+    const add = (key: string, entries: ExtraDisplayPoolEntry[]) => {
+      pools[key] = entries;
+    };
+    const filter = (
+      source: readonly ExtraDisplayPoolEntry[],
+      predicate: (metadata: ExtraDisplayCardMetadata, cardId: string) => boolean,
+      options: { excludeCardId?: string } = {},
+    ): ExtraDisplayPoolEntry[] => collapsePool(
+      source.filter((entry) => {
+        if (options.excludeCardId !== undefined && entry.cardId === options.excludeCardId) return false;
+        const metadata = this.cardMetadataLookup?.(entry.cardId);
+        return metadata !== null && metadata !== undefined && predicate(metadata, entry.cardId);
+      }),
+    );
+
+    add('beastsRemainingInDeck', filter(deckCards, (m) => hasMetadataRace(m, 'BEAST')));
+    add('deckMinionsRemaining', filter(deckCards, (m) => m.type === 'MINION'));
+    add('deathrattleMinionsRemainingInDeck', filter(deckCards, (m) => m.type === 'MINION' && hasMetadataMechanic(m, 'DEATHRATTLE')));
+    add('deathrattleCardsRemainingInDeck', filter(deckCards, (m) => hasMetadataMechanic(m, 'DEATHRATTLE')));
+    add('holySpellsRemainingInDeck', filter(deckCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'HOLY'));
+    add('shadowSpellsRemainingInDeck', filter(deckCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'SHADOW'));
+    add('felSpellsInDeck', filter(deckCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'FEL'));
+    add('natureSpellsInDeck', filter(deckCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'NATURE'));
+    add('spellsInDeck', filter(deckCards, (m) => m.type === 'SPELL'));
+
+    add('felSpellsInHand', filter(handCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'FEL'));
+    add('natureSpellsInHand', filter(handCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'NATURE'));
+    add('spellsInHand', filter(handCards, (m) => m.type === 'SPELL'));
+    add('oneCostMinionsInHandAndDeck', filter(handAndDeck, (m) => m.type === 'MINION' && m.cost === 1));
+    add('oneCostSpellsInHandAndDeck', filter(handAndDeck, (m) => m.type === 'SPELL' && m.cost === 1));
+
+    add('deckPool.CORE_REV_015', filter(deckCards, (m) => m.type === 'MINION', { excludeCardId: 'CORE_REV_015' }));
+    add('deckPool.CORE_ICC_812', filter(deckCards, (m) => m.type === 'MINION' && (m.attack ?? 0) < 1));
+    add('deckPool.EDR_571', filter(deckCards, (m) => m.type === 'SPELL' && (m.cost ?? 0) >= 5));
+    add('deckPool.EDR_572', filter(deckCards, (m) => hasMetadataRace(m, 'DRAGON')));
+    add('deckPool.CORE_DMF_194', filter(deckCards, (m) => hasMetadataRace(m, 'DRAGON')));
+    add('deckPool.CORE_ICC_201', pools.deathrattleCardsRemainingInDeck ?? []);
+    add('deckPool.EDR_485', filter(deckCards, (m) => m.type === 'MINION' && (m.cost ?? 0) >= 7));
+    add('deckPool.EDR_494', pools.deckMinionsRemaining ?? []);
+    add('deckPool.DINO_131', pools.beastsRemainingInDeck ?? []);
+    add('deckPool.EDR_226', pools.beastsRemainingInDeck ?? []);
+
+    return pools;
   }
 
   private buildFriendlyBoard(): OpponentCardRecord[] {
@@ -1244,6 +1319,39 @@ function capRemainingToDeckStateCount(
   trim(true);
   trim(false);
   return new DeckSnapshot(counts);
+}
+
+function expandPoolEntries(entries: readonly ExtraDisplayPoolEntry[]): ExtraDisplayPoolEntry[] {
+  return entries
+    .filter((entry) => entry.count > 0)
+    .map((entry) => ({ cardId: entry.cardId, count: entry.count }));
+}
+
+function collapsePool(entries: readonly ExtraDisplayPoolEntry[]): ExtraDisplayPoolEntry[] {
+  const counts = new Map<string, number>();
+  for (const entry of entries) {
+    counts.set(entry.cardId, (counts.get(entry.cardId) ?? 0) + entry.count);
+  }
+  return [...counts.entries()]
+    .map(([cardId, count]) => ({ cardId, count }))
+    .sort((a, b) => b.count - a.count || a.cardId.localeCompare(b.cardId));
+}
+
+function hasMetadataRace(metadata: ExtraDisplayCardMetadata, race: string): boolean {
+  const expected = normalizeMetadataToken(race);
+  return (metadata.races ?? []).some((r) => {
+    const normalized = normalizeMetadataToken(r);
+    return normalized === expected || normalized === 'ALL';
+  });
+}
+
+function hasMetadataMechanic(metadata: ExtraDisplayCardMetadata, mechanic: string): boolean {
+  const expected = normalizeMetadataToken(mechanic);
+  return (metadata.mechanics ?? []).some((m) => normalizeMetadataToken(m) === expected);
+}
+
+function normalizeMetadataToken(value: string | undefined): string {
+  return (value ?? '').trim().toUpperCase();
 }
 
 function blankSnapshot(): DeckTrackerSnapshot {
