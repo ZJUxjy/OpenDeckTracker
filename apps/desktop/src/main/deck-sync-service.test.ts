@@ -42,9 +42,12 @@ function makeStore(initial: DeckDetail[] = []): DeckStore {
     }),
     delete: vi.fn(),
     setSortIndex: vi.fn(),
-    saveFromLive: vi.fn((live) => {
+    saveFromLive: vi.fn((live, lookup) => {
       const offenders = (live.cards as { cardId: string }[]).filter(
-        (c) => c.cardId.startsWith('TOKEN_'),
+        (c) => {
+          const info = lookup(c.cardId);
+          return info === null || (!info.collectible && info.validInLiveDeck !== true);
+        },
       );
       if (offenders.length > 0) {
         throw new NonCollectibleSnapshotError(offenders.map((c) => c.cardId));
@@ -138,13 +141,53 @@ describe('deck-sync-service', () => {
         liveDeck({ id: 2 }),
       ],
       resolveHeroClass: () => 'HUNTER',
-      collectibleLookup: () => ({ collectible: true }),
+      collectibleLookup: (cardId) => ({ collectible: !cardId.startsWith('TOKEN_') }),
     });
 
     const result = await svc.syncOnce();
 
     expect(result.synced).toBe(1);
     expect(result.skippedNonCollectible).toBe(1);
+  });
+
+  it('syncs Fabled bundle cards that are valid live deck entries', async () => {
+    const store = makeStore();
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks: async () => [
+        liveDeck({
+          id: 9,
+          name: 'Companion Hunter',
+          hero: 'HERO_05aq',
+          cards: [
+            { cardId: 'CARD_A', count: 28, premium: 0 },
+            { cardId: 'TIME_609t1', count: 1, premium: 0 },
+            { cardId: 'TIME_609t2', count: 1, premium: 0 },
+          ],
+        }),
+      ],
+      resolveHeroClass: () => 'HUNTER',
+      collectibleLookup: (cardId) => ({
+        collectible: cardId === 'CARD_A',
+        validInLiveDeck: cardId === 'TIME_609t1' || cardId === 'TIME_609t2',
+      }),
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(result.synced).toBe(1);
+    expect(result.skippedNonCollectible).toBe(0);
+    expect(store.saveFromLive).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Companion Hunter',
+        cards: [
+          { cardId: 'CARD_A', count: 28 },
+          { cardId: 'TIME_609t1', count: 1 },
+          { cardId: 'TIME_609t2', count: 1 },
+        ],
+      }),
+      expect.any(Function),
+    );
   });
 
   it('upserts a previously synced deck instead of creating duplicates', async () => {
@@ -203,5 +246,66 @@ describe('deck-sync-service', () => {
     const result = await svc.syncOnce();
     expect(result.synced).toBe(0);
     expect(result.skippedUnknownClass).toBe(1);
+  });
+
+  it('infers the deck class from cards when the hero portrait is unrecognized', async () => {
+    const store = makeStore();
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks: async () => [
+        liveDeck({
+          hero: 'UNKNOWN_HUNTER_SKIN',
+          cards: [
+            { cardId: 'HUNTER_CARD', count: 2, premium: 0 },
+            { cardId: 'NEUTRAL_CARD', count: 2, premium: 0 },
+          ],
+        }),
+      ],
+      resolveHeroClass: () => null,
+      resolveCardClass: (cardId) => {
+        if (cardId === 'HUNTER_CARD') return 'HUNTER';
+        if (cardId === 'NEUTRAL_CARD') return 'NEUTRAL';
+        return null;
+      },
+      collectibleLookup: () => ({ collectible: true }),
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(result.synced).toBe(1);
+    expect(result.skippedUnknownClass).toBe(0);
+    expect(store.saveFromLive).toHaveBeenCalledWith(
+      expect.objectContaining({ class: 'HUNTER' }),
+      expect.any(Function),
+    );
+  });
+
+  it('does not infer a class when card-class evidence is tied', async () => {
+    const store = makeStore();
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks: async () => [
+        liveDeck({
+          hero: 'UNKNOWN_HERO',
+          cards: [
+            { cardId: 'HUNTER_CARD', count: 1, premium: 0 },
+            { cardId: 'WARRIOR_CARD', count: 1, premium: 0 },
+          ],
+        }),
+      ],
+      resolveHeroClass: () => null,
+      resolveCardClass: (cardId) => {
+        if (cardId === 'HUNTER_CARD') return 'HUNTER';
+        if (cardId === 'WARRIOR_CARD') return 'WARRIOR';
+        return null;
+      },
+      collectibleLookup: () => ({ collectible: true }),
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(result.synced).toBe(0);
+    expect(result.skippedUnknownClass).toBe(1);
+    expect(store.saveFromLive).not.toHaveBeenCalled();
   });
 });

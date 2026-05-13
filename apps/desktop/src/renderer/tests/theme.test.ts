@@ -149,6 +149,29 @@ describe('macOS Liquid Glass theme tokens', () => {
     expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s+\.tavern-main-surface\s*\{/);
   });
 
+  it('declares the Fallout 76 Pip-Boy UI skin and terminal chrome', () => {
+    expect(themeCss).toMatch(/:root\[data-ui-style="fallout76"\]\s*\{/);
+    expect(themeCss).toMatch(/--pip-green:\s*#6dff55;/i);
+    expect(themeCss).toMatch(/--pip-amber:\s*#f3b336;/i);
+    expect(themeCss).toMatch(/:root\[data-ui-style="fallout76"\]\s+\.tavern-topbar\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style="fallout76"\]\s+\.tavern-bottom-status\s*\{/);
+    expect(themeCss).toMatch(/repeating-linear-gradient\(\s*180deg,[\s\S]*rgba\(141,\s*255,\s*122,\s*0\.045\)/);
+  });
+
+  it('uses the Fallout 76 control positions as the shared desktop layout', () => {
+    expect(themeCss).toMatch(/\.tavern-topbar\s*\{[\s\S]*height:\s*86px;[\s\S]*grid-template-columns:\s*minmax\(180px,\s*260px\)\s+minmax\(0,\s*1fr\)\s+minmax\(248px,\s*max-content\);/);
+    expect(themeCss).toMatch(/\.tavern-brand-plaque\s*\{[\s\S]*height:\s*52px;/);
+    expect(themeCss).toMatch(/\.tavern-main-tabs\s*>\s*\.tavern-nav-tab\s*\{[\s\S]*flex:\s*1\s+1\s+112px;[\s\S]*max-width:\s*132px;/);
+    expect(themeCss).toMatch(/\.tavern-nav-tab\s*\{[\s\S]*height:\s*64px;[\s\S]*padding:\s*0\s+9px;/);
+    expect(themeCss).toMatch(/\.fallout-dashboard-grid\s*\{[\s\S]*grid-template-columns:\s*260px\s+minmax\(0,\s*1fr\)\s+minmax\(320px,\s*500px\);/);
+  });
+
+  it('clips shared shell labels inside their controls', () => {
+    expect(themeCss).toMatch(/\.tavern-brand-title,\s*[\s\S]*\.tavern-brand-subtitle\s*\{[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/);
+    expect(themeCss).toMatch(/\.tavern-nav-label\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/);
+    expect(themeCss).toMatch(/\.tavern-bottom-status\s*>\s*span\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*text-overflow:\s*ellipsis;/);
+  });
+
   it('keeps the tavern desktop shell from drawing a full-window gold frame', () => {
     expect(themeCss).toMatch(
       /:root\[data-ui-style="tavern"\]\s+\.tavern-app-frame\s*\{[\s\S]*border:\s*0;/,

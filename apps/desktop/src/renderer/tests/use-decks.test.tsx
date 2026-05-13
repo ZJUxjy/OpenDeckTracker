@@ -10,6 +10,11 @@ function Probe(): ReactElement {
   return <div data-testid="count">{decks.length}</div>;
 }
 
+function SyncProbe(): ReactElement {
+  const { decks } = useDecks({ sync: true });
+  return <div data-testid="count">{decks.length}</div>;
+}
+
 describe('useDecks', () => {
   let saved: typeof window.hdt.decks;
 
@@ -44,5 +49,57 @@ describe('useDecks', () => {
 
     expect(list).toHaveBeenCalledOnce();
     expect(result!.getByTestId('count').textContent).toBe('1');
+  });
+
+  it('retries live deck sync while the synced deck list hydrates', async () => {
+    vi.useFakeTimers();
+    try {
+      const syncFromLive = vi.fn().mockResolvedValue({
+        ok: true,
+        source: 'live' as const,
+        synced: 1,
+        skippedNonCollectible: 0,
+        skippedUnknownClass: 0,
+        startedAt: 0,
+        finishedAt: 0,
+      });
+      const list = vi
+        .fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          {
+            id: 'd-1',
+            name: 'Hydrated Hunter',
+            class: 'HUNTER' as const,
+            format: 'Standard' as const,
+            version: 1,
+            cardCount: 30,
+            updatedAt: 0,
+          },
+        ]);
+      (window.hdt as { decks: typeof window.hdt.decks }).decks = {
+        ...saved,
+        syncFromLive,
+        list,
+      };
+
+      let result;
+      await act(async () => {
+        result = render(<SyncProbe />);
+      });
+
+      expect(syncFromLive).toHaveBeenCalledTimes(1);
+      expect(result!.getByTestId('count').textContent).toBe('0');
+
+      await act(async () => {
+        vi.advanceTimersByTime(2_000);
+        await Promise.resolve();
+      });
+
+      expect(syncFromLive).toHaveBeenCalledTimes(2);
+      expect(result!.getByTestId('count').textContent).toBe('1');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -28,6 +28,7 @@ interface FakeCardInfo {
   rarity: string;
   type: string;
   collectible: boolean;
+  validInLiveDeck?: boolean;
 }
 
 function makeCardLookup(cards: FakeCardInfo[]) {
@@ -555,6 +556,43 @@ describe('createDeckStore', () => {
           lookup,
         ),
       ).toThrow(NonCollectibleSnapshotError);
+    } finally {
+      store.close();
+    }
+  });
+
+  it('saveFromLive accepts non-collectible cards that are valid in live decks', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'HUNTER', rarity: 'COMMON', type: 'SPELL', collectible: true },
+        {
+          cardId: 'TIME_609t1',
+          class: 'HUNTER',
+          rarity: 'LEGENDARY',
+          type: 'MINION',
+          collectible: false,
+          validInLiveDeck: true,
+        },
+      ]);
+
+      const created = store.saveFromLive(
+        {
+          name: 'Fabled Hunter',
+          class: 'HUNTER',
+          format: 'Standard',
+          cards: [
+            { cardId: 'A', count: 28 },
+            { cardId: 'TIME_609t1', count: 1 },
+          ],
+        },
+        lookup,
+      );
+
+      expect(created.cards).toEqual([
+        { cardId: 'A', count: 28 },
+        { cardId: 'TIME_609t1', count: 1 },
+      ]);
     } finally {
       store.close();
     }

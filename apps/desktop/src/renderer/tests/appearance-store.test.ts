@@ -7,11 +7,11 @@ describe('appearance store', () => {
     vi.resetModules();
   });
 
-  it('defaults to comfortable density, tavern UI style, blue accent, system theme when nothing is stored', async () => {
+  it('defaults to comfortable density, Fallout 76 UI style, blue accent, system theme when nothing is stored', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
+    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -57,13 +57,26 @@ describe('appearance store', () => {
     expect(fresh.getState().uiStyle).toBe('wechat');
   });
 
+  it('round-trips the Fallout 76 UI style through localStorage', async () => {
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    useAppearanceStore.getState().setUiStyle('fallout76');
+
+    const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
+    expect(stored.uiStyle).toBe('fallout76');
+
+    vi.resetModules();
+    const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
+    expect(fresh.getState().uiStyle).toBe('fallout76');
+  });
+
   it('falls back to defaults on malformed JSON', async () => {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, '{ this is not json');
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
+    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -77,7 +90,7 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
+    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -135,7 +148,7 @@ describe('appearance store', () => {
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
-    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
+    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
     expect(useAppearanceStore.getState().density).toBe('compact');
   });
 

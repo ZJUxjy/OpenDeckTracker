@@ -4,6 +4,8 @@ import type { DeckDetail, DeckSummary } from '@hdt/core';
 
 import { useDecksStore } from '../stores/decks-store';
 
+const DECK_SYNC_RETRY_DELAYS_MS = [2_000, 5_000, 10_000] as const;
+
 /**
  * Read the saved-decks list from the renderer store. Auto-refreshes on first
  * use; component remounts that share the store (same renderer session) reuse
@@ -13,7 +15,7 @@ export function useDecks(options: { sync?: boolean } = {}): {
   decks: DeckSummary[];
   loading: boolean;
   error: string | null;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<DeckSummary[]>;
 } {
   const decks = useDecksStore((s) => s.decks);
   const loading = useDecksStore((s) => s.loading);
@@ -23,8 +25,28 @@ export function useDecks(options: { sync?: boolean } = {}): {
   const sync = options.sync === true;
 
   useEffect(() => {
-    if (sync) void syncAndRefresh();
-    else void refresh();
+    if (!sync) {
+      void refresh();
+      return;
+    }
+
+    let cancelled = false;
+    let retryIndex = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const runSync = async (): Promise<void> => {
+      await syncAndRefresh();
+      if (cancelled || retryIndex >= DECK_SYNC_RETRY_DELAYS_MS.length) return;
+      const delay = DECK_SYNC_RETRY_DELAYS_MS[retryIndex]!;
+      retryIndex += 1;
+      retryTimer = setTimeout(() => { void runSync(); }, delay);
+    };
+
+    void runSync();
+    return () => {
+      cancelled = true;
+      if (retryTimer !== null) clearTimeout(retryTimer);
+    };
   }, [sync, refresh, syncAndRefresh]);
 
   return { decks, loading, error, refresh };

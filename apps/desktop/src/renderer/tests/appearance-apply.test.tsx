@@ -34,6 +34,11 @@ describe('AppearanceApplyEffect', () => {
   });
 
   it('updates inline custom properties when accent changes', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', uiStyle: 'macos', accent: 'blue' }),
+    );
+
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
 
@@ -72,7 +77,7 @@ describe('AppearanceApplyEffect', () => {
       wrapper: ({ children }) => <>{children}</>,
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('tavern');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
 
     act(() => {
       useAppearanceStore.getState().setUiStyle('macos');
@@ -85,6 +90,12 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(document.documentElement.getAttribute('data-ui-style')).toBe('wechat');
+
+    act(() => {
+      useAppearanceStore.getState().setUiStyle('fallout76');
+    });
+
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
   });
 
   it('forces dark color-scheme while the WeChat UI style is active', async () => {
@@ -103,7 +114,29 @@ describe('AppearanceApplyEffect', () => {
     expect(document.documentElement.style.colorScheme).toBe('dark');
   });
 
+  it('forces dark color-scheme and terminal accent while the Fallout 76 UI style is active', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', uiStyle: 'fallout76', accent: 'blue', theme: 'light' }),
+    );
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#6DFF55');
+  });
+
   it('inline properties persist after unmount (page-lifetime behavior)', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', uiStyle: 'macos', accent: 'blue' }),
+    );
+
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
 

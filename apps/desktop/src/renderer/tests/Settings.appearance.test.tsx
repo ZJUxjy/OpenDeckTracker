@@ -39,6 +39,7 @@ describe('Settings — Appearance category', () => {
     expect(screen.getAllByText('System').length).toBeGreaterThan(0);
     expect(screen.getByText('English')).toBeInTheDocument();
 
+    expect(screen.getByText('Fallout 76')).toBeInTheDocument();
     expect(screen.getByText('Tavern')).toBeInTheDocument();
     expect(screen.getByText('macOS')).toBeInTheDocument();
     expect(screen.getByText('WeChat Dark')).toBeInTheDocument();
@@ -83,6 +84,15 @@ describe('Settings — Appearance category', () => {
     expect(useAppearanceStore.getState().uiStyle).toBe('wechat');
   });
 
+  it('clicking Fallout 76 UI style button updates UI style', async () => {
+    renderSettings();
+
+    fireEvent.click(screen.getByText('Fallout 76'));
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
+  });
+
   it('clicking Light theme button updates theme to light', async () => {
     renderSettings();
 
@@ -97,6 +107,7 @@ describe('Settings — Appearance category', () => {
 
     expect(screen.getByText('舒适')).toBeInTheDocument();
     expect(screen.getByText('紧凑')).toBeInTheDocument();
+    expect(screen.getByText('Fallout 76')).toBeInTheDocument();
     expect(screen.getByText('酒馆')).toBeInTheDocument();
     expect(screen.getByText('macOS')).toBeInTheDocument();
     expect(screen.getByText('微信深色')).toBeInTheDocument();

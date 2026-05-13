@@ -1,5 +1,16 @@
 import { useEffect, type CSSProperties } from 'react';
-import { AppWindow, BarChart2, BookOpen, Crown, Layers, Monitor, Settings, User } from 'lucide-react';
+import {
+  AppWindow,
+  BarChart2,
+  BookOpen,
+  Crosshair,
+  Film,
+  Layers,
+  Monitor,
+  Settings,
+  ShieldAlert,
+  User,
+} from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { DeckSelectDialog } from './components/DeckSelectDialog';
 import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
@@ -10,10 +21,13 @@ import { useAppearanceStore } from './stores/appearance-store';
 import { useHearthWatcherStatus } from './hooks/use-hearthwatcher-status';
 
 const MAIN_NAV_ITEMS = [
-  { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker' },
-  { id: 'decks', icon: Layers, labelKey: 'sidebar.decks' },
-  { id: 'stats', icon: BarChart2, labelKey: 'sidebar.stats' },
-  { id: 'collection', icon: BookOpen, labelKey: 'sidebar.collection' },
+  { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker', code: 'DASHBOARD' },
+  { id: 'decks', icon: Layers, labelKey: 'sidebar.decks', code: 'DECKS' },
+  { id: 'stats', icon: BarChart2, labelKey: 'sidebar.stats', code: 'STATS' },
+  { id: 'opponent', icon: ShieldAlert, labelKey: 'sidebar.opponent', code: 'OPPONENT' },
+  { id: 'lethal', icon: Crosshair, labelKey: 'sidebar.lethal', code: 'LETHAL' },
+  { id: 'replay', icon: Film, labelKey: 'sidebar.replay', code: 'REPLAY' },
+  { id: 'collection', icon: BookOpen, labelKey: 'sidebar.collection', code: 'COLLECTION' },
 ];
 
 export default function App() {
@@ -92,26 +106,25 @@ export default function App() {
           <div className="tavern-titlebar-grip h-px w-full" />
         </div>
         <header
-          className="tavern-topbar tahoe-topbar flex h-16 shrink-0 items-center gap-4 px-5 relative z-50"
+          className="tavern-topbar tahoe-topbar grid h-16 shrink-0 items-center gap-3 px-5 relative z-50"
           style={{ WebkitAppRegion: 'drag' } as CSSProperties}
         >
           <button
             type="button"
-            className="tavern-brand-plaque flex shrink-0 items-center gap-3"
+            className="tavern-brand-plaque flex min-w-0 items-center"
             style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
             onClick={() => {
               void navigate('/tracker');
             }}
           >
-            <span className="tavern-brand-icon flex h-10 w-10 items-center justify-center">
-              <Crown size={22} />
+            <span className="tavern-brand-copy flex min-w-0 flex-col">
+              <span className="tavern-brand-title min-w-0 truncate text-lg font-black tracking-wide">OpenDeckTracker</span>
             </span>
-            <span className="text-lg font-black tracking-wide">OpenDeckTracker</span>
           </button>
 
           <nav
             aria-label="Primary"
-            className="tavern-main-tabs flex min-w-0 flex-1 items-center justify-center gap-2"
+            className="tavern-main-tabs flex min-w-0 flex-1 items-center justify-start gap-2"
             style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
           >
             {MAIN_NAV_ITEMS.map((item) => {
@@ -121,23 +134,26 @@ export default function App() {
                   key={item.id}
                   type="button"
                   data-active={active ? 'true' : 'false'}
-                  className="tavern-nav-tab flex items-center justify-center gap-2"
+                  className="tavern-nav-tab flex min-w-0 items-center justify-center gap-2"
                   onClick={() => {
                     void navigate(`/${item.id}`);
                   }}
                 >
                   <item.icon size={17} className="shrink-0" />
-                  <span className="truncate">{t(item.labelKey)}</span>
+                  <span className="tavern-nav-labels min-w-0">
+                    <span className="tavern-nav-label truncate">{t(item.labelKey)}</span>
+                    <span className="tavern-nav-code truncate">{item.code}</span>
+                  </span>
                 </button>
               );
             })}
           </nav>
 
           <div
-            className="tavern-topbar-actions flex shrink-0 items-center gap-3"
+            className="tavern-topbar-actions flex min-w-0 items-center gap-3"
             style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
           >
-            <span className="tavern-status-pill text-text-dim flex items-center text-sm font-semibold uppercase">
+            <span className="tavern-status-pill text-text-dim flex min-w-0 items-center text-sm font-semibold uppercase">
               <Monitor size={16} className={`mr-2 ${statusIconClass}`} />
               <span className="truncate">
                 {isAlive
@@ -147,7 +163,7 @@ export default function App() {
             </span>
             <div
               data-testid="player-identity"
-              className="tavern-player-pill flex items-center gap-2 select-none"
+              className="tavern-player-pill flex min-w-0 items-center gap-2 select-none"
             >
               <div className="tavern-avatar-medallion flex h-8 w-8 items-center justify-center font-bold text-sm">
                 <User size={16} />
@@ -173,6 +189,19 @@ export default function App() {
         <main className="tavern-main-surface flex-1 flex overflow-hidden relative">
           <Outlet />
         </main>
+        <footer
+          className="tavern-bottom-status shrink-0"
+          aria-label={t('fallout.statusBar.ariaLabel')}
+          style={{ WebkitAppRegion: 'drag' } as CSSProperties}
+        >
+          <span className="font-bold text-amber">{t('fallout.statusBar.pipboy')}</span>
+          <span>{t('fallout.statusBar.version')}</span>
+          <span>{t('fallout.statusBar.database')}</span>
+          <span className={isAlive ? 'text-green' : 'text-text-mute'}>
+            {isAlive ? t('fallout.statusBar.connected') : t('fallout.statusBar.standby')}
+          </span>
+          <span className="ml-auto text-amber">{t('fallout.statusBar.links')}</span>
+        </footer>
       </div>
       {/* Global dialog — shown only when the tracker emits
           'needs-deck-selection' (Practice / Brawl modes etc.). */}

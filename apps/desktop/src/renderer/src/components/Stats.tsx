@@ -180,7 +180,7 @@ export function Stats() {
 
         {/* Top Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-accent group-hover:opacity-10 transition-opacity">
               <Trophy size={100} />
             </div>
@@ -191,7 +191,7 @@ export function Stats() {
             </div>
           </div>
 
-          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-tertiary group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
@@ -200,7 +200,7 @@ export function Stats() {
             <div className="text-sm mt-2 text-text-tertiary">{t('stats.kpi.matchesPlayedSubtitle')}</div>
           </div>
 
-          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-tertiary group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
@@ -213,7 +213,7 @@ export function Stats() {
             </div>
           </div>
 
-          <div className="tahoe-card kpi-card p-5 flex flex-col relative overflow-hidden group">
+          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red group-hover:opacity-10 transition-opacity">
               <Target size={100} />
             </div>

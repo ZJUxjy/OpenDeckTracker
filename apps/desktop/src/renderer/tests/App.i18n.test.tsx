@@ -30,6 +30,7 @@ describe('App i18n', () => {
     expect(screen.getByText('记牌器')).toBeInTheDocument();
     expect(screen.getByText('统计')).toBeInTheDocument();
     expect(screen.getByText('收藏')).toBeInTheDocument();
+    expect(screen.queryByText('炉石智能记牌器 · Pip-Boy 76 主题')).not.toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText('游戏运行中')).toBeInTheDocument();
     });

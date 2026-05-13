@@ -43,8 +43,19 @@ export interface LiveDeckSnapshotInput {
   liveDeckId?: number | null;
 }
 
+export interface SaveFromLiveCardInfo {
+  collectible: boolean;
+  /**
+   * Some valid constructed deck components are not individually collectible
+   * in CardDb. Fabled bundle cards are the current example: Hearthstone's
+   * live deck list includes them as real deck slots even though collection
+   * ownership is attached to the parent Fabled card.
+   */
+  validInLiveDeck?: boolean;
+}
+
 export interface SaveFromLiveCardLookup {
-  (cardId: string): { collectible: boolean } | null;
+  (cardId: string): SaveFromLiveCardInfo | null;
 }
 
 export interface DeckStore {
@@ -385,7 +396,9 @@ export function createDeckStore(dbPath: string): DeckStore {
       const offenders: string[] = [];
       for (const c of live.cards) {
         const info = lookup(c.cardId);
-        if (!info || !info.collectible) offenders.push(c.cardId);
+        if (!info || (!info.collectible && info.validInLiveDeck !== true)) {
+          offenders.push(c.cardId);
+        }
       }
       if (offenders.length > 0) throw new NonCollectibleSnapshotError(offenders);
       const hasLiveId = live.liveDeckId !== undefined && live.liveDeckId !== null;

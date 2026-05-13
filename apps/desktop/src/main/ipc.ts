@@ -46,7 +46,7 @@ import {
 import { join } from 'node:path';
 import { createDeckStore } from './deck-store';
 import { registerDeckIpc } from './deck-ipc';
-import { makeCollectibleLookup, makeDeckCodecLookup } from './deck-card-lookup';
+import { makeCollectibleLookup, makeDeckCodecLookup, makeHeroClassLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
 import { createCollectionSnapshotStore } from './collection-snapshot-store';
 import { createDeckSyncService } from './deck-sync-service';
@@ -427,30 +427,13 @@ export function registerIpc(overlay?: OverlayControllers): void {
     });
     popularDecksCardDb = db;
     setCardDbForDeckTracker(db);
+    const heroClassLookup = makeHeroClassLookup(db);
 
     const deckSync = createDeckSyncService({
       store: deckStore,
       getLiveDecks: () => hm().getDecks(),
-      resolveHeroClass: (cardId) => {
-        const card = db.findById(cardId);
-        if (card === null || card === undefined) return null;
-        const cls = card.cardClass;
-        // The hero card must itself carry one of the player class values.
-        const known: ReadonlySet<string> = new Set([
-          'WARRIOR',
-          'PALADIN',
-          'HUNTER',
-          'ROGUE',
-          'PRIEST',
-          'SHAMAN',
-          'MAGE',
-          'WARLOCK',
-          'DRUID',
-          'DEMONHUNTER',
-          'DEATHKNIGHT',
-        ]);
-        return known.has(cls) ? (cls as import('@hdt/core').HeroClass) : null;
-      },
+      resolveHeroClass: heroClassLookup,
+      resolveCardClass: heroClassLookup,
       collectibleLookup: makeCollectibleLookup(db),
     });
     deckSyncHost.setService(deckSync);

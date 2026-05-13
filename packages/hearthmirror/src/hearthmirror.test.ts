@@ -133,12 +133,16 @@ describe('HearthMirror', () => {
 
   describe('isMulligan', () => {
     it('coerces null → null', async () => {
-      mocked(native.isMulligan).mockResolvedValue(null);
+      mocked(native.isMulligan).mockResolvedValue(
+        null as unknown as Awaited<ReturnType<typeof native.isMulligan>>,
+      );
       expect(await mirror.isMulligan()).toEqual({ mulligan: null });
     });
 
     it('coerces undefined → null', async () => {
-      mocked(native.isMulligan).mockResolvedValue({});
+      mocked(native.isMulligan).mockResolvedValue(
+        {} as Awaited<ReturnType<typeof native.isMulligan>>,
+      );
       expect(await mirror.isMulligan()).toEqual({ mulligan: null });
     });
 
@@ -233,6 +237,14 @@ describe('HearthMirror', () => {
       expect(result![0]!.id).toBe(999);
       expect(result![0]!.seasonId).toBe(150);
       expect(result![0]!.cards[0]).toEqual({ cardId: 'CS2_222', count: 2, premium: 0 });
+    });
+
+    it('repairs UTF-8 deck names that Hearthstone exposes as CP437 mojibake', async () => {
+      mocked(native.getDecks).mockResolvedValue([
+        makeNativeDeck({ name: '\u0398\u00e9\u00fa\u03a3\u2555\u00ac\u03c4\u00f6\u2556\u03a3\u2551\u2551' }),
+      ]);
+      const result = await mirror.getDecks();
+      expect(result![0]!.name).toBe('\u90a3\u4e2a\u7537\u4eba');
     });
 
     it('returns null when native returns null', async () => {

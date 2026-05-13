@@ -1278,11 +1278,11 @@ body[data-overlay="true"] .tavern-empty-row {
   }
 
   .tavern-brand-plaque {
-    min-width: 52px;
-    padding: 0 8px;
+    min-width: 148px;
+    padding: 0 10px;
   }
 
-  .tavern-brand-plaque > span:last-child,
+  .tavern-brand-subtitle,
   .tavern-nav-tab span {
     display: none;
   }
@@ -2018,4 +2018,700 @@ body[data-overlay="true"] .tavern-empty-row {
   color: var(--wechat-text-mute) !important;
   border-color: var(--wechat-line) !important;
   background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Shared desktop layout contract. Every visual skin uses these positions so
+   switching UI style changes material and color only, not control placement. */
+.tavern-topbar {
+  height: 86px;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr) minmax(248px, max-content);
+  gap: 10px;
+  padding-inline: 22px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tavern-brand-plaque {
+  min-width: 0;
+  width: 100%;
+  height: 52px;
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.tavern-brand-copy {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tavern-brand-title,
+.tavern-brand-subtitle {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tavern-main-tabs {
+  min-width: 0;
+  max-width: 100%;
+  justify-content: flex-start;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-padding-inline: 2px;
+}
+
+.tavern-main-tabs > .tavern-nav-tab {
+  flex: 1 1 112px;
+  min-width: 0;
+  max-width: 132px;
+}
+
+.tavern-nav-tab {
+  min-width: 78px;
+  height: 64px;
+  padding: 0 9px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tavern-nav-labels {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.tavern-nav-label {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tavern-nav-code {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-mute);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.tavern-status-pill,
+.tavern-player-pill,
+.tavern-settings-button {
+  height: 46px;
+}
+
+.tavern-status-pill {
+  max-width: 176px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tavern-player-pill {
+  max-width: 230px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tavern-status-pill > span,
+.tavern-player-pill > span,
+.tavern-topbar-actions {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tavern-status-pill > span,
+.tavern-player-pill > span {
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tavern-settings-button {
+  width: 46px;
+  flex: 0 0 46px;
+}
+
+.tavern-bottom-status {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: clamp(20px, 5vw, 120px);
+  padding: 0 24px;
+  color: var(--text-mute);
+  border-top: 1px solid var(--border-hi);
+  background: var(--bg-2);
+  font-size: 12px;
+}
+
+.tavern-bottom-status > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tavern-dashboard {
+  padding: 22px 24px;
+}
+
+.fallout-dashboard-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) minmax(320px, 500px);
+  gap: 24px;
+  min-height: 100%;
+}
+
+.fallout-connection-panel {
+  min-height: 560px;
+}
+
+.fallout-page-heading {
+  min-height: 70px;
+}
+
+@media (max-width: 1500px) {
+  .tavern-topbar {
+    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr) minmax(180px, max-content);
+  }
+
+  .tavern-main-tabs > .tavern-nav-tab {
+    flex-basis: 82px;
+  }
+
+  .tavern-nav-tab {
+    min-width: 58px;
+    padding-inline: 7px;
+  }
+
+  .tavern-nav-code {
+    display: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  .fallout-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fallout-connection-panel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  .tavern-topbar {
+    height: 64px;
+    grid-template-columns: minmax(52px, 140px) minmax(0, 1fr) minmax(0, max-content);
+  }
+
+  .tavern-brand-subtitle,
+  .tavern-nav-label,
+  .tavern-nav-code {
+    display: none;
+  }
+
+  .tavern-nav-tab {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    padding: 0;
+  }
+
+  .tavern-bottom-status {
+    display: none;
+  }
+}
+
+/* Fallout 76 / Pip-Boy skin from the supplied Figma file. */
+:root[data-ui-style="fallout76"] {
+  --pip-bg: #050804;
+  --pip-dark: #070b06;
+  --pip-panel: #0b1409;
+  --pip-panel-2: #111b0e;
+  --pip-row: rgba(13, 22, 11, 0.95);
+  --pip-row-alt: rgba(9, 17, 8, 0.95);
+  --pip-line: #3d3a1e;
+  --pip-line-strong: #766b2b;
+  --pip-green: #6dff55;
+  --pip-green-2: #32d74b;
+  --pip-green-dim: rgba(109, 255, 85, 0.16);
+  --pip-amber: #f3b336;
+  --pip-red: #e04b34;
+  --pip-muted: #8ea57b;
+  --pip-text: #dde7c8;
+  --pip-shadow: rgba(109, 255, 85, 0.20);
+
+  --surface-window: var(--pip-bg);
+  --surface-sidebar: var(--pip-dark);
+  --surface-toolbar: var(--pip-dark);
+  --surface-content: var(--pip-panel);
+  --surface-elevated: var(--pip-panel-2);
+  --surface-raised: rgba(109, 255, 85, 0.07);
+  --surface-popover: var(--pip-panel);
+  --border-hairline: var(--pip-line);
+  --border-separator: rgba(61, 58, 30, 0.72);
+  --border-strong: var(--pip-line-strong);
+  --text-primary: var(--pip-text);
+  --text-secondary: var(--pip-muted);
+  --text-tertiary: rgba(142, 165, 123, 0.78);
+  --text-quaternary: rgba(142, 165, 123, 0.46);
+  --text-on-accent: #041004;
+  --bg: var(--pip-bg);
+  --bg-2: var(--pip-dark);
+  --bg-3: var(--pip-panel);
+  --border: var(--pip-line);
+  --border-hi: var(--pip-line-strong);
+  --text: var(--pip-text);
+  --text-dim: var(--pip-muted);
+  --text-mute: rgba(142, 165, 123, 0.70);
+  --green: var(--pip-green);
+  --red: var(--pip-red);
+  --amber: var(--pip-amber);
+  --overlay-surface: rgba(11, 20, 9, 0.82);
+  --overlay-hover: rgba(109, 255, 85, 0.10);
+  --overlay-pressed: rgba(109, 255, 85, 0.16);
+  --overlay-elevated: rgba(17, 27, 14, 0.92);
+  --overlay-input: rgba(5, 8, 4, 0.72);
+  --glass-overlay: rgba(11, 20, 9, 0.92);
+  color-scheme: dark;
+}
+
+:root[data-ui-style="fallout76"] .tavern-app-shell {
+  color: var(--pip-text);
+  font-family: "Noto Sans SC", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(109, 255, 85, 0.08), transparent 28%),
+    radial-gradient(circle at 88% 18%, rgba(243, 179, 54, 0.08), transparent 24%),
+    linear-gradient(180deg, var(--pip-bg), #020402);
+}
+
+:root[data-ui-style="fallout76"] .tavern-app-shell::before,
+:root[data-ui-style="fallout76"] .tavern-app-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+:root[data-ui-style="fallout76"] .tavern-app-shell::before {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(141, 255, 122, 0.045) 0 2px,
+      transparent 2px 50px
+    ),
+    linear-gradient(90deg, rgba(109, 255, 85, 0.025), transparent 18%, transparent 82%, rgba(109, 255, 85, 0.025));
+  mix-blend-mode: screen;
+}
+
+:root[data-ui-style="fallout76"] .tavern-app-shell::after {
+  background:
+    radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.34) 100%),
+    linear-gradient(180deg, rgba(109, 255, 85, 0.04), transparent 18%, transparent 82%, rgba(109, 255, 85, 0.035));
+}
+
+:root[data-ui-style="fallout76"] .tavern-app-frame {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  margin: 0;
+  border: 1px solid var(--pip-line-strong);
+  border-top: none;
+  border-radius: 0;
+  background: rgba(5, 8, 4, 0.96);
+  box-shadow:
+    inset 0 0 0 1px rgba(109, 255, 85, 0.05),
+    0 0 42px rgba(0, 0, 0, 0.58);
+}
+
+:root[data-ui-style="fallout76"] .tavern-window-titlebar {
+  background: var(--pip-dark);
+  border-bottom: 1px solid var(--pip-line-strong);
+  box-shadow: none;
+}
+
+:root[data-ui-style="fallout76"] .tavern-titlebar-grip {
+  opacity: 0.56;
+  background:
+    linear-gradient(90deg, transparent, rgba(109, 255, 85, 0.18) 18%, rgba(243, 179, 54, 0.24) 50%, rgba(109, 255, 85, 0.18) 82%, transparent);
+}
+
+:root[data-ui-style="fallout76"] .tavern-topbar {
+  height: 86px;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr) minmax(248px, max-content);
+  gap: 10px;
+  padding-inline: 22px;
+  background: var(--pip-dark);
+  border-bottom: 1px solid var(--pip-line-strong);
+  box-shadow: inset 0 -1px 0 rgba(109, 255, 85, 0.08);
+}
+
+:root[data-ui-style="fallout76"] .tavern-brand-plaque {
+  min-width: 0;
+  width: 100%;
+  height: 52px;
+  padding: 0 12px;
+  color: var(--pip-amber);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-ui-style="fallout76"] .tavern-brand-icon,
+:root[data-ui-style="fallout76"] .tavern-avatar-medallion,
+:root[data-ui-style="fallout76"] .fallout-terminal-icon,
+:root[data-ui-style="fallout76"] .fallout-vault-mark {
+  color: var(--pip-amber);
+  border: 1px solid var(--pip-line-strong);
+  border-radius: 8px;
+  background: #0b1207;
+  box-shadow:
+    inset 0 0 0 1px rgba(109, 255, 85, 0.04),
+    0 0 12px rgba(109, 255, 85, 0.08);
+}
+
+:root[data-ui-style="fallout76"] .tavern-brand-icon {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+:root[data-ui-style="fallout76"] .tavern-brand-title {
+  color: var(--pip-amber);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+:root[data-ui-style="fallout76"] .tavern-brand-subtitle {
+  display: block;
+  color: var(--pip-amber);
+  opacity: 0.9;
+}
+
+:root[data-ui-style="fallout76"] .tavern-main-tabs {
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+:root[data-ui-style="fallout76"] .tavern-main-tabs > .tavern-nav-tab {
+  flex: 1 1 112px;
+  max-width: 132px;
+}
+
+:root[data-ui-style="fallout76"] .tavern-nav-tab {
+  min-width: 78px;
+  height: 64px;
+  padding: 0 9px;
+  color: var(--pip-amber);
+  border: 1px solid var(--pip-line);
+  border-radius: 8px;
+  background: #0d100b;
+  box-shadow: none;
+}
+
+:root[data-ui-style="fallout76"] .tavern-nav-tab:hover {
+  color: var(--pip-green);
+  border-color: var(--pip-green);
+  background: rgba(20, 44, 18, 0.78);
+}
+
+:root[data-ui-style="fallout76"] .tavern-nav-tab[data-active="true"] {
+  color: var(--pip-green);
+  border-color: var(--pip-green);
+  background: #142c12;
+  box-shadow:
+    inset 0 0 0 1px rgba(109, 255, 85, 0.14),
+    0 0 16px rgba(109, 255, 85, 0.08);
+}
+
+:root[data-ui-style="fallout76"] .tavern-nav-labels {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+:root[data-ui-style="fallout76"] .tavern-nav-label {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+:root[data-ui-style="fallout76"] .tavern-nav-code {
+  display: block;
+  margin-top: 5px;
+  color: var(--pip-muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+:root[data-ui-style="fallout76"] .tavern-nav-tab[data-active="true"] .tavern-nav-code {
+  color: var(--pip-green);
+}
+
+:root[data-ui-style="fallout76"] .tavern-status-pill,
+:root[data-ui-style="fallout76"] .tavern-player-pill,
+:root[data-ui-style="fallout76"] .tavern-settings-button {
+  height: 46px;
+  color: var(--pip-amber);
+  border: 1px solid var(--pip-line-strong);
+  border-radius: 8px;
+  background: #0b1208;
+  box-shadow: none;
+}
+
+:root[data-ui-style="fallout76"] .tavern-status-pill {
+  max-width: 176px;
+  min-width: 0;
+}
+
+:root[data-ui-style="fallout76"] .tavern-player-pill {
+  max-width: 230px;
+  min-width: 0;
+}
+
+:root[data-ui-style="fallout76"] .tavern-settings-button:hover,
+:root[data-ui-style="fallout76"] .tavern-settings-button[data-active="true"] {
+  color: var(--pip-green);
+  border-color: var(--pip-green);
+  background: #142c12;
+}
+
+:root[data-ui-style="fallout76"] .tavern-main-surface {
+  background:
+    linear-gradient(180deg, rgba(5, 8, 4, 0.94), rgba(2, 4, 2, 0.94)),
+    var(--pip-bg);
+}
+
+:root[data-ui-style="fallout76"] .tavern-bottom-status {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: clamp(20px, 5vw, 120px);
+  padding: 0 24px;
+  color: var(--pip-muted);
+  border-top: 1px solid var(--pip-line-strong);
+  background: #080c06;
+  font-size: 12px;
+}
+
+:root[data-ui-style="fallout76"] .tavern-dashboard {
+  padding: 22px 24px;
+}
+
+:root[data-ui-style="fallout76"] .fallout-dashboard-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) minmax(320px, 500px);
+  gap: 24px;
+  min-height: 100%;
+}
+
+:root[data-ui-style="fallout76"] .fallout-connection-panel {
+  min-height: 560px;
+}
+
+:root[data-ui-style="fallout76"] .fallout-page-heading {
+  min-height: 70px;
+}
+
+:root[data-ui-style="fallout76"] .tavern-app-shell .tahoe-card {
+  color: var(--pip-text);
+  border: 1px solid var(--pip-line-strong);
+  border-radius: 10px;
+  background: rgba(11, 20, 9, 0.94);
+  box-shadow:
+    inset 0 0 0 1px rgba(109, 255, 85, 0.025),
+    0 0 0 1px rgba(0, 0, 0, 0.28);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-ui-style="fallout76"] .tavern-hero-card {
+  border-color: var(--pip-line-strong);
+}
+
+:root[data-ui-style="fallout76"] .tavern-hero-card::before {
+  background:
+    linear-gradient(90deg, rgba(109, 255, 85, 0.08), transparent 36%),
+    repeating-linear-gradient(180deg, rgba(141, 255, 122, 0.045) 0 2px, transparent 2px 28px);
+}
+
+:root[data-ui-style="fallout76"] .tavern-stat-card {
+  min-height: 118px;
+}
+
+:root[data-ui-style="fallout76"] .tavern-stat-card:hover,
+:root[data-ui-style="fallout76"] .recent-match-row:hover {
+  border-color: var(--pip-green);
+}
+
+:root[data-ui-style="fallout76"] .kpi-card::after,
+:root[data-ui-style="fallout76"] .tahoe-card::after {
+  background: none;
+}
+
+:root[data-ui-style="fallout76"] .fallout-chip {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pip-muted);
+  border: 1px solid var(--pip-line);
+  border-radius: 6px;
+  background: #0a1008;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+:root[data-ui-style="fallout76"] .fallout-chip-active,
+:root[data-ui-style="fallout76"] .tahoe-active-pill,
+:root[data-ui-style="fallout76"] .settings-row .bg-accent,
+:root[data-ui-style="fallout76"] .settings-row button.bg-accent {
+  color: var(--pip-green);
+  border-color: var(--pip-green);
+  background: #17351b;
+  box-shadow: 0 0 12px rgba(109, 255, 85, 0.08);
+}
+
+:root[data-ui-style="fallout76"] .settings-row .text-on-accent,
+:root[data-ui-style="fallout76"] .settings-row .text-text-on-accent {
+  color: var(--pip-green);
+}
+
+:root[data-ui-style="fallout76"] button,
+:root[data-ui-style="fallout76"] input,
+:root[data-ui-style="fallout76"] select,
+:root[data-ui-style="fallout76"] textarea {
+  border-color: var(--pip-line);
+}
+
+:root[data-ui-style="fallout76"] input,
+:root[data-ui-style="fallout76"] select,
+:root[data-ui-style="fallout76"] textarea {
+  color: var(--pip-text);
+  background: rgba(5, 8, 4, 0.72);
+}
+
+:root[data-ui-style="fallout76"] .recharts-cartesian-grid line {
+  stroke: rgba(61, 58, 30, 0.75);
+}
+
+:root[data-ui-style="fallout76"] .recharts-line-curve,
+:root[data-ui-style="fallout76"] .recharts-line .recharts-curve {
+  stroke: var(--pip-green);
+}
+
+:root[data-ui-style="fallout76"] .recharts-dot,
+:root[data-ui-style="fallout76"] .recharts-line-dot {
+  stroke: var(--pip-green);
+  fill: var(--pip-bg);
+}
+
+:root[data-ui-style="fallout76"] .recharts-bar-rectangle path {
+  fill: var(--pip-green);
+}
+
+:root[data-ui-style="fallout76"] body[data-overlay="true"] .tracker-panel-shell {
+  color: var(--pip-text) !important;
+  border: 1px solid var(--pip-line-strong) !important;
+  border-radius: 10px !important;
+  background: rgba(5, 8, 4, 0.90) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(109, 255, 85, 0.06),
+    0 0 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+:root[data-ui-style="fallout76"] body[data-overlay="true"] .tracker-panel-tabbar,
+:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-overlay-header,
+:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-overlay-footer {
+  background: var(--pip-dark) !important;
+  border-color: var(--pip-line) !important;
+}
+
+:root[data-ui-style="fallout76"] body[data-overlay="true"] .tracker-tab-pill[data-active="true"] {
+  color: var(--pip-green) !important;
+  border-color: var(--pip-green);
+  background: #17351b !important;
+}
+
+:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-card-row {
+  color: var(--pip-text);
+  border-color: var(--pip-line) !important;
+  background: linear-gradient(90deg, var(--pip-row), rgba(13, 22, 11, 0.50)) !important;
+}
+
+:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-card-row:hover {
+  border-color: var(--pip-green) !important;
+  box-shadow: inset 3px 0 0 var(--pip-green) !important;
+}
+
+@media (max-width: 1500px) {
+  :root[data-ui-style="fallout76"] .tavern-topbar {
+    grid-template-columns: minmax(160px, 220px) minmax(0, 1fr) minmax(180px, max-content);
+  }
+
+  :root[data-ui-style="fallout76"] .tavern-main-tabs > .tavern-nav-tab {
+    flex-basis: 82px;
+  }
+
+  :root[data-ui-style="fallout76"] .tavern-nav-tab {
+    min-width: 58px;
+    padding-inline: 7px;
+  }
+
+  :root[data-ui-style="fallout76"] .tavern-nav-code {
+    display: none;
+  }
+}
+
+@media (max-width: 1180px) {
+  :root[data-ui-style="fallout76"] .fallout-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  :root[data-ui-style="fallout76"] .fallout-connection-panel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 980px) {
+  :root[data-ui-style="fallout76"] .tavern-topbar {
+    height: 64px;
+    grid-template-columns: minmax(52px, 140px) minmax(0, 1fr) minmax(0, max-content);
+  }
+
+  :root[data-ui-style="fallout76"] .tavern-brand-subtitle,
+  :root[data-ui-style="fallout76"] .tavern-nav-label,
+  :root[data-ui-style="fallout76"] .tavern-nav-code {
+    display: none;
+  }
+
+  :root[data-ui-style="fallout76"] .tavern-nav-tab {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    padding: 0;
+  }
+
+  :root[data-ui-style="fallout76"] .tavern-bottom-status {
+    display: none;
+  }
 }

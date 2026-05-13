@@ -8,6 +8,7 @@ import { OverlayView } from './components/OverlayView';
 import { OpponentOverlayView } from './components/OpponentOverlayView';
 import { CardPreviewView } from './components/CardPreviewView';
 import { TrackerStatusBanner } from './components/TrackerStatusBanner';
+import { FeaturePreviewPage } from './components/FeaturePreviewPages';
 
 function TrackerRoute() {
   return (
@@ -25,6 +26,9 @@ export const routes: RouteObject[] = [
   { path: 'tracker', element: <TrackerRoute /> },
   { path: 'decks', element: <DecksPage /> },
   { path: 'stats', element: <Stats /> },
+  { path: 'opponent', element: <FeaturePreviewPage kind="opponent" /> },
+  { path: 'lethal', element: <FeaturePreviewPage kind="lethal" /> },
+  { path: 'replay', element: <FeaturePreviewPage kind="replay" /> },
   { path: 'collection', element: <Collection /> },
   { path: 'settings', element: <Settings /> },
   { path: 'overlay', element: <OverlayView /> },

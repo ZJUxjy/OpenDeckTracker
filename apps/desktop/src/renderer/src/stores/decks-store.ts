@@ -6,14 +6,14 @@ interface DecksStoreState {
   decks: DeckSummary[];
   loading: boolean;
   error: string | null;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<DeckSummary[]>;
   /**
    * Call `syncFromLive()` against the main-process sync host first, then
    * always re-fetch the canonical list. A failed sync (Hearthstone
    * unavailable, card db not ready, error) must not block the list
    * refresh — the renderer keeps cached local decks visible.
    */
-  syncAndRefresh: () => Promise<void>;
+  syncAndRefresh: () => Promise<DeckSummary[]>;
   createDeck: (input: CreateDeckInput) => Promise<DeckDetail>;
   updateDeck: (id: string, patch: UpdateDeckPatch) => Promise<DeckDetail>;
   duplicateDeck: (id: string) => Promise<DeckDetail>;
@@ -35,23 +35,35 @@ export const useDecksStore = create<DecksStoreState>((set) => ({
     try {
       const decks = await window.hdt.decks.list();
       set({ decks, loading: false });
+      return decks;
     } catch (err) {
       set({ loading: false, error: (err as Error).message });
+      return [];
     }
   },
   async syncAndRefresh() {
     set({ loading: true, error: null });
     try {
       try {
-        await window.hdt.decks.syncFromLive();
+        const syncResult = await window.hdt.decks.syncFromLive();
+        console.log('[decks-sync:auto] result', syncResult);
       } catch (err) {
         // Sync failures stay non-fatal so cached decks keep rendering.
         console.warn('[decks-store] syncFromLive failed', err);
       }
       const decks = await window.hdt.decks.list();
+      console.log('[decks-sync:auto] refreshed decks', decks.map((d) => ({
+        id: d.id,
+        name: d.name,
+        class: d.class,
+        format: d.format,
+        cardCount: d.cardCount,
+      })));
       set({ decks, loading: false });
+      return decks;
     } catch (err) {
       set({ loading: false, error: (err as Error).message });
+      return [];
     }
   },
   async createDeck(input) {

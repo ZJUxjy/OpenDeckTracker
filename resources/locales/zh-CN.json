@@ -9,12 +9,16 @@
       "desktop": "桌面应用",
       "overlay": "游戏内覆盖层"
     },
-    "playerFallback": "玩家"
+    "playerFallback": "玩家",
+    "subtitle": "炉石智能记牌器"
   },
   "sidebar": {
     "deckTracker": "记牌器",
     "decks": "卡组",
     "stats": "统计",
+    "opponent": "对手分析",
+    "lethal": "斩杀",
+    "replay": "回放",
     "collection": "收藏",
     "settings": "设置"
   },
@@ -102,16 +106,47 @@
     },
     "list": {
       "title": "我的卡组",
+      "formats": {
+        "standard": "标准",
+        "wild": "狂野",
+        "classic": "经典",
+        "twist": "时光"
+      },
       "empty": {
         "title": "尚无已保存的卡组",
         "create": "新建卡组",
         "import": "导入卡组码"
       },
+      "sync": {
+        "button": "同步卡组",
+        "syncing": "同步中…",
+        "ariaLabel": "从炉石传说同步卡组",
+        "lastResult": "上次同步：保存 {synced} 副，跳过 {skipped} 副（{source}，{time}）",
+        "sourceLive": "实时",
+        "sourceUnavailable": "游戏不可用",
+        "sourceNotReady": "尚未就绪",
+        "sourceError": "错误"
+      },
+      "filters": {
+        "searchLabel": "搜索已保存卡组",
+        "searchPlaceholder": "搜索卡组、职业或游戏编号…",
+        "classLabel": "职业筛选",
+        "formatLabel": "模式筛选",
+        "sourceLabel": "来源筛选",
+        "allClasses": "全部职业",
+        "allFormats": "全部模式",
+        "allSources": "全部来源",
+        "count": "{shown} / {total} 副卡组",
+        "noResults": "当前筛选条件下没有匹配的卡组。"
+      },
       "row": {
+        "expand": "展开卡组",
+        "collapse": "收起卡组",
         "edit": "编辑",
         "duplicate": "复制",
         "export": "导出",
         "delete": "删除",
+        "version": "版本 {version}",
         "deleteConfirm": {
           "title": "删除此卡组？",
           "description": "将一并移除卡组及其全部版本历史。",
@@ -119,7 +154,24 @@
           "confirm": "删除"
         },
         "savedBadge": "已保存",
-        "cardCount": "{count} / 30"
+        "cardCount": "{count} / 30",
+        "sourceLive": "炉石同步",
+        "sourceManual": "手动",
+        "updated": "更新",
+        "liveId": "游戏编号",
+        "loading": "正在加载卡组详情…",
+        "loadFailed": "无法加载此卡组。",
+        "noPreview": "暂无卡组预览。",
+        "totalCards": "卡牌",
+        "uniqueCards": "唯一牌",
+        "avgCost": "平均费用",
+        "manaCurve": "费用曲线",
+        "keyCards": "关键卡牌",
+        "cards": "完整牌表",
+        "noCards": "此卡组中没有卡牌。",
+        "copyCode": "复制卡组码",
+        "copied": "已复制",
+        "copyFailed": "复制失败"
       }
     },
     "editor": {
@@ -228,6 +280,7 @@
       "uiStyle": {
         "title": "界面风格",
         "description": "切换视觉皮肤，同时保持当前布局不变。",
+        "fallout76": "Fallout 76",
         "tavern": "酒馆",
         "macos": "macOS",
         "wechat": "微信深色"
@@ -259,6 +312,75 @@
       "viewThirdPartyNotices": "第三方组件声明",
       "openFailed": "无法打开文件，可能不存在或无访问权限。",
       "disclaimer": "OpenDeckTracker 是独立的第三方工具，与暴雪娱乐（Blizzard Entertainment, Inc.）无任何附属、背书或赞助关系。《炉石传说》是暴雪娱乐的注册商标。本软件配合《炉石传说》使用须遵守暴雪的服务条款，相关风险由用户自行承担。"
+    }
+  },
+  "fallout": {
+    "statusBar": {
+      "ariaLabel": "Pip-Boy 状态栏",
+      "pipboy": "PIP-BOY 76",
+      "version": "当前版本：v1.0.0.76",
+      "database": "数据库：本地缓存就绪",
+      "connected": "终端连接：已上线",
+      "standby": "终端连接：待机",
+      "links": "日志    帮助与反馈    关于"
+    },
+    "dashboard": {
+      "liveBadge": "实时记牌",
+      "moduleDecks": "卡组模块",
+      "moduleCollection": "收藏模块",
+      "moduleReplay": "回放模块",
+      "moduleLethal": "斩杀模块"
+    },
+    "preview": {
+      "eyebrow": "功能预览 / TERMINAL MODULE",
+      "opponent": {
+        "title": "对手分析",
+        "body": "此模块先按 Pip-Boy 终端风格完成信息布局，后续会接入对手构筑预测、已揭示卡牌权重和热门卡组匹配。",
+        "card0": {
+          "title": "构筑识别",
+          "body": "根据对手职业、已打出卡牌和当前环境库推断最可能的卡组列表。"
+        },
+        "card1": {
+          "title": "威胁预警",
+          "body": "把关键解牌、斩杀组件和节奏转折点做成终端告警。"
+        },
+        "card2": {
+          "title": "换牌建议",
+          "body": "结合历史对局和当前卡组，给出可解释的起手保留参考。"
+        }
+      },
+      "lethal": {
+        "title": "斩杀计算器",
+        "body": "此模块先保留 Fallout 76 风格操作台，后续会接入场攻、手牌法术、武器和可用法力的组合计算。",
+        "card0": {
+          "title": "伤害池",
+          "body": "汇总我方场面、手牌直伤、英雄攻击和可触发增益。"
+        },
+        "card1": {
+          "title": "嘲讽路径",
+          "body": "在存在嘲讽、圣盾和免疫时计算可行攻击分配。"
+        },
+        "card2": {
+          "title": "回合模拟",
+          "body": "按法力曲线枚举可执行序列，并展示最高伤害路径。"
+        }
+      },
+      "replay": {
+        "title": "对局回放",
+        "body": "此模块先按终端档案库设计占位，后续会展示本地录像、事件时间线、换牌和关键回合复盘。",
+        "card0": {
+          "title": "录像档案",
+          "body": "按日期、卡组、职业和胜负筛选本地保存的对局。"
+        },
+        "card1": {
+          "title": "事件时间线",
+          "body": "以回合为单位展示抽牌、出牌、伤害和墓地变化。"
+        },
+        "card2": {
+          "title": "复盘标记",
+          "body": "标记关键回合，方便后续查找错过的斩杀或资源点。"
+        }
+      }
     }
   },
   "deckTracker": {
