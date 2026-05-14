@@ -596,13 +596,10 @@ function buildRowExtraDisplay(
 ): RowExtraDisplay {
   const candidate = getExtraDisplayCandidate(cardId);
   const hasTrackedState = candidate ? hasTrackedExtraDisplayState(candidate, extraDisplay) : false;
-  const staticPoolCardIds = getStaticHoverPoolCardIds(cardId);
-  const poolCardIds =
-    staticPoolCardIds.length > 0
-      ? staticPoolCardIds
-      : candidate && hasTrackedState
-        ? resolvePreviewPoolCardIds(candidate, extraDisplay)
-        : [];
+  const dynamicPoolCardIds =
+    candidate && hasTrackedState
+      ? resolvePreviewPoolCardIds(candidate, extraDisplay)
+      : [];
   const extraLines: string[] = [];
   const triggerHit = matchOnBoardTrigger(def, extraDisplay?.friendlyBoard ?? []);
   if (triggerHit) {
@@ -617,8 +614,12 @@ function buildRowExtraDisplay(
 
   // On-board trigger highlight remains visual, but detailed enhanced data
   // belongs in the hover preview rather than inline row text.
+  const staticPoolCardIds =
+    dynamicPoolCardIds.length === 0 && extraLines.length === 0
+      ? getStaticHoverPoolCardIds(cardId)
+      : [];
   return {
-    poolCardIds,
+    poolCardIds: dynamicPoolCardIds.length > 0 ? dynamicPoolCardIds : staticPoolCardIds,
     extraLines,
     highlight: triggerHit !== null,
   };

@@ -79,17 +79,19 @@ export function useCardPreview(): {
       if (!api) return;
       const cardId = typeof request === 'string' ? request : request.cardId;
       const requestedPoolCardIds = typeof request === 'string' ? [] : (request.poolCardIds ?? []);
-      const poolCardIds = requestedPoolCardIds.length > 0
-        ? requestedPoolCardIds
-        : getStaticHoverPoolCardIds(cardId);
       const extra = typeof request === 'string' ? null : (request.extra ?? null);
       const anchor = computeAnchor(el);
-      if (poolCardIds.length > 0 && api.showPool) {
-        void api.showPool(poolCardIds, anchor);
+      if (requestedPoolCardIds.length > 0 && api.showPool) {
+        void api.showPool(requestedPoolCardIds, anchor);
         return;
       }
       if (extra && extra.lines.length > 0 && api.showExtra) {
         void api.showExtra(extra, anchor);
+        return;
+      }
+      const staticPoolCardIds = getStaticHoverPoolCardIds(cardId);
+      if (staticPoolCardIds.length > 0 && api.showPool) {
+        void api.showPool(staticPoolCardIds, anchor);
         return;
       }
       void api.show(cardId, anchor);
