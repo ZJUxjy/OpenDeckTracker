@@ -5,6 +5,7 @@ export interface OverlayManagerOptions {
   preloadPath: string;
   routeHash?: string;
   onFocusChange?: () => void;
+  placeWindowAboveHearthstone?: (nativeWindowHandle: Uint8Array) => boolean;
 }
 
 export interface BoundsRect {
@@ -167,6 +168,7 @@ export class OverlayManager {
       this.isApplyingTrackerBounds = false;
     });
     this.lastAppliedBounds = { ...clamped };
+    this.syncZOrder();
   }
 
   dispose(): void {
@@ -250,18 +252,32 @@ export class OverlayManager {
       console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
       return;
     }
-    const shouldShow =
-      this.userEnabled && this.visibleOnScreen && this.inActiveMatch && this.targetForeground;
+    const shouldShow = this.userEnabled && this.visibleOnScreen && this.inActiveMatch;
     console.log(
       `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} inActiveMatch=${this.inActiveMatch} targetForeground=${this.targetForeground} → ${shouldShow ? 'show' : 'hide'}`,
     );
     if (shouldShow) {
       this.win.showInactive();
-      this.win.setAlwaysOnTop(true, 'screen-saver');
-      (this.win as { moveTop?: () => void }).moveTop?.();
+      this.syncZOrder();
     } else {
       this.win.hide();
       this.win.setAlwaysOnTop(false);
+    }
+  }
+
+  private syncZOrder(): void {
+    if (!this.win || this.win.isDestroyed()) return;
+    if (!this.userEnabled || !this.visibleOnScreen || !this.inActiveMatch) return;
+    if (this.targetForeground) {
+      this.win.setAlwaysOnTop(true, 'screen-saver');
+      (this.win as { moveTop?: () => void }).moveTop?.();
+    } else {
+      this.win.setAlwaysOnTop(false);
+      const placed =
+        this.opts.placeWindowAboveHearthstone?.(this.win.getNativeWindowHandle()) ?? false;
+      if (!placed) {
+        console.log(`[overlay-mgr ${this.routeHash}] placeWindowAboveHearthstone skipped/failed`);
+      }
     }
   }
 }

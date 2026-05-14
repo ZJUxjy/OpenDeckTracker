@@ -20,10 +20,14 @@ pub mod runtime_slot;
 pub mod window;
 
 use error::ScryError;
+use napi::bindgen_prelude::Buffer;
 use napi_derive::napi;
 use runtime_slot::{back_off_duration, RuntimeSlot};
+use std::ffi::c_void;
+use std::mem::size_of;
 use std::sync::Mutex;
 use std::time::Instant;
+use windows::Win32::Foundation::HWND;
 
 static MIRROR: Mutex<RuntimeSlot<mono::MonoRuntime>> = Mutex::new(RuntimeSlot::new());
 
@@ -212,6 +216,31 @@ pub async fn get_hearthstone_window() -> napi::Result<Option<HearthstoneWindowRe
         visible: w.visible,
         foreground: w.foreground,
     }))
+}
+
+fn hwnd_from_native_window_handle(handle: &[u8]) -> napi::Result<HWND> {
+    let size = size_of::<usize>();
+    if handle.len() < size {
+        return Err(napi::Error::from_reason(format!(
+            "native window handle is too short: got {} bytes, need {}",
+            handle.len(),
+            size
+        )));
+    }
+    let mut raw = [0u8; size_of::<usize>()];
+    raw.copy_from_slice(&handle[..size]);
+    let hwnd = usize::from_ne_bytes(raw);
+    if hwnd == 0 {
+        return Err(napi::Error::from_reason("native window handle is null"));
+    }
+    Ok(HWND(hwnd as *mut c_void))
+}
+
+#[napi]
+pub fn place_window_above_hearthstone(native_window_handle: Buffer) -> napi::Result<bool> {
+    let hwnd = hwnd_from_native_window_handle(native_window_handle.as_ref())?;
+    window::place_window_above_hearthstone(hwnd)
+        .map_err(|e| napi::Error::from_reason(e.to_string()))
 }
 
 /// Diagnostic: number of times the slot has populated a fresh runtime.

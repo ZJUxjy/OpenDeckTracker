@@ -269,6 +269,8 @@ export interface OpponentSecretsResult {
   count: number
 }
 
+export declare function placeWindowAboveHearthstone(nativeWindowHandle: Buffer): boolean
+
 export interface SecretEntity {
   entityId: number
   cardId: string

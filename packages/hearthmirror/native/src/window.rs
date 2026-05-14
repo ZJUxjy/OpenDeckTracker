@@ -11,6 +11,7 @@
 //! visibility via `IsIconic` / `IsWindowVisible`.
 
 use std::cell::Cell;
+use std::ptr::null_mut;
 
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, BOOL, HWND, LPARAM, MAX_PATH, RECT};
@@ -18,8 +19,9 @@ use windows::Win32::System::Threading::{
     OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId,
-    IsIconic, IsWindowVisible,
+    EnumWindows, GetClassNameW, GetForegroundWindow, GetWindow, GetWindowRect,
+    GetWindowThreadProcessId, IsIconic, IsWindowVisible, SetWindowPos, GW_HWNDPREV, HWND_NOTOPMOST,
+    HWND_TOP, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, SWP_SHOWWINDOW,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -116,6 +118,52 @@ fn find_hearthstone_hwnd() -> Option<HWND> {
     } else {
         Some(HWND(raw as *mut _))
     }
+}
+
+/// Keep an overlay as a normal, non-topmost window immediately above
+/// Hearthstone in z-order. This lets the overlay remain visible over the
+/// game on a secondary monitor without floating over unrelated foreground
+/// applications.
+pub fn place_window_above_hearthstone(overlay_hwnd: HWND) -> windows::core::Result<bool> {
+    if overlay_hwnd.0.is_null() {
+        return Ok(false);
+    }
+    let Some(hearthstone_hwnd) = find_hearthstone_hwnd() else {
+        return Ok(false);
+    };
+    if overlay_hwnd == hearthstone_hwnd {
+        return Ok(false);
+    }
+
+    let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_SHOWWINDOW;
+    // SAFETY: both HWNDs are top-level windows. We only change z-order /
+    // visibility and explicitly avoid activation or geometry changes.
+    unsafe {
+        SetWindowPos(overlay_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, flags)?;
+    }
+
+    // hWndInsertAfter is the window that should precede the positioned
+    // window. Therefore, to put the overlay above Hearthstone without
+    // covering unrelated foreground windows, insert it after the current
+    // window immediately above Hearthstone. If Hearthstone is already top
+    // of the non-topmost stack, HWND_TOP is the correct boundary.
+    // SAFETY: hearthstone_hwnd was just found; GetWindow is read-only.
+    let insert_after =
+        unsafe { GetWindow(hearthstone_hwnd, GW_HWNDPREV) }.unwrap_or(HWND(null_mut()));
+    if insert_after == overlay_hwnd {
+        return Ok(true);
+    }
+    let insert_after = if insert_after.0.is_null() {
+        HWND_TOP
+    } else {
+        insert_after
+    };
+    // SAFETY: overlay_hwnd is supplied by Electron for our overlay window;
+    // insert_after is either a HWND returned by GetWindow or HWND_TOP.
+    unsafe {
+        SetWindowPos(overlay_hwnd, insert_after, 0, 0, 0, 0, flags)?;
+    }
+    Ok(true)
 }
 
 /// Locate the Hearthstone window and read its bounds + visibility flags.

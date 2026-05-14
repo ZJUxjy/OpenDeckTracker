@@ -54,12 +54,16 @@ if (!gotLock) {
       preloadPath,
       routeHash: '/overlay',
       onFocusChange: () => recomputeOverlayForeground(),
+      placeWindowAboveHearthstone: (handle) =>
+        getHearthMirror().placeWindowAboveHearthstone(handle),
     });
     const opponentOverlay = new OverlayManager({
       rendererUrl,
       preloadPath,
       routeHash: '/overlay-opponent',
       onFocusChange: () => recomputeOverlayForeground(),
+      placeWindowAboveHearthstone: (handle) =>
+        getHearthMirror().placeWindowAboveHearthstone(handle),
     });
 
     // Each overlay is a small panel-sized window anchored to one edge of

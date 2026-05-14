@@ -113,6 +113,14 @@ export class HearthMirror {
     }
   }
 
+  placeWindowAboveHearthstone(nativeWindowHandle: Uint8Array): boolean {
+    try {
+      return native.placeWindowAboveHearthstone(nativeWindowHandle);
+    } catch {
+      return false;
+    }
+  }
+
   async getBattleTag(): Promise<BattleTag | null> {
     const r = await native.getBattleTag();
     if (!r) return null;

@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => {
     _opts: Record<string, unknown>;
     _currentBounds: { x: number; y: number; width: number; height: number };
     _listeners: Record<string, Array<() => void>> = {};
+    _nativeHandle = new Uint8Array([1, 0, 0, 0, 0, 0, 0, 0]);
     webContents = { on: vi.fn() };
 
     constructor(opts: Record<string, unknown>) {
@@ -28,6 +29,8 @@ const mocks = vi.hoisted(() => {
     isDestroyed = vi.fn(() => this._destroyed);
     destroy = vi.fn(() => { this._destroyed = true; });
     setAlwaysOnTop = vi.fn();
+    moveTop = vi.fn();
+    getNativeWindowHandle = vi.fn(() => this._nativeHandle);
     loadURL = vi.fn(() => Promise.resolve());
     loadFile = vi.fn(() => Promise.resolve());
     setBounds = vi.fn((rect: { x: number; y: number; width: number; height: number }) => {
@@ -157,26 +160,33 @@ describe('OverlayManager', () => {
     expect(lastWindow().isVisible()).toBe(false);
   });
 
-  it('setVisibleOnScreen(true) + setInActiveMatch(true) + setTargetForeground(true) after enable() shows the window', () => {
-    const mgr = makeManager();
+  it('setVisibleOnScreen(true) + setInActiveMatch(true) after enable() shows above Hearthstone even in background', () => {
+    const placeWindowAboveHearthstone = vi.fn(() => true);
+    const mgr = makeManager({ placeWindowAboveHearthstone });
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
-    mgr.setTargetForeground(true);
 
-    expect(lastWindow().setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
-    expect(lastWindow().showInactive).toHaveBeenCalled();
-    expect(lastWindow().isVisible()).toBe(true);
+    const win = lastWindow();
+    expect(win.showInactive).toHaveBeenCalled();
+    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(false);
+    expect(placeWindowAboveHearthstone).toHaveBeenCalledWith(win._nativeHandle);
+    expect(win.isVisible()).toBe(true);
   });
 
-  it('keeps the window hidden while Hearthstone is not foreground', () => {
+  it('setTargetForeground(true) switches the visible overlay to screen-saver topmost', () => {
     const mgr = makeManager();
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+    win.setAlwaysOnTop.mockClear();
 
-    expect(lastWindow().isVisible()).toBe(false);
-    expect(lastWindow().showInactive).not.toHaveBeenCalled();
+    mgr.setTargetForeground(true);
+
+    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
+    expect(win.moveTop).toHaveBeenCalled();
+    expect(win.isVisible()).toBe(true);
   });
 
   it('setVisibleOnScreen(false) after showing hides the window', () => {
@@ -231,19 +241,23 @@ describe('OverlayManager', () => {
     expect(lastWindow().isVisible()).toBe(false);
   });
 
-  it('setTargetForeground(false) hides the window without disabling the overlay', () => {
-    const mgr = makeManager();
+  it('setTargetForeground(false) keeps the window visible and places it above Hearthstone', () => {
+    const placeWindowAboveHearthstone = vi.fn(() => true);
+    const mgr = makeManager({ placeWindowAboveHearthstone });
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     mgr.setTargetForeground(true);
-    expect(lastWindow().isVisible()).toBe(true);
+    const win = lastWindow();
+    expect(win.isVisible()).toBe(true);
+    win.hide.mockClear();
 
     mgr.setTargetForeground(false);
 
-    expect(lastWindow().hide).toHaveBeenCalled();
-    expect(lastWindow().setAlwaysOnTop).toHaveBeenCalledWith(false);
-    expect(lastWindow().isVisible()).toBe(false);
+    expect(win.hide).not.toHaveBeenCalled();
+    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(false);
+    expect(placeWindowAboveHearthstone).toHaveBeenCalledWith(win._nativeHandle);
+    expect(win.isVisible()).toBe(true);
   });
 
   it('tracks overlay focus and notifies the host', () => {

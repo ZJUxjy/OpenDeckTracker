@@ -601,3 +601,4 @@ module.exports.isAlive = nativeBinding.isAlive
 module.exports.isGameOver = nativeBinding.isGameOver
 module.exports.isMulligan = nativeBinding.isMulligan
 module.exports.isSpectating = nativeBinding.isSpectating
+module.exports.placeWindowAboveHearthstone = nativeBinding.placeWindowAboveHearthstone

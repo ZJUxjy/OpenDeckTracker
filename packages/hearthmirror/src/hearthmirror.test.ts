@@ -23,6 +23,7 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getOpponentSecrets: vi.fn(),
   getChoices: vi.fn(),
   getHearthstoneWindow: vi.fn(),
+  placeWindowAboveHearthstone: vi.fn(),
 }));
 
 import * as native from '@hdt/hearthmirror-native';
@@ -455,6 +456,24 @@ describe('HearthMirror', () => {
       expect(result?.minimized).toBe(true);
       expect(result?.visible).toBe(false);
       expect(result?.foreground).toBe(false);
+    });
+  });
+
+  describe('placeWindowAboveHearthstone', () => {
+    it('forwards the native window handle to native', () => {
+      mocked(native.placeWindowAboveHearthstone).mockReturnValue(true);
+      const handle = new Uint8Array([1, 2, 3, 4]);
+
+      expect(mirror.placeWindowAboveHearthstone(handle)).toBe(true);
+      expect(native.placeWindowAboveHearthstone).toHaveBeenCalledWith(handle);
+    });
+
+    it('returns false when native throws', () => {
+      mocked(native.placeWindowAboveHearthstone).mockImplementation(() => {
+        throw new Error('bad hwnd');
+      });
+
+      expect(mirror.placeWindowAboveHearthstone(new Uint8Array([1]))).toBe(false);
     });
   });
 });
