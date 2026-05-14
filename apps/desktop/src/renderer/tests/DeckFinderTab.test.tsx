@@ -176,9 +176,11 @@ describe('DeckFinderTab', () => {
       cardPreview: {
         show: cardPreviewShow,
         showPool: vi.fn(),
+        showExtra: vi.fn(),
         hide: vi.fn(),
         onSetCard: vi.fn(() => () => {}),
         onSetPool: vi.fn(() => () => {}),
+        onSetExtra: vi.fn(() => () => {}),
       },
     };
     Object.defineProperty(window, 'screenX', { value: 0, configurable: true });

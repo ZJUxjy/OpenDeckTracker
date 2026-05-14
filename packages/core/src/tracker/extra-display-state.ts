@@ -61,6 +61,7 @@ export class MatchExtraDisplayState {
   private readonly friendlyDeadMinions = new Map<string, number>();
   private readonly poolMaps = new Map<string, Map<string, number>>();
   private readonly friendlyDeadUndeadCosts = new Map<string, number>();
+  private readonly oneCostCardsPlayedThisGame = new Map<string, number>();
 
   reset(): void {
     this.currentTurn = null;
@@ -70,6 +71,7 @@ export class MatchExtraDisplayState {
     this.friendlyDeadMinions.clear();
     this.poolMaps.clear();
     this.friendlyDeadUndeadCosts.clear();
+    this.oneCostCardsPlayedThisGame.clear();
   }
 
   recordTurnChange(turn: number): void {
@@ -119,6 +121,9 @@ export class MatchExtraDisplayState {
     this.increment('cardsPlayedThisTurn', 1);
     this.setCounter('otherCardsPlayedThisTurn', this.counters.get('cardsPlayedThisTurn') ?? 0);
     if (typeof metadata.cost === 'number') this.setCounter('lastPlayedCardCost', metadata.cost);
+    if (metadata.cost === 1 && metadata.type !== 'HERO_POWER') {
+      incrementMap(this.oneCostCardsPlayedThisGame, args.event.cardId);
+    }
 
     if (metadata.type === 'HERO_POWER') {
       this.increment('heroPowerUsesThisGame', 1);
@@ -242,6 +247,7 @@ export class MatchExtraDisplayState {
     for (const [key, map] of this.poolMaps) {
       pools[key] = entriesFromCountMap(map);
     }
+    pools.oneCostCardsPlayedThisGameDistinct = entriesFromInsertionOrderedMap(this.oneCostCardsPlayedThisGame);
     pools.friendlyDeadUndeadHighestCostPoolThisGame = this.highestCostUndeadPool();
     pools['graveyardPool.EDR_891'] = pools.friendlyDeadDeathrattleMinionsCostLte4Unique ?? [];
     pools['graveyardPool.EDR_892'] = pools.friendlyDeadDeathrattleMinionsCostGte5Unique ?? [];
@@ -350,4 +356,8 @@ function entriesFromCountMap(map: Map<string, number>): ExtraDisplayPoolEntry[] 
   return [...map.entries()]
     .map(([cardId, count]) => ({ cardId, count }))
     .sort((a, b) => b.count - a.count || a.cardId.localeCompare(b.cardId));
+}
+
+function entriesFromInsertionOrderedMap(map: Map<string, number>): ExtraDisplayPoolEntry[] {
+  return [...map.entries()].map(([cardId, count]) => ({ cardId, count }));
 }

@@ -3,6 +3,7 @@ import { MatchExtraDisplayState, type ExtraDisplayCardLookup } from './extra-dis
 
 const lookup: ExtraDisplayCardLookup = (cardId) => {
   if (cardId === 'FEL_SPELL') return { type: 'SPELL', spellSchool: 'FEL', cost: 2 };
+  if (cardId === 'TAME_PET') return { type: 'SPELL', cost: 1 };
   if (cardId === 'FIRE_SPELL') return { type: 'SPELL', spellSchool: 'FIRE', cost: 2 };
   if (cardId === 'HOLY_SPELL') return { type: 'SPELL', spellSchool: 'HOLY', cost: 2 };
   if (cardId === 'SHADOW_SPELL') return { type: 'SPELL', spellSchool: 'SHADOW', cost: 2 };
@@ -66,6 +67,34 @@ describe('MatchExtraDisplayState', () => {
 
     expect(state.snapshot().counters.felSpellsCastThisGame).toBe(1);
     expect(state.snapshot().counters.spellsCastThisGame).toBe(1);
+  });
+
+  it('records local one-cost cards played this game for replay-pool previews', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordCardPlayed({
+      event: baseEvent('TAME_PET', 12),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: baseEvent('TAME_PET', 13),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: baseEvent('FEL_SPELL', 14),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: { ...baseEvent('TAME_PET', 15), controllerId: 2 },
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    expect(state.snapshot().pools.oneCostCardsPlayedThisGameDistinct).toEqual([
+      { cardId: 'TAME_PET', count: 2 },
+    ]);
   });
 
   it('tracks friendly minion deaths this turn and resets them on turn changes', () => {

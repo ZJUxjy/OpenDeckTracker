@@ -74,6 +74,8 @@ interface StoredShape {
   gameOverlayOpponent: boolean;
 }
 
+export type AppearanceSyncPayload = Partial<StoredShape>;
+
 interface AppearanceState extends StoredShape {
   setDensity: (next: Density) => void;
   setUiStyle: (next: UiStyle) => void;
@@ -90,6 +92,7 @@ interface AppearanceState extends StoredShape {
    */
   silentSetGameOverlay: (next: boolean) => void;
   silentSetGameOverlayOpponent: (next: boolean) => void;
+  syncFromExternal: (next: unknown) => void;
 }
 
 const DEFAULTS: StoredShape = {
@@ -114,18 +117,22 @@ function readStored(): StoredShape {
   try {
     const raw = localStorage.getItem(APPEARANCE_STORAGE_KEY);
     if (!raw) return { ...DEFAULTS };
-    const parsed = JSON.parse(raw);
-    return {
-      density: VALID_DENSITIES.has(parsed?.density) ? parsed.density : DEFAULT_DENSITY,
-      uiStyle: VALID_UI_STYLES.has(parsed?.uiStyle) ? parsed.uiStyle : DEFAULT_UI_STYLE,
-      accent: coerceAccent(parsed?.accent),
-      theme: VALID_THEMES.has(parsed?.theme) ? parsed.theme : DEFAULT_THEME,
-      gameOverlay: typeof parsed?.gameOverlay === 'boolean' ? parsed.gameOverlay : DEFAULT_GAME_OVERLAY,
-      gameOverlayOpponent: typeof parsed?.gameOverlayOpponent === 'boolean' ? parsed.gameOverlayOpponent : DEFAULT_GAME_OVERLAY_OPPONENT,
-    };
+    return coerceStoredShape(JSON.parse(raw));
   } catch {
     return { ...DEFAULTS };
   }
+}
+
+function coerceStoredShape(raw: unknown): StoredShape {
+  const parsed = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+  return {
+    density: VALID_DENSITIES.has(parsed['density'] as string) ? parsed['density'] as Density : DEFAULT_DENSITY,
+    uiStyle: VALID_UI_STYLES.has(parsed['uiStyle'] as string) ? parsed['uiStyle'] as UiStyle : DEFAULT_UI_STYLE,
+    accent: coerceAccent(parsed['accent']),
+    theme: VALID_THEMES.has(parsed['theme'] as string) ? parsed['theme'] as Theme : DEFAULT_THEME,
+    gameOverlay: typeof parsed['gameOverlay'] === 'boolean' ? parsed['gameOverlay'] : DEFAULT_GAME_OVERLAY,
+    gameOverlayOpponent: typeof parsed['gameOverlayOpponent'] === 'boolean' ? parsed['gameOverlayOpponent'] : DEFAULT_GAME_OVERLAY_OPPONENT,
+  };
 }
 
 function writeStored(s: StoredShape): void {
@@ -135,6 +142,14 @@ function writeStored(s: StoredShape): void {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(s));
   } catch {
     // Ignore storage errors; the in-memory setting still updates for this session.
+  }
+}
+
+function broadcastStored(s: StoredShape): void {
+  if (typeof window === 'undefined') return;
+  const result = window.hdt?.appearance?.broadcast?.(s);
+  if (result && typeof result.catch === 'function') {
+    void result.catch(() => undefined);
   }
 }
 
@@ -149,33 +164,45 @@ export const useAppearanceStore = create<AppearanceState>((set) => ({
   gameOverlayOpponent: initial.gameOverlayOpponent,
   setDensity: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: next, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    const stored = { density: next, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent };
+    writeStored(stored);
+    broadcastStored(stored);
     set({ density: next });
   },
   setUiStyle: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, uiStyle: next, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    const stored = { density: s.density, uiStyle: next, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent };
+    writeStored(stored);
+    broadcastStored(stored);
     set({ uiStyle: next });
   },
   setAccent: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: next, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    const stored = { density: s.density, uiStyle: s.uiStyle, accent: next, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent };
+    writeStored(stored);
+    broadcastStored(stored);
     set({ accent: next });
   },
   setTheme: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: next, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent });
+    const stored = { density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: next, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent };
+    writeStored(stored);
+    broadcastStored(stored);
     set({ theme: next });
   },
   setGameOverlay: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: next, gameOverlayOpponent: s.gameOverlayOpponent });
+    const stored = { density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: next, gameOverlayOpponent: s.gameOverlayOpponent };
+    writeStored(stored);
+    broadcastStored(stored);
     set({ gameOverlay: next });
     window.hdt?.overlay?.setEnabled?.(next);
   },
   setGameOverlayOpponent: (next) => {
     const s = useAppearanceStore.getState();
-    writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
+    const stored = { density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: next };
+    writeStored(stored);
+    broadcastStored(stored);
     set({ gameOverlayOpponent: next });
     window.hdt?.overlay?.setEnabledOpponent?.(next);
   },
@@ -188,5 +215,10 @@ export const useAppearanceStore = create<AppearanceState>((set) => ({
     const s = useAppearanceStore.getState();
     writeStored({ density: s.density, uiStyle: s.uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: next });
     set({ gameOverlayOpponent: next });
+  },
+  syncFromExternal: (raw) => {
+    const next = coerceStoredShape(raw);
+    writeStored(next);
+    set(next);
   },
 }));

@@ -4,6 +4,16 @@ import { useCardDef } from '../hooks/use-card-def';
 import { useGlassMouseFollow } from '../hooks/use-glass-mouse-follow';
 import { useLocale } from '../i18n';
 
+interface ExtraPreviewPayload {
+  title: string;
+  lines: readonly string[];
+}
+
+const POOL_PREVIEW_MAX_COLUMNS = 4;
+const POOL_PREVIEW_CARD_WIDTH = 230;
+const POOL_PREVIEW_CARD_HEIGHT = 330;
+const POOL_PREVIEW_GAP = 14;
+
 /**
  * Standalone renderer for the floating card-preview tooltip window.
  * The route loads at #/card-preview; the BrowserWindow is positioned
@@ -13,15 +23,19 @@ import { useLocale } from '../i18n';
  * Two modes:
  *   - single (`card-preview:set-card`): one card image. Used by deck
  *     row hover.
- *   - pool   (`card-preview:set-pool`): N cards side-by-side. Used by
- *     the Animal Companion pool row hover so the user sees the 3
- *     beasts at full size like in-game.
+ *   - pool   (`card-preview:set-pool`): N cards in a max-four-column
+ *     grid. Used by card pools so the user sees related cards at full
+ *     size like in-game.
+ *   - extra  (`card-preview:set-extra`): text-only enhanced tracker
+ *     context for cards whose extra display is a counter rather than
+ *     a card pool.
  *
  * Whichever IPC fires last wins; main resizes the window to fit.
  */
 export function CardPreviewView() {
   const [cardId, setCardId] = useState<string | null>(null);
   const [pool, setPool] = useState<readonly string[] | null>(null);
+  const [extra, setExtra] = useState<ExtraPreviewPayload | null>(null);
   const poolGlassRef = useRef<HTMLDivElement | null>(null);
   useGlassMouseFollow(poolGlassRef);
 
@@ -29,33 +43,61 @@ export function CardPreviewView() {
     const offCard = window.hdt?.cardPreview?.onSetCard?.((next) => {
       setCardId(next);
       setPool(null);
+      setExtra(null);
     });
     const offPool = window.hdt?.cardPreview?.onSetPool?.((next) => {
       setPool(next);
       setCardId(null);
+      setExtra(null);
+    });
+    const offExtra = window.hdt?.cardPreview?.onSetExtra?.((next) => {
+      setExtra(next);
+      setCardId(null);
+      setPool(null);
     });
     return () => {
       offCard?.();
       offPool?.();
+      offExtra?.();
     };
   }, []);
 
   if (pool && pool.length > 0) {
+    const columnCount = Math.min(pool.length, POOL_PREVIEW_MAX_COLUMNS);
+
     return (
       <div className="w-screen h-screen flex items-center justify-center bg-transparent select-none p-2">
         <div
           ref={poolGlassRef}
-          className="macos-glass flex items-stretch justify-center gap-3 w-full h-full px-4 py-3 rounded-2xl"
+          data-testid="card-preview-pool"
+          className="macos-glass grid place-content-center w-full h-full rounded-2xl overflow-hidden"
+          style={{
+            gridTemplateColumns: `repeat(${columnCount}, ${POOL_PREVIEW_CARD_WIDTH}px)`,
+            gridAutoRows: `${POOL_PREVIEW_CARD_HEIGHT}px`,
+            gap: `${POOL_PREVIEW_GAP}px`,
+          }}
         >
           {pool.map((id, i) => (
             <div
               key={`${id}-${i}`}
-              className="flex-1 min-w-0 h-full flex items-stretch justify-center"
+              className="min-w-0 min-h-0 h-full w-full flex items-stretch justify-center"
+              style={{
+                width: POOL_PREVIEW_CARD_WIDTH,
+                height: POOL_PREVIEW_CARD_HEIGHT,
+              }}
             >
               <PoolCardPreview cardId={id} />
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (extra && extra.lines.length > 0) {
+    return (
+      <div className="w-screen h-screen flex items-center justify-center bg-transparent select-none p-3">
+        <ExtraPreviewPanel payload={extra} />
       </div>
     );
   }
@@ -71,23 +113,37 @@ export function CardPreviewView() {
   );
 }
 
+function ExtraPreviewPanel({ payload }: { payload: ExtraPreviewPayload }) {
+  return (
+    <div className="macos-glass w-full max-w-[360px] rounded-xl border border-border px-4 py-3 text-text-primary shadow-elevated">
+      <div className="text-sm font-bold leading-tight text-text-primary">
+        {payload.title}
+      </div>
+      <div className="mt-3 space-y-2">
+        {payload.lines.map((line, index) => (
+          <div
+            key={`${index}:${line}`}
+            className="rounded-md border border-border-hairline bg-surface-popover/80 px-3 py-2 text-[13px] leading-snug text-text-secondary"
+          >
+            {line}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PoolCardPreview({ cardId }: { cardId: string }) {
   const def = useCardDef(cardId);
   const name = def?.name ?? cardId;
 
   return (
-    <div className="min-w-0 h-full w-full flex flex-col items-center gap-2">
-      <div className="min-h-0 flex-1 w-full flex items-center justify-center">
-        <CardImage cardId={cardId} />
-      </div>
-      <div
-        className="h-9 w-full px-2 flex items-center justify-center rounded-md border border-border-hairline bg-surface-popover/85 text-center text-[13px] leading-tight font-semibold text-text-primary shadow-elevated"
-        title={name}
-      >
-        <span className="overflow-hidden break-words [display:-webkit-box] [-webkit-line-clamp:2] [-webkit-box-orient:vertical]">
-          {name}
-        </span>
-      </div>
+    <div
+      className="min-w-0 min-h-0 h-full w-full flex items-center justify-center"
+      aria-label={name}
+      title={name}
+    >
+      <CardImage cardId={cardId} />
     </div>
   );
 }

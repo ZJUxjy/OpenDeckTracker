@@ -98,6 +98,49 @@ describe('AppearanceApplyEffect', () => {
     expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
   });
 
+  it('applies appearance updates broadcast from another renderer window', async () => {
+    let onChanged: ((payload: unknown) => void) | null = null;
+    const off = vi.fn();
+    (window as any).hdt = {
+      appearance: {
+        onChanged: vi.fn((cb: (payload: unknown) => void) => {
+          onChanged = cb;
+          return off;
+        }),
+      },
+    };
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    const { unmount } = render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
+
+    act(() => {
+      onChanged?.({
+        density: 'compact',
+        uiStyle: 'macos',
+        accent: 'purple',
+        theme: 'light',
+        gameOverlay: false,
+        gameOverlayOpponent: false,
+      });
+    });
+
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
+    expect(document.documentElement.getAttribute('data-density')).toBe('compact');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.purple.accentLight);
+
+    unmount();
+    expect(off).toHaveBeenCalledTimes(1);
+    (window as any).hdt = undefined;
+  });
+
   it('forces dark color-scheme while the WeChat UI style is active', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,

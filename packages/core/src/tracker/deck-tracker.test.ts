@@ -195,6 +195,97 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('replaces Broxigar with its start-of-game deck inserts in the visible deck snapshot', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'Broxigar Deck', [
+        { cardId: 'TIME_020', count: 1 },
+        { cardId: 'CS2_029', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [
+        { entityId: 100, cardId: 'CS2_029' },
+        { entityId: 101, cardId: 'TIME_020t1' },
+        { entityId: 102, cardId: 'TIME_020t2' },
+        { entityId: 103, cardId: 'TIME_020t2' },
+      ],
+      opposingDeckCount: 0,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    const snapshotDeck = tracker.getSnapshot().deck;
+    expect(snapshotDeck?.original).toEqual(
+      expect.arrayContaining([
+        { cardId: 'CS2_029', count: 1 },
+        { cardId: 'TIME_020t1', count: 1 },
+        { cardId: 'TIME_020t2', count: 1 },
+      ]),
+    );
+    expect(snapshotDeck?.original.some((card) => card.cardId === 'TIME_020')).toBe(false);
+    expect(snapshotDeck?.remaining).toEqual(
+      expect.arrayContaining([
+        { cardId: 'CS2_029', count: 1 },
+        { cardId: 'TIME_020t1', count: 1 },
+        { cardId: 'TIME_020t2', count: 1 },
+      ]),
+    );
+    expect(snapshotDeck?.remaining.some((card) => card.cardId === 'TIME_020')).toBe(false);
+    expect(snapshotDeck?.remaining.find((card) => card.cardId === 'TIME_020t2')?.count).toBe(1);
+    tracker.stop();
+  });
+
+  it('does not keep a Broxigar deck insert in remaining when it is in the opening hand', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'Broxigar Deck', [
+        { cardId: 'TIME_020', count: 1 },
+        { cardId: 'CS2_029', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [
+        { entityId: 100, cardId: 'CS2_029' },
+        { entityId: 101, cardId: 'TIME_020t1' },
+        // Mirror can briefly report the same physical card in deck while
+        // hand state already shows it. The visible hand copy must win.
+        { entityId: 102, cardId: '' },
+      ],
+      opposingDeckCount: 0,
+    };
+    state.handState = {
+      friendlyHand: [{ entityId: 102, cardId: 'TIME_020t2', zonePosition: 1 }],
+      opposingHandCount: 0,
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyHand).toEqual(['TIME_020t2']);
+    expect(snapshot.deck?.remaining).toEqual(
+      expect.arrayContaining([
+        { cardId: 'CS2_029', count: 1 },
+        { cardId: 'TIME_020t1', count: 1 },
+      ]),
+    );
+    expect(snapshot.deck?.remaining.some((card) => card.cardId === 'TIME_020t2')).toBe(false);
+    tracker.stop();
+  });
+
   it('orders friendlyHand by zonePosition', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

@@ -781,25 +781,46 @@ export class DeckTracker {
     let deck: DeckTrackerSnapshot['deck'] = null;
     const original = this.game.localPlayer.originalDeck;
     if (original !== null) {
+      const displayOriginal = expandStartOfGameDisappearingOriginalDeck(
+        original,
+        this.cardMetadataLookup,
+      );
       const seen = gatherSeenEntities(this.game.localPlayer);
+      const visibleStartOfGameReplacementCounts =
+        countVisibleStartOfGameReplacementCards(handState, seen);
       const result = computeRemaining({
-        originalDeck: original,
+        originalDeck: displayOriginal,
         seenEntities: seen,
         deckEntities: this.game.localPlayer.deck,
         localControllerId: this.game.localPlayer.controllerId,
       });
-      const authoritativeRemaining = authoritativeRemainingFromDeckState(deckState);
+      const authoritativeRemaining = normalizeRemainingForStartOfGameDisplay(
+        authoritativeRemainingFromDeckState(
+          deckState,
+          visibleFriendlyHandEntityIds(handState),
+        ),
+        this.cardMetadataLookup,
+        original,
+        visibleStartOfGameReplacementCounts,
+      );
+      const computedRemaining = normalizeRemainingForStartOfGameDisplay(
+        result.remaining,
+        this.cardMetadataLookup,
+        original,
+        visibleStartOfGameReplacementCounts,
+      ) ?? result.remaining;
+      const shouldCapRemaining = !hasStartOfGameDisappearingCards(original, this.cardMetadataLookup);
       const remaining = capRemainingToDeckStateCount(
-        authoritativeRemaining ?? result.remaining,
+        authoritativeRemaining ?? computedRemaining,
         this.game.localPlayer.deck,
-        deckState,
+        shouldCapRemaining ? deckState : null,
       );
       deck = {
         id: this.identifiedDeck?.id ?? 0,
         name: this.identifiedDeck?.name ?? this.game.localPlayer.name ?? '',
-        original: original.entries(),
+        original: displayOriginal.entries(),
         remaining: remaining.entries(),
-        extras: result.extras,
+        extras: removeStartOfGameDisappearExtras(result.extras, this.cardMetadataLookup),
       };
     }
 
@@ -1273,11 +1294,155 @@ function sumCounts(counts: Map<string, number>): number {
   return total;
 }
 
-function authoritativeRemainingFromDeckState(deckState: DeckState | null): DeckSnapshot | null {
+function visibleFriendlyHandEntityIds(handState: HandState | null): Set<number> {
+  return new Set((handState?.friendlyHand ?? []).map((card) => card.entityId));
+}
+
+function authoritativeRemainingFromDeckState(
+  deckState: DeckState | null,
+  excludedEntityIds: ReadonlySet<number> = new Set(),
+): DeckSnapshot | null {
   if (deckState === null || deckState.friendlyDeck.length === 0) return null;
-  const cardIds = deckState.friendlyDeck.map((card) => card.cardId);
+  const cardIds = deckState.friendlyDeck
+    .filter((card) => !excludedEntityIds.has(card.entityId))
+    .map((card) => card.cardId);
   if (cardIds.some((cardId) => cardId === '')) return null;
   return DeckSnapshot.fromCardIds(cardIds);
+}
+
+const START_OF_GAME_DECK_REPLACEMENTS: Record<string, readonly { cardId: string; count: number }[]> = {
+  TIME_020: [
+    { cardId: 'TIME_020t1', count: 1 },
+    { cardId: 'TIME_020t2', count: 1 },
+  ],
+};
+
+function expandStartOfGameDisappearingOriginalDeck(
+  original: DeckSnapshot,
+  lookup: ExtraDisplayCardLookup | null,
+): DeckSnapshot {
+  const entries: { cardId: string; count: number }[] = [];
+  for (const entry of original.entries()) {
+    const replacements = START_OF_GAME_DECK_REPLACEMENTS[entry.cardId];
+    if (replacements) {
+      for (const replacement of replacements) {
+        entries.push({
+          cardId: replacement.cardId,
+          count: replacement.count * entry.count,
+        });
+      }
+      continue;
+    }
+    if (isStartOfGameDisappearCard(entry.cardId, lookup)) continue;
+    entries.push(entry);
+  }
+  return new DeckSnapshot(entries.map((entry) => [entry.cardId, entry.count] as const));
+}
+
+function removeStartOfGameDisappearExtras(
+  extras: readonly { cardId: string; count: number }[],
+  lookup: ExtraDisplayCardLookup | null,
+): { cardId: string; count: number }[] {
+  return extras.filter((entry) => !isStartOfGameDisappearCard(entry.cardId, lookup));
+}
+
+function normalizeRemainingForStartOfGameDisplay(
+  remaining: DeckSnapshot | null,
+  lookup: ExtraDisplayCardLookup | null,
+  original: DeckSnapshot,
+  visibleReplacementCounts: ReadonlyMap<string, number> = new Map(),
+): DeckSnapshot | null {
+  if (remaining === null) return null;
+  const counts = new Map(remaining.entries().map((entry) => [entry.cardId, entry.count] as const));
+  for (const [cardId, count] of [...counts.entries()]) {
+    const replacements = START_OF_GAME_DECK_REPLACEMENTS[cardId];
+    if (replacements) {
+      counts.delete(cardId);
+      const alreadyHasReplacement = replacements.some((replacement) => (counts.get(replacement.cardId) ?? 0) > 0);
+      if (!alreadyHasReplacement) {
+        for (const replacement of replacements) {
+          counts.set(replacement.cardId, (counts.get(replacement.cardId) ?? 0) + replacement.count * count);
+        }
+      }
+      continue;
+    }
+    if (isStartOfGameDisappearCard(cardId, lookup)) {
+      counts.delete(cardId);
+    }
+  }
+  capStartOfGameReplacementCounts(counts, original, visibleReplacementCounts);
+  return new DeckSnapshot(counts);
+}
+
+function countVisibleStartOfGameReplacementCards(
+  handState: HandState | null,
+  seenEntities: readonly { entityId: number; cardId: string; info: { created?: boolean } }[],
+): Map<string, number> {
+  const replacementIds = new Set(
+    Object.values(START_OF_GAME_DECK_REPLACEMENTS).flatMap((replacements) =>
+      replacements.map((replacement) => replacement.cardId),
+    ),
+  );
+  const counts = new Map<string, number>();
+  const handEntityIds = new Set<number>();
+  const add = (cardId: string): void => {
+    if (!replacementIds.has(cardId)) return;
+    counts.set(cardId, (counts.get(cardId) ?? 0) + 1);
+  };
+
+  for (const card of handState?.friendlyHand ?? []) {
+    handEntityIds.add(card.entityId);
+    add(card.cardId);
+  }
+  for (const entity of seenEntities) {
+    if (handEntityIds.has(entity.entityId)) continue;
+    if (entity.info.created === true) continue;
+    add(entity.cardId);
+  }
+  return counts;
+}
+
+function capStartOfGameReplacementCounts(
+  counts: Map<string, number>,
+  original: DeckSnapshot,
+  visibleReplacementCounts: ReadonlyMap<string, number>,
+): void {
+  const caps = new Map<string, number>();
+  for (const entry of original.entries()) {
+    const replacements = START_OF_GAME_DECK_REPLACEMENTS[entry.cardId];
+    if (!replacements) continue;
+    for (const replacement of replacements) {
+      caps.set(
+        replacement.cardId,
+        (caps.get(replacement.cardId) ?? 0) + replacement.count * entry.count,
+      );
+    }
+  }
+  for (const [cardId, cap] of caps) {
+    const visible = visibleReplacementCounts.get(cardId) ?? 0;
+    const remainingCap = Math.max(0, cap - visible);
+    const current = counts.get(cardId) ?? 0;
+    if (current > remainingCap) {
+      if (remainingCap > 0) counts.set(cardId, remainingCap);
+      else counts.delete(cardId);
+    }
+  }
+}
+
+function hasStartOfGameDisappearingCards(
+  snapshot: DeckSnapshot,
+  lookup: ExtraDisplayCardLookup | null,
+): boolean {
+  return snapshot.entries().some((entry) => isStartOfGameDisappearCard(entry.cardId, lookup));
+}
+
+function isStartOfGameDisappearCard(cardId: string, lookup: ExtraDisplayCardLookup | null): boolean {
+  if (Object.prototype.hasOwnProperty.call(START_OF_GAME_DECK_REPLACEMENTS, cardId)) return true;
+  const rawText = lookup?.(cardId)?.text;
+  if (!rawText) return false;
+  const text = rawText.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ');
+  return (text.includes('Start of Game') && text.includes('Disappear')) ||
+    (text.includes('对战开始') && text.includes('消失'));
 }
 
 function capRemainingToDeckStateCount(

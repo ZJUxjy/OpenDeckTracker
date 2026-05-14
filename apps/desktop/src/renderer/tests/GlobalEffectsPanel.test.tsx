@@ -16,9 +16,11 @@ beforeEach(() => {
     cardPreview: {
       show: vi.fn(),
       showPool: vi.fn(),
+      showExtra: vi.fn(),
       hide: vi.fn(),
       onSetCard: vi.fn(() => () => {}),
       onSetPool: vi.fn(() => () => {}),
+      onSetExtra: vi.fn(() => () => {}),
     },
   };
 });

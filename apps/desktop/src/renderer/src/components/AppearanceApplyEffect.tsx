@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { useAppearanceStore, ACCENT_PALETTE, type Theme, type UiStyle } from '../stores/appearance-store';
+import {
+  APPEARANCE_STORAGE_KEY,
+  useAppearanceStore,
+  ACCENT_PALETTE,
+  type Theme,
+  type UiStyle,
+} from '../stores/appearance-store';
 
 /** Resolves the effective dark-mode boolean for a given theme preference. */
 function resolveIsDark(theme: Theme): boolean {
@@ -72,6 +78,27 @@ export function AppearanceApplyEffect() {
   const accent = useAppearanceStore((s) => s.accent);
   const theme = useAppearanceStore((s) => s.theme);
   const bootOverlayFired = useRef(false);
+
+  useEffect(() => {
+    const sync = (next: unknown) => {
+      useAppearanceStore.getState().syncFromExternal(next);
+    };
+    const offAppearance = window.hdt?.appearance?.onChanged?.(sync);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== APPEARANCE_STORAGE_KEY || !event.newValue) return;
+      try {
+        sync(JSON.parse(event.newValue));
+      } catch {
+        // Ignore malformed external writes; local store validation handles
+        // normal legacy payloads.
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      offAppearance?.();
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   // Density — independent of theme
   useEffect(() => {

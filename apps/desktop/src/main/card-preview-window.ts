@@ -23,10 +23,21 @@ export interface PreviewAnchor {
   side: 'left' | 'right';
 }
 
+export interface ExtraPreviewPayload {
+  title: string;
+  lines: readonly string[];
+}
+
 const PREVIEW_WIDTH = 280;
 const PREVIEW_HEIGHT = 400;
-const POOL_PREVIEW_HEIGHT = 440;
-const POOL_GAP = 8;
+const EXTRA_PREVIEW_WIDTH = 360;
+const EXTRA_PREVIEW_HEIGHT = 220;
+const POOL_PREVIEW_CARD_WIDTH = 230;
+const POOL_PREVIEW_CARD_HEIGHT = 330;
+const POOL_PREVIEW_PADDING_X = 24;
+const POOL_PREVIEW_PADDING_Y = 24;
+const POOL_PREVIEW_MAX_COLUMNS = 4;
+const POOL_GAP = 14;
 const EDGE_GAP = 8;
 
 function clamp(n: number, min: number, max: number): number {
@@ -93,10 +104,28 @@ export class CardPreviewWindow {
     this.win.setOpacity(1);
   }
 
+  showExtra(payload: ExtraPreviewPayload, anchor: PreviewAnchor): void {
+    if (payload.lines.length === 0) {
+      this.hide();
+      return;
+    }
+    if (!this.win || this.win.isDestroyed()) this.createWindow();
+    if (!this.win) return;
+
+    this.win.setBounds(computePreviewBounds(anchor, EXTRA_PREVIEW_WIDTH, EXTRA_PREVIEW_HEIGHT));
+
+    const key = `extra:${payload.title}:${payload.lines.join('\u001f')}`;
+    if (key !== this.currentKey) {
+      this.currentKey = key;
+      this.win.webContents.send('card-preview:set-extra', payload);
+    }
+    this.win.setOpacity(1);
+  }
+
   /**
-   * Multi-card variant: shows N card images side-by-side. Used by the
-   * Animal Companion pool row to surface the 3-beast pool. Window
-   * width grows to fit N cards plus inter-card gaps.
+   * Multi-card variant: shows N card images in a max-four-column grid.
+   * Window grows by row and column so wide pools do not become a single
+   * long strip.
    */
   showPool(cardIds: readonly string[], anchor: PreviewAnchor): void {
     if (cardIds.length === 0) {
@@ -106,8 +135,17 @@ export class CardPreviewWindow {
     if (!this.win || this.win.isDestroyed()) this.createWindow();
     if (!this.win) return;
 
-    const totalWidth = cardIds.length * PREVIEW_WIDTH + (cardIds.length - 1) * POOL_GAP;
-    this.win.setBounds(computePreviewBounds(anchor, totalWidth, POOL_PREVIEW_HEIGHT));
+    const columns = Math.min(cardIds.length, POOL_PREVIEW_MAX_COLUMNS);
+    const rows = Math.ceil(cardIds.length / POOL_PREVIEW_MAX_COLUMNS);
+    const totalWidth =
+      columns * POOL_PREVIEW_CARD_WIDTH +
+      (columns - 1) * POOL_GAP +
+      POOL_PREVIEW_PADDING_X * 2;
+    const totalHeight =
+      rows * POOL_PREVIEW_CARD_HEIGHT +
+      (rows - 1) * POOL_GAP +
+      POOL_PREVIEW_PADDING_Y * 2;
+    this.win.setBounds(computePreviewBounds(anchor, totalWidth, totalHeight));
 
     const key = `pool:${cardIds.join(',')}`;
     if (key !== this.currentKey) {

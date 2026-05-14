@@ -91,6 +91,12 @@ name a real tracker state source, not a generic placeholder such as
 | `holySpellsRemainingInDeck` | Holy spells remaining in deck. |
 | `shadowSpellsRemainingInDeck` | Shadow spells remaining in deck. |
 
+## Played-Card Pools
+
+| Key | Meaning |
+|---|---|
+| `oneCostCardsPlayedThisGameDistinct` | Distinct friendly card ids with original cost 1 played this game. |
+
 ## Related-Card Highlights
 
 | Key | Meaning |

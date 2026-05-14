@@ -24,9 +24,22 @@ type PopularDecksSyncStartResult =
   | { ok: false; error: string };
 
 type PopularDecksSyncStatus = { inFlight: boolean; lastFetchedAt: string | null };
+export type CardPreviewExtraPayload = {
+  title: string;
+  lines: readonly string[];
+};
 type CollectionProgressRequest = {
   force?: boolean;
   cooldownMs?: number;
+};
+
+type AppearanceSyncPayload = {
+  density?: string;
+  uiStyle?: string;
+  accent?: string;
+  theme?: string;
+  gameOverlay?: boolean;
+  gameOverlayOpponent?: boolean;
 };
 
 type CollectionProgressResult = {
@@ -269,6 +282,15 @@ const api = {
       return () => ipcRenderer.removeListener('overlay:disabled-by-window', handler);
     },
   },
+  appearance: {
+    broadcast: (payload: AppearanceSyncPayload): Promise<void> =>
+      ipcRenderer.invoke('appearance:broadcast', payload),
+    onChanged: (cb: (payload: AppearanceSyncPayload) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, payload: AppearanceSyncPayload): void => cb(payload);
+      ipcRenderer.on('appearance:changed', handler);
+      return () => ipcRenderer.removeListener('appearance:changed', handler);
+    },
+  },
   opponentDeckPrediction: {
     get: (): Promise<OpponentDeckPrediction[]> =>
       ipcRenderer.invoke('opponent-deck-prediction:get'),
@@ -301,6 +323,10 @@ const api = {
       cardIds: readonly string[],
       anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
     ): Promise<void> => ipcRenderer.invoke('card-preview:show-pool', cardIds, anchor),
+    showExtra: (
+      payload: CardPreviewExtraPayload,
+      anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
+    ): Promise<void> => ipcRenderer.invoke('card-preview:show-extra', payload, anchor),
     hide: (): Promise<void> => ipcRenderer.invoke('card-preview:hide'),
     onSetCard: (cb: (cardId: string) => void): (() => void) => {
       const handler = (_e: IpcRendererEvent, cardId: string): void => cb(cardId);
@@ -311,6 +337,11 @@ const api = {
       const handler = (_e: IpcRendererEvent, cardIds: readonly string[]): void => cb(cardIds);
       ipcRenderer.on('card-preview:set-pool', handler);
       return () => ipcRenderer.removeListener('card-preview:set-pool', handler);
+    },
+    onSetExtra: (cb: (payload: CardPreviewExtraPayload) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, payload: CardPreviewExtraPayload): void => cb(payload);
+      ipcRenderer.on('card-preview:set-extra', handler);
+      return () => ipcRenderer.removeListener('card-preview:set-extra', handler);
     },
   },
 };

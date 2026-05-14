@@ -108,4 +108,45 @@ describe('CardPreviewWindow', () => {
     expect(bounds.x).toBeGreaterThanOrEqual(0);
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(1920);
   });
+
+  it('wraps pool previews after four cards', () => {
+    const preview = createPreview();
+
+    preview.showPool(['a', 'b', 'c', 'd', 'e', 'f', 'g'], {
+      x: 200,
+      y: 600,
+      width: 300,
+      height: 24,
+      side: 'right',
+    });
+
+    expect(lastWindow().setBounds).toHaveBeenCalledWith({
+      x: 508,
+      y: 251,
+      width: 1010,
+      height: 722,
+    });
+  });
+
+  it('sends text-only enhanced preview payloads', () => {
+    const preview = createPreview();
+    const payload = {
+      title: 'Soul Feast',
+      lines: ['本回合友方随从死亡：2；预计抽牌：2'],
+    };
+
+    preview.showExtra(payload, {
+      x: 400,
+      y: 260,
+      width: 300,
+      height: 24,
+      side: 'right',
+    });
+
+    expect(lastWindow().webContents.send).toHaveBeenCalledWith(
+      'card-preview:set-extra',
+      payload,
+    );
+    expect(lastWindow().setOpacity).toHaveBeenCalledWith(1);
+  });
 });

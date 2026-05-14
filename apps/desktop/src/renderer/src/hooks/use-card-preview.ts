@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { getStaticHoverPoolCardIds } from '../lib/card-preview-specials';
 
 interface AnchorRect {
   x: number;
@@ -10,6 +11,15 @@ interface AnchorRect {
 
 const PREVIEW_WIDTH = 280;
 const PREVIEW_GAP = 8;
+
+export type RowPreviewRequest = string | {
+  cardId: string;
+  poolCardIds?: readonly string[];
+  extra?: {
+    title: string;
+    lines: readonly string[];
+  };
+};
 
 function computeAnchor(el: HTMLElement): AnchorRect {
   const rect = el.getBoundingClientRect();
@@ -36,8 +46,10 @@ function computeAnchor(el: HTMLElement): AnchorRect {
 /**
  * Hover handlers that drive the floating card-preview tooltip window.
  * Two modes:
- *   - `onRowEnter(cardId, el)` shows ONE card next to the row (used by
- *     deck rows).
+ *   - `onRowEnter(cardId, el)` shows ONE card next to the row.
+ *   - `onRowEnter({ cardId, poolCardIds }, el)` shows the pool instead
+ *     when enhanced card context exists, falling back to the card image.
+ *   - `onRowEnter({ cardId, extra }, el)` shows text enhanced context.
  *   - `onPoolEnter(cardIds, el)` shows N cards side-by-side (used by
  *     the Animal Companion pool row).
  *
@@ -47,7 +59,7 @@ function computeAnchor(el: HTMLElement): AnchorRect {
  * the cursor over multiple rows doesn't churn the preview window.
  */
 export function useCardPreview(): {
-  onRowEnter: (cardId: string, el: HTMLElement) => void;
+  onRowEnter: (request: RowPreviewRequest, el: HTMLElement) => void;
   onPoolEnter: (cardIds: readonly string[], el: HTMLElement) => void;
   onRowLeave: () => void;
 } {
@@ -60,12 +72,27 @@ export function useCardPreview(): {
     }
   };
 
-  const onRowEnter = useCallback((cardId: string, el: HTMLElement) => {
+  const onRowEnter = useCallback((request: RowPreviewRequest, el: HTMLElement) => {
     clearHover();
     hoverTimerRef.current = setTimeout(() => {
       const api = window.hdt?.cardPreview;
       if (!api) return;
-      void api.show(cardId, computeAnchor(el));
+      const cardId = typeof request === 'string' ? request : request.cardId;
+      const requestedPoolCardIds = typeof request === 'string' ? [] : (request.poolCardIds ?? []);
+      const poolCardIds = requestedPoolCardIds.length > 0
+        ? requestedPoolCardIds
+        : getStaticHoverPoolCardIds(cardId);
+      const extra = typeof request === 'string' ? null : (request.extra ?? null);
+      const anchor = computeAnchor(el);
+      if (poolCardIds.length > 0 && api.showPool) {
+        void api.showPool(poolCardIds, anchor);
+        return;
+      }
+      if (extra && extra.lines.length > 0 && api.showExtra) {
+        void api.showExtra(extra, anchor);
+        return;
+      }
+      void api.show(cardId, anchor);
     }, 250);
   }, []);
 

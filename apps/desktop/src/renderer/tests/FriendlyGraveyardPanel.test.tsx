@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { OpponentCardRecord } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { FriendlyGraveyardPanel } from '../src/components/FriendlyGraveyardPanel';
@@ -97,6 +97,10 @@ describe('FriendlyGraveyardPanel filters', () => {
     };
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('filters by card name/text and treats 传说 as legendary minions', async () => {
     const user = userEvent.setup();
     render(
@@ -135,5 +139,42 @@ describe('FriendlyGraveyardPanel filters', () => {
 
     await user.selectOptions(typeFilter, 'MINION');
     expect(rowIds()).toEqual(['DEATH_MINION', 'LEGENDARY_MINION']);
+  });
+
+  it('uses static derived-card pool preview for Nespirah rows', async () => {
+    vi.useFakeTimers();
+    const showPool = vi.fn();
+    const show = vi.fn();
+    const hide = vi.fn();
+    window.hdt = {
+      ...window.hdt,
+      cardPreview: {
+        ...window.hdt.cardPreview,
+        show,
+        showPool,
+        hide,
+      },
+    };
+
+    render(
+      <I18nProvider preference="zh-CN">
+        <FriendlyGraveyardPanel records={[record(10, 'CATA_527')]} />
+      </I18nProvider>,
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    act(() => {
+      fireEvent.mouseEnter(screen.getByTestId('friendly-graveyard-row'));
+    });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(show).not.toHaveBeenCalled();
+    expect(showPool).toHaveBeenCalledTimes(1);
+    expect(showPool.mock.calls[0]![0]).toEqual(['CATA_527t2']);
+    vi.useRealTimers();
   });
 });

@@ -89,9 +89,35 @@ const CARD_DEFS: Record<string, {
   CORE_BT_427: { name: 'Soul Feast', cost: 1, rarity: 'RARE', type: 'SPELL' },
   CATA_529: { name: 'Felfused Fel-Fisher', cost: 6, rarity: 'RARE', type: 'MINION' },
   CATA_527: { name: 'Nespirah', cost: 3, rarity: 'LEGENDARY', type: 'LOCATION' },
+  CATA_527t2: { name: 'Unburdened Nespirah', cost: 6, rarity: 'LEGENDARY', type: 'MINION' },
   FEL_SPELL: { name: 'Fel Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'FEL' },
   NATURE_SPELL: { name: 'Nature Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'NATURE' },
   EDR_226: { name: 'Pet Trainer', cost: 4, rarity: 'RARE', type: 'MINION' },
+  CATA_560: { name: '直面托维尔', cost: 3, rarity: 'EPIC', type: 'SPELL' },
+  MEND_300: { name: '驯服宠物', cost: 1, rarity: 'COMMON', type: 'SPELL' },
+  TIME_020t2: { name: '第一道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  TIME_020t2t: { name: '奔逃的乌祖尔', cost: 1, rarity: 'COMMON', type: 'MINION' },
+  TIME_020t3: { name: '第二道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  TIME_020t3t: { name: '奔逃的夜魔', cost: 2, rarity: 'COMMON', type: 'MINION' },
+  TIME_020t4: { name: '第三道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  TIME_020t4t: { name: '奔逃的愤怒卫士', cost: 3, rarity: 'COMMON', type: 'MINION' },
+  TIME_020t5: { name: '最后一道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  TIME_020t5t: { name: '奔逃的恐惧卫士', cost: 4, rarity: 'COMMON', type: 'MINION' },
+  TIME_443: { name: '怒火狱犬', cost: 4, rarity: 'RARE', type: 'SPELL' },
+  TIME_443t: { name: '萨格拉斯的地狱犬', cost: 3, rarity: 'COMMON', type: 'MINION' },
+  EDR_840: { name: '恐怖收割', cost: 2, rarity: 'FREE', type: 'SPELL' },
+  EDR_840t1: { name: '鸦魔之种', cost: 1, rarity: 'COMMON', type: 'MINION' },
+  EDR_840t: { name: '犬魔之种', cost: 2, rarity: 'COMMON', type: 'MINION' },
+  EDR_840t2: { name: '蛇魔之种', cost: 3, rarity: 'COMMON', type: 'MINION' },
+  TLC_902: { name: '虫害侵扰', cost: 2, rarity: 'RARE', type: 'SPELL' },
+  TLC_630t: { name: '格里什毒刺虫', cost: 1, rarity: 'COMMON', type: 'SPELL' },
+  TLC_903t: { name: '异种虫幼体', cost: 1, rarity: 'COMMON', type: 'MINION' },
+  DINO_136: { name: '盛宴之角', cost: 4, rarity: 'FREE', type: 'SPELL' },
+  DINO_136t: { name: '贪婪的迅猛龙', cost: 2, rarity: 'COMMON', type: 'MINION' },
+  CORE_ICC_825: { name: '憎恶弓箭手', cost: 7, rarity: 'EPIC', type: 'MINION' },
+  TLC_818: { name: '轮回转生', cost: 6, rarity: 'EPIC', type: 'SPELL' },
+  CORE_AV_328: { name: '灵魂向导', cost: 5, rarity: 'FREE', type: 'MINION' },
+  CATA_584: { name: '喷发火山', cost: 3, rarity: 'RARE', type: 'LOCATION' },
 };
 
 // Mock useCardDef to return stubs from CARD_DEFS.
@@ -351,7 +377,7 @@ describe('LiveDeckPanel sorting', () => {
     });
   });
 
-  it('renders reviewed extra-display counters on deck and hand rows', async () => {
+  it('does not render reviewed extra-display counters directly on rows', async () => {
     const snap = makeSnapshot({
       original: [
         { cardId: 'CATA_529', count: 1 },
@@ -366,6 +392,7 @@ describe('LiveDeckPanel sorting', () => {
         pools: {
           friendlyDeadDemonsThisGameUnique: [],
           friendlyDeadMinionsThisGameUnique: [],
+          friendlyGraveyardThisTurn: [{ cardId: 'DEAD_MINION', count: 2 }],
         },
         friendlyBoard: [],
       },
@@ -375,18 +402,19 @@ describe('LiveDeckPanel sorting', () => {
     render(<LiveDeckPanel />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('3费').length).toBeGreaterThan(0);
-      expect(screen.getAllByText('死 2').length).toBeGreaterThan(0);
+      expect(screen.queryByText('3费')).not.toBeInTheDocument();
+      expect(screen.queryByText('死 2')).not.toBeInTheDocument();
       expect(
-        screen.getByText('本局已施放邪能法术：3；费用减少 3；当前费用 3'),
-      ).toBeInTheDocument();
+        screen.queryByText('本局已施放邪能法术：3；费用减少 3；当前费用 3'),
+      ).not.toBeInTheDocument();
       expect(
-        screen.getAllByText('本回合友方随从死亡：2；预计抽牌：2').length,
-      ).toBeGreaterThan(0);
+        screen.queryByText('本回合友方随从死亡：2；预计抽牌：2'),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId('card-extra-display-badge')).not.toBeInTheDocument();
     });
   });
 
-  it('renders reviewed deck-pool candidates from extra-display pools', async () => {
+  it('marks reviewed deck-pool candidates for hover preview without inline text', async () => {
     const snap = makeSnapshot({
       original: [{ cardId: 'EDR_226', count: 1 }],
       extraDisplay: {
@@ -404,8 +432,11 @@ describe('LiveDeckPanel sorting', () => {
     render(<LiveDeckPanel />);
 
     await waitFor(() => {
-      expect(screen.getByText('池 2')).toBeInTheDocument();
-      expect(screen.getByText('牌库中可抽野兽：BEAST_CARD x2（2）')).toBeInTheDocument();
+      const row = screen.getAllByTestId('card-copy-row')[0]!;
+      expect(row).toHaveAttribute('data-extra-display', 'active');
+      expect(row).toHaveAttribute('data-extra-preview', 'pool');
+      expect(screen.queryByText('池 2')).not.toBeInTheDocument();
+      expect(screen.queryByText('牌库中可抽野兽：BEAST_CARD x2（2）')).not.toBeInTheDocument();
     });
   });
 
@@ -438,8 +469,8 @@ describe('LiveDeckPanel sorting', () => {
       const handRow = within(screen.getByTestId('friendly-hand-section'))
         .getAllByTestId('friendly-hand-row')[0]!;
       expect(handRow).toHaveAttribute('data-extra-display', 'active');
-      expect(within(handRow).getByText('邪能')).toBeInTheDocument();
-      expect(handRow).toHaveTextContent('将触发：奈瑟匹拉，蒙难古灵');
+      expect(within(handRow).queryByText('邪能')).not.toBeInTheDocument();
+      expect(handRow).not.toHaveTextContent('将触发：奈瑟匹拉，蒙难古灵');
     });
   });
 
@@ -472,8 +503,8 @@ describe('LiveDeckPanel sorting', () => {
       const handRow = within(screen.getByTestId('friendly-hand-section'))
         .getAllByTestId('friendly-hand-row')[0]!;
       expect(handRow).toHaveAttribute('data-extra-display', 'active');
-      expect(within(handRow).getByText('自然')).toBeInTheDocument();
-      expect(handRow).toHaveTextContent('将触发：灌木巨龙托匹奥');
+      expect(within(handRow).queryByText('自然')).not.toBeInTheDocument();
+      expect(handRow).not.toHaveTextContent('将触发：灌木巨龙托匹奥');
     });
   });
 
@@ -786,6 +817,8 @@ describe('LiveDeckPanel draw animation', () => {
 describe('LiveDeckPanel hover', () => {
   let savedHdt: typeof window.hdt;
   let cardPreviewShow: ReturnType<typeof vi.fn>;
+  let cardPreviewShowPool: ReturnType<typeof vi.fn>;
+  let cardPreviewShowExtra: ReturnType<typeof vi.fn>;
   let cardPreviewHide: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -797,15 +830,19 @@ describe('LiveDeckPanel hover', () => {
     });
     savedHdt = window.hdt;
     cardPreviewShow = vi.fn();
+    cardPreviewShowPool = vi.fn();
+    cardPreviewShowExtra = vi.fn();
     cardPreviewHide = vi.fn();
     (window as { hdt: typeof window.hdt }).hdt = {
       ...savedHdt,
       cardPreview: {
         show: cardPreviewShow,
-        showPool: vi.fn(),
+        showPool: cardPreviewShowPool,
+        showExtra: cardPreviewShowExtra,
         hide: cardPreviewHide,
         onSetCard: vi.fn(() => () => {}),
         onSetPool: vi.fn(() => () => {}),
+        onSetExtra: vi.fn(() => () => {}),
       },
     };
   });
@@ -833,6 +870,284 @@ describe('LiveDeckPanel hover', () => {
     expect(cardPreviewShow.mock.calls[0]![0]).toBe('CS2_029');
     const anchor = cardPreviewShow.mock.calls[0]![1] as { side: 'left' | 'right' };
     expect(anchor.side === 'left' || anchor.side === 'right').toBe(true);
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+  });
+
+  it('uses enhanced pool preview for 直面托维尔 one-cost replay candidates', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_560', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          oneCostCardsPlayedThisGameDistinct: [{ cardId: 'MEND_300', count: 2 }],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(['MEND_300', 'MEND_300']);
+    const anchor = cardPreviewShowPool.mock.calls[0]![1] as { side: 'left' | 'right' };
+    expect(anchor.side === 'left' || anchor.side === 'right').toBe(true);
+  });
+
+  it('highlights Fel spells while hovering Nespirah and previews its deathrattle minion', async () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'FEL_SPELL', count: 1 },
+        { cardId: 'CATA_527', count: 1 },
+        { cardId: 'CS2_029', count: 1 },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const rows = screen.getAllByTestId('card-copy-row');
+    expect(rows).toHaveLength(3);
+    const felSpellRow = screen.getByText('Fel Spell').closest('[data-testid="card-copy-row"]')!;
+    const nespirahRow = screen.getByText('Nespirah').closest('[data-testid="card-copy-row"]')!;
+    const fireballRow = screen.getByText('Fireball').closest('[data-testid="card-copy-row"]')!;
+
+    expect(felSpellRow).not.toHaveClass('ring-1');
+    expect(nespirahRow).toHaveAttribute('data-extra-preview', 'pool');
+
+    act(() => {
+      fireEvent.mouseEnter(nespirahRow);
+    });
+    expect(felSpellRow).toHaveAttribute('data-extra-display', 'active');
+    expect(felSpellRow).toHaveClass('ring-1');
+    expect(fireballRow).not.toHaveClass('ring-1');
+
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(['CATA_527t2']);
+  });
+
+  it('previews all First Argus Portal derived cards on hover', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'TIME_020t2', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual([
+      'TIME_020t2t',
+      'TIME_020t3',
+      'TIME_020t3t',
+      'TIME_020t4',
+      'TIME_020t4t',
+      'TIME_020t5',
+      'TIME_020t5t',
+    ]);
+  });
+
+  it.each([
+    ['怒火狱犬', 'TIME_443', ['TIME_443t', 'TIME_443t']],
+    ['恐怖收割', 'EDR_840', ['EDR_840t1', 'EDR_840t', 'EDR_840t2']],
+    ['虫害侵扰', 'TLC_902', ['TLC_630t', 'TLC_630t', 'TLC_903t', 'TLC_903t']],
+    ['盛宴之角', 'DINO_136', ['DINO_136t', 'DINO_136t', 'DINO_136t']],
+  ] as const)('previews static derived cards for %s', (_name, cardId, expectedPool) => {
+    const snap = makeSnapshot({
+      original: [{ cardId, count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(expectedPool);
+  });
+
+  it('uses enhanced text preview for counter-only candidates', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CORE_BT_427', count: 1 }],
+      extraDisplay: {
+        counters: {
+          friendlyMinionsDiedThisTurn: 2,
+        },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'extra');
+    expect(row).not.toHaveTextContent('本回合友方随从死亡：2；预计抽牌：2');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+      title: 'Soul Feast',
+      lines: ['本回合友方随从死亡：2；预计抽牌：2'],
+    });
+  });
+
+  it('keeps turn-condition candidates on text preview when their state also has a pool', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_584', count: 1 }],
+      extraDisplay: {
+        counters: {
+          fireSpellsCastThisTurnByYou: 1,
+        },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          fireSpellsCastThisTurnByYou: [{ cardId: 'FIRE_SPELL', count: 1 }],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'extra');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+      title: '喷发火山',
+      lines: ['本回合已施放火焰法术：是；当前伤害 6'],
+    });
+  });
+
+  it('expands weighted graveyard pools by instance count', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CORE_ICC_825', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          friendlyDeadBeastsThisGameWeighted: [
+            { cardId: 'BEAST_A', count: 2 },
+            { cardId: 'BEAST_B', count: 1 },
+          ],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(['BEAST_A', 'BEAST_A', 'BEAST_B']);
+  });
+
+  it('uses text preview for multi-bucket graveyard pools', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'TLC_818', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          friendlyDeadMinionsCost1: [{ cardId: 'COST_ONE_DEAD', count: 2 }],
+          friendlyDeadMinionsCost3: [{ cardId: 'COST_THREE_DEAD', count: 1 }],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'extra');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+      title: '轮回转生',
+      lines: ['1费：COST_ONE_DEAD x2；2费：无；3费：COST_THREE_DEAD'],
+    });
+  });
+
+  it('uses text preview for multi-school deck pools', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CORE_AV_328', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          holySpellsRemainingInDeck: [{ cardId: 'HOLY_DECK_SPELL', count: 1 }],
+          shadowSpellsRemainingInDeck: [{ cardId: 'SHADOW_DECK_SPELL', count: 2 }],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'extra');
+
+    fireEvent.mouseEnter(row);
+    act(() => { vi.advanceTimersByTime(300); });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+      title: '灵魂向导',
+      lines: ['牌库剩余神圣法术 1 张 / 暗影法术 2 张'],
+    });
   });
 
   it('does not invoke cardPreview.show when mouse leaves before threshold', () => {
@@ -850,6 +1165,7 @@ describe('LiveDeckPanel hover', () => {
     act(() => { vi.advanceTimersByTime(300); });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
     // Mouse leave still fires hide() (cheap idempotent call).
     expect(cardPreviewHide).toHaveBeenCalled();
   });

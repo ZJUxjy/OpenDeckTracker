@@ -44,6 +44,55 @@ describe('appearance store', () => {
     expect(fresh.getState().theme).toBe('dark');
   });
 
+  it('broadcasts appearance changes so overlay/layout windows can sync live', async () => {
+    const broadcast = vi.fn(async () => undefined);
+    (window as any).hdt = { appearance: { broadcast } };
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    useAppearanceStore.getState().setUiStyle('macos');
+
+    expect(broadcast).toHaveBeenCalledTimes(1);
+    expect(broadcast).toHaveBeenCalledWith({
+      density: 'comfortable',
+      uiStyle: 'macos',
+      accent: 'blue',
+      theme: 'system',
+      gameOverlay: false,
+      gameOverlayOpponent: false,
+    });
+    (window as any).hdt = undefined;
+  });
+
+  it('syncs external appearance payloads without toggling overlay IPC', async () => {
+    const setEnabled = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled } };
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    useAppearanceStore.getState().syncFromExternal({
+      density: 'compact',
+      uiStyle: 'wechat',
+      accent: 'purple',
+      theme: 'dark',
+      gameOverlay: true,
+      gameOverlayOpponent: false,
+    });
+
+    expect(useAppearanceStore.getState().density).toBe('compact');
+    expect(useAppearanceStore.getState().uiStyle).toBe('wechat');
+    expect(useAppearanceStore.getState().accent).toBe('purple');
+    expect(useAppearanceStore.getState().theme).toBe('dark');
+    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
+    expect(setEnabled).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!)).toMatchObject({
+      density: 'compact',
+      uiStyle: 'wechat',
+      accent: 'purple',
+      theme: 'dark',
+      gameOverlay: true,
+    });
+    (window as any).hdt = undefined;
+  });
+
   it('round-trips the WeChat UI style through localStorage', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 

@@ -7,7 +7,7 @@ import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { expandDeckToCopies, type DeckCopy, type DeckTrackerSnapshot } from '@hdt/core';
 import { clsx } from 'clsx';
-import { useCardPreview } from '../hooks/use-card-preview';
+import { useCardPreview, type RowPreviewRequest } from '../hooks/use-card-preview';
 import { getRarityCostBg } from '../lib/rarity';
 import type { CardDef, Rarity } from '@hdt/hearthdb';
 import { useLocale, useTranslation } from '../i18n';
@@ -16,6 +16,7 @@ import {
   getOnBoardTriggerCandidates,
   type ExtraDisplayCandidate,
 } from '../lib/extra-display-candidates';
+import { getStaticHoverPoolCardIds } from '../lib/card-preview-specials';
 
 const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
 
@@ -199,11 +200,18 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
 
   // Hover handlers for the floating card-preview tooltip window.
   const { onRowEnter, onRowLeave } = useCardPreview();
+  const [hoveredRelatedSourceCardId, setHoveredRelatedSourceCardId] = useState<string | null>(null);
   const handleRowMouseEnter = useCallback(
-    (cardId: string, el: HTMLDivElement) => onRowEnter(cardId, el),
+    (cardId: string, request: RowPreviewRequest, el: HTMLDivElement) => {
+      setHoveredRelatedSourceCardId(cardId);
+      onRowEnter(request, el);
+    },
     [onRowEnter],
   );
-  const handleRowMouseLeave = useCallback(() => onRowLeave(), [onRowLeave]);
+  const handleRowMouseLeave = useCallback(() => {
+    setHoveredRelatedSourceCardId(null);
+    onRowLeave();
+  }, [onRowLeave]);
   const handleHandAnimationEnd = useCallback(() => {}, []);
 
   return (
@@ -246,6 +254,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                 onMouseEnter={handleRowMouseEnter}
                 onMouseLeave={handleRowMouseLeave}
                 extraDisplay={snapshot.extraDisplay}
+                hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
               />
             ))}
             {[...exitingCopyKeys]
@@ -262,6 +271,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                     onMouseEnter={handleRowMouseEnter}
                     onMouseLeave={handleRowMouseLeave}
                     extraDisplay={snapshot.extraDisplay}
+                    hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
                   />
                 );
               })}
@@ -300,6 +310,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                   onMouseEnter={handleRowMouseEnter}
                   onMouseLeave={handleRowMouseLeave}
                   extraDisplay={snapshot.extraDisplay}
+                  hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
                 />
               ))}
             </div>
@@ -480,8 +491,9 @@ interface CardCopyRowProps {
   exiting: boolean;
   testId?: string;
   extraDisplay?: DeckTrackerSnapshot['extraDisplay'];
+  hoveredRelatedSourceCardId?: string | null;
   onAnimationEnd: (copyKey: string) => void;
-  onMouseEnter: (cardId: string, el: HTMLDivElement) => void;
+  onMouseEnter: (cardId: string, request: RowPreviewRequest, el: HTMLDivElement) => void;
   onMouseLeave: () => void;
 }
 
@@ -491,6 +503,7 @@ function CardCopyRow({
   exiting,
   testId = 'card-copy-row',
   extraDisplay,
+  hoveredRelatedSourceCardId,
   onAnimationEnd,
   onMouseEnter,
   onMouseLeave,
@@ -502,24 +515,36 @@ function CardCopyRow({
   const tileUrl = useCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
   const rowExtra = buildRowExtraDisplay(cardId, def, extraDisplay);
-  const rowTitle = rowExtra.titleLines.length > 0
-    ? [name, ...rowExtra.titleLines].join('\n')
+  const hoverRelatedHighlight = matchesHoverRelatedHighlight(def, hoveredRelatedSourceCardId);
+  const isExtraDisplayActive =
+    rowExtra.poolCardIds.length > 0 ||
+    rowExtra.extraLines.length > 0 ||
+    rowExtra.highlight ||
+    hoverRelatedHighlight;
+  const previewRequest: RowPreviewRequest =
+    rowExtra.poolCardIds.length > 0 || rowExtra.extraLines.length > 0
+    ? {
+        cardId,
+        poolCardIds: rowExtra.poolCardIds,
+        extra: { title: name, lines: rowExtra.extraLines },
+      }
     : cardId;
 
   return (
     <div
       ref={ref}
       data-testid={testId}
-      data-extra-display={rowExtra.badges.length > 0 || rowExtra.highlight ? 'active' : 'none'}
+      data-extra-display={isExtraDisplayActive ? 'active' : 'none'}
+      data-extra-preview={rowExtra.poolCardIds.length > 0 ? 'pool' : rowExtra.extraLines.length > 0 ? 'extra' : 'card'}
       data-row-state={exiting ? 'exiting' : 'ready'}
       className={clsx(
         'tavern-card-row relative overflow-hidden rounded text-sm border-b border-border last:border-b-0 transition-colors hover:bg-overlay-elevated hover:shadow-[inset_3px_0_0_var(--accent)]',
         exiting ? 'animate-deck-exit' : '',
-        rowExtra.highlight ? 'ring-1 ring-accent/70 bg-accent-dim/20 shadow-[inset_3px_0_0_var(--accent)]' : '',
+        rowExtra.highlight || hoverRelatedHighlight ? 'ring-1 ring-accent/70 bg-accent-dim/20 shadow-[inset_3px_0_0_var(--accent)]' : '',
       )}
-      title={rowTitle}
+      title={name}
       onAnimationEnd={() => onAnimationEnd(copyKey)}
-      onMouseEnter={() => ref.current && onMouseEnter(cardId, ref.current)}
+      onMouseEnter={() => ref.current && onMouseEnter(cardId, previewRequest, ref.current)}
       onMouseLeave={onMouseLeave}
     >
       <img
@@ -552,48 +577,15 @@ function CardCopyRow({
           >
             {name}
           </div>
-          {rowExtra.summary ? (
-            <div className="mt-0.5 truncate text-[10px] leading-none text-accent/90">
-              {rowExtra.summary}
-            </div>
-          ) : null}
         </div>
-        {rowExtra.badges.length > 0 ? (
-          <div className="flex shrink-0 items-center gap-1">
-            {rowExtra.badges.map((badge, index) => (
-              <span
-                key={`${badge.label}:${index}`}
-                data-testid="card-extra-display-badge"
-                className={clsx(
-                  'rounded border px-1.5 py-0.5 text-[10px] font-bold leading-none shadow-sm',
-                  badge.tone === 'highlight'
-                    ? 'border-accent/60 bg-accent/25 text-accent'
-                    : badge.tone === 'warning'
-                      ? 'border-red/60 bg-red/25 text-red'
-                      : 'border-green/40 bg-green/20 text-green',
-                )}
-                title={badge.title}
-              >
-                {badge.label}
-              </span>
-            ))}
-          </div>
-        ) : null}
       </div>
     </div>
   );
 }
 
-interface RowExtraBadge {
-  label: string;
-  title: string;
-  tone?: 'normal' | 'highlight' | 'warning';
-}
-
 interface RowExtraDisplay {
-  badges: RowExtraBadge[];
-  titleLines: string[];
-  summary: string | null;
+  poolCardIds: string[];
+  extraLines: string[];
   highlight: boolean;
 }
 
@@ -603,38 +595,33 @@ function buildRowExtraDisplay(
   extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
 ): RowExtraDisplay {
   const candidate = getExtraDisplayCandidate(cardId);
-  const counters = extraDisplay?.counters ?? {};
-  const badges: RowExtraBadge[] = [];
-  const titleLines: string[] = [];
-  let summary: string | null = null;
-  let highlight = false;
-
-  // 1. On-board trigger highlight — data-driven from candidate JSON.
+  const hasTrackedState = candidate ? hasTrackedExtraDisplayState(candidate, extraDisplay) : false;
+  const staticPoolCardIds = getStaticHoverPoolCardIds(cardId);
+  const poolCardIds =
+    staticPoolCardIds.length > 0
+      ? staticPoolCardIds
+      : candidate && hasTrackedState
+        ? resolvePreviewPoolCardIds(candidate, extraDisplay)
+        : [];
+  const extraLines: string[] = [];
   const triggerHit = matchOnBoardTrigger(def, extraDisplay?.friendlyBoard ?? []);
   if (triggerHit) {
-    const triggerText = `将触发：${triggerHit.triggerNames.join('、')}`;
-    badges.push({ label: triggerHit.label, title: triggerText, tone: 'highlight' });
-    titleLines.push(triggerText);
-    summary = triggerText;
-    highlight = true;
+    extraLines.push(`将触发：${triggerHit.triggerNames.join('、')}`);
   }
-
-  // 2. State-driven row for this card's own candidate spec.
   const stateNeeded = candidate?.extraDisplay?.stateNeeded ?? [];
   const template = candidate?.extraDisplay?.suggestedDisplayTextZhCN;
-  if (candidate && stateNeeded.length > 0) {
+  if (candidate && hasTrackedState && stateNeeded.length > 0 && template) {
     const bindings = computeBindings(cardId, candidate, def, extraDisplay);
-    const expanded = template ? expandTemplate(template, bindings) : null;
-    for (const badge of buildBadgesFor(candidate, bindings, extraDisplay)) {
-      badges.push(badge);
-    }
-    if (expanded) {
-      titleLines.push(expanded);
-      summary = summary ?? expanded;
-    }
+    extraLines.push(expandTemplate(template, bindings));
   }
 
-  return { badges, titleLines, summary, highlight };
+  // On-board trigger highlight remains visual, but detailed enhanced data
+  // belongs in the hover preview rather than inline row text.
+  return {
+    poolCardIds,
+    extraLines,
+    highlight: triggerHit !== null,
+  };
 }
 
 interface Bindings {
@@ -652,9 +639,11 @@ function computeBindings(
   const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
   const bindings: Bindings = { ...counters };
 
-  const primaryPool = resolvePrimaryPool(candidate, extraDisplay);
+  const primaryPool = allowsPoolPreview(candidate.extraDisplay?.displayType)
+    ? resolvePrimaryPool(candidate, extraDisplay)
+    : [];
   const primaryPoolCount = countPoolCards(primaryPool);
-  if (primaryPool.length > 0 || stateNeeded.some((key) => poolForStateKey(key, extraDisplay).length > 0)) {
+  if (primaryPool.length > 0) {
     bindings.cardNames = formatPoolNames(primaryPool);
     bindings.count = primaryPoolCount;
     bindings.distinctCount = primaryPool.length;
@@ -668,6 +657,8 @@ function computeBindings(
   bindings.natureSpellCount = countPoolCards(pools.natureSpellsInHand ?? []) + countPoolCards(pools.natureSpellsInDeck ?? []);
   bindings.holyCount = countPoolCards(pools.holySpellsRemainingInDeck ?? []);
   bindings.shadowCount = countPoolCards(pools.shadowSpellsRemainingInDeck ?? []);
+  bindings.holyYesNo = Number(counters.holySpellsCastThisTurn ?? 0) > 0 ? '是' : '否';
+  bindings.shadowYesNo = Number(counters.shadowSpellsCastThisTurn ?? 0) > 0 ? '是' : '否';
   bindings.cost1Names = formatPoolNames(pools.friendlyDeadMinionsCost1 ?? []);
   bindings.cost2Names = formatPoolNames(pools.friendlyDeadMinionsCost2 ?? []);
   bindings.cost3Names = formatPoolNames(pools.friendlyDeadMinionsCost3 ?? []);
@@ -688,7 +679,6 @@ function computeBindings(
   bindings.discount = Math.min(baseCost, costDriver);
   bindings.currentCost = Math.max(0, baseCost - costDriver);
 
-  // Soul-feast: predicted draws equal friendlyMinionsDiedThisTurn.
   if (cardId === 'CORE_BT_427') {
     bindings.drawCount = bindings.friendlyMinionsDiedThisTurn ?? 0;
   }
@@ -728,55 +718,6 @@ function computeBindings(
   return bindings;
 }
 
-function buildBadgesFor(
-  candidate: ExtraDisplayCandidate,
-  bindings: Bindings,
-  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
-): RowExtraBadge[] {
-  const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
-  const emptyWarning = candidate.extraDisplay?.emptyWarning === true;
-  const out: RowExtraBadge[] = [];
-  const primaryPool = resolvePrimaryPool(candidate, extraDisplay);
-  const poolCount = countPoolCards(primaryPool);
-
-  if (primaryPool.length > 0 || stateNeeded.some((key) => isPoolStateKey(key))) {
-    const tone: RowExtraBadge['tone'] = emptyWarning && poolCount === 0 ? 'warning' : 'normal';
-    out.push({ label: `池 ${poolCount}`, title: `候选池：${formatPoolNames(primaryPool) || '无'}`, tone });
-  }
-
-  if (stateNeeded.includes('currentCost')) {
-    const currentCost = bindings.currentCost as number;
-    out.push({ label: `${currentCost}费`, title: `预计当前费用 ${currentCost}` });
-  }
-
-  if (stateNeeded.includes('felSpellsCastThisGame')) {
-    const currentCost = bindings.currentCost as number;
-    out.push({ label: `${currentCost}费`, title: `当前邪能费用 ${currentCost}` });
-  }
-  if (stateNeeded.includes('friendlyDeadDemonsThisGameUnique')) {
-    const count = bindings.demonCount as number;
-    const tone: RowExtraBadge['tone'] = emptyWarning && count === 0 ? 'warning' : 'normal';
-    out.push({ label: `恶魔 ${count}`, title: `本局死亡友方恶魔：${count} 种`, tone });
-  }
-  if (stateNeeded.includes('friendlyMinionsDiedThisTurn')) {
-    const died = bindings.friendlyMinionsDiedThisTurn as number;
-    out.push({ label: `死 ${died}`, title: `本回合友方随从死亡：${died}` });
-  }
-  if (stateNeeded.includes('fireSpellsCastThisTurnByYou')) {
-    const cast = bindings.fireSpellsCastThisTurnByYou as number;
-    out.push({ label: `火 ${cast}`, title: `本回合已施放火焰法术：${cast}` });
-  }
-  if (stateNeeded.includes('holySpellsCastThisTurn')) {
-    const cast = bindings.holySpellsCastThisTurn as number;
-    out.push({ label: `神 ${cast}`, title: `本回合已施放神圣法术：${cast}` });
-  }
-  if (stateNeeded.includes('shadowSpellsCastThisTurn')) {
-    const cast = bindings.shadowSpellsCastThisTurn as number;
-    out.push({ label: `暗 ${cast}`, title: `本回合已施放暗影法术：${cast}` });
-  }
-  return out;
-}
-
 function expandTemplate(template: string, bindings: Bindings): string {
   return template.replace(/\{(\w+)\}/g, (_match, key: string) => {
     const value = bindings[key];
@@ -785,14 +726,45 @@ function expandTemplate(template: string, bindings: Bindings): string {
   });
 }
 
+function hasTrackedExtraDisplayState(
+  candidate: ExtraDisplayCandidate,
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): boolean {
+  const counters = extraDisplay?.counters ?? {};
+  for (const key of candidate.extraDisplay?.stateNeeded ?? []) {
+    if (key === 'currentCost') continue;
+    if (Object.prototype.hasOwnProperty.call(counters, key)) return true;
+    if (poolForStateKey(key, extraDisplay).length > 0) return true;
+  }
+  return false;
+}
+
+function resolvePreviewPoolCardIds(
+  candidate: ExtraDisplayCandidate,
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): string[] {
+  const displayType = candidate.extraDisplay?.displayType;
+  if (!allowsPoolPreview(displayType)) return [];
+  if (prefersTextPreview(displayType)) return [];
+
+  const primaryPool = resolvePrimaryPool(candidate, extraDisplay);
+  if (primaryPool.length === 0) return [];
+  return shouldExpandPoolByCount(candidate)
+    ? expandPoolByCount(primaryPool)
+    : primaryPool.map((entry) => entry.cardId);
+}
+
 function resolvePrimaryPool(
   candidate: ExtraDisplayCandidate,
   extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
 ): { cardId: string; count: number }[] {
+  let sawExplicitPoolState = false;
   for (const key of candidate.extraDisplay?.stateNeeded ?? []) {
     const pool = poolForStateKey(key, extraDisplay);
     if (pool.length > 0) return pool;
+    if (isPoolStateKey(key)) sawExplicitPoolState = true;
   }
+  if (sawExplicitPoolState) return [];
   const fallbackKey = primaryPoolKeyForDisplayType(candidate.extraDisplay?.displayType);
   return fallbackKey ? poolForStateKey(fallbackKey, extraDisplay) : [];
 }
@@ -805,6 +777,26 @@ function poolForStateKey(
   if (!pools) return [];
   if (key === 'friendlyMinionsDiedThisTurn') return pools.friendlyGraveyardThisTurn ?? [];
   return pools[key] ?? [];
+}
+
+function allowsPoolPreview(displayType: string | undefined): boolean {
+  return displayType?.includes('pool') === true;
+}
+
+function prefersTextPreview(displayType: string | undefined): boolean {
+  return displayType === 'deck_school_pool' ||
+    displayType === 'graveyard_pool_by_cost' ||
+    displayType === 'graveyard_pool_and_upgrade_progress';
+}
+
+function shouldExpandPoolByCount(candidate: ExtraDisplayCandidate): boolean {
+  const displayType = candidate.extraDisplay?.displayType;
+  return displayType === 'replay_pool' ||
+    (candidate.extraDisplay?.stateNeeded ?? []).some((key) => key.includes('Weighted'));
+}
+
+function expandPoolByCount(pool: readonly { cardId: string; count: number }[]): string[] {
+  return pool.flatMap((entry) => Array.from({ length: Math.max(1, entry.count) }, () => entry.cardId));
 }
 
 function primaryPoolKeyForDisplayType(displayType: string | undefined): string | null {
@@ -879,29 +871,7 @@ function fallbackBindingText(key: string): string {
 }
 
 interface OnBoardTriggerHit {
-  label: string;
   triggerNames: string[];
-}
-
-function spellSchoolLabel(spellSchool: string): string {
-  switch (spellSchool) {
-    case 'FEL':
-      return '邪能';
-    case 'FIRE':
-      return '火焰';
-    case 'FROST':
-      return '冰霜';
-    case 'HOLY':
-      return '神圣';
-    case 'NATURE':
-      return '自然';
-    case 'SHADOW':
-      return '暗影';
-    case 'ARCANE':
-      return '奥术';
-    default:
-      return spellSchool;
-  }
 }
 
 function matchOnBoardTrigger(
@@ -914,7 +884,6 @@ function matchOnBoardTrigger(
 
   const boardCardIds = new Set(friendlyBoard.map((r) => r.cardId));
   const matched: string[] = [];
-  let label: string | null = null;
   for (const cand of candidates) {
     if (!boardCardIds.has(cand.cardCode)) continue;
     const th = cand.extraDisplay?.triggerHighlight;
@@ -922,12 +891,21 @@ function matchOnBoardTrigger(
     if (th.matchSpellSchool && (def.type !== 'SPELL' || def.spellSchool !== th.matchSpellSchool)) continue;
     if (th.matchRace && !(def.races ?? []).some((r) => r === th.matchRace)) continue;
     matched.push(cand.cardNameZhCN);
-    if (label === null && th.matchSpellSchool) {
-      label = spellSchoolLabel(th.matchSpellSchool);
-    }
   }
   if (matched.length === 0) return null;
-  return { label: label ?? '触发', triggerNames: matched };
+  return { triggerNames: matched };
+}
+
+function matchesHoverRelatedHighlight(
+  def: CardDef | null | undefined,
+  hoveredSourceCardId: string | null | undefined,
+): boolean {
+  if (!def || !hoveredSourceCardId) return false;
+  const th = getExtraDisplayCandidate(hoveredSourceCardId)?.extraDisplay?.triggerHighlight;
+  if (!th) return false;
+  if (th.matchSpellSchool && (def.type !== 'SPELL' || def.spellSchool !== th.matchSpellSchool)) return false;
+  if (th.matchRace && !(def.races ?? []).some((race) => race === th.matchRace)) return false;
+  return true;
 }
 
 function prettyCardName(cardId: string): string {

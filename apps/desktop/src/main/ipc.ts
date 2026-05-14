@@ -1,4 +1,4 @@
-import { app, ipcMain, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, protocol } from 'electron';
 import { readFile } from 'node:fs/promises';
 import {
   encodeDeck,
@@ -58,7 +58,7 @@ import {
 } from './popular-decks-sync';
 import { registerPopularDecksSyncIpc } from './popular-decks-sync/ipc';
 import { net } from 'electron';
-import type { CardPreviewWindow, PreviewAnchor } from './card-preview-window';
+import type { CardPreviewWindow, ExtraPreviewPayload, PreviewAnchor } from './card-preview-window';
 
 export interface OverlayControllers {
   enablePlayerOverlay: () => void;
@@ -76,6 +76,12 @@ function toHearthstoneLocale(appLocale?: string): 'enUS' | 'zhCN' {
 
 export function registerIpc(overlay?: OverlayControllers): void {
   ipcMain.handle('app:getVersion', () => app.getVersion());
+  ipcMain.handle('appearance:broadcast', (event, payload: unknown) => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (win.isDestroyed() || win.webContents.id === event.sender.id) continue;
+      win.webContents.send('appearance:changed', payload);
+    }
+  });
 
   if (overlay) {
     ipcMain.handle('overlay:set-enabled', (_, enabled: boolean) => {
@@ -109,6 +115,9 @@ export function registerIpc(overlay?: OverlayControllers): void {
         );
         cp.showPool(cardIds, anchor);
       });
+      ipcMain.handle('card-preview:show-extra', (_, payload: ExtraPreviewPayload, anchor: PreviewAnchor) => {
+        cp.showExtra(payload, anchor);
+      });
       ipcMain.handle('card-preview:hide', () => {
         cp.hide();
       });
@@ -121,8 +130,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
     ipcMain.handle('overlay:close-from-window', (_, which: 'player' | 'opponent') => {
       if (which === 'player') overlay.disablePlayerOverlay();
       else if (which === 'opponent') overlay.disableOpponentOverlay();
-      const { BrowserWindow: BW } = require('electron') as typeof import('electron');
-      for (const win of BW.getAllWindows()) {
+      for (const win of BrowserWindow.getAllWindows()) {
         if (!win.isDestroyed()) {
           win.webContents.send('overlay:disabled-by-window', which);
         }

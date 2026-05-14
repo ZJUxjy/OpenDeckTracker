@@ -163,9 +163,11 @@ describe('OpponentCardsPanel', () => {
       cardPreview: {
         show: cardPreviewShow,
         showPool: vi.fn(),
+        showExtra: vi.fn(),
         hide: cardPreviewHide,
         onSetCard: vi.fn(() => () => {}),
         onSetPool: vi.fn(() => () => {}),
+        onSetExtra: vi.fn(() => () => {}),
       },
     };
     try {
