@@ -12,14 +12,16 @@ interface AnchorRect {
 const PREVIEW_WIDTH = 280;
 const PREVIEW_GAP = 8;
 
-export type RowPreviewRequest = string | {
-  cardId: string;
-  poolCardIds?: readonly string[];
-  extra?: {
-    title: string;
-    lines: readonly string[];
-  };
-};
+export type RowPreviewRequest =
+  | string
+  | {
+      cardId: string;
+      poolCardIds?: readonly string[];
+      extra?: {
+        title: string;
+        lines: readonly string[];
+      };
+    };
 
 function computeAnchor(el: HTMLElement): AnchorRect {
   const rect = el.getBoundingClientRect();
@@ -47,9 +49,10 @@ function computeAnchor(el: HTMLElement): AnchorRect {
  * Hover handlers that drive the floating card-preview tooltip window.
  * Two modes:
  *   - `onRowEnter(cardId, el)` shows ONE card next to the row.
- *   - `onRowEnter({ cardId, poolCardIds }, el)` shows the pool instead
- *     when enhanced card context exists, falling back to the card image.
- *   - `onRowEnter({ cardId, extra }, el)` shows text enhanced context.
+ *   - `onRowEnter({ cardId, poolCardIds }, el)` shows the hovered card
+ *     plus a separate enhanced-card pool.
+ *   - `onRowEnter({ cardId, extra }, el)` shows the hovered card plus
+ *     separate text enhanced context.
  *   - `onPoolEnter(cardIds, el)` shows N cards side-by-side (used by
  *     the Animal Companion pool row).
  *
@@ -81,8 +84,18 @@ export function useCardPreview(): {
       const requestedPoolCardIds = typeof request === 'string' ? [] : (request.poolCardIds ?? []);
       const extra = typeof request === 'string' ? null : (request.extra ?? null);
       const anchor = computeAnchor(el);
-      if (requestedPoolCardIds.length > 0 && api.showPool) {
-        void api.showPool(requestedPoolCardIds, anchor);
+      if (requestedPoolCardIds.length > 0) {
+        if (api.showEnhancedPool) {
+          void api.showEnhancedPool(cardId, requestedPoolCardIds, anchor);
+          return;
+        }
+        if (api.showPool) {
+          void api.showPool(requestedPoolCardIds, anchor);
+          return;
+        }
+      }
+      if (extra && extra.lines.length > 0 && api.showEnhancedExtra) {
+        void api.showEnhancedExtra(cardId, extra, anchor);
         return;
       }
       if (extra && extra.lines.length > 0 && api.showExtra) {
@@ -90,8 +103,15 @@ export function useCardPreview(): {
         return;
       }
       const staticPoolCardIds = getStaticHoverPoolCardIds(cardId);
-      if (staticPoolCardIds.length > 0 && api.showPool) {
-        void api.showPool(staticPoolCardIds, anchor);
+      if (staticPoolCardIds.length > 0) {
+        if (api.showEnhancedPool) {
+          void api.showEnhancedPool(cardId, staticPoolCardIds, anchor);
+          return;
+        }
+        if (api.showPool) {
+          void api.showPool(staticPoolCardIds, anchor);
+          return;
+        }
         return;
       }
       void api.show(cardId, anchor);

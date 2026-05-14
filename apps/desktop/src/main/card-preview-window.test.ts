@@ -122,9 +122,32 @@ describe('CardPreviewWindow', () => {
 
     expect(lastWindow().setBounds).toHaveBeenCalledWith({
       x: 508,
-      y: 251,
-      width: 1010,
-      height: 722,
+      y: 272,
+      width: 948,
+      height: 680,
+    });
+  });
+
+  it('shows enhanced pool previews with the source card in a separate region', () => {
+    const preview = createPreview();
+
+    preview.showEnhancedPool('CATA_560', ['MEND_300', 'MEND_300'], {
+      x: 400,
+      y: 260,
+      width: 300,
+      height: 24,
+      side: 'right',
+    });
+
+    expect(lastWindow().setBounds).toHaveBeenCalledWith({
+      x: 708,
+      y: 72,
+      width: 768,
+      height: 400,
+    });
+    expect(lastWindow().webContents.send).toHaveBeenCalledWith('card-preview:set-enhanced-pool', {
+      sourceCardId: 'CATA_560',
+      cardIds: ['MEND_300', 'MEND_300'],
     });
   });
 
@@ -143,10 +166,7 @@ describe('CardPreviewWindow', () => {
       side: 'right',
     });
 
-    expect(lastWindow().webContents.send).toHaveBeenCalledWith(
-      'card-preview:set-extra',
-      payload,
-    );
+    expect(lastWindow().webContents.send).toHaveBeenCalledWith('card-preview:set-extra', payload);
     expect(lastWindow().setOpacity).toHaveBeenCalledWith(1);
   });
 });

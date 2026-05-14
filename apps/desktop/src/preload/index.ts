@@ -28,6 +28,13 @@ export type CardPreviewExtraPayload = {
   title: string;
   lines: readonly string[];
 };
+export type CardPreviewEnhancedPoolPayload = {
+  sourceCardId: string;
+  cardIds: readonly string[];
+};
+export type CardPreviewEnhancedExtraPayload = CardPreviewExtraPayload & {
+  sourceCardId: string;
+};
 type CollectionProgressRequest = {
   force?: boolean;
   cooldownMs?: number;
@@ -323,10 +330,20 @@ const api = {
       cardIds: readonly string[],
       anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
     ): Promise<void> => ipcRenderer.invoke('card-preview:show-pool', cardIds, anchor),
+    showEnhancedPool: (
+      sourceCardId: string,
+      cardIds: readonly string[],
+      anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
+    ): Promise<void> => ipcRenderer.invoke('card-preview:show-enhanced-pool', sourceCardId, cardIds, anchor),
     showExtra: (
       payload: CardPreviewExtraPayload,
       anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
     ): Promise<void> => ipcRenderer.invoke('card-preview:show-extra', payload, anchor),
+    showEnhancedExtra: (
+      sourceCardId: string,
+      payload: CardPreviewExtraPayload,
+      anchor: { x: number; y: number; width: number; height: number; side: 'left' | 'right' },
+    ): Promise<void> => ipcRenderer.invoke('card-preview:show-enhanced-extra', sourceCardId, payload, anchor),
     hide: (): Promise<void> => ipcRenderer.invoke('card-preview:hide'),
     onSetCard: (cb: (cardId: string) => void): (() => void) => {
       const handler = (_e: IpcRendererEvent, cardId: string): void => cb(cardId);
@@ -338,10 +355,20 @@ const api = {
       ipcRenderer.on('card-preview:set-pool', handler);
       return () => ipcRenderer.removeListener('card-preview:set-pool', handler);
     },
+    onSetEnhancedPool: (cb: (payload: CardPreviewEnhancedPoolPayload) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, payload: CardPreviewEnhancedPoolPayload): void => cb(payload);
+      ipcRenderer.on('card-preview:set-enhanced-pool', handler);
+      return () => ipcRenderer.removeListener('card-preview:set-enhanced-pool', handler);
+    },
     onSetExtra: (cb: (payload: CardPreviewExtraPayload) => void): (() => void) => {
       const handler = (_e: IpcRendererEvent, payload: CardPreviewExtraPayload): void => cb(payload);
       ipcRenderer.on('card-preview:set-extra', handler);
       return () => ipcRenderer.removeListener('card-preview:set-extra', handler);
+    },
+    onSetEnhancedExtra: (cb: (payload: CardPreviewEnhancedExtraPayload) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, payload: CardPreviewEnhancedExtraPayload): void => cb(payload);
+      ipcRenderer.on('card-preview:set-enhanced-extra', handler);
+      return () => ipcRenderer.removeListener('card-preview:set-enhanced-extra', handler);
     },
   },
 };

@@ -6,15 +6,19 @@ import {
 } from './hearthstone-window-tracker';
 
 const HS_VISIBLE: HearthstoneWindow = {
-  x: 0, y: 0, width: 1920, height: 1080, minimized: false, visible: true,
+  x: 0, y: 0, width: 1920, height: 1080, minimized: false, visible: true, foreground: true,
 };
 
 const HS_MOVED: HearthstoneWindow = {
-  x: 100, y: 100, width: 1920, height: 1080, minimized: false, visible: true,
+  x: 100, y: 100, width: 1920, height: 1080, minimized: false, visible: true, foreground: true,
 };
 
 const HS_MINIMIZED: HearthstoneWindow = {
-  x: 0, y: 0, width: 1920, height: 1080, minimized: true, visible: true,
+  x: 0, y: 0, width: 1920, height: 1080, minimized: true, visible: true, foreground: false,
+};
+
+const HS_BACKGROUND: HearthstoneWindow = {
+  x: 0, y: 0, width: 1920, height: 1080, minimized: false, visible: true, foreground: false,
 };
 
 beforeEach(() => {
@@ -82,10 +86,12 @@ describe('createHearthstoneWindowTracker', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(events.length).toBe(2);
+    expect(events.length).toBe(3);
     expect(events[0]?.kind).toBe('bounds');
     expect(events[1]?.kind).toBe('visibility');
+    expect(events[2]?.kind).toBe('foreground');
     if (events[1]?.kind === 'visibility') expect(events[1].visible).toBe(true);
+    if (events[2]?.kind === 'foreground') expect(events[2].foreground).toBe(true);
     tracker.stop();
   });
 
@@ -202,6 +208,47 @@ describe('createHearthstoneWindowTracker', () => {
 
     const visEvent = events.find((e) => e.kind === 'visibility');
     expect(visEvent).toBeUndefined();
+    tracker.stop();
+  });
+
+  it('emits foreground=false immediately when Hearthstone moves behind another app', async () => {
+    let result: HearthstoneWindow = HS_VISIBLE;
+    const getWindow = vi.fn(async () => result);
+    const tracker = createHearthstoneWindowTracker({ getWindow });
+    const { events, cb } = collect();
+    tracker.subscribe(cb);
+
+    tracker.addClient();
+    await Promise.resolve();
+    await Promise.resolve();
+    events.length = 0;
+
+    result = HS_BACKGROUND;
+    await vi.advanceTimersByTimeAsync(200);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(events).toContainEqual({ kind: 'foreground', foreground: false });
+    expect(events.find((event) => event.kind === 'visibility')).toBeUndefined();
+    tracker.stop();
+  });
+
+  it('emits foreground=true when Hearthstone returns to the foreground', async () => {
+    let result: HearthstoneWindow = HS_BACKGROUND;
+    const getWindow = vi.fn(async () => result);
+    const tracker = createHearthstoneWindowTracker({ getWindow });
+    const { events, cb } = collect();
+    tracker.subscribe(cb);
+
+    tracker.addClient();
+    await Promise.resolve();
+    await Promise.resolve();
+    events.length = 0;
+
+    result = HS_VISIBLE;
+    await vi.advanceTimersByTimeAsync(200);
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(events).toContainEqual({ kind: 'foreground', foreground: true });
     tracker.stop();
   });
 

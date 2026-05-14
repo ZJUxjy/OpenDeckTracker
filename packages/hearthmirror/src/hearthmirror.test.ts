@@ -420,6 +420,7 @@ describe('HearthMirror', () => {
         height: 720,
         minimized: false,
         visible: true,
+        foreground: true,
       });
       const result = await mirror.getHearthstoneWindow();
       expect(result).toEqual({
@@ -429,6 +430,7 @@ describe('HearthMirror', () => {
         height: 720,
         minimized: false,
         visible: true,
+        foreground: true,
       });
     });
 
@@ -447,10 +449,12 @@ describe('HearthMirror', () => {
         x: 0, y: 0, width: 0, height: 0,
         minimized: true,
         visible: false,
+        foreground: false,
       });
       const result = await mirror.getHearthstoneWindow();
       expect(result?.minimized).toBe(true);
       expect(result?.visible).toBe(false);
+      expect(result?.foreground).toBe(false);
     });
   });
 });

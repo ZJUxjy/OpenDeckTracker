@@ -37,6 +37,10 @@ export function computeRemaining(args: {
   localControllerId: number;
 }): {
   remaining: DeckSnapshot;
+  /** Original-deck copies still expected in DECK before extra cards are added. */
+  baseRemaining: DeckSnapshot;
+  /** Copies currently in DECK that are outside the original deck plan. */
+  extraRemaining: { cardId: string; count: number }[];
   extras: { cardId: string; count: number }[];
 } {
   const { originalDeck, seenEntities, deckEntities, localControllerId } = args;
@@ -66,8 +70,13 @@ export function computeRemaining(args: {
   const knownDeckSnapshot = DeckSnapshot.fromCardIds(deckCardIds);
   const shuffledIntoDeck = baseRemaining.extras(knownDeckSnapshot);
   const createdInDeck = DeckSnapshot.fromCardIds(createdDeckCardIds);
+  const extraRemaining = DeckSnapshot.fromDeckCards(shuffledIntoDeck)
+    .add(createdInDeck)
+    .entries();
   return {
     remaining: baseRemaining.add(shuffledIntoDeck).add(createdInDeck),
+    baseRemaining,
+    extraRemaining,
     extras: originalDeck.extras(seenSnapshot),
   };
 }

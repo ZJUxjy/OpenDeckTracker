@@ -3,7 +3,7 @@ import { render, screen, act, fireEvent, waitFor, within } from '@testing-librar
 import { afterEach } from 'vitest';
 import { LiveDeckPanel } from '../src/components/LiveDeckPanel';
 import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
-import type { DeckTrackerSnapshot } from '@hdt/core';
+import type { ActiveEffect, DeckTrackerSnapshot } from '@hdt/core';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -13,10 +13,13 @@ import type { DeckTrackerSnapshot } from '@hdt/core';
 function makeSnapshot(overrides: {
   original: { cardId: string; count: number }[];
   remaining?: { cardId: string; count: number }[];
+  extraRemaining?: { cardId: string; count: number }[];
   friendlyHand?: string[];
+  friendlyHandExtras?: boolean[];
   boardAttack?: DeckTrackerSnapshot['boardAttack'];
   opposingHero?: DeckTrackerSnapshot['opposingHero'];
   extraDisplay?: DeckTrackerSnapshot['extraDisplay'];
+  friendlyEffects?: ActiveEffect[];
 }): DeckTrackerSnapshot {
   return {
     phase: 'IN_MATCH',
@@ -35,10 +38,13 @@ function makeSnapshot(overrides: {
       name: 'Test Deck',
       original: overrides.original,
       remaining: overrides.remaining ?? overrides.original,
+      extraRemaining: overrides.extraRemaining ?? [],
       extras: [],
     },
     pendingDeckSelection: null,
     friendlyHand: overrides.friendlyHand ?? [],
+    friendlyHandExtras:
+      overrides.friendlyHandExtras ?? (overrides.friendlyHand ?? []).map(() => false),
     opposingHandCount: 0,
     opponent: {
       revealed: [],
@@ -55,24 +61,30 @@ function makeSnapshot(overrides: {
       friendlyBoard: [],
     },
     friendlyDeckCount: overrides.original.reduce((s, c) => s + c.count, 0),
-    friendlyEffects: [],
+    friendlyEffects: overrides.friendlyEffects ?? [],
     opposingEffects: [],
     boardAttack: overrides.boardAttack ?? { friendly: 0, opposing: 0 },
     boardAttackToFace: overrides.boardAttack ?? { friendly: 0, opposing: 0 },
+    friendlyHero: null,
     opposingHero: overrides.opposingHero ?? null,
+    playerClass: null,
     error: null,
     updatedAt: Date.now(),
   };
 }
 
 /** Card definition stubs keyed by cardId. */
-const CARD_DEFS: Record<string, {
-  name: string;
-  cost?: number;
-  rarity?: string;
-  type?: string;
-  spellSchool?: string;
-}> = {
+const CARD_DEFS: Record<
+  string,
+  {
+    name: string;
+    cost?: number;
+    rarity?: string;
+    type?: string;
+    spellSchool?: string;
+    races?: string[];
+  }
+> = {
   CS2_106: { name: 'Fen Creeper', cost: 5, rarity: 'COMMON' },
   CS2_024: { name: 'Frostbolt', cost: 2, rarity: 'COMMON' },
   CS2_029: { name: 'Fireball', cost: 4, rarity: 'COMMON' },
@@ -91,17 +103,63 @@ const CARD_DEFS: Record<string, {
   CATA_527: { name: 'Nespirah', cost: 3, rarity: 'LEGENDARY', type: 'LOCATION' },
   CATA_527t2: { name: 'Unburdened Nespirah', cost: 6, rarity: 'LEGENDARY', type: 'MINION' },
   FEL_SPELL: { name: 'Fel Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'FEL' },
-  NATURE_SPELL: { name: 'Nature Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'NATURE' },
+  NATURE_SPELL: {
+    name: 'Nature Spell',
+    cost: 2,
+    rarity: 'COMMON',
+    type: 'SPELL',
+    spellSchool: 'NATURE',
+  },
   EDR_226: { name: 'Pet Trainer', cost: 4, rarity: 'RARE', type: 'MINION' },
+  BEAST_CARD: { name: 'Deck Beast', cost: 2, rarity: 'COMMON', type: 'MINION', races: ['BEAST'] },
+  DRAGON_CARD: { name: 'Deck Dragon', cost: 2, rarity: 'COMMON', type: 'MINION', races: ['DRAGON'] },
   CATA_560: { name: '直面托维尔', cost: 3, rarity: 'EPIC', type: 'SPELL' },
+  NEW1_031: { name: '动物伙伴', cost: 3, rarity: 'FREE', type: 'SPELL' },
+  CORE_NEW1_031: { name: '动物伙伴', cost: 3, rarity: 'FREE', type: 'SPELL' },
+  NEW1_032: { name: '米莎', cost: 3, rarity: 'FREE', type: 'MINION', races: ['BEAST'] },
+  NEW1_033: { name: '雷欧克', cost: 3, rarity: 'FREE', type: 'MINION', races: ['BEAST'] },
+  NEW1_034: { name: '霍弗', cost: 3, rarity: 'FREE', type: 'MINION', races: ['BEAST'] },
   MEND_300: { name: '驯服宠物', cost: 1, rarity: 'COMMON', type: 'SPELL' },
-  TIME_020t2: { name: '第一道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  MEND_301: { name: '灵语猎手', cost: 4, rarity: 'FREE', type: 'MINION' },
+  MEND_303: { name: '迁徙的雷象', cost: 3, rarity: 'RARE', type: 'MINION', races: ['BEAST'] },
+  MEND_304: { name: '塔雅·陆行', cost: 5, rarity: 'LEGENDARY', type: 'MINION' },
+  MEND_307: { name: '自由漫步', cost: 7, rarity: 'EPIC', type: 'SPELL' },
+  EDR_853: { name: '布罗尔·熊皮', cost: 4, rarity: 'LEGENDARY', type: 'MINION' },
+  OG_211: { name: '兽群呼唤', cost: 8, rarity: 'EPIC', type: 'SPELL' },
+  CORE_OG_211: { name: '兽群呼唤', cost: 8, rarity: 'EPIC', type: 'SPELL' },
+  TIME_609: { name: '游侠将军希尔瓦娜斯', cost: 3, rarity: 'LEGENDARY', type: 'MINION' },
+  TIME_609t1: { name: '游侠队长奥蕾莉亚', cost: 3, rarity: 'FREE', type: 'MINION' },
+  TIME_609t2: { name: '游侠新兵温蕾萨', cost: 3, rarity: 'FREE', type: 'MINION' },
+  BEAST_A: { name: 'Replacement Beast A', cost: 4, rarity: 'COMMON', type: 'MINION', races: ['BEAST'] },
+  BEAST_B: { name: 'Replacement Beast B', cost: 4, rarity: 'COMMON', type: 'MINION', races: ['BEAST'] },
+  BEAST_C: { name: 'Replacement Beast C', cost: 4, rarity: 'COMMON', type: 'MINION', races: ['BEAST'] },
+  TIME_020t2: {
+    name: '第一道阿古斯传送门',
+    rarity: 'LEGENDARY',
+    type: 'SPELL',
+    spellSchool: 'FEL',
+  },
   TIME_020t2t: { name: '奔逃的乌祖尔', cost: 1, rarity: 'COMMON', type: 'MINION' },
-  TIME_020t3: { name: '第二道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  TIME_020t3: {
+    name: '第二道阿古斯传送门',
+    rarity: 'LEGENDARY',
+    type: 'SPELL',
+    spellSchool: 'FEL',
+  },
   TIME_020t3t: { name: '奔逃的夜魔', cost: 2, rarity: 'COMMON', type: 'MINION' },
-  TIME_020t4: { name: '第三道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  TIME_020t4: {
+    name: '第三道阿古斯传送门',
+    rarity: 'LEGENDARY',
+    type: 'SPELL',
+    spellSchool: 'FEL',
+  },
   TIME_020t4t: { name: '奔逃的愤怒卫士', cost: 3, rarity: 'COMMON', type: 'MINION' },
-  TIME_020t5: { name: '最后一道阿古斯传送门', rarity: 'LEGENDARY', type: 'SPELL', spellSchool: 'FEL' },
+  TIME_020t5: {
+    name: '最后一道阿古斯传送门',
+    rarity: 'LEGENDARY',
+    type: 'SPELL',
+    spellSchool: 'FEL',
+  },
   TIME_020t5t: { name: '奔逃的恐惧卫士', cost: 4, rarity: 'COMMON', type: 'MINION' },
   TIME_443: { name: '怒火狱犬', cost: 4, rarity: 'RARE', type: 'SPELL' },
   TIME_443t: { name: '萨格拉斯的地狱犬', cost: 3, rarity: 'COMMON', type: 'MINION' },
@@ -135,6 +193,7 @@ vi.mock('../src/hooks/use-card-def', () => ({
       set: 'TEST',
       type: def.type ?? 'SPELL',
       ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
+      ...(def.races ? { races: def.races } : {}),
       collectible: true,
     };
   },
@@ -161,6 +220,7 @@ describe('LiveDeckPanel sorting', () => {
             set: 'TEST',
             type: def.type ?? 'SPELL',
             ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
+            ...(def.races ? { races: def.races } : {}),
             collectible: true,
           };
         }),
@@ -263,12 +323,12 @@ describe('LiveDeckPanel sorting', () => {
 
   it('renders 30 rows for a 30-card deck (one row per copy)', async () => {
     const original: { cardId: string; count: number }[] = [
-      { cardId: 'CS2_024', count: 2 },  // Frostbolt x2
-      { cardId: 'CS2_029', count: 2 },  // Fireball x2
-      { cardId: 'EX1_277', count: 2 },  // Arcane Intellect x2
-      { cardId: 'EX1_287', count: 2 },  // Counterspell x2
-      { cardId: 'CS2_022', count: 2 },  // Polymorph x2
-      { cardId: 'CS2_106', count: 2 },  // Fen Creeper x2
+      { cardId: 'CS2_024', count: 2 }, // Frostbolt x2
+      { cardId: 'CS2_029', count: 2 }, // Fireball x2
+      { cardId: 'EX1_277', count: 2 }, // Arcane Intellect x2
+      { cardId: 'EX1_287', count: 2 }, // Counterspell x2
+      { cardId: 'CS2_022', count: 2 }, // Polymorph x2
+      { cardId: 'CS2_106', count: 2 }, // Fen Creeper x2
       // Fill to 30 with single-copy cards
       ...Array.from({ length: 18 }, (_, i) => ({
         cardId: `CARD_${String(i).padStart(3, '0')}`,
@@ -302,15 +362,41 @@ describe('LiveDeckPanel sorting', () => {
         { cardId: 'CS2_029', count: 2 },
         { cardId: 'ALBATROSS', count: 1 },
       ],
+      extraRemaining: [{ cardId: 'ALBATROSS', count: 1 }],
     });
     useDeckTrackerStore.setState({ snapshot: snap });
 
     render(<LiveDeckPanel />);
 
     await waitFor(() => {
-      const rows = screen.getAllByTestId('card-copy-row');
+      const rows = within(screen.getByTestId('remaining-cards-section')).getAllByTestId('card-copy-row');
       expect(rows).toHaveLength(3);
       expect(rows.some((row) => row.textContent?.includes('Bad Luck Albatross'))).toBe(true);
+      const albatrossRow = rows.find((row) => row.textContent?.includes('Bad Luck Albatross'));
+      expect(albatrossRow).toBeDefined();
+      expect(within(albatrossRow!).getByTestId('card-extra-origin-icon')).toBeInTheDocument();
+      for (const row of rows.filter((candidate) => candidate.textContent?.includes('Fireball'))) {
+        expect(within(row).queryByTestId('card-extra-origin-icon')).not.toBeInTheDocument();
+      }
+    });
+  });
+
+  it('marks only the overflow copy when an extra card shares an original card id', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 2 }],
+      remaining: [{ cardId: 'CS2_029', count: 3 }],
+      extraRemaining: [{ cardId: 'CS2_029', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      const rows = within(screen.getByTestId('remaining-cards-section')).getAllByTestId('card-copy-row');
+      expect(rows).toHaveLength(3);
+      expect(
+        rows.filter((row) => within(row).queryByTestId('card-extra-origin-icon') !== null),
+      ).toHaveLength(1);
     });
   });
 
@@ -331,7 +417,9 @@ describe('LiveDeckPanel sorting', () => {
         remainingSection.compareDocumentPosition(handSection) & Node.DOCUMENT_POSITION_FOLLOWING,
       ).toBeTruthy();
       expect(
-        within(handSection).getAllByTestId('friendly-hand-row').map((row) => row.textContent),
+        within(handSection)
+          .getAllByTestId('friendly-hand-row')
+          .map((row) => row.textContent),
       ).toEqual([
         expect.stringContaining('Left Card'),
         expect.stringContaining('Middle Card'),
@@ -340,6 +428,26 @@ describe('LiveDeckPanel sorting', () => {
       for (const row of within(handSection).getAllByTestId('friendly-hand-row')) {
         expect(within(row).getByTestId('card-row-art')).toBeInTheDocument();
       }
+    });
+  });
+
+  it('marks extra friendly hand cards with a gift icon', async () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 1 }],
+      friendlyHand: ['CS2_029', 'ALBATROSS'],
+      friendlyHandExtras: [false, true],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      const handRows = within(screen.getByTestId('friendly-hand-section')).getAllByTestId(
+        'friendly-hand-row',
+      );
+      expect(handRows).toHaveLength(2);
+      expect(within(handRows[0]!).queryByTestId('card-extra-origin-icon')).not.toBeInTheDocument();
+      expect(within(handRows[1]!).getByTestId('card-extra-origin-icon')).toBeInTheDocument();
     });
   });
 
@@ -407,9 +515,7 @@ describe('LiveDeckPanel sorting', () => {
       expect(
         screen.queryByText('本局已施放邪能法术：3；费用减少 3；当前费用 3'),
       ).not.toBeInTheDocument();
-      expect(
-        screen.queryByText('本回合友方随从死亡：2；预计抽牌：2'),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText('本回合友方随从死亡：2；预计抽牌：2')).not.toBeInTheDocument();
       expect(screen.queryByTestId('card-extra-display-badge')).not.toBeInTheDocument();
     });
   });
@@ -466,8 +572,9 @@ describe('LiveDeckPanel sorting', () => {
     render(<LiveDeckPanel />);
 
     await waitFor(() => {
-      const handRow = within(screen.getByTestId('friendly-hand-section'))
-        .getAllByTestId('friendly-hand-row')[0]!;
+      const handRow = within(screen.getByTestId('friendly-hand-section')).getAllByTestId(
+        'friendly-hand-row',
+      )[0]!;
       expect(handRow).toHaveAttribute('data-extra-display', 'active');
       expect(within(handRow).queryByText('邪能')).not.toBeInTheDocument();
       expect(handRow).not.toHaveTextContent('将触发：奈瑟匹拉，蒙难古灵');
@@ -500,8 +607,9 @@ describe('LiveDeckPanel sorting', () => {
     render(<LiveDeckPanel />);
 
     await waitFor(() => {
-      const handRow = within(screen.getByTestId('friendly-hand-section'))
-        .getAllByTestId('friendly-hand-row')[0]!;
+      const handRow = within(screen.getByTestId('friendly-hand-section')).getAllByTestId(
+        'friendly-hand-row',
+      )[0]!;
       expect(handRow).toHaveAttribute('data-extra-display', 'active');
       expect(within(handRow).queryByText('自然')).not.toBeInTheDocument();
       expect(handRow).not.toHaveTextContent('将触发：灌木巨龙托匹奥');
@@ -663,9 +771,9 @@ describe('LiveDeckPanel draw animation', () => {
     rerender(<LiveDeckPanel />);
 
     // The highest ordinal copy (Fireball#1) should have the exit class
-    const exitingRows = screen.getAllByTestId('card-copy-row').filter(
-      (el) => el.classList.contains('animate-deck-exit'),
-    );
+    const exitingRows = screen
+      .getAllByTestId('card-copy-row')
+      .filter((el) => el.classList.contains('animate-deck-exit'));
     expect(exitingRows.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -686,9 +794,9 @@ describe('LiveDeckPanel draw animation', () => {
     rerender(<LiveDeckPanel />);
 
     // Find the exiting row and fire animationEnd
-    const exitingRow = screen.getAllByTestId('card-copy-row').find(
-      (el) => el.classList.contains('animate-deck-exit'),
-    );
+    const exitingRow = screen
+      .getAllByTestId('card-copy-row')
+      .find((el) => el.classList.contains('animate-deck-exit'));
     expect(exitingRow).toBeTruthy();
 
     act(() => {
@@ -697,9 +805,9 @@ describe('LiveDeckPanel draw animation', () => {
     rerender(<LiveDeckPanel />);
 
     // After animation end, only 1 row should remain
-    const remaining = screen.getAllByTestId('card-copy-row').filter(
-      (el) => !el.classList.contains('animate-deck-exit'),
-    );
+    const remaining = screen
+      .getAllByTestId('card-copy-row')
+      .filter((el) => !el.classList.contains('animate-deck-exit'));
     expect(remaining).toHaveLength(1);
   });
 
@@ -721,9 +829,7 @@ describe('LiveDeckPanel draw animation', () => {
 
     // The row should be in exit animation, not a regular row
     const allRows = screen.getAllByTestId('card-copy-row');
-    const nonExitingRows = allRows.filter(
-      (el) => !el.classList.contains('animate-deck-exit'),
-    );
+    const nonExitingRows = allRows.filter((el) => !el.classList.contains('animate-deck-exit'));
     expect(nonExitingRows).toHaveLength(0);
   });
 
@@ -818,7 +924,9 @@ describe('LiveDeckPanel hover', () => {
   let savedHdt: typeof window.hdt;
   let cardPreviewShow: ReturnType<typeof vi.fn>;
   let cardPreviewShowPool: ReturnType<typeof vi.fn>;
+  let cardPreviewShowEnhancedPool: ReturnType<typeof vi.fn>;
   let cardPreviewShowExtra: ReturnType<typeof vi.fn>;
+  let cardPreviewShowEnhancedExtra: ReturnType<typeof vi.fn>;
   let cardPreviewHide: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -831,18 +939,24 @@ describe('LiveDeckPanel hover', () => {
     savedHdt = window.hdt;
     cardPreviewShow = vi.fn();
     cardPreviewShowPool = vi.fn();
+    cardPreviewShowEnhancedPool = vi.fn();
     cardPreviewShowExtra = vi.fn();
+    cardPreviewShowEnhancedExtra = vi.fn();
     cardPreviewHide = vi.fn();
     (window as { hdt: typeof window.hdt }).hdt = {
       ...savedHdt,
       cardPreview: {
         show: cardPreviewShow,
         showPool: cardPreviewShowPool,
+        showEnhancedPool: cardPreviewShowEnhancedPool,
         showExtra: cardPreviewShowExtra,
+        showEnhancedExtra: cardPreviewShowEnhancedExtra,
         hide: cardPreviewHide,
         onSetCard: vi.fn(() => () => {}),
         onSetPool: vi.fn(() => () => {}),
+        onSetEnhancedPool: vi.fn(() => () => {}),
         onSetExtra: vi.fn(() => () => {}),
+        onSetEnhancedExtra: vi.fn(() => () => {}),
       },
     };
   });
@@ -865,7 +979,9 @@ describe('LiveDeckPanel hover', () => {
     fireEvent.mouseEnter(row);
     expect(cardPreviewShow).not.toHaveBeenCalled();
 
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
     expect(cardPreviewShow).toHaveBeenCalledTimes(1);
     expect(cardPreviewShow.mock.calls[0]![0]).toBe('CS2_029');
     const anchor = cardPreviewShow.mock.calls[0]![1] as { side: 'left' | 'right' };
@@ -894,13 +1010,90 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toHaveAttribute('data-extra-preview', 'pool');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
-    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(['MEND_300', 'MEND_300']);
-    const anchor = cardPreviewShowPool.mock.calls[0]![1] as { side: 'left' | 'right' };
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe('CATA_560');
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual(['MEND_300', 'MEND_300']);
+    const anchor = cardPreviewShowEnhancedPool.mock.calls[0]![2] as { side: 'left' | 'right' };
     expect(anchor.side === 'left' || anchor.side === 'right').toBe(true);
+  });
+
+  it('previews the default Animal Companion pool on Animal Companion hover', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'NEW1_031', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe('NEW1_031');
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual([
+      'NEW1_032',
+      'NEW1_033',
+      'NEW1_034',
+    ]);
+  });
+
+  it.each([
+    'MEND_300',
+    'MEND_301',
+    'MEND_303',
+    'MEND_304',
+    'MEND_307',
+    'CORE_NEW1_031',
+    'OG_211',
+    'CORE_OG_211',
+    'EDR_853',
+  ] as const)('previews the changed Animal Companion pool for %s', (cardId) => {
+    const snap = makeSnapshot({
+      original: [{ cardId, count: 1 }],
+      friendlyEffects: [
+        {
+          id: 'roam-free',
+          sourceCardId: 'MEND_307',
+          triggeredAt: 200,
+          triggerCount: 1,
+          params: { pool: ['BEAST_A', 'BEAST_B', 'BEAST_C'] },
+        },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe(cardId);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual([
+      'BEAST_A',
+      'BEAST_B',
+      'BEAST_C',
+    ]);
   });
 
   it('highlights Fel spells while hovering Nespirah and previews its deathrattle minion', async () => {
@@ -930,12 +1123,85 @@ describe('LiveDeckPanel hover', () => {
     expect(felSpellRow).toHaveClass('ring-1');
     expect(fireballRow).not.toHaveClass('ring-1');
 
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowExtra).not.toHaveBeenCalled();
-    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(['CATA_527t2']);
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe('CATA_527');
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual(['CATA_527t2']);
+  });
+
+  it('previews already-played Ranger Sylvanas-family cards without prepending the hovered card', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'TIME_609t2', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          rangerSylvanasCardsPlayedThisGame: [
+            { cardId: 'TIME_609t1', count: 1 },
+            { cardId: 'TIME_609', count: 1 },
+          ],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(cardPreviewShow).not.toHaveBeenCalled();
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe('TIME_609t2');
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual(['TIME_609t1', 'TIME_609']);
+  });
+
+  it('highlights beast cards while hovering Strange Dog Trainer', () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'EDR_226', count: 1 },
+        { cardId: 'BEAST_CARD', count: 1 },
+        { cardId: 'DRAGON_CARD', count: 1 },
+      ],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          beastsRemainingInDeck: [{ cardId: 'BEAST_CARD', count: 1 }],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const dogTrainerRow = screen.getByText('Pet Trainer').closest('[data-testid="card-copy-row"]')!;
+    const beastRow = screen.getByText('Deck Beast').closest('[data-testid="card-copy-row"]')!;
+    const dragonRow = screen.getByText('Deck Dragon').closest('[data-testid="card-copy-row"]')!;
+
+    expect(beastRow).not.toHaveClass('ring-1');
+    act(() => {
+      fireEvent.mouseEnter(dogTrainerRow);
+    });
+
+    expect(beastRow).toHaveAttribute('data-extra-display', 'active');
+    expect(beastRow).toHaveClass('ring-1');
+    expect(dragonRow).not.toHaveClass('ring-1');
   });
 
   it('previews all First Argus Portal derived cards on hover', () => {
@@ -949,12 +1215,16 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toHaveAttribute('data-extra-preview', 'pool');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowExtra).not.toHaveBeenCalled();
-    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual([
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe('TIME_020t2');
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual([
       'TIME_020t2t',
       'TIME_020t3',
       'TIME_020t3t',
@@ -981,12 +1251,16 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toHaveAttribute('data-extra-preview', 'pool');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowExtra).not.toHaveBeenCalled();
-    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(expectedPool);
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe(cardId);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual(expectedPool);
   });
 
   it('uses enhanced text preview for counter-only candidates', () => {
@@ -1011,12 +1285,16 @@ describe('LiveDeckPanel hover', () => {
     expect(row).not.toHaveTextContent('本回合友方随从死亡：2；预计抽牌：2');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowPool).not.toHaveBeenCalled();
-    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![0]).toBe('CORE_BT_427');
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![1]).toEqual({
       title: 'Soul Feast',
       lines: ['本回合友方随从死亡：2；预计抽牌：2'],
     });
@@ -1044,12 +1322,16 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toHaveAttribute('data-extra-preview', 'extra');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowPool).not.toHaveBeenCalled();
-    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![0]).toBe('CATA_584');
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![1]).toEqual({
       title: '喷发火山',
       lines: ['本回合已施放火焰法术：是；当前伤害 6'],
     });
@@ -1078,12 +1360,20 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toHaveAttribute('data-extra-preview', 'pool');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowExtra).not.toHaveBeenCalled();
-    expect(cardPreviewShowPool).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowPool.mock.calls[0]![0]).toEqual(['BEAST_A', 'BEAST_A', 'BEAST_B']);
+    expect(cardPreviewShowPool).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe('CORE_ICC_825');
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual([
+      'BEAST_A',
+      'BEAST_A',
+      'BEAST_B',
+    ]);
   });
 
   it('uses text preview for multi-bucket graveyard pools', () => {
@@ -1107,12 +1397,16 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toHaveAttribute('data-extra-preview', 'extra');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowPool).not.toHaveBeenCalled();
-    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![0]).toBe('TLC_818');
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![1]).toEqual({
       title: '轮回转生',
       lines: ['1费：COST_ONE_DEAD x2；2费：无；3费：COST_THREE_DEAD'],
     });
@@ -1139,12 +1433,16 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toHaveAttribute('data-extra-preview', 'extra');
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowPool).not.toHaveBeenCalled();
-    expect(cardPreviewShowExtra).toHaveBeenCalledTimes(1);
-    expect(cardPreviewShowExtra.mock.calls[0]![0]).toEqual({
+    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
+    expect(cardPreviewShowEnhancedExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![0]).toBe('CORE_AV_328');
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![1]).toEqual({
       title: '灵魂向导',
       lines: ['牌库剩余神圣法术 1 张 / 暗影法术 2 张'],
     });
@@ -1160,9 +1458,13 @@ describe('LiveDeckPanel hover', () => {
     const row = screen.getAllByTestId('card-copy-row')[0]!;
 
     fireEvent.mouseEnter(row);
-    act(() => { vi.advanceTimersByTime(100); });
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
     fireEvent.mouseLeave(row);
-    act(() => { vi.advanceTimersByTime(300); });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(cardPreviewShow).not.toHaveBeenCalled();
     expect(cardPreviewShowExtra).not.toHaveBeenCalled();

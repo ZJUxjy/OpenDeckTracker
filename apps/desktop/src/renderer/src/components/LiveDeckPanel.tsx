@@ -7,6 +7,7 @@ import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { expandDeckToCopies, type DeckCopy, type DeckTrackerSnapshot } from '@hdt/core';
 import { clsx } from 'clsx';
+import { Gift } from 'lucide-react';
 import { useCardPreview, type RowPreviewRequest } from '../hooks/use-card-preview';
 import { getRarityCostBg } from '../lib/rarity';
 import type { CardDef, Rarity } from '@hdt/hearthdb';
@@ -17,8 +18,25 @@ import {
   type ExtraDisplayCandidate,
 } from '../lib/extra-display-candidates';
 import { getStaticHoverPoolCardIds } from '../lib/card-preview-specials';
+import { partitionAnimalCompanionEffects } from '../lib/animal-companion-effects';
 
 const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
+const DEFAULT_ANIMAL_COMPANION_POOL_CARD_IDS = ['NEW1_032', 'NEW1_033', 'NEW1_034'];
+const ANIMAL_COMPANION_POOL_PREVIEW_CARD_IDS = new Set([
+  'NEW1_031',
+  'CORE_NEW1_031',
+  'VAN_NEW1_031',
+  'OG_211',
+  'CORE_OG_211',
+  'MEND_300',
+  'MEND_301',
+  'MEND_303',
+  'MEND_304',
+  'MEND_307',
+  'EDR_853',
+]);
+const RANGER_SYLVANAS_CARD_IDS = new Set(['TIME_609', 'TIME_609t1', 'TIME_609t2']);
+const STRANGE_DOG_TRAINER_CARD_ID = 'EDR_226';
 
 // Mask the tile's left edge into transparency so it blends smoothly with
 // the row's background — no hard gradient seam visible against bright art.
@@ -134,17 +152,32 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     for (const e of deck.remaining) m.set(e.cardId, e.count);
     return m;
   }, [deck.remaining]);
+  const extraRemainingByCardId = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of deck.extraRemaining ?? []) m.set(e.cardId, e.count);
+    return m;
+  }, [deck.extraRemaining]);
 
   // Build card defs map for sorting and friendly-hand display.
-  const friendlyHandCardIds = useMemo(
-    () => snapshot.friendlyHand.filter((cardId) => cardId !== ''),
-    [snapshot.friendlyHand],
+  const friendlyHandRows = useMemo(
+    () =>
+      snapshot.friendlyHand
+        .map((cardId, index) => ({
+          cardId,
+          isExtraCard: snapshot.friendlyHandExtras?.[index] ?? false,
+        }))
+        .filter((row) => row.cardId !== ''),
+    [snapshot.friendlyHand, snapshot.friendlyHandExtras],
   );
   const cardIds = useMemo(
     () => [...new Set([...deck.original, ...deck.remaining].map((e) => e.cardId))],
     [deck.original, deck.remaining],
   );
   const cardDefs = useCardDefs(cardIds);
+  const animalCompanionPoolCardIds = useMemo(
+    () => resolveCurrentAnimalCompanionPool(snapshot.friendlyEffects),
+    [snapshot.friendlyEffects],
+  );
 
   const totalOriginal = deck.original.reduce((s, c) => s + c.count, 0);
   const totalRemaining = deck.remaining.reduce((s, c) => s + c.count, 0);
@@ -254,7 +287,9 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                 onMouseEnter={handleRowMouseEnter}
                 onMouseLeave={handleRowMouseLeave}
                 extraDisplay={snapshot.extraDisplay}
+                animalCompanionPoolCardIds={animalCompanionPoolCardIds}
                 hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
+                isExtraCard={isExtraRemainingCopy(copy, remainingByCardId, extraRemainingByCardId)}
               />
             ))}
             {[...exitingCopyKeys]
@@ -271,7 +306,13 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                     onMouseEnter={handleRowMouseEnter}
                     onMouseLeave={handleRowMouseLeave}
                     extraDisplay={snapshot.extraDisplay}
+                    animalCompanionPoolCardIds={animalCompanionPoolCardIds}
                     hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
+                    isExtraCard={isExtraRemainingCopy(
+                      { cardId, ordinal: Number(copyKey.split('#')[1] ?? 0) },
+                      remainingByCardId,
+                      extraRemainingByCardId,
+                    )}
                   />
                 );
               })}
@@ -290,27 +331,29 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
               {t('deckTracker.currentHand')}
             </h3>
             <span className="font-mono text-[11px] tabular-nums text-text-dim">
-              {friendlyHandCardIds.length}
+              {friendlyHandRows.length}
             </span>
           </div>
-          {friendlyHandCardIds.length === 0 ? (
+          {friendlyHandRows.length === 0 ? (
             <div className="tavern-empty-row rounded border border-border bg-overlay-elevated backdrop-blur-xl px-2 py-2 text-center text-xs text-text-dim">
               {t('deckTracker.emptyHand')}
             </div>
           ) : (
             <div className="space-y-1">
-              {friendlyHandCardIds.map((cardId, index) => (
+              {friendlyHandRows.map((row, index) => (
                 <CardCopyRow
-                  key={`${cardId}-${index}`}
-                  copyKey={`hand-${index}-${cardId}`}
-                  cardId={cardId}
+                  key={`${row.cardId}-${index}`}
+                  copyKey={`hand-${index}-${row.cardId}`}
+                  cardId={row.cardId}
                   exiting={false}
                   testId="friendly-hand-row"
                   onAnimationEnd={handleHandAnimationEnd}
                   onMouseEnter={handleRowMouseEnter}
                   onMouseLeave={handleRowMouseLeave}
                   extraDisplay={snapshot.extraDisplay}
+                  animalCompanionPoolCardIds={animalCompanionPoolCardIds}
                   hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
+                  isExtraCard={row.isExtraCard}
                 />
               ))}
             </div>
@@ -485,12 +528,35 @@ function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: numb
   return defs;
 }
 
+function resolveCurrentAnimalCompanionPool(
+  effects: DeckTrackerSnapshot['friendlyEffects'],
+): string[] {
+  const summary = partitionAnimalCompanionEffects(effects).summary;
+  const replacementPool = summary?.poolReplacement?.pool ?? [];
+  return replacementPool.length > 0
+    ? [...replacementPool]
+    : [...DEFAULT_ANIMAL_COMPANION_POOL_CARD_IDS];
+}
+
+function isExtraRemainingCopy(
+  copy: Pick<DeckCopy, 'cardId' | 'ordinal'>,
+  remainingByCardId: ReadonlyMap<string, number>,
+  extraRemainingByCardId: ReadonlyMap<string, number>,
+): boolean {
+  const extraCount = extraRemainingByCardId.get(copy.cardId) ?? 0;
+  if (extraCount <= 0) return false;
+  const totalCount = remainingByCardId.get(copy.cardId) ?? 0;
+  return copy.ordinal >= Math.max(0, totalCount - extraCount);
+}
+
 interface CardCopyRowProps {
   copyKey: string;
   cardId: string;
   exiting: boolean;
   testId?: string;
+  isExtraCard?: boolean;
   extraDisplay?: DeckTrackerSnapshot['extraDisplay'];
+  animalCompanionPoolCardIds: readonly string[];
   hoveredRelatedSourceCardId?: string | null;
   onAnimationEnd: (copyKey: string) => void;
   onMouseEnter: (cardId: string, request: RowPreviewRequest, el: HTMLDivElement) => void;
@@ -502,7 +568,9 @@ function CardCopyRow({
   cardId,
   exiting,
   testId = 'card-copy-row',
+  isExtraCard = false,
   extraDisplay,
+  animalCompanionPoolCardIds,
   hoveredRelatedSourceCardId,
   onAnimationEnd,
   onMouseEnter,
@@ -514,7 +582,7 @@ function CardCopyRow({
   const rarity = def?.rarity as Rarity | undefined;
   const tileUrl = useCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
-  const rowExtra = buildRowExtraDisplay(cardId, def, extraDisplay);
+  const rowExtra = buildRowExtraDisplay(cardId, def, extraDisplay, animalCompanionPoolCardIds);
   const hoverRelatedHighlight = matchesHoverRelatedHighlight(def, hoveredRelatedSourceCardId);
   const isExtraDisplayActive =
     rowExtra.poolCardIds.length > 0 ||
@@ -578,6 +646,16 @@ function CardCopyRow({
             {name}
           </div>
         </div>
+        {isExtraCard ? (
+          <div
+            data-testid="card-extra-origin-icon"
+            className="relative z-20 ml-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded border border-amber-300/80 bg-black/60 text-amber-300 shadow-[0_0_0_1px_rgba(0,0,0,0.55)]"
+            title="套牌外卡牌"
+            aria-label="套牌外卡牌"
+          >
+            <Gift className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -593,13 +671,22 @@ function buildRowExtraDisplay(
   cardId: string,
   def: CardDef | null | undefined,
   extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+  animalCompanionPoolCardIds: readonly string[],
 ): RowExtraDisplay {
-  const candidate = getExtraDisplayCandidate(cardId);
+  const isAnimalCompanionPoolPreview = isAnimalCompanionPoolPreviewCard(cardId);
+  const isRangerSylvanasPreview = isRangerSylvanasCard(cardId);
+  const candidate =
+    isAnimalCompanionPoolPreview || isRangerSylvanasPreview
+      ? null
+      : getExtraDisplayCandidate(cardId);
   const hasTrackedState = candidate ? hasTrackedExtraDisplayState(candidate, extraDisplay) : false;
-  const dynamicPoolCardIds =
-    candidate && hasTrackedState
-      ? resolvePreviewPoolCardIds(candidate, extraDisplay)
-      : [];
+  const dynamicPoolCardIds = isAnimalCompanionPoolPreview
+    ? [...animalCompanionPoolCardIds]
+    : isRangerSylvanasPreview
+      ? resolveRangerSylvanasPlayedPool(extraDisplay)
+      : candidate && hasTrackedState
+        ? resolvePreviewPoolCardIds(candidate, extraDisplay)
+        : [];
   const extraLines: string[] = [];
   const triggerHit = matchOnBoardTrigger(def, extraDisplay?.friendlyBoard ?? []);
   if (triggerHit) {
@@ -615,7 +702,7 @@ function buildRowExtraDisplay(
   // On-board trigger highlight remains visual, but detailed enhanced data
   // belongs in the hover preview rather than inline row text.
   const staticPoolCardIds =
-    dynamicPoolCardIds.length === 0 && extraLines.length === 0
+    dynamicPoolCardIds.length === 0 && extraLines.length === 0 && !isRangerSylvanasPreview
       ? getStaticHoverPoolCardIds(cardId)
       : [];
   return {
@@ -800,6 +887,20 @@ function expandPoolByCount(pool: readonly { cardId: string; count: number }[]): 
   return pool.flatMap((entry) => Array.from({ length: Math.max(1, entry.count) }, () => entry.cardId));
 }
 
+function isAnimalCompanionPoolPreviewCard(cardId: string): boolean {
+  return ANIMAL_COMPANION_POOL_PREVIEW_CARD_IDS.has(cardId);
+}
+
+function isRangerSylvanasCard(cardId: string): boolean {
+  return RANGER_SYLVANAS_CARD_IDS.has(cardId);
+}
+
+function resolveRangerSylvanasPlayedPool(
+  extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
+): string[] {
+  return expandPoolByCount(extraDisplay?.pools.rangerSylvanasCardsPlayedThisGame ?? []);
+}
+
 function primaryPoolKeyForDisplayType(displayType: string | undefined): string | null {
   if (displayType === 'graveyard_pool') return 'friendlyDeadMinionPoolThisGameUnique';
   if (displayType === 'deck_pool') return 'deckMinionsRemaining';
@@ -902,6 +1003,9 @@ function matchesHoverRelatedHighlight(
   hoveredSourceCardId: string | null | undefined,
 ): boolean {
   if (!def || !hoveredSourceCardId) return false;
+  if (hoveredSourceCardId === STRANGE_DOG_TRAINER_CARD_ID) {
+    return (def.races ?? []).some((race) => race === 'BEAST');
+  }
   const th = getExtraDisplayCandidate(hoveredSourceCardId)?.extraDisplay?.triggerHighlight;
   if (!th) return false;
   if (th.matchSpellSchool && (def.type !== 'SPELL' || def.spellSchool !== th.matchSpellSchool)) return false;

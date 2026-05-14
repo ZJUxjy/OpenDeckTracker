@@ -9,7 +9,8 @@ export interface BoundsRect {
 
 export type TrackerEvent =
   | { kind: 'bounds'; bounds: BoundsRect }
-  | { kind: 'visibility'; visible: boolean };
+  | { kind: 'visibility'; visible: boolean }
+  | { kind: 'foreground'; foreground: boolean };
 
 export interface HearthstoneWindowTracker {
   addClient(): void;
@@ -40,6 +41,7 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
   let falseStreak = 0;
   let lastBounds: BoundsRect | null = null;
   let lastVisible = false;
+  let lastForeground = false;
   const subscribers: Array<(e: TrackerEvent) => void> = [];
 
   function emit(event: TrackerEvent): void {
@@ -63,11 +65,12 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
 
     if (pollCount === 1 || pollCount % 25 === 0) {
       console.log(
-        `[overlay-tracker] poll #${pollCount}: result=${result === null ? 'null' : `{${result.x},${result.y} ${result.width}×${result.height} vis=${result.visible} min=${result.minimized}}`}${threw ? ' (threw)' : ''}`,
+        `[overlay-tracker] poll #${pollCount}: result=${result === null ? 'null' : `{${result.x},${result.y} ${result.width}×${result.height} vis=${result.visible} min=${result.minimized} fg=${result.foreground}}`}${threw ? ' (threw)' : ''}`,
       );
     }
 
     const isPresent = result !== null && result.visible && !result.minimized;
+    const isForeground = isPresent && result !== null && result.foreground;
 
     if (isPresent && result !== null) {
       // Reset streak — any present reading clears the throttle.
@@ -86,7 +89,17 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
         console.log('[overlay-tracker] emit visibility: true');
         emit({ kind: 'visibility', visible: true });
       }
+      if (lastForeground !== isForeground) {
+        lastForeground = isForeground;
+        console.log(`[overlay-tracker] emit foreground: ${isForeground}`);
+        emit({ kind: 'foreground', foreground: isForeground });
+      }
     } else {
+      if (lastForeground) {
+        lastForeground = false;
+        console.log('[overlay-tracker] emit foreground: false');
+        emit({ kind: 'foreground', foreground: false });
+      }
       falseStreak++;
       if (falseStreak >= falseStreakThreshold && lastVisible) {
         lastVisible = false;
@@ -111,6 +124,7 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
     falseStreak = 0;
     lastBounds = null;
     lastVisible = false;
+    lastForeground = false;
   }
 
   return {

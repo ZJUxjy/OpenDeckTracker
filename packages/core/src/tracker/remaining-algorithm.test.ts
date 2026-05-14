@@ -141,6 +141,7 @@ describe('computeRemaining', () => {
       localControllerId: 1,
     });
     expect(result.remaining.countOf('Fireball')).toBe(3);
+    expect(result.extraRemaining).toEqual([{ cardId: 'Fireball', count: 1 }]);
   });
 
   it('counts created same-card deck entities even when original copies are unknown', () => {
@@ -167,6 +168,7 @@ describe('computeRemaining', () => {
     });
 
     expect(result.remaining.entries()).toEqual([{ cardId: 'Fireball', count: 2 }]);
+    expect(result.extraRemaining).toEqual([{ cardId: 'Fireball', count: 1 }]);
   });
 
   it('created same-card copies stop contributing after leaving the deck', () => {
@@ -217,6 +219,7 @@ describe('computeRemaining', () => {
     expect(result.remaining.countOf('Fireball')).toBe(2);
     expect(result.remaining.countOf('Albatross')).toBe(1);
     expect(result.remaining.total()).toBe(3);
+    expect(result.extraRemaining).toEqual([{ cardId: 'Albatross', count: 1 }]);
     expect(result.extras).toEqual([]);
   });
 
@@ -232,6 +235,7 @@ describe('computeRemaining', () => {
       localControllerId: 1,
     });
     expect(result.remaining.countOf('Fireball')).toBe(2);
+    expect(result.extraRemaining).toEqual([{ cardId: 'Fireball', count: 1 }]);
   });
 
   it('does not double-count known original deck entities', () => {

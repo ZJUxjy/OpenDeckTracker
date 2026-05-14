@@ -97,6 +97,30 @@ describe('MatchExtraDisplayState', () => {
     ]);
   });
 
+  it('records local Ranger Sylvanas-family cards played this game for hover previews', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordCardPlayed({
+      event: baseEvent('TIME_609t1', 16),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: baseEvent('TIME_609', 17),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: { ...baseEvent('TIME_609t2', 18), controllerId: 2 },
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    expect(state.snapshot().pools.rangerSylvanasCardsPlayedThisGame).toEqual([
+      { cardId: 'TIME_609t1', count: 1 },
+      { cardId: 'TIME_609', count: 1 },
+    ]);
+  });
+
   it('tracks friendly minion deaths this turn and resets them on turn changes', () => {
     const state = new MatchExtraDisplayState();
     state.recordTurnChange(3);

@@ -45,7 +45,6 @@ const STATIC_HOVER_POOLS: Record<string, readonly string[]> = {
     'TIME_020t5',
     'TIME_020t5t',
   ],
-  TIME_609: ['TIME_609t1', 'TIME_609t2'],
   TIME_619: ['TIME_619t', 'TIME_619t2', 'TIME_619t3', 'TIME_619t4', 'TIME_619t5'],
   TIME_850: ['TIME_850t', 'TIME_850t1'],
   TLC_902: ['TLC_630t', 'TLC_630t', 'TLC_903t', 'TLC_903t'],

@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => {
       windows.push(this);
     }
     show = vi.fn(() => { this._visible = true; });
+    showInactive = vi.fn(() => { this._visible = true; });
     hide = vi.fn(() => { this._visible = false; });
     isVisible = vi.fn(() => this._visible);
     isDestroyed = vi.fn(() => this._destroyed);
@@ -101,12 +102,12 @@ describe('OverlayManager', () => {
     const win = lastWindow();
     expect(win._opts.transparent).toBe(true);
     expect(win._opts.frame).toBe(false);
-    expect(win._opts.alwaysOnTop).toBe(true);
+    expect(win._opts.alwaysOnTop).toBe(false);
     expect(win._opts.skipTaskbar).toBe(true);
     // focusable=true since v2 (drag region requires it on Windows).
     expect(win._opts.focusable).toBe(true);
     expect(win._opts.show).toBe(false);
-    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
+    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(false);
   });
 
   it('initial bounds are 1×1 at origin (no static workArea sizing)', () => {
@@ -156,14 +157,26 @@ describe('OverlayManager', () => {
     expect(lastWindow().isVisible()).toBe(false);
   });
 
-  it('setVisibleOnScreen(true) + setInActiveMatch(true) after enable() shows the window', () => {
+  it('setVisibleOnScreen(true) + setInActiveMatch(true) + setTargetForeground(true) after enable() shows the window', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    mgr.setTargetForeground(true);
+
+    expect(lastWindow().setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
+    expect(lastWindow().showInactive).toHaveBeenCalled();
+    expect(lastWindow().isVisible()).toBe(true);
+  });
+
+  it('keeps the window hidden while Hearthstone is not foreground', () => {
     const mgr = makeManager();
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
 
-    expect(lastWindow().show).toHaveBeenCalled();
-    expect(lastWindow().isVisible()).toBe(true);
+    expect(lastWindow().isVisible()).toBe(false);
+    expect(lastWindow().showInactive).not.toHaveBeenCalled();
   });
 
   it('setVisibleOnScreen(false) after showing hides the window', () => {
@@ -171,6 +184,7 @@ describe('OverlayManager', () => {
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
+    mgr.setTargetForeground(true);
     expect(lastWindow().isVisible()).toBe(true);
 
     mgr.setVisibleOnScreen(false);
@@ -183,6 +197,7 @@ describe('OverlayManager', () => {
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
+    mgr.setTargetForeground(true);
     expect(lastWindow().isVisible()).toBe(true);
 
     mgr.setInActiveMatch(false);
@@ -194,6 +209,7 @@ describe('OverlayManager', () => {
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
+    mgr.setTargetForeground(true);
     mgr.disable();
 
     expect(lastWindow().isVisible()).toBe(false);
@@ -205,6 +221,7 @@ describe('OverlayManager', () => {
     mgr.enable();
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
+    mgr.setTargetForeground(true);
     expect(lastWindow().isVisible()).toBe(true);
 
     mgr.disable();
@@ -212,6 +229,36 @@ describe('OverlayManager', () => {
 
     mgr.enable();
     expect(lastWindow().isVisible()).toBe(false);
+  });
+
+  it('setTargetForeground(false) hides the window without disabling the overlay', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    mgr.setTargetForeground(true);
+    expect(lastWindow().isVisible()).toBe(true);
+
+    mgr.setTargetForeground(false);
+
+    expect(lastWindow().hide).toHaveBeenCalled();
+    expect(lastWindow().setAlwaysOnTop).toHaveBeenCalledWith(false);
+    expect(lastWindow().isVisible()).toBe(false);
+  });
+
+  it('tracks overlay focus and notifies the host', () => {
+    const onFocusChange = vi.fn();
+    const mgr = makeManager({ onFocusChange });
+    mgr.enable();
+    const win = lastWindow();
+
+    win._emit('focus');
+    expect(mgr.isWindowFocused()).toBe(true);
+    expect(onFocusChange).toHaveBeenCalledTimes(1);
+
+    win._emit('blur');
+    expect(mgr.isWindowFocused()).toBe(false);
+    expect(onFocusChange).toHaveBeenCalledTimes(2);
   });
 
   it('dispose() destroys the window', () => {

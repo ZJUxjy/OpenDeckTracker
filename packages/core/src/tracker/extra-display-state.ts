@@ -42,6 +42,7 @@ interface TaggedEntity {
 }
 
 const EMPTY_COUNTERS: Readonly<Record<string, number>> = Object.freeze({});
+const RANGER_SYLVANAS_CARD_IDS = new Set(['TIME_609', 'TIME_609t1', 'TIME_609t2']);
 
 export function createEmptyExtraDisplaySnapshot(): ExtraDisplaySnapshot {
   return {
@@ -62,6 +63,7 @@ export class MatchExtraDisplayState {
   private readonly poolMaps = new Map<string, Map<string, number>>();
   private readonly friendlyDeadUndeadCosts = new Map<string, number>();
   private readonly oneCostCardsPlayedThisGame = new Map<string, number>();
+  private readonly rangerSylvanasCardsPlayedThisGame = new Map<string, number>();
 
   reset(): void {
     this.currentTurn = null;
@@ -72,6 +74,7 @@ export class MatchExtraDisplayState {
     this.poolMaps.clear();
     this.friendlyDeadUndeadCosts.clear();
     this.oneCostCardsPlayedThisGame.clear();
+    this.rangerSylvanasCardsPlayedThisGame.clear();
   }
 
   recordTurnChange(turn: number): void {
@@ -123,6 +126,9 @@ export class MatchExtraDisplayState {
     if (typeof metadata.cost === 'number') this.setCounter('lastPlayedCardCost', metadata.cost);
     if (metadata.cost === 1 && metadata.type !== 'HERO_POWER') {
       incrementMap(this.oneCostCardsPlayedThisGame, args.event.cardId);
+    }
+    if (RANGER_SYLVANAS_CARD_IDS.has(args.event.cardId)) {
+      incrementMap(this.rangerSylvanasCardsPlayedThisGame, args.event.cardId);
     }
 
     if (metadata.type === 'HERO_POWER') {
@@ -248,6 +254,7 @@ export class MatchExtraDisplayState {
       pools[key] = entriesFromCountMap(map);
     }
     pools.oneCostCardsPlayedThisGameDistinct = entriesFromInsertionOrderedMap(this.oneCostCardsPlayedThisGame);
+    pools.rangerSylvanasCardsPlayedThisGame = entriesFromInsertionOrderedMap(this.rangerSylvanasCardsPlayedThisGame);
     pools.friendlyDeadUndeadHighestCostPoolThisGame = this.highestCostUndeadPool();
     pools['graveyardPool.EDR_891'] = pools.friendlyDeadDeathrattleMinionsCostLte4Unique ?? [];
     pools['graveyardPool.EDR_892'] = pools.friendlyDeadDeathrattleMinionsCostGte5Unique ?? [];

@@ -198,6 +198,7 @@ pub struct HearthstoneWindowResult {
     pub height: i32,
     pub minimized: bool,
     pub visible: bool,
+    pub foreground: bool,
 }
 
 #[napi]
@@ -209,6 +210,7 @@ pub async fn get_hearthstone_window() -> napi::Result<Option<HearthstoneWindowRe
         height: w.height,
         minimized: w.minimized,
         visible: w.visible,
+        foreground: w.foreground,
     }))
 }
 

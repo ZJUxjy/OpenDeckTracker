@@ -188,6 +188,7 @@ export interface HearthstoneWindowResult {
   height: number
   minimized: boolean
   visible: boolean
+  foreground: boolean
 }
 
 export interface InMatchDeckCard {

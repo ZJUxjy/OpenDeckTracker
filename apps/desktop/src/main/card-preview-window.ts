@@ -32,12 +32,13 @@ const PREVIEW_WIDTH = 280;
 const PREVIEW_HEIGHT = 400;
 const EXTRA_PREVIEW_WIDTH = 360;
 const EXTRA_PREVIEW_HEIGHT = 220;
+const ENHANCED_PREVIEW_GAP = 8;
 const POOL_PREVIEW_CARD_WIDTH = 230;
 const POOL_PREVIEW_CARD_HEIGHT = 330;
-const POOL_PREVIEW_PADDING_X = 24;
-const POOL_PREVIEW_PADDING_Y = 24;
+const POOL_PREVIEW_PADDING_X = 8;
+const POOL_PREVIEW_PADDING_Y = 8;
 const POOL_PREVIEW_MAX_COLUMNS = 4;
-const POOL_GAP = 14;
+const POOL_GAP = 4;
 const EDGE_GAP = 8;
 
 function clamp(n: number, min: number, max: number): number {
@@ -74,6 +75,36 @@ function computePreviewBounds(
     y: clamp(rawY, workArea.y, maxY),
     width,
     height,
+  };
+}
+
+function computePoolPreviewSize(cardCount: number): { width: number; height: number } {
+  const columns = Math.min(cardCount, POOL_PREVIEW_MAX_COLUMNS);
+  const rows = Math.ceil(cardCount / POOL_PREVIEW_MAX_COLUMNS);
+  return {
+    width:
+      columns * POOL_PREVIEW_CARD_WIDTH +
+      (columns - 1) * POOL_GAP +
+      POOL_PREVIEW_PADDING_X * 2,
+    height:
+      rows * POOL_PREVIEW_CARD_HEIGHT +
+      (rows - 1) * POOL_GAP +
+      POOL_PREVIEW_PADDING_Y * 2,
+  };
+}
+
+function computeEnhancedPoolPreviewSize(cardCount: number): { width: number; height: number } {
+  const pool = computePoolPreviewSize(cardCount);
+  return {
+    width: PREVIEW_WIDTH + ENHANCED_PREVIEW_GAP + pool.width,
+    height: Math.max(PREVIEW_HEIGHT, pool.height),
+  };
+}
+
+function computeEnhancedExtraPreviewSize(): { width: number; height: number } {
+  return {
+    width: PREVIEW_WIDTH + ENHANCED_PREVIEW_GAP + EXTRA_PREVIEW_WIDTH,
+    height: Math.max(PREVIEW_HEIGHT, EXTRA_PREVIEW_HEIGHT),
   };
 }
 
@@ -122,6 +153,28 @@ export class CardPreviewWindow {
     this.win.setOpacity(1);
   }
 
+  showEnhancedExtra(sourceCardId: string, payload: ExtraPreviewPayload, anchor: PreviewAnchor): void {
+    if (payload.lines.length === 0) {
+      this.show(sourceCardId, anchor);
+      return;
+    }
+    if (!this.win || this.win.isDestroyed()) this.createWindow();
+    if (!this.win) return;
+
+    const size = computeEnhancedExtraPreviewSize();
+    this.win.setBounds(computePreviewBounds(anchor, size.width, size.height));
+
+    const key = `enhanced-extra:${sourceCardId}:${payload.title}:${payload.lines.join('\u001f')}`;
+    if (key !== this.currentKey) {
+      this.currentKey = key;
+      this.win.webContents.send('card-preview:set-enhanced-extra', {
+        sourceCardId,
+        ...payload,
+      });
+    }
+    this.win.setOpacity(1);
+  }
+
   /**
    * Multi-card variant: shows N card images in a max-four-column grid.
    * Window grows by row and column so wide pools do not become a single
@@ -135,22 +188,35 @@ export class CardPreviewWindow {
     if (!this.win || this.win.isDestroyed()) this.createWindow();
     if (!this.win) return;
 
-    const columns = Math.min(cardIds.length, POOL_PREVIEW_MAX_COLUMNS);
-    const rows = Math.ceil(cardIds.length / POOL_PREVIEW_MAX_COLUMNS);
-    const totalWidth =
-      columns * POOL_PREVIEW_CARD_WIDTH +
-      (columns - 1) * POOL_GAP +
-      POOL_PREVIEW_PADDING_X * 2;
-    const totalHeight =
-      rows * POOL_PREVIEW_CARD_HEIGHT +
-      (rows - 1) * POOL_GAP +
-      POOL_PREVIEW_PADDING_Y * 2;
-    this.win.setBounds(computePreviewBounds(anchor, totalWidth, totalHeight));
+    const size = computePoolPreviewSize(cardIds.length);
+    this.win.setBounds(computePreviewBounds(anchor, size.width, size.height));
 
     const key = `pool:${cardIds.join(',')}`;
     if (key !== this.currentKey) {
       this.currentKey = key;
       this.win.webContents.send('card-preview:set-pool', cardIds);
+    }
+    this.win.setOpacity(1);
+  }
+
+  showEnhancedPool(sourceCardId: string, cardIds: readonly string[], anchor: PreviewAnchor): void {
+    if (cardIds.length === 0) {
+      this.show(sourceCardId, anchor);
+      return;
+    }
+    if (!this.win || this.win.isDestroyed()) this.createWindow();
+    if (!this.win) return;
+
+    const size = computeEnhancedPoolPreviewSize(cardIds.length);
+    this.win.setBounds(computePreviewBounds(anchor, size.width, size.height));
+
+    const key = `enhanced-pool:${sourceCardId}:${cardIds.join(',')}`;
+    if (key !== this.currentKey) {
+      this.currentKey = key;
+      this.win.webContents.send('card-preview:set-enhanced-pool', {
+        sourceCardId,
+        cardIds,
+      });
     }
     this.win.setOpacity(1);
   }

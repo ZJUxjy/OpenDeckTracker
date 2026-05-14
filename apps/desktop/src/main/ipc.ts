@@ -115,8 +115,26 @@ export function registerIpc(overlay?: OverlayControllers): void {
         );
         cp.showPool(cardIds, anchor);
       });
+      ipcMain.handle('card-preview:show-enhanced-pool', (_, sourceCardId: string, cardIds: string[], anchor: PreviewAnchor) => {
+        void Promise.all(
+          [sourceCardId, ...cardIds].map((cardId) =>
+            ensureCardImageCached(cardId, {
+              root: cardImageRoot,
+              primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
+            }).catch(() => undefined),
+          ),
+        );
+        cp.showEnhancedPool(sourceCardId, cardIds, anchor);
+      });
       ipcMain.handle('card-preview:show-extra', (_, payload: ExtraPreviewPayload, anchor: PreviewAnchor) => {
         cp.showExtra(payload, anchor);
+      });
+      ipcMain.handle('card-preview:show-enhanced-extra', (_, sourceCardId: string, payload: ExtraPreviewPayload, anchor: PreviewAnchor) => {
+        void ensureCardImageCached(sourceCardId, {
+          root: cardImageRoot,
+          primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
+        }).catch(() => undefined);
+        cp.showEnhancedExtra(sourceCardId, payload, anchor);
       });
       ipcMain.handle('card-preview:hide', () => {
         cp.hide();

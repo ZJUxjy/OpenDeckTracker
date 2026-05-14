@@ -83,6 +83,8 @@ export interface DeckTrackerSnapshot {
     original: { cardId: string; count: number }[];
     /** Cards still in the player's library. */
     remaining: { cardId: string; count: number }[];
+    /** Remaining library copies that came from outside the original deck. */
+    extraRemaining: { cardId: string; count: number }[];
     /** Cards in seen-but-not-original (created/stolen approximate). */
     extras: { cardId: string; count: number }[];
   } | null;
@@ -101,6 +103,8 @@ export interface DeckTrackerSnapshot {
   } | null;
   /** Friendly hand cardIds (for highlight + "drawn this turn" UI). */
   friendlyHand: string[];
+  /** Parallel flags for `friendlyHand`; true when that hand card is outside the original deck. */
+  friendlyHandExtras: boolean[];
   /** Opposing hand size (count only — info-leak guard). */
   opposingHandCount: number;
   /** Opponent cards that have been publicly revealed this match. */
@@ -209,6 +213,8 @@ export class DeckTracker {
   private previousFriendlyHandSize = 0;
   private opponentRecordOrder = 0;
   private readonly opponentEntityOrders = new Map<number, number>();
+  private readonly transientGraveyardOriginEntityIds = new Set<number>();
+  private readonly suppressedGraveyardEntityIds = new Set<number>();
   private identifiedDeck: { id: number; name: string; heroClass: string | null } | null = null;
   /**
    * App-managed saved-deck attribution. Set via `selectSavedDeck` when the
@@ -361,6 +367,8 @@ export class DeckTracker {
       controllerId: event.controllerId,
       info: { playedByController: event.controllerId },
     });
+    this.transientGraveyardOriginEntityIds.delete(event.entityId);
+    this.suppressedGraveyardEntityIds.delete(event.entityId);
     this.extraDisplayState.recordCardPlayed({
       event,
       localControllerId: this.game.localPlayer.controllerId,
@@ -382,17 +390,33 @@ export class DeckTracker {
     for (const update of updates) {
       const before = this.game.entities.get(update.entityId);
       const previousZone = before?.zone;
+      const hadTransientOrigin =
+        isTransientChoiceZone(previousZone) ||
+        this.transientGraveyardOriginEntityIds.has(update.entityId);
       this.game.applyLogDerivedEntityUpdate(update);
       const after = this.game.entities.get(update.entityId);
       if (!after) continue;
 
-      const isFriendly = this.resolveHistoryController(after) === localControllerId;
+      if (isPlayableHistoryOriginZone(after.zone)) {
+        this.transientGraveyardOriginEntityIds.delete(after.entityId);
+        this.suppressedGraveyardEntityIds.delete(after.entityId);
+      } else if (isTransientChoiceZone(after.zone)) {
+        this.transientGraveyardOriginEntityIds.add(after.entityId);
+      }
+
+      const historyController = this.resolveHistoryController(after);
 
       if (after.cardId === '' || after.zone !== 'GRAVEYARD') continue;
       if (previousZone === 'GRAVEYARD') continue;
+      if (hadTransientOrigin || !isHistoryTrackableCardId(after.cardId, this.cardMetadataLookup)) {
+        this.suppressedGraveyardEntityIds.add(after.entityId);
+        continue;
+      }
+      if (historyController === null) continue;
+      this.suppressedGraveyardEntityIds.delete(after.entityId);
       this.extraDisplayState.recordEntityEnteredGraveyard({
         entity: { entityId: after.entityId, cardId: after.cardId },
-        isFriendly,
+        isFriendly: historyController === localControllerId,
         cardLookup: this.cardMetadataLookup,
       });
     }
@@ -407,10 +431,11 @@ export class DeckTracker {
   recordExtraDisplayEntityTag(args: { entityId: number; tag: string; value: number }): void {
     const entity = this.game.entities.get(args.entityId);
     if (!entity) return;
-    const isFriendly = this.resolveHistoryController(entity) === this.game.localPlayer.controllerId;
+    const historyController = this.resolveHistoryController(entity);
+    if (historyController === null) return;
     this.extraDisplayState.recordEntityTagValue({
       entity: { entityId: entity.entityId, cardId: entity.cardId },
-      isFriendly,
+      isFriendly: historyController === this.game.localPlayer.controllerId,
       tag: args.tag,
       value: args.value,
     });
@@ -772,11 +797,12 @@ export class DeckTracker {
     const matchInfo = args?.matchInfo ?? this.currentSnapshot.matchInfo;
     const handState = args?.handState ?? null;
     const deckState = args?.deckState ?? null;
-    const friendlyHand =
+    const friendlyHandRows =
       handState?.friendlyHand
         .slice()
-        .sort((a, b) => a.zonePosition - b.zonePosition || a.entityId - b.entityId)
-        .map((c) => c.cardId) ?? [];
+        .sort((a, b) => a.zonePosition - b.zonePosition || a.entityId - b.entityId) ?? [];
+    const friendlyHand = friendlyHandRows.map((c) => c.cardId);
+    let friendlyHandExtras = friendlyHandRows.map(() => false);
 
     let deck: DeckTrackerSnapshot['deck'] = null;
     const original = this.game.localPlayer.originalDeck;
@@ -809,17 +835,31 @@ export class DeckTracker {
         original,
         visibleStartOfGameReplacementCounts,
       ) ?? result.remaining;
+      const computedBaseRemaining = normalizeRemainingForStartOfGameDisplay(
+        result.baseRemaining,
+        this.cardMetadataLookup,
+        original,
+        visibleStartOfGameReplacementCounts,
+      ) ?? result.baseRemaining;
       const shouldCapRemaining = !hasStartOfGameDisappearingCards(original, this.cardMetadataLookup);
       const remaining = capRemainingToDeckStateCount(
         authoritativeRemaining ?? computedRemaining,
         this.game.localPlayer.deck,
         shouldCapRemaining ? deckState : null,
       );
+      friendlyHandExtras = friendlyHandRows.map((card) =>
+        this.isFriendlyHandExtraCard(card, displayOriginal),
+      );
       deck = {
         id: this.identifiedDeck?.id ?? 0,
         name: this.identifiedDeck?.name ?? this.game.localPlayer.name ?? '',
         original: displayOriginal.entries(),
         remaining: remaining.entries(),
+        extraRemaining: capExtraRemainingToDisplayedRemaining(
+          result.extraRemaining,
+          remaining,
+          computedBaseRemaining,
+        ),
         extras: removeStartOfGameDisappearExtras(result.extras, this.cardMetadataLookup),
       };
     }
@@ -856,6 +896,7 @@ export class DeckTracker {
       deck,
       pendingDeckSelection,
       friendlyHand,
+      friendlyHandExtras,
       opposingHandCount: handState?.opposingHandCount ?? 0,
       opponent: this.buildOpponentRecords(),
       opponentClass: this.resolveOpponentClass(),
@@ -926,6 +967,8 @@ export class DeckTracker {
   private resetOpponentRecords(): void {
     this.opponentRecordOrder = 0;
     this.opponentEntityOrders.clear();
+    this.transientGraveyardOriginEntityIds.clear();
+    this.suppressedGraveyardEntityIds.clear();
   }
 
   private ensureOpponentRecordOrder(entityId: number): number {
@@ -949,7 +992,8 @@ export class DeckTracker {
     const records = Array.from(this.game.entities.values())
       .filter((entity) => {
         if (!entity.isRevealed) return false;
-        if (!isHistoryTrackableCardId(entity.cardId)) return false;
+        if (!isHistoryTrackableCardId(entity.cardId, this.cardMetadataLookup)) return false;
+        if (this.suppressedGraveyardEntityIds.has(entity.entityId)) return false;
         if (!(entity.isInPlay || entity.isInGraveyard || entity.isInSecret)) return false;
         if (this.opponentCardSuppressor?.(entity.cardId) === true) return false;
         if (this.resolveHistoryController(entity) !== opposingControllerId) return false;
@@ -996,8 +1040,9 @@ export class DeckTracker {
       .filter(
         (entity) =>
           entity.isRevealed &&
-          isHistoryTrackableCardId(entity.cardId) &&
+          isHistoryTrackableCardId(entity.cardId, this.cardMetadataLookup) &&
           entity.isInGraveyard &&
+          !this.suppressedGraveyardEntityIds.has(entity.entityId) &&
           this.resolveHistoryController(entity) === localControllerId,
       )
       .map((entity) => ({
@@ -1008,6 +1053,16 @@ export class DeckTracker {
         created: entity.info.created === true,
       }))
       .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
+  }
+
+  private isFriendlyHandExtraCard(
+    card: { entityId: number; cardId: string },
+    displayOriginal: DeckSnapshot,
+  ): boolean {
+    if (!isDeckIdentityCardId(card.cardId)) return false;
+    const entity = this.game.entities.get(card.entityId);
+    if (entity?.info.created === true) return true;
+    return displayOriginal.countOf(card.cardId) === 0;
   }
 
   private buildExtraDisplaySnapshot(
@@ -1092,7 +1147,7 @@ export class DeckTracker {
       .filter(
         (entity) =>
           entity.isRevealed &&
-          isHistoryTrackableCardId(entity.cardId) &&
+          isHistoryTrackableCardId(entity.cardId, this.cardMetadataLookup) &&
           entity.isInPlay &&
           this.resolveHistoryController(entity) === localControllerId,
       )
@@ -1113,12 +1168,12 @@ export class DeckTracker {
       originalController?: number;
       created?: boolean;
     };
-  }): number {
+  }): number | null {
     if (entity.info.playedByController !== undefined) return entity.info.playedByController;
     if (entity.info.originalController !== undefined && entity.info.created !== true) {
       return entity.info.originalController;
     }
-    return entity.controllerId;
+    return null;
   }
 
   /**
@@ -1254,10 +1309,25 @@ function isDeckIdentityCardId(cardId: string): boolean {
   return true;
 }
 
-function isHistoryTrackableCardId(cardId: string): boolean {
+function isHistoryTrackableCardId(
+  cardId: string,
+  lookup: ExtraDisplayCardLookup | null = null,
+): boolean {
   if (cardId === '') return false;
   if (isHeroOrPowerCardId(cardId)) return false;
+  const metadataType = normalizeMetadataToken(lookup?.(cardId)?.type);
+  if (metadataType === 'HERO' || metadataType === 'HERO_POWER' || metadataType === 'ENCHANTMENT') {
+    return false;
+  }
   return true;
+}
+
+function isTransientChoiceZone(zone: Zone | undefined): boolean {
+  return zone === 'SETASIDE' || zone === 'REMOVEDFROMGAME';
+}
+
+function isPlayableHistoryOriginZone(zone: Zone): boolean {
+  return zone === 'HAND' || zone === 'PLAY' || zone === 'DECK' || zone === 'SECRET';
 }
 
 function isHeroOrPowerCardId(cardId: string): boolean {
@@ -1344,6 +1414,23 @@ function removeStartOfGameDisappearExtras(
   lookup: ExtraDisplayCardLookup | null,
 ): { cardId: string; count: number }[] {
   return extras.filter((entry) => !isStartOfGameDisappearCard(entry.cardId, lookup));
+}
+
+function capExtraRemainingToDisplayedRemaining(
+  extraRemaining: readonly { cardId: string; count: number }[],
+  remaining: DeckSnapshot,
+  baseRemaining: DeckSnapshot,
+): { cardId: string; count: number }[] {
+  return extraRemaining
+    .map((entry) => ({
+      cardId: entry.cardId,
+      count: Math.min(
+        entry.count,
+        Math.max(0, remaining.countOf(entry.cardId) - baseRemaining.countOf(entry.cardId)),
+      ),
+    }))
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => a.cardId.localeCompare(b.cardId));
 }
 
 function normalizeRemainingForStartOfGameDisplay(
@@ -1527,6 +1614,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     deck: null,
     pendingDeckSelection: null,
     friendlyHand: [],
+    friendlyHandExtras: [],
     opposingHandCount: 0,
     opponent: {
       revealed: [],

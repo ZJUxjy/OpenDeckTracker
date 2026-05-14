@@ -240,6 +240,7 @@ describe('DeckTracker', () => {
     );
     expect(snapshotDeck?.remaining.some((card) => card.cardId === 'TIME_020')).toBe(false);
     expect(snapshotDeck?.remaining.find((card) => card.cardId === 'TIME_020t2')?.count).toBe(1);
+    expect(snapshotDeck?.extraRemaining).toEqual([]);
     tracker.stop();
   });
 
@@ -276,6 +277,7 @@ describe('DeckTracker', () => {
 
     const snapshot = tracker.getSnapshot();
     expect(snapshot.friendlyHand).toEqual(['TIME_020t2']);
+    expect(snapshot.friendlyHandExtras).toEqual([false]);
     expect(snapshot.deck?.remaining).toEqual(
       expect.arrayContaining([
         { cardId: 'CS2_029', count: 1 },
@@ -308,6 +310,64 @@ describe('DeckTracker', () => {
     await advanceTicks(4);
 
     expect(tracker.getSnapshot().friendlyHand).toEqual(['A', 'B', 'C']);
+    expect(tracker.getSnapshot().friendlyHandExtras).toEqual([false, false, true]);
+    tracker.stop();
+  });
+
+  it('marks friendly hand cards outside the original deck as extra cards', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [deckWithCards(1, 'A', [{ cardId: 'A', count: 2 }])];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = {
+      friendlyHand: [
+        { entityId: 10, cardId: 'DISCOVERED', zonePosition: 1 },
+        { entityId: 11, cardId: 'A', zonePosition: 2 },
+      ],
+      opposingHandCount: 0,
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().friendlyHand).toEqual(['DISCOVERED', 'A']);
+    expect(tracker.getSnapshot().friendlyHandExtras).toEqual([true, false]);
+    tracker.stop();
+  });
+
+  it('marks log-created same-card hand copies as extra cards', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [deckWithCards(1, 'A', [{ cardId: 'A', count: 2 }])];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = {
+      friendlyHand: [{ entityId: 10, cardId: 'A', zonePosition: 1 }],
+      opposingHandCount: 0,
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+    tracker.applyLogDerivedEntityUpdates([
+      {
+        entityId: 10,
+        cardId: 'A',
+        zone: 'HAND',
+        controllerId: 1,
+        info: { created: true },
+      },
+    ]);
+    await advanceTicks(1);
+
+    expect(tracker.getSnapshot().friendlyHand).toEqual(['A']);
+    expect(tracker.getSnapshot().friendlyHandExtras).toEqual([true]);
     tracker.stop();
   });
 
@@ -529,6 +589,9 @@ describe('DeckTracker', () => {
       cardId: 'ALBATROSS',
       count: 1,
     });
+    expect(tracker.getSnapshot().deck?.extraRemaining).toEqual([
+      { cardId: 'ALBATROSS', count: 1 },
+    ]);
     tracker.stop();
   });
 
@@ -845,6 +908,9 @@ describe('DeckTracker', () => {
     });
     tracker.start();
     await advanceTicks(4);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 20, info: { originalController: 2, originalZone: 'DECK' } },
+    ]);
 
     expect(tracker.getSnapshot().opponent.revealed[0]?.cardId).toBe('CS2_029');
     tracker.stop();
@@ -871,6 +937,9 @@ describe('DeckTracker', () => {
     });
     tracker.start();
     await advanceTicks(4);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 22, info: { originalController: 2, originalZone: 'DECK' } },
+    ]);
 
     expect(tracker.getSnapshot().opponent.revealed.map((record) => record.cardId)).toEqual([
       'CS2_029',
@@ -926,6 +995,9 @@ describe('DeckTracker', () => {
     });
     tracker.start();
     await advanceTicks(4);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 20, info: { originalController: 2, originalZone: 'DECK' } },
+    ]);
 
     expect(tracker.getSnapshot().opponent.revealed[0]?.cardId).toBe('CS2_029');
     expect(tracker.getSnapshot().deck?.remaining.find((card) => card.cardId === 'A')?.count).toBe(1);
@@ -951,6 +1023,9 @@ describe('DeckTracker', () => {
     });
     tracker.start();
     await advanceTicks(4);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 20, info: { originalController: 2, originalZone: 'DECK' } },
+    ]);
 
     state.boardState = { friendly: [], opposing: [] };
     await advanceTicks(2);
@@ -1019,6 +1094,130 @@ describe('DeckTracker', () => {
     expect(tracker.getSnapshot().friendlyGraveyard).toEqual([]);
   });
 
+  it('keeps unchosen discover options out of graveyard records and death counters', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) => {
+        if (cardId === 'DISCOVER_OPTION_A') {
+          return { type: 'MINION', cost: 1, races: ['BEAST'] };
+        }
+        if (cardId === 'DISCOVER_OPTION_B') {
+          return { type: 'MINION', cost: 2, mechanics: ['DEATHRATTLE'] };
+        }
+        return null;
+      },
+    });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      {
+        entityId: 90,
+        cardId: 'DISCOVER_OPTION_A',
+        zone: 'SETASIDE',
+        controllerId: 1,
+        info: { created: true },
+      },
+      {
+        entityId: 91,
+        cardId: 'DISCOVER_OPTION_B',
+        zone: 'SETASIDE',
+        controllerId: 1,
+        info: { created: true },
+      },
+    ]);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 90, zone: 'GRAVEYARD' },
+      { entityId: 91, zone: 'GRAVEYARD' },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyGraveyard).toEqual([]);
+    expect(snapshot.extraDisplay?.counters.friendlyMinionDeathsThisGame).toBeUndefined();
+    expect(snapshot.extraDisplay?.pools.friendlyDeadMinionsThisGameUnique).toEqual([]);
+  });
+
+  it('records a chosen generated card once it leaves the transient choice zone for play', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) => {
+        if (cardId === 'CHOSEN_DISCOVER_MINION') {
+          return { type: 'MINION', cost: 3, races: ['BEAST'] };
+        }
+        return null;
+      },
+    });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      {
+        entityId: 92,
+        cardId: 'CHOSEN_DISCOVER_MINION',
+        zone: 'SETASIDE',
+        controllerId: 1,
+        info: { created: true },
+      },
+      { entityId: 92, zone: 'HAND' },
+    ]);
+    tracker.recordCardPlayed({
+      entityId: 92,
+      cardId: 'CHOSEN_DISCOVER_MINION',
+      controllerId: 1,
+      timestamp: 1,
+    });
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 92, zone: 'PLAY' },
+      { entityId: 92, zone: 'GRAVEYARD' },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyGraveyard.map((record) => record.cardId)).toEqual([
+      'CHOSEN_DISCOVER_MINION',
+    ]);
+    expect(snapshot.extraDisplay?.counters.friendlyMinionDeathsThisGame).toBe(1);
+  });
+
+  it('drops graveyard entities when neither played nor original controller is known', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) => {
+        if (cardId === 'UNKNOWN_OWNER_MINION') {
+          return { type: 'MINION', cost: 1 };
+        }
+        return null;
+      },
+    });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 95, cardId: 'UNKNOWN_OWNER_MINION', zone: 'PLAY', controllerId: 1 },
+      { entityId: 95, zone: 'GRAVEYARD', controllerId: 1 },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyGraveyard).toEqual([]);
+    expect(snapshot.opponent.revealed).toEqual([]);
+    expect(snapshot.opponent.graveyard).toEqual([]);
+    expect(snapshot.extraDisplay?.counters.friendlyMinionDeathsThisGame).toBeUndefined();
+  });
+
   it('keeps hero power replacement entities out of graveyard and opponent history', () => {
     const { mirror } = makeMirror();
     const tracker = new DeckTracker({ mirror });
@@ -1040,6 +1239,34 @@ describe('DeckTracker', () => {
     expect(snapshot.opponent.graveyard).toEqual([]);
   });
 
+  it('keeps hero power enchantments out of graveyard and opponent history', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) => {
+        if (cardId === 'CS2_017o') return { type: 'ENCHANTMENT' };
+        return null;
+      },
+    });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 93, cardId: 'CS2_017o', zone: 'PLAY', controllerId: 1 },
+      { entityId: 93, zone: 'GRAVEYARD' },
+      { entityId: 94, cardId: 'CS2_017o', zone: 'PLAY', controllerId: 2 },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyGraveyard).toEqual([]);
+    expect(snapshot.opponent.revealed.map((record) => record.cardId)).not.toContain('CS2_017o');
+    expect(snapshot.opponent.graveyard).toEqual([]);
+  });
+
   it('records friendly script tag counters for reviewed dynamic counter cards', () => {
     const { mirror } = makeMirror();
     const tracker = new DeckTracker({ mirror });
@@ -1050,7 +1277,13 @@ describe('DeckTracker', () => {
       opposingName: 'Opponent',
     });
     tracker.applyLogDerivedEntityUpdates([
-      { entityId: 80, cardId: 'RLK_101', zone: 'HAND', controllerId: 1 },
+      {
+        entityId: 80,
+        cardId: 'RLK_101',
+        zone: 'HAND',
+        controllerId: 1,
+        info: { originalController: 1, originalZone: 'DECK' },
+      },
     ]);
     tracker.recordExtraDisplayEntityTag({
       entityId: 80,
@@ -1196,6 +1429,9 @@ describe('DeckTracker', () => {
     });
     tracker.start();
     await advanceTicks(4);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 20, info: { originalController: 2, originalZone: 'DECK' } },
+    ]);
 
     const record = tracker.getSnapshot().opponent.revealed[0];
     expect(record).toBeDefined();
@@ -1223,6 +1459,12 @@ describe('DeckTracker', () => {
     tracker.start();
     await advanceTicks(4);
 
+    tracker.recordCardPlayed({
+      entityId: 30,
+      cardId: 'CS2_029',
+      controllerId: 2,
+      timestamp: 1,
+    });
     // Mark the entity created via the log-derived ingestion path.
     tracker.applyLogDerivedEntityUpdates([
       { entityId: 30, info: { created: true } },

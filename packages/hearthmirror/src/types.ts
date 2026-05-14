@@ -25,6 +25,8 @@ export interface HearthstoneWindow {
   minimized: boolean;
   /** True when the window is `IsWindowVisible`. */
   visible: boolean;
+  /** True when the Hearthstone top-level window is the Win32 foreground window. */
+  foreground: boolean;
 }
 
 export interface AccountId {

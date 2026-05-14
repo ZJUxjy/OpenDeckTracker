@@ -13,14 +13,13 @@
 use std::cell::Cell;
 
 use windows::core::PCWSTR;
-use windows::Win32::Foundation::{BOOL, CloseHandle, HWND, LPARAM, MAX_PATH, RECT};
+use windows::Win32::Foundation::{CloseHandle, BOOL, HWND, LPARAM, MAX_PATH, RECT};
 use windows::Win32::System::Threading::{
-    OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT,
-    PROCESS_QUERY_LIMITED_INFORMATION,
+    OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetWindowRect, GetWindowThreadProcessId, IsIconic,
-    IsWindowVisible,
+    EnumWindows, GetClassNameW, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId,
+    IsIconic, IsWindowVisible,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -31,6 +30,7 @@ pub struct HearthstoneWindow {
     pub height: i32,
     pub minimized: bool,
     pub visible: bool,
+    pub foreground: bool,
 }
 
 const TARGET_CLASS: &str = "UnityWndClass";
@@ -67,7 +67,12 @@ fn process_name(hwnd: HWND) -> Option<String> {
     let mut size = buf.len() as u32;
     // SAFETY: handle is owned for this scope; buffer + size pointers are valid.
     let result = unsafe {
-        QueryFullProcessImageNameW(handle, PROCESS_NAME_FORMAT(0), windows::core::PWSTR(buf.as_mut_ptr()), &mut size)
+        QueryFullProcessImageNameW(
+            handle,
+            PROCESS_NAME_FORMAT(0),
+            windows::core::PWSTR(buf.as_mut_ptr()),
+            &mut size,
+        )
     };
     let _ = unsafe { CloseHandle(handle) };
     if result.is_err() || size == 0 {
@@ -85,9 +90,7 @@ fn process_name(hwnd: HWND) -> Option<String> {
 }
 
 extern "system" fn enum_proc(hwnd: HWND, _lparam: LPARAM) -> BOOL {
-    let class_ok = class_name(hwnd)
-        .map(|c| c == TARGET_CLASS)
-        .unwrap_or(false);
+    let class_ok = class_name(hwnd).map(|c| c == TARGET_CLASS).unwrap_or(false);
     if !class_ok {
         return BOOL(1);
     }
@@ -131,6 +134,7 @@ pub fn get_hearthstone_window() -> Option<HearthstoneWindow> {
     // SAFETY: hwnd is valid; both functions are read-only.
     let minimized = unsafe { IsIconic(hwnd) }.as_bool();
     let visible = unsafe { IsWindowVisible(hwnd) }.as_bool();
+    let foreground = unsafe { GetForegroundWindow() } == hwnd;
 
     // Suppress `PCWSTR` "unused" warning from older edits — the import was
     // dropped above. Keep the function pure / no-op here.
@@ -143,5 +147,6 @@ pub fn get_hearthstone_window() -> Option<HearthstoneWindow> {
         height: rect.bottom - rect.top,
         minimized,
         visible,
+        foreground,
     })
 }

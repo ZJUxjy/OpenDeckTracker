@@ -47,16 +47,19 @@ if (!gotLock) {
     const devUrl = process.env['ELECTRON_RENDERER_URL'];
     const rendererUrl = devUrl ?? join(__dirname, '../renderer/index.html');
     const preloadPath = join(__dirname, '../preload/index.js');
+    let recomputeOverlayForeground = (): void => {};
 
     const playerOverlay = new OverlayManager({
       rendererUrl,
       preloadPath,
       routeHash: '/overlay',
+      onFocusChange: () => recomputeOverlayForeground(),
     });
     const opponentOverlay = new OverlayManager({
       rendererUrl,
       preloadPath,
       routeHash: '/overlay-opponent',
+      onFocusChange: () => recomputeOverlayForeground(),
     });
 
     // Each overlay is a small panel-sized window anchored to one edge of
@@ -76,6 +79,15 @@ if (!gotLock) {
     const tracker = createHearthstoneWindowTracker({
       getWindow: () => getHearthMirror().getHearthstoneWindow(),
     });
+    let hearthstoneForeground = false;
+    recomputeOverlayForeground = (): void => {
+      const foreground =
+        hearthstoneForeground ||
+        playerOverlay.isWindowFocused() ||
+        opponentOverlay.isWindowFocused();
+      playerOverlay.setTargetForeground(foreground);
+      opponentOverlay.setTargetForeground(foreground);
+    };
     tracker.subscribe((event) => {
       if (event.kind === 'bounds') {
         // GetWindowRect returns PHYSICAL pixels; BrowserWindow.setBounds
@@ -103,8 +115,13 @@ if (!gotLock) {
           height: h,
         });
       } else {
-        playerOverlay.setVisibleOnScreen(event.visible);
-        opponentOverlay.setVisibleOnScreen(event.visible);
+        if (event.kind === 'visibility') {
+          playerOverlay.setVisibleOnScreen(event.visible);
+          opponentOverlay.setVisibleOnScreen(event.visible);
+        } else {
+          hearthstoneForeground = event.foreground;
+          recomputeOverlayForeground();
+        }
       }
     });
 

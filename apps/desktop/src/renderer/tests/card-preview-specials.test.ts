@@ -7,7 +7,6 @@ describe('card preview static hover pools', () => {
     ['EDR_271', ['EDR_271t']],
     ['END_009', ['END_009t', 'END_009t']],
     ['CATA_132', ['CATA_132t', 'CATA_132t']],
-    ['TIME_609', ['TIME_609t1', 'TIME_609t2']],
     ['CATA_553', ['CATA_553t']],
     [
       'EDR_846',

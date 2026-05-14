@@ -16,11 +16,15 @@ beforeEach(() => {
     cardPreview: {
       show: vi.fn(),
       showPool: vi.fn(),
+      showEnhancedPool: vi.fn(),
       showExtra: vi.fn(),
+      showEnhancedExtra: vi.fn(),
       hide: vi.fn(),
       onSetCard: vi.fn(() => () => {}),
       onSetPool: vi.fn(() => () => {}),
+      onSetEnhancedPool: vi.fn(() => () => {}),
       onSetExtra: vi.fn(() => () => {}),
+      onSetEnhancedExtra: vi.fn(() => () => {}),
     },
   };
 });

@@ -144,6 +144,7 @@ describe('FriendlyGraveyardPanel filters', () => {
   it('uses static derived-card pool preview for Nespirah rows', async () => {
     vi.useFakeTimers();
     const showPool = vi.fn();
+    const showEnhancedPool = vi.fn();
     const show = vi.fn();
     const hide = vi.fn();
     window.hdt = {
@@ -152,6 +153,7 @@ describe('FriendlyGraveyardPanel filters', () => {
         ...window.hdt.cardPreview,
         show,
         showPool,
+        showEnhancedPool,
         hide,
       },
     };
@@ -173,8 +175,10 @@ describe('FriendlyGraveyardPanel filters', () => {
     });
 
     expect(show).not.toHaveBeenCalled();
-    expect(showPool).toHaveBeenCalledTimes(1);
-    expect(showPool.mock.calls[0]![0]).toEqual(['CATA_527t2']);
+    expect(showPool).not.toHaveBeenCalled();
+    expect(showEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(showEnhancedPool.mock.calls[0]![0]).toBe('CATA_527');
+    expect(showEnhancedPool.mock.calls[0]![1]).toEqual(['CATA_527t2']);
     vi.useRealTimers();
   });
 });

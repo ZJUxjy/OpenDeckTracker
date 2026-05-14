@@ -4,6 +4,7 @@ export interface OverlayManagerOptions {
   rendererUrl: string;
   preloadPath: string;
   routeHash?: string;
+  onFocusChange?: () => void;
 }
 
 export interface BoundsRect {
@@ -51,6 +52,8 @@ export class OverlayManager {
   private win: BrowserWindow | null = null;
   private userEnabled = false;
   private visibleOnScreen = false;
+  private targetForeground = false;
+  private windowFocused = false;
   /**
    * Whether the player is currently in an active match (PRE_MATCH /
    * IN_MATCH). Driven by the deck-tracker phase. Combined with
@@ -110,6 +113,17 @@ export class OverlayManager {
     this.syncVisibility();
   }
 
+  setTargetForeground(foreground: boolean): void {
+    if (this.targetForeground === foreground) return;
+    this.targetForeground = foreground;
+    console.log(`[overlay-mgr ${this.routeHash}] setTargetForeground(${foreground})`);
+    this.syncVisibility();
+  }
+
+  isWindowFocused(): boolean {
+    return this.windowFocused;
+  }
+
   setInActiveMatch(active: boolean): void {
     if (this.inActiveMatch === active) return;
     this.inActiveMatch = active;
@@ -160,6 +174,7 @@ export class OverlayManager {
       this.win.destroy();
     }
     this.win = null;
+    this.windowFocused = false;
   }
 
   private createWindow(): void {
@@ -169,7 +184,7 @@ export class OverlayManager {
       resizable: true,
       movable: true,
       skipTaskbar: true,
-      alwaysOnTop: true,
+      alwaysOnTop: false,
       // focusable=true so the user can click into the panel to interact
       // (drag, scroll, hover). With focusable=false, drag regions don't
       // respond on Windows.
@@ -190,7 +205,7 @@ export class OverlayManager {
       },
     });
 
-    this.win.setAlwaysOnTop(true, 'screen-saver');
+    this.win.setAlwaysOnTop(false);
 
     this.win.on('moved', () => {
       if (this.isApplyingTrackerBounds) return;
@@ -205,6 +220,16 @@ export class OverlayManager {
       console.log(
         `[overlay-mgr ${this.routeHash}] user-moved → offset dx=${this.userOffset.dx} dy=${this.userOffset.dy}`,
       );
+    });
+    this.win.on('focus', () => {
+      if (this.windowFocused) return;
+      this.windowFocused = true;
+      this.opts.onFocusChange?.();
+    });
+    this.win.on('blur', () => {
+      if (!this.windowFocused) return;
+      this.windowFocused = false;
+      this.opts.onFocusChange?.();
     });
 
     if (this.pendingBounds) {
@@ -225,14 +250,18 @@ export class OverlayManager {
       console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
       return;
     }
-    const shouldShow = this.userEnabled && this.visibleOnScreen && this.inActiveMatch;
+    const shouldShow =
+      this.userEnabled && this.visibleOnScreen && this.inActiveMatch && this.targetForeground;
     console.log(
-      `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} inActiveMatch=${this.inActiveMatch} → ${shouldShow ? 'show' : 'hide'}`,
+      `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} inActiveMatch=${this.inActiveMatch} targetForeground=${this.targetForeground} → ${shouldShow ? 'show' : 'hide'}`,
     );
     if (shouldShow) {
-      this.win.show();
+      this.win.showInactive();
+      this.win.setAlwaysOnTop(true, 'screen-saver');
+      (this.win as { moveTop?: () => void }).moveTop?.();
     } else {
       this.win.hide();
+      this.win.setAlwaysOnTop(false);
     }
   }
 }

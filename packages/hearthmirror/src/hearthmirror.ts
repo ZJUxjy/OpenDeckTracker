@@ -1,3 +1,5 @@
+/// <reference path="./hearthmirror-native.d.ts" />
+
 import * as native from '@hdt/hearthmirror-native';
 import { MirrorError, MirrorErrorCode } from './errors';
 import type {
@@ -104,6 +106,7 @@ export class HearthMirror {
         height: r.height,
         minimized: r.minimized,
         visible: r.visible,
+        foreground: r.foreground,
       };
     } catch {
       return null;

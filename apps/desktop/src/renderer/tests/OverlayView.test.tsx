@@ -22,10 +22,12 @@ function makeSnapshot(): DeckTrackerSnapshot {
       name: 'Test Deck',
       original: [{ cardId: 'CS2_029', count: 2 }],
       remaining: [{ cardId: 'CS2_029', count: 2 }],
+      extraRemaining: [],
       extras: [],
     },
     pendingDeckSelection: null,
     friendlyHand: [],
+    friendlyHandExtras: [],
     opposingHandCount: 0,
     opponent: {
       revealed: [],
@@ -38,6 +40,9 @@ function makeSnapshot(): DeckTrackerSnapshot {
     opposingEffects: [],
     boardAttack: { friendly: 0, opposing: 0 },
     boardAttackToFace: { friendly: 0, opposing: 0 },
+    friendlyHero: null,
+    opposingHero: null,
+    playerClass: null,
     error: null,
     updatedAt: Date.now(),
   };
