@@ -19,7 +19,10 @@ interface KnownEntity {
  * into `CardPlayedEvent` calls. We watch FULL_ENTITY / SHOW_ENTITY to
  * keep a tiny `entityId → { cardId, controllerId }` table, and emit a
  * `cardPlayed` whenever we see a TAG_CHANGE moving an entity's ZONE
- * to PLAY (or HAND→PLAY equivalents).
+ * to PLAY (or HAND→PLAY equivalents). The event also carries whether
+ * the play was a manual HAND-origin play; effect replays / random casts
+ * still emit for global effects, but downstream "cards you played"
+ * counters can opt out.
  *
  * Intentionally minimal: no graveyard tracking, no block-aware
  * filtering — the global-effects registry is idempotent on
@@ -118,11 +121,11 @@ export class CardPlayedDetector {
       // still fires.
       if (previousZone === 'PLAY' || previousZone === '1') return;
       if (known.cardId === '' || known.controllerId === 0) return;
-      this.fireEmit(id, known);
+      this.fireEmit(id, known, isHandZone(previousZone));
     }
   }
 
-  private fireEmit(entityId: number, known: KnownEntity): void {
+  private fireEmit(entityId: number, known: KnownEntity, isManualPlay: boolean): void {
     const now = this.clock();
     const prevFire = this.lastFiredAt.get(entityId);
     if (prevFire !== undefined && now - prevFire < REFIRE_SUPPRESS_MS) {
@@ -137,6 +140,7 @@ export class CardPlayedDetector {
       controllerId: known.controllerId,
       entityId,
       timestamp: now,
+      isManualPlay,
     });
   }
 
@@ -156,7 +160,8 @@ export class CardPlayedDetector {
     if (typeof ref !== 'string') return;
     const cardIdMatch = /\bcardId=([A-Za-z0-9_]+)/.exec(ref);
     const playerMatch = /\bplayer=(\d+)/i.exec(ref);
-    if (!cardIdMatch && !playerMatch) return;
+    const zoneMatch = /\bzone=([A-Za-z0-9_]+)/i.exec(ref);
+    if (!cardIdMatch && !playerMatch && !zoneMatch) return;
     const existing = this.entities.get(entityId) ?? {
       cardId: '',
       controllerId: 0,
@@ -166,6 +171,7 @@ export class CardPlayedDetector {
     if ((existing.controllerId === 0 || options.overwriteController === true) && playerMatch) {
       existing.controllerId = Number(playerMatch[1]);
     }
+    if (zoneMatch) existing.zone = zoneMatch[1] ?? existing.zone;
     this.entities.set(entityId, existing);
   }
 
@@ -176,8 +182,9 @@ export class CardPlayedDetector {
     // zone state ourselves — the TAG_CHANGE handler short-circuits
     // when previousZone is already PLAY.
     if (known.zone === 'PLAY' || known.zone === '1') return;
+    const isManualPlay = isHandZone(known.zone);
     known.zone = 'PLAY';
-    this.fireEmit(entityId, known);
+    this.fireEmit(entityId, known, isManualPlay);
   }
 
   private recordEntity(
@@ -230,4 +237,9 @@ function numberOf(v: unknown): number | null {
     if (Number.isFinite(n)) return n;
   }
   return null;
+}
+
+function isHandZone(zone: string | null): boolean {
+  const normalized = zone?.toUpperCase();
+  return normalized === 'HAND' || normalized === '3';
 }

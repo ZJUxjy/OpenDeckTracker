@@ -8,12 +8,13 @@ function fullEntity(
   entityId: number,
   cardId: string,
   controllerId: number,
+  zone = 'HAND',
 ): PowerEvent {
   return {
     type: 'full-entity',
     entityId,
     cardId,
-    tags: { CONTROLLER: controllerId, ZONE: 'HAND' },
+    tags: { CONTROLLER: controllerId, ZONE: zone },
     ...empty,
   };
 }
@@ -50,6 +51,7 @@ describe('CardPlayedDetector', () => {
       controllerId: 1,
       entityId: 64,
       timestamp: 9000,
+      isManualPlay: true,
     });
   });
 
@@ -153,6 +155,32 @@ describe('CardPlayedDetector', () => {
     });
   });
 
+  it('marks effect-driven BLOCK_START plays from non-hand zones as non-manual', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle(fullEntity(64, 'MEND_300', 1, 'SETASIDE'));
+    det.handle(blockStart(64, 'PLAY'));
+
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toMatchObject({
+      cardId: 'MEND_300',
+      isManualPlay: false,
+    });
+  });
+
+  it('marks effect-driven TAG_CHANGE plays from non-hand zones as non-manual', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit });
+    det.handle(fullEntity(64, 'MEND_300', 1, 'GRAVEYARD'));
+    det.handle(tagChange(64, 'ZONE', 'PLAY'));
+
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toMatchObject({
+      cardId: 'MEND_300',
+      isManualPlay: false,
+    });
+  });
+
   it('uses BLOCK_START entity ref player over a stale tracked controller', () => {
     const emit = vi.fn();
     const det = new CardPlayedDetector({ emit });
@@ -180,6 +208,7 @@ describe('CardPlayedDetector', () => {
       cardId: 'MEND_300',
       controllerId: 2,
       entityId: 28,
+      isManualPlay: true,
     });
   });
 
@@ -242,6 +271,7 @@ describe('CardPlayedDetector', () => {
     expect(emit.mock.calls[0]?.[0]).toMatchObject({
       cardId: 'CATA_216',
       controllerId: 2,
+      isManualPlay: true,
     });
   });
 

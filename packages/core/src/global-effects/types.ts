@@ -56,6 +56,12 @@ export interface CardPlayedEvent {
   cardType?: string;
   spellSchool?: string;
   races?: readonly string[];
+  /**
+   * True when Power.log shows this card was played from the controller's HAND.
+   * False for effect-driven replays / random casts from SETASIDE, GRAVEYARD,
+   * DECK, etc. Omitted only by legacy/test callers that cannot classify it.
+   */
+  isManualPlay?: boolean;
 }
 
 /**

@@ -369,11 +369,13 @@ export class DeckTracker {
     });
     this.transientGraveyardOriginEntityIds.delete(event.entityId);
     this.suppressedGraveyardEntityIds.delete(event.entityId);
-    this.extraDisplayState.recordCardPlayed({
-      event,
-      localControllerId: this.game.localPlayer.controllerId,
-      cardLookup: this.cardMetadataLookup,
-    });
+    if (event.isManualPlay !== false) {
+      this.extraDisplayState.recordCardPlayed({
+        event,
+        localControllerId: this.game.localPlayer.controllerId,
+        cardLookup: this.cardMetadataLookup,
+      });
+    }
     this.registry.handleCardPlayed(event);
     this.currentSnapshot = this.buildSnapshot();
   }

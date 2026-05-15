@@ -1062,6 +1062,44 @@ describe('DeckTracker', () => {
     expect(snapshot.friendlyGraveyard.map((record) => record.cardId)).toEqual(['MEND_300']);
   });
 
+  it('keeps effect-replayed cards out of extra-display played-card pools', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) => {
+        if (cardId === 'ONE_COST_SPELL') return { type: 'SPELL', cost: 1 };
+        return null;
+      },
+    });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.recordCardPlayed({
+      entityId: 31,
+      cardId: 'ONE_COST_SPELL',
+      controllerId: 1,
+      timestamp: 1,
+      isManualPlay: true,
+    });
+    tracker.recordCardPlayed({
+      entityId: 32,
+      cardId: 'ONE_COST_SPELL',
+      controllerId: 1,
+      timestamp: 2,
+      isManualPlay: false,
+    });
+
+    const snapshot = tracker.getSnapshot().extraDisplay!;
+    expect(snapshot.counters.friendlyCardsPlayedThisGame).toBe(1);
+    expect(snapshot.pools.oneCostCardsPlayedThisGameDistinct).toEqual([
+      { cardId: 'ONE_COST_SPELL', count: 1 },
+    ]);
+  });
+
   it('keeps SETASIDE effect pool candidates out of the friendly graveyard', () => {
     const { mirror } = makeMirror();
     const tracker = new DeckTracker({ mirror });
