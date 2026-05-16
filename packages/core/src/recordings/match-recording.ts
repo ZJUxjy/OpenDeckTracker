@@ -1,5 +1,7 @@
 import type { MatchResult } from '../stats/match-history';
 import type { Zone } from '../game/types';
+import type { GameProgressAnalysisEvent } from './game-progress-analysis';
+import type { GameProgressNarrationFrame } from './game-progress-narration';
 
 export type MatchRecordingStatus = 'in-progress' | 'completed' | 'incomplete';
 
@@ -114,6 +116,8 @@ export interface MatchRecordingSummary {
   opponentName: string | null;
   result: MatchResult;
   timelineEventCount: number;
+  analysisEventCount: number;
+  narrationFrameCount: number;
 }
 
 export interface MatchRecording {
@@ -125,6 +129,8 @@ export interface MatchRecording {
   initialState: MatchRecordingInitialState;
   finalSummary: MatchRecordingSummary | null;
   timeline: MatchTimelineEvent[];
+  analysisEvents: GameProgressAnalysisEvent[];
+  narrationFrames: GameProgressNarrationFrame[];
   rawEventRefs: RawEventRef[];
   entities: RecordedEntityState[];
 }
@@ -160,6 +166,8 @@ export function createEmptyMatchRecording(args: {
     },
     finalSummary: null,
     timeline: [],
+    analysisEvents: [],
+    narrationFrames: [],
     rawEventRefs: [],
     entities: [],
   };
@@ -179,5 +187,7 @@ export function buildMatchRecordingSummary(recording: MatchRecording): MatchReco
     opponentName: recording.metadata.opponentName,
     result: recording.metadata.result,
     timelineEventCount: recording.timeline.length,
+    analysisEventCount: recording.analysisEvents?.length ?? 0,
+    narrationFrameCount: recording.narrationFrames?.length ?? 0,
   };
 }

@@ -2,9 +2,12 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, write
 import { join } from 'node:path';
 import {
   buildMatchRecordingSummary,
+  type GameProgressAnalysisEvent,
+  type GameProgressNarrationFrame,
   type MatchRecording,
   type MatchRecordingDetail,
   type MatchRecordingSummary,
+  type RawEventRef,
 } from '@hdt/core';
 
 export interface MatchRecordingStore {
@@ -72,10 +75,46 @@ function readRecordingFile(rootDir: string, recordingId: string): MatchRecording
   const path = join(rootDir, recordingId, 'recording.json');
   if (!existsSync(path)) return null;
   try {
-    return JSON.parse(readFileSync(path, 'utf8')) as MatchRecording;
+    return normalizeRecording(JSON.parse(readFileSync(path, 'utf8')) as MatchRecording);
   } catch {
     return null;
   }
+}
+
+function normalizeRecording(recording: MatchRecording): MatchRecording {
+  const rawEventRefs = readArray<RawEventRef>(recording.rawEventRefs);
+  const validSourceIndexes = new Set(rawEventRefs.map((ref) => ref.index));
+  const normalized: MatchRecording = {
+    ...recording,
+    timeline: readArray(recording.timeline),
+    rawEventRefs,
+    analysisEvents: filterByValidSourceIndex(
+      readArray<GameProgressAnalysisEvent>(recording.analysisEvents),
+      validSourceIndexes,
+    ),
+    narrationFrames: filterByValidSourceIndex(
+      readArray<GameProgressNarrationFrame>(recording.narrationFrames),
+      validSourceIndexes,
+    ),
+    entities: readArray(recording.entities),
+  };
+  return {
+    ...normalized,
+    finalSummary: normalized.finalSummary === null
+      ? null
+      : buildMatchRecordingSummary(normalized),
+  };
+}
+
+function readArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value as T[] : [];
+}
+
+function filterByValidSourceIndex<T extends { sourceEventIndex: number }>(
+  events: T[],
+  validSourceIndexes: ReadonlySet<number>,
+): T[] {
+  return events.filter((event) => validSourceIndexes.has(event.sourceEventIndex));
 }
 
 function resolveRecordingId(rootDir: string, idOrFingerprint: string): string | null {

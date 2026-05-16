@@ -111,6 +111,75 @@ describe('match-recording-store', () => {
     expect(store.loadRecording('match-v2-1000-1')?.recordingId).toBe('rec-1');
   });
 
+  it('loads legacy recordings with empty analysis and narration arrays', async () => {
+    const store = createMatchRecordingStore(dir);
+    const legacy = completedRecording({ recordingId: 'legacy' }) as Partial<MatchRecording>;
+    delete legacy.analysisEvents;
+    delete legacy.narrationFrames;
+    legacy.finalSummary = {
+      recordingId: 'legacy',
+      status: 'completed',
+      startedAt: legacy.startedAt!,
+      endedAt: legacy.endedAt!,
+      deckId: 42,
+      deckName: 'Tempo Mage',
+      opponentName: 'Opponent',
+      result: 'win',
+      timelineEventCount: 1,
+    } as MatchRecording['finalSummary'];
+    await mkdir(join(dir, 'legacy'), { recursive: true });
+    await writeFile(join(dir, 'legacy', 'recording.json'), `${JSON.stringify(legacy, null, 2)}\n`);
+
+    expect(store.loadRecording('legacy')).toMatchObject({
+      analysisEvents: [],
+      narrationFrames: [],
+      finalSummary: {
+        analysisEventCount: 0,
+        narrationFrameCount: 0,
+      },
+    });
+    expect(store.listCompleted()[0]).toMatchObject({
+      recordingId: 'legacy',
+      analysisEventCount: 0,
+      narrationFrameCount: 0,
+    });
+  });
+
+  it('drops narration frames whose source event index is outside raw refs', async () => {
+    const store = createMatchRecordingStore(dir);
+    const recording = completedRecording({
+      recordingId: 'rec-with-corrupt-frame',
+      rawEventRefs: [{ index: 0, type: 'create-game' }],
+      narrationFrames: [
+        {
+          sequence: 0,
+          sourceEventIndex: 0,
+          eventKind: 'game-started',
+          text: '对局开始。',
+          facts: {},
+        },
+        {
+          sequence: 1,
+          sourceEventIndex: 99,
+          eventKind: 'card-played',
+          text: 'corrupt',
+          facts: {},
+        },
+      ],
+    });
+    store.writeRecording(recording);
+
+    expect(store.loadRecording('rec-with-corrupt-frame')?.narrationFrames).toEqual([
+      {
+        sequence: 0,
+        sourceEventIndex: 0,
+        eventKind: 'game-started',
+        text: '对局开始。',
+        facts: {},
+      },
+    ]);
+  });
+
   it('does not load by endedAt-only key', () => {
     const store = createMatchRecordingStore(dir);
     store.writeRecording(

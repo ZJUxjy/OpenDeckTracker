@@ -25,6 +25,8 @@ describe('createEmptyMatchRecording', () => {
       },
       timeline: [],
       rawEventRefs: [],
+      analysisEvents: [],
+      narrationFrames: [],
     });
     expect(recording.endedAt).toBeNull();
   });
@@ -38,5 +40,32 @@ describe('createEmptyMatchRecording', () => {
 
     expect(recording.metadata.matchFingerprint).toBe('match-v2-1000-1');
     expect(buildMatchRecordingSummary(recording).matchFingerprint).toBe('match-v2-1000-1');
+  });
+
+  it('summarizes analysis and narration counts', () => {
+    const recording = {
+      ...createEmptyMatchRecording({
+        recordingId: 'rec-1',
+        startedAt: 1_000,
+      }),
+      analysisEvents: Array.from({ length: 12 }, (_, sequence) => ({
+        sequence,
+        kind: 'card-played',
+        actor: 'local',
+        sourceEventIndex: sequence,
+      })),
+      narrationFrames: Array.from({ length: 3 }, (_, sequence) => ({
+        sequence,
+        sourceEventIndex: sequence,
+        eventKind: 'card-played',
+        text: `frame ${sequence}`,
+        facts: {},
+      })),
+    };
+
+    expect(buildMatchRecordingSummary(recording)).toMatchObject({
+      analysisEventCount: 12,
+      narrationFrameCount: 3,
+    });
   });
 });
