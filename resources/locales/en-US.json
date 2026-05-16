@@ -419,6 +419,9 @@
     "bannerInMatchBody": "Tracking active. Drag the in-game overlays to reposition them; they remember their last placement."
   },
   "tracker": {
+    "tabNarration": "Narration",
+    "narrationTitle": "Live narration",
+    "narrationEmpty": "Waiting for match activity…",
     "tabGraveyard": "Graveyard",
     "graveyardEmpty": "Nothing in your graveyard yet.",
     "opponentGraveyardEmpty": "Nothing in the opponent graveyard yet.",

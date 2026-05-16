@@ -30,4 +30,13 @@ describe('OverlayView tabs', () => {
     expect(screen.getByTestId('tracker-tab-deck')).toBeInTheDocument();
     expect(screen.getByTestId('tracker-tab-effects')).toBeInTheDocument();
   });
+
+  it('renders the live narration tab', () => {
+    render(
+      <I18nProvider preference="en-US">
+        <OverlayView />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId('tracker-tab-narration')).toBeInTheDocument();
+  });
 });

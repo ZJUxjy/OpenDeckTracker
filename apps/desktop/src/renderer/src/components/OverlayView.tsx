@@ -1,5 +1,6 @@
 import { useEffect, type CSSProperties } from 'react';
 import { LiveDeckPanel } from './LiveDeckPanel';
+import { LiveNarrationPanel } from './LiveNarrationPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
 import { GlobalEffectsPanel } from './GlobalEffectsPanel';
 import { FriendlyGraveyardPanel } from './FriendlyGraveyardPanel';
@@ -37,6 +38,7 @@ export function OverlayView() {
         }
         graveyardSlot={<FriendlyGraveyardPanel records={friendlyGraveyard} />}
         graveyardCount={friendlyGraveyard.length}
+        narrationSlot={<LiveNarrationPanel />}
       />
       <button
         type="button"

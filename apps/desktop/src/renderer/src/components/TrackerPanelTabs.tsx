@@ -3,7 +3,7 @@ import { clsx } from 'clsx';
 import { useTranslation } from '../i18n';
 import { useGlassMouseFollow } from '../hooks/use-glass-mouse-follow';
 
-type Tab = 'deck' | 'effects' | 'graveyard';
+type Tab = 'deck' | 'effects' | 'graveyard' | 'narration';
 
 // Frameless overlay BrowserWindows recognize `-webkit-app-region: drag`
 // as the OS drag handle. The styles are inert in framed windows (the
@@ -25,6 +25,11 @@ interface TrackerPanelTabsProps {
   graveyardSlot?: ReactNode;
   /** Number of cards in this side's graveyard, rendered as a count badge. */
   graveyardCount?: number;
+  /**
+   * Optional tab showing the live game-progress narration feed. Only the
+   * player overlay passes this; when omitted, the tab is not rendered.
+   */
+  narrationSlot?: ReactNode;
 }
 
 /**
@@ -40,6 +45,7 @@ export function TrackerPanelTabs({
   effectsCount,
   graveyardSlot,
   graveyardCount = 0,
+  narrationSlot,
 }: TrackerPanelTabsProps) {
   const { t } = useTranslation();
   const [active, setActive] = useState<Tab>('deck');
@@ -99,6 +105,15 @@ export function TrackerPanelTabs({
             ) : null}
           </TabPill>
         ) : null}
+        {narrationSlot ? (
+          <TabPill
+            testId="tracker-tab-narration"
+            active={active === 'narration'}
+            onClick={() => setActive('narration')}
+          >
+            {t('tracker.tabNarration')}
+          </TabPill>
+        ) : null}
       </div>
       <div className="flex-1 min-h-0 overflow-hidden">
         <div
@@ -122,6 +137,15 @@ export function TrackerPanelTabs({
             className="w-full h-full"
           >
             {graveyardSlot}
+          </div>
+        ) : null}
+        {narrationSlot ? (
+          <div
+            aria-hidden={active !== 'narration'}
+            hidden={active !== 'narration'}
+            className="w-full h-full"
+          >
+            {narrationSlot}
           </div>
         ) : null}
       </div>

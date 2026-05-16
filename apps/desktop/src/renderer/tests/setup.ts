@@ -21,6 +21,10 @@ Object.defineProperty(window, 'hdt', {
       list: async () => Promise.resolve([]),
       get: async () => Promise.resolve(null),
     },
+    gameProgressNarration: {
+      getRecent: async () => Promise.resolve([]),
+      subscribe: () => () => {},
+    },
     decks: {
       list: async () => Promise.resolve([]),
       getById: async () => Promise.resolve(null),
