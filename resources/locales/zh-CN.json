@@ -840,6 +840,8 @@
       "deck": "卡组",
       "startingHand": "起手",
       "postMulliganHand": "换牌后手牌",
+      "narration": "分析叙述",
+      "narrationEmpty": "暂无分析叙述。",
       "timeline": "时间线",
       "empty": "录像为空。",
       "close": "关闭"

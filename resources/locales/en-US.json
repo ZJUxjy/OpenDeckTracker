@@ -840,6 +840,8 @@
       "deck": "Deck",
       "startingHand": "Starting hand",
       "postMulliganHand": "Post-mulligan hand",
+      "narration": "Analysis narration",
+      "narrationEmpty": "No narration frames recorded.",
       "timeline": "Timeline",
       "empty": "Recording is empty.",
       "close": "Close"

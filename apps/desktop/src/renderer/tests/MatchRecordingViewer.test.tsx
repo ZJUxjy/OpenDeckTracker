@@ -27,6 +27,8 @@ function fakeDetail(overrides: Partial<MatchRecordingDetail> = {}): MatchRecordi
     },
     finalSummary: null,
     timeline: [{ kind: 'draw', sourceEventIndex: 0 } as never],
+    analysisEvents: [],
+    narrationFrames: [],
     rawEvents: [],
     rawEventRefs: [],
     ...overrides,
@@ -84,6 +86,58 @@ describe('MatchRecordingViewer', () => {
     expect(screen.getByTestId('recording-starting-hand').textContent).toContain('EX1_169');
     expect(screen.getByTestId('recording-mulligan-hand').textContent).toContain('EX1_400');
     expect(screen.getByTestId('recording-timeline').textContent).toContain('draw');
+  });
+
+  it('renders narration frames in order', async () => {
+    const get = vi.fn().mockResolvedValue(
+      fakeDetail({
+        narrationFrames: [
+          {
+            sequence: 0,
+            sourceEventIndex: 0,
+            eventKind: 'card-played',
+            text: '我方使用了驯服宠物。',
+            facts: { cardId: 'MEND_300' },
+          },
+          {
+            sequence: 1,
+            sourceEventIndex: 1,
+            eventKind: 'card-played',
+            text: '对手使用了心灵咒术师。',
+            facts: { cardId: 'CORE_EX1_339' },
+          },
+        ],
+      }),
+    );
+    (window.hdt as { recordings: typeof window.hdt.recordings }).recordings = {
+      ...savedRecordings,
+      get,
+    };
+
+    await act(async () => {
+      renderViewer({ open: true, recordingId: 'rec-1' });
+    });
+
+    await waitFor(() => expect(screen.queryByTestId('recording-narration')).not.toBeNull());
+    const text = screen.getByTestId('recording-narration').textContent ?? '';
+    expect(text).toContain('我方使用了驯服宠物');
+    expect(text).toContain('对手使用了心灵咒术师');
+    expect(text.indexOf('我方使用了驯服宠物')).toBeLessThan(text.indexOf('对手使用了心灵咒术师'));
+  });
+
+  it('renders narration empty state for recordings without narration frames', async () => {
+    const get = vi.fn().mockResolvedValue(fakeDetail({ narrationFrames: [] }));
+    (window.hdt as { recordings: typeof window.hdt.recordings }).recordings = {
+      ...savedRecordings,
+      get,
+    };
+
+    await act(async () => {
+      renderViewer({ open: true, recordingId: 'rec-1' });
+    });
+
+    await waitFor(() => expect(screen.queryByTestId('recording-narration')).not.toBeNull());
+    expect(screen.getByTestId('recording-narration').textContent).toContain('No narration frames recorded.');
   });
 
   it('renders empty state when get returns null', async () => {

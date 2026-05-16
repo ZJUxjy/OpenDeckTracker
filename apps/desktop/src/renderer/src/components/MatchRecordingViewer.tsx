@@ -103,6 +103,30 @@ export function MatchRecordingViewer({
                       : detail.initialState.postMulliganHand.map((c) => c.cardId).join(', ')}
                   </div>
                 </section>
+                <section data-testid="recording-narration">
+                  <h3 className="text-xs uppercase tracking-wider text-text-dim mb-1">
+                    {t('stats.recordingViewer.narration')}
+                  </h3>
+                  <ul className="text-xs space-y-1 max-h-[220px] overflow-y-auto">
+                    {detail.narrationFrames.length === 0 ? (
+                      <li className="text-text-mute">
+                        {t('stats.recordingViewer.narrationEmpty')}
+                      </li>
+                    ) : (
+                      detail.narrationFrames.map((frame) => (
+                        <li
+                          key={`${frame.sourceEventIndex}-${frame.sequence}`}
+                          className="flex items-start gap-2 rounded border border-border bg-overlay px-2 py-1"
+                        >
+                          <span className="w-8 shrink-0 font-mono text-text-mute">
+                            #{frame.sequence}
+                          </span>
+                          <span className="text-text">{frame.text}</span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </section>
                 <section data-testid="recording-timeline">
                   <h3 className="text-xs uppercase tracking-wider text-text-dim mb-1">
                     {t('stats.recordingViewer.timeline')}
