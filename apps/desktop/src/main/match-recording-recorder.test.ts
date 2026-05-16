@@ -308,4 +308,120 @@ describe('match-recording-recorder', () => {
       sourceEventIndex: 2,
     });
   });
+
+  it('persists analysis and narration frames for local card plays', () => {
+    const store = createMemoryStore();
+    const recorder = createMatchRecordingRecorder({
+      store,
+      getSnapshot: () => snapshot(),
+      now: () => 1_000,
+      createRecordingId: () => 'rec-a',
+      resolveCardName: (cardId) => (cardId === 'MEND_300' ? '驯服宠物' : null),
+    });
+
+    recorder.handleEvent(createGame);
+    recorder.handleEvent({
+      type: 'full-entity',
+      entityId: 30,
+      cardId: 'MEND_300',
+      tags: { CONTROLLER: 1, ZONE: 'HAND' },
+      raw: '',
+      content: '',
+    });
+    recorder.handleEvent({
+      type: 'block-start',
+      entity: 30,
+      blockType: 'PLAY',
+      target: null,
+      raw: '',
+      content: '',
+    });
+
+    const recording = store.recordings.get('rec-a');
+    const analysisEvent = recording?.analysisEvents.find((event) => event.kind === 'card-played');
+    const narrationFrame = recording?.narrationFrames.find((frame) => frame.eventKind === 'card-played');
+
+    expect(analysisEvent).toMatchObject({
+      kind: 'card-played',
+      actor: 'local',
+      cardId: 'MEND_300',
+      entityId: 30,
+      controllerId: 1,
+      sourceEventIndex: 2,
+    });
+    expect(narrationFrame).toMatchObject({
+      eventKind: 'card-played',
+      sourceEventIndex: 2,
+      text: '我方使用了驯服宠物。',
+      facts: {
+        cardId: 'MEND_300',
+        actor: 'local',
+      },
+    });
+  });
+
+  it('keeps raw events and later narration when one narration derivation fails', () => {
+    const store = createMemoryStore();
+    const recorder = createMatchRecordingRecorder({
+      store,
+      getSnapshot: () => snapshot(),
+      now: () => 1_000,
+      createRecordingId: () => 'rec-a',
+      resolveCardName: () => {
+        throw new Error('resolver failed');
+      },
+    });
+
+    recorder.handleEvent(createGame);
+    recorder.handleEvent({
+      type: 'full-entity',
+      entityId: 40,
+      cardId: 'MEND_300',
+      tags: { CONTROLLER: 1, ZONE: 'HAND' },
+      raw: '',
+      content: '',
+    });
+
+    expect(() =>
+      recorder.handleEvent({
+        type: 'block-start',
+        entity: 40,
+        blockType: 'PLAY',
+        raw: '',
+        content: '',
+      }),
+    ).not.toThrow();
+
+    recorder.handleEvent({
+      type: 'tag-change',
+      entity: 'GameEntity',
+      tag: 'TURN',
+      value: 2,
+      raw: '',
+      content: '',
+    });
+
+    const recording = store.recordings.get('rec-a');
+    expect(store.events.get('rec-a')).toHaveLength(4);
+    expect(recording?.rawEventRefs).toHaveLength(4);
+    expect(recording?.timeline).toContainEqual({
+      kind: 'play-card',
+      entityId: 40,
+      cardId: 'MEND_300',
+      controllerId: 1,
+      targetEntityId: null,
+      sourceEventIndex: 2,
+    });
+    expect(recording?.narrationFrames).toContainEqual({
+      sequence: 1,
+      sourceEventIndex: 3,
+      eventKind: 'turn-start',
+      text: '第2回合开始。',
+      facts: {
+        actor: 'game',
+        turnNumber: 2,
+        controllerId: null,
+      },
+    });
+  });
 });

@@ -2,8 +2,11 @@ import { join } from 'node:path';
 import {
   buildMatchRecordingSummary,
   createEmptyMatchRecording,
+  deriveGameProgressAnalysisEvents,
   deriveTimelineEvents,
+  narrateGameProgressEvents,
   sanitizeEntityForRecording,
+  type CardNameResolver,
   type DeckTrackerSnapshot,
   type MatchRecording,
   type RecordedCardRef,
@@ -29,11 +32,15 @@ export function createMatchRecordingRecorder(args: {
   store: MatchRecordingStore;
   getSnapshot: () => DeckTrackerSnapshot | null;
   getMatchFingerprint?: () => string | null;
+  resolveCardName?: CardNameResolver;
   now?: () => number;
   createRecordingId?: (startedAt: number) => string;
 }): MatchRecordingRecorder {
   const now = args.now ?? Date.now;
   const createRecordingId = args.createRecordingId ?? defaultRecordingId;
+  const narrationOptions = args.resolveCardName !== undefined
+    ? { resolveCardName: args.resolveCardName }
+    : {};
   let current: MatchRecording | null = null;
   let state: HearthWatcherGameState | null = null;
 
@@ -108,6 +115,21 @@ export function createMatchRecordingRecorder(args: {
           sourceEventIndex,
         }),
       );
+      try {
+        const analysisEvents = deriveGameProgressAnalysisEvents({
+          event,
+          previousEntities,
+          currentEntities,
+          localControllerId,
+          sourceEventIndex,
+          sequenceStart: current.analysisEvents.length,
+        });
+        const narrationFrames = narrateGameProgressEvents(analysisEvents, narrationOptions);
+        current.analysisEvents.push(...analysisEvents);
+        current.narrationFrames.push(...narrationFrames);
+      } catch (error) {
+        console.warn('[recordings] failed to derive game narration', error);
+      }
       current.entities = currentEntities.map((entity) =>
         sanitizeEntityForRecording(entity, localControllerId),
       );
