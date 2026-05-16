@@ -163,6 +163,12 @@ export type {
   GameProgressAnalysisEvent,
   GameProgressAnalysisEventKind,
 } from './recordings/game-progress-analysis';
+export { narrateGameProgressEvents } from './recordings/game-progress-narration';
+export type {
+  CardNameResolver,
+  GameProgressNarrationFactValue,
+  GameProgressNarrationFrame,
+} from './recordings/game-progress-narration';
 
 // Lower-level utilities (exposed for testing + advanced consumers).
 export { PollingLoop } from './tracker/polling-loop';
