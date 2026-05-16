@@ -91,7 +91,7 @@ describe('computeSetProgress', () => {
 
   it('rarity undefined is treated as non-legendary (legalMax = 2)', () => {
     const cards: CardDef[] = [
-      card({ dbfId: 1, set: STANDARD_CODE, rarity: undefined }),
+      card({ dbfId: 1, set: STANDARD_CODE }),
     ];
     const owned = new Map([[1, 3]]);
     const result = computeSetProgress(cards, owned);

@@ -17,6 +17,7 @@ const D = (over: Partial<PopularDeckEnriched>): PopularDeckEnriched => ({
   manaCurve: over.manaCurve ?? [0, 0, 0, 0, 0, 0, 0, 0],
   keyCards: over.keyCards ?? [],
   cardNames: over.cardNames ?? [],
+  deckCardList: over.deckCardList ?? [],
 });
 
 const SEED: PopularDeckEnriched[] = [

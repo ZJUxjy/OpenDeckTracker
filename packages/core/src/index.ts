@@ -157,6 +157,12 @@ export type {
   RecordingEntityRef,
   RecordingEventLike,
 } from './recordings/timeline-deriver';
+export { deriveGameProgressAnalysisEvents } from './recordings/game-progress-analysis';
+export type {
+  GameProgressAnalysisActor,
+  GameProgressAnalysisEvent,
+  GameProgressAnalysisEventKind,
+} from './recordings/game-progress-analysis';
 
 // Lower-level utilities (exposed for testing + advanced consumers).
 export { PollingLoop } from './tracker/polling-loop';

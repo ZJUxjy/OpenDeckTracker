@@ -17,6 +17,7 @@ function deck(over: Partial<PopularDeckEnriched> & { id: string }): PopularDeckE
     manaCurve: over.manaCurve ?? [0, 0, 0, 0, 0, 0, 0, 0],
     keyCards: over.keyCards ?? [],
     cardNames: over.cardNames ?? [],
+    deckCardList: over.deckCardList ?? [],
     dustCost: over.dustCost ?? 0,
   };
 }
