@@ -66,6 +66,7 @@ import type {
   DeckDetail,
   DeckSummary,
   FormatFilter,
+  GameProgressNarrationFrame,
   MatchRecordingDetail,
   MatchRecordingSummary,
   MatchHistoryRecord,
@@ -168,6 +169,15 @@ const api = {
     list: (): Promise<MatchRecordingSummary[]> => ipcRenderer.invoke('recordings:list'),
     get: (recordingId: string): Promise<MatchRecordingDetail | null> =>
       ipcRenderer.invoke('recordings:get', recordingId),
+  },
+  gameProgressNarration: {
+    getRecent: (): Promise<GameProgressNarrationFrame[]> =>
+      ipcRenderer.invoke('game-progress-narration:get-recent'),
+    subscribe: (cb: (frame: GameProgressNarrationFrame) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, frame: GameProgressNarrationFrame): void => cb(frame);
+      ipcRenderer.on('game-progress-narration:frame', handler);
+      return () => ipcRenderer.removeListener('game-progress-narration:frame', handler);
+    },
   },
   decks: {
     list: (): Promise<DeckSummary[]> => ipcRenderer.invoke('decks:list'),

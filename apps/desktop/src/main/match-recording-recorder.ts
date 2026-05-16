@@ -8,6 +8,7 @@ import {
   sanitizeEntityForRecording,
   type CardNameResolver,
   type DeckTrackerSnapshot,
+  type GameProgressNarrationFrame,
   type MatchRecording,
   type RecordedCardRef,
   type RecordingEntityLike,
@@ -33,6 +34,7 @@ export function createMatchRecordingRecorder(args: {
   getSnapshot: () => DeckTrackerSnapshot | null;
   getMatchFingerprint?: () => string | null;
   resolveCardName?: CardNameResolver;
+  onNarrationFrames?: (frames: readonly GameProgressNarrationFrame[]) => void;
   now?: () => number;
   createRecordingId?: (startedAt: number) => string;
 }): MatchRecordingRecorder {
@@ -127,6 +129,9 @@ export function createMatchRecordingRecorder(args: {
         const narrationFrames = narrateGameProgressEvents(analysisEvents, narrationOptions);
         current.analysisEvents.push(...analysisEvents);
         current.narrationFrames.push(...narrationFrames);
+        if (narrationFrames.length > 0) {
+          args.onNarrationFrames?.(narrationFrames);
+        }
       } catch (error) {
         console.warn('[recordings] failed to derive game narration', error);
       }

@@ -66,4 +66,37 @@ describe('preload api', () => {
     expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('recordings:list');
     expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('recordings:get', 'rec-a');
   });
+
+  it('exposes read-only live game narration queries and subscription', async () => {
+    await import('./index');
+    const api = mocks.exposed as {
+      gameProgressNarration: {
+        getRecent(): Promise<unknown>;
+        subscribe(cb: (frame: unknown) => void): () => void;
+      };
+    };
+    const frame = {
+      sequence: 0,
+      sourceEventIndex: 0,
+      eventKind: 'game-started',
+      text: '对局开始。',
+      facts: {},
+    };
+    const cb = vi.fn();
+
+    await api.gameProgressNarration.getRecent();
+    const unsubscribe = api.gameProgressNarration.subscribe(cb);
+    const handler = mocks.ipcRenderer.on.mock.calls.find(
+      ([channel]) => channel === 'game-progress-narration:frame',
+    )?.[1] as ((event: unknown, frame: unknown) => void) | undefined;
+    handler?.({}, frame);
+    unsubscribe();
+
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('game-progress-narration:get-recent');
+    expect(cb).toHaveBeenCalledWith(frame);
+    expect(mocks.ipcRenderer.removeListener).toHaveBeenCalledWith(
+      'game-progress-narration:frame',
+      handler,
+    );
+  });
 });

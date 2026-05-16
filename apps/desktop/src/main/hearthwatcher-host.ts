@@ -16,6 +16,7 @@ import {
 import { liveMatchIdentity } from './match-identity';
 import { createPowerMatchRecorder } from './power-match-recorder';
 import { recordCompletedMatch } from './stats-host';
+import { gameProgressNarrationHost } from './game-progress-narration-host';
 
 let watcher: ReturnType<typeof createHearthWatcher> | null = null;
 let latestStatus: HearthWatcherDiagnostic | null = null;
@@ -42,6 +43,10 @@ export function startHearthWatcher(): void {
     store: createDefaultMatchRecordingStore(app.getPath('userData')),
     getSnapshot: getLatestDeckTrackerSnapshot,
     getMatchFingerprint,
+    onNarrationFrames: (frames) => gameProgressNarrationHost.appendFrames(frames),
+  });
+  const unsubscribeNarration = gameProgressNarrationHost.subscribe((frame) => {
+    broadcast('game-progress-narration:frame', frame);
   });
   watcher.onStatus((status) => {
     logHearthWatcherStatus(status);
@@ -57,6 +62,7 @@ export function startHearthWatcher(): void {
     // would double-record the match every time the tracker restarts.
     if (phase === 'live') {
       if (event.type === 'create-game') {
+        gameProgressNarrationHost.clear();
         liveMatchIdentity.beginLiveMatch(Date.now());
       }
       matchRecorder.handleEvent(event);
@@ -81,6 +87,7 @@ export function startHearthWatcher(): void {
   });
 
   app.on('before-quit', () => {
+    unsubscribeNarration();
     watcher?.stop();
     watcher = null;
   });

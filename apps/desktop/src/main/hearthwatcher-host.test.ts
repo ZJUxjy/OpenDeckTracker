@@ -4,6 +4,7 @@ import type { EventPhase, HearthWatcherDiagnostic, PowerEvent } from '@hdt/heart
 const mocks = vi.hoisted(() => {
   const statusHandlers: ((status: HearthWatcherDiagnostic) => void)[] = [];
   const eventHandlers: ((event: unknown, phase: EventPhase) => void)[] = [];
+  const narrationHandlers: ((frame: unknown) => void)[] = [];
   const watcher = {
     onStatus: vi.fn((handler: (status: HearthWatcherDiagnostic) => void) => {
       statusHandlers.push(handler);
@@ -33,11 +34,20 @@ const mocks = vi.hoisted(() => {
       current: vi.fn((): { fingerprint: string; startedAt: number } | null => null),
       clear: vi.fn(),
     },
+    gameProgressNarrationHost: {
+      appendFrames: vi.fn(),
+      clear: vi.fn(),
+      subscribe: vi.fn((handler: (frame: unknown) => void) => {
+        narrationHandlers.push(handler);
+        return vi.fn();
+      }),
+    },
     powerRecorder,
     matchRecordingRecorder,
     ipcMain: { handle: vi.fn() },
     app: { on: vi.fn(), getPath: vi.fn(() => 'C:\\Users\\me\\AppData\\Roaming\\HDT') },
     send: vi.fn(),
+    narrationHandlers,
   };
 });
 
@@ -67,6 +77,10 @@ vi.mock('./match-identity', () => ({
   liveMatchIdentity: mocks.liveMatchIdentity,
 }));
 
+vi.mock('./game-progress-narration-host', () => ({
+  gameProgressNarrationHost: mocks.gameProgressNarrationHost,
+}));
+
 vi.mock('electron', () => ({
   app: mocks.app,
   ipcMain: mocks.ipcMain,
@@ -85,6 +99,7 @@ describe('hearthwatcher-host', () => {
     vi.clearAllMocks();
     mocks.statusHandlers.length = 0;
     mocks.eventHandlers.length = 0;
+    mocks.narrationHandlers.length = 0;
     mocks.liveMatchIdentity.current.mockReturnValue(null);
     vi.resetModules();
   });
@@ -159,10 +174,40 @@ describe('hearthwatcher-host', () => {
       store: { kind: 'store' },
       getSnapshot: mocks.getLatestDeckTrackerSnapshot,
       getMatchFingerprint: expect.any(Function),
+      onNarrationFrames: expect.any(Function),
     });
     expect(mocks.powerRecorder.handleEvent).toHaveBeenCalledWith(event);
     expect(mocks.matchRecordingRecorder.handleEvent).toHaveBeenCalledWith(event);
     expect(mocks.send).toHaveBeenCalledWith('hearthwatcher:event', event);
+  });
+
+  it('broadcasts live narration frames emitted by the narration host', async () => {
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const frame = {
+      sequence: 0,
+      sourceEventIndex: 0,
+      eventKind: 'game-started',
+      text: '对局开始。',
+      facts: {},
+    };
+    mocks.narrationHandlers[0]?.(frame);
+
+    expect(mocks.send).toHaveBeenCalledWith('game-progress-narration:frame', frame);
+  });
+
+  it('clears live narration before live recorders handle create-game', async () => {
+    const { startHearthWatcher } = await import('./hearthwatcher-host');
+    startHearthWatcher();
+
+    const event: PowerEvent = { type: 'create-game', raw: '', content: '' };
+    mocks.eventHandlers[0]?.(event, 'live');
+
+    expect(mocks.gameProgressNarrationHost.clear).toHaveBeenCalledTimes(1);
+    expect(
+      mocks.gameProgressNarrationHost.clear.mock.invocationCallOrder[0],
+    ).toBeLessThan(mocks.matchRecordingRecorder.handleEvent.mock.invocationCallOrder[0]!);
   });
 
   it('passes live match fingerprint callbacks to durable recorders', async () => {

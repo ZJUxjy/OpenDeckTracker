@@ -37,6 +37,7 @@ import { registerOpponentDeckPredictionIpc } from './opponent-deck-prediction-ip
 import { getPopularDecksList } from './popular-decks-ipc';
 import type { PopularDeckEnriched } from '@hdt/core';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
+import { registerGameProgressNarrationIpc } from './game-progress-narration-host';
 import { registerMatchRecordingsIpc } from './match-recordings-ipc';
 import { registerStatsIpc } from './stats-host';
 import {
@@ -357,6 +358,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
   // Deck-tracker host (M2)
   registerDeckTrackerIpc();
   registerHearthWatcherIpc();
+  registerGameProgressNarrationIpc();
   registerMatchRecordingsIpc();
   registerStatsIpc();
   registerPlayerProfileIpc();
