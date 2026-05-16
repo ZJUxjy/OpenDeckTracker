@@ -199,6 +199,8 @@ describe('Stats', () => {
         opponentName: 'Opponent',
         result: 'win',
         timelineEventCount: 1,
+        analysisEventCount: 0,
+        narrationFrameCount: 0,
       }],
       recordingGet,
     });
@@ -233,6 +235,8 @@ describe('Stats', () => {
         opponentName: 'Opponent',
         result: 'win',
         timelineEventCount: 1,
+        analysisEventCount: 0,
+        narrationFrameCount: 0,
       }],
       recordingGet,
     });

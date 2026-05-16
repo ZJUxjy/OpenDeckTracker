@@ -50,14 +50,14 @@ describe('createEmptyMatchRecording', () => {
       }),
       analysisEvents: Array.from({ length: 12 }, (_, sequence) => ({
         sequence,
-        kind: 'card-played',
-        actor: 'local',
+        kind: 'card-played' as const,
+        actor: 'local' as const,
         sourceEventIndex: sequence,
       })),
       narrationFrames: Array.from({ length: 3 }, (_, sequence) => ({
         sequence,
         sourceEventIndex: sequence,
-        eventKind: 'card-played',
+        eventKind: 'card-played' as const,
         text: `frame ${sequence}`,
         facts: {},
       })),

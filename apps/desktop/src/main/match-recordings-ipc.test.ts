@@ -30,6 +30,8 @@ describe('match-recordings-ipc', () => {
       opponentName: 'Opponent',
       result: 'win',
       timelineEventCount: 3,
+      analysisEventCount: 0,
+      narrationFrameCount: 0,
     }];
     const detail = { recordingId: 'rec-a', rawEvents: [] } as unknown as MatchRecordingDetail;
     const store = {
