@@ -58,9 +58,10 @@ export function initAutoUpdate(): void {
   });
 
   const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
-  setInterval(() => {
+  const periodicCheck = setInterval(() => {
     void autoUpdater.checkForUpdates().catch((err) => {
       console.error('[auto-update] periodic check failed', err);
     });
   }, SIX_HOURS_MS);
+  app.on('before-quit', () => clearInterval(periodicCheck));
 }

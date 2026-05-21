@@ -40,8 +40,9 @@ import type { PopularDeckEnriched } from '@hdt/core';
 import { registerHearthWatcherIpc } from './hearthwatcher-host';
 import { registerGameProgressNarrationIpc } from './game-progress-narration-host';
 import { registerMatchRecordingsIpc } from './match-recordings-ipc';
-import { registerStatsIpc } from './stats-host';
+import { closeStatsHost, registerStatsIpc } from './stats-host';
 import {
+  closePlayerProfileStore,
   refreshPlayerProfileFromLive,
   registerPlayerProfileIpc,
 } from './player-profile-ipc';
@@ -414,11 +415,11 @@ export function registerIpc(overlay?: OverlayControllers): void {
     onSnapshotChange: onDeckTrackerSnapshotChange,
   });
 
-  app.on('before-quit', () => {
-    popularDecksSync.abort();
-    disposePopularDecksSyncIpc();
-    disposeOpponentDeckPredictionIpc();
-  });
+  // SQLite store handles closed in the unified `before-quit` disposer
+  // below. Tracked here so the `.then` callback that creates the
+  // collection cache can register it. Initialized to null and never
+  // re-set after construction — `before-quit` reads whatever is set.
+  let collectionSnapshotStoreRef: ReturnType<typeof createCollectionSnapshotStore> | null = null;
 
   // Saved deck management (deck CRUD + deckstring import/export).
   const deckStore = createDeckStore(join(app.getPath('userData'), 'decks.db'));
@@ -450,6 +451,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
       collectionSnapshotStore = createCollectionSnapshotStore(
         join(app.getPath('userData'), 'collection-snapshot.sqlite'),
       );
+      collectionSnapshotStoreRef = collectionSnapshotStore;
     } catch (err) {
       console.error('[collection-progress] cache disabled', err);
     }
@@ -486,6 +488,19 @@ export function registerIpc(overlay?: OverlayControllers): void {
     void deckSyncHost.syncFromLive().catch((err) => {
       console.warn('[deck-sync] initial sync failed', err);
     });
+  });
+
+  // Close every SQLite store on quit. On normal close the OS would
+  // eventually flush WAL frames, but force-quit / task-manager kill
+  // paths can leave the latest tiny transactions (e.g. a just-recorded
+  // match) stranded in `-wal` until the next launch. Explicit close
+  // calls `PRAGMA wal_checkpoint(TRUNCATE)` via better-sqlite3 and
+  // releases the lock, so subsequent recovery is unnecessary.
+  app.on('before-quit', () => {
+    try { deckStore.close(); } catch (err) { console.error('[shutdown] deckStore.close failed', err); }
+    try { collectionSnapshotStoreRef?.close(); } catch (err) { console.error('[shutdown] collectionSnapshotStore.close failed', err); }
+    try { closeStatsHost(); } catch (err) { console.error('[shutdown] closeStatsHost failed', err); }
+    try { closePlayerProfileStore(); } catch (err) { console.error('[shutdown] closePlayerProfileStore failed', err); }
   });
 }
 

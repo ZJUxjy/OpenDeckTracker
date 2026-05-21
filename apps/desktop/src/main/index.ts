@@ -1,4 +1,5 @@
 import { app, BrowserWindow, protocol, screen } from 'electron';
+import { existsSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createMainWindow } from './window';
@@ -12,6 +13,30 @@ import { getHearthMirror } from './hearthmirror';
 import { initAutoUpdate } from './auto-update';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
+
+// Override the userData / logs directory name. By default Electron
+// derives both from `package.json#name`, which is `@hdt/desktop` —
+// resulting in `%APPDATA%\@hdt\desktop\`. We want the user-visible
+// product name on disk too, both for clarity and so renaming the
+// package later doesn't strand user data. MUST be called BEFORE the
+// first `app.getPath('userData')` call (which `requestSingleInstanceLock`
+// implicitly triggers via its lock file).
+//
+// One-shot migration: if the v1-test-build pre-rename directory exists
+// and the new one doesn't, atomically rename so v1 testers keep their
+// recordings, stats, and saved decks. Best-effort — failure logs but
+// doesn't block startup; user just sees an empty profile.
+const oldAppDataDir = join(app.getPath('appData'), '@hdt', 'desktop');
+app.setName('OpenDeckTracker');
+const newUserDataDir = app.getPath('userData');
+if (existsSync(oldAppDataDir) && !existsSync(newUserDataDir)) {
+  try {
+    renameSync(oldAppDataDir, newUserDataDir);
+    console.log('[migration] userData', oldAppDataDir, '→', newUserDataDir);
+  } catch (err) {
+    console.error('[migration] userData rename failed', err);
+  }
+}
 
 protocol.registerSchemesAsPrivileged([
   {
