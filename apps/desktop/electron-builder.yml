@@ -8,8 +8,24 @@ directories:
 # Files / extra resources shipped inside the installer.
 files:
   - out/**/*
+  - '!out/native-runtime/**/*'
   - package.json
-asarUnpack: []
+  - from: out/native-runtime
+    to: node_modules
+    filter:
+      - '**/*'
+# Native addons cannot be loaded directly from app.asar. Keep every .node
+# binary outside the archive; this covers both better-sqlite3 and the
+# HearthMirror napi-rs bridge.
+#
+# Paths match the in-asar layout: `files:` above remaps `out/native-runtime`
+# to `node_modules/`, so the hearthmirror-native addon lives at
+# `node_modules/@hdt/hearthmirror-native/` inside the archive — NOT at
+# `out/native-runtime/...`. Do not add an `out/native-runtime/...`
+# pattern here; it would silently never match.
+asarUnpack:
+  - node_modules/@hdt/hearthmirror-native/*.node
+  - node_modules/better-sqlite3/**/*.node
 
 # Bundled legal artifacts. The installer surfaces LICENSE.txt as the
 # click-through EULA (NSIS `license` directive below); both files land
@@ -20,6 +36,12 @@ extraResources:
     to: LICENSE.txt
   - from: ../../THIRD_PARTY_NOTICES.txt
     to: THIRD_PARTY_NOTICES.txt
+  - from: ../../data/cards/generated
+    to: data/cards/generated
+    filter:
+      - card-build.json
+      - cards.all.*.json
+      - cards.collectible.*.json
 
 win:
   target:
@@ -27,6 +49,10 @@ win:
       arch:
         - x64
   icon: build/icon.png
+  # Internal v1 packages are intentionally unsigned. This also avoids
+  # winCodeSign extraction on Windows machines without symlink privileges.
+  # Re-enable once a real code-signing certificate is wired.
+  signAndEditExecutable: false
   # publisherName is the "Publisher" / "Verified publisher" string the
   # Windows installer displays. MUST match the CN on the code-signing
   # certificate once signing is wired (B5).

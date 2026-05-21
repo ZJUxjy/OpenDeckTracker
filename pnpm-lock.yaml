@@ -59,6 +59,19 @@ importers:
 
   apps/desktop:
     dependencies:
+      better-sqlite3:
+        specifier: ^12.9.0
+        version: 12.9.0
+      electron-updater:
+        specifier: ^6.8.3
+        version: 6.8.3
+      pngjs:
+        specifier: ^7.0.0
+        version: 7.0.0
+    devDependencies:
+      '@electron/rebuild':
+        specifier: ^4.0.4
+        version: 4.0.4
       '@hdt/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -92,15 +105,27 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.2(vite@6.4.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
+      '@testing-library/react':
+        specifier: ^15.0.7
+        version: 15.0.7(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
       '@types/pngjs':
         specifier: ^6.0.5
         version: 6.0.5
+      '@types/react':
+        specifier: ^19.2.14
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.14)
       '@vitejs/plugin-react':
         specifier: ^4.7.0
         version: 4.7.0(vite@6.4.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
-      better-sqlite3:
-        specifier: ^12.9.0
-        version: 12.9.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -113,9 +138,6 @@ importers:
       electron-builder:
         specifier: ^25.1.8
         version: 25.1.8(electron-builder-squirrel-windows@25.1.8)
-      electron-updater:
-        specifier: ^6.8.3
-        version: 6.8.3
       electron-vite:
         specifier: ^5.0.0
         version: 5.0.0(vite@6.4.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0))
@@ -125,9 +147,6 @@ importers:
       motion:
         specifier: ^12.38.0
         version: 12.38.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      pngjs:
-        specifier: ^7.0.0
-        version: 7.0.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -158,25 +177,6 @@ importers:
       zustand:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@19.2.14)(immer@11.1.4)(react@18.3.1)(use-sync-external-store@1.6.0(react@18.3.1))
-    devDependencies:
-      '@electron/rebuild':
-        specifier: ^4.0.4
-        version: 4.0.4
-      '@testing-library/react':
-        specifier: ^15.0.7
-        version: 15.0.7(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/better-sqlite3':
-        specifier: ^7.6.13
-        version: 7.6.13
-      '@types/node':
-        specifier: ^25.6.0
-        version: 25.6.0
-      '@types/react':
-        specifier: ^19.2.14
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.14)
 
   packages/core:
     dependencies:

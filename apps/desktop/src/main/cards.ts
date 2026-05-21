@@ -22,7 +22,10 @@ function resolveCardsJsonPath(locale: CardsLocale): string {
   const here = dirname(fileURLToPath(import.meta.url));
   const relativeJsonPath = relativeJson(locale);
   const appPath = typeof app?.getAppPath === 'function' ? app.getAppPath() : null;
+  const resourcesPath = typeof process.resourcesPath === 'string' ? process.resourcesPath : null;
   const candidates = [
+    // packaged: extraResources ships data/cards/generated under resources/
+    ...(resourcesPath ? [resolve(resourcesPath, relativeJsonPath)] : []),
     // dev: from out/main go up 3 levels to monorepo root
     resolve(here, '../../../..', relativeJsonPath),
     // legacy / explicit cwd at repo root
