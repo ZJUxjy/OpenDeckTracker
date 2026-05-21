@@ -24,6 +24,7 @@ import {
 } from './card-image-cache';
 import { ensureSetLogoCached } from './set-logo-cache';
 import { registerAboutIpc } from './about';
+import { capPoolCardIds, sanitizeSearchFilter } from './ipc-sanitizers';
 import { getHearthMirror } from './hearthmirror';
 import {
   getLatestDeckTrackerSnapshot,
@@ -106,26 +107,28 @@ export function registerIpc(overlay?: OverlayControllers): void {
         cp.show(cardId, anchor);
       });
       ipcMain.handle('card-preview:show-pool', (_, cardIds: string[], anchor: PreviewAnchor) => {
+        const capped = capPoolCardIds(cardIds);
         void Promise.all(
-          cardIds.map((cardId) =>
+          capped.map((cardId) =>
             ensureCardImageCached(cardId, {
               root: cardImageRoot,
               primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
             }).catch(() => undefined),
           ),
         );
-        cp.showPool(cardIds, anchor);
+        cp.showPool(capped, anchor);
       });
       ipcMain.handle('card-preview:show-enhanced-pool', (_, sourceCardId: string, cardIds: string[], anchor: PreviewAnchor) => {
+        const capped = capPoolCardIds(cardIds);
         void Promise.all(
-          [sourceCardId, ...cardIds].map((cardId) =>
+          [sourceCardId, ...capped].map((cardId) =>
             ensureCardImageCached(cardId, {
               root: cardImageRoot,
               primaryLocale: CARD_IMAGE_PRIMARY_LOCALE,
             }).catch(() => undefined),
           ),
         );
-        cp.showEnhancedPool(sourceCardId, cardIds, anchor);
+        cp.showEnhancedPool(sourceCardId, capped, anchor);
       });
       ipcMain.handle('card-preview:show-extra', (_, payload: ExtraPreviewPayload, anchor: PreviewAnchor) => {
         cp.showExtra(payload, anchor);
@@ -214,8 +217,10 @@ export function registerIpc(overlay?: OverlayControllers): void {
 
   ipcMain.handle('cards:search', async (_, filter: SearchFilter, appLocale?: string) => {
     try {
+      const safe = sanitizeSearchFilter(filter);
+      if (safe === null) return [];
       const db = await ensureCardDb(toHearthstoneLocale(appLocale));
-      return db.search(filter);
+      return db.search(safe);
     } catch (e) {
       console.error('[ipc cards:search]', (e as Error).message);
       return [];

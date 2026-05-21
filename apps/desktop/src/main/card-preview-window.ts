@@ -261,6 +261,11 @@ export class CardPreviewWindow {
     });
     this.win.setAlwaysOnTop(true, 'screen-saver');
     this.win.setIgnoreMouseEvents(true);
+    // Defense-in-depth: same navigation lockdown as the main window.
+    // Block stray navigation / webview attach attempts even though the
+    // preview window is normally invisible to mouse input.
+    this.win.webContents.on('will-navigate', (e) => e.preventDefault());
+    this.win.webContents.on('will-attach-webview', (e) => e.preventDefault());
     // Show the window immediately at opacity 0 so the OS does its
     // (only) fade-in once at creation rather than on every hover.
     // After this initial reveal, show()/hide() toggle opacity only.

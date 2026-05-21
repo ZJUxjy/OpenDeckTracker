@@ -41,7 +41,10 @@ function resolveCardsJsonPath(locale: CardsLocale): string {
   for (const p of candidates) {
     if (existsSync(p)) return p;
   }
-  // Fall back to the dev path even if missing — loader will throw a clear ENOENT
+  // No candidate exists yet (e.g. dev tree without generated JSON, or
+  // a broken install). Return the first candidate so the loader emits a
+  // pinpointed ENOENT — in packaged builds that's `process.resourcesPath`,
+  // in dev it's the monorepo root.
   return candidates[0]!;
 }
 

@@ -209,6 +209,15 @@ export class OverlayManager {
 
     this.win.setAlwaysOnTop(false);
 
+    // Defense-in-depth: same navigation lockdown as the main window.
+    // Block any attempt to navigate the overlay's webContents away from
+    // its loaded route (a renderer-side bug, injected link, or stray
+    // window.location.assign should be inert). With contextIsolation +
+    // sandbox we already keep Node out of reach, but `will-navigate`
+    // belongs to the chrome layer that sits above isolation.
+    this.win.webContents.on('will-navigate', (e) => e.preventDefault());
+    this.win.webContents.on('will-attach-webview', (e) => e.preventDefault());
+
     this.win.on('moved', () => {
       if (this.isApplyingTrackerBounds) return;
       if (this.lastTrackerBounds === null) return;

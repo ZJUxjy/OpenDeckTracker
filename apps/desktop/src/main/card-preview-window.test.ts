@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => {
   class MockWindow {
     _opts: Record<string, unknown>;
     _bounds: { x: number; y: number; width: number; height: number };
-    webContents = { send: vi.fn() };
+    webContents = { send: vi.fn(), on: vi.fn() };
 
     constructor(opts: Record<string, unknown>) {
       this._opts = opts;
