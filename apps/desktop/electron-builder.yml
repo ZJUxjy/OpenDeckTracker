@@ -18,13 +18,15 @@ files:
 # binary outside the archive; this covers both better-sqlite3 and the
 # HearthMirror napi-rs bridge.
 #
-# Paths match the in-asar layout: `files:` above remaps `out/native-runtime`
-# to `node_modules/`, so the hearthmirror-native addon lives at
-# `node_modules/@hdt/hearthmirror-native/` inside the archive — NOT at
-# `out/native-runtime/...`. Do not add an `out/native-runtime/...`
-# pattern here; it would silently never match.
+# IMPORTANT: asarUnpack patterns match against SOURCE paths (relative to
+# the app dir), NOT the remapped in-archive paths. better-sqlite3 lives
+# at `node_modules/better-sqlite3/` in the source tree so its pattern
+# matches directly. The hearthmirror-native runtime is staged at
+# `out/native-runtime/@hdt/hearthmirror-native/` by `prepare:native-runtime`
+# — match THAT path even though the file lands in the archive at
+# `node_modules/@hdt/hearthmirror-native/` via the `files:` remap above.
 asarUnpack:
-  - node_modules/@hdt/hearthmirror-native/*.node
+  - out/native-runtime/@hdt/hearthmirror-native/*.node
   - node_modules/better-sqlite3/**/*.node
 
 # Bundled legal artifacts. The installer surfaces LICENSE.txt as the
