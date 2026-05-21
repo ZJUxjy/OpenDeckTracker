@@ -20,7 +20,7 @@
     "package": "electron-vite build && pnpm run prepare:native-runtime && electron-builder --config electron-builder.yml --win"
   },
   "dependencies": {
-    "better-sqlite3": "^12.9.0",
+    "better-sqlite3": "^12.10.0",
     "electron-updater": "^6.8.3",
     "pngjs": "^7.0.0"
   },
