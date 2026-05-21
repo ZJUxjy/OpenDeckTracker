@@ -655,7 +655,7 @@ function CardCopyRow({
         {isExtraCard ? (
           <div
             data-testid="card-extra-origin-icon"
-            className="relative z-20 ml-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded border border-amber-300/80 bg-black/60 text-amber-300 shadow-[0_0_0_1px_rgba(0,0,0,0.55)]"
+            className="relative z-20 ml-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded border border-amber/80 bg-black/60 text-amber shadow-[0_0_0_1px_rgba(0,0,0,0.55)]"
             title="套牌外卡牌"
             aria-label="套牌外卡牌"
           >

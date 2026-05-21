@@ -3,12 +3,9 @@ import {
   AppWindow,
   BarChart2,
   BookOpen,
-  Crosshair,
-  Film,
   Layers,
   Monitor,
   Settings,
-  ShieldAlert,
   User,
 } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
@@ -24,9 +21,6 @@ const MAIN_NAV_ITEMS = [
   { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker', code: 'DASHBOARD' },
   { id: 'decks', icon: Layers, labelKey: 'sidebar.decks', code: 'DECKS' },
   { id: 'stats', icon: BarChart2, labelKey: 'sidebar.stats', code: 'STATS' },
-  { id: 'opponent', icon: ShieldAlert, labelKey: 'sidebar.opponent', code: 'OPPONENT' },
-  { id: 'lethal', icon: Crosshair, labelKey: 'sidebar.lethal', code: 'LETHAL' },
-  { id: 'replay', icon: Film, labelKey: 'sidebar.replay', code: 'REPLAY' },
   { id: 'collection', icon: BookOpen, labelKey: 'sidebar.collection', code: 'COLLECTION' },
 ];
 

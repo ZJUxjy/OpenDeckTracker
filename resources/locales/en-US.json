@@ -16,9 +16,6 @@
     "deckTracker": "Deck Tracker",
     "decks": "Decks",
     "stats": "Stats",
-    "opponent": "Opponent",
-    "lethal": "Lethal",
-    "replay": "Replay",
     "collection": "Collection",
     "settings": "Settings"
   },
@@ -325,62 +322,7 @@
       "links": "Logs    Help & feedback    About"
     },
     "dashboard": {
-      "liveBadge": "LIVE TRACKER",
-      "moduleDecks": "DECK MODULE",
-      "moduleCollection": "COLLECTION MODULE",
-      "moduleReplay": "REPLAY MODULE",
-      "moduleLethal": "LETHAL MODULE"
-    },
-    "preview": {
-      "eyebrow": "Feature preview / TERMINAL MODULE",
-      "opponent": {
-        "title": "Opponent Analysis",
-        "body": "This module ships the Pip-Boy terminal layout first. Later it can connect deck prediction, revealed-card weighting, and popular-deck matching.",
-        "card0": {
-          "title": "Deck ID",
-          "body": "Infer likely deck lists from opponent class, revealed cards, and the current meta database."
-        },
-        "card1": {
-          "title": "Threat Alerts",
-          "body": "Surface key removal, lethal packages, and tempo swing points as terminal warnings."
-        },
-        "card2": {
-          "title": "Mulligan Intel",
-          "body": "Combine matchup history with your current deck to produce explainable mulligan guidance."
-        }
-      },
-      "lethal": {
-        "title": "Lethal Calculator",
-        "body": "This module keeps the Fallout 76 control surface ready for board attack, hand damage, weapon, and mana-combination logic.",
-        "card0": {
-          "title": "Damage Pool",
-          "body": "Summarize friendly board, direct damage, hero attacks, and triggerable buffs."
-        },
-        "card1": {
-          "title": "Taunt Routes",
-          "body": "Calculate valid attack distribution through taunt, divine shield, and immunity states."
-        },
-        "card2": {
-          "title": "Turn Simulation",
-          "body": "Enumerate executable sequences by mana curve and show the highest damage path."
-        }
-      },
-      "replay": {
-        "title": "Match Replays",
-        "body": "This module starts as a terminal archive view for local recordings, event timelines, mulligans, and key-turn review.",
-        "card0": {
-          "title": "Archive",
-          "body": "Filter local matches by date, deck, class, and result."
-        },
-        "card1": {
-          "title": "Timeline",
-          "body": "Review draw, play, damage, and graveyard changes turn by turn."
-        },
-        "card2": {
-          "title": "Review Marks",
-          "body": "Flag key turns so missed lethal and resource points are easy to revisit."
-        }
-      }
+      "liveBadge": "LIVE TRACKER"
     }
   },
   "deckTracker": {
