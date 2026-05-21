@@ -44,6 +44,10 @@ interface TaggedEntity {
 const EMPTY_COUNTERS: Readonly<Record<string, number>> = Object.freeze({});
 const RANGER_SYLVANAS_CARD_IDS = new Set(['TIME_609', 'TIME_609t1', 'TIME_609t2']);
 
+/** Pool key for 时光领主埃博克 (TIME_714) hover preview. */
+export const OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL =
+  'opponentMinionsPlayedLastTurnStillInPlay';
+
 export function createEmptyExtraDisplaySnapshot(): ExtraDisplaySnapshot {
   return {
     counters: { ...EMPTY_COUNTERS },
@@ -64,6 +68,10 @@ export class MatchExtraDisplayState {
   private readonly friendlyDeadUndeadCosts = new Map<string, number>();
   private readonly oneCostCardsPlayedThisGame = new Map<string, number>();
   private readonly rangerSylvanasCardsPlayedThisGame = new Map<string, number>();
+  private originalDeckCardIds: ReadonlySet<string> | null = null;
+  private activeTurnControllerId: number | null = null;
+  private readonly opponentMinionsPlayedCurrentOpponentTurn = new Map<number, string>();
+  private opponentMinionsPlayedLastOpponentTurn = new Map<number, string>();
 
   reset(): void {
     this.currentTurn = null;
@@ -75,6 +83,18 @@ export class MatchExtraDisplayState {
     this.friendlyDeadUndeadCosts.clear();
     this.oneCostCardsPlayedThisGame.clear();
     this.rangerSylvanasCardsPlayedThisGame.clear();
+    this.originalDeckCardIds = null;
+    this.activeTurnControllerId = null;
+    this.opponentMinionsPlayedCurrentOpponentTurn.clear();
+    this.opponentMinionsPlayedLastOpponentTurn.clear();
+  }
+
+  setOriginalDeckCardIds(cardIds: Iterable<string>): void {
+    this.originalDeckCardIds = new Set(cardIds);
+  }
+
+  clearOriginalDeckCardIds(): void {
+    this.originalDeckCardIds = null;
   }
 
   recordTurnChange(turn: number): void {
@@ -118,6 +138,14 @@ export class MatchExtraDisplayState {
   }): void {
     if (args.event.controllerId !== args.localControllerId) return;
 
+    if (
+      this.activeTurnControllerId !== null &&
+      this.activeTurnControllerId !== args.localControllerId
+    ) {
+      this.commitOpponentTurnMinionPlays();
+    }
+    this.activeTurnControllerId = args.localControllerId;
+
     const metadata = metadataForPlayedEvent(args.event, args.cardLookup);
     this.increment('friendlyCardsPlayedThisTurn', 1);
     this.increment('friendlyCardsPlayedThisGame', 1);
@@ -136,13 +164,23 @@ export class MatchExtraDisplayState {
       this.setCounter('heroPowerUsedThisTurn', 1);
     }
 
+    if (!this.isCardFromInitialDeck(args.event.cardId)) {
+      this.increment('cardsPlayedNotFromInitialDeckThisGame', 1);
+    }
+
     if (metadata.type === 'MINION') {
       this.increment('friendlyMinionCardsPlayedThisGame', 1);
       if (hasRace(metadata, 'ELEMENTAL')) this.increment('elementalsPlayedThisTurn', 1);
+      if (hasRace(metadata, 'TOTEM')) this.increment('friendlyTotemsSummonedThisGame', 1);
     }
 
     if (doesImbueHeroPower(metadata)) {
       this.increment('heroPowerImbueCountThisGame', 1);
+    }
+
+    const overloadAmount = overloadAmountFromMetadata(metadata);
+    if (overloadAmount > 0) {
+      this.increment('totalOverloadedCrystalsThisGame', overloadAmount);
     }
 
     if (metadata.type !== 'SPELL') return;
@@ -163,6 +201,32 @@ export class MatchExtraDisplayState {
       this.increment('shadowSpellsCastThisTurn', 1);
       this.incrementPool('shadowSpellsCastThisTurn', args.event.cardId);
     }
+  }
+
+  recordOpponentCardPlayed(args: {
+    event: CardPlayedEvent;
+    localControllerId: number;
+    cardLookup: ExtraDisplayCardLookup | null;
+  }): void {
+    if (args.event.controllerId === args.localControllerId) return;
+
+    if (this.activeTurnControllerId === args.localControllerId) {
+      this.opponentMinionsPlayedCurrentOpponentTurn.clear();
+    }
+    this.activeTurnControllerId = args.event.controllerId;
+
+    const metadata = metadataForPlayedEvent(args.event, args.cardLookup);
+    if (metadata.type !== 'MINION') return;
+    this.opponentMinionsPlayedCurrentOpponentTurn.set(args.event.entityId, args.event.cardId);
+  }
+
+  opponentMinionsPlayedLastTurnStillInPlay(
+    opponentBoardEntityIds: ReadonlySet<number>,
+  ): ExtraDisplayPoolEntry[] {
+    return [...this.opponentMinionsPlayedLastOpponentTurn.entries()]
+      .filter(([entityId]) => opponentBoardEntityIds.has(entityId))
+      .sort(([a], [b]) => a - b)
+      .map(([_, cardId]) => ({ cardId, count: 1 }));
   }
 
   recordEntityEnteredGraveyard(args: {
@@ -267,6 +331,20 @@ export class MatchExtraDisplayState {
     };
   }
 
+  private commitOpponentTurnMinionPlays(): void {
+    this.opponentMinionsPlayedLastOpponentTurn = new Map(
+      this.opponentMinionsPlayedCurrentOpponentTurn,
+    );
+    this.opponentMinionsPlayedCurrentOpponentTurn.clear();
+  }
+
+  private isCardFromInitialDeck(cardId: string): boolean {
+    if (this.originalDeckCardIds === null || this.originalDeckCardIds.size === 0) {
+      return true;
+    }
+    return this.originalDeckCardIds.has(cardId);
+  }
+
   private increment(key: string, amount: number): void {
     this.setCounter(key, (this.counters.get(key) ?? 0) + amount);
   }
@@ -349,6 +427,18 @@ function isScriptValueTag(tag: string): boolean {
     normalized === 'TAG_SCRIPT_DATA_NUM_2' ||
     normalized === 'SCRIPT_DATA_NUM_1' ||
     normalized === 'SCRIPT_DATA_NUM_2';
+}
+
+function overloadAmountFromMetadata(metadata: ExtraDisplayCardMetadata): number {
+  if (!hasMechanic(metadata, 'OVERLOAD')) return 0;
+  const text = metadata.text ?? '';
+  const match =
+    /过载：?\s*[（(]?(\d+)|Overload:\s*\(?(\d+)/i.exec(text);
+  if (match) {
+    const amount = Number(match[1] ?? match[2]);
+    return Number.isFinite(amount) && amount > 0 ? amount : 1;
+  }
+  return 1;
 }
 
 function normalizeToken(value: string | undefined): string {

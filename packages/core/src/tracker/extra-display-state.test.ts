@@ -16,6 +16,12 @@ const lookup: ExtraDisplayCardLookup = (cardId) => {
   if (cardId === 'TAUNT_MINION') return { type: 'MINION', mechanics: ['TAUNT'], cost: 2 };
   if (cardId === 'IMP_MINION') return { type: 'MINION', races: ['DEMON'], cost: 1, name: 'Imp Minion' };
   if (cardId === 'FEL_RAGE') return { type: 'SPELL', spellSchool: 'FEL', cost: 5 };
+  if (cardId === 'OVERLOAD_TWO') {
+    return { type: 'SPELL', cost: 2, mechanics: ['OVERLOAD'], text: 'Overload: (2)' };
+  }
+  if (cardId === 'OPP_MINION_A' || cardId === 'OPP_MINION_B') {
+    return { type: 'MINION', cost: 3 };
+  }
   return null;
 };
 
@@ -254,5 +260,57 @@ describe('MatchExtraDisplayState', () => {
       cardLookup: lookup,
     });
     expect(state.snapshot().counters.felSpellsCastThisGame ?? 0).toBe(0);
+  });
+
+  it('tracks opponent minions played last turn that remain on board for Ebonok', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordOpponentCardPlayed({
+      event: { ...baseEvent('OPP_MINION_A', 50), controllerId: 2 },
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordOpponentCardPlayed({
+      event: { ...baseEvent('OPP_MINION_B', 51), controllerId: 2 },
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: baseEvent('FEL_SPELL', 52),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    expect(
+      state.opponentMinionsPlayedLastTurnStillInPlay(new Set([50])).map((e) => e.cardId),
+    ).toEqual(['OPP_MINION_A']);
+    expect(
+      state.opponentMinionsPlayedLastTurnStillInPlay(new Set([50, 51])).map((e) => e.cardId),
+    ).toEqual(['OPP_MINION_A', 'OPP_MINION_B']);
+  });
+
+  it('counts totems summoned, overload crystals, and cards played outside the initial deck', () => {
+    const state = new MatchExtraDisplayState();
+    state.setOriginalDeckCardIds(['DECK_ONLY']);
+
+    state.recordCardPlayed({
+      event: baseEvent('TOTEM_MINION', 40),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: baseEvent('OVERLOAD_TWO', 41),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: baseEvent('FEL_SPELL', 42),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    const snap = state.snapshot();
+    expect(snap.counters.friendlyTotemsSummonedThisGame).toBe(1);
+    expect(snap.counters.totalOverloadedCrystalsThisGame).toBe(2);
+    expect(snap.counters.cardsPlayedNotFromInitialDeckThisGame).toBe(3);
   });
 });

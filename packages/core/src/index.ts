@@ -36,6 +36,17 @@ export type {
   ExtraDisplayPoolEntry,
   ExtraDisplaySnapshot,
 } from './tracker/extra-display-state';
+export { OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL } from './tracker/extra-display-state';
+export {
+  COST_REDUCTION_BY_CARD_ID,
+  formatCostReductionHoverLine,
+  getCostReductionRule,
+} from './tracker/cost-reduction-cards';
+export type {
+  CostReductionDriver,
+  CostReductionRule,
+  CostReductionScope,
+} from './tracker/cost-reduction-cards';
 
 // Opponent deck prediction.
 export { predictOpponentDecks } from './tracker/opponent-deck-prediction';

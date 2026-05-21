@@ -386,11 +386,21 @@ export class DeckTracker {
     this.transientGraveyardOriginEntityIds.delete(event.entityId);
     this.suppressedGraveyardEntityIds.delete(event.entityId);
     if (event.isManualPlay !== false) {
-      this.extraDisplayState.recordCardPlayed({
-        event,
-        localControllerId: this.game.localPlayer.controllerId,
-        cardLookup: this.cardMetadataLookup,
-      });
+      const localControllerId = this.game.localPlayer.controllerId;
+      if (event.controllerId === localControllerId) {
+        this.syncExtraDisplayOriginalDeck();
+        this.extraDisplayState.recordCardPlayed({
+          event,
+          localControllerId,
+          cardLookup: this.cardMetadataLookup,
+        });
+      } else {
+        this.extraDisplayState.recordOpponentCardPlayed({
+          event,
+          localControllerId,
+          cardLookup: this.cardMetadataLookup,
+        });
+      }
     }
     this.registry.handleCardPlayed(event);
     this.currentSnapshot = this.buildSnapshot();
@@ -439,6 +449,21 @@ export class DeckTracker {
       });
     }
     this.currentSnapshot = this.buildSnapshot();
+  }
+
+  private syncExtraDisplayOriginalDeck(): void {
+    const original = this.game.localPlayer.originalDeck;
+    if (original === null || original.isEmpty()) {
+      this.extraDisplayState.clearOriginalDeckCardIds();
+      return;
+    }
+    const cardIds: string[] = [];
+    for (const entry of original.entries()) {
+      for (let i = 0; i < entry.count; i += 1) {
+        cardIds.push(entry.cardId);
+      }
+    }
+    this.extraDisplayState.setOriginalDeckCardIds(cardIds);
   }
 
   recordTurnChange(turn: number): void {
@@ -1142,9 +1167,14 @@ export class DeckTracker {
     friendlyHand: readonly string[],
   ): NonNullable<DeckTrackerSnapshot['extraDisplay']> {
     const base = this.extraDisplayState.snapshot();
+    const opponentBoard = this.buildOpponentBoard();
     const pools: ExtraDisplaySnapshot['pools'] = {
       ...base.pools,
       ...this.buildDeckAndHandPools(deck, friendlyHand),
+      opponentMinionsPlayedLastTurnStillInPlay:
+        this.extraDisplayState.opponentMinionsPlayedLastTurnStillInPlay(
+          new Set(opponentBoard.map((record) => record.entityId)),
+        ),
     };
     return {
       ...base,
@@ -1215,13 +1245,21 @@ export class DeckTracker {
 
   private buildFriendlyBoard(): OpponentCardRecord[] {
     const localControllerId = this.game.localPlayer.controllerId;
+    return this.buildBoardForController(localControllerId);
+  }
+
+  private buildOpponentBoard(): OpponentCardRecord[] {
+    return this.buildBoardForController(this.game.opposingPlayer.controllerId);
+  }
+
+  private buildBoardForController(controllerId: number): OpponentCardRecord[] {
     return Array.from(this.game.entities.values())
       .filter(
         (entity) =>
           entity.isRevealed &&
           isHistoryTrackableCardId(entity.cardId, this.cardMetadataLookup) &&
           entity.isInPlay &&
-          this.resolveHistoryController(entity) === localControllerId,
+          this.resolveHistoryController(entity) === controllerId,
       )
       .map((entity) => ({
         entityId: entity.entityId,

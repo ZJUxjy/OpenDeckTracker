@@ -100,6 +100,9 @@ const CARD_DEFS: Record<
   COST10: { name: 'Left Card', cost: 10, rarity: 'COMMON' },
   CORE_BT_427: { name: 'Soul Feast', cost: 1, rarity: 'RARE', type: 'SPELL' },
   CATA_529: { name: 'Felfused Fel-Fisher', cost: 6, rarity: 'RARE', type: 'MINION' },
+  TIME_714: { name: 'Time Lord Ebonok', cost: 6, rarity: 'LEGENDARY', type: 'MINION' },
+  OPP_LAST_A: { name: 'Opponent Last Turn A', cost: 3, rarity: 'COMMON', type: 'MINION' },
+  OPP_LAST_B: { name: 'Opponent Last Turn B', cost: 4, rarity: 'COMMON', type: 'MINION' },
   CATA_527: { name: 'Nespirah', cost: 3, rarity: 'LEGENDARY', type: 'LOCATION' },
   CATA_527t2: { name: 'Unburdened Nespirah', cost: 6, rarity: 'LEGENDARY', type: 'MINION' },
   FEL_SPELL: { name: 'Fel Spell', cost: 2, rarity: 'COMMON', type: 'SPELL', spellSchool: 'FEL' },
@@ -1261,6 +1264,105 @@ describe('LiveDeckPanel hover', () => {
     expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
     expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe(cardId);
     expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual(expectedPool);
+  });
+
+  it('shows Ebonok last-turn destroy pool on hover with card previews', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'TIME_714', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          opponentMinionsPlayedLastTurnStillInPlay: [
+            { cardId: 'OPP_LAST_A', count: 1 },
+            { cardId: 'OPP_LAST_B', count: 1 },
+          ],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'pool');
+
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(cardPreviewShowEnhancedPool).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![0]).toBe('TIME_714');
+    expect(cardPreviewShowEnhancedPool.mock.calls[0]![1]).toEqual(['OPP_LAST_A', 'OPP_LAST_B']);
+    expect(cardPreviewShowEnhancedExtra).not.toHaveBeenCalled();
+  });
+
+  it('highlights Ebonok when the destroy pool is empty', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'TIME_714', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          opponentMinionsPlayedLastTurnStillInPlay: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-display', 'active');
+    expect(row).toHaveClass('ring-1');
+    expect(row).toHaveAttribute('data-extra-preview', 'extra');
+
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(cardPreviewShowEnhancedExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![1]).toEqual({
+      title: 'Time Lord Ebonok',
+      lines: ['可消灭：无'],
+    });
+  });
+
+  it('shows cost-reduction hover text for giant-style cards even at zero progress', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_529', count: 1 }],
+      extraDisplay: {
+        counters: {
+          felSpellsCastThisGame: 2,
+        },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'extra');
+
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(cardPreviewShowEnhancedExtra).toHaveBeenCalledTimes(1);
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![0]).toBe('CATA_529');
+    expect(cardPreviewShowEnhancedExtra.mock.calls[0]![1]).toEqual({
+      title: 'Felfused Fel-Fisher',
+      lines: ['本局邪能法术：2；费用减少 2，当前费用 4'],
+    });
   });
 
   it('uses enhanced text preview for counter-only candidates', () => {

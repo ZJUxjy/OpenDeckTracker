@@ -5,7 +5,13 @@ import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useCardDef } from '../hooks/use-card-def';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
-import { expandDeckToCopies, type DeckCopy, type DeckTrackerSnapshot } from '@hdt/core';
+import {
+  expandDeckToCopies,
+  formatCostReductionHoverLine,
+  getCostReductionRule,
+  type DeckCopy,
+  type DeckTrackerSnapshot,
+} from '@hdt/core';
 import { clsx } from 'clsx';
 import { Gift } from 'lucide-react';
 import { useCardPreview, type RowPreviewRequest } from '../hooks/use-card-preview';
@@ -679,25 +685,54 @@ function buildRowExtraDisplay(
     isAnimalCompanionPoolPreview || isRangerSylvanasPreview
       ? null
       : getExtraDisplayCandidate(cardId);
+  const isLastTurnHistory = candidate?.extraDisplay?.displayType === 'last_turn_history';
+  const lastTurnPool = isLastTurnHistory
+    ? (extraDisplay?.pools?.opponentMinionsPlayedLastTurnStillInPlay ?? [])
+    : [];
   const hasTrackedState = candidate ? hasTrackedExtraDisplayState(candidate, extraDisplay) : false;
+  const showLastTurnHistory = isLastTurnHistory && extraDisplay !== undefined;
   const dynamicPoolCardIds = isAnimalCompanionPoolPreview
     ? [...animalCompanionPoolCardIds]
     : isRangerSylvanasPreview
       ? resolveRangerSylvanasPlayedPool(extraDisplay)
-      : candidate && hasTrackedState
-        ? resolvePreviewPoolCardIds(candidate, extraDisplay)
-        : [];
+      : showLastTurnHistory
+        ? lastTurnPool.map((entry) => entry.cardId)
+        : candidate && hasTrackedState
+          ? resolvePreviewPoolCardIds(candidate, extraDisplay)
+          : [];
   const extraLines: string[] = [];
+  const costReductionRule = getCostReductionRule(cardId);
+  if (costReductionRule && extraDisplay) {
+    const baseCost = def?.cost ?? candidate?.cost ?? 0;
+    extraLines.push(
+      formatCostReductionHoverLine(baseCost, costReductionRule, extraDisplay.counters ?? {}),
+    );
+  }
+  if (isLastTurnHistory && extraDisplay) {
+    extraLines.push(`可消灭：${formatPoolNames(lastTurnPool)}`);
+  }
   const triggerHit = matchOnBoardTrigger(def, extraDisplay?.friendlyBoard ?? []);
   if (triggerHit) {
     extraLines.push(`将触发：${triggerHit.triggerNames.join('、')}`);
   }
   const stateNeeded = candidate?.extraDisplay?.stateNeeded ?? [];
   const template = candidate?.extraDisplay?.suggestedDisplayTextZhCN;
-  if (candidate && hasTrackedState && stateNeeded.length > 0 && template) {
+  if (
+    !costReductionRule &&
+    !isLastTurnHistory &&
+    candidate &&
+    hasTrackedState &&
+    stateNeeded.length > 0 &&
+    template
+  ) {
     const bindings = computeBindings(cardId, candidate, def, extraDisplay);
     extraLines.push(expandTemplate(template, bindings));
   }
+  const emptyPoolWarning =
+    isLastTurnHistory &&
+    (candidate?.extraDisplay?.emptyWarning ?? false) &&
+    lastTurnPool.length === 0 &&
+    extraDisplay !== undefined;
 
   // On-board trigger highlight remains visual, but detailed enhanced data
   // belongs in the hover preview rather than inline row text.
@@ -708,7 +743,7 @@ function buildRowExtraDisplay(
   return {
     poolCardIds: dynamicPoolCardIds.length > 0 ? dynamicPoolCardIds : staticPoolCardIds,
     extraLines,
-    highlight: triggerHit !== null,
+    highlight: triggerHit !== null || emptyPoolWarning,
   };
 }
 
@@ -868,7 +903,7 @@ function poolForStateKey(
 }
 
 function allowsPoolPreview(displayType: string | undefined): boolean {
-  return displayType?.includes('pool') === true;
+  return displayType?.includes('pool') === true || displayType === 'last_turn_history';
 }
 
 function prefersTextPreview(displayType: string | undefined): boolean {
