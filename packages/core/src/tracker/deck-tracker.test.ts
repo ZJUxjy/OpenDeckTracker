@@ -532,7 +532,50 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
-  it('includes opposing hero vitals from the board-attack context provider', async () => {
+  it('caches board-attack figures between turn boundaries (lethal heuristic guard)', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = {
+      friendly: [
+        { entityId: 11, cardId: 'CS2_231', zonePosition: 1, attack: 3, health: 3, damage: 0 },
+      ],
+      opposing: [],
+    };
+
+    const provider = vi.fn(() => ({}));
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: provider,
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    // First build populated the cache from a real board state.
+    expect(tracker.getSnapshot().boardAttack).toEqual({ friendly: 3, opposing: 0 });
+
+    // Board changes mid-turn; boardAttack/boardAttackToFace must stay
+    // frozen until the next turn boundary so the lethal heuristics
+    // (computeMaxFaceDamage) do not re-run on every PowerEvent tick.
+    state.boardState = {
+      friendly: [
+        { entityId: 11, cardId: 'CS2_231', zonePosition: 1, attack: 9, health: 3, damage: 0 },
+      ],
+      opposing: [],
+    };
+    await advanceTicks(4);
+    expect(tracker.getSnapshot().boardAttack).toEqual({ friendly: 3, opposing: 0 });
+
+    // A turn boundary refreshes the cached figures.
+    tracker.recordTurnChange(1);
+    expect(tracker.getSnapshot().boardAttack).toEqual({ friendly: 9, opposing: 0 });
+    tracker.stop();
+  });
+
+  it('updates hero vitals on every tick (no caching to turn boundaries)', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();
     state.decks = [fakeDeck(1, 'A')];
@@ -540,27 +583,82 @@ describe('DeckTracker', () => {
     state.handState = { friendlyHand: [], opposingHandCount: 0 };
     state.boardState = { friendly: [], opposing: [] };
 
+    // Host-style provider whose hero readings change over time as the
+    // game progresses (damage taken mid-turn, healing, armor gained).
+    let friendlyHealth = 30;
+    let opposingHealth = 30;
     const tracker = new DeckTracker({
       mirror,
       identifier: new CallbackDeckIdentifier(async () => 1),
       boardAttackContextProvider: () => ({
-        friendlyHero: { health: 26, armor: 1, effectiveHealth: 27 },
-        opposingHero: { health: 18, armor: 4, effectiveHealth: 22 },
+        friendlyHero: { health: friendlyHealth, armor: 0, effectiveHealth: friendlyHealth },
+        opposingHero: { health: opposingHealth, armor: 0, effectiveHealth: opposingHealth },
       }),
     });
     tracker.start();
     await advanceTicks(4);
 
-    expect(tracker.getSnapshot().friendlyHero).toEqual({
-      health: 26,
-      armor: 1,
-      effectiveHealth: 27,
+    expect(tracker.getSnapshot().friendlyHero?.health).toBe(30);
+    expect(tracker.getSnapshot().opposingHero?.health).toBe(30);
+
+    // Mid-turn damage: HP MUST update on the next tick — caching it
+    // to turn boundaries would freeze the displayed HP in the UI.
+    friendlyHealth = 24;
+    opposingHealth = 18;
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().friendlyHero?.health).toBe(24);
+    expect(tracker.getSnapshot().opposingHero?.health).toBe(18);
+
+    // Another mid-turn change before any recordTurnChange: still live.
+    friendlyHealth = 20;
+    opposingHealth = 12;
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().friendlyHero?.health).toBe(20);
+    expect(tracker.getSnapshot().opposingHero?.health).toBe(12);
+    tracker.stop();
+  });
+
+  it('does not populate the board-attack cache while boardState is still null (PRE_MATCH bootstrap)', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    // Reflector hasn't populated boardState yet — provider MUST NOT
+    // be invoked, and the cache MUST stay empty so the first board
+    // observation drives a real recompute (not a frozen zero).
+    state.boardState = null;
+
+    const provider = vi.fn(() => ({
+      friendlyHero: { health: 30, armor: 0, effectiveHealth: 30 },
+    }));
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: provider,
     });
-    expect(tracker.getSnapshot().opposingHero).toEqual({
-      health: 18,
-      armor: 4,
-      effectiveHealth: 22,
-    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(provider).not.toHaveBeenCalled();
+    expect(tracker.getSnapshot().friendlyHero).toBeNull();
+    expect(tracker.getSnapshot().boardAttack).toEqual({ friendly: 0, opposing: 0 });
+
+    // Once boardState arrives, the first tick must compute fresh
+    // figures from the real board (not a stale zero baseline).
+    state.boardState = {
+      friendly: [
+        { entityId: 11, cardId: 'CS2_231', zonePosition: 1, attack: 7, health: 3, damage: 0 },
+      ],
+      opposing: [],
+    };
+    await advanceTicks(2);
+
+    expect(provider).toHaveBeenCalled();
+    expect(tracker.getSnapshot().friendlyHero?.health).toBe(30);
+    expect(tracker.getSnapshot().boardAttack.friendly).toBe(7);
     tracker.stop();
   });
 

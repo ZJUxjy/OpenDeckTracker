@@ -292,6 +292,22 @@ export class DeckTracker {
   /** Latest reflector boardState — fed to `computeBoardAttack`. */
   private latestBoardState: BoardState | null = null;
   private latestMatchInfo: MatchInfo | null = null;
+  // Board-attack recompute cache. The snapshot rebuilds on every poll
+  // tick and on every PowerEvent-driven mutation (recordCardPlayed,
+  // applyLogDerivedEntityUpdates, recordExtraDisplayEntityTag), but the
+  // expensive lethal heuristics (`computeBoardAttack` and especially
+  // `computeMaxFaceDamage` with its taunt-coverage search) are only
+  // refreshed at turn boundaries (`recordTurnChange`). Cached figures
+  // are reused between boundaries.
+  //
+  // Intentionally NOT cached: `friendlyHero` / `opposingHero` vitals.
+  // Those are surfaced verbatim in the UI as the live HP/armor readout
+  // and MUST update within the same turn (damage taken, healing, armor
+  // gained). The provider call itself is cheap (a couple of entity-map
+  // scans); only the post-processing heuristics are worth memoising.
+  private cachedBoardAttack: BoardAttackTotals | null = null;
+  private cachedBoardAttackToFace: BoardAttackTotals | null = null;
+  private boardAttackRefreshPending = false;
 
   constructor(args: {
     mirror: HearthMirror;
@@ -427,6 +443,10 @@ export class DeckTracker {
 
   recordTurnChange(turn: number): void {
     this.extraDisplayState.recordTurnChange(turn);
+    // A turn boundary — refresh the cached board-attack figures on
+    // this rebuild. Hero vitals are not cached and always reflect the
+    // latest provider output.
+    this.boardAttackRefreshPending = true;
     this.currentSnapshot = this.buildSnapshot();
   }
 
@@ -592,6 +612,7 @@ export class DeckTracker {
       this.game.reset();
       this.resetOpponentRecords();
       this.opponentClassCache = null;
+      this.resetBoardAttackCache();
       // NOTE: registry.reset() is intentionally NOT called here. The
       // global-effects registry is reset on the `create-game`
       // PowerEvent (driven by the host on watcher's replay or live
@@ -604,6 +625,12 @@ export class DeckTracker {
     }
     if (target === 'IN_MATCH' && previousPhase !== 'IN_MATCH') {
       this.game.transitionTo('IN_MATCH');
+      // The PRE_MATCH boot may have populated the board-attack cache
+      // with figures derived from a partially-loaded board state (or
+      // none at all if the reflector wasn't ready yet). Clear it so
+      // the first IN_MATCH tick recomputes against the authoritative
+      // board before the first TURN tag flips.
+      this.resetBoardAttackCache();
       // First-time entry: try to identify the deck.
       if (this.game.localPlayer.originalDeck === null && !this.awaitingDeckSelection) {
         await this.identifyDeck(matchInfo, { handState, boardState });
@@ -622,6 +649,7 @@ export class DeckTracker {
       this.lastKnownSelectedDeckId = null;
       this.identifiedDeck = null;
       this.opponentClassCache = null;
+      this.resetBoardAttackCache();
     }
     this.game.phase = target;
 
@@ -790,6 +818,13 @@ export class DeckTracker {
     });
   }
 
+  /** Drop carried-over board-attack figures so a new match starts clean. */
+  private resetBoardAttackCache(): void {
+    this.cachedBoardAttack = null;
+    this.cachedBoardAttackToFace = null;
+    this.boardAttackRefreshPending = false;
+  }
+
   private buildSnapshot(args?: {
     matchInfo?: MatchInfo | null;
     handState?: HandState | null;
@@ -878,19 +913,54 @@ export class DeckTracker {
 
     const effects = this.registry.snapshot();
 
+    // The provider is invoked on every rebuild so that hero vitals
+    // (HP / armor / effectiveHealth) stay live within the turn — UI
+    // surfaces these directly as the current HP readout, so caching
+    // them to turn boundaries would freeze the displayed HP whenever
+    // damage or healing happens mid-turn. The provider itself is cheap
+    // (a few entity-map scans); only the post-processing heuristics
+    // below are worth memoising.
+    //
+    // Skip the provider call entirely when boardState is still null —
+    // this happens during PRE_MATCH bootstrap before the mirror has
+    // populated boardState. Without this guard the cache could be
+    // populated with an empty BoardAttackTotals and then frozen until
+    // the first turn boundary.
     const resolvedMatchInfo = matchInfo ?? this.latestMatchInfo;
     const boardAttackOpts =
-      this.boardAttackContextProvider !== null
+      this.boardAttackContextProvider !== null && this.latestBoardState !== null
         ? this.boardAttackContextProvider(
             this.latestBoardState,
             resolvedMatchInfo,
             this.game.localPlayer.controllerId,
           )
-        : {};
-    const boardAttack = computeBoardAttack(this.latestBoardState, boardAttackOpts);
-    const boardAttackToFace = computeMaxFaceDamage(this.latestBoardState, boardAttackOpts);
-    const friendlyHero = boardAttackOpts.friendlyHero ?? null;
-    const opposingHero = boardAttackOpts.opposingHero ?? null;
+        : null;
+
+    // Refresh `boardAttack` / `boardAttackToFace` only at turn boundaries
+    // (or the first build with a real board state, when nothing is
+    // cached yet); intermediate ticks reuse the cached figures and skip
+    // the expensive lethal heuristics — `computeMaxFaceDamage` in
+    // particular searches over taunt assignments. The cache still works
+    // when no provider is wired: `computeBoardAttack` falls back to
+    // "sum positive ATK from mirror.boardState" with an empty opts bag.
+    const recompute =
+      this.latestBoardState !== null &&
+      (this.cachedBoardAttack === null || this.boardAttackRefreshPending);
+    if (recompute) {
+      this.boardAttackRefreshPending = false;
+      this.cachedBoardAttack = computeBoardAttack(
+        this.latestBoardState,
+        boardAttackOpts ?? {},
+      );
+      this.cachedBoardAttackToFace = computeMaxFaceDamage(
+        this.latestBoardState,
+        boardAttackOpts ?? {},
+      );
+    }
+    const boardAttack = this.cachedBoardAttack ?? { friendly: 0, opposing: 0 };
+    const boardAttackToFace = this.cachedBoardAttackToFace ?? { friendly: 0, opposing: 0 };
+    const friendlyHero = boardAttackOpts?.friendlyHero ?? null;
+    const opposingHero = boardAttackOpts?.opposingHero ?? null;
 
     return {
       phase: this.game.phase,
