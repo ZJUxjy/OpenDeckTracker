@@ -202,7 +202,7 @@ export default function App() {
           aria-label={t('fallout.statusBar.ariaLabel')}
           style={{ WebkitAppRegion: 'drag' } as CSSProperties}
         >
-          <span>{appVersion ? `${t('fallout.statusBar.version')}: v${appVersion}` : ''}</span>
+          <span>{appVersion ? `${t('fallout.statusBar.version')}: v${appVersion.replace('-', ' ')}` : ''}</span>
         </footer>
       </div>
       {/* Global dialog — shown only when the tracker emits

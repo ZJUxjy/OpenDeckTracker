@@ -325,7 +325,7 @@ function AboutPanel() {
       <div className="border-b border-border pb-4 mb-6">
         <h2 className="text-xl font-bold text-text">{t('settings.about.title')}</h2>
         <p className="text-text-dim text-sm mt-1 font-mono tabular-nums">
-          {t('settings.about.version', { version: version || '—' })}
+          {t('settings.about.version', { version: version ? version.replace('-', ' ') : '—' })}
         </p>
       </div>
 
