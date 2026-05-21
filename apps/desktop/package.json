@@ -1,6 +1,6 @@
 {
   "name": "@hdt/desktop",
-  "version": "0.1.0-beta",
+  "version": "0.5.0-beta",
   "private": true,
   "description": "OpenDeckTracker desktop app",
   "author": "OpenDeckTracker",

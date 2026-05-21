@@ -83,17 +83,18 @@ nsis:
   license: ../../LICENSE.txt
 
 # Auto-update feed — consumed by electron-updater in the main process
-# (apps/desktop/src/main/auto-update.ts). The `generic` provider points
-# at a static-file CDN that hosts the build output (latest.yml +
-# .exe + .blockmap). Until a real CDN bucket is provisioned (per the
-# zh-CN distribution decision in H7), this URL is a placeholder — the
-# auto-update check will fail with 404, which the main process logs
-# and ignores. Once provisioned, replace the URL below with the real
-# bucket / domain (e.g. https://updates.opendecktracker.example/win).
+# (apps/desktop/src/main/auto-update.ts). GitHub Releases is the
+# primary distribution channel for the v0.x beta line; electron-updater
+# fetches `latest.yml` from the release matching `v<version>` and
+# downloads the .exe + .blockmap incrementally. `releaseType: prerelease`
+# marks pre-1.0 builds so users on a future stable channel won't auto-
+# update into a beta, while testers explicitly opting into prereleases
+# still get them.
 publish:
-  provider: generic
-  url: https://updates.opendecktracker.example/win/${arch}
-  channel: latest
+  provider: github
+  owner: ZJUxjy
+  repo: OpenDeckTracker
+  releaseType: prerelease
 
 # ========================================================================
 # TODOs before commercial release:
