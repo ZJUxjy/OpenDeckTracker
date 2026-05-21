@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, act } from '@testing-library/react';
-import { APPEARANCE_STORAGE_KEY, ACCENT_PALETTE } from '../src/stores/appearance-store';
+import {
+  APPEARANCE_STORAGE_KEY,
+  APPEARANCE_V1_MACOS_RESET_KEY,
+  ACCENT_PALETTE,
+} from '../src/stores/appearance-store';
 
 describe('AppearanceApplyEffect', () => {
   beforeEach(() => {
@@ -158,6 +162,11 @@ describe('AppearanceApplyEffect', () => {
   });
 
   it('forces dark color-scheme and terminal accent while the Fallout 76 UI style is active', async () => {
+    // The v1 one-shot reset would flip a stored `fallout76` to `macos`
+    // on first read. This test models a user who has *deliberately*
+    // re-picked Fallout 76 after the reset already ran, so pre-stamp
+    // the sentinel to opt out of migration.
+    localStorage.setItem(APPEARANCE_V1_MACOS_RESET_KEY, '1');
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
       JSON.stringify({ density: 'comfortable', uiStyle: 'fallout76', accent: 'blue', theme: 'light' }),

@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { APPEARANCE_STORAGE_KEY, ACCENT_PALETTE } from '../src/stores/appearance-store';
+import {
+  APPEARANCE_STORAGE_KEY,
+  APPEARANCE_V1_MACOS_RESET_KEY,
+  ACCENT_PALETTE,
+} from '../src/stores/appearance-store';
 
 describe('appearance store', () => {
   beforeEach(() => {
@@ -199,6 +203,56 @@ describe('appearance store', () => {
 
     expect(useAppearanceStore.getState().uiStyle).toBe('macos');
     expect(useAppearanceStore.getState().density).toBe('compact');
+  });
+
+  it('v1 one-shot reset flips legacy `fallout76` uiStyle to `macos` and persists the flip', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'compact', uiStyle: 'fallout76', accent: 'orange', theme: 'dark' }),
+    );
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
+    // Other fields unaffected.
+    expect(useAppearanceStore.getState().density).toBe('compact');
+    expect(useAppearanceStore.getState().accent).toBe('orange');
+    expect(useAppearanceStore.getState().theme).toBe('dark');
+    // Sentinel set so the reset never fires again.
+    expect(localStorage.getItem(APPEARANCE_V1_MACOS_RESET_KEY)).toBe('1');
+    // Migrated value persisted (so a future reload without sentinel
+    // would still land on macos via stored value, not bare default).
+    const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
+    expect(stored.uiStyle).toBe('macos');
+  });
+
+  it('after the v1 reset has run, a user deliberately re-picking `fallout76` is preserved', async () => {
+    // Simulate state right after the v1 reset has fired: sentinel set,
+    // stored value reflects whatever the user picks afterwards.
+    localStorage.setItem(APPEARANCE_V1_MACOS_RESET_KEY, '1');
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', uiStyle: 'fallout76', accent: 'blue', theme: 'system' }),
+    );
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
+  });
+
+  it('fresh install (no stored appearance) marks the v1 reset sentinel up front', async () => {
+    expect(localStorage.getItem(APPEARANCE_V1_MACOS_RESET_KEY)).toBeNull();
+    await import('../src/stores/appearance-store');
+    expect(localStorage.getItem(APPEARANCE_V1_MACOS_RESET_KEY)).toBe('1');
+  });
+
+  it('v1 reset leaves non-fallout76 stored values untouched', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'compact', uiStyle: 'tavern', accent: 'blue', theme: 'system' }),
+    );
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().uiStyle).toBe('tavern');
+    expect(localStorage.getItem(APPEARANCE_V1_MACOS_RESET_KEY)).toBe('1');
   });
 
   it('fires window.hdt.overlay.setEnabled when setGameOverlay is called', async () => {

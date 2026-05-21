@@ -2,6 +2,18 @@ import { create } from 'zustand';
 
 export const APPEARANCE_STORAGE_KEY = 'hdt.appearance';
 
+// One-shot v1 migration: testers who ran any pre-`b47024c` build had
+// `uiStyle: 'fallout76'` written into their localStorage on first launch
+// (the previous default). When the v1 default flipped to `macos`, those
+// existing testers kept seeing Fallout because localStorage outranks
+// DEFAULTS. This sentinel records that the v1 reset has been applied
+// to this profile; on first read after upgrade, if no sentinel is set
+// AND the stored `uiStyle` is `fallout76`, flip it to `macos` once.
+// Subsequent reads see the sentinel and leave the value alone — so a
+// user who deliberately re-picks Fallout from Settings after the
+// migration keeps Fallout.
+export const APPEARANCE_V1_MACOS_RESET_KEY = 'hdt.appearance.v1MacosReset';
+
 export type Density = 'comfortable' | 'compact';
 
 /** Visual skin only; layout stays the current top-navigation structure. */
@@ -114,13 +126,34 @@ function coerceAccent(raw: unknown): Accent {
 function readStored(): StoredShape {
   if (typeof localStorage === 'undefined') return { ...DEFAULTS };
 
+  let coerced: StoredShape;
   try {
     const raw = localStorage.getItem(APPEARANCE_STORAGE_KEY);
-    if (!raw) return { ...DEFAULTS };
-    return coerceStoredShape(JSON.parse(raw));
+    if (!raw) {
+      // No prior settings — mark the v1 reset as already-applied so
+      // future loads don't second-guess a brand-new install where
+      // `fallout76` would only ever be a deliberate user choice.
+      try { localStorage.setItem(APPEARANCE_V1_MACOS_RESET_KEY, '1'); } catch { /* ignore */ }
+      return { ...DEFAULTS };
+    }
+    coerced = coerceStoredShape(JSON.parse(raw));
   } catch {
     return { ...DEFAULTS };
   }
+
+  // Apply the one-shot v1 reset if a pre-flip tester still has `fallout76`.
+  try {
+    if (localStorage.getItem(APPEARANCE_V1_MACOS_RESET_KEY) !== '1') {
+      if (coerced.uiStyle === 'fallout76') {
+        coerced = { ...coerced, uiStyle: 'macos' };
+        writeStored(coerced);
+      }
+      localStorage.setItem(APPEARANCE_V1_MACOS_RESET_KEY, '1');
+    }
+  } catch {
+    // Storage write failures don't block the in-memory value; next launch will try again.
+  }
+  return coerced;
 }
 
 function coerceStoredShape(raw: unknown): StoredShape {
@@ -140,6 +173,15 @@ function writeStored(s: StoredShape): void {
 
   try {
     localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(s));
+    // Stamp the v1-reset sentinel on every deliberate save. Any value
+    // written by `writeStored` is by definition a deliberate user
+    // choice (or a value coming back from another renderer window's
+    // explicit save), so the v1 one-shot migration MUST NOT undo it
+    // on the next read. Without this, a user who re-picks `fallout76`
+    // via Settings after the migration ran in one session would see
+    // it flipped back to `macos` the next time the module is re-read
+    // in a context where the sentinel hasn't been propagated yet.
+    localStorage.setItem(APPEARANCE_V1_MACOS_RESET_KEY, '1');
   } catch {
     // Ignore storage errors; the in-memory setting still updates for this session.
   }
