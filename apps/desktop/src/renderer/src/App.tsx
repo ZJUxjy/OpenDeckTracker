@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import {
   AppWindow,
   BarChart2,
@@ -38,6 +38,20 @@ export default function App() {
   useDeckTracker();
   // Activate hearthwatcher diagnostics subscription (status displayed in Dashboard).
   useHearthWatcherStatus();
+
+  // Read the app version once at mount for the footer pill. Reads from
+  // `app.getVersion()` (which reflects package.json) so the footer
+  // stays in sync with releases without manual locale-string updates.
+  const [appVersion, setAppVersion] = useState<string>('');
+  useEffect(() => {
+    let alive = true;
+    void window.hdt?.app?.getVersion().then((v) => {
+      if (alive) setAppVersion(v);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // Cross-window sync: when an overlay window's close button disables
   // the overlay, every renderer (including the main window's Settings
@@ -188,13 +202,7 @@ export default function App() {
           aria-label={t('fallout.statusBar.ariaLabel')}
           style={{ WebkitAppRegion: 'drag' } as CSSProperties}
         >
-          <span className="font-bold text-amber">{t('fallout.statusBar.pipboy')}</span>
-          <span>{t('fallout.statusBar.version')}</span>
-          <span>{t('fallout.statusBar.database')}</span>
-          <span className={isAlive ? 'text-green' : 'text-text-mute'}>
-            {isAlive ? t('fallout.statusBar.connected') : t('fallout.statusBar.standby')}
-          </span>
-          <span className="ml-auto text-amber">{t('fallout.statusBar.links')}</span>
+          <span>{appVersion ? `${t('fallout.statusBar.version')}: v${appVersion}` : ''}</span>
         </footer>
       </div>
       {/* Global dialog — shown only when the tracker emits

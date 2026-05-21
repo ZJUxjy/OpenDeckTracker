@@ -313,13 +313,9 @@
   },
   "fallout": {
     "statusBar": {
-      "ariaLabel": "Pip-Boy 状态栏",
-      "pipboy": "PIP-BOY 76",
-      "version": "当前版本：v1.0.0.76",
-      "database": "数据库：本地缓存就绪",
-      "connected": "终端连接：已上线",
-      "standby": "终端连接：待机",
-      "links": "日志    帮助与反馈    关于"
+      "ariaLabel": "应用状态栏",
+      "version": "当前版本",
+      "database": "数据库"
     },
     "dashboard": {
       "liveBadge": "实时记牌"

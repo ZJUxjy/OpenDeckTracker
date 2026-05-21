@@ -313,13 +313,9 @@
   },
   "fallout": {
     "statusBar": {
-      "ariaLabel": "Pip-Boy status bar",
-      "pipboy": "PIP-BOY 76",
-      "version": "Version: v1.0.0.76",
-      "database": "Database: local cache ready",
-      "connected": "Terminal link: online",
-      "standby": "Terminal link: standby",
-      "links": "Logs    Help & feedback    About"
+      "ariaLabel": "App status bar",
+      "version": "Version",
+      "database": "Database"
     },
     "dashboard": {
       "liveBadge": "LIVE TRACKER"
