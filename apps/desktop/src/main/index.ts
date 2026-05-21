@@ -18,25 +18,29 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 // derives both from `package.json#name`, which is `@hdt/desktop` —
 // resulting in `%APPDATA%\@hdt\desktop\`. We want the user-visible
 // product name on disk too, both for clarity and so renaming the
-// package later doesn't strand user data. MUST be called BEFORE the
-// first `app.getPath('userData')` call (which `requestSingleInstanceLock`
-// implicitly triggers via its lock file).
+// package later doesn't strand user data. `setName` MUST be called
+// BEFORE the first `app.getPath('userData')` call (which
+// `requestSingleInstanceLock` implicitly triggers via its lock file).
 //
 // One-shot migration: if the v1-test-build pre-rename directory exists
 // and the new one doesn't, atomically rename so v1 testers keep their
-// recordings, stats, and saved decks. Best-effort — failure logs but
-// doesn't block startup; user just sees an empty profile.
-const oldAppDataDir = join(app.getPath('appData'), '@hdt', 'desktop');
-app.setName('OpenDeckTracker');
-const newUserDataDir = app.getPath('userData');
-if (existsSync(oldAppDataDir) && !existsSync(newUserDataDir)) {
+// recordings, stats, and saved decks. Compute the new path manually
+// from the `appData` parent rather than via `app.getPath('userData')`,
+// because `getPath('userData')` has the side effect of eagerly
+// creating the directory — which would make `existsSync` return true
+// and skip the migration even though no data has been moved yet.
+const appDataRoot = app.getPath('appData');
+const oldAppDataDir = join(appDataRoot, '@hdt', 'desktop');
+const newAppDataDir = join(appDataRoot, 'OpenDeckTracker');
+if (existsSync(oldAppDataDir) && !existsSync(newAppDataDir)) {
   try {
-    renameSync(oldAppDataDir, newUserDataDir);
-    console.log('[migration] userData', oldAppDataDir, '→', newUserDataDir);
+    renameSync(oldAppDataDir, newAppDataDir);
+    console.log('[migration] userData', oldAppDataDir, '→', newAppDataDir);
   } catch (err) {
     console.error('[migration] userData rename failed', err);
   }
 }
+app.setName('OpenDeckTracker');
 
 protocol.registerSchemesAsPrivileged([
   {

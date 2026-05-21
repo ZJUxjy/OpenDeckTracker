@@ -5,6 +5,17 @@ directories:
   output: release
   buildResources: build
 
+# Skip electron-builder's own `@electron/rebuild` invocation. With pnpm
+# workspaces and better-sqlite3 it has a habit of "succeeding" without
+# actually placing the Electron-ABI prebuild — the package script runs
+# `pnpm rebuild:native` (which calls electron-rebuild directly) before
+# packaging, so node_modules already has the right binary by the time
+# electron-builder copies files into the asar. Letting electron-builder
+# run its own rebuild on top has reliably overwritten our binary with
+# the Node prebuild, which then crashes the packaged app at startup
+# with "compiled against a different Node.js version".
+npmRebuild: false
+
 # Files / extra resources shipped inside the installer.
 files:
   - out/**/*
