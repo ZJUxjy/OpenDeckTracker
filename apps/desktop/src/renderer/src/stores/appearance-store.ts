@@ -46,7 +46,7 @@ export const ACCENT_PALETTE: Record<Accent, AccentValues> = {
 };
 
 const DEFAULT_DENSITY: Density = 'comfortable';
-const DEFAULT_UI_STYLE: UiStyle = 'fallout76';
+const DEFAULT_UI_STYLE: UiStyle = 'macos';
 const DEFAULT_ACCENT: Accent = 'blue';
 const DEFAULT_THEME: Theme = 'system';
 const DEFAULT_GAME_OVERLAY = false;

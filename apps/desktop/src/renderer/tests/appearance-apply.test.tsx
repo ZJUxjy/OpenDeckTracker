@@ -77,13 +77,13 @@ describe('AppearanceApplyEffect', () => {
       wrapper: ({ children }) => <>{children}</>,
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
 
     act(() => {
-      useAppearanceStore.getState().setUiStyle('macos');
+      useAppearanceStore.getState().setUiStyle('tavern');
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('tavern');
 
     act(() => {
       useAppearanceStore.getState().setUiStyle('wechat');
@@ -117,7 +117,7 @@ describe('AppearanceApplyEffect', () => {
       wrapper: ({ children }) => <>{children}</>,
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
 
     act(() => {
       onChanged?.({

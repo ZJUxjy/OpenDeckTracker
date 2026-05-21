@@ -7,11 +7,11 @@ describe('appearance store', () => {
     vi.resetModules();
   });
 
-  it('defaults to comfortable density, Fallout 76 UI style, blue accent, system theme when nothing is stored', async () => {
+  it('defaults to comfortable density, macOS UI style, blue accent, system theme when nothing is stored', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -125,7 +125,7 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -139,7 +139,7 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     expect(useAppearanceStore.getState().density).toBe('comfortable');
-    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
   });
@@ -197,7 +197,7 @@ describe('appearance store', () => {
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
-    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
     expect(useAppearanceStore.getState().density).toBe('compact');
   });
 
