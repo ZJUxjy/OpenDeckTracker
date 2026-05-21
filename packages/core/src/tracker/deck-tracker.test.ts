@@ -662,6 +662,46 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('clears per-match state when entering IDLE via the spectator shortcut (IN_MATCH→IDLE)', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = {
+      friendly: [
+        { entityId: 11, cardId: 'CS2_231', zonePosition: 1, attack: 5, health: 3, damage: 0 },
+      ],
+      opposing: [],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({}),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    // Mid-match state populated.
+    expect(tracker.getSnapshot().phase).toBe('IN_MATCH');
+    tracker.recordTurnChange(3);
+    expect(tracker.getSnapshot().extraDisplay?.counters?.currentTurn).toBe(3);
+
+    // Spectator shortcut: phase machine returns IDLE from any phase
+    // (bypassing POST_MATCH). The IN_MATCH → IDLE transition MUST
+    // clear per-match state — extraDisplay counters, registry, and
+    // identified-deck pointers — so the next live match does not
+    // inherit them. Before this guard only POST_MATCH → IDLE reset
+    // them, leaving spectator round-trips silently corrupted.
+    state.isSpectating = true;
+    await advanceTicks(3);
+    expect(tracker.getSnapshot().phase).toBe('IDLE');
+    expect(tracker.getSnapshot().extraDisplay?.counters?.currentTurn ?? 0).toBe(0);
+
+    tracker.stop();
+  });
+
   it('includes known shuffled-in deck cards in snapshot remaining', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

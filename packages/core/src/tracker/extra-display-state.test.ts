@@ -288,6 +288,38 @@ describe('MatchExtraDisplayState', () => {
     ).toEqual(['OPP_MINION_A', 'OPP_MINION_B']);
   });
 
+  it('commits opponent minion plays on the turn boundary when the player passes a turn silently', () => {
+    // T2 (opponent turn): two opponent minions land.
+    const state = new MatchExtraDisplayState();
+    state.recordTurnChange(2, 1);
+    state.recordOpponentCardPlayed({
+      event: { ...baseEvent('OPP_MINION_A', 60), controllerId: 2 },
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    // T3 (player turn): player makes NO plays — turn just ticks.
+    // Without the boundary-driven commit, T2's minions would stay
+    // pending in the current map and combine with T4's, silently
+    // corrupting the Ebonok "minions played last opponent turn" view.
+    state.recordTurnChange(3, 1);
+
+    // T4 (opponent turn): another opponent minion. Only this one
+    // should be considered "current opponent turn" — T2's must have
+    // already been committed to the last-opponent-turn map.
+    state.recordTurnChange(4, 1);
+    state.recordOpponentCardPlayed({
+      event: { ...baseEvent('OPP_MINION_B', 61), controllerId: 2 },
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    // "Last opponent turn" = T2 only (one card).
+    expect(
+      state.opponentMinionsPlayedLastTurnStillInPlay(new Set([60, 61])).map((e) => e.cardId),
+    ).toEqual(['OPP_MINION_A']);
+  });
+
   it('counts totems summoned, overload crystals, and cards played outside the initial deck', () => {
     const state = new MatchExtraDisplayState();
     state.setOriginalDeckCardIds(['DECK_ONLY']);

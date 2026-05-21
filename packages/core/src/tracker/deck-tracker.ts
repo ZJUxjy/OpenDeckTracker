@@ -467,7 +467,7 @@ export class DeckTracker {
   }
 
   recordTurnChange(turn: number): void {
-    this.extraDisplayState.recordTurnChange(turn);
+    this.extraDisplayState.recordTurnChange(turn, this.game.localPlayer.controllerId);
     // A turn boundary — refresh the cached board-attack figures on
     // this rebuild. Hero vitals are not cached and always reflect the
     // latest provider output.
@@ -664,7 +664,15 @@ export class DeckTracker {
     if (target === 'POST_MATCH' && previousPhase !== 'POST_MATCH') {
       this.game.transitionTo('POST_MATCH');
     }
-    if (previousPhase === 'POST_MATCH' && target === 'IDLE') {
+    // Any transition INTO IDLE — including the spectator-mode shortcut
+    // (`isSpectating === true` returns IDLE from any phase, see
+    // phase-machine.ts), not just the normal POST_MATCH → IDLE one. If
+    // a user toggles spectator mid-match, the next live match must NOT
+    // inherit the previous game's effects registry, extra-display
+    // counters, identified deck, opponent records, or board-attack
+    // cache. Without this guard the IDLE → PRE_MATCH branch above only
+    // clears a subset of the per-match state.
+    if (previousPhase !== 'IDLE' && target === 'IDLE') {
       this.game.reset();
       this.previousFriendlyHandSize = 0;
       this.resetOpponentRecords();

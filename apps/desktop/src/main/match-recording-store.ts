@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import {
   buildMatchRecordingSummary,
   type GameProgressAnalysisEvent,
@@ -23,11 +23,13 @@ export function createMatchRecordingStore(rootDir: string): MatchRecordingStore 
   return {
     appendRawEvent(recordingId, event) {
       const dir = ensureRecordingDir(rootDir, recordingId);
+      if (dir === null) return;
       appendFileSync(join(dir, 'events.jsonl'), `${JSON.stringify(event)}\n`, 'utf8');
     },
 
     writeRecording(recording) {
       const dir = ensureRecordingDir(rootDir, recording.recordingId);
+      if (dir === null) return;
       const normalized: MatchRecording = {
         ...recording,
         finalSummary:
@@ -58,8 +60,34 @@ export function createMatchRecordingStore(rootDir: string): MatchRecordingStore 
   };
 }
 
-function ensureRecordingDir(rootDir: string, recordingId: string): string {
-  const dir = join(rootDir, recordingId);
+// Renderer-supplied recordingId hits disk paths via `recordings:get` and
+// the recorder's own appendRawEvent/writeRecording. Treat every join as
+// potentially adversarial — reject anything that escapes `rootDir` or
+// contains separators / parent-traversal segments / NUL. Returns the
+// safe absolute path on success, or null when the input is malformed.
+function safeRecordingPath(
+  rootDir: string,
+  recordingId: string,
+  ...rest: string[]
+): string | null {
+  if (typeof recordingId !== 'string' || recordingId.length === 0 || recordingId.length > 256) {
+    return null;
+  }
+  if (/[\\/\x00]/.test(recordingId) || recordingId === '.' || recordingId === '..') {
+    return null;
+  }
+  const root = resolve(rootDir);
+  const target = resolve(root, recordingId, ...rest);
+  const rel = relative(root, target);
+  if (rel.length === 0 || rel.startsWith('..') || /^[A-Za-z]:/.test(rel)) {
+    return null;
+  }
+  return target;
+}
+
+function ensureRecordingDir(rootDir: string, recordingId: string): string | null {
+  const dir = safeRecordingPath(rootDir, recordingId);
+  if (dir === null) return null;
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -72,7 +100,8 @@ function readRecordingDirs(rootDir: string): string[] {
 }
 
 function readRecordingFile(rootDir: string, recordingId: string): MatchRecording | null {
-  const path = join(rootDir, recordingId, 'recording.json');
+  const path = safeRecordingPath(rootDir, recordingId, 'recording.json');
+  if (path === null) return null;
   if (!existsSync(path)) return null;
   try {
     return normalizeRecording(JSON.parse(readFileSync(path, 'utf8')) as MatchRecording);
@@ -129,7 +158,8 @@ function resolveRecordingId(rootDir: string, idOrFingerprint: string): string | 
 }
 
 function readRawEvents(rootDir: string, recordingId: string): unknown[] {
-  const path = join(rootDir, recordingId, 'events.jsonl');
+  const path = safeRecordingPath(rootDir, recordingId, 'events.jsonl');
+  if (path === null) return [];
   if (!existsSync(path)) return [];
   const lines = readFileSync(path, 'utf8').split(/\r?\n/).filter((line) => line.length > 0);
   const events: unknown[] = [];

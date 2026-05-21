@@ -97,9 +97,22 @@ export class MatchExtraDisplayState {
     this.originalDeckCardIds = null;
   }
 
-  recordTurnChange(turn: number): void {
+  recordTurnChange(turn: number, localControllerId?: number): void {
     if (!Number.isFinite(turn)) return;
     if (this.currentTurn === turn) return;
+    // Boundary-driven commit of "opponent minions played last opponent
+    // turn" — recordCardPlayed alone can't catch the case where the
+    // player passes a turn with zero plays in between two opponent
+    // turns, which would otherwise let two opponent turns accumulate
+    // into the same map and silently corrupt the Ebonok preview.
+    if (
+      typeof localControllerId === 'number' &&
+      this.activeTurnControllerId !== null &&
+      this.activeTurnControllerId !== localControllerId
+    ) {
+      this.commitOpponentTurnMinionPlays();
+      this.activeTurnControllerId = null;
+    }
     if (this.currentTurn !== null) {
       this.setCounter(
         'friendlySpellCastLastTurn',

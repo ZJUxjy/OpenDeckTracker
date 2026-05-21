@@ -95,6 +95,47 @@ describe('match-recording-store', () => {
     });
   });
 
+  it('refuses path-traversal recording IDs (loadRecording / appendRawEvent / writeRecording)', async () => {
+    const store = createMatchRecordingStore(dir);
+    // Place a sentinel file outside `dir` that a `../` traversal would
+    // otherwise reach. The recording loader's sole job is to never
+    // dereference an ID that escapes the rootDir.
+    const escapeDir = join(dir, '..', 'escape-target');
+    await mkdir(escapeDir, { recursive: true });
+    await writeFile(
+      join(escapeDir, 'recording.json'),
+      JSON.stringify({ recordingId: 'pwned', status: 'completed' }),
+      'utf8',
+    );
+
+    const evilIds = [
+      '../escape-target',
+      '..\\escape-target',
+      '../../etc/passwd',
+      '/absolute/path',
+      'C:\\Windows\\System32',
+      '.',
+      '..',
+      '',
+      'has/slash',
+      'has\\backslash',
+    ];
+    for (const id of evilIds) {
+      expect(store.loadRecording(id)).toBeNull();
+      // Neither write nor append should create files outside rootDir,
+      // nor throw — they silently no-op on rejected IDs.
+      expect(() => store.appendRawEvent(id, { type: 'x' })).not.toThrow();
+      expect(() =>
+        store.writeRecording({
+          ...completedRecording({ recordingId: id }),
+          recordingId: id,
+        }),
+      ).not.toThrow();
+    }
+    // No new file was created under escapeDir/parent dir as a side effect.
+    expect(existsSync(join(escapeDir, 'events.jsonl'))).toBe(false);
+  });
+
   it('loads recording detail by match fingerprint', () => {
     const store = createMatchRecordingStore(dir);
     const base = completedRecording({ recordingId: 'rec-1' });
