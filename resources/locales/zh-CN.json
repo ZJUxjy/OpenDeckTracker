@@ -402,7 +402,9 @@
     "hearthstoneNotRunningHint": "启动游戏即可开始实时记牌。",
     "matchNotDetected": "未识别到对局",
     "knownPositionBottom": "已放至牌库底（来自 {source}）",
-    "knownPositionTop": "已放至牌库顶（来自 {source}）"
+    "knownPositionTop": "已放至牌库顶（来自 {source}）",
+    "deckBottomSection": "牌库底",
+    "deckTopSection": "牌库顶"
   },
   "boardAttack": {
     "friendly": "我方场攻",

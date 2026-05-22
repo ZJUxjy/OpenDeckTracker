@@ -442,18 +442,42 @@ export class DeckTracker {
     const extractor = getDeckPositionExtractor(event.cardId);
     if (!extractor) return;
     const ctx = this.deckPositionExtractCtx?.();
-    if (!ctx) return;
+    if (!ctx) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[deck-position] no extractCtx wired; cardId=${event.cardId} entityId=${event.entityId}`,
+      );
+      return;
+    }
+    // eslint-disable-next-line no-console
+    console.log(
+      `[deck-position] extractor START cardId=${event.cardId} entityId=${event.entityId} controllerId=${event.controllerId} bufferSize=${ctx.recentEvents.length}`,
+    );
     void Promise.resolve()
       .then(() => extractor.extract(event, ctx))
       .then(
         (placements) => {
-          if (placements === null || placements.length === 0) return;
+          if (placements === null || placements.length === 0) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              `[deck-position] extractor RETURNED EMPTY cardId=${event.cardId} entityId=${event.entityId}`,
+            );
+            return;
+          }
+          // eslint-disable-next-line no-console
+          console.log(
+            `[deck-position] extractor RESOLVED cardId=${event.cardId} placements=${JSON.stringify(placements)}`,
+          );
           this.deckPositionState.recordPlacements(placements);
           this.currentSnapshot = this.buildSnapshot();
           this.emit({ type: 'state-change', snapshot: this.currentSnapshot });
         },
-        () => {
-          /* extractor threw — best-effort, ignore */
+        (err) => {
+          // eslint-disable-next-line no-console
+          console.error(
+            `[deck-position] extractor THREW cardId=${event.cardId}`,
+            err,
+          );
         },
       );
   }

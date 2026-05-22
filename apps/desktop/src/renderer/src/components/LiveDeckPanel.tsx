@@ -309,59 +309,106 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
         data-overlay-list-area
         className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
       >
-        <section data-testid="remaining-cards-section">
-          <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
-            {t('deckTracker.remaining')}
-          </h3>
-          <div className="space-y-1">
-            {copies.map((copy) => (
-              <CardCopyRow
-                key={copy.copyKey}
-                copyKey={copy.copyKey}
-                cardId={copy.cardId}
-                exiting={exitingCopyKeys.has(copy.copyKey)}
-                onAnimationEnd={handleAnimationEnd}
-                onMouseEnter={handleRowMouseEnter}
-                onMouseLeave={handleRowMouseLeave}
-                extraDisplay={snapshot.extraDisplay}
-                animalCompanionPoolCardIds={animalCompanionPoolCardIds}
-                hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
-                isExtraCard={isExtraRemainingCopy(copy, remainingByCardId, extraRemainingByCardId)}
-                knownPosition={knownPositionForCopy(copy, remainingByCardId, knownPositionsByCardId)}
-              />
-            ))}
-            {[...exitingCopyKeys]
-              .filter((key) => !copies.some((c) => c.copyKey === key))
-              .map((copyKey) => {
-                const cardId = copyKey.split('#')[0]!;
-                const ordinal = Number(copyKey.split('#')[1] ?? 0);
-                return (
-                  <CardCopyRow
-                    key={copyKey}
-                    copyKey={copyKey}
-                    cardId={cardId}
-                    exiting={true}
-                    onAnimationEnd={handleAnimationEnd}
-                    onMouseEnter={handleRowMouseEnter}
-                    onMouseLeave={handleRowMouseLeave}
-                    extraDisplay={snapshot.extraDisplay}
-                    animalCompanionPoolCardIds={animalCompanionPoolCardIds}
-                    hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
-                    isExtraCard={isExtraRemainingCopy(
-                      { cardId, ordinal },
-                      remainingByCardId,
-                      extraRemainingByCardId,
-                    )}
-                    knownPosition={knownPositionForCopy(
-                      { cardId, ordinal },
-                      remainingByCardId,
-                      knownPositionsByCardId,
-                    )}
-                  />
-                );
-              })}
-          </div>
-        </section>
+        {(() => {
+          // Split copies by known deck position. Bottom-marked copies
+          // move into a separate "牌库底" section below the main deck
+          // list (Firestone-style), so the user can see at a glance
+          // what Waveshaping etc. has stacked at the bottom.
+          type Bucket = { main: DeckCopy[]; bottom: DeckCopy[]; top: DeckCopy[] };
+          const split = copies.reduce<Bucket>(
+            (acc, copy) => {
+              const pos = knownPositionForCopy(
+                copy,
+                remainingByCardId,
+                knownPositionsByCardId,
+              );
+              if (pos?.placement === 'bottom') acc.bottom.push(copy);
+              else if (pos?.placement === 'top') acc.top.push(copy);
+              else acc.main.push(copy);
+              return acc;
+            },
+            { main: [], bottom: [], top: [] },
+          );
+          const exitingKeys = [...exitingCopyKeys].filter(
+            (key) => !copies.some((c) => c.copyKey === key),
+          );
+          const renderRow = (
+            copy: Pick<DeckCopy, 'copyKey' | 'cardId' | 'ordinal'>,
+            exiting: boolean,
+          ) => (
+            <CardCopyRow
+              key={copy.copyKey}
+              copyKey={copy.copyKey}
+              cardId={copy.cardId}
+              exiting={exiting}
+              onAnimationEnd={handleAnimationEnd}
+              onMouseEnter={handleRowMouseEnter}
+              onMouseLeave={handleRowMouseLeave}
+              extraDisplay={snapshot.extraDisplay}
+              animalCompanionPoolCardIds={animalCompanionPoolCardIds}
+              hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
+              isExtraCard={isExtraRemainingCopy(
+                copy,
+                remainingByCardId,
+                extraRemainingByCardId,
+              )}
+              knownPosition={knownPositionForCopy(
+                copy,
+                remainingByCardId,
+                knownPositionsByCardId,
+              )}
+            />
+          );
+          return (
+            <>
+              {split.top.length > 0 && (
+                <section
+                  data-testid="deck-top-section"
+                  className="mb-2"
+                >
+                  <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                    {t('deckTracker.deckTopSection')}
+                    <span className="ml-2 font-mono tabular-nums text-text-dim">
+                      ({split.top.length})
+                    </span>
+                  </h3>
+                  <div className="space-y-1">
+                    {split.top.map((copy) => renderRow(copy, false))}
+                  </div>
+                </section>
+              )}
+              <section data-testid="remaining-cards-section">
+                <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
+                  {t('deckTracker.remaining')}
+                </h3>
+                <div className="space-y-1">
+                  {split.main.map((copy) => renderRow(copy, exitingCopyKeys.has(copy.copyKey)))}
+                  {exitingKeys.map((copyKey) => {
+                    const cardId = copyKey.split('#')[0]!;
+                    const ordinal = Number(copyKey.split('#')[1] ?? 0);
+                    return renderRow({ copyKey, cardId, ordinal }, true);
+                  })}
+                </div>
+              </section>
+              {split.bottom.length > 0 && (
+                <section
+                  data-testid="deck-bottom-section"
+                  className="mt-3 border-t border-border pt-2"
+                >
+                  <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                    {t('deckTracker.deckBottomSection')}
+                    <span className="ml-2 font-mono tabular-nums text-text-dim">
+                      ({split.bottom.length})
+                    </span>
+                  </h3>
+                  <div className="space-y-1">
+                    {split.bottom.map((copy) => renderRow(copy, false))}
+                  </div>
+                </section>
+              )}
+            </>
+          );
+        })()}
         {deck.extras.length > 0 && (
           <div className="mt-3 px-2 py-1 text-xs text-text-dim border-t border-border pt-2">
             {t('deckTracker.extraCards', {
