@@ -115,10 +115,24 @@ export class OverlayManager {
   }
 
   setTargetForeground(foreground: boolean): void {
-    if (this.targetForeground === foreground) return;
+    const changed = this.targetForeground !== foreground;
     this.targetForeground = foreground;
-    console.log(`[overlay-mgr ${this.routeHash}] setTargetForeground(${foreground})`);
-    this.syncVisibility();
+    if (changed) {
+      console.log(`[overlay-mgr ${this.routeHash}] setTargetForeground(${foreground})`);
+      this.syncVisibility();
+      return;
+    }
+    // No state change, but the tracker still wants us to re-assert
+    // z-order. The Win32 z-order can silently drift after an alt-tab
+    // race — `placeWindowAboveHearthstone` is best-effort and one of
+    // the two overlay windows occasionally ends up behind HS even
+    // though our cached state says it should be on top. Re-running
+    // `syncZOrder` on every tracker foreground signal (max once per
+    // 200ms poll) costs a couple of cheap Win32 calls and makes the
+    // system self-heal instead of requiring the user-click recovery.
+    if (this.win && !this.win.isDestroyed() && this.shouldBeShown()) {
+      this.syncZOrder();
+    }
   }
 
   isWindowFocused(): boolean {
@@ -247,12 +261,16 @@ export class OverlayManager {
     }
   }
 
+  private shouldBeShown(): boolean {
+    return this.userEnabled && this.visibleOnScreen && this.inActiveMatch;
+  }
+
   private syncVisibility(): void {
     if (!this.win || this.win.isDestroyed()) {
       console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
       return;
     }
-    const shouldShow = this.userEnabled && this.visibleOnScreen && this.inActiveMatch;
+    const shouldShow = this.shouldBeShown();
     console.log(
       `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} inActiveMatch=${this.inActiveMatch} targetForeground=${this.targetForeground} → ${shouldShow ? 'show' : 'hide'}`,
     );
@@ -267,7 +285,7 @@ export class OverlayManager {
 
   private syncZOrder(): void {
     if (!this.win || this.win.isDestroyed()) return;
-    if (!this.userEnabled || !this.visibleOnScreen || !this.inActiveMatch) return;
+    if (!this.shouldBeShown()) return;
     if (this.targetForeground) {
       this.win.setAlwaysOnTop(true, 'screen-saver');
       (this.win as { moveTop?: () => void }).moveTop?.();
