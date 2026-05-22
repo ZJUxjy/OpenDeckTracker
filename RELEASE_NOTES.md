@@ -1,6 +1,6 @@
-# OpenDeckTracker v0.6.0 beta
+# OpenDeckTracker v0.6.0
 
-Second public test build. Builds on v0.5.0-beta — the first focused on
+Second public release. Builds on v0.5.0-beta — the first focused on
 verifying install / launch / data-persistence on testers' real
 machines; this one is where actual deck-tracking features land:
 known-position tracking, opponent effect-summon filtering, and a much
