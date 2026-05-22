@@ -10,7 +10,8 @@
       "overlay": "游戏内覆盖层"
     },
     "playerFallback": "玩家",
-    "subtitle": "炉石智能记牌器"
+    "subtitle": "炉石智能记牌器",
+    "versionAriaLabel": "应用版本"
   },
   "sidebar": {
     "deckTracker": "记牌器",

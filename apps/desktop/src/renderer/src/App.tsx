@@ -1,14 +1,11 @@
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import {
   AppWindow,
   BarChart2,
   BookOpen,
-  Crosshair,
-  Film,
   Layers,
   Monitor,
   Settings,
-  ShieldAlert,
   User,
 } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
@@ -24,9 +21,6 @@ const MAIN_NAV_ITEMS = [
   { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker', code: 'DASHBOARD' },
   { id: 'decks', icon: Layers, labelKey: 'sidebar.decks', code: 'DECKS' },
   { id: 'stats', icon: BarChart2, labelKey: 'sidebar.stats', code: 'STATS' },
-  { id: 'opponent', icon: ShieldAlert, labelKey: 'sidebar.opponent', code: 'OPPONENT' },
-  { id: 'lethal', icon: Crosshair, labelKey: 'sidebar.lethal', code: 'LETHAL' },
-  { id: 'replay', icon: Film, labelKey: 'sidebar.replay', code: 'REPLAY' },
   { id: 'collection', icon: BookOpen, labelKey: 'sidebar.collection', code: 'COLLECTION' },
 ];
 
@@ -39,6 +33,16 @@ export default function App() {
     location.pathname === '/overlay-opponent' ||
     location.pathname === '/card-preview';
   const { isAlive, battleTag, displayBattleTag } = useHearthMirrorStatus();
+  const [appVersion, setAppVersion] = useState<string>('');
+  useEffect(() => {
+    let alive = true;
+    void window.hdt?.app?.getVersion().then((v) => {
+      if (alive) setAppVersion(v);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   // Subscribe the global deck-tracker store to main-process IPC pushes.
   // Mounted at App root so the subscription survives all route changes.
   useDeckTracker();
@@ -191,16 +195,12 @@ export default function App() {
         </main>
         <footer
           className="tavern-bottom-status shrink-0"
-          aria-label={t('fallout.statusBar.ariaLabel')}
+          aria-label={t('app.versionAriaLabel')}
           style={{ WebkitAppRegion: 'drag' } as CSSProperties}
         >
-          <span className="font-bold text-amber">{t('fallout.statusBar.pipboy')}</span>
-          <span>{t('fallout.statusBar.version')}</span>
-          <span>{t('fallout.statusBar.database')}</span>
-          <span className={isAlive ? 'text-green' : 'text-text-mute'}>
-            {isAlive ? t('fallout.statusBar.connected') : t('fallout.statusBar.standby')}
+          <span className="text-text-dim">
+            {appVersion ? `v${appVersion.replace('-', ' ')}` : ''}
           </span>
-          <span className="ml-auto text-amber">{t('fallout.statusBar.links')}</span>
         </footer>
       </div>
       {/* Global dialog — shown only when the tracker emits

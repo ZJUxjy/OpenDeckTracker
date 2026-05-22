@@ -10,7 +10,8 @@
       "overlay": "In-Game Overlay"
     },
     "playerFallback": "PlayerOne",
-    "subtitle": "Hearthstone smart tracker"
+    "subtitle": "Hearthstone smart tracker",
+    "versionAriaLabel": "App version"
   },
   "sidebar": {
     "deckTracker": "Deck Tracker",

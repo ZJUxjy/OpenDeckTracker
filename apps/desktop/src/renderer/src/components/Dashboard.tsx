@@ -135,55 +135,22 @@ export function Dashboard() {
             />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="tahoe-card p-5">
-              <div className="mb-4 border-b border-border pb-3 text-base font-bold text-amber">
-                {t('deckTracker.deck')}
-              </div>
-              <p className="text-2xl font-black text-green">
-                {deck ? deck.name || t('dashboard.unnamedDeck') : t('dashboard.waitingForGame')}
-              </p>
-              <p className="mt-2 text-sm text-text-dim">
-                {totalOriginal > 0 ? `${totalRemaining} / ${totalOriginal} ${t('dashboard.cardsLeft')}` : t('deckTracker.deckNotDetected')}
-              </p>
-            </div>
-            <div className="tahoe-card p-5">
-              <div className="mb-4 border-b border-border pb-3 text-base font-bold text-amber">
-                {t('fallout.preview.lethal.title')}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="fallout-chip">{t('fallout.dashboard.moduleDecks')}</div>
-                <div className="fallout-chip">{t('fallout.dashboard.moduleCollection')}</div>
-                <div className="fallout-chip">{t('fallout.dashboard.moduleReplay')}</div>
-                <div className="fallout-chip fallout-chip-active">{t('fallout.dashboard.moduleLethal')}</div>
-              </div>
-            </div>
-          </div>
         </section>
 
         <aside className="fallout-dashboard-side space-y-4">
           <div className="tahoe-card p-5">
             <div className="mb-4 border-b border-border pb-3 text-base font-bold text-amber">
-              {t('fallout.preview.opponent.title')}
-            </div>
-            <div className="space-y-3 text-sm">
-              <StatusLine label={t('opponent.played')} value="0" />
-              <StatusLine label={t('opponent.revealed')} value="0" />
-              <StatusLine label={t('opponent.graveyard')} value="0" />
+              {t('opponent.title')}
             </div>
             {snapshot?.opponent.revealed.length ? (
-              <div className="mt-4 space-y-2">
-                {snapshot.opponent.revealed.slice(0, 4).map((card) => (
+              <div className="space-y-2">
+                {snapshot.opponent.revealed.slice(0, 6).map((card) => (
                   <OpponentIntelCard key={`${card.entityId}-${card.cardId}`} cardId={card.cardId} />
                 ))}
               </div>
-            ) : null}
-          </div>
-          <div className="tahoe-card p-5">
-            <div className="mb-4 border-b border-border pb-3 text-base font-bold text-amber">
-              {t('fallout.preview.replay.title')}
-            </div>
-            <p className="text-sm leading-6 text-text-dim">{t('fallout.preview.replay.body')}</p>
+            ) : (
+              <p className="text-sm leading-6 text-text-dim">{t('opponent.empty')}</p>
+            )}
           </div>
         </aside>
       </div>
