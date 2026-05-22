@@ -33,6 +33,7 @@ import {
   ensureCardTileCached,
 } from './card-image-cache';
 import { getHearthMirror } from './hearthmirror';
+import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
 import { liveMatchIdentity } from './match-identity';
 import { recordCompletedMatch } from './stats-host';
 
@@ -541,7 +542,18 @@ export function startDeckTracker(): void {
 
   tracker.start();
 
+  // Edge: Hearthstone just launched. Force one mirror isAlive() probe
+  // (kicks the Rust runtime's lazy reinit so the next tick sees a
+  // populated runtime) AND request an immediate tracker tick so we
+  // don't wait out the 2s IDLE cadence.
+  const onAppeared = (): void => {
+    void mirror.isAlive().catch(() => undefined);
+    tracker?.requestImmediateTick();
+  };
+  hearthstoneProcessMonitor.on('appeared', onAppeared);
+
   app.on('before-quit', () => {
+    hearthstoneProcessMonitor.off('appeared', onAppeared);
     tracker?.stop();
     tracker = null;
     cardPlayedDetector = null;
@@ -583,19 +595,28 @@ export function forwardPowerEventToDeckTracker(
     resetBoardAttackState();
     cardPlayedDetector?.reset();
     tracker?.resetGlobalEffects();
-    // Power.log says actual gameplay is starting — flip the
-    // overlay-visibility gate, BUT only for `phase === 'live'`. The
-    // hearthwatcher replays the entire current Power.log file on
-    // startup so we can rebuild state mid-match; those events carry
-    // `phase === 'replay'` and refer to PAST matches, not the
-    // current one. Honoring them would mark the gate live the moment
-    // HDT_js launches against any non-empty Power.log, even if the
-    // user is sitting on the main menu / deck picker.
-    //
-    // Cleared on phase → IDLE further below.
-    if (phase === 'live') {
-      setLiveMatchActive(true);
-    }
+  }
+  // Overlay-visibility gate flip is driven by STEP advancing to the
+  // mulligan phase, not by CREATE_GAME. Hearthstone fires CREATE_GAME
+  // for the deck-picker's right-side hero portrait animation too,
+  // which would otherwise reveal the overlay panels at the deck-select
+  // screen before the player has queued for an actual match. STEP only
+  // advances to BEGIN_MULLIGAN / BEGIN_FIRST when a real game session
+  // is starting; the deck-picker preview doesn't run the STEP machine.
+  //
+  // `phase === 'live'` gate keeps the watcher's start-up replay pass
+  // (which re-emits prior matches as 'replay') from spuriously turning
+  // the gate on when HDT launches against an existing Power.log.
+  //
+  // Cleared on phase → IDLE further below.
+  if (
+    phase === 'live' &&
+    event.type === 'tag-change' &&
+    event.entity === 'GameEntity' &&
+    event.tag === 'STEP' &&
+    isRealMatchStepValue(event.value)
+  ) {
+    setLiveMatchActive(true);
   }
   if (event.type === 'tag-change' && event.entity === 'GameEntity' && event.tag === 'TURN') {
     const turn = numericTag(event.value);
@@ -655,6 +676,40 @@ function scriptValueTagUpdates(
     if (value !== undefined) out.push({ entityId, tag, value });
   }
   return out;
+}
+
+/**
+ * STEP tag values that indicate a real, playable match is in progress.
+ * Returned `true` is consumed by `forwardPowerEventToDeckTracker` to
+ * flip the `liveMatchActive` overlay gate.
+ *
+ * The deck-picker preview animation fires CREATE_GAME but does NOT
+ * advance STEP through mulligan / main-phase values, so these are
+ * safe to gate on. FINAL_GAMEOVER is excluded since it marks the
+ * post-match cleanup — the gate is cleared by phase→IDLE anyway.
+ */
+function isRealMatchStepValue(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  switch (value.toUpperCase()) {
+    case 'BEGIN_FIRST':
+    case 'BEGIN_SHUFFLE':
+    case 'BEGIN_DRAW':
+    case 'BEGIN_MULLIGAN':
+    case 'MAIN_BEGIN':
+    case 'MAIN_READY':
+    case 'MAIN_START_TRIGGERS':
+    case 'MAIN_START':
+    case 'MAIN_ACTION':
+    case 'MAIN_COMBAT':
+    case 'MAIN_END':
+    case 'MAIN_NEXT':
+    case 'MAIN_CLEANUP':
+    case 'MAIN_PRE_ACTION':
+    case 'MAIN_POST_ACTION':
+      return true;
+    default:
+      return false;
+  }
 }
 
 function isScriptValueTag(tag: string): boolean {
