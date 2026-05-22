@@ -5,6 +5,15 @@ directories:
   output: release
   buildResources: build
 
+# Native modules are pre-built by `pnpm run rebuild:native` (better-sqlite3
+# via electron-rebuild) and `pnpm run prepare:native-runtime` (the napi-rs
+# hearthmirror binary, copied into out/native-runtime). electron-builder's
+# own @electron/rebuild pass would traverse pnpm's symlinked dependency
+# tree under node_modules/.pnpm/node_modules/@emnapi/... and ENOENT on
+# Windows because the symlink stat fails. Skip it — our pre-build hooks
+# already produce ABI-matched binaries.
+npmRebuild: false
+
 # Files / extra resources shipped inside the installer.
 files:
   - out/**/*
@@ -46,6 +55,13 @@ extraResources:
 win:
   target:
     - target: nsis
+      arch:
+        - x64
+    # Portable: a plain zip of the unpacked app directory. Users unzip
+    # anywhere and double-click OpenDeckTracker.exe; no installer, no
+    # registry writes, no uninstaller entry. Required because the
+    # README's Download section advertises both forms.
+    - target: zip
       arch:
         - x64
   icon: build/icon.png
