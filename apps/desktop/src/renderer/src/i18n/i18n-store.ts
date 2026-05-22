@@ -45,7 +45,13 @@ export const useI18nStore = create<I18nStoreState>((set, get) => ({
 
 function broadcastLanguagePreference(preference: LanguagePreference): void {
   if (typeof window === 'undefined') return;
-  const result = window.hdt?.appearance?.broadcast?.({ languagePreference: preference });
+  // Dedicated `i18n` IPC channel — DO NOT route through `appearance`
+  // here. The appearance broadcast is consumed by AppearanceApplyEffect
+  // which treats every payload as the full appearance state and resets
+  // unmentioned keys (uiStyle / accent / theme / ...) to defaults.
+  // Riding language on that channel was wiping every other window's
+  // visual appearance whenever the user toggled language.
+  const result = window.hdt?.i18n?.broadcast?.({ languagePreference: preference });
   if (result && typeof result.catch === 'function') {
     void result.catch(() => undefined);
   }

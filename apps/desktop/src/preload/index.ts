@@ -47,12 +47,10 @@ type AppearanceSyncPayload = {
   theme?: string;
   gameOverlay?: boolean;
   gameOverlayOpponent?: boolean;
-  // Language preference rides on the appearance broadcast so overlay
-  // BrowserWindows pick up locale changes the user makes in the main
-  // window's Settings page. Each renderer has its own in-memory store,
-  // so without this signal an already-open overlay would keep showing
-  // its bootstrap locale.
-  languagePreference?: 'system' | 'en-US' | 'zh-CN';
+};
+
+type I18nSyncPayload = {
+  languagePreference: 'system' | 'en-US' | 'zh-CN';
 };
 
 type CollectionProgressResult = {
@@ -312,6 +310,21 @@ const api = {
       const handler = (_e: IpcRendererEvent, payload: AppearanceSyncPayload): void => cb(payload);
       ipcRenderer.on('appearance:changed', handler);
       return () => ipcRenderer.removeListener('appearance:changed', handler);
+    },
+  },
+  // Dedicated channel for cross-window language preference sync.
+  // Kept separate from `appearance` because AppearanceApplyEffect's
+  // `syncFromExternal` treats incoming appearance payloads as the
+  // FULL state and coerces missing fields to defaults — riding the
+  // language signal on that channel was wiping uiStyle / accent /
+  // theme back to defaults in every receiving window.
+  i18n: {
+    broadcast: (payload: I18nSyncPayload): Promise<void> =>
+      ipcRenderer.invoke('i18n:broadcast', payload),
+    onChanged: (cb: (payload: I18nSyncPayload) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, payload: I18nSyncPayload): void => cb(payload);
+      ipcRenderer.on('i18n:changed', handler);
+      return () => ipcRenderer.removeListener('i18n:changed', handler);
     },
   },
   opponentDeckPrediction: {

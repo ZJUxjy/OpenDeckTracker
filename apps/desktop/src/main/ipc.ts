@@ -83,6 +83,12 @@ export function registerIpc(overlay?: OverlayControllers): void {
       win.webContents.send('appearance:changed', payload);
     }
   });
+  ipcMain.handle('i18n:broadcast', (event, payload: unknown) => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (win.isDestroyed() || win.webContents.id === event.sender.id) continue;
+      win.webContents.send('i18n:changed', payload);
+    }
+  });
 
   if (overlay) {
     ipcMain.handle('overlay:set-enabled', (_, enabled: boolean) => {

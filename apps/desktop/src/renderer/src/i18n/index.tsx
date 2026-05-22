@@ -68,14 +68,14 @@ export function I18nProvider({
     [locale, messages, resolvedPreference],
   );
 
-  // Subscribe to the cross-window appearance broadcast so language
-  // changes made in the main window's Settings page propagate to
-  // already-open overlay BrowserWindows. Each renderer has its own
-  // in-memory store, so an already-open overlay would otherwise keep
-  // its bootstrap locale until refresh. `syncFromExternal` writes
-  // through to localStorage without re-broadcasting.
+  // Subscribe to the cross-window i18n broadcast so language changes
+  // made in the main window's Settings page propagate to already-open
+  // overlay BrowserWindows. Each renderer has its own in-memory store,
+  // so an already-open overlay would otherwise keep its bootstrap
+  // locale until refresh. `syncFromExternal` writes through to
+  // localStorage without re-broadcasting (no echo loop).
   useEffect(() => {
-    const off = window.hdt?.appearance?.onChanged?.((payload) => {
+    const off = window.hdt?.i18n?.onChanged?.((payload) => {
       const next = payload?.languagePreference;
       if (!isLanguagePreference(next)) return;
       useI18nStore.getState().syncFromExternal(next);
