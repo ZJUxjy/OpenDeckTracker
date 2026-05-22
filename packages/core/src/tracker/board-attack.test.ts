@@ -23,7 +23,7 @@ describe('computeBoardAttack — base behavior (no overlay)', () => {
       friendly: [entity({ attack: 2 }), entity({ entityId: 2, attack: 5 })],
       opposing: [entity({ entityId: 3, attack: 3 }), entity({ entityId: 4, attack: 4 })],
     };
-    expect(computeBoardAttack(board)).toEqual({ friendly: 7, opposing: 7 });
+    expect(computeBoardAttack(board, { localControllerId: 1 })).toEqual({ friendly: 7, opposing: 7 });
   });
 
   it('ignores invalid attacks and hero entities', () => {
@@ -36,12 +36,12 @@ describe('computeBoardAttack — base behavior (no overlay)', () => {
       ],
       opposing: [],
     };
-    expect(computeBoardAttack(board)).toEqual({ friendly: 3, opposing: 0 });
+    expect(computeBoardAttack(board, { localControllerId: 1 })).toEqual({ friendly: 3, opposing: 0 });
   });
 
   it('returns zero totals when board state is missing', () => {
-    expect(computeBoardAttack(null)).toEqual({ friendly: 0, opposing: 0 });
-    expect(computeBoardAttack(undefined)).toEqual({ friendly: 0, opposing: 0 });
+    expect(computeBoardAttack(null, { localControllerId: 1 })).toEqual({ friendly: 0, opposing: 0 });
+    expect(computeBoardAttack(undefined, { localControllerId: 1 })).toEqual({ friendly: 0, opposing: 0 });
   });
 });
 
@@ -64,71 +64,71 @@ describe('computeBoardAttack — minion tag overlay', () => {
 
   it('frozen friendly minion contributes 0', () => {
     const { boardState, tagsByEntityId } = build([[1, { frozen: true, numTurnsInPlay: 1 }]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 3, opposing: 5 });
   });
 
   it('cant-attack minion contributes 0', () => {
     const { boardState, tagsByEntityId } = build([[1, { cantAttack: true, numTurnsInPlay: 1 }]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 3, opposing: 5 });
   });
 
   it('sleeping minion (just summoned, no charge/rush) contributes 0', () => {
     const { boardState, tagsByEntityId } = build([[1, { numTurnsInPlay: 0 }]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 3, opposing: 5 });
   });
 
   it('minion with overlay but missing NUM_TURNS_IN_PLAY is treated as just summoned', () => {
     const { boardState, tagsByEntityId } = build([[1, {}]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 3, opposing: 5 });
   });
 
   it('charge overrides sleeping', () => {
     const { boardState, tagsByEntityId } = build([[1, { numTurnsInPlay: 0, charge: true }]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 7, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 7, opposing: 5 });
   });
 
   it('rush overrides sleeping', () => {
     const { boardState, tagsByEntityId } = build([[1, { numTurnsInPlay: 0, rush: true }]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 7, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 7, opposing: 5 });
   });
 
   it('windfury that has not swung yet doubles the contribution', () => {
     const { boardState, tagsByEntityId } = build([[1, { windfury: true, numTurnsInPlay: 1 }]]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 11, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 11, opposing: 5 });
   });
 
   it('windfury that already swung once falls back to ×1', () => {
     const { boardState, tagsByEntityId } = build([
       [1, { windfury: true, numTurnsInPlay: 1, numAttacksThisTurn: 1 }],
     ]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 7, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 7, opposing: 5 });
   });
 
   it('minion that used all swings this turn contributes 0', () => {
     const { boardState, tagsByEntityId } = build([
       [1, { numTurnsInPlay: 1, numAttacksThisTurn: 1 }],
     ]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 3, opposing: 5 });
   });
 
   it('mega-windfury (×4) supersedes regular windfury', () => {
     const { boardState, tagsByEntityId } = build([
       [1, { megaWindfury: true, numTurnsInPlay: 1 }],
     ]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 19, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 19, opposing: 5 });
   });
 
   it('extra attacks this turn add to the swing budget', () => {
     const { boardState, tagsByEntityId } = build([
       [1, { extraAttacksThisTurn: 1, numTurnsInPlay: 1 }],
     ]);
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 11, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 11, opposing: 5 });
   });
 
   it('missing tag entries fall back to plain ATK sum', () => {
     const { boardState, tagsByEntityId } = build([[1, { frozen: true, numTurnsInPlay: 1 }]]);
     // entity 2 and 3 have no overlay — they contribute their raw attack.
-    expect(computeBoardAttack(boardState, { tagsByEntityId })).toEqual({ friendly: 3, opposing: 5 });
+    expect(computeBoardAttack(boardState, { tagsByEntityId, localControllerId: 1 })).toEqual({ friendly: 3, opposing: 5 });
   });
 });
 
@@ -188,12 +188,6 @@ describe('computeBoardAttack — weapons', () => {
     expect(result).toEqual({ friendly: 3, opposing: 2 });
   });
 
-  it('handles localControllerId default of 1', () => {
-    const result = computeBoardAttack(board, {
-      weapons: [weapon({ controllerId: 1, attack: 4 })],
-    });
-    expect(result.friendly).toBe(7);
-  });
 });
 
 describe('computeBoardAttack — hero attack state', () => {
@@ -243,8 +237,8 @@ describe('computeMaxFaceDamage', () => {
   const ready: MinionTags = { numTurnsInPlay: 1 };
 
   it('returns zero when board state is missing', () => {
-    expect(computeMaxFaceDamage(null)).toEqual({ friendly: 0, opposing: 0 });
-    expect(computeMaxFaceDamage(undefined)).toEqual({ friendly: 0, opposing: 0 });
+    expect(computeMaxFaceDamage(null, { localControllerId: 1 })).toEqual({ friendly: 0, opposing: 0 });
+    expect(computeMaxFaceDamage(undefined, { localControllerId: 1 })).toEqual({ friendly: 0, opposing: 0 });
   });
 
   it('without taunts on either side, equals computeBoardAttack', () => {
@@ -256,7 +250,7 @@ describe('computeMaxFaceDamage', () => {
       [1, ready],
       [2, ready],
     ]);
-    expect(computeMaxFaceDamage(board, { tagsByEntityId })).toEqual({
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 })).toEqual({
       friendly: 4,
       opposing: 3,
     });
@@ -267,7 +261,7 @@ describe('computeMaxFaceDamage', () => {
       friendly: [entity({ entityId: 1, attack: 4 })],
       opposing: [entity({ entityId: 2, attack: 3 })],
     };
-    expect(computeMaxFaceDamage(board)).toEqual({ friendly: 4, opposing: 3 });
+    expect(computeMaxFaceDamage(board, { localControllerId: 1 })).toEqual({ friendly: 4, opposing: 3 });
   });
 
   it('opposing taunt is killed and remaining swings reach face', () => {
@@ -285,7 +279,7 @@ describe('computeMaxFaceDamage', () => {
     ]);
     // Friendly should kill the 3-HP taunt with the 3/4 minion (cost 3),
     // sending the 4/5 to face → 4 face damage.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(4);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(4);
   });
 
   it('returns 0 when the only attacker cannot break a divine-shield taunt alone', () => {
@@ -299,7 +293,7 @@ describe('computeMaxFaceDamage', () => {
     ]);
     // Single swing only breaks the shield (deals 0 damage). Taunt
     // survives ⇒ no face damage possible.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(0);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(0);
   });
 
   it('two small attackers cooperate on a divine-shield taunt — big hitter goes face', () => {
@@ -319,7 +313,7 @@ describe('computeMaxFaceDamage', () => {
     ]);
     // Optimal: assign the two 1-attack minions to the shielded taunt
     // (one absorbs, one finishes), and the 6-attack swings face → 6.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(6);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(6);
   });
 
   it('returns 0 when the taunt is unkillable with available attack', () => {
@@ -331,7 +325,7 @@ describe('computeMaxFaceDamage', () => {
       [1, ready],
       [2, { ...ready, taunt: true }],
     ]);
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(0);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(0);
   });
 
   it('uses minion damage so a wounded taunt is easier to clear', () => {
@@ -349,7 +343,7 @@ describe('computeMaxFaceDamage', () => {
       [3, { ...ready, taunt: true }],
     ]);
     // 1-attack swing kills the wounded taunt; 5-attack hits face.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(5);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(5);
   });
 
   it('handles two opposing taunts with optimal partitioning', () => {
@@ -375,7 +369,7 @@ describe('computeMaxFaceDamage', () => {
     ]);
     // Use 4 on the 4-HP taunt and 5 on the 5-HP taunt (cost 9). Send
     // 3 + 7 = 10 face.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(10);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(10);
   });
 
   it('a rush minion on its first turn can clear a taunt but not go face', () => {
@@ -395,7 +389,7 @@ describe('computeMaxFaceDamage', () => {
     ]);
     // Optimal: rush 5/5 clears the 4-HP taunt (its swing has faceValue
     // 0 anyway), 4/4 swings at the face → 4 face damage.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(4);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(4);
   });
 
   it('rush-only board with no taunt sees 0 face damage', () => {
@@ -406,7 +400,7 @@ describe('computeMaxFaceDamage', () => {
     const tagsByEntityId = new Map<number, MinionTags>([
       [1, { rush: true, numTurnsInPlay: 0 }],
     ]);
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(0);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(0);
   });
 
   it('windfury minion contributes two independent swings', () => {
@@ -419,7 +413,7 @@ describe('computeMaxFaceDamage', () => {
       [2, { ...ready, taunt: true }],
     ]);
     // First 3 kills the taunt; second 3 hits face.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(3);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(3);
   });
 
   it('hero attack via heroAttacks contributes to face damage', () => {
@@ -458,7 +452,7 @@ describe('computeMaxFaceDamage', () => {
     ]);
     // Opposing must clear the friendly 3-HP taunt. Optimal: spend the
     // 4 on it (cost 4), send 5 face → opposing face = 5.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).opposing).toBe(5);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).opposing).toBe(5);
   });
 
   it('fallback path (>16 swings) clears taunts instead of bailing to 0', () => {
@@ -477,7 +471,7 @@ describe('computeMaxFaceDamage', () => {
     tagsByEntityId.set(100, { ...ready, taunt: true });
     // Spend one 4-attack swing on the 3-HP taunt (cost 4). Remaining
     // 17 swings × 4 = 68 face damage.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(68);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(68);
   });
 
   it('fallback path returns 0 when the taunt is unkillable even in bulk', () => {
@@ -493,7 +487,7 @@ describe('computeMaxFaceDamage', () => {
       opposing: [entity({ entityId: 100, attack: 0, health: 99 })],
     };
     tagsByEntityId.set(100, { ...ready, taunt: true });
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(0);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(0);
   });
 
   it('fallback path handles divine shield with two-attacker breaker', () => {
@@ -511,7 +505,7 @@ describe('computeMaxFaceDamage', () => {
     tagsByEntityId.set(100, { ...ready, taunt: true, divineShield: true });
     // Two swings used (one shield-breaker + one finisher), cost = 10.
     // Remaining 16 × 5 = 80 face damage.
-    expect(computeMaxFaceDamage(board, { tagsByEntityId }).friendly).toBe(80);
+    expect(computeMaxFaceDamage(board, { tagsByEntityId, localControllerId: 1 }).friendly).toBe(80);
   });
 
   it('weapon swings count toward face damage when no heroAttacks present', () => {

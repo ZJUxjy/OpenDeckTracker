@@ -518,6 +518,7 @@ describe('DeckTracker', () => {
           [12, { numTurnsInPlay: 1 }],
           [21, { numTurnsInPlay: 1, taunt: true }],
         ]),
+        localControllerId: 1,
       }),
     });
     tracker.start();
@@ -545,7 +546,7 @@ describe('DeckTracker', () => {
       opposing: [],
     };
 
-    const provider = vi.fn(() => ({}));
+    const provider = vi.fn(() => ({ localControllerId: 1 }));
     const tracker = new DeckTracker({
       mirror,
       identifier: new CallbackDeckIdentifier(async () => 1),
@@ -593,6 +594,7 @@ describe('DeckTracker', () => {
       boardAttackContextProvider: () => ({
         friendlyHero: { health: friendlyHealth, armor: 0, effectiveHealth: friendlyHealth },
         opposingHero: { health: opposingHealth, armor: 0, effectiveHealth: opposingHealth },
+        localControllerId: 1,
       }),
     });
     tracker.start();
@@ -633,6 +635,7 @@ describe('DeckTracker', () => {
 
     const provider = vi.fn(() => ({
       friendlyHero: { health: 30, armor: 0, effectiveHealth: 30 },
+      localControllerId: 1,
     }));
     const tracker = new DeckTracker({
       mirror,

@@ -1195,14 +1195,16 @@ export class DeckTracker {
       (this.cachedBoardAttack === null || this.boardAttackRefreshPending);
     if (recompute) {
       this.boardAttackRefreshPending = false;
-      this.cachedBoardAttack = computeBoardAttack(
-        this.latestBoardState,
-        boardAttackOpts ?? {},
-      );
-      this.cachedBoardAttackToFace = computeMaxFaceDamage(
-        this.latestBoardState,
-        boardAttackOpts ?? {},
-      );
+      // `localControllerId` is required on the options bag because a
+      // wrong / defaulted value silently swaps weapon + hero-attack
+      // sides whenever the user is the second player. Forward the
+      // tracker's resolved controllerId — when no full provider is
+      // wired the minimal bag still carries the right bucketing key.
+      const opts: ComputeBoardAttackOptions = boardAttackOpts ?? {
+        localControllerId: this.game.localPlayer.controllerId,
+      };
+      this.cachedBoardAttack = computeBoardAttack(this.latestBoardState, opts);
+      this.cachedBoardAttackToFace = computeMaxFaceDamage(this.latestBoardState, opts);
     }
     const boardAttack = this.cachedBoardAttack ?? { friendly: 0, opposing: 0 };
     const boardAttackToFace = this.cachedBoardAttackToFace ?? { friendly: 0, opposing: 0 };

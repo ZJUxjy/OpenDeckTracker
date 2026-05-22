@@ -93,11 +93,16 @@ export interface ComputeBoardAttackOptions {
    */
   heroAttacks?: readonly HeroAttackState[];
   /**
-   * Local controller id (1 or 2). Used to bucket weapons. Defaults
-   * to 1 — the deck-tracker normalizes unresolved match IDs to 1
-   * regardless, so this is the right fallback.
+   * Local controller id (1 or 2). Used to bucket weapons / hero
+   * attacks onto the right side of the readout. REQUIRED — there
+   * is no safe default: a missed pass on this field silently swaps
+   * the friendly / opposing weapon-and-hero-attack contributions
+   * whenever the user is the second player (real TAG_CONTROLLER=2).
+   * Pair this with `applyMatchInfo`'s skip-on-null discipline so
+   * the value is always the authoritative one resolved from
+   * HearthMirror, never a hard-coded fallback.
    */
-  localControllerId?: number;
+  localControllerId: number;
   /**
    * Opposing hero's current health/armor from the Power.log tag state.
    * Board attack uses this only for UI context; combat math remains
@@ -112,7 +117,7 @@ const ZERO_BOARD_ATTACK: BoardAttackTotals = Object.freeze({ friendly: 0, opposi
 
 export function computeBoardAttack(
   boardState: BoardState | null | undefined,
-  opts: ComputeBoardAttackOptions = {},
+  opts: ComputeBoardAttackOptions,
 ): BoardAttackTotals {
   if (boardState === null || boardState === undefined) {
     return { ...ZERO_BOARD_ATTACK };
@@ -124,7 +129,7 @@ export function computeBoardAttack(
 
   let friendlyWeapon = 0;
   let opposingWeapon = 0;
-  const localId = opts.localControllerId ?? 1;
+  const localId = opts.localControllerId;
   if (opts.heroAttacks !== undefined && opts.heroAttacks.length > 0) {
     for (const h of opts.heroAttacks) {
       const contrib = heroContribution(h);
@@ -235,14 +240,14 @@ interface Taunt {
 
 export function computeMaxFaceDamage(
   boardState: BoardState | null | undefined,
-  opts: ComputeBoardAttackOptions = {},
+  opts: ComputeBoardAttackOptions,
 ): BoardAttackTotals {
   if (boardState === null || boardState === undefined) {
     return { ...ZERO_BOARD_ATTACK };
   }
 
   const tagsByEntityId = opts.tagsByEntityId;
-  const localId = opts.localControllerId ?? 1;
+  const localId = opts.localControllerId;
 
   const friendlySwings = collectMinionSwings(boardState.friendly, tagsByEntityId);
   const opposingSwings = collectMinionSwings(boardState.opposing, tagsByEntityId);
