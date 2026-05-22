@@ -3,7 +3,11 @@ import { render, screen, act, fireEvent, waitFor, within } from '@testing-librar
 import { afterEach } from 'vitest';
 import { LiveDeckPanel } from '../src/components/LiveDeckPanel';
 import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
-import type { ActiveEffect, DeckTrackerSnapshot } from '@hdt/core';
+import type {
+  ActiveEffect,
+  DeckTrackerSnapshot,
+  KnownDeckPosition,
+} from '@hdt/core';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -14,6 +18,7 @@ function makeSnapshot(overrides: {
   original: { cardId: string; count: number }[];
   remaining?: { cardId: string; count: number }[];
   extraRemaining?: { cardId: string; count: number }[];
+  knownPositions?: KnownDeckPosition[];
   friendlyHand?: string[];
   friendlyHandExtras?: boolean[];
   boardAttack?: DeckTrackerSnapshot['boardAttack'];
@@ -40,6 +45,7 @@ function makeSnapshot(overrides: {
       remaining: overrides.remaining ?? overrides.original,
       extraRemaining: overrides.extraRemaining ?? [],
       extras: [],
+      knownPositions: overrides.knownPositions ?? [],
     },
     pendingDeckSelection: null,
     friendlyHand: overrides.friendlyHand ?? [],
@@ -1572,5 +1578,71 @@ describe('LiveDeckPanel hover', () => {
     expect(cardPreviewShowExtra).not.toHaveBeenCalled();
     // Mouse leave still fires hide() (cheap idempotent call).
     expect(cardPreviewHide).toHaveBeenCalled();
+  });
+
+  it('renders a known-position badge on cards Waveshaping put at the bottom', () => {
+    // CS2_029 has 2 copies remaining in the deck. The state machine
+    // marked 1 of those as "bottom" via Waveshaping. The LAST physical
+    // row (ordinal 1) should carry the badge; the earlier (ordinal 0)
+    // should not.
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 2 }],
+      remaining: [{ cardId: 'CS2_029', count: 2 }],
+      knownPositions: [
+        {
+          cardId: 'CS2_029',
+          controllerId: 1,
+          placement: 'bottom',
+          insertedAt: 0,
+          sourceCardId: 'TIME_701',
+        },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const badges = screen.getAllByTestId('card-known-position-icon');
+    expect(badges).toHaveLength(1);
+    expect(badges[0]!.getAttribute('data-placement')).toBe('bottom');
+    expect(badges[0]!.getAttribute('aria-label')).toContain('TIME_701');
+  });
+
+  it('shows two badges when two copies of a card are bottom-marked', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 2 }],
+      remaining: [{ cardId: 'CS2_029', count: 2 }],
+      knownPositions: [
+        {
+          cardId: 'CS2_029',
+          controllerId: 1,
+          placement: 'bottom',
+          insertedAt: 0,
+          sourceCardId: 'TIME_701',
+        },
+        {
+          cardId: 'CS2_029',
+          controllerId: 1,
+          placement: 'bottom',
+          insertedAt: 1,
+          sourceCardId: 'TIME_701',
+        },
+      ],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    expect(screen.getAllByTestId('card-known-position-icon')).toHaveLength(2);
+  });
+
+  it('renders no badge when knownPositions is empty', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CS2_029', count: 2 }],
+      remaining: [{ cardId: 'CS2_029', count: 2 }],
+      knownPositions: [],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    expect(screen.queryByTestId('card-known-position-icon')).toBeNull();
   });
 });

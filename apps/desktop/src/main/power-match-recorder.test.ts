@@ -35,6 +35,7 @@ const snapshot = (overrides: Partial<DeckTrackerSnapshot> = {}): DeckTrackerSnap
     remaining: [],
     extraRemaining: [],
     extras: [],
+    knownPositions: [],
   },
   pendingDeckSelection: null,
   friendlyHand: [],

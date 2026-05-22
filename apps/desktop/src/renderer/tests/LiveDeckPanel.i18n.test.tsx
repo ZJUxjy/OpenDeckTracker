@@ -51,6 +51,7 @@ describe('LiveDeckPanel i18n', () => {
           remaining: [{ cardId: 'CS2_029', count: 1 }],
           extraRemaining: [],
           extras: [],
+          knownPositions: [],
         },
         pendingDeckSelection: null,
         friendlyHand: [],

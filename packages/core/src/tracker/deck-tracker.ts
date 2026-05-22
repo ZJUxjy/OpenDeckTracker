@@ -47,6 +47,9 @@ import {
   type ExtraDisplayPoolEntry,
   type ExtraDisplaySnapshot,
 } from './extra-display-state';
+import { MatchDeckPositionState } from './deck-position/state';
+import { getDeckPositionExtractor } from './deck-position/extractor-registry';
+import type { KnownDeckPosition } from './deck-position/types';
 
 // ── Polling intervals (per design D6) ────────────────────────────────
 const INTERVAL_IDLE_MS = 2_000;
@@ -87,6 +90,15 @@ export interface DeckTrackerSnapshot {
     extraRemaining: { cardId: string; count: number }[];
     /** Cards in seen-but-not-original (created/stolen approximate). */
     extras: { cardId: string; count: number }[];
+    /**
+     * Cards whose deck position the tracker knows about (e.g. cards
+     * Waveshaping (TIME_701) put on the bottom). Each marker is paired
+     * with the source card that caused it for UI attribution. Reconciled
+     * against `remaining` counts on every snapshot rebuild — markers
+     * decay (FIFO) when copies of that cardId are drawn out of the deck.
+     * Local-player only; opponent positions are not exposed (info leak).
+     */
+    knownPositions: KnownDeckPosition[];
   } | null;
   /**
    * When non-null, the orchestrator is waiting for the user to pick
@@ -284,6 +296,17 @@ export class DeckTracker {
   private readonly cardMetadataLookup: ExtraDisplayCardLookup | null;
   private readonly extraDisplayState = new MatchExtraDisplayState();
   /**
+   * Per-match store of known deck positions (e.g. cards put on the
+   * bottom of the local player's deck by Waveshaping). Reset in lockstep
+   * with `extraDisplayState`. Reconciled against deck counts on every
+   * snapshot rebuild so drawn copies decay automatically.
+   */
+  private readonly deckPositionState = new MatchDeckPositionState();
+  /** Optional context provider for parameterized deck-position extractors. */
+  private readonly deckPositionExtractCtx:
+    | (() => ExtractCtx)
+    | null;
+  /**
    * Once-per-match memoised opponent class. Cleared on PRE_MATCH entry
    * and POST_MATCH → IDLE. Avoids UI flicker if the hero entity is
    * briefly missing from `game.opposingPlayer.entities` mid-turn.
@@ -362,6 +385,7 @@ export class DeckTracker {
       }),
       ...(args.extractCtx !== undefined ? { extractCtx: args.extractCtx } : {}),
     });
+    this.deckPositionExtractCtx = args.extractCtx ?? null;
     this.currentSnapshot = blankSnapshot();
   }
 
@@ -403,7 +427,35 @@ export class DeckTracker {
       }
     }
     this.registry.handleCardPlayed(event);
+    this.handleDeckPositionCardPlayed(event);
     this.currentSnapshot = this.buildSnapshot();
+  }
+
+  /**
+   * Fire a registered deck-position extractor for this card. The
+   * extractor may resolve asynchronously (Waveshaping needs the user
+   * to pick from a Discover prompt); we don't block on it. When it
+   * resolves, the placements are folded into `deckPositionState` and
+   * picked up by the next snapshot rebuild.
+   */
+  private handleDeckPositionCardPlayed(event: CardPlayedEvent): void {
+    const extractor = getDeckPositionExtractor(event.cardId);
+    if (!extractor) return;
+    const ctx = this.deckPositionExtractCtx?.();
+    if (!ctx) return;
+    void Promise.resolve()
+      .then(() => extractor.extract(event, ctx))
+      .then(
+        (placements) => {
+          if (placements === null || placements.length === 0) return;
+          this.deckPositionState.recordPlacements(placements);
+          this.currentSnapshot = this.buildSnapshot();
+          this.emit({ type: 'state-change', snapshot: this.currentSnapshot });
+        },
+        () => {
+          /* extractor threw — best-effort, ignore */
+        },
+      );
   }
 
   /**
@@ -497,6 +549,7 @@ export class DeckTracker {
   resetGlobalEffects(): void {
     this.registry.reset();
     this.extraDisplayState.reset();
+    this.deckPositionState.reset();
     this.currentSnapshot = this.buildSnapshot();
   }
 
@@ -680,6 +733,7 @@ export class DeckTracker {
       this.resetOpponentRecords();
       this.registry.reset();
       this.extraDisplayState.reset();
+      this.deckPositionState.reset();
       this.awaitingDeckSelection = false;
       this.lastKnownSelectedDeckId = null;
       this.identifiedDeck = null;
@@ -922,17 +976,37 @@ export class DeckTracker {
       friendlyHandExtras = friendlyHandRows.map((card) =>
         this.isFriendlyHandExtraCard(card, displayOriginal),
       );
+      const remainingEntries = remaining.entries();
+      // Reconcile known-position markers against current deck counts so
+      // drawn copies decay automatically (without needing to hook each
+      // individual draw event). Then snapshot just the local controller's
+      // markers — opponent positions are intentionally NOT exposed to
+      // the renderer to avoid information leaks.
+      const remainingCounts = new Map<string, number>();
+      for (const entry of remainingEntries) {
+        remainingCounts.set(
+          entry.cardId,
+          (remainingCounts.get(entry.cardId) ?? 0) + entry.count,
+        );
+      }
+      this.deckPositionState.reconcileWithDeckCounts(
+        remainingCounts,
+        this.game.localPlayer.controllerId,
+      );
       deck = {
         id: this.identifiedDeck?.id ?? 0,
         name: this.identifiedDeck?.name ?? this.game.localPlayer.name ?? '',
         original: displayOriginal.entries(),
-        remaining: remaining.entries(),
+        remaining: remainingEntries,
         extraRemaining: capExtraRemainingToDisplayedRemaining(
           result.extraRemaining,
           remaining,
           computedBaseRemaining,
         ),
         extras: removeStartOfGameDisappearExtras(result.extras, this.cardMetadataLookup),
+        knownPositions: this.deckPositionState.snapshot(
+          this.game.localPlayer.controllerId,
+        ),
       };
     }
 

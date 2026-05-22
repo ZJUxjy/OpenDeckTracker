@@ -37,6 +37,11 @@ export type {
   ExtraDisplaySnapshot,
 } from './tracker/extra-display-state';
 export { OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL } from './tracker/extra-display-state';
+export type {
+  KnownDeckPosition,
+  DeckPositionPlacement,
+  DeckPositionExtractor,
+} from './tracker/deck-position/types';
 export {
   COST_REDUCTION_BY_CARD_ID,
   formatCostReductionHoverLine,

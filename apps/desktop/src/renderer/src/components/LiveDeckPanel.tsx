@@ -13,7 +13,7 @@ import {
   type DeckTrackerSnapshot,
 } from '@hdt/core';
 import { clsx } from 'clsx';
-import { Gift } from 'lucide-react';
+import { ArrowDown, ArrowUp, Gift } from 'lucide-react';
 import { useCardPreview, type RowPreviewRequest } from '../hooks/use-card-preview';
 import { getRarityCostBg } from '../lib/rarity';
 import type { CardDef, Rarity } from '@hdt/hearthdb';
@@ -163,6 +163,37 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     for (const e of deck.extraRemaining ?? []) m.set(e.cardId, e.count);
     return m;
   }, [deck.extraRemaining]);
+  // Aggregate known deck-position markers (bottom / top) per cardId so
+  // the renderer can decide which physical copy of a card should carry
+  // a "↓ at bottom" or "↑ on top" badge. Source attribution is the most
+  // recent inserter so multi-Waveshaping plays attribute to the latest
+  // cast — good enough for the tooltip.
+  const knownPositionsByCardId = useMemo(() => {
+    type Bucket = {
+      bottom: number;
+      top: number;
+      bottomSource: string;
+      topSource: string;
+    };
+    const m = new Map<string, Bucket>();
+    for (const p of deck.knownPositions ?? []) {
+      const b = m.get(p.cardId) ?? {
+        bottom: 0,
+        top: 0,
+        bottomSource: '',
+        topSource: '',
+      };
+      if (p.placement === 'bottom') {
+        b.bottom += 1;
+        b.bottomSource = p.sourceCardId;
+      } else {
+        b.top += 1;
+        b.topSource = p.sourceCardId;
+      }
+      m.set(p.cardId, b);
+    }
+    return m;
+  }, [deck.knownPositions]);
 
   // Build card defs map for sorting and friendly-hand display.
   const friendlyHandRows = useMemo(
@@ -296,12 +327,14 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                 animalCompanionPoolCardIds={animalCompanionPoolCardIds}
                 hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
                 isExtraCard={isExtraRemainingCopy(copy, remainingByCardId, extraRemainingByCardId)}
+                knownPosition={knownPositionForCopy(copy, remainingByCardId, knownPositionsByCardId)}
               />
             ))}
             {[...exitingCopyKeys]
               .filter((key) => !copies.some((c) => c.copyKey === key))
               .map((copyKey) => {
                 const cardId = copyKey.split('#')[0]!;
+                const ordinal = Number(copyKey.split('#')[1] ?? 0);
                 return (
                   <CardCopyRow
                     key={copyKey}
@@ -315,9 +348,14 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
                     animalCompanionPoolCardIds={animalCompanionPoolCardIds}
                     hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
                     isExtraCard={isExtraRemainingCopy(
-                      { cardId, ordinal: Number(copyKey.split('#')[1] ?? 0) },
+                      { cardId, ordinal },
                       remainingByCardId,
                       extraRemainingByCardId,
+                    )}
+                    knownPosition={knownPositionForCopy(
+                      { cardId, ordinal },
+                      remainingByCardId,
+                      knownPositionsByCardId,
                     )}
                   />
                 );
@@ -555,12 +593,58 @@ function isExtraRemainingCopy(
   return copy.ordinal >= Math.max(0, totalCount - extraCount);
 }
 
+interface KnownPositionBucket {
+  bottom: number;
+  top: number;
+  bottomSource: string;
+  topSource: string;
+}
+
+interface KnownPositionBadge {
+  placement: 'top' | 'bottom';
+  sourceCardId: string;
+}
+
+/**
+ * Decide whether a specific physical copy of a card should carry a
+ * "↓ at bottom" or "↑ on top" badge. Marks the highest-ordinal copies
+ * for `bottom` and the lowest-ordinal copies for `top`, matching how
+ * the state machine FIFO-trims markers when the deck count drops.
+ *
+ * Returns `null` when this copy is neither at top nor bottom. When
+ * markers exist for both ends (rare; would need two different effects
+ * stacking), the bottom badge wins because it's the more actionable
+ * piece of information (you'd otherwise expect to draw it last).
+ */
+function knownPositionForCopy(
+  copy: Pick<DeckCopy, 'cardId' | 'ordinal'>,
+  remainingByCardId: ReadonlyMap<string, number>,
+  knownPositionsByCardId: ReadonlyMap<string, KnownPositionBucket>,
+): KnownPositionBadge | null {
+  const bucket = knownPositionsByCardId.get(copy.cardId);
+  if (!bucket) return null;
+  const total = remainingByCardId.get(copy.cardId) ?? 0;
+  if (bucket.bottom > 0) {
+    const threshold = Math.max(0, total - bucket.bottom);
+    if (copy.ordinal >= threshold) {
+      return { placement: 'bottom', sourceCardId: bucket.bottomSource };
+    }
+  }
+  if (bucket.top > 0) {
+    if (copy.ordinal < bucket.top) {
+      return { placement: 'top', sourceCardId: bucket.topSource };
+    }
+  }
+  return null;
+}
+
 interface CardCopyRowProps {
   copyKey: string;
   cardId: string;
   exiting: boolean;
   testId?: string;
   isExtraCard?: boolean;
+  knownPosition?: KnownPositionBadge | null;
   extraDisplay?: DeckTrackerSnapshot['extraDisplay'];
   animalCompanionPoolCardIds: readonly string[];
   hoveredRelatedSourceCardId?: string | null;
@@ -575,6 +659,7 @@ function CardCopyRow({
   exiting,
   testId = 'card-copy-row',
   isExtraCard = false,
+  knownPosition = null,
   extraDisplay,
   animalCompanionPoolCardIds,
   hoveredRelatedSourceCardId,
@@ -582,6 +667,7 @@ function CardCopyRow({
   onMouseEnter,
   onMouseLeave,
 }: CardCopyRowProps) {
+  const { t } = useTranslation();
   const def = useCardDef(cardId);
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
@@ -662,7 +748,42 @@ function CardCopyRow({
             <Gift className="h-3.5 w-3.5" strokeWidth={2.4} />
           </div>
         ) : null}
+        {knownPosition !== null ? (
+          <KnownPositionBadge
+            placement={knownPosition.placement}
+            sourceCardId={knownPosition.sourceCardId}
+            tooltip={t(
+              knownPosition.placement === 'bottom'
+                ? 'deckTracker.knownPositionBottom'
+                : 'deckTracker.knownPositionTop',
+              { source: knownPosition.sourceCardId },
+            )}
+          />
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+function KnownPositionBadge({
+  placement,
+  sourceCardId: _sourceCardId,
+  tooltip,
+}: {
+  placement: 'top' | 'bottom';
+  sourceCardId: string;
+  tooltip: string;
+}) {
+  const Icon = placement === 'bottom' ? ArrowDown : ArrowUp;
+  return (
+    <div
+      data-testid="card-known-position-icon"
+      data-placement={placement}
+      className="relative z-20 ml-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded border border-accent/80 bg-black/60 text-accent shadow-[0_0_0_1px_rgba(0,0,0,0.55)]"
+      title={tooltip}
+      aria-label={tooltip}
+    >
+      <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
     </div>
   );
 }

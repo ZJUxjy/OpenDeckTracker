@@ -400,7 +400,9 @@
     "live": "LIVE",
     "hearthstoneNotRunning": "炉石传说未运行",
     "hearthstoneNotRunningHint": "启动游戏即可开始实时记牌。",
-    "matchNotDetected": "未识别到对局"
+    "matchNotDetected": "未识别到对局",
+    "knownPositionBottom": "已放至牌库底（来自 {source}）",
+    "knownPositionTop": "已放至牌库顶（来自 {source}）"
   },
   "boardAttack": {
     "friendly": "我方场攻",

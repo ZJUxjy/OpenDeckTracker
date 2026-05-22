@@ -400,7 +400,9 @@
     "live": "LIVE",
     "hearthstoneNotRunning": "Hearthstone not running",
     "hearthstoneNotRunningHint": "Start the game to begin live deck tracking.",
-    "matchNotDetected": "Match not detected"
+    "matchNotDetected": "Match not detected",
+    "knownPositionBottom": "At bottom of deck (from {source})",
+    "knownPositionTop": "On top of deck (from {source})"
   },
   "boardAttack": {
     "friendly": "Your board attack",

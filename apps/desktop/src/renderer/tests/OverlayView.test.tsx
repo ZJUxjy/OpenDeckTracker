@@ -24,6 +24,7 @@ function makeSnapshot(): DeckTrackerSnapshot {
       remaining: [{ cardId: 'CS2_029', count: 2 }],
       extraRemaining: [],
       extras: [],
+      knownPositions: [],
     },
     pendingDeckSelection: null,
     friendlyHand: [],
