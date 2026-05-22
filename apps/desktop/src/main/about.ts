@@ -17,7 +17,7 @@ export type UpdateCheckResult =
   | { state: 'error'; message: string };
 
 /**
- * Resolve a legal-doc file path. Bundled installers ship LICENSE.txt
+ * Resolve a legal-doc file path. Bundled installers ship LICENSE
  * and THIRD_PARTY_NOTICES.txt under `process.resourcesPath` via the
  * `extraResources` block in electron-builder.yml; in dev they live at
  * the repo root, several levels up from the compiled main module.
@@ -53,7 +53,7 @@ export function registerAboutIpc(): void {
   });
 
   ipcMain.handle('about:open-license', async (): Promise<boolean> => {
-    const path = resolveLegalDocPath('LICENSE.txt');
+    const path = resolveLegalDocPath('LICENSE');
     if (!path) return false;
     const error = await shell.openPath(path);
     return error === '';

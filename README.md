@@ -13,7 +13,7 @@
     <img alt="Downloads" src="https://img.shields.io/github/downloads/ZJUxjy/OpenDeckTracker/total?style=flat-square">
   </a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%20x64-blue?style=flat-square">
-  <img alt="License" src="https://img.shields.io/github/license/ZJUxjy/OpenDeckTracker?style=flat-square">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-blue?style=flat-square">
 </p>
 
 ---
@@ -162,10 +162,10 @@ Foundational subsystems (matched against `openspec/changes/`):
 
 ## ⚖️ License & disclaimer / 许可证与免责声明
 
-Source code is released under the repository's [LICENSE](./LICENSE). Third-party components are listed in [`THIRD_PARTY_NOTICES.txt`](./THIRD_PARTY_NOTICES.txt).
+Source code is released under the [MIT License](./LICENSE). Third-party components are listed in [`THIRD_PARTY_NOTICES.txt`](./THIRD_PARTY_NOTICES.txt).
 
 **Not affiliated with Blizzard Entertainment.** Hearthstone is a trademark of Blizzard Entertainment, Inc. This is a third-party fan tool that reads publicly available game state on the player's local machine. It does not modify the game, automate gameplay, or transmit anything to or from Blizzard servers.
 
-源代码在仓库 [LICENSE](./LICENSE) 之下发布，第三方组件见 [`THIRD_PARTY_NOTICES.txt`](./THIRD_PARTY_NOTICES.txt)。
+源代码在 [MIT 许可证](./LICENSE) 下发布，第三方组件见 [`THIRD_PARTY_NOTICES.txt`](./THIRD_PARTY_NOTICES.txt)。
 
 **与暴雪娱乐无关联**。Hearthstone（炉石传说）是 Blizzard Entertainment, Inc. 的商标。本项目为第三方爱好者工具，仅在玩家本机读取公开可见的游戏状态，**不修改游戏行为、不自动操作、不与暴雪服务器进行任何通信**。

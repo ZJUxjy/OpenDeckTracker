@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "OpenDeckTracker — TypeScript Hearthstone deck tracker",
+  "license": "MIT",
   "packageManager": "pnpm@10.10.0",
   "engines": {
     "node": ">=20",

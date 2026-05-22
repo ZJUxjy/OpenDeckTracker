@@ -302,7 +302,7 @@
       "categoryLabel": "About",
       "title": "About OpenDeckTracker",
       "version": "Version {version}",
-      "copyright": "Copyright © 2026 OpenDeckTracker. All rights reserved.",
+      "copyright": "Copyright © 2026 OpenDeckTracker. Released under the MIT License.",
       "checkForUpdates": "Check for updates",
       "checking": "Checking…",
       "upToDate": "You're on the latest version.",

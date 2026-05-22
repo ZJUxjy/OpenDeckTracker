@@ -302,7 +302,7 @@
       "categoryLabel": "关于",
       "title": "关于 OpenDeckTracker",
       "version": "版本 {version}",
-      "copyright": "Copyright © 2026 OpenDeckTracker。保留所有权利。",
+      "copyright": "Copyright © 2026 OpenDeckTracker。采用 MIT 许可证发布。",
       "checkForUpdates": "检查更新",
       "checking": "正在检查…",
       "upToDate": "已是最新版本。",

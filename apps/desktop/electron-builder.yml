@@ -1,6 +1,6 @@
 appId: com.opendecktracker.desktop
 productName: OpenDeckTracker
-copyright: Copyright © 2026 OpenDeckTracker. All rights reserved.
+copyright: Copyright © 2026 OpenDeckTracker
 directories:
   output: release
   buildResources: build
@@ -36,13 +36,13 @@ asarUnpack:
   - node_modules/@hdt/hearthmirror-native/*.node
   - node_modules/better-sqlite3/**/*.node
 
-# Bundled legal artifacts. The installer surfaces LICENSE.txt as the
-# click-through EULA (NSIS `license` directive below); both files land
+# Bundled legal artifacts. The installer surfaces LICENSE as the
+# click-through license (NSIS `license` directive below); both files land
 # under app.getPath('exe')'s sibling directory at runtime so the About
 # dialog can link to them.
 extraResources:
-  - from: ../../LICENSE.txt
-    to: LICENSE.txt
+  - from: ../../LICENSE
+    to: LICENSE
   - from: ../../THIRD_PARTY_NOTICES.txt
     to: THIRD_PARTY_NOTICES.txt
   - from: ../../data/cards/generated
@@ -81,9 +81,9 @@ nsis:
   perMachine: false
   allowToChangeInstallationDirectory: true
   artifactName: OpenDeckTracker-Setup-${version}.${ext}
-  # Show LICENSE.txt as the EULA click-through during install. NSIS
-  # auto-converts UTF-8 to the locale-appropriate format.
-  license: ../../LICENSE.txt
+  # Show LICENSE as the click-through during install. NSIS auto-converts
+  # UTF-8 to the locale-appropriate format.
+  license: ../../LICENSE
 
 # Auto-update feed — consumed by electron-updater in the main process
 # (apps/desktop/src/main/auto-update.ts). The `generic` provider points
