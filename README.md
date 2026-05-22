@@ -20,9 +20,9 @@
 
 ## 🎯 Download / 下载
 
-**v0.5.0 beta** is the first public test build. Two install forms available:
+**v0.6.0 beta** is the latest public test build. Two install forms available:
 
-**v0.5.0 beta** 是首个公开测试版，提供两种安装形态：
+**v0.6.0 beta** 是最新公开测试版，提供两种安装形态：
 
 | | EN | 中文 |
 |---|---|---|
@@ -138,7 +138,7 @@ docs/              Design references, ADRs, spike reports
 
 ## 📌 Project status / 项目状态
 
-Pre-1.0. This project is in beta — APIs, persistence shape, and IPC contracts may still change between releases. The current public release (`v0.5.0-beta`) focuses on verifying install / launch / persistence on real machines before broader rollout. See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for what's in each release.
+Pre-1.0. This project is in beta — APIs, persistence shape, and IPC contracts may still change between releases. The current public release (`v0.6.0-beta`) builds on the v0.5.0-beta install / launch verification with the live deck-position tracker, opponent effect-summon filtering, and a much tighter overlay-window experience. See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for what's in each release.
 
 Foundational subsystems (matched against `openspec/changes/`):
 
@@ -158,7 +158,7 @@ Foundational subsystems (matched against `openspec/changes/`):
 - ⏳ Code signing certificate (will remove the SmartScreen warning)
 - ⏳ macOS / Linux builds
 
-中文：1.0 之前的预发布阶段，**API、数据格式、IPC 协议在 release 间仍可能调整**。当前对外版本 `v0.5.0-beta` 主要用于在真实机器上验证安装 / 启动 / 数据持久化链路，再扩大邀请。每次发版的细节见 [`RELEASE_NOTES.md`](./RELEASE_NOTES.md)。
+中文：1.0 之前的预发布阶段，**API、数据格式、IPC 协议在 release 间仍可能调整**。当前对外版本 `v0.6.0-beta` 在 v0.5.0-beta 的安装 / 启动验证基础上，新增了已知牌库底位置跟踪、对手效果触发卡牌过滤、以及更稳的 overlay 窗口体验。每次发版的细节见 [`RELEASE_NOTES.md`](./RELEASE_NOTES.md)。
 
 ## ⚖️ License & disclaimer / 许可证与免责声明
 
