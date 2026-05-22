@@ -79,6 +79,24 @@ export class HearthWatcherGameState {
       tags: args.tags ?? {},
       info: args.info ?? {},
     };
+    // Capture the *first observed* zone for every entity. Used by
+    // `classifyOrigin` to flag opponent entities that appear directly
+    // in PLAY / SETASIDE — those are effect-summoned (Phaelarc's
+    // dragons, Flashback's replays, Infectious Breath's leeches),
+    // never passed through the opponent's HAND/DECK. Cards manually
+    // played from hand are first observed in HAND with cardId='' (we
+    // can't see what the opponent is holding); by the time the
+    // cardId is revealed on the HAND→PLAY transition the entity
+    // already has `info.originalZone === 'HAND'`, so we can tell
+    // them apart.
+    //
+    // For LOCAL entities `classifyOrigin` overwrites `originalZone`
+    // when matching against the original-deck list — that's fine,
+    // both routes land on the same value when the entity is from
+    // the player's deck.
+    if (entity.info.originalZone === undefined && entity.zone !== 'INVALID') {
+      entity.info.originalZone = entity.zone;
+    }
     entity.info.hidden = entity.info.hidden ?? this.isHiddenEntity(entity);
     this.entities.set(args.entityId, entity);
     this.classifyOrigin(entity);
@@ -87,20 +105,36 @@ export class HearthWatcherGameState {
 
   private classifyOrigin(entity: HearthWatcherEntity): void {
     if (this.localControllerId === null) return;
-    if (entity.controllerId !== this.localControllerId) return;
     if (entity.cardId === '') return;
     if (entity.info.originalController !== undefined || entity.info.created === true) return;
 
-    const originalCount = this.originalDeckCounts.get(entity.cardId) ?? 0;
-    const assignedCount = this.assignedOriginalCounts.get(entity.cardId) ?? 0;
-    if (!this.initialAssignmentComplete && assignedCount < originalCount) {
-      this.assignedOriginalCounts.set(entity.cardId, assignedCount + 1);
-      entity.info.originalController = entity.controllerId;
-      entity.info.originalZone = entity.zone;
+    // LOCAL side: match the revealed cardId against the player's
+    // original-deck counts. Anything beyond the deck-list count is
+    // effect-generated (Discover, tokens, opponent-class steal, etc.).
+    if (entity.controllerId === this.localControllerId) {
+      const originalCount = this.originalDeckCounts.get(entity.cardId) ?? 0;
+      const assignedCount = this.assignedOriginalCounts.get(entity.cardId) ?? 0;
+      if (!this.initialAssignmentComplete && assignedCount < originalCount) {
+        this.assignedOriginalCounts.set(entity.cardId, assignedCount + 1);
+        entity.info.originalController = entity.controllerId;
+        entity.info.originalZone = entity.zone;
+        return;
+      }
+      entity.info.created = true;
       return;
     }
 
-    entity.info.created = true;
+    // OPPONENT side: we don't know their deck list, so we lean on the
+    // entity's *first observed* zone (captured in `upsertEntity`).
+    // Manually-played cards spend time in HAND or DECK before reaching
+    // PLAY — that's where we first see the entity, even though the
+    // cardId is hidden. Effect-summoned cards appear directly in PLAY
+    // / SETASIDE with the cardId already revealed.
+    if (entity.info.originalZone === 'HAND' || entity.info.originalZone === 'DECK') {
+      entity.info.originalController = entity.controllerId;
+    } else {
+      entity.info.created = true;
+    }
   }
 
   private isHiddenEntity(entity: HearthWatcherEntity): boolean {

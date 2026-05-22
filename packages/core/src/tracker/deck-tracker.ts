@@ -451,7 +451,11 @@ export class DeckTracker {
     }
     // eslint-disable-next-line no-console
     console.log(
-      `[deck-position] extractor START cardId=${event.cardId} entityId=${event.entityId} controllerId=${event.controllerId} bufferSize=${ctx.recentEvents.length}`,
+      `[deck-position] extractor START cardId=${event.cardId} entityId=${event.entityId} ` +
+      `event.controllerId=${event.controllerId} ` +
+      `game.local.controllerId=${this.game.localPlayer.controllerId} ` +
+      `game.opposing.controllerId=${this.game.opposingPlayer.controllerId} ` +
+      `bufferSize=${ctx.recentEvents.length}`,
     );
     void Promise.resolve()
       .then(() => extractor.extract(event, ctx))
@@ -743,6 +747,14 @@ export class DeckTracker {
       // the first IN_MATCH tick recomputes against the authoritative
       // board before the first TURN tag flips.
       this.resetBoardAttackCache();
+      // PRE_MATCH may have run before HearthMirror's MatchInfo had
+      // localPlayer populated, in which case the player identities
+      // are still at their reset defaults (local=1, opposing=2).
+      // By IN_MATCH MatchInfo is reliable — re-apply so the user's
+      // real `TAG_CONTROLLER` value lands as `local.controllerId`,
+      // which is the source of truth for every friendly/opposing
+      // filter (graveyard, revealed cards, known deck positions).
+      this.applyMatchInfo(matchInfo);
       // First-time entry: try to identify the deck.
       if (this.game.localPlayer.originalDeck === null && !this.awaitingDeckSelection) {
         await this.identifyDeck(matchInfo, { handState, boardState });
@@ -835,18 +847,54 @@ export class DeckTracker {
     this.game.gameType = info.gameType;
     this.game.formatType = info.formatType;
     this.game.missionId = info.missionId;
-    if (info.localPlayer || info.opposingPlayer) {
-      const localControllerId = validControllerId(info.localPlayer?.id) ?? 1;
-      const reflectedOpponentId = validControllerId(info.opposingPlayer?.id);
-      this.game.setPlayers({
-        localControllerId,
-        localName: info.localPlayer?.name ?? '',
-        opposingControllerId:
-          reflectedOpponentId !== undefined && reflectedOpponentId !== localControllerId
-            ? reflectedOpponentId
-            : localControllerId === 1 ? 2 : 1,
-        opposingName: info.opposingPlayer?.name ?? '',
-      });
+    // Skip when localPlayer isn't populated yet — happens during the
+    // very early PRE_MATCH window before HS finishes building its
+    // GameState. Falling back to a hard-coded `1` here used to swap
+    // the friendly/opposing controllers whenever the user went second
+    // on the coin (their real TAG_CONTROLLER was 2, but localPlayer
+    // defaulted to 1, so everything tagged player=2 ended up filed
+    // under "opponent" — including the user's own Discover bottoms,
+    // graveyard, and revealed cards). Skipping leaves the player
+    // identities at their post-`reset` defaults and lets a later
+    // `applyMatchInfo` call (we now also fire at IN_MATCH) lock them
+    // in once MatchInfo is reliable.
+    const localControllerId = validControllerId(info.localPlayer?.id);
+    if (localControllerId === undefined) return;
+    const reflectedOpponentId = validControllerId(info.opposingPlayer?.id);
+    const opposingControllerId =
+      reflectedOpponentId !== undefined && reflectedOpponentId !== localControllerId
+        ? reflectedOpponentId
+        : localControllerId === 1
+          ? 2
+          : 1;
+    // Idempotency: don't recreate Player objects (which would wipe
+    // originalDeck + entity bindings) if the IDs already match.
+    if (
+      this.game.localPlayer.controllerId === localControllerId &&
+      this.game.opposingPlayer.controllerId === opposingControllerId
+    ) {
+      // Names can still drift; keep them in sync by writing through
+      // the public `name` field (mutable on Player).
+      this.game.localPlayer.name = info.localPlayer?.name ?? this.game.localPlayer.name;
+      this.game.opposingPlayer.name =
+        info.opposingPlayer?.name ?? this.game.opposingPlayer.name;
+      return;
+    }
+    // Carry the already-identified deck (whether picked via the
+    // selection dialog or auto-resolved by `identifyDeck`) across
+    // the player-identity swap. Without this, setPlayers would
+    // null out `originalDeck` and the user would have to pick again
+    // — visible as "right-side tracker doesn't recover after I picked
+    // a deck."
+    const previousOriginalDeck = this.game.localPlayer.originalDeck;
+    this.game.setPlayers({
+      localControllerId,
+      localName: info.localPlayer?.name ?? '',
+      opposingControllerId,
+      opposingName: info.opposingPlayer?.name ?? '',
+    });
+    if (previousOriginalDeck !== null) {
+      this.game.localPlayer.originalDeck = previousOriginalDeck;
     }
   }
 

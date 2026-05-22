@@ -391,7 +391,7 @@ describe('Collection — set progress', () => {
     expect(screen.getByText('Core')).toBeInTheDocument();
   });
 
-  it('mode dropdown filters tiles by format', async () => {
+  it('standard/wild segment toggle filters tiles by format', async () => {
     mockProgressApi({
       standard: [row({ setCode: 'SET_1810' })],
       wild: [row({ setCode: 'SET_12', format: 'wild' })],
@@ -399,7 +399,9 @@ describe('Collection — set progress', () => {
     });
     renderWithLocale('en-US');
     await screen.findByText('Core');
-    fireEvent.change(screen.getByTestId('mode-dropdown'), { target: { value: 'wild' } });
+    // The mode-dropdown was removed; clicking the Wild segment is now
+    // the single way to switch the visible format.
+    fireEvent.click(screen.getByRole('button', { name: 'Wild' }));
     await waitFor(() => expect(screen.getByText('Naxxramas')).toBeInTheDocument());
     expect(screen.queryByText('Core')).not.toBeInTheDocument();
   });

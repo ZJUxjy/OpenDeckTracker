@@ -154,6 +154,39 @@ describe('OpponentCardsPanel', () => {
     });
   });
 
+  it('excludes effect-summoned (created) cards from the played list', async () => {
+    // Two reveals of the same cardId — one manual play, one summoned
+    // by a card effect (Phaelarc / Flashback / similar). Only the
+    // manual one should appear in the 已打出 list; the graveyard tab
+    // (wired elsewhere via `opponent.graveyard`) is unaffected.
+    render(
+      <OpponentCardsPanel
+        revealed={[
+          record({ entityId: 20, cardId: 'CS2_029', order: 1, created: false }),
+          record({ entityId: 21, cardId: 'CS2_029', order: 2, created: true }),
+        ]}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+    // Only 1 played → no "x2" stack marker
+    expect(screen.queryByText('x2')).toBeNull();
+  });
+
+  it('hides played list entirely when all reveals are effect-summoned', async () => {
+    render(
+      <OpponentCardsPanel
+        revealed={[record({ entityId: 21, cardId: 'CS2_029', created: true })]}
+      />,
+    );
+
+    // No manual play means an empty list; the panel falls back to
+    // its empty / "Hearthstone not running" copy.
+    expect(screen.queryByText('Fireball')).toBeNull();
+  });
+
   it('invokes cardPreview.show after hovering an opponent card row past threshold', async () => {
     const cardPreviewShow = vi.fn();
     const cardPreviewHide = vi.fn();
@@ -185,13 +218,9 @@ describe('OpponentCardsPanel', () => {
         expect(screen.getByText('Fireball')).toBeInTheDocument();
       });
 
-      vi.useFakeTimers();
+      // Preview fires synchronously on mouseenter — the 250ms
+      // anti-flicker delay was removed at user request.
       fireEvent.mouseEnter(screen.getByTestId('opponent-card-row'));
-      expect(cardPreviewShow).not.toHaveBeenCalled();
-
-      act(() => {
-        vi.advanceTimersByTime(300);
-      });
 
       expect(cardPreviewShow).toHaveBeenCalledTimes(1);
       expect(cardPreviewShow.mock.calls[0]![0]).toBe('CS2_029');

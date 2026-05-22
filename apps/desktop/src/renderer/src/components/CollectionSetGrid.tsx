@@ -21,7 +21,6 @@ interface CollectionSetGridProps {
 }
 
 type TabId = 'cards' | 'cardBacks' | 'heroes' | 'coins' | 'packs';
-type ModeFilter = 'all' | 'standard' | 'wild';
 
 const TAB_ORDER: TabId[] = ['cards', 'cardBacks', 'heroes', 'coins', 'packs'];
 
@@ -41,9 +40,13 @@ function isMiniSet(label: string): boolean {
 
 export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: CollectionSetGridProps) {
   const { t, locale } = useTranslation();
+  // `activeFormat` is the single source of truth for "Standard vs Wild".
+  // We previously also had a separate `modeFilter` with an "all" option
+  // driven by a dropdown in the filter row, but it duplicated the
+  // standard/wild segment toggle on the right. Removed in favour of one
+  // selector — the segment toggle.
   const [activeFormat, setActiveFormat] = useState<'standard' | 'wild'>('standard');
   const [activeTab, setActiveTab] = useState<TabId>('cards');
-  const [modeFilter, setModeFilter] = useState<ModeFilter>('standard');
   const [search, setSearch] = useState('');
 
   const overallRows = activeFormat === 'standard' ? progress.standard : progress.wild;
@@ -59,20 +62,11 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
 
   const filteredRows = useMemo(() => {
     const baseRows: SetProgress[] =
-      modeFilter === 'all'
-        ? [...progress.standard, ...progress.wild]
-        : modeFilter === 'standard'
-          ? progress.standard
-          : progress.wild;
+      activeFormat === 'standard' ? progress.standard : progress.wild;
     if (search.trim() === '') return baseRows;
     const q = search.trim().toLowerCase();
     return baseRows.filter((r) => labelFor(r.setCode).toLowerCase().includes(q));
-  }, [progress, modeFilter, search, locale]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function handleFormatSegment(fmt: 'standard' | 'wild'): void {
-    setActiveFormat(fmt);
-    setModeFilter(fmt);
-  }
+  }, [progress, activeFormat, search, locale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-5">
@@ -109,18 +103,8 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
         })}
       </div>
 
-      {/* Filter row: mode dropdown + search */}
+      {/* Filter row: search + standard/wild segment */}
       <div className="flex items-center gap-3">
-        <select
-          data-testid="mode-dropdown"
-          value={modeFilter}
-          onChange={(e) => setModeFilter(e.target.value as ModeFilter)}
-          className="h-9 px-3 rounded-md bg-card border border-border-hairline text-sm text-text font-medium"
-        >
-          <option value="all">{t('collection.filter.mode.all')}</option>
-          <option value="standard">{t('collection.filter.mode.standard')}</option>
-          <option value="wild">{t('collection.filter.mode.wild')}</option>
-        </select>
         <input
           data-testid="tile-search"
           type="text"
@@ -134,7 +118,7 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
             <button
               key={fmt}
               type="button"
-              onClick={() => handleFormatSegment(fmt)}
+              onClick={() => setActiveFormat(fmt)}
               className={
                 'px-4 py-1.5 rounded text-sm font-semibold transition-all ' +
                 (activeFormat === fmt

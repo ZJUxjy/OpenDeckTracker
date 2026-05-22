@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 import { getStaticHoverPoolCardIds } from '../lib/card-preview-specials';
 
 interface AnchorRect {
@@ -56,70 +56,57 @@ function computeAnchor(el: HTMLElement): AnchorRect {
  *   - `onPoolEnter(cardIds, el)` shows N cards side-by-side (used by
  *     the Animal Companion pool row).
  *
- * `onRowLeave` hides whichever preview is currently visible. The pool
- * variant skips the hover delay since the pool row is large and the
- * intent is unambiguous; deck rows keep the 250ms delay so brushing
- * the cursor over multiple rows doesn't churn the preview window.
+ * `onRowLeave` hides whichever preview is currently visible. Preview
+ * fires synchronously on mouseenter — the earlier 250ms anti-flicker
+ * delay was removed at user request. Mouseleave still calls
+ * `api.hide()` so the preview tracks the cursor without lag.
  */
 export function useCardPreview(): {
   onRowEnter: (request: RowPreviewRequest, el: HTMLElement) => void;
   onPoolEnter: (cardIds: readonly string[], el: HTMLElement) => void;
   onRowLeave: () => void;
 } {
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearHover = (): void => {
-    if (hoverTimerRef.current !== null) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-  };
-
   const onRowEnter = useCallback((request: RowPreviewRequest, el: HTMLElement) => {
-    clearHover();
-    hoverTimerRef.current = setTimeout(() => {
-      const api = window.hdt?.cardPreview;
-      if (!api) return;
-      const cardId = typeof request === 'string' ? request : request.cardId;
-      const requestedPoolCardIds = typeof request === 'string' ? [] : (request.poolCardIds ?? []);
-      const extra = typeof request === 'string' ? null : (request.extra ?? null);
-      const anchor = computeAnchor(el);
-      if (requestedPoolCardIds.length > 0) {
-        if (api.showEnhancedPool) {
-          void api.showEnhancedPool(cardId, requestedPoolCardIds, anchor);
-          return;
-        }
-        if (api.showPool) {
-          void api.showPool(requestedPoolCardIds, anchor);
-          return;
-        }
-      }
-      if (extra && extra.lines.length > 0 && api.showEnhancedExtra) {
-        void api.showEnhancedExtra(cardId, extra, anchor);
+    const api = window.hdt?.cardPreview;
+    if (!api) return;
+    const cardId = typeof request === 'string' ? request : request.cardId;
+    const requestedPoolCardIds = typeof request === 'string' ? [] : (request.poolCardIds ?? []);
+    const extra = typeof request === 'string' ? null : (request.extra ?? null);
+    const anchor = computeAnchor(el);
+    if (requestedPoolCardIds.length > 0) {
+      if (api.showEnhancedPool) {
+        void api.showEnhancedPool(cardId, requestedPoolCardIds, anchor);
         return;
       }
-      if (extra && extra.lines.length > 0 && api.showExtra) {
-        void api.showExtra(extra, anchor);
+      if (api.showPool) {
+        void api.showPool(requestedPoolCardIds, anchor);
         return;
       }
-      const staticPoolCardIds = getStaticHoverPoolCardIds(cardId);
-      if (staticPoolCardIds.length > 0) {
-        if (api.showEnhancedPool) {
-          void api.showEnhancedPool(cardId, staticPoolCardIds, anchor);
-          return;
-        }
-        if (api.showPool) {
-          void api.showPool(staticPoolCardIds, anchor);
-          return;
-        }
+    }
+    if (extra && extra.lines.length > 0 && api.showEnhancedExtra) {
+      void api.showEnhancedExtra(cardId, extra, anchor);
+      return;
+    }
+    if (extra && extra.lines.length > 0 && api.showExtra) {
+      void api.showExtra(extra, anchor);
+      return;
+    }
+    const staticPoolCardIds = getStaticHoverPoolCardIds(cardId);
+    if (staticPoolCardIds.length > 0) {
+      if (api.showEnhancedPool) {
+        void api.showEnhancedPool(cardId, staticPoolCardIds, anchor);
         return;
       }
-      void api.show(cardId, anchor);
-    }, 250);
+      if (api.showPool) {
+        void api.showPool(staticPoolCardIds, anchor);
+        return;
+      }
+      return;
+    }
+    void api.show(cardId, anchor);
   }, []);
 
   const onPoolEnter = useCallback((cardIds: readonly string[], el: HTMLElement) => {
-    clearHover();
     if (cardIds.length === 0) return;
     const api = window.hdt?.cardPreview;
     if (!api?.showPool) return;
@@ -127,13 +114,11 @@ export function useCardPreview(): {
   }, []);
 
   const onRowLeave = useCallback(() => {
-    clearHover();
     void window.hdt?.cardPreview?.hide?.();
   }, []);
 
   useEffect(() => {
     return () => {
-      clearHover();
       void window.hdt?.cardPreview?.hide?.();
     };
   }, []);

@@ -691,11 +691,6 @@
       "miniSet": "迷你系列"
     },
     "filter": {
-      "mode": {
-        "all": "全部模式",
-        "standard": "标准",
-        "wild": "狂野"
-      },
       "search": "搜索卡牌套装…"
     },
     "detail": {

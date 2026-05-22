@@ -691,11 +691,6 @@
       "miniSet": "MINI-SET"
     },
     "filter": {
-      "mode": {
-        "all": "All modes",
-        "standard": "Standard",
-        "wild": "Wild"
-      },
       "search": "Search sets…"
     },
     "detail": {

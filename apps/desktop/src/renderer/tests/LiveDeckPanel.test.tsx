@@ -986,11 +986,6 @@ describe('LiveDeckPanel hover', () => {
     expect(row).toBeTruthy();
 
     fireEvent.mouseEnter(row);
-    expect(cardPreviewShow).not.toHaveBeenCalled();
-
-    act(() => {
-      vi.advanceTimersByTime(300);
-    });
     expect(cardPreviewShow).toHaveBeenCalledTimes(1);
     expect(cardPreviewShow.mock.calls[0]![0]).toBe('CS2_029');
     const anchor = cardPreviewShow.mock.calls[0]![1] as { side: 'left' | 'right' };
@@ -1556,7 +1551,10 @@ describe('LiveDeckPanel hover', () => {
     });
   });
 
-  it('does not invoke cardPreview.show when mouse leaves before threshold', () => {
+  it('invokes hide() on mouse leave after a synchronous show on enter', () => {
+    // The 250ms anti-flicker hover delay was removed at user request,
+    // so the preview now follows the cursor instantly: show() fires
+    // on enter, hide() fires on leave.
     const snap = makeSnapshot({
       original: [{ cardId: 'CS2_029', count: 1 }],
     });
@@ -1566,17 +1564,9 @@ describe('LiveDeckPanel hover', () => {
     const row = screen.getAllByTestId('card-copy-row')[0]!;
 
     fireEvent.mouseEnter(row);
-    act(() => {
-      vi.advanceTimersByTime(100);
-    });
-    fireEvent.mouseLeave(row);
-    act(() => {
-      vi.advanceTimersByTime(300);
-    });
+    expect(cardPreviewShow).toHaveBeenCalledTimes(1);
 
-    expect(cardPreviewShow).not.toHaveBeenCalled();
-    expect(cardPreviewShowExtra).not.toHaveBeenCalled();
-    // Mouse leave still fires hide() (cheap idempotent call).
+    fireEvent.mouseLeave(row);
     expect(cardPreviewHide).toHaveBeenCalled();
   });
 

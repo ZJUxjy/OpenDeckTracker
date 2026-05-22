@@ -20,11 +20,11 @@ function blockStart(entity: number, cardId: string): PowerEvent {
   };
 }
 
-function showEntity(entity: number, cardId: string): PowerEvent {
+function fullEntity(entityId: number, cardId: string): PowerEvent {
   return {
     ...BASE,
-    type: 'show-entity',
-    entity,
+    type: 'full-entity',
+    entityId,
     cardId,
     tags: {},
   };
@@ -44,7 +44,27 @@ function blockEnd(): PowerEvent {
   return { ...BASE, type: 'block-end' };
 }
 
-/** Ctx that resolves waitForMoreEvents synchronously with the same events. */
+/**
+ * Helper: emit the standard tag chain that HS writes for one Discover
+ * candidate copy entity — CONTROLLER, CREATOR (the cast), COPIED_FROM,
+ * and ZONE=SETASIDE. Mirrors what shows up in real Power.log.
+ */
+function discoverCandidate(
+  copyId: number,
+  cardId: string,
+  originalId: number,
+  castEntityId: number,
+  controllerId = 1,
+): PowerEvent[] {
+  return [
+    fullEntity(copyId, cardId),
+    tagChange(copyId, 'CONTROLLER', controllerId),
+    tagChange(copyId, 'CREATOR', castEntityId),
+    tagChange(copyId, 'COPIED_FROM_ENTITY_ID', originalId),
+    tagChange(copyId, 'ZONE', 'SETASIDE'),
+  ];
+}
+
 function makeCtx(events: PowerEvent[]): ExtractCtx {
   return {
     recentEvents: events,
@@ -52,33 +72,31 @@ function makeCtx(events: PowerEvent[]): ExtractCtx {
   };
 }
 
-/**
- * Test-only extractor — same logic, but trims the wait budget so the
- * "extractor times out" cases finish in ~200ms instead of 5s.
- */
 const fastExtractor = makeWaveshapingExtractor({ waitMs: 150, pollStepMs: 30 });
 
 describe('waveshapingExtractor', () => {
+  const CAST_ENTITY_ID = 7;
   const castEvent: CardPlayedEvent = {
     cardId: 'TIME_701',
     controllerId: 1,
-    entityId: 99,
+    entityId: CAST_ENTITY_ID,
     timestamp: 0,
     isManualPlay: true,
   };
 
-  it('returns 2 bottom placements for the unchosen Discover candidates', async () => {
+  it('returns the two unchosen cardIds when the chosen ORIGINAL moves to HAND', async () => {
+    // 3 candidate copies (109/110/111) backed by originals (12/27/26).
+    // User picks the FIRST one — original 12 (CARD_A) moves DECK → HAND.
+    // CARD_B and CARD_C should be returned as bottom placements.
     const events: PowerEvent[] = [
-      blockStart(99, 'TIME_701'),
-      showEntity(101, 'CARD_A'),
-      showEntity(102, 'CARD_B'),
-      showEntity(103, 'CARD_C'),
-      tagChange(101, 'ZONE', 'HAND'),
-      tagChange(102, 'ZONE', 'DECK'),
-      tagChange(103, 'ZONE', 'DECK'),
+      blockStart(CAST_ENTITY_ID, 'TIME_701'),
+      ...discoverCandidate(109, 'CARD_A', 12, CAST_ENTITY_ID),
+      ...discoverCandidate(110, 'CARD_B', 27, CAST_ENTITY_ID),
+      ...discoverCandidate(111, 'CARD_C', 26, CAST_ENTITY_ID),
       blockEnd(),
+      // User picks CARD_A — its ORIGINAL entity (12) moves to HAND
+      tagChange(12, 'ZONE', 'HAND'),
     ];
-
     const result = await waveshapingExtractor.extract(castEvent, makeCtx(events));
     expect(result).not.toBeNull();
     expect(result).toHaveLength(2);
@@ -91,113 +109,105 @@ describe('waveshapingExtractor', () => {
     }
   });
 
-  it('handles numeric ZONE values (raw enum) as well as string', async () => {
+  it('also works when the CHOSEN COPY (not original) is the one moving to HAND', async () => {
     const events: PowerEvent[] = [
-      blockStart(99, 'TIME_701'),
-      showEntity(101, 'CARD_A'),
-      showEntity(102, 'CARD_B'),
-      showEntity(103, 'CARD_C'),
-      tagChange(101, 'ZONE', 3), // HAND
-      tagChange(102, 'ZONE', 2), // DECK
-      tagChange(103, 'ZONE', 2), // DECK
+      blockStart(CAST_ENTITY_ID, 'TIME_701'),
+      ...discoverCandidate(109, 'CARD_A', 12, CAST_ENTITY_ID),
+      ...discoverCandidate(110, 'CARD_B', 27, CAST_ENTITY_ID),
+      ...discoverCandidate(111, 'CARD_C', 26, CAST_ENTITY_ID),
       blockEnd(),
+      // HS variant: the COPY entity itself moves SETASIDE → HAND
+      tagChange(110, 'ZONE', 'HAND'),
     ];
     const result = await waveshapingExtractor.extract(castEvent, makeCtx(events));
-    expect(result).not.toBeNull();
+    expect((result as { cardId: string }[]).map((p) => p.cardId).sort()).toEqual([
+      'CARD_A',
+      'CARD_C',
+    ]);
+  });
+
+  it('handles numeric ZONE values (raw enum) as well as string', async () => {
+    const events: PowerEvent[] = [
+      blockStart(CAST_ENTITY_ID, 'TIME_701'),
+      ...discoverCandidate(109, 'CARD_A', 12, CAST_ENTITY_ID),
+      ...discoverCandidate(110, 'CARD_B', 27, CAST_ENTITY_ID),
+      ...discoverCandidate(111, 'CARD_C', 26, CAST_ENTITY_ID),
+      blockEnd(),
+      tagChange(12, 'ZONE', 3), // 3 = HAND
+    ];
+    const result = await waveshapingExtractor.extract(castEvent, makeCtx(events));
     expect((result as { cardId: string }[]).map((p) => p.cardId).sort()).toEqual([
       'CARD_B',
       'CARD_C',
     ]);
   });
 
-  it('returns null when fewer than 2 cards land in DECK', async () => {
+  it('ignores ZONE→HAND events on entities NOT created by the cast', async () => {
+    // An unrelated entity moves to HAND (a card we drew). It is NOT
+    // a Discover candidate (no CREATOR=cast tag). Extractor must wait.
     const events: PowerEvent[] = [
-      blockStart(99, 'TIME_701'),
-      showEntity(101, 'CARD_A'),
-      showEntity(102, 'CARD_B'),
-      showEntity(103, 'CARD_C'),
-      tagChange(101, 'ZONE', 'HAND'),
-      tagChange(102, 'ZONE', 'DECK'),
-      // Third ZONE→DECK event missing
+      blockStart(CAST_ENTITY_ID, 'TIME_701'),
+      ...discoverCandidate(109, 'CARD_A', 12, CAST_ENTITY_ID),
+      ...discoverCandidate(110, 'CARD_B', 27, CAST_ENTITY_ID),
+      ...discoverCandidate(111, 'CARD_C', 26, CAST_ENTITY_ID),
       blockEnd(),
+      tagChange(999, 'ZONE', 'HAND'), // unrelated entity
     ];
     const result = await fastExtractor.extract(castEvent, makeCtx(events));
     expect(result).toBeNull();
   });
 
-  it('stops at block-end and does not consume events from a later block', async () => {
+  it('returns null when only 2 candidates are present (rare HS bug / cut buffer)', async () => {
     const events: PowerEvent[] = [
-      blockStart(99, 'TIME_701'),
-      showEntity(101, 'CARD_A'),
-      showEntity(102, 'CARD_B'),
-      showEntity(103, 'CARD_C'),
-      tagChange(101, 'ZONE', 'HAND'),
-      tagChange(102, 'ZONE', 'DECK'),
+      blockStart(CAST_ENTITY_ID, 'TIME_701'),
+      ...discoverCandidate(109, 'CARD_A', 12, CAST_ENTITY_ID),
+      ...discoverCandidate(110, 'CARD_B', 27, CAST_ENTITY_ID),
       blockEnd(),
-      // Unrelated subsequent block adds another ZONE→DECK — must NOT
-      // be picked up.
-      blockStart(200, 'OTHER_CARD'),
-      showEntity(201, 'CARD_X'),
-      tagChange(201, 'ZONE', 'DECK'),
-      blockEnd(),
+      tagChange(12, 'ZONE', 'HAND'),
     ];
     const result = await fastExtractor.extract(castEvent, makeCtx(events));
     expect(result).toBeNull();
   });
 
-  it('resolves cardIds carried by full-entity events too', async () => {
+  it('handles a Discover prompt that resolves AFTER block-end (real-game timing)', async () => {
+    // The user takes time on the prompt — block-end fires before
+    // they pick. The extractor must continue past block-end.
     const events: PowerEvent[] = [
-      blockStart(99, 'TIME_701'),
-      {
-        ...BASE,
-        type: 'full-entity',
-        entityId: 101,
-        cardId: 'CARD_A',
-        tags: {},
-      },
-      {
-        ...BASE,
-        type: 'full-entity',
-        entityId: 102,
-        cardId: 'CARD_B',
-        tags: {},
-      },
-      {
-        ...BASE,
-        type: 'full-entity',
-        entityId: 103,
-        cardId: 'CARD_C',
-        tags: {},
-      },
-      tagChange(101, 'ZONE', 'HAND'),
-      tagChange(102, 'ZONE', 'DECK'),
-      tagChange(103, 'ZONE', 'DECK'),
+      blockStart(CAST_ENTITY_ID, 'TIME_701'),
+      ...discoverCandidate(109, 'CARD_A', 12, CAST_ENTITY_ID),
+      ...discoverCandidate(110, 'CARD_B', 27, CAST_ENTITY_ID),
+      ...discoverCandidate(111, 'CARD_C', 26, CAST_ENTITY_ID),
       blockEnd(),
+      // ... game continues, irrelevant events arrive ...
+      tagChange(999, 'COST', 1),
+      blockStart(500, 'SOME_OTHER_CARD'),
+      blockEnd(),
+      // ... finally the user picks ...
+      tagChange(27, 'ZONE', 'HAND'),
     ];
     const result = await waveshapingExtractor.extract(castEvent, makeCtx(events));
-    expect(result).toHaveLength(2);
+    expect((result as { cardId: string }[]).map((p) => p.cardId).sort()).toEqual([
+      'CARD_A',
+      'CARD_C',
+    ]);
   });
 
   it('matches the cast by entityId, not cardId (handles multiple Waveshapings)', async () => {
-    // First Waveshaping cast happened earlier; only the SECOND cast
-    // (entityId 99) should be matched for this CardPlayedEvent.
     const events: PowerEvent[] = [
+      // First Waveshaping (entityId=50) — already resolved, irrelevant
       blockStart(50, 'TIME_701'),
-      showEntity(51, 'CARD_X'),
-      showEntity(52, 'CARD_Y'),
-      showEntity(53, 'CARD_Z'),
-      tagChange(51, 'ZONE', 'HAND'),
-      tagChange(52, 'ZONE', 'DECK'),
-      tagChange(53, 'ZONE', 'DECK'),
+      ...discoverCandidate(80, 'OLD_A', 4, 50),
+      ...discoverCandidate(81, 'OLD_B', 5, 50),
+      ...discoverCandidate(82, 'OLD_C', 6, 50),
       blockEnd(),
-      blockStart(99, 'TIME_701'),
-      showEntity(101, 'CARD_A'),
-      showEntity(102, 'CARD_B'),
-      showEntity(103, 'CARD_C'),
-      tagChange(101, 'ZONE', 'HAND'),
-      tagChange(102, 'ZONE', 'DECK'),
-      tagChange(103, 'ZONE', 'DECK'),
+      tagChange(4, 'ZONE', 'HAND'),
+      // Second Waveshaping (the one we're tracking) — entity 7
+      blockStart(CAST_ENTITY_ID, 'TIME_701'),
+      ...discoverCandidate(109, 'CARD_A', 12, CAST_ENTITY_ID),
+      ...discoverCandidate(110, 'CARD_B', 27, CAST_ENTITY_ID),
+      ...discoverCandidate(111, 'CARD_C', 26, CAST_ENTITY_ID),
       blockEnd(),
+      tagChange(12, 'ZONE', 'HAND'),
     ];
     const result = await waveshapingExtractor.extract(castEvent, makeCtx(events));
     expect((result as { cardId: string }[]).map((p) => p.cardId).sort()).toEqual([

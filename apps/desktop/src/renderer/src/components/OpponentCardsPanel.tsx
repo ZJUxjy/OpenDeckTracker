@@ -56,12 +56,24 @@ export function OpponentCardsPanel({
   const { t } = useTranslation();
   // `revealed` is cumulative history; the dedicated graveyard tab is
   // wired at the overlay level from `opponent.graveyard`.
-  const cardIds = useMemo(
-    () => [...new Set(revealed.map((record) => record.cardId))],
+  //
+  // The "已打出" / "played" list is meant to show cards the opponent
+  // ACTUALLY played from hand — not minions/spells that some other
+  // card summoned or replayed on their behalf (Phaelarc the Firelight,
+  // Flashback, etc.). Strip `created === true` entries here so the list
+  // stays focused on real plays. The 墓地 tab still surfaces the
+  // effect-summoned minions when they die — that filter lives at the
+  // overlay level and reads `opponent.graveyard` unchanged.
+  const playedRecords = useMemo(
+    () => revealed.filter((r) => !r.created),
     [revealed],
   );
+  const cardIds = useMemo(
+    () => [...new Set(playedRecords.map((record) => record.cardId))],
+    [playedRecords],
+  );
   const defs = useOpponentCardDefs(cardIds);
-  const revealedGroups = useMemo(() => groupRecords(revealed), [revealed]);
+  const revealedGroups = useMemo(() => groupRecords(playedRecords), [playedRecords]);
   const isEmpty = revealedGroups.length === 0;
   const { isAlive } = useHearthMirrorStatus();
   // Mirror the LiveDeckPanel behaviour: if the game isn't running and
