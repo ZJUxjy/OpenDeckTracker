@@ -17,6 +17,7 @@ import { liveMatchIdentity } from './match-identity';
 import { createPowerMatchRecorder } from './power-match-recorder';
 import { recordCompletedMatch } from './stats-host';
 import { gameProgressNarrationHost } from './game-progress-narration-host';
+import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
 
 let watcher: ReturnType<typeof createHearthWatcher> | null = null;
 let latestStatus: HearthWatcherDiagnostic | null = null;
@@ -86,8 +87,18 @@ export function startHearthWatcher(): void {
     broadcast('hearthwatcher:status', latestStatus);
   });
 
+  // Edge: Hearthstone just launched. Skip the watcher's 2s back-off
+  // and immediately re-run discovery (or, if already tailing, check
+  // whether HS opened a newer timestamped Power.log we should switch
+  // to). Cheaper than waiting for the next scheduled tick.
+  const onAppeared = (): void => {
+    watcher?.triggerDiscovery();
+  };
+  hearthstoneProcessMonitor.on('appeared', onAppeared);
+
   app.on('before-quit', () => {
     unsubscribeNarration();
+    hearthstoneProcessMonitor.off('appeared', onAppeared);
     watcher?.stop();
     watcher = null;
   });

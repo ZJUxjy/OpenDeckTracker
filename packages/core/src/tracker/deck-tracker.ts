@@ -514,6 +514,16 @@ export class DeckTracker {
     );
   }
 
+  /**
+   * Force the next tick to fire as soon as possible (~0ms). Used by
+   * the main-process Hearthstone-process monitor when it observes
+   * the game just appeared, so the tracker doesn't sit on its
+   * IDLE-cadence 2s timer before noticing.
+   */
+  requestImmediateTick(): void {
+    this.loop.requestImmediate();
+  }
+
   stop(): void {
     this.loop.stop();
   }

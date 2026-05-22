@@ -1,3 +1,12 @@
+// Shorten the HearthMirror Rust runtime's reinit back-off (default 2000ms)
+// to 500ms so the global Hearthstone-process monitor can drive sub-second
+// reconnects when the game appears AFTER the tracker. Must be set before
+// the first napi call into @hdt/hearthmirror-native because the back-off
+// is memoised via OnceLock on first read.
+if (process.env['HDT_HEARTHMIRROR_REINIT_BACKOFF_MS'] === undefined) {
+  process.env['HDT_HEARTHMIRROR_REINIT_BACKOFF_MS'] = '500';
+}
+
 import { app, BrowserWindow, protocol, screen } from 'electron';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,6 +19,7 @@ import { createHearthstoneWindowTracker } from './hearthstone-window-tracker';
 import { CardPreviewWindow } from './card-preview-window';
 import { getHearthMirror } from './hearthmirror';
 import { initAutoUpdate } from './auto-update';
+import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -167,6 +177,13 @@ if (!gotLock) {
     });
     startDeckTracker();
     startHearthWatcher();
+    // Global edge-signal for "Hearthstone appeared / disappeared".
+    // Subscribers (HearthMirror via deck-tracker, HearthWatcher) wire
+    // their own `appeared` handlers to force an immediate retry instead
+    // of sitting on their own polling cadences. Order matters: must be
+    // started AFTER the consumers so their subscribers exist by the
+    // time the first edge fires.
+    hearthstoneProcessMonitor.start();
 
     // Gate overlay visibility on EITHER:
     //   1. `phase === 'IN_MATCH'` — HearthMirror has confirmed gameplay
@@ -217,6 +234,7 @@ if (!gotLock) {
     });
 
     app.on('before-quit', () => {
+      hearthstoneProcessMonitor.stop();
       tracker.stop();
       playerOverlay.dispose();
       opponentOverlay.dispose();

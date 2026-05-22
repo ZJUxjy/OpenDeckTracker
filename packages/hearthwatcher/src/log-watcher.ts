@@ -76,6 +76,31 @@ export class HearthWatcher {
     await this.attemptDiscoveryAndTail();
   }
 
+  /**
+   * Cancel any pending discovery / latest-log timers and immediately
+   * re-run the appropriate check. Called by main-process callers that
+   * know Hearthstone just appeared (via the global process monitor)
+   * so we don't wait out the 2s back-off.
+   *
+   * Safe to call repeatedly; safe to call before `start()` (no-op).
+   */
+  triggerDiscovery(): void {
+    if (!this.running) return;
+    if (this.tailer === null) {
+      if (this.discoveryTimer !== null) {
+        clearTimeout(this.discoveryTimer);
+        this.discoveryTimer = null;
+      }
+      void this.attemptDiscoveryAndTail();
+    } else {
+      if (this.latestLogTimer !== null) {
+        clearTimeout(this.latestLogTimer);
+        this.latestLogTimer = null;
+      }
+      void this.checkForLatestPowerLog();
+    }
+  }
+
   stop(): void {
     this.running = false;
     if (this.discoveryTimer !== null) {
