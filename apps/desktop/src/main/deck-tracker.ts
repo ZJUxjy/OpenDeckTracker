@@ -622,6 +622,20 @@ export function forwardPowerEventToDeckTracker(
     const turn = numericTag(event.value);
     if (turn !== undefined) tracker?.recordTurnChange(turn);
   }
+  // CURRENT_PLAYER=1 fires on the player entity whose turn just
+  // started. The same tag-change pair fires every turn (CURRENT_PLAYER
+  // flips off the previous player, then on for the next). We forward
+  // only the "on" edge — the tracker resolves the player's
+  // controllerId from its entity map and uses the latest known owner
+  // to gate live recomputation of friendly board attack.
+  if (
+    event.type === 'tag-change' &&
+    event.tag === 'CURRENT_PLAYER' &&
+    numericTag(event.value) === 1
+  ) {
+    const playerEntityId = numericEntityRef(event.entity);
+    if (playerEntityId !== null) tracker?.recordCurrentPlayerChange(playerEntityId);
+  }
   pushPowerEvent(event);
   const logUpdates = logUpdatesFromPowerEvent(event);
   if (logUpdates.length > 0) {

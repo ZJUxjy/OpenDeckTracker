@@ -331,6 +331,21 @@ export class DeckTracker {
   private cachedBoardAttack: BoardAttackTotals | null = null;
   private cachedBoardAttackToFace: BoardAttackTotals | null = null;
   private boardAttackRefreshPending = false;
+  /**
+   * Numeric controllerId of whichever player currently owns the turn
+   * (CURRENT_PLAYER tag = 1 in Power.log). Updated through
+   * `recordCurrentPlayerChange`; null until the host has forwarded
+   * the first CURRENT_PLAYER tag of the match.
+   *
+   * Used to decide whether the board-attack cache should refresh on
+   * every mid-turn entity update. During the user's own turn the
+   * cache is kept live (so buffs / silences / weapon attaches show
+   * up instantly in the friendly attack number); during the
+   * opponent's turn we keep the original turn-boundary throttle, so
+   * the expensive `computeMaxFaceDamage` taunt search doesn't run
+   * once per Power.log line.
+   */
+  private currentTurnController: number | null = null;
 
   constructor(args: {
     mirror: HearthMirror;
@@ -528,6 +543,16 @@ export class DeckTracker {
         cardLookup: this.cardMetadataLookup,
       });
     }
+    // During the local player's own turn, treat every log-derived
+    // entity update as a board-attack invalidation. The cache is
+    // there to keep us off `computeMaxFaceDamage`'s taunt search
+    // during the OPPONENT's turn — but on the user's own turn the
+    // friendly attack number must reflect mid-turn buffs / silences
+    // / weapon attaches immediately. Opponent-turn updates still
+    // ride the original turn-boundary throttle (no flag set here).
+    if (this.isLocalPlayerTurn()) {
+      this.boardAttackRefreshPending = true;
+    }
     this.currentSnapshot = this.buildSnapshot();
   }
 
@@ -553,6 +578,42 @@ export class DeckTracker {
     // latest provider output.
     this.boardAttackRefreshPending = true;
     this.currentSnapshot = this.buildSnapshot();
+  }
+
+  /**
+   * Forward a `CURRENT_PLAYER` tag observation from the host. Drives
+   * the board-attack cache live-refresh policy: during the local
+   * player's turn the cache is bypassed on every entity update so
+   * the displayed friendly attack number tracks buffs, silences,
+   * weapon attaches etc. in real time; during the opponent's turn
+   * we keep the original turn-boundary throttle.
+   *
+   * `playerEntityId` is the entityId of the Player entity whose
+   * `CURRENT_PLAYER` tag flipped to 1 — NOT the player's
+   * controllerId, since HS's parser surfaces only the entity ref
+   * here. We resolve the controllerId by looking the entity up;
+   * a missed lookup (Power.log race where TAG_CHANGE preceeds the
+   * FULL_ENTITY in our buffer) just leaves the turn-owner unchanged
+   * — the next CURRENT_PLAYER edge of the same player will catch us
+   * up.
+   *
+   * Pass `null` to clear (e.g. on POST_MATCH → IDLE).
+   */
+  recordCurrentPlayerChange(playerEntityId: number | null): void {
+    if (playerEntityId === null) {
+      this.currentTurnController = null;
+      return;
+    }
+    const entity = this.game.entities.get(playerEntityId);
+    if (!entity) return;
+    this.currentTurnController = entity.controllerId;
+  }
+
+  private isLocalPlayerTurn(): boolean {
+    return (
+      this.currentTurnController !== null &&
+      this.currentTurnController === this.game.localPlayer.controllerId
+    );
   }
 
   recordExtraDisplayEntityTag(args: { entityId: number; tag: string; value: number }): void {
@@ -984,6 +1045,11 @@ export class DeckTracker {
     this.cachedBoardAttack = null;
     this.cachedBoardAttackToFace = null;
     this.boardAttackRefreshPending = false;
+    // Drop the per-match turn-owner too — the value carries over
+    // from the previous match otherwise and would briefly mis-route
+    // the first few entity updates of the next match (until the
+    // first CURRENT_PLAYER tag fires).
+    this.currentTurnController = null;
   }
 
   private buildSnapshot(args?: {
