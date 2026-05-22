@@ -1,12 +1,14 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   type PropsWithChildren,
 } from 'react';
 import {
   DEFAULT_LANGUAGE_PREFERENCE,
   getSystemLanguage,
+  isLanguagePreference,
   resolveAppLocale,
   type AppLocale,
   type LanguagePreference,
@@ -65,6 +67,21 @@ export function I18nProvider({
     }),
     [locale, messages, resolvedPreference],
   );
+
+  // Subscribe to the cross-window appearance broadcast so language
+  // changes made in the main window's Settings page propagate to
+  // already-open overlay BrowserWindows. Each renderer has its own
+  // in-memory store, so an already-open overlay would otherwise keep
+  // its bootstrap locale until refresh. `syncFromExternal` writes
+  // through to localStorage without re-broadcasting.
+  useEffect(() => {
+    const off = window.hdt?.appearance?.onChanged?.((payload) => {
+      const next = payload?.languagePreference;
+      if (!isLanguagePreference(next)) return;
+      useI18nStore.getState().syncFromExternal(next);
+    });
+    return () => off?.();
+  }, []);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

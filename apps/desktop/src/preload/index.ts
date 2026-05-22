@@ -47,6 +47,12 @@ type AppearanceSyncPayload = {
   theme?: string;
   gameOverlay?: boolean;
   gameOverlayOpponent?: boolean;
+  // Language preference rides on the appearance broadcast so overlay
+  // BrowserWindows pick up locale changes the user makes in the main
+  // window's Settings page. Each renderer has its own in-memory store,
+  // so without this signal an already-open overlay would keep showing
+  // its bootstrap locale.
+  languagePreference?: 'system' | 'en-US' | 'zh-CN';
 };
 
 type CollectionProgressResult = {
