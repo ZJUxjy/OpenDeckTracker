@@ -60,7 +60,7 @@ export class GlobalEffectsRegistry {
     const def = this.catalogIndex.get(event.cardId);
     if (!def) return;
 
-    // eslint-disable-next-line no-console
+     
     console.log(
       `[global-effects] registry recorded: id=${def.id} controllerId=${event.controllerId}`,
     );

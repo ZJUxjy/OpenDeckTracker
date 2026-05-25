@@ -7,7 +7,7 @@ import App from '../src/App';
 import { routes } from '../src/routes';
 import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
 
-function renderRoute(initialEntry = '/') {
+function renderRoute(initialEntry = '/tracker') {
   const router = createMemoryRouter([{ path: '/', element: <App />, children: routes }], {
     initialEntries: [initialEntry],
   });

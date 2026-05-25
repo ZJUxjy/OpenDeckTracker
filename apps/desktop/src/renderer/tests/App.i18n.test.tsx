@@ -56,7 +56,9 @@ describe('App i18n', () => {
     await user.click(screen.getByRole('button', { name: 'Simplified Chinese' }));
     await user.click(screen.getByRole('button', { name: /记牌器/ }));
 
-    expect(screen.getByText('暂无活动卡组')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('暂无活动卡组')).toBeInTheDocument();
+    });
     expect(screen.getByText('状态：空闲')).toBeInTheDocument();
     expect(screen.queryByText('No Active Deck')).not.toBeInTheDocument();
   });

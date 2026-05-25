@@ -7,7 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // vitest 2.x ships vite 5 plugin types but desktop uses vite 6 — types are
 // structurally compatible at runtime; cast through `unknown` to bridge them.
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment */
+ 
 export default defineConfig({
   plugins: [react() as unknown as any],
   test: {

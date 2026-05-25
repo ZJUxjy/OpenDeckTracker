@@ -1,0 +1,9 @@
+D 00:00:00.0000000 GameState.DebugPrintPower() - CREATE_GAME
+D 00:00:00.0000000 GameState.DebugPrintPower() - FULL_ENTITY - Updating [entityName=Fireball id=64 zone=DECK zonePos=0 cardId=CS2_029 player=1] CardID=CS2_029 tag=CONTROLLER value=1 tag=ZONE value=DECK
+D 00:00:00.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=64 tag=ZONE value=HAND
+D 00:00:00.0000000 GameState.DebugPrintPower() - SHOW_ENTITY - Updating Entity=[entityName=foo id=64 zone=HAND zonePos=1 cardId=CS2_029 player=1] CardID=CS2_029
+D 00:00:00.0000000 GameState.DebugPrintPower() - HIDE_ENTITY - Entity=65 tag=ZONE value=HAND
+D 00:00:00.0000000 GameState.DebugPrintPower() - CHANGE_ENTITY - Updating Entity=[entityName=foo id=64 zone=HAND zonePos=1 cardId=CS2_029 player=1] CardID=CS2_032
+D 00:00:00.0000000 GameState.DebugPrintPower() - BLOCK_START BlockType=PLAY Entity=[entityName=foo id=64 zone=HAND zonePos=1 cardId=CS2_032 player=1] EffectCardId= EffectIndex=0 Target=0 SubOption=-1
+D 00:00:00.0000000 GameState.DebugPrintPower() - BLOCK_END
+D 00:00:00.0000000 GameState.DebugPrintPower() - SHUFFLE_DECK PlayerID=1
