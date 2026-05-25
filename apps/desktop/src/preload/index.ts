@@ -67,6 +67,7 @@ import type {
   CreateDeckInput,
   DeckTrackerEvent,
   DeckTrackerSnapshot,
+  DeckLadderWinrateStats,
   DeckDetail,
   DeckSummary,
   FormatFilter,
@@ -74,6 +75,7 @@ import type {
   MatchRecordingDetail,
   MatchRecordingSummary,
   MatchHistoryRecord,
+  MatchModeFilter,
   SavedDeckMatchupStats,
   StatsQueryOptions,
   StatsSummary,
@@ -159,15 +161,20 @@ const api = {
     listRecent: (
       filter: StatsTimeFilter,
       limit: number,
-      options?: { formatFilter?: FormatFilter },
+      options?: { formatFilter?: FormatFilter; matchModeFilter?: MatchModeFilter },
     ): Promise<MatchHistoryRecord[]> =>
       ipcRenderer.invoke('stats:list-recent', filter, limit, options),
     getSavedDeckMatchups: (
       savedDeckId: string,
       filter: StatsTimeFilter,
-      options?: { formatFilter?: FormatFilter },
+      options?: { formatFilter?: FormatFilter; matchModeFilter?: MatchModeFilter },
     ): Promise<SavedDeckMatchupStats[]> =>
       ipcRenderer.invoke('stats:get-saved-deck-matchups', savedDeckId, filter, options),
+    getDeckLadderWinrate: (query: {
+      deckId?: number | null;
+      deckName?: string | null;
+    }): Promise<DeckLadderWinrateStats> =>
+      ipcRenderer.invoke('stats:get-deck-ladder-winrate', query),
   },
   recordings: {
     list: (): Promise<MatchRecordingSummary[]> => ipcRenderer.invoke('recordings:list'),

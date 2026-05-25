@@ -21,6 +21,18 @@ Object.defineProperty(window, 'hdt', {
       list: async () => Promise.resolve([]),
       get: async () => Promise.resolve(null),
     },
+    stats: {
+      getSummary: async () => Promise.reject(new Error('stats.getSummary not stubbed')),
+      listRecent: async () => Promise.resolve([]),
+      getSavedDeckMatchups: async () => Promise.resolve([]),
+      getDeckLadderWinrate: async () =>
+        Promise.resolve({
+          wins: 0,
+          losses: 0,
+          matchesPlayed: 0,
+          winrate: null,
+        }),
+    },
     gameProgressNarration: {
       getRecent: async () => Promise.resolve([]),
       subscribe: () => () => {},

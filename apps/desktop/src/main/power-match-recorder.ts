@@ -1,5 +1,5 @@
 import {
-  isConstructedMatch,
+  classifyMatchMode,
   normalizeCompletedMatch,
   type MatchResult,
   type DeckTrackerSnapshot,
@@ -47,20 +47,12 @@ export function createPowerMatchRecorder(args: {
       const powerClassification = inferHumanConstructedMatch(playstates);
       const classification =
         powerClassification ??
-        (matchInfo !== null && isConstructedMatch(matchInfo) ? matchInfo : null);
+        (matchInfo !== null && classifyMatchMode(matchInfo) !== null ? matchInfo : null);
       if (classification === null) {
         logSkip('missing match info and no human Power.log opponent', playstates);
         return;
       }
-      if (
-        powerClassification === null &&
-        matchInfo?.missionId !== undefined &&
-        matchInfo.missionId > 0
-      ) {
-        logSkip('mission or practice match classification', playstates);
-        return;
-      }
-      if (!isConstructedMatch(classification)) {
+      if (classifyMatchMode(classification) === null) {
         logSkip('unsupported match classification', playstates);
         return;
       }

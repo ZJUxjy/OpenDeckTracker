@@ -7,7 +7,7 @@ import type {
   HearthMirror,
   MatchInfo,
 } from '@hdt/hearthmirror';
-import { DeckTracker, type DeckTrackerEvent, type DeckTrackerEventName } from './deck-tracker';
+import { DeckTracker, type DeckTrackerEvent } from './deck-tracker';
 import { CallbackDeckIdentifier, ChainedDeckIdentifier } from './deck-identifier';
 import { DeckSnapshot } from '../game/deck-snapshot';
 
@@ -108,6 +108,17 @@ const fakeMatch = (overrides: Partial<MatchInfo> = {}): MatchInfo => ({
   ...overrides,
 });
 
+const shellMatchInfo = (): MatchInfo => ({
+  localPlayer: null,
+  opposingPlayer: null,
+  missionId: 0,
+  gameType: 0,
+  formatType: 0,
+  rankedSeasonId: 0,
+  arenaSeasonId: 0,
+  brawlSeasonId: 0,
+});
+
 /**
  * Advance time enough to complete the initial tick + N follow-up ticks.
  * The first tick is at t=0; subsequent ticks fire at the current
@@ -138,6 +149,22 @@ describe('DeckTracker', () => {
     tracker.start();
     await advanceTicks(2);
     expect(tracker.getSnapshot().phase).toBe('IDLE');
+    tracker.stop();
+  });
+
+  it('stays IDLE when HearthMirror returns only shell match info from the deck picker', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = shellMatchInfo();
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({ mirror });
+    tracker.on('match-started', (e) => events.push(e));
+
+    tracker.start();
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().phase).toBe('IDLE');
+    expect(events).toHaveLength(0);
+    expect(mirror.getDeckState).not.toHaveBeenCalled();
     tracker.stop();
   });
 
@@ -408,6 +435,69 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('uses an idle selected-deck refresh captured before the deck picker unloads', async () => {
+    const { mirror, state } = makeMirror();
+    state.decks = [
+      deckWithCards(1, 'Wrong Deck', [
+        { cardId: 'X', count: 2 },
+        { cardId: 'Y', count: 1 },
+      ]),
+      deckWithCards(2, 'Queued Deck', [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [{ entityId: 100, cardId: '' }],
+      opposingDeckCount: 20,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 4 };
+
+    let selectedDeckId: bigint | null = null;
+    vi.mocked(mirror.getSelectedDeckId).mockImplementation(async () =>
+      selectedDeckId === null
+        ? null
+        : {
+            deckId: selectedDeckId,
+            templateDeckId: 0,
+            formatType: 2,
+          },
+    );
+
+    const events: DeckTrackerEvent[] = [];
+    const capturedSelectedDecks: Array<{ deckId: string; templateDeckId: number; formatType: number }> = [];
+    const tracker = new DeckTracker({ mirror });
+    tracker.on('needs-deck-selection', (e) => events.push(e));
+    tracker.on('selected-deck-captured', (e) => {
+      if (e.selectedDeck) capturedSelectedDecks.push(e.selectedDeck);
+    });
+    tracker.start();
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+
+    selectedDeckId = 2n;
+    await vi.advanceTimersByTimeAsync(500);
+    await Promise.resolve();
+
+    // The deck-picker scene unloads as soon as queue / match startup begins.
+    selectedDeckId = null;
+    state.matchInfo = fakeMatch();
+    tracker.requestImmediateTick();
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    tracker.requestImmediateTick();
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+
+    expect(tracker.getSnapshot().deck?.id).toBe(2);
+    expect(tracker.getSnapshot().deck?.name).toBe('Queued Deck');
+    expect(capturedSelectedDecks).toEqual([
+      { deckId: '2', templateDeckId: 0, formatType: 2 },
+    ]);
+    expect(events).toHaveLength(0);
+    tracker.stop();
+  });
+
   it('narrows manual deck selection to visible-card candidates when fallback is ambiguous', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();
@@ -451,6 +541,54 @@ describe('DeckTracker', () => {
       'Candidate A',
       'Candidate B',
     ]);
+    tracker.stop();
+  });
+
+  it('retries visible-card deck identification after the initial selection prompt', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [
+      deckWithCards(1, 'Wrong Deck', [
+        { cardId: 'X', count: 2 },
+        { cardId: 'Y', count: 1 },
+      ]),
+      deckWithCards(2, 'Late Visible Match', [
+        { cardId: 'A', count: 2 },
+        { cardId: 'B', count: 1 },
+        { cardId: 'C', count: 1 },
+      ]),
+    ];
+    state.deckState = {
+      friendlyDeck: [{ entityId: 100, cardId: '' }],
+      opposingDeckCount: 20,
+    };
+    state.handState = { friendlyHand: [], opposingHandCount: 4 };
+
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({ mirror });
+    tracker.on('needs-deck-selection', (e) => events.push(e));
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().deck).toBeNull();
+    expect(events).toHaveLength(1);
+    expect(tracker.getSnapshot().pendingDeckSelection?.decks.map((deck) => deck.name)).toEqual([
+      'Wrong Deck',
+      'Late Visible Match',
+    ]);
+
+    state.handState = {
+      friendlyHand: [
+        { entityId: 1, cardId: 'A', zonePosition: 1 },
+        { entityId: 2, cardId: 'B', zonePosition: 2 },
+      ],
+      opposingHandCount: 4,
+    };
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().deck?.id).toBe(2);
+    expect(tracker.getSnapshot().deck?.name).toBe('Late Visible Match');
+    expect(tracker.getSnapshot().pendingDeckSelection).toBeNull();
     tracker.stop();
   });
 
@@ -883,9 +1021,9 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
-  it('omits completedMatch summary for mission or practice games', async () => {
+  it('emits completedMatch summary for adventure games with mission ids', async () => {
     const { mirror, state } = makeMirror();
-    state.matchInfo = fakeMatch({ gameType: 3, formatType: 2, missionId: 270 });
+    state.matchInfo = fakeMatch({ gameType: 1, formatType: 0, missionId: 270 });
     state.decks = [fakeDeck(42, 'Practice Deck')];
     state.deckState = { friendlyDeck: [], opposingDeckCount: 20 };
     state.handState = { friendlyHand: [], opposingHandCount: 5 };
@@ -903,7 +1041,14 @@ describe('DeckTracker', () => {
     state.deckState = null;
     await advanceTicks(2);
 
-    expect(events.at(-1)?.completedMatch).toBeUndefined();
+    expect(events.at(-1)?.completedMatch).toMatchObject({
+      deckId: 42,
+      deckName: 'Practice Deck',
+      gameType: 1,
+      formatType: 0,
+      missionId: 270,
+      matchMode: 'adventure',
+    });
     tracker.stop();
   });
 

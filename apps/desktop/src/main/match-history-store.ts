@@ -2,9 +2,10 @@ import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import {
+  classifyMatchMode,
   filterMatchesByTime,
-  isConstructedMatch,
   type MatchHistoryRecord,
+  type MatchMode,
   type NormalizedCompletedMatch,
   type StatsTimeFilter,
 } from '@hdt/core';
@@ -36,6 +37,8 @@ interface MatchHistoryRow {
   opponent_class: string | null;
   game_type: number;
   format_type: number;
+  mission_id: number | null;
+  match_mode: MatchMode | null;
   player_class: string | null;
   saved_deck_id: string | null;
   saved_deck_version: number | null;
@@ -61,6 +64,8 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
       opponent_class,
       game_type,
       format_type,
+      mission_id,
+      match_mode,
       player_class,
       saved_deck_id,
       saved_deck_version,
@@ -78,6 +83,8 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
       @opponentClass,
       @gameType,
       @formatType,
+      @missionId,
+      @matchMode,
       @playerClass,
       @savedDeckId,
       @savedDeckVersion,
@@ -99,13 +106,16 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
       opponent_class = @opponentClass,
       player_class = @playerClass,
       saved_deck_id = @savedDeckId,
-      saved_deck_version = @savedDeckVersion
+      saved_deck_version = @savedDeckVersion,
+      mission_id = @missionId,
+      match_mode = @matchMode
     WHERE fingerprint = @fingerprint
   `);
 
   return {
     record(match) {
-      if (!isConstructedMatch(match)) return;
+      const matchMode = match.matchMode ?? classifyMatchMode(match);
+      if (matchMode === null) return;
       const incoming = {
         fingerprint: match.fingerprint,
         startedAt: match.startedAt,
@@ -119,6 +129,8 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
         opponentClass: match.opponentClass,
         gameType: match.gameType,
         formatType: match.formatType,
+        missionId: match.missionId ?? null,
+        matchMode,
         playerClass: match.playerClass ?? null,
         savedDeckId: match.savedDeckId ?? null,
         savedDeckVersion: match.savedDeckVersion ?? null,
@@ -144,6 +156,8 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
         playerClass: pickNonNull(existing.player_class, incoming.playerClass),
         savedDeckId: pickNonNull(existing.saved_deck_id, incoming.savedDeckId),
         savedDeckVersion: pickNonNull(existing.saved_deck_version, incoming.savedDeckVersion),
+        missionId: pickNonNull(existing.mission_id, incoming.missionId),
+        matchMode: existing.match_mode ?? incoming.matchMode,
       };
       updateStmt.run(merged);
     },
@@ -180,6 +194,8 @@ function initializeSchema(db: Database.Database): void {
       opponent_class TEXT,
       game_type INTEGER NOT NULL,
       format_type INTEGER NOT NULL,
+      mission_id INTEGER,
+      match_mode TEXT,
       source TEXT NOT NULL
     );
 
@@ -201,14 +217,42 @@ function initializeSchema(db: Database.Database): void {
   if (!existingCols.includes('saved_deck_version')) {
     db.exec('ALTER TABLE match_history ADD COLUMN saved_deck_version INTEGER');
   }
+  if (!existingCols.includes('mission_id')) {
+    db.exec('ALTER TABLE match_history ADD COLUMN mission_id INTEGER');
+  }
+  if (!existingCols.includes('match_mode')) {
+    db.exec('ALTER TABLE match_history ADD COLUMN match_mode TEXT');
+  }
+  db.exec(`
+    UPDATE match_history
+    SET match_mode = CASE
+      WHEN mission_id IS NOT NULL AND mission_id > 0 THEN 'adventure'
+      WHEN game_type = 3 THEN 'ranked'
+      WHEN game_type = 4 THEN 'casual'
+      ELSE match_mode
+    END
+    WHERE match_mode IS NULL
+  `);
 }
 
 function readAll(db: Database.Database): MatchHistoryRecord[] {
   const rows = db.prepare('SELECT * FROM match_history ORDER BY ended_at DESC').all() as MatchHistoryRow[];
-  return rows.map(rowToRecord);
+  return rows.flatMap((row) => {
+    const record = rowToRecord(row);
+    return record === null ? [] : [record];
+  });
 }
 
-function rowToRecord(row: MatchHistoryRow): MatchHistoryRecord {
+function rowToRecord(row: MatchHistoryRow): MatchHistoryRecord | null {
+  const missionId = row.mission_id ?? undefined;
+  const matchMode =
+    row.match_mode ??
+    classifyMatchMode({
+      gameType: row.game_type,
+      formatType: row.format_type,
+      ...(missionId !== undefined ? { missionId } : {}),
+    });
+  if (matchMode === null) return null;
   const record: MatchHistoryRecord = {
     id: row.id,
     fingerprint: row.fingerprint,
@@ -223,6 +267,8 @@ function rowToRecord(row: MatchHistoryRow): MatchHistoryRecord {
     opponentClass: row.opponent_class,
     gameType: row.game_type,
     formatType: row.format_type,
+    ...(missionId !== undefined ? { missionId } : {}),
+    matchMode,
     source: row.source,
   };
   if (row.player_class !== undefined) {

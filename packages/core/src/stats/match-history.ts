@@ -2,6 +2,7 @@ export type MatchResult = 'win' | 'loss' | 'unknown';
 export type PlayOrder = 'first' | 'coin' | 'unknown';
 export type StatsTimeFilter = 'today' | 'week' | 'season' | 'all-time';
 export type MatchHistorySource = 'deck-tracker';
+export type MatchMode = 'ranked' | 'casual' | 'adventure';
 
 export interface MatchClassification {
   gameType: number;
@@ -40,6 +41,7 @@ export interface CompletedMatchSummary extends MatchClassification {
 
 export interface NormalizedCompletedMatch extends CompletedMatchSummary {
   durationSeconds: number;
+  matchMode?: MatchMode;
 }
 
 export interface MatchHistoryRecord extends NormalizedCompletedMatch {
@@ -54,9 +56,26 @@ export function isConstructedMatch(match: MatchClassification): boolean {
   return CONSTRUCTED_GAME_TYPES.has(match.gameType) && CONSTRUCTED_FORMAT_TYPES.has(match.formatType);
 }
 
+export function classifyMatchMode(match: MatchClassification): MatchMode | null {
+  if (match.missionId !== undefined && match.missionId > 0) return 'adventure';
+  if (!CONSTRUCTED_FORMAT_TYPES.has(match.formatType)) return null;
+  if (match.gameType === 3) return 'ranked';
+  if (match.gameType === 4) return 'casual';
+  return null;
+}
+
+export function isRecordableMatch(match: MatchClassification): boolean {
+  return classifyMatchMode(match) !== null;
+}
+
 export function normalizeCompletedMatch(match: CompletedMatchSummary): NormalizedCompletedMatch {
   const durationSeconds = Math.max(0, Math.floor((match.endedAt - match.startedAt) / 1000));
-  const normalized = { ...match, durationSeconds };
+  const matchMode = classifyMatchMode(match);
+  const normalized = {
+    ...match,
+    durationSeconds,
+    ...(matchMode !== null ? { matchMode } : {}),
+  };
   const fingerprint = match.fingerprint.trim() === '' ? buildMatchFingerprint(normalized) : match.fingerprint;
   return { ...normalized, fingerprint };
 }

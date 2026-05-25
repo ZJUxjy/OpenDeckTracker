@@ -72,6 +72,19 @@ describe('Dashboard rank display', () => {
     expect(screen.queryByText(/Control Odyn Warrior/i)).not.toBeInTheDocument();
   });
 
+  it('does not show match in progress while Hearthstone is connected but tracker is idle', async () => {
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
+    useDeckTrackerStore.setState({ snapshot: makeSnapshot({ phase: 'IDLE' }) });
+
+    renderRoute();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+
+    expect(screen.queryByRole('heading', { name: 'Match in progress' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Waiting for a match' })).toBeInTheDocument();
+  });
+
   it('shows "Star N" when starLevel > 0 and not legend', async () => {
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
     window.hdt.hearthmirror.getBattleTag = vi

@@ -1,5 +1,6 @@
 import type { MatchHistoryRecord, StatsTimeFilter } from './match-history';
 import { type FormatFilter, filterMatchesByFormat } from './format-filter';
+import { type MatchModeFilter, filterMatchesByMode } from './match-mode-filter';
 import { computeMatchupMatrix, type MatchupMatrix } from './matchup-matrix';
 import { computePlayOrderSplit, type PlayOrderSplit } from './play-order-split';
 import {
@@ -13,6 +14,7 @@ export interface StatsQueryOptions {
   now?: Date;
   recentLimit?: number;
   formatFilter?: FormatFilter;
+  matchModeFilter?: MatchModeFilter;
   includeMatchupMatrix?: boolean;
   includeTimeSeries?: boolean;
   timeSeriesGranularity?: TimeSeriesGranularity;
@@ -60,13 +62,17 @@ export function aggregateStats(
   records: readonly MatchHistoryRecord[],
   options: StatsQueryOptions,
 ): StatsSummary {
-  // Apply format filter BEFORE all other aggregations so every downstream
-  // metric reflects the same scope.
+  // Apply scope filters BEFORE all other aggregations so every downstream
+  // metric reflects the same set of matches.
   const formatFiltered =
     options.formatFilter && options.formatFilter !== 'all'
       ? filterMatchesByFormat([...records], options.formatFilter)
       : [...records];
-  const filtered = filterMatchesByTime(formatFiltered, options);
+  const modeFiltered =
+    options.matchModeFilter && options.matchModeFilter !== 'all'
+      ? filterMatchesByMode(formatFiltered, options.matchModeFilter)
+      : formatFiltered;
+  const filtered = filterMatchesByTime(modeFiltered, options);
   const wins = filtered.filter((record) => record.result === 'win').length;
   const losses = filtered.filter((record) => record.result === 'loss').length;
   const timePlayedSeconds = filtered.reduce((total, record) => total + record.durationSeconds, 0);

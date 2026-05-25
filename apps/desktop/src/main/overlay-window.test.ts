@@ -189,6 +189,30 @@ describe('OverlayManager', () => {
     expect(win.isVisible()).toBe(true);
   });
 
+  it('reasserts z-order shortly after Hearthstone returns to foreground', async () => {
+    vi.useFakeTimers();
+    const mgr = makeManager();
+    mgr.enable();
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+    win.setAlwaysOnTop.mockClear();
+    win.moveTop.mockClear();
+
+    mgr.setTargetForeground(true);
+
+    expect(win.setAlwaysOnTop).toHaveBeenCalledTimes(1);
+    expect(win.moveTop).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(50);
+    expect(win.setAlwaysOnTop).toHaveBeenCalledTimes(2);
+    expect(win.moveTop).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(win.setAlwaysOnTop).toHaveBeenCalledTimes(3);
+    expect(win.moveTop).toHaveBeenCalledTimes(3);
+  });
+
   it('setVisibleOnScreen(false) after showing hides the window', () => {
     const mgr = makeManager();
     mgr.enable();

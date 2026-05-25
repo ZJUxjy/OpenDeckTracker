@@ -1,5 +1,6 @@
 import { filterMatchesByTime } from './stats-aggregation';
 import { filterMatchesByFormat, type FormatFilter } from './format-filter';
+import { filterMatchesByMode, type MatchModeFilter } from './match-mode-filter';
 import type { MatchHistoryRecord, StatsTimeFilter } from './match-history';
 
 export interface SavedDeckMatchupStats {
@@ -16,6 +17,7 @@ export interface SavedDeckMatchupOptions {
   filter: StatsTimeFilter;
   now?: Date;
   formatFilter?: FormatFilter;
+  matchModeFilter?: MatchModeFilter;
 }
 
 const UNKNOWN_OPPONENT_KEY = 'Unknown';
@@ -31,13 +33,12 @@ export function computeSavedDeckMatchups(
   savedDeckId: string,
   options: SavedDeckMatchupOptions,
 ): SavedDeckMatchupStats[] {
-  const filtered = filterMatchesByFormat(
-    filterMatchesByTime([...records], {
-      filter: options.filter,
-      ...(options.now !== undefined ? { now: options.now } : {}),
-    }),
-    options.formatFilter ?? 'all',
-  );
+  const timeFiltered = filterMatchesByTime([...records], {
+    filter: options.filter,
+    ...(options.now !== undefined ? { now: options.now } : {}),
+  });
+  const formatFiltered = filterMatchesByFormat(timeFiltered, options.formatFilter ?? 'all');
+  const filtered = filterMatchesByMode(formatFiltered, options.matchModeFilter ?? 'all');
 
   const buckets = new Map<string, SavedDeckMatchupStats>();
   for (const m of filtered) {

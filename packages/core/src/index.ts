@@ -83,7 +83,9 @@ export type { IDeckIdentifier, IdentifiedDeck } from './tracker/deck-identifier'
 // Stats and match history.
 export {
   buildMatchFingerprint,
+  classifyMatchMode,
   isConstructedMatch,
+  isRecordableMatch,
   normalizeCompletedMatch,
 } from './stats/match-history';
 export type {
@@ -91,6 +93,7 @@ export type {
   MatchClassification,
   MatchHistoryRecord,
   MatchHistorySource,
+  MatchMode,
   MatchResult,
   NormalizedCompletedMatch,
   PlayOrder,
@@ -111,6 +114,15 @@ export {
   type FormatFilter,
   filterMatchesByFormat,
 } from './stats/format-filter';
+export {
+  type MatchModeFilter,
+  filterMatchesByMode,
+} from './stats/match-mode-filter';
+export {
+  computeDeckLadderWinrate,
+  type DeckLadderWinrateQuery,
+  type DeckLadderWinrateStats,
+} from './stats/deck-ladder-winrate';
 export {
   computeMatchupMatrix,
   type MatchupCell,

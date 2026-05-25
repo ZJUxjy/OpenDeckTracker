@@ -24,6 +24,8 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getChoices: vi.fn(),
   getHearthstoneWindow: vi.fn(),
   placeWindowAboveHearthstone: vi.fn(),
+  subscribeHearthstoneWindowEvents: vi.fn(),
+  unsubscribeHearthstoneWindowEvents: vi.fn(),
 }));
 
 import * as native from '@hdt/hearthmirror-native';
@@ -474,6 +476,42 @@ describe('HearthMirror', () => {
       });
 
       expect(mirror.placeWindowAboveHearthstone(new Uint8Array([1]))).toBe(false);
+    });
+  });
+
+  describe('subscribeToHearthstoneWindowEvents', () => {
+    it('returns an unsubscribe function backed by the native subscription id', () => {
+      const onWindowChanged = vi.fn();
+      mocked(native.subscribeHearthstoneWindowEvents).mockReturnValue(7);
+      mocked(native.unsubscribeHearthstoneWindowEvents).mockReturnValue(true);
+
+      const unsubscribe = mirror.subscribeToHearthstoneWindowEvents(onWindowChanged);
+
+      expect(unsubscribe).toEqual(expect.any(Function));
+      expect(native.subscribeHearthstoneWindowEvents).toHaveBeenCalledWith(onWindowChanged);
+
+      unsubscribe?.();
+
+      expect(native.unsubscribeHearthstoneWindowEvents).toHaveBeenCalledWith(7);
+    });
+
+    it('returns null when native subscription setup fails', () => {
+      mocked(native.subscribeHearthstoneWindowEvents).mockImplementation(() => {
+        throw new Error('hook failed');
+      });
+
+      expect(mirror.subscribeToHearthstoneWindowEvents(vi.fn())).toBeNull();
+    });
+
+    it('swallows native unsubscribe errors', () => {
+      mocked(native.subscribeHearthstoneWindowEvents).mockReturnValue(3);
+      mocked(native.unsubscribeHearthstoneWindowEvents).mockImplementation(() => {
+        throw new Error('already gone');
+      });
+
+      const unsubscribe = mirror.subscribeToHearthstoneWindowEvents(vi.fn());
+
+      expect(() => unsubscribe?.()).not.toThrow();
     });
   });
 });

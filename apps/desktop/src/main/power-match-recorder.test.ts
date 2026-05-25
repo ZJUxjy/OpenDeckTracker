@@ -93,10 +93,13 @@ describe('power-match-recorder', () => {
     );
   });
 
-  it('does not record mission or practice games from Power.log completion', () => {
+  it('records adventure games from Power.log completion', () => {
     const record = vi.fn<(match: NormalizedCompletedMatch) => void>();
     const recorder = createPowerMatchRecorder({
-      getSnapshot: () => snapshot({ matchInfo: { ...snapshot().matchInfo!, missionId: 270 } }),
+      getSnapshot: () =>
+        snapshot({
+          matchInfo: { ...snapshot().matchInfo!, gameType: 1, formatType: 0, missionId: 270 },
+        }),
       record,
       now: () => 2_000,
     });
@@ -104,7 +107,14 @@ describe('power-match-recorder', () => {
     recorder.handleEvent({ type: 'create-game', raw: '', content: '' });
     recorder.handleEvent(tagChange('STATE', 'COMPLETE'));
 
-    expect(record).not.toHaveBeenCalled();
+    expect(record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gameType: 1,
+        formatType: 0,
+        missionId: 270,
+        matchMode: 'adventure',
+      }),
+    );
   });
 
   it('records a human Power.log match even when HearthMirror match info is unavailable', () => {

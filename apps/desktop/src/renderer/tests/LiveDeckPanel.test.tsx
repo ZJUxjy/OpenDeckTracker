@@ -25,6 +25,8 @@ function makeSnapshot(overrides: {
   opposingHero?: DeckTrackerSnapshot['opposingHero'];
   extraDisplay?: DeckTrackerSnapshot['extraDisplay'];
   friendlyEffects?: ActiveEffect[];
+  deckId?: number;
+  deckName?: string;
 }): DeckTrackerSnapshot {
   return {
     phase: 'IN_MATCH',
@@ -39,8 +41,8 @@ function makeSnapshot(overrides: {
       brawlSeasonId: 0,
     },
     deck: {
-      id: 1,
-      name: 'Test Deck',
+      id: overrides.deckId ?? 1,
+      name: overrides.deckName ?? 'Test Deck',
       original: overrides.original,
       remaining: overrides.remaining ?? overrides.original,
       extraRemaining: overrides.extraRemaining ?? [],
@@ -234,6 +236,14 @@ describe('LiveDeckPanel sorting', () => {
           };
         }),
       },
+      stats: {
+        getDeckLadderWinrate: vi.fn(async () => ({
+          wins: 0,
+          losses: 0,
+          matchesPlayed: 0,
+          winrate: null,
+        })),
+      },
     };
     useDeckTrackerStore.setState({
       snapshot: null,
@@ -265,6 +275,35 @@ describe('LiveDeckPanel sorting', () => {
       expect(names[0]!).toContain('Frostbolt');
       expect(names[1]!).toContain('Fireball');
       expect(names[2]!).toContain('Fen Creeper');
+    });
+  });
+
+  it('shows ladder winrate beside the current deck name', async () => {
+    const getDeckLadderWinrate = vi.fn(async () => ({
+      wins: 2,
+      losses: 1,
+      matchesPlayed: 3,
+      winrate: 66.7,
+    }));
+    (window as { hdt: typeof window.hdt }).hdt = {
+      ...window.hdt,
+      stats: {
+        getDeckLadderWinrate,
+      } as unknown as typeof window.hdt.stats,
+    };
+    const snap = makeSnapshot({
+      deckId: 42,
+      deckName: 'Ladder Deck',
+      original: [{ cardId: 'CS2_106', count: 1 }],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    expect(await screen.findByText('Ladder 66.7%')).toBeInTheDocument();
+    expect(getDeckLadderWinrate).toHaveBeenCalledWith({
+      deckId: 42,
+      deckName: 'Ladder Deck',
     });
   });
 

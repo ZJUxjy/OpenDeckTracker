@@ -539,6 +539,13 @@ export function startDeckTracker(): void {
       decks: event.decks,
     });
   });
+  tracker.on('selected-deck-captured', (event: DeckTrackerEvent) => {
+    const selected = event.selectedDeck;
+    if (!selected) return;
+    console.log(
+      `[deck-tracker] selected-deck-captured deckId=${selected.deckId} templateDeckId=${selected.templateDeckId} formatType=${selected.formatType}`,
+    );
+  });
 
   tracker.start();
 

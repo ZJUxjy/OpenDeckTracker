@@ -48,6 +48,16 @@ describe('match history domain', () => {
     expect(match.fingerprint).toBe(buildMatchFingerprint(match));
   });
 
+  it('normalizes match mode from Hearthstone game type and mission id', () => {
+    expect(normalizeCompletedMatch(makeCompletedMatch({ gameType: 3 })).matchMode).toBe('ranked');
+    expect(normalizeCompletedMatch(makeCompletedMatch({ gameType: 4 })).matchMode).toBe('casual');
+    expect(
+      normalizeCompletedMatch(
+        makeCompletedMatch({ gameType: 1, formatType: 0, missionId: 270 }),
+      ).matchMode,
+    ).toBe('adventure');
+  });
+
   it('changes fingerprint when match identity fields change', () => {
     const base = makeCompletedMatch({ fingerprint: '' });
     const fingerprint = buildMatchFingerprint(base);

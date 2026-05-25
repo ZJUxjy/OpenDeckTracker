@@ -90,6 +90,8 @@ if (!gotLock) {
 
     const tracker = createHearthstoneWindowTracker({
       getWindow: () => getHearthMirror().getHearthstoneWindow(),
+      subscribeToWindowEvents: (notifyWindowChanged) =>
+        getHearthMirror().subscribeToHearthstoneWindowEvents(notifyWindowChanged),
     });
     let hearthstoneForeground = false;
     recomputeOverlayForeground = (): void => {

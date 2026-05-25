@@ -101,6 +101,28 @@ describe('stats-host', () => {
     expect(summary.matchupMatrix).toBeDefined();
   });
 
+  it('summary and recent handlers accept matchModeFilter options', async () => {
+    const { registerStatsIpc } = await import('./stats-host');
+    const store = makeStoreWithMatches([
+      makeRecord({ id: 1, fingerprint: 'ranked', matchMode: 'ranked' }),
+      makeRecord({ id: 2, fingerprint: 'casual', matchMode: 'casual' }),
+    ] as MatchHistoryRecord[]);
+    registerStatsIpc(store);
+
+    const summaryHandler = mocks.ipcMain.handle.mock.calls.find(
+      ([channel]) => channel === 'stats:get-summary',
+    )?.[1];
+    const listHandler = mocks.ipcMain.handle.mock.calls.find(
+      ([channel]) => channel === 'stats:list-recent',
+    )?.[1];
+
+    const summary = await summaryHandler({}, 'all-time', { matchModeFilter: 'ranked' });
+    const recent = await listHandler({}, 'all-time', 5, { matchModeFilter: 'ranked' });
+
+    expect(summary.matchesPlayed).toBe(1);
+    expect(recent.map((record: MatchHistoryRecord) => record.fingerprint)).toEqual(['ranked']);
+  });
+
   it('list-recent handler accepts an options object with formatFilter', async () => {
     const { registerStatsIpc } = await import('./stats-host');
     const store = makeStoreWithMatches([
@@ -168,6 +190,51 @@ describe('stats-host', () => {
       opponentClass: 'MAGE',
       wins: 1,
       losses: 1,
+      winrate: 50,
+    });
+  });
+
+  it('registers deck ladder winrate handler and ignores casual games', async () => {
+    const { registerStatsIpc } = await import('./stats-host');
+    const store = makeStoreWithMatches([
+      makeRecord({
+        id: 1,
+        fingerprint: 'ranked-win',
+        deckId: 42,
+        deckName: 'Recorded Real Deck',
+        result: 'win',
+        matchMode: 'ranked',
+      }),
+      makeRecord({
+        id: 2,
+        fingerprint: 'ranked-loss',
+        deckId: 42,
+        deckName: 'Recorded Real Deck',
+        result: 'loss',
+        matchMode: 'ranked',
+      }),
+      makeRecord({
+        id: 3,
+        fingerprint: 'casual-win',
+        deckId: 42,
+        deckName: 'Recorded Real Deck',
+        result: 'win',
+        matchMode: 'casual',
+      }),
+    ] as MatchHistoryRecord[]);
+    registerStatsIpc(store);
+
+    const handler = mocks.ipcMain.handle.mock.calls.find(
+      ([channel]) => channel === 'stats:get-deck-ladder-winrate',
+    )?.[1];
+    expect(handler).toBeDefined();
+
+    const result = await handler({}, { deckId: 42, deckName: 'Recorded Real Deck' });
+
+    expect(result).toEqual({
+      wins: 1,
+      losses: 1,
+      matchesPlayed: 2,
       winrate: 50,
     });
   });

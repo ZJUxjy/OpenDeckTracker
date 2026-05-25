@@ -13,7 +13,6 @@
 use std::cell::Cell;
 use std::ptr::null_mut;
 
-use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, BOOL, HWND, LPARAM, MAX_PATH, RECT};
 use windows::Win32::System::Threading::{
     OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
@@ -92,18 +91,24 @@ fn process_name(hwnd: HWND) -> Option<String> {
 }
 
 extern "system" fn enum_proc(hwnd: HWND, _lparam: LPARAM) -> BOOL {
-    let class_ok = class_name(hwnd).map(|c| c == TARGET_CLASS).unwrap_or(false);
-    if !class_ok {
-        return BOOL(1);
-    }
-    let process_ok = process_name(hwnd)
-        .map(|p| p.eq_ignore_ascii_case(TARGET_PROCESS))
-        .unwrap_or(false);
-    if process_ok {
+    if is_hearthstone_hwnd(hwnd) {
         FOUND_HWND.with(|cell| cell.set(hwnd.0 as isize));
         return BOOL(0); // stop enumeration
     }
     BOOL(1)
+}
+
+pub fn is_hearthstone_hwnd(hwnd: HWND) -> bool {
+    if hwnd.0.is_null() {
+        return false;
+    }
+    let class_ok = class_name(hwnd).map(|c| c == TARGET_CLASS).unwrap_or(false);
+    if !class_ok {
+        return false;
+    }
+    process_name(hwnd)
+        .map(|p| p.eq_ignore_ascii_case(TARGET_PROCESS))
+        .unwrap_or(false)
 }
 
 fn find_hearthstone_hwnd() -> Option<HWND> {
@@ -183,10 +188,6 @@ pub fn get_hearthstone_window() -> Option<HearthstoneWindow> {
     let minimized = unsafe { IsIconic(hwnd) }.as_bool();
     let visible = unsafe { IsWindowVisible(hwnd) }.as_bool();
     let foreground = unsafe { GetForegroundWindow() } == hwnd;
-
-    // Suppress `PCWSTR` "unused" warning from older edits — the import was
-    // dropped above. Keep the function pure / no-op here.
-    let _ = PCWSTR::null();
 
     Some(HearthstoneWindow {
         x: rect.left,

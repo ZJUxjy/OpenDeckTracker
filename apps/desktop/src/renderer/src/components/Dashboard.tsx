@@ -43,6 +43,16 @@ export function Dashboard() {
   const totalRemaining = deck?.remaining.reduce((sum, card) => sum + card.count, 0) ?? 0;
   const phase = snapshot?.phase ?? 'IDLE';
   const phaseLabel = t(`dashboard.phaseKind.${phase}`);
+  const connectionTitle = !isAlive
+    ? t('deckTracker.hearthstoneNotRunning')
+    : phase === 'IN_MATCH'
+      ? t('onboarding.bannerInMatchTitle')
+      : t('onboarding.bannerWaitingTitle');
+  const connectionHint = !isAlive
+    ? t('deckTracker.hearthstoneNotRunningHint')
+    : phase === 'IN_MATCH'
+      ? t('deckTracker.live')
+      : t('onboarding.bannerWaitingBody');
   const rankLabel = useRankLabel(medalInfo?.standard);
 
   const watcherKindLabel = watcherStatus
@@ -57,10 +67,10 @@ export function Dashboard() {
             76
           </div>
           <h2 className="text-center text-2xl font-black text-green">
-            {isAlive ? t('onboarding.bannerInMatchTitle') : t('deckTracker.hearthstoneNotRunning')}
+            {connectionTitle}
           </h2>
           <p className="mt-2 text-center text-sm text-green">
-            {isAlive ? t('deckTracker.live') : t('deckTracker.hearthstoneNotRunningHint')}
+            {connectionHint}
           </p>
           <div className="mt-10 space-y-4 text-sm text-green">
             <StatusLine label={t('dashboard.watcher')} value={watcherKindLabel} />

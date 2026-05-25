@@ -23,6 +23,12 @@ function mockStatsApi(): void {
       getSummary: vi.fn(async () => emptySummary()),
       listRecent: vi.fn(async () => []),
       getSavedDeckMatchups: vi.fn(async () => []),
+      getDeckLadderWinrate: vi.fn(async () => ({
+        wins: 0,
+        losses: 0,
+        matchesPlayed: 0,
+        winrate: null,
+      })),
     },
   };
 }

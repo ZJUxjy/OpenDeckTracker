@@ -67,6 +67,32 @@ describe('match-history-store', () => {
     store.close();
   });
 
+  it('persists separate match modes for ranked, casual, and adventure records', () => {
+    const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
+    store.record(makeCompletedMatch({ fingerprint: 'ranked', gameType: 3, formatType: 2 }));
+    store.record(makeCompletedMatch({ fingerprint: 'casual', gameType: 4, formatType: 2 }));
+    store.record(
+      makeCompletedMatch({
+        fingerprint: 'adventure',
+        gameType: 1,
+        formatType: 0,
+        missionId: 270,
+      }),
+    );
+
+    const modes = store
+      .getAllForFilter({ filter: 'all-time' })
+      .sort((a, b) => a.fingerprint.localeCompare(b.fingerprint))
+      .map((record) => [record.fingerprint, record.matchMode]);
+
+    expect(modes).toEqual([
+      ['adventure', 'adventure'],
+      ['casual', 'casual'],
+      ['ranked', 'ranked'],
+    ]);
+    store.close();
+  });
+
   it('persists player_class on new records', () => {
     const store = createMatchHistoryStore(join(dir, 'stats.sqlite'));
     store.record(makeCompletedMatch({ fingerprint: 'p1', playerClass: 'DRUID' }));

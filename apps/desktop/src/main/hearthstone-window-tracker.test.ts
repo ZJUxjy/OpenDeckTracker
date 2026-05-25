@@ -36,6 +36,104 @@ function collect(): { events: TrackerEvent[]; cb: (e: TrackerEvent) => void } {
 }
 
 describe('createHearthstoneWindowTracker', () => {
+  it('polls immediately when the native window event source fires', async () => {
+    let result: HearthstoneWindow = HS_VISIBLE;
+    const notifyWindowEvent: { current?: () => void } = {};
+    const unsubscribe = vi.fn();
+    const subscribeToWindowEvents = vi.fn((notify: () => void) => {
+      notifyWindowEvent.current = notify;
+      return unsubscribe;
+    });
+    const getWindow = vi.fn(async () => result);
+    const tracker = createHearthstoneWindowTracker({
+      getWindow,
+      subscribeToWindowEvents,
+      watchdogIntervalMs: 1000,
+    });
+    const { events, cb } = collect();
+    tracker.subscribe(cb);
+
+    tracker.addClient();
+    await Promise.resolve();
+    await Promise.resolve();
+    events.length = 0;
+    const callsAfterInitialPoll = getWindow.mock.calls.length;
+
+    result = HS_MOVED;
+    notifyWindowEvent.current?.();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(getWindow.mock.calls.length).toBeGreaterThan(callsAfterInitialPoll);
+    expect(events).toContainEqual({
+      kind: 'bounds',
+      bounds: { x: 100, y: 100, width: 1920, height: 1080 },
+    });
+    tracker.stop();
+  });
+
+  it('uses a slower watchdog interval while a native window event source is active', async () => {
+    const subscribeToWindowEvents = vi.fn((_notify: () => void) => vi.fn());
+    const getWindow = vi.fn(async () => HS_VISIBLE);
+    const tracker = createHearthstoneWindowTracker({
+      getWindow,
+      subscribeToWindowEvents,
+      watchdogIntervalMs: 1000,
+    });
+
+    tracker.addClient();
+    await Promise.resolve();
+    await Promise.resolve();
+    const callsAfterInitialPoll = getWindow.mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(999);
+    expect(getWindow.mock.calls.length).toBe(callsAfterInitialPoll);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(getWindow.mock.calls.length).toBeGreaterThan(callsAfterInitialPoll);
+    tracker.stop();
+  });
+
+  it('falls back to the regular polling interval when native event subscription fails', async () => {
+    const subscribeToWindowEvents = vi.fn((_notify: () => void) => {
+      throw new Error('hooks unavailable');
+    });
+    const getWindow = vi.fn(async () => HS_VISIBLE);
+    const tracker = createHearthstoneWindowTracker({
+      getWindow,
+      subscribeToWindowEvents,
+      intervalMs: 200,
+      watchdogIntervalMs: 1000,
+    });
+
+    tracker.addClient();
+    await Promise.resolve();
+    await Promise.resolve();
+    const callsAfterInitialPoll = getWindow.mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(getWindow.mock.calls.length).toBeGreaterThan(callsAfterInitialPoll);
+    tracker.stop();
+  });
+
+  it('unsubscribes from native window events when the last client is removed', async () => {
+    const unsubscribe = vi.fn();
+    const subscribeToWindowEvents = vi.fn((_notify: () => void) => unsubscribe);
+    const getWindow = vi.fn(async () => HS_VISIBLE);
+    const tracker = createHearthstoneWindowTracker({ getWindow, subscribeToWindowEvents });
+
+    tracker.addClient();
+    tracker.addClient();
+    expect(subscribeToWindowEvents).toHaveBeenCalledTimes(1);
+
+    tracker.removeClient();
+    expect(unsubscribe).not.toHaveBeenCalled();
+
+    tracker.removeClient();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+    tracker.stop();
+  });
+
   it('does not poll before first addClient', async () => {
     const getWindow = vi.fn(async () => HS_VISIBLE);
     const tracker = createHearthstoneWindowTracker({ getWindow });

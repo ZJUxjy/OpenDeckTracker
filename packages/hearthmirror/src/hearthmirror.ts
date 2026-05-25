@@ -121,6 +121,21 @@ export class HearthMirror {
     }
   }
 
+  subscribeToHearthstoneWindowEvents(onWindowChanged: () => void): (() => void) | null {
+    try {
+      const subscriptionId = native.subscribeHearthstoneWindowEvents(onWindowChanged);
+      return () => {
+        try {
+          native.unsubscribeHearthstoneWindowEvents(subscriptionId);
+        } catch {
+          // The hook may already be gone during app shutdown or native unload.
+        }
+      };
+    } catch {
+      return null;
+    }
+  }
+
   async getBattleTag(): Promise<BattleTag | null> {
     const r = await native.getBattleTag();
     if (!r) return null;

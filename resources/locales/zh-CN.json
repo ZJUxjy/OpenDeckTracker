@@ -400,6 +400,10 @@
     "loadingMatch": "正在加载对局信息...",
     "deckNotDetected": "未识别到当前卡组。请在弹窗中选择。",
     "unnamedDeck": "未命名卡组",
+    "ladderWinrate": "天梯 {winrate}",
+    "ladderWinrateEmpty": "天梯 --",
+    "ladderWinrateTitle": "天梯记录：{wins}胜-{losses}负，共 {matches} 场",
+    "ladderWinrateTitleEmpty": "这套卡组暂无天梯记录",
     "extraCards": "+{count} 张额外卡牌（生成/偷取）",
     "handAndOpponent": "手牌 {hand} · 对手 {opponent}",
     "error": "错误",
@@ -809,6 +813,12 @@
       "wild": "狂野",
       "classic": "经典",
       "twist": "乱斗"
+    },
+    "matchModeFilter": {
+      "all": "全部比赛",
+      "ranked": "天梯",
+      "casual": "休闲",
+      "adventure": "冒险"
     },
     "matchup": {
       "title": "对战矩阵",

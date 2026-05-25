@@ -21,15 +21,38 @@ pub mod window;
 
 use error::ScryError;
 use napi::bindgen_prelude::Buffer;
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
 use runtime_slot::{back_off_duration, RuntimeSlot};
+use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem::size_of;
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
-use windows::Win32::Foundation::HWND;
+use windows::Win32::Foundation::{HMODULE, HWND};
+use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK};
+use windows::Win32::UI::WindowsAndMessaging::{
+    EVENT_OBJECT_LOCATIONCHANGE, EVENT_SYSTEM_FOREGROUND, WINEVENT_OUTOFCONTEXT,
+    WINEVENT_SKIPOWNPROCESS,
+};
 
 static MIRROR: Mutex<RuntimeSlot<mono::MonoRuntime>> = Mutex::new(RuntimeSlot::new());
+static WINDOW_EVENT_SUBSCRIPTIONS: OnceLock<Mutex<HashMap<u32, WindowEventSubscription>>> =
+    OnceLock::new();
+static NEXT_WINDOW_EVENT_SUBSCRIPTION_ID: AtomicU32 = AtomicU32::new(1);
+
+type WindowEventCallback = Arc<ThreadsafeFunction<(), (), (), napi::Status, false>>;
+
+struct WindowEventSubscription {
+    location_hook: isize,
+    foreground_hook: isize,
+    callback: WindowEventCallback,
+}
+
+fn window_event_subscriptions() -> &'static Mutex<HashMap<u32, WindowEventSubscription>> {
+    WINDOW_EVENT_SUBSCRIPTIONS.get_or_init(|| Mutex::new(HashMap::new()))
+}
 
 fn try_init() -> Option<mono::MonoRuntime> {
     mono::MonoRuntime::init().ok()
@@ -241,6 +264,139 @@ pub fn place_window_above_hearthstone(native_window_handle: Buffer) -> napi::Res
     let hwnd = hwnd_from_native_window_handle(native_window_handle.as_ref())?;
     window::place_window_above_hearthstone(hwnd)
         .map_err(|e| napi::Error::from_reason(e.to_string()))
+}
+
+fn hook_to_raw(hook: HWINEVENTHOOK) -> isize {
+    hook.0 as isize
+}
+
+fn raw_to_hook(raw: isize) -> HWINEVENTHOOK {
+    HWINEVENTHOOK(raw as *mut c_void)
+}
+
+fn notify_window_event_subscribers() {
+    let callbacks: Vec<WindowEventCallback> = match window_event_subscriptions().lock() {
+        Ok(guard) => guard
+            .values()
+            .map(|subscription| subscription.callback.clone())
+            .collect(),
+        Err(e) => {
+            eprintln!("[hearthmirror] window event hook: lock poisoned ({})", e);
+            return;
+        }
+    };
+
+    for callback in callbacks {
+        let _ = callback.call((), ThreadsafeFunctionCallMode::NonBlocking);
+    }
+}
+
+unsafe extern "system" fn hearthstone_window_event_proc(
+    _hook: HWINEVENTHOOK,
+    event: u32,
+    hwnd: HWND,
+    object_id: i32,
+    child_id: i32,
+    _event_thread: u32,
+    _event_time: u32,
+) {
+    const OBJID_WINDOW: i32 = 0;
+    const CHILDID_SELF: i32 = 0;
+
+    if object_id != OBJID_WINDOW || child_id != CHILDID_SELF {
+        return;
+    }
+
+    let should_notify = match event {
+        EVENT_SYSTEM_FOREGROUND => true,
+        EVENT_OBJECT_LOCATIONCHANGE => window::is_hearthstone_hwnd(hwnd),
+        _ => false,
+    };
+
+    if should_notify {
+        notify_window_event_subscribers();
+    }
+}
+
+#[napi]
+pub fn subscribe_hearthstone_window_events(
+    callback: Arc<ThreadsafeFunction<(), (), (), napi::Status, false>>,
+) -> napi::Result<u32> {
+    let flags = WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS;
+    // SAFETY: The callback has the required extern "system" ABI and is static.
+    // OUTOFCONTEXT delivers events on a system thread, so callback work is kept
+    // tiny and hands off to a napi ThreadsafeFunction.
+    let location_hook = unsafe {
+        SetWinEventHook(
+            EVENT_OBJECT_LOCATIONCHANGE,
+            EVENT_OBJECT_LOCATIONCHANGE,
+            HMODULE::default(),
+            Some(hearthstone_window_event_proc),
+            0,
+            0,
+            flags,
+        )
+    };
+    if location_hook.is_invalid() {
+        return Err(napi::Error::from_reason(
+            "SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE) failed",
+        ));
+    }
+
+    // Foreground changes can hide/show overlays without any movement event, so
+    // track them globally and let the JS side read the latest window state.
+    let foreground_hook = unsafe {
+        SetWinEventHook(
+            EVENT_SYSTEM_FOREGROUND,
+            EVENT_SYSTEM_FOREGROUND,
+            HMODULE::default(),
+            Some(hearthstone_window_event_proc),
+            0,
+            0,
+            flags,
+        )
+    };
+    if foreground_hook.is_invalid() {
+        let _ = unsafe { UnhookWinEvent(location_hook) };
+        return Err(napi::Error::from_reason(
+            "SetWinEventHook(EVENT_SYSTEM_FOREGROUND) failed",
+        ));
+    }
+
+    let subscription_id = NEXT_WINDOW_EVENT_SUBSCRIPTION_ID.fetch_add(1, Ordering::Relaxed);
+    let subscription = WindowEventSubscription {
+        location_hook: hook_to_raw(location_hook),
+        foreground_hook: hook_to_raw(foreground_hook),
+        callback,
+    };
+
+    let mut guard = match window_event_subscriptions().lock() {
+        Ok(guard) => guard,
+        Err(e) => {
+            let _ = unsafe { UnhookWinEvent(location_hook) };
+            let _ = unsafe { UnhookWinEvent(foreground_hook) };
+            return Err(napi::Error::from_reason(e.to_string()));
+        }
+    };
+    guard.insert(subscription_id, subscription);
+    Ok(subscription_id)
+}
+
+#[napi]
+pub fn unsubscribe_hearthstone_window_events(subscription_id: u32) -> napi::Result<bool> {
+    let subscription = window_event_subscriptions()
+        .lock()
+        .map_err(|e| napi::Error::from_reason(e.to_string()))?
+        .remove(&subscription_id);
+
+    let Some(subscription) = subscription else {
+        return Ok(false);
+    };
+
+    let location_ok = unsafe { UnhookWinEvent(raw_to_hook(subscription.location_hook)) }.as_bool();
+    let foreground_ok = unsafe { UnhookWinEvent(raw_to_hook(subscription.foreground_hook)) }
+        .as_bool();
+    Ok(location_ok && foreground_ok)
 }
 
 /// Diagnostic: number of times the slot has populated a fresh runtime.

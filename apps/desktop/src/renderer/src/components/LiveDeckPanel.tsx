@@ -9,6 +9,7 @@ import {
   expandDeckToCopies,
   formatCostReductionHoverLine,
   getCostReductionRule,
+  type DeckLadderWinrateStats,
   type DeckCopy,
   type DeckTrackerSnapshot,
 } from '@hdt/core';
@@ -185,6 +186,13 @@ function compareDeckCopies(
 function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   const { t } = useTranslation();
   const deck = snapshot.deck!;
+  const deckWinrateKey = `${deck.id}:${deck.name ?? ''}`;
+  const [ladderWinrateState, setLadderWinrateState] = useState<{
+    key: string;
+    stats: DeckLadderWinrateStats | null;
+  } | null>(null);
+  const ladderWinrate =
+    ladderWinrateState?.key === deckWinrateKey ? ladderWinrateState.stats : null;
   const [collapsedSections, setCollapsedSections] = useState(readCollapsedSectionsState);
   const deckLibraryCollapsed = collapsedSections.deckLibrary;
   const friendlyHandCollapsed = collapsedSections.friendlyHand;
@@ -257,6 +265,28 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
 
   const totalOriginal = deck.original.reduce((s, c) => s + c.count, 0);
   const totalRemaining = deck.remaining.reduce((s, c) => s + c.count, 0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const api = window.hdt?.stats;
+    if (!api?.getDeckLadderWinrate) {
+      return;
+    }
+    void api
+      .getDeckLadderWinrate({
+        deckId: deck.id,
+        deckName: deck.name || null,
+      })
+      .then((stats) => {
+        if (!cancelled) setLadderWinrateState({ key: deckWinrateKey, stats });
+      })
+      .catch(() => {
+        if (!cancelled) setLadderWinrateState({ key: deckWinrateKey, stats: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [deck.id, deck.name, deckWinrateKey]);
 
   // Expand current remaining deck to physical copies so shuffled-in cards
   // absent from the original deck can render as real rows.
@@ -344,9 +374,18 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
           {t('deckTracker.deck')}
         </div>
         <div className="text-text font-bold text-sm flex justify-between items-center gap-3">
-          <span className="truncate" title={deck.name || t('deckTracker.unnamedDeck')}>
-            {deck.name || t('deckTracker.unnamedDeck')}
-          </span>
+          <div className="min-w-0 flex items-center gap-2">
+            <span className="truncate" title={deck.name || t('deckTracker.unnamedDeck')}>
+              {deck.name || t('deckTracker.unnamedDeck')}
+            </span>
+            <span
+              className="shrink-0 rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent"
+              data-testid="deck-ladder-winrate"
+              title={formatLadderWinrateTitle(ladderWinrate, t)}
+            >
+              {formatLadderWinrate(ladderWinrate, t)}
+            </span>
+          </div>
           <span className="text-accent text-xs shrink-0 font-mono tabular-nums">
             {totalRemaining} / {totalOriginal}
           </span>
@@ -543,6 +582,32 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
 
     </aside>
   );
+}
+
+function formatLadderWinrate(
+  stats: DeckLadderWinrateStats | null,
+  t: (key: string, values?: Record<string, string | number | boolean>) => string,
+): string {
+  if (stats?.winrate === null || stats?.winrate === undefined) {
+    return t('deckTracker.ladderWinrateEmpty');
+  }
+  return t('deckTracker.ladderWinrate', {
+    winrate: `${stats.winrate}%`,
+  });
+}
+
+function formatLadderWinrateTitle(
+  stats: DeckLadderWinrateStats | null,
+  t: (key: string, values?: Record<string, string | number | boolean>) => string,
+): string {
+  if (stats?.winrate === null || stats?.winrate === undefined) {
+    return t('deckTracker.ladderWinrateTitleEmpty');
+  }
+  return t('deckTracker.ladderWinrateTitle', {
+    wins: stats.wins,
+    losses: stats.losses,
+    matches: stats.matchesPlayed,
+  });
 }
 
 function CollapsibleSectionHeader({

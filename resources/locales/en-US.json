@@ -400,6 +400,10 @@
     "loadingMatch": "Loading match information...",
     "deckNotDetected": "Current deck not detected. Select it in the dialog.",
     "unnamedDeck": "Unnamed Deck",
+    "ladderWinrate": "Ladder {winrate}",
+    "ladderWinrateEmpty": "Ladder --",
+    "ladderWinrateTitle": "Ranked ladder record: {wins}-{losses} across {matches} matches",
+    "ladderWinrateTitleEmpty": "No ranked ladder matches recorded for this deck",
     "extraCards": "+{count} extra cards (created/stolen)",
     "handAndOpponent": "Hand {hand} · Opponent {opponent}",
     "error": "Error",
@@ -809,6 +813,12 @@
       "wild": "Wild",
       "classic": "Classic",
       "twist": "Twist"
+    },
+    "matchModeFilter": {
+      "all": "All Modes",
+      "ranked": "Ranked",
+      "casual": "Casual",
+      "adventure": "Adventure"
     },
     "matchup": {
       "title": "Matchup Matrix",

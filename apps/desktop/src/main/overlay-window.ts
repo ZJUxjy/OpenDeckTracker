@@ -88,6 +88,7 @@ export class OverlayManager {
   private isApplyingTrackerBounds = false;
   private readonly opts: OverlayManagerOptions;
   private readonly routeHash: string;
+  private readonly zOrderReassertHandles = new Set<ReturnType<typeof setTimeout>>();
 
   constructor(opts: OverlayManagerOptions) {
     this.opts = opts;
@@ -104,6 +105,7 @@ export class OverlayManager {
   disable(): void {
     this.userEnabled = false;
     this.visibleOnScreen = false;
+    this.clearZOrderReasserts();
     console.log(`[overlay-mgr ${this.routeHash}] disable()`);
     this.syncVisibility();
   }
@@ -120,18 +122,18 @@ export class OverlayManager {
     if (changed) {
       console.log(`[overlay-mgr ${this.routeHash}] setTargetForeground(${foreground})`);
       this.syncVisibility();
+      if (foreground) {
+        this.scheduleZOrderReassert();
+      } else {
+        this.clearZOrderReasserts();
+      }
       return;
     }
-    // No state change, but the tracker still wants us to re-assert
-    // z-order. The Win32 z-order can silently drift after an alt-tab
-    // race — `placeWindowAboveHearthstone` is best-effort and one of
-    // the two overlay windows occasionally ends up behind HS even
-    // though our cached state says it should be on top. Re-running
-    // `syncZOrder` on every tracker foreground signal (max once per
-    // 200ms poll) costs a couple of cheap Win32 calls and makes the
-    // system self-heal instead of requiring the user-click recovery.
+    // No state change, but a repeated tracker signal still means the
+    // host wants the overlay z-order refreshed.
     if (this.win && !this.win.isDestroyed() && this.shouldBeShown()) {
       this.syncZOrder();
+      if (foreground) this.scheduleZOrderReassert();
     }
   }
 
@@ -186,6 +188,7 @@ export class OverlayManager {
   }
 
   dispose(): void {
+    this.clearZOrderReasserts();
     if (this.win && !this.win.isDestroyed()) {
       this.win.destroy();
     }
@@ -278,9 +281,30 @@ export class OverlayManager {
       this.win.showInactive();
       this.syncZOrder();
     } else {
+      this.clearZOrderReasserts();
       this.win.hide();
       this.win.setAlwaysOnTop(false);
     }
+  }
+
+  private scheduleZOrderReassert(): void {
+    this.clearZOrderReasserts();
+    if (!this.targetForeground || !this.shouldBeShown()) return;
+    for (const delayMs of [50, 250]) {
+      const handle = setTimeout(() => {
+        this.zOrderReassertHandles.delete(handle);
+        if (!this.targetForeground) return;
+        this.syncZOrder();
+      }, delayMs);
+      this.zOrderReassertHandles.add(handle);
+    }
+  }
+
+  private clearZOrderReasserts(): void {
+    for (const handle of this.zOrderReassertHandles) {
+      clearTimeout(handle);
+    }
+    this.zOrderReassertHandles.clear();
   }
 
   private syncZOrder(): void {

@@ -17,7 +17,7 @@ import {
 } from './deck-identifier';
 import type { Deck } from '@hdt/hearthmirror';
 import {
-  isConstructedMatch,
+  isRecordableMatch,
   normalizeCompletedMatch,
   type NormalizedCompletedMatch,
 } from '../stats/match-history';
@@ -55,6 +55,7 @@ import type { KnownDeckPosition } from './deck-position/types';
 const INTERVAL_IDLE_MS = 2_000;
 const INTERVAL_PRE_MATCH_MS = 500;
 const INTERVAL_IN_MATCH_MS = 500;
+const SELECTED_DECK_REFRESH_MS = 500;
 /** Adaptive catch-up — fired right after observing a hand-size delta. */
 const INTERVAL_IMMEDIATE_MS = 0;
 const ASSEMBLY_CSHARP_RETRY_DELAYS_MS = [5_000, 10_000] as const;
@@ -195,12 +196,20 @@ export interface DeckTrackerSnapshot {
 }
 
 export interface DeckTrackerEvent {
-  type: 'state-change' | 'match-started' | 'match-ended' | 'error' | 'needs-deck-selection';
+  type:
+    | 'state-change'
+    | 'match-started'
+    | 'match-ended'
+    | 'error'
+    | 'needs-deck-selection'
+    | 'selected-deck-captured';
   snapshot: DeckTrackerSnapshot;
   completedMatch?: NormalizedCompletedMatch;
   error?: string;
   /** For 'needs-deck-selection': the available decks the renderer should display. */
   decks?: { id: number; name: string; hero: string }[];
+  /** For 'selected-deck-captured': current in-game deck-picker selection. */
+  selectedDeck?: { deckId: string; templateDeckId: number; formatType: number };
 }
 
 export type DeckTrackerEventName = DeckTrackerEvent['type'];
@@ -208,6 +217,12 @@ type Handler = (event: DeckTrackerEvent) => void;
 
 function isAssemblyCSharpModuleMiss(message: string): boolean {
   return /module not found:\s*Assembly-CSharp\.dll/i.test(message);
+}
+
+function isMeaningfulMatchInfo(info: MatchInfo | null): info is MatchInfo {
+  if (info === null) return false;
+  if (info.localPlayer !== null || info.opposingPlayer !== null) return true;
+  return info.gameType !== 0 || info.formatType !== 0 || info.missionId !== 0;
 }
 
 /**
@@ -223,6 +238,8 @@ export class DeckTracker {
   private readonly mirror: HearthMirror;
   private readonly identifier: IDeckIdentifier;
   private readonly loop: PollingLoop;
+  private selectedDeckRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private selectedDeckRefreshInFlight: Promise<void> | null = null;
   private readonly handlers = new Map<DeckTrackerEventName, Set<Handler>>();
   private readonly registry: GlobalEffectsRegistry;
   private game: Game;
@@ -661,6 +678,7 @@ export class DeckTracker {
       () => this.tick(),
       (err) => this.onError(err),
     );
+    this.scheduleSelectedDeckRefresh();
   }
 
   /**
@@ -675,6 +693,7 @@ export class DeckTracker {
   }
 
   stop(): void {
+    this.clearSelectedDeckRefreshTimer();
     this.loop.stop();
   }
 
@@ -751,7 +770,8 @@ export class DeckTracker {
   private async tick(): Promise<void> {
     const previousPhase = this.game.phase;
 
-    const matchInfo = await this.mirror.getMatchInfo();
+    const rawMatchInfo = await this.mirror.getMatchInfo();
+    const matchInfo = isMeaningfulMatchInfo(rawMatchInfo) ? rawMatchInfo : null;
     const isSpectating = await this.mirror.isSpectating();
     const isGameOverFlag = await this.mirror.isGameOver();
 
@@ -759,14 +779,7 @@ export class DeckTracker {
     // deck-picker selection BEFORE the scene unloads at match start.
     // Skipped during IN_MATCH/POST_MATCH (scene already gone).
     if (previousPhase === 'IDLE' || previousPhase === 'PRE_MATCH') {
-      try {
-        const selected = await this.mirror.getSelectedDeckId();
-        if (selected !== null && selected.deckId > 0n) {
-          this.lastKnownSelectedDeckId = selected.deckId;
-        }
-      } catch {
-        // Reflector failures don't kill the loop; just skip the cache update.
-      }
+      await this.refreshSelectedDeckCache();
     }
 
     let deckState: DeckState | null = null;
@@ -856,6 +869,14 @@ export class DeckTracker {
     if (target === 'IN_MATCH' || target === 'PRE_MATCH') {
       this.applyEntitySnapshots({ matchInfo, deckState, handState, boardState });
     }
+    if (
+      target === 'IN_MATCH' &&
+      previousPhase === 'IN_MATCH' &&
+      this.game.localPlayer.originalDeck === null &&
+      this.awaitingDeckSelection
+    ) {
+      await this.identifyDeck(matchInfo, { handState, boardState }, { emitSelection: false });
+    }
     // Cache latest reflector state so `computeBoardAttack` (called
     // from `buildSnapshot`) sees authoritative minion data.
     this.latestBoardState = boardState;
@@ -898,6 +919,67 @@ export class DeckTracker {
   }
 
   // ── Helpers ────────────────────────────────────────────────────────
+
+  private scheduleSelectedDeckRefresh(): void {
+    this.clearSelectedDeckRefreshTimer();
+    this.selectedDeckRefreshTimer = setTimeout(
+      () => void this.runSelectedDeckRefreshTimer(),
+      SELECTED_DECK_REFRESH_MS,
+    );
+  }
+
+  private clearSelectedDeckRefreshTimer(): void {
+    if (this.selectedDeckRefreshTimer !== null) {
+      clearTimeout(this.selectedDeckRefreshTimer);
+      this.selectedDeckRefreshTimer = null;
+    }
+  }
+
+  private async runSelectedDeckRefreshTimer(): Promise<void> {
+    this.selectedDeckRefreshTimer = null;
+    if (!this.loop.isRunning()) return;
+    if (this.game.phase === 'IDLE' || this.game.phase === 'PRE_MATCH') {
+      await this.refreshSelectedDeckCache();
+    }
+    if (this.loop.isRunning()) {
+      this.scheduleSelectedDeckRefresh();
+    }
+  }
+
+  private refreshSelectedDeckCache(): Promise<void> {
+    if (this.selectedDeckRefreshInFlight !== null) {
+      return this.selectedDeckRefreshInFlight;
+    }
+    const refresh = (async () => {
+      try {
+        const selected = await this.mirror.getSelectedDeckId();
+        if (selected !== null && selected.deckId > 0n) {
+          const changed = this.lastKnownSelectedDeckId !== selected.deckId;
+          this.lastKnownSelectedDeckId = selected.deckId;
+          if (changed) {
+            this.emit({
+              type: 'selected-deck-captured',
+              snapshot: this.currentSnapshot,
+              selectedDeck: {
+                deckId: selected.deckId.toString(),
+                templateDeckId: selected.templateDeckId,
+                formatType: selected.formatType,
+              },
+            });
+          }
+        }
+      } catch {
+        // Reflector failures don't kill the loop; just skip the cache update.
+      }
+    })();
+    this.selectedDeckRefreshInFlight = refresh;
+    void refresh.finally(() => {
+      if (this.selectedDeckRefreshInFlight === refresh) {
+        this.selectedDeckRefreshInFlight = null;
+      }
+    });
+    return refresh;
+  }
 
   private intervalFor(phase: MatchPhase): number {
     switch (phase) {
@@ -1005,11 +1087,16 @@ export class DeckTracker {
     );
   }
 
-  private async identifyDeck(matchInfo: MatchInfo | null, visibleState: {
-    handState: HandState | null;
-    boardState: BoardState | null;
-  }): Promise<void> {
-    if (matchInfo === null) return;
+  private async identifyDeck(
+    matchInfo: MatchInfo | null,
+    visibleState: {
+      handState: HandState | null;
+      boardState: BoardState | null;
+    },
+    opts: { emitSelection?: boolean } = {},
+  ): Promise<boolean> {
+    if (matchInfo === null) return false;
+    const emitSelection = opts.emitSelection ?? true;
     const decks = (await this.mirror.getDecks()) ?? [];
 
     // Fast path: use the cached deck id captured during IDLE/PRE_MATCH
@@ -1020,7 +1107,8 @@ export class DeckTracker {
       const matched = decks.find((d) => d.id === cachedId);
       if (matched) {
         this.applyIdentifiedDeck(deckToIdentified(matched));
-        return;
+        this.awaitingDeckSelection = false;
+        return true;
       }
     }
 
@@ -1029,15 +1117,18 @@ export class DeckTracker {
     const identified = await this.identifier.identify({ decks, matchInfo });
     if (identified !== null) {
       this.applyIdentifiedDeck(identified);
-      return;
+      this.awaitingDeckSelection = false;
+      return true;
     }
 
     const visibleCandidates = findDecksFromVisibleFriendlyCards(decks, visibleState);
     const visibleIdentified = identifyDeckFromVisibleCandidates(visibleCandidates);
     if (visibleIdentified !== null) {
       this.applyIdentifiedDeck(visibleIdentified);
-      return;
+      this.awaitingDeckSelection = false;
+      return true;
     }
+    if (!emitSelection) return false;
     // No automatic match — emit a `needs-deck-selection` event with
     // the available decks so the renderer can prompt the user.
     this.cachedDecks = visibleCandidates.length > 0 ? visibleCandidates : decks;
@@ -1047,6 +1138,7 @@ export class DeckTracker {
       snapshot: this.currentSnapshot,
       decks: this.cachedDecks.map((d) => ({ id: d.id, name: d.name, hero: d.hero })),
     });
+    return false;
   }
 
   /** Drop carried-over board-attack figures so a new match starts clean. */
@@ -1558,7 +1650,7 @@ export class DeckTracker {
     const gameType = matchInfo?.gameType ?? this.game.gameType;
     const formatType = matchInfo?.formatType ?? this.game.formatType;
     const missionId = matchInfo?.missionId ?? this.game.missionId;
-    if (!isConstructedMatch({ gameType, formatType, missionId })) return undefined;
+    if (!isRecordableMatch({ gameType, formatType, missionId })) return undefined;
 
     const startedAt = this.game.startedAt ?? this.currentSnapshot.updatedAt;
     const endedAt = this.game.endedAt ?? Date.now();

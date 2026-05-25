@@ -5,6 +5,7 @@ import type {
   DeckSummary,
   FormatFilter,
   MatchHistoryRecord,
+  MatchModeFilter,
   MatchRecordingSummary,
   SavedDeckMatchupStats,
   StatsSummary,
@@ -20,6 +21,7 @@ import { MatchRecordingViewer } from './MatchRecordingViewer';
 import { useTranslation } from '../i18n';
 
 const FILTERS: StatsTimeFilter[] = ['today', 'week', 'season', 'all-time'];
+const MATCH_MODE_FILTERS: MatchModeFilter[] = ['all', 'ranked', 'casual', 'adventure'];
 const CLASS_STATS_KEY = 'class' + 'Winrates';
 
 const emptySummary = {
@@ -38,6 +40,7 @@ export function Stats() {
   const { t } = useTranslation();
   const [timeFilter, setTimeFilter] = useState<StatsTimeFilter>('season');
   const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
+  const [matchModeFilter, setMatchModeFilter] = useState<MatchModeFilter>('all');
   const [granularity, setGranularity] = useState<TimeSeriesGranularity>('daily');
   const [summary, setSummary] = useState<StatsSummary>(emptySummary);
   const [recentMatches, setRecentMatches] = useState<MatchHistoryRecord[]>([]);
@@ -57,12 +60,13 @@ export function Stats() {
     void Promise.all([
       window.hdt.stats.getSummary(timeFilter, {
         formatFilter,
+        matchModeFilter,
         includeMatchupMatrix: true,
         includeTimeSeries: true,
         includePlayOrderSplit: true,
         timeSeriesGranularity: granularity,
       }),
-      window.hdt.stats.listRecent(timeFilter, 5, { formatFilter }),
+      window.hdt.stats.listRecent(timeFilter, 5, { formatFilter, matchModeFilter }),
       window.hdt.recordings.list().catch(() => [] as MatchRecordingSummary[]),
     ])
       .then(([nextSummary, nextRecent, nextRecordings]) => {
@@ -84,7 +88,7 @@ export function Stats() {
     return () => {
       cancelled = true;
     };
-  }, [timeFilter, formatFilter, granularity]);
+  }, [timeFilter, formatFilter, matchModeFilter, granularity]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +118,10 @@ export function Stats() {
     }
     let cancelled = false;
     void window.hdt.stats
-      .getSavedDeckMatchups(selectedSavedDeckId, timeFilter, { formatFilter })
+      .getSavedDeckMatchups(selectedSavedDeckId, timeFilter, {
+        formatFilter,
+        matchModeFilter,
+      })
       .then((rows) => {
         if (!cancelled) setDeckMatchups(rows);
       })
@@ -124,7 +131,7 @@ export function Stats() {
     return () => {
       cancelled = true;
     };
-  }, [selectedSavedDeckId, timeFilter, formatFilter]);
+  }, [selectedSavedDeckId, timeFilter, formatFilter, matchModeFilter]);
 
   const recordingByFingerprint = useMemo(() => {
     const m = new Map<string, string>();
@@ -174,6 +181,26 @@ export function Stats() {
               ))}
             </div>
             <FormatFilterPills value={formatFilter} onChange={setFormatFilter} />
+            <div
+              className="flex flex-wrap justify-end gap-2"
+              data-testid="match-mode-filter-pills"
+            >
+              {MATCH_MODE_FILTERS.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={matchModeFilter === mode}
+                  onClick={() => setMatchModeFilter(mode)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    matchModeFilter === mode
+                      ? 'bg-accent text-bg'
+                      : 'bg-overlay-surface text-text-dim hover:text-text hover:bg-overlay-hover'
+                  }`}
+                >
+                  {t(`stats.matchModeFilter.${mode}`)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

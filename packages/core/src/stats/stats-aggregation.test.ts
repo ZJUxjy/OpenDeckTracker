@@ -155,4 +155,31 @@ describe('stats aggregation', () => {
     expect(summary.playOrderSplit?.first.wins).toBe(1);
     expect(summary.playOrderSplit?.coin.losses).toBe(0);
   });
+
+  it('matchModeFilter narrows all aggregations including recent matches', () => {
+    const ranked = makeRecord({
+      id: 1,
+      fingerprint: 'ranked',
+      result: 'win',
+      matchMode: 'ranked',
+    } as Partial<MatchHistoryRecord>);
+    const casual = makeRecord({
+      id: 2,
+      fingerprint: 'casual',
+      result: 'loss',
+      matchMode: 'casual',
+    } as Partial<MatchHistoryRecord>);
+    const summary = aggregateStats([ranked, casual], {
+      filter: 'all-time',
+      now: fixedNow,
+      matchModeFilter: 'ranked',
+      includePlayOrderSplit: true,
+    });
+
+    expect(summary.matchesPlayed).toBe(1);
+    expect(summary.wins).toBe(1);
+    expect(summary.losses).toBe(0);
+    expect(summary.recentMatches.map((match) => match.fingerprint)).toEqual(['ranked']);
+    expect(summary.playOrderSplit?.first.wins).toBe(1);
+  });
 });

@@ -46,15 +46,23 @@ function mockStatsApi(args: {
   recordingGet?: ReturnType<typeof vi.fn>;
   decks?: DeckSummary[];
   matchups?: SavedDeckMatchupStats[];
+  getSummary?: ReturnType<typeof vi.fn>;
+  listRecent?: ReturnType<typeof vi.fn>;
   getSavedDeckMatchups?: ReturnType<typeof vi.fn>;
 }): void {
   (window as unknown as { hdt: typeof window.hdt }).hdt = {
     ...window.hdt,
     stats: {
-      getSummary: vi.fn(async () => args.summary),
-      listRecent: vi.fn(async () => args.recent),
+      getSummary: args.getSummary ?? vi.fn(async () => args.summary),
+      listRecent: args.listRecent ?? vi.fn(async () => args.recent),
       getSavedDeckMatchups:
         args.getSavedDeckMatchups ?? vi.fn(async () => args.matchups ?? []),
+      getDeckLadderWinrate: vi.fn(async () => ({
+        wins: 0,
+        losses: 0,
+        matchesPlayed: 0,
+        winrate: null,
+      })),
     },
     decks: {
       ...window.hdt.decks,
@@ -111,6 +119,33 @@ describe('Stats', () => {
     // after Section 6 wraps each numeric in its own font-mono span; assert
     // at least one match instead of pinning to a single occurrence.
     expect(screen.getAllByText('100%').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('passes the selected match mode filter to stats APIs', async () => {
+    const getSummary = vi.fn(async () => emptyStatsSummary());
+    const listRecent = vi.fn(async () => [] as MatchHistoryRecord[]);
+    mockStatsApi({
+      summary: emptyStatsSummary(),
+      recent: [],
+      getSummary,
+      listRecent,
+    });
+
+    render(<Stats />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /ranked/i }));
+
+    await waitFor(() => {
+      expect(getSummary).toHaveBeenLastCalledWith(
+        expect.any(String),
+        expect.objectContaining({ matchModeFilter: 'ranked' }),
+      );
+      expect(listRecent).toHaveBeenLastCalledWith(
+        expect.any(String),
+        5,
+        expect.objectContaining({ matchModeFilter: 'ranked' }),
+      );
+    });
   });
 
   it('renders saved deck matchup rows when a deck is selected', async () => {

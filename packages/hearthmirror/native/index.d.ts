@@ -288,3 +288,7 @@ export interface SelectedDeckResult {
   /** Currently visible format tab — `PegasusShared.FormatType` enum. */
   formatType: number
 }
+
+export declare function subscribeHearthstoneWindowEvents(callback: (() => void)): number
+
+export declare function unsubscribeHearthstoneWindowEvents(subscriptionId: number): boolean
