@@ -132,7 +132,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
       const hit = cardLookup.get(cardId);
       if (!hit) return null;
       return {
-        class: ((hit.cardClass as HeroClass) ?? 'NEUTRAL') as HeroClass,
+        class: ((hit.cardClass as HeroClass) ?? 'NEUTRAL'),
         rarity: hit.rarity ?? 'COMMON',
         type: hit.type,
       };

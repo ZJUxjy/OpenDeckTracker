@@ -29,9 +29,9 @@ function isPopularDeck(value: unknown): value is PopularDeck {
   return (
     typeof v['id'] === 'string'
     && typeof v['name'] === 'string'
-    && typeof v['class'] === 'string' && HERO_CLASS_VALUES.has(v['class'] as string)
-    && typeof v['format'] === 'string' && FORMAT_VALUES.has(v['format'] as string)
-    && typeof v['archetype'] === 'string' && ARCHETYPE_VALUES.has(v['archetype'] as string)
+    && typeof v['class'] === 'string' && HERO_CLASS_VALUES.has(v['class'])
+    && typeof v['format'] === 'string' && FORMAT_VALUES.has(v['format'])
+    && typeof v['archetype'] === 'string' && ARCHETYPE_VALUES.has(v['archetype'])
     && typeof v['deckstring'] === 'string'
     && typeof v['winratePercent'] === 'number'
     && typeof v['gamesCount'] === 'number'
@@ -71,7 +71,7 @@ export async function loadCache(dir: string): Promise<SyncedSnapshot | null> {
   return {
     schemaVersion: SYNCED_SCHEMA_VERSION,
     fetchedAt: obj['fetchedAt'],
-    decks: decks as PopularDeck[],
+    decks: decks,
   };
 }
 

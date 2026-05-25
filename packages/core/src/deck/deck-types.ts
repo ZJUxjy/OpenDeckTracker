@@ -140,7 +140,7 @@ export interface DeckSummary {
   liveDeckId?: number | null;
 }
 
-export interface DeckDetail extends Deck {}
+export type DeckDetail = Deck;
 
 export interface DeckVersion {
   deckId: string;

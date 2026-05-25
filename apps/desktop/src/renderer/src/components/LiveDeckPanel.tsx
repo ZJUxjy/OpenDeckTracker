@@ -17,7 +17,7 @@ import { clsx } from 'clsx';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Gift } from 'lucide-react';
 import { useCardPreview, type RowPreviewRequest } from '../hooks/use-card-preview';
 import { getRarityCostBg } from '../lib/rarity';
-import type { CardDef, Rarity } from '@hdt/hearthdb';
+import type { CardDef } from '@hdt/hearthdb';
 import { useLocale, useTranslation } from '../i18n';
 import {
   getExtraDisplayCandidate,
@@ -895,7 +895,7 @@ function CardCopyRow({
   const def = useCardDef(cardId);
   const cost = def?.cost ?? 0;
   const name = def?.name ?? cardId;
-  const rarity = def?.rarity as Rarity | undefined;
+  const rarity = def?.rarity;
   const tileUrl = useCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
   const rowExtra = buildRowExtraDisplay(cardId, def, extraDisplay, animalCompanionPoolCardIds);
@@ -1104,7 +1104,6 @@ function computeBindings(
 ): Bindings {
   const counters = extraDisplay?.counters ?? {};
   const pools = (extraDisplay?.pools ?? {}) as NonNullable<DeckTrackerSnapshot['extraDisplay']>['pools'];
-  const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
   const bindings: Bindings = { ...counters };
 
   const primaryPool = allowsPoolPreview(candidate.extraDisplay?.displayType)

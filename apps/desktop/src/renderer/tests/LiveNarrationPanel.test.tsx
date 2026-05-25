@@ -1,5 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameProgressNarrationFrame } from '@hdt/core';
 import { LiveNarrationPanel } from '../src/components/LiveNarrationPanel';
 import { I18nProvider } from '../src/i18n';

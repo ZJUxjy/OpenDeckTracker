@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- native .d.ts has no importable module
 /// <reference path="./hearthmirror-native.d.ts" />
 
 import * as native from '@hdt/hearthmirror-native';
@@ -430,6 +431,7 @@ function mapDeck(d: native.DeckResult): Deck {
 }
 
 function repairCp437Utf8Mojibake(value: string): string {
+  // eslint-disable-next-line no-control-regex -- intentional non-ASCII detection
   if (!/[^\x00-\x7f]/.test(value)) return value;
 
   const bytes: number[] = [];

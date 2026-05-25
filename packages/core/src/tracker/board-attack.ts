@@ -567,7 +567,7 @@ function minCostSubsetForDamage(
 ): number[] | null {
   if (damageNeeded <= 0) return [];
   const cap = damageNeeded;
-  const dp: Array<KnapsackCell | null> = new Array(cap + 1).fill(null);
+  const dp: Array<KnapsackCell | null> = Array.from({ length: cap + 1 }, () => null);
   dp[0] = { cost: 0, from: -1, via: -1 };
   for (const idx of candidates) {
     const swing = swings[idx]!;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SET_LABELS } from '@hdt/hearthdb';
-import type { CardClass, CardDef, CardType, Rarity } from '@hdt/hearthdb';
+import type { CardClass, CardDef, Rarity } from '@hdt/hearthdb';
 import type { SetProgress } from '@hdt/core';
 
 import { useTranslation } from '../i18n';

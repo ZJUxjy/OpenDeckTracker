@@ -8,7 +8,7 @@ import {
   type ReactElement,
 } from 'react';
 import type { OpponentCardRecord } from '@hdt/core';
-import type { CardDef, Rarity } from '@hdt/hearthdb';
+import type { CardDef } from '@hdt/hearthdb';
 import { clsx } from 'clsx';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useCardPreview } from '../hooks/use-card-preview';
@@ -193,7 +193,7 @@ function GraveyardRow({
 }): ReactElement {
   const name = def?.name ?? row.cardId;
   const cost = def?.cost ?? 0;
-  const rarity = def?.rarity as Rarity | undefined;
+  const rarity = def?.rarity;
   const tileUrl = useCardTileUrl(row.cardId);
   const ref = useRef<HTMLDivElement>(null);
 

@@ -85,7 +85,7 @@ function logEventsAroundCast(
 ): void {
   const start = findBlockStart(events, event.entityId);
   if (start < 0) {
-    // eslint-disable-next-line no-console
+     
     console.warn(
       `[deck-position] waveshaping diag: no BLOCK_START with entity=${event.entityId} found in buffer of ${events.length} events`,
     );
@@ -95,7 +95,7 @@ function logEventsAroundCast(
     for (let i = events.length - 1; i >= 0 && dumped < 20; i -= 1) {
       const ev = events[i];
       if (!ev || ev.type !== 'block-start') continue;
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `  block-start at index ${i}: blockType=${ev.blockType} entity=${ev.entity} effectCardId=${ev.effectCardId}`,
       );
@@ -114,7 +114,7 @@ function logEventsAroundCast(
         ev.cardId === 'TIME_701';
       if (!hasCardId) continue;
       const id = ev.type === 'full-entity' ? ev.entityId : ev.entity;
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `  ${ev.type} at index ${i}: entity=${id} cardId=${ev.cardId}`,
       );
@@ -123,7 +123,7 @@ function logEventsAroundCast(
     return;
   }
   const end = Math.min(events.length, start + 80);
-  // eslint-disable-next-line no-console
+   
   console.warn(
     `[deck-position] waveshaping diag: BLOCK_START at index ${start}, dumping ${end - start} subsequent events:`,
   );
@@ -157,7 +157,7 @@ function logEventsAroundCast(
       default:
         summary = `${ev.type}`;
     }
-    // eslint-disable-next-line no-console
+     
     console.warn(`  [+${offset}] ${summary}`);
   }
 }

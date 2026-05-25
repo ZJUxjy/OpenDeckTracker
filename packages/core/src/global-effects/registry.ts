@@ -60,7 +60,7 @@ export class GlobalEffectsRegistry {
     const def = this.catalogIndex.get(event.cardId);
     if (!def) return;
 
-    // eslint-disable-next-line no-console
+     
     console.log(
       `[global-effects] registry recorded: id=${def.id} controllerId=${event.controllerId}`,
     );
@@ -115,8 +115,12 @@ export class GlobalEffectsRegistry {
   snapshot(): RegistrySnapshot {
     const ids = this.getControllerIds();
     return {
-      local: this.serializeSide(this.effectsByController.get(ids.local) ?? new Map()),
-      opposing: this.serializeSide(this.effectsByController.get(ids.opposing) ?? new Map()),
+      local: this.serializeSide(
+        this.effectsByController.get(ids.local) ?? new Map<string, ActiveEffect>(),
+      ),
+      opposing: this.serializeSide(
+        this.effectsByController.get(ids.opposing) ?? new Map<string, ActiveEffect>(),
+      ),
     };
   }
 

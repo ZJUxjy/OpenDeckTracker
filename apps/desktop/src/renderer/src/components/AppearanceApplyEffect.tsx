@@ -146,10 +146,10 @@ export function AppearanceApplyEffect() {
     bootOverlayFired.current = true;
     const { gameOverlay, gameOverlayOpponent } = useAppearanceStore.getState();
     if (gameOverlay) {
-      window.hdt?.overlay?.setEnabled?.(true);
+      void window.hdt?.overlay?.setEnabled?.(true);
     }
     if (gameOverlayOpponent) {
-      window.hdt?.overlay?.setEnabledOpponent?.(true);
+      void window.hdt?.overlay?.setEnabledOpponent?.(true);
     }
   }, []);
 
