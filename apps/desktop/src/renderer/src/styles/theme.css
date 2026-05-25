@@ -2,16 +2,31 @@
 
 /* Deck tracker card exit animation */
 @keyframes deckExit {
-  0%   { opacity: 1; transform: translateX(0); }
-  20%  { opacity: 1; transform: translateX(0); background: var(--accent-dim); }
-  100% { opacity: 0; transform: translateX(40px); max-height: 0; padding: 0; border-width: 0; }
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(0);
+    background: var(--accent-dim);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(40px);
+    max-height: 0;
+    padding: 0;
+    border-width: 0;
+  }
 }
 .animate-deck-exit {
   animation: deckExit 2000ms forwards ease-out;
   animation-delay: 0ms;
 }
 @media (prefers-reduced-motion: reduce) {
-  .animate-deck-exit { animation: deckExit 50ms forwards linear; }
+  .animate-deck-exit {
+    animation: deckExit 50ms forwards linear;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -26,120 +41,122 @@
      with subtle warm-gray chrome. Dark text for high legibility
      on solid backgrounds. The translucent glass variants further
      below adapt these for Mica/Acrylic backdrop scenarios.         */
-  --surface-window:   #F4F4F6;
-  --surface-sidebar:  #ECECEE;
-  --surface-toolbar:  #EEEEF0;
-  --surface-content:  #FFFFFF;
-  --surface-elevated: #FFFFFF;
-  --surface-raised:   #F7F7F9;
-  --surface-popover:  #FFFFFF;
+  --surface-window: #f4f4f6;
+  --surface-sidebar: #ececee;
+  --surface-toolbar: #eeeef0;
+  --surface-content: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-raised: #f7f7f9;
+  --surface-popover: #ffffff;
 
   /* Glass — translucent panels for light mode.
      Higher alpha white so the panel remains readable when
      Mica/Acrylic bleeds desktop wallpaper through.               */
-  --glass-overlay:    rgba(255, 255, 255, 0.72);
-  --glass-blur:       60px;
+  --glass-overlay: rgba(255, 255, 255, 0.72);
+  --glass-blur: 60px;
 
   /* ── Borders ─ dark-with-alpha (works on light surfaces) ─── */
-  --border-hairline:  rgba(0, 0, 0, 0.08);
+  --border-hairline: rgba(0, 0, 0, 0.08);
   --border-separator: rgba(0, 0, 0, 0.05);
-  --border-strong:    rgba(0, 0, 0, 0.18);
+  --border-strong: rgba(0, 0, 0, 0.18);
 
   /* ── Text ─ dark values for light backgrounds ──────────────── */
-  --text-primary:     #1C1C1E;
-  --text-secondary:   rgba(0, 0, 0, 0.55);
-  --text-tertiary:    rgba(0, 0, 0, 0.35);
-  --text-quaternary:  rgba(0, 0, 0, 0.18);
-  --text-on-accent:   #FFFFFF;
+  --text-primary: #1c1c1e;
+  --text-secondary: rgba(0, 0, 0, 0.55);
+  --text-tertiary: rgba(0, 0, 0, 0.35);
+  --text-quaternary: rgba(0, 0, 0, 0.18);
+  --text-on-accent: #ffffff;
 
   /* ── Accent — macOS System Blue ──────────────────────────── */
-  --accent:           #007AFF;
-  --accent-hover:     #0070EE;
-  --accent-pressed:   #0058C8;
+  --accent: #007aff;
+  --accent-hover: #0070ee;
+  --accent-pressed: #0058c8;
   --accent-translucent: rgba(0, 122, 255, 0.12);
-  --accent-dim:       rgba(0, 122, 255, 0.10);
+  --accent-dim: rgba(0, 122, 255, 0.1);
 
   /* ── Semantic status ──────────────────────────────────────── */
-  --semantic-success: #28A745;
-  --semantic-warning: #FF9500;
-  --semantic-danger:  #FF3B30;
-  --semantic-info:    #5AC8FA;
+  --semantic-success: #28a745;
+  --semantic-warning: #ff9500;
+  --semantic-danger: #ff3b30;
+  --semantic-info: #5ac8fa;
 
   /* ── Hearthstone domain — rarities ────────────────────────── */
-  --rarity-free:      #7E7E84;
-  --rarity-common:    #5C5C61;
-  --rarity-rare:      #0A84FF;
-  --rarity-epic:      #AF52DE;
-  --rarity-legendary: #FF9500;
+  --rarity-free: #7e7e84;
+  --rarity-common: #5c5c61;
+  --rarity-rare: #0a84ff;
+  --rarity-epic: #af52de;
+  --rarity-legendary: #ff9500;
 
   /* ── Hearthstone domain — classes ─────────────────────────── */
-  --class-mage:        #3B82F6;
-  --class-hunter:      #22C55E;
-  --class-priest:      #8B95A3;
-  --class-rogue:       #1F2937;
-  --class-warlock:     #7C3AED;
-  --class-warrior:     #B91C1C;
-  --class-druid:       #A16207;
-  --class-shaman:      #1D4ED8;
-  --class-paladin:     #CA8A04;
-  --class-demonhunter: #15803D;
-  --class-deathknight: #0E7490;
-  --class-neutral:     #5C5C61;
+  --class-mage: #3b82f6;
+  --class-hunter: #22c55e;
+  --class-priest: #8b95a3;
+  --class-rogue: #1f2937;
+  --class-warlock: #7c3aed;
+  --class-warrior: #b91c1c;
+  --class-druid: #a16207;
+  --class-shaman: #1d4ed8;
+  --class-paladin: #ca8a04;
+  --class-demonhunter: #15803d;
+  --class-deathknight: #0e7490;
+  --class-neutral: #5c5c61;
 
   /* ── Shadows — softer for light mode ─────────────────────── */
-  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.10), 0 0 1px rgba(0,0,0,0.08);
-  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.06);
-  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.04);
-  --shadow-raised:   0 1px 2px rgba(0,0,0,0.04);
+  --shadow-window: 0 24px 64px -8px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-popover: 0 16px 36px -8px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-elevated: 0 4px 12px -4px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.04);
 
   /* ── Radii ────────────────────────────────────────────────── */
-  --radius-xs:   4px;
-  --radius-sm:   6px;
-  --radius-md:   8px;
-  --radius-lg:   10px;
-  --radius-xl:   12px;
-  --radius-2xl:  16px;
-  --radius-3xl:  20px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
   --radius-full: 9999px;
 
   /* ── Typography ───────────────────────────────────────────── */
-  --font-sans: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+  --font-sans:
+    'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter',
+    system-ui, sans-serif;
   --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* ── Scrollbar — macOS thinness, hidden track ─────────────── */
-  --scrollbar-size:         8px;
-  --scrollbar-track:        transparent;
-  --scrollbar-thumb:        rgba(0, 0, 0, 0.15);
-  --scrollbar-thumb-hover:  rgba(0, 0, 0, 0.30);
+  --scrollbar-size: 8px;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
   --scrollbar-thumb-active: var(--accent);
 
   /* ── Overlay variables — mode-aware replacements for
      hardcoded bg-white/X and bg-black/X in components.
      Light mode uses dark-tinted overlays (black with low alpha)
      so they subtly darken the light surface beneath.              */
-  --overlay-surface:  rgba(0, 0, 0, 0.04);
-  --overlay-hover:    rgba(0, 0, 0, 0.06);
-  --overlay-pressed:  rgba(0, 0, 0, 0.10);
+  --overlay-surface: rgba(0, 0, 0, 0.04);
+  --overlay-hover: rgba(0, 0, 0, 0.06);
+  --overlay-pressed: rgba(0, 0, 0, 0.1);
   --overlay-elevated: rgba(0, 0, 0, 0.07);
-  --overlay-input:    rgba(0, 0, 0, 0.03);
-  --overlay-dialog:   rgba(0, 0, 0, 0.40);
+  --overlay-input: rgba(0, 0, 0, 0.03);
+  --overlay-dialog: rgba(0, 0, 0, 0.4);
 
   /* ── Backward-compat aliases ──────────────────────────────────
      Components written before the macOS redesign reference these
      old names (`--bg`, `--bg-2`, `--text`, etc). Aliasing keeps
      them working without a sweeping refactor.                    */
-  --bg:        var(--surface-window);
-  --bg-2:      var(--surface-toolbar);
-  --bg-3:      var(--surface-raised);
-  --border:    var(--border-hairline);
+  --bg: var(--surface-window);
+  --bg-2: var(--surface-toolbar);
+  --bg-3: var(--surface-raised);
+  --border: var(--border-hairline);
   --border-hi: var(--border-strong);
-  --text:      var(--text-primary);
-  --text-dim:  var(--text-secondary);
+  --text: var(--text-primary);
+  --text-dim: var(--text-secondary);
   --text-mute: var(--text-tertiary);
-  --green:     var(--semantic-success);
-  --red:       var(--semantic-danger);
-  --amber:     var(--semantic-warning);
-  --radius:    var(--radius-lg);
+  --green: var(--semantic-success);
+  --red: var(--semantic-danger);
+  --amber: var(--semantic-warning);
+  --radius: var(--radius-lg);
   --font-size: 14px;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
@@ -147,33 +164,33 @@
   /* ── Legacy shadcn-style — kept as inert defaults so any
         leftover usage doesn't crash. Mapped to current surface
         tokens so colors stay coherent.                          */
-  --background:           var(--surface-window);
-  --foreground:           var(--text-primary);
-  --card:                 var(--surface-content);
-  --card-foreground:      var(--text-primary);
-  --popover:              var(--surface-popover);
-  --popover-foreground:   var(--text-primary);
-  --primary:              var(--accent);
-  --primary-foreground:   var(--text-on-accent);
-  --secondary:            var(--surface-raised);
+  --background: var(--surface-window);
+  --foreground: var(--text-primary);
+  --card: var(--surface-content);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface-popover);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent);
+  --primary-foreground: var(--text-on-accent);
+  --secondary: var(--surface-raised);
   --secondary-foreground: var(--text-primary);
-  --muted:                var(--surface-raised);
-  --muted-foreground:     var(--text-secondary);
-  --accent-foreground:    var(--text-on-accent);
-  --destructive:          var(--semantic-danger);
+  --muted: var(--surface-raised);
+  --muted-foreground: var(--text-secondary);
+  --accent-foreground: var(--text-on-accent);
+  --destructive: var(--semantic-danger);
   --destructive-foreground: var(--text-on-accent);
-  --input:                transparent;
-  --input-background:     var(--surface-content);
-  --switch-background:    var(--border-strong);
-  --ring:                 var(--accent);
-  --sidebar:              var(--surface-sidebar);
-  --sidebar-foreground:   var(--text-primary);
-  --sidebar-primary:      var(--accent);
+  --input: transparent;
+  --input-background: var(--surface-content);
+  --switch-background: var(--border-strong);
+  --ring: var(--accent);
+  --sidebar: var(--surface-sidebar);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--accent);
   --sidebar-primary-foreground: var(--text-on-accent);
-  --sidebar-accent:       var(--accent-translucent);
+  --sidebar-accent: var(--accent-translucent);
   --sidebar-accent-foreground: var(--accent);
-  --sidebar-border:       var(--border-hairline);
-  --sidebar-ring:         var(--accent);
+  --sidebar-border: var(--border-hairline);
+  --sidebar-ring: var(--accent);
   --chart-1: var(--accent);
   --chart-2: var(--semantic-success);
   --chart-3: var(--rarity-epic);
@@ -189,173 +206,173 @@
 
 .dark {
   /* Dark mode = cool-tinted deeper dark. Light text. */
-  --surface-window:   #1C1C1E;
-  --surface-sidebar:  #171719;
-  --surface-toolbar:  #1A1A1C;
-  --surface-content:  #242427;
+  --surface-window: #1c1c1e;
+  --surface-sidebar: #171719;
+  --surface-toolbar: #1a1a1c;
+  --surface-content: #242427;
   --surface-elevated: #262629;
-  --surface-raised:   #1E1E21;
-  --surface-popover:  #242427;
+  --surface-raised: #1e1e21;
+  --surface-popover: #242427;
 
-  --glass-overlay:    rgba(28, 28, 30, 0.55);
+  --glass-overlay: rgba(28, 28, 30, 0.55);
 
-  --border-hairline:  rgba(255, 255, 255, 0.10);
+  --border-hairline: rgba(255, 255, 255, 0.1);
   --border-separator: rgba(255, 255, 255, 0.06);
-  --border-strong:    rgba(255, 255, 255, 0.20);
+  --border-strong: rgba(255, 255, 255, 0.2);
 
   /* Text — light values for dark backgrounds */
-  --text-primary:     #F4F4F8;
-  --text-secondary:   rgba(240, 240, 250, 0.72);
-  --text-tertiary:    rgba(240, 240, 250, 0.40);
-  --text-quaternary:  rgba(240, 240, 250, 0.22);
+  --text-primary: #f4f4f8;
+  --text-secondary: rgba(240, 240, 250, 0.72);
+  --text-tertiary: rgba(240, 240, 250, 0.4);
+  --text-quaternary: rgba(240, 240, 250, 0.22);
 
-  --accent:           #0A84FF;
-  --accent-hover:     #1A8CFF;
-  --accent-pressed:   #0066D9;
+  --accent: #0a84ff;
+  --accent-hover: #1a8cff;
+  --accent-pressed: #0066d9;
   --accent-translucent: rgba(10, 132, 255, 0.18);
-  --accent-dim:       rgba(10, 132, 255, 0.18);
+  --accent-dim: rgba(10, 132, 255, 0.18);
 
-  --semantic-success: #30D158;
-  --semantic-warning: #FF9F0A;
-  --semantic-danger:  #FF453A;
-  --semantic-info:    #64D2FF;
+  --semantic-success: #30d158;
+  --semantic-warning: #ff9f0a;
+  --semantic-danger: #ff453a;
+  --semantic-info: #64d2ff;
 
-  --rarity-free:      #98989D;
-  --rarity-common:    #C7C7CC;
-  --rarity-epic:      #BF5AF2;
-  --rarity-legendary: #FF9F0A;
+  --rarity-free: #98989d;
+  --rarity-common: #c7c7cc;
+  --rarity-epic: #bf5af2;
+  --rarity-legendary: #ff9f0a;
 
-  --class-priest:      #F2F2F4;
-  --class-rogue:       #48484A;
-  --class-shaman:      #0A84FF;
-  --class-deathknight: #64D2FF;
+  --class-priest: #f2f2f4;
+  --class-rogue: #48484a;
+  --class-shaman: #0a84ff;
+  --class-deathknight: #64d2ff;
 
-  --shadow-window:   0 24px 64px -8px rgba(0,0,0,0.40), 0 0 1px rgba(0,0,0,0.40);
-  --shadow-popover:  0 16px 36px -8px rgba(0,0,0,0.30), 0 0 1px rgba(0,0,0,0.30);
-  --shadow-elevated: 0 4px 12px -4px rgba(0,0,0,0.20), 0 0 1px rgba(0,0,0,0.15);
-  --shadow-raised:   0 1px 2px rgba(0,0,0,0.15);
+  --shadow-window: 0 24px 64px -8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.4);
+  --shadow-popover: 0 16px 36px -8px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 12px -4px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.15);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.15);
 
   /* Dark mode overlays — white-tinted */
-  --overlay-surface:  rgba(255, 255, 255, 0.05);
-  --overlay-hover:    rgba(255, 255, 255, 0.08);
-  --overlay-pressed:  rgba(255, 255, 255, 0.12);
+  --overlay-surface: rgba(255, 255, 255, 0.05);
+  --overlay-hover: rgba(255, 255, 255, 0.08);
+  --overlay-pressed: rgba(255, 255, 255, 0.12);
   --overlay-elevated: rgba(255, 255, 255, 0.07);
-  --overlay-input:    rgba(255, 255, 255, 0.04);
-  --overlay-dialog:   rgba(0, 0, 0, 0.60);
+  --overlay-input: rgba(255, 255, 255, 0.04);
+  --overlay-dialog: rgba(0, 0, 0, 0.6);
 
-  --scrollbar-thumb:       rgba(255, 255, 255, 0.15);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.30);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
 }
 
 /* Tailwind v4 theme exposure — these utility names map back to
    the CSS custom properties so `bg-bg`, `text-text`, etc work. */
 @theme inline {
   /* Semantic surfaces */
-  --color-surface-window:   var(--surface-window);
-  --color-surface-sidebar:  var(--surface-sidebar);
-  --color-surface-toolbar:  var(--surface-toolbar);
-  --color-surface-content:  var(--surface-content);
+  --color-surface-window: var(--surface-window);
+  --color-surface-sidebar: var(--surface-sidebar);
+  --color-surface-toolbar: var(--surface-toolbar);
+  --color-surface-content: var(--surface-content);
   --color-surface-elevated: var(--surface-elevated);
-  --color-surface-raised:   var(--surface-raised);
-  --color-surface-popover:  var(--surface-popover);
-  --color-glass-overlay:    var(--glass-overlay);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-popover: var(--surface-popover);
+  --color-glass-overlay: var(--glass-overlay);
 
   /* Borders */
-  --color-border-hairline:  var(--border-hairline);
+  --color-border-hairline: var(--border-hairline);
   --color-border-separator: var(--border-separator);
-  --color-border-strong:    var(--border-strong);
+  --color-border-strong: var(--border-strong);
 
   /* Text */
-  --color-text-primary:     var(--text-primary);
-  --color-text-secondary:   var(--text-secondary);
-  --color-text-tertiary:    var(--text-tertiary);
-  --color-text-quaternary:  var(--text-quaternary);
-  --color-text-on-accent:   var(--text-on-accent);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-quaternary: var(--text-quaternary);
+  --color-text-on-accent: var(--text-on-accent);
 
   /* Overlay variables (mode-aware) */
-  --color-overlay-surface:  var(--overlay-surface);
-  --color-overlay-hover:    var(--overlay-hover);
-  --color-overlay-pressed:  var(--overlay-pressed);
+  --color-overlay-surface: var(--overlay-surface);
+  --color-overlay-hover: var(--overlay-hover);
+  --color-overlay-pressed: var(--overlay-pressed);
   --color-overlay-elevated: var(--overlay-elevated);
-  --color-overlay-input:    var(--overlay-input);
-  --color-overlay-dialog:   var(--overlay-dialog);
+  --color-overlay-input: var(--overlay-input);
+  --color-overlay-dialog: var(--overlay-dialog);
 
   /* Accent + semantic */
-  --color-accent:            var(--accent);
-  --color-accent-hover:      var(--accent-hover);
-  --color-accent-pressed:    var(--accent-pressed);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-pressed: var(--accent-pressed);
   --color-accent-translucent: var(--accent-translucent);
-  --color-semantic-success:  var(--semantic-success);
-  --color-semantic-warning:  var(--semantic-warning);
-  --color-semantic-danger:   var(--semantic-danger);
-  --color-semantic-info:     var(--semantic-info);
+  --color-semantic-success: var(--semantic-success);
+  --color-semantic-warning: var(--semantic-warning);
+  --color-semantic-danger: var(--semantic-danger);
+  --color-semantic-info: var(--semantic-info);
 
   /* Class colors */
-  --color-class-mage:        var(--class-mage);
-  --color-class-hunter:      var(--class-hunter);
-  --color-class-priest:      var(--class-priest);
-  --color-class-rogue:       var(--class-rogue);
-  --color-class-warlock:     var(--class-warlock);
-  --color-class-warrior:     var(--class-warrior);
-  --color-class-druid:       var(--class-druid);
-  --color-class-shaman:      var(--class-shaman);
-  --color-class-paladin:     var(--class-paladin);
+  --color-class-mage: var(--class-mage);
+  --color-class-hunter: var(--class-hunter);
+  --color-class-priest: var(--class-priest);
+  --color-class-rogue: var(--class-rogue);
+  --color-class-warlock: var(--class-warlock);
+  --color-class-warrior: var(--class-warrior);
+  --color-class-druid: var(--class-druid);
+  --color-class-shaman: var(--class-shaman);
+  --color-class-paladin: var(--class-paladin);
   --color-class-demonhunter: var(--class-demonhunter);
   --color-class-deathknight: var(--class-deathknight);
-  --color-class-neutral:     var(--class-neutral);
+  --color-class-neutral: var(--class-neutral);
 
   /* Backward-compat aliases (existing code) */
-  --color-bg:                var(--bg);
-  --color-bg-2:              var(--bg-2);
-  --color-bg-3:              var(--bg-3);
-  --color-border:            var(--border);
-  --color-border-hi:         var(--border-hi);
-  --color-text:              var(--text);
-  --color-text-dim:          var(--text-dim);
-  --color-text-mute:         var(--text-mute);
-  --color-accent-dim:        var(--accent-dim);
-  --color-green:             var(--green);
-  --color-red:               var(--red);
-  --color-amber:             var(--amber);
-  --color-rarity-free:       var(--rarity-free);
-  --color-rarity-common:     var(--rarity-common);
-  --color-rarity-rare:       var(--rarity-rare);
-  --color-rarity-epic:       var(--rarity-epic);
-  --color-rarity-legendary:  var(--rarity-legendary);
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-border: var(--border);
+  --color-border-hi: var(--border-hi);
+  --color-text: var(--text);
+  --color-text-dim: var(--text-dim);
+  --color-text-mute: var(--text-mute);
+  --color-accent-dim: var(--accent-dim);
+  --color-green: var(--green);
+  --color-red: var(--red);
+  --color-amber: var(--amber);
+  --color-rarity-free: var(--rarity-free);
+  --color-rarity-common: var(--rarity-common);
+  --color-rarity-rare: var(--rarity-rare);
+  --color-rarity-epic: var(--rarity-epic);
+  --color-rarity-legendary: var(--rarity-legendary);
 
   /* Shadcn-compat aliases */
-  --color-background:        var(--background);
-  --color-foreground:        var(--foreground);
-  --color-card:              var(--card);
-  --color-card-foreground:   var(--card-foreground);
-  --color-popover:           var(--popover);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary:           var(--primary);
+  --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary:         var(--secondary);
+  --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted:             var(--muted);
-  --color-muted-foreground:  var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent-foreground: var(--accent-foreground);
-  --color-destructive:       var(--destructive);
+  --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-input:             var(--input);
-  --color-input-background:  var(--input-background);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
-  --color-ring:              var(--ring);
-  --color-sidebar:           var(--sidebar);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary:   var(--sidebar-primary);
+  --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent:    var(--sidebar-accent);
+  --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border:    var(--sidebar-border);
-  --color-sidebar-ring:      var(--sidebar-ring);
-  --color-chart-1:           var(--chart-1);
-  --color-chart-2:           var(--chart-2);
-  --color-chart-3:           var(--chart-3);
-  --color-chart-4:           var(--chart-4);
-  --color-chart-5:           var(--chart-5);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 
   /* Radius */
   --radius-sm: var(--radius-sm);
@@ -364,10 +381,10 @@
   --radius-xl: var(--radius-xl);
 
   /* Shadows as Tailwind shadow utilities */
-  --shadow-window:   var(--shadow-window);
-  --shadow-popover:  var(--shadow-popover);
+  --shadow-window: var(--shadow-window);
+  --shadow-popover: var(--shadow-popover);
   --shadow-elevated: var(--shadow-elevated);
-  --shadow-raised:   var(--shadow-raised);
+  --shadow-raised: var(--shadow-raised);
 
   /* Fonts */
   --font-family-sans: var(--font-sans);
@@ -388,7 +405,8 @@
      belongs. On platforms WITHOUT Mica/vibrancy, the BrowserWindow's
      backgroundColor provides a solid base so the window doesn't read
      as a black hole. */
-  html, #root {
+  html,
+  #root {
     background: transparent;
   }
   body {
@@ -486,27 +504,25 @@
   box-shadow:
     /* Refractive rim — top-left blue, bottom-right warm pink.
        Adapted alpha for light mode visibility. */
-    inset 1px  1px 0 rgba(180, 200, 220, 0.30),
+    inset 1px 1px 0 rgba(180, 200, 220, 0.3),
     inset -1px -1px 0 rgba(220, 190, 200, 0.22),
-    /* Top edge highlight */
-    inset 0  1px 0 rgba(255, 255, 255, 0.55),
-    /* Subtle bottom pull-down */
-    inset 0 -1px 0 rgba(0, 0, 0, 0.06),
-    /* Single soft outer shadow — Tahoe one-source-light feel */
-    0 24px 64px -8px rgba(0, 0, 0, 0.15);
+    /* Top edge highlight */ inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    /* Subtle bottom pull-down */ inset 0 -1px 0 rgba(0, 0, 0, 0.06),
+    /* Single soft outer shadow — Tahoe one-source-light feel */ 0 24px 64px -8px
+      rgba(0, 0, 0, 0.15);
 }
 
 /* Dark mode — heavier saturation, less bright, light borders */
 .dark .macos-glass {
-  border-color: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
   box-shadow:
-    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
-    inset 0  1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
-    0 24px 64px -8px rgba(0, 0, 0, 0.40);
+    inset 1px 1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 24px 64px -8px rgba(0, 0, 0, 0.4);
 }
 
 /* Top specular sheen — fades from a faint white wash at the
@@ -516,20 +532,12 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.18) 0%,
-    rgba(255, 255, 255, 0.00) 18%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 18%);
   pointer-events: none;
   z-index: 0;
 }
 .dark .macos-glass::after {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.10) 0%,
-    rgba(255, 255, 255, 0.00) 18%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 18%);
 }
 
 /* Mouse-follow specular highlight */
@@ -566,20 +574,18 @@
   background: rgba(250, 250, 252, 0.65);
 }
 .dark .macos-glass-clear {
-  background: rgba(28, 28, 30, 0.40);
+  background: rgba(28, 28, 30, 0.4);
 }
 
 /* Tinted variant — the glass picks up the accent color, used
    for selected popovers / focused panels. */
 .macos-glass-tinted {
   background:
-    linear-gradient(rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.08)),
-    var(--glass-overlay);
+    linear-gradient(rgba(0, 122, 255, 0.08), rgba(0, 122, 255, 0.08)), var(--glass-overlay);
 }
 .dark .macos-glass-tinted {
   background:
-    linear-gradient(rgba(10, 132, 255, 0.14), rgba(10, 132, 255, 0.14)),
-    var(--glass-overlay);
+    linear-gradient(rgba(10, 132, 255, 0.14), rgba(10, 132, 255, 0.14)), var(--glass-overlay);
 }
 
 @supports not (backdrop-filter: blur(1px)) {
@@ -640,18 +646,18 @@
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: var(--radius-2xl);
   box-shadow:
-    inset  1px  1px 0 rgba(180, 200, 220, 0.25),
+    inset 1px 1px 0 rgba(180, 200, 220, 0.25),
     inset -1px -1px 0 rgba(220, 190, 200, 0.18),
-    inset 0  1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
     inset 0 -1px 0 rgba(0, 0, 0, 0.08),
-    0 6px 22px -4px rgba(0, 0, 0, 0.10);
+    0 6px 22px -4px rgba(0, 0, 0, 0.1);
 }
 .dark .tahoe-card {
   background: rgba(38, 38, 40, 0.55);
   box-shadow:
-    inset  1px  1px 0 rgba(180, 220, 255, 0.30),
+    inset 1px 1px 0 rgba(180, 220, 255, 0.3),
     inset -1px -1px 0 rgba(255, 200, 215, 0.18),
-    inset 0  1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
     inset 0 -1px 0 rgba(0, 0, 0, 0.25),
     0 6px 22px -4px rgba(0, 0, 0, 0.35);
 }
@@ -660,7 +666,7 @@
 .tahoe-active-pill {
   background: rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.14);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.40);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .dark .tahoe-active-pill {
   background: rgba(255, 255, 255, 0.12);
@@ -674,7 +680,7 @@
    shell becomes a barely-there glass plate floating on the game
    scene. Main-app right panel uses the same component but without
    data-overlay, so it stays opaque.                              */
-body[data-overlay="true"] .tracker-panel-shell {
+body[data-overlay='true'] .tracker-panel-shell {
   position: relative;
   background: var(--glass-overlay);
   backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
@@ -683,53 +689,44 @@ body[data-overlay="true"] .tracker-panel-shell {
   border: 1px solid rgba(0, 0, 0, 0.14);
   box-shadow:
     /* Chromatic rim — slightly stronger for game scene visibility */
-    inset 1px  1px 0 rgba(180, 200, 220, 0.38),
+    inset 1px 1px 0 rgba(180, 200, 220, 0.38),
     inset -1px -1px 0 rgba(220, 190, 200, 0.28),
-    inset 0  1px 0 rgba(255, 255, 255, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
     inset 0 -1px 0 rgba(0, 0, 0, 0.08),
-    /* Single soft outer shadow */
-    0 24px 64px -8px rgba(0, 0, 0, 0.20);
+    /* Single soft outer shadow */ 0 24px 64px -8px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
-.dark body[data-overlay="true"] .tracker-panel-shell,
-body[data-overlay="true"].dark .tracker-panel-shell,
-body[data-overlay="true"] .dark .tracker-panel-shell {
-  border-color: rgba(255, 255, 255, 0.10);
+.dark body[data-overlay='true'] .tracker-panel-shell,
+body[data-overlay='true'].dark .tracker-panel-shell,
+body[data-overlay='true'] .dark .tracker-panel-shell {
+  border-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
   box-shadow:
-    inset 1px  1px 0 rgba(180, 220, 255, 0.45),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
-    inset 0  1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+    inset 1px 1px 0 rgba(180, 220, 255, 0.45),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
     0 24px 64px -8px rgba(0, 0, 0, 0.45);
 }
 
 /* Top specular sheen */
-body[data-overlay="true"] .tracker-panel-shell::after {
+body[data-overlay='true'] .tracker-panel-shell::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.00) 18%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 18%);
   pointer-events: none;
   z-index: 0;
 }
-.dark body[data-overlay="true"] .tracker-panel-shell::after {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.10) 0%,
-    rgba(255, 255, 255, 0.00) 18%
-  );
+.dark body[data-overlay='true'] .tracker-panel-shell::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 18%);
 }
 
 /* Mouse-follow specular */
-body[data-overlay="true"] .tracker-panel-shell::before {
+body[data-overlay='true'] .tracker-panel-shell::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -742,30 +739,30 @@ body[data-overlay="true"] .tracker-panel-shell::before {
   pointer-events: none;
   z-index: 0;
 }
-.dark body[data-overlay="true"] .tracker-panel-shell::before {
+.dark body[data-overlay='true'] .tracker-panel-shell::before {
   background: radial-gradient(
     260px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
-    rgba(255, 255, 255, 0.10),
+    rgba(255, 255, 255, 0.1),
     transparent 65%
   );
 }
 
-body[data-overlay="true"] .tracker-panel-shell > * {
+body[data-overlay='true'] .tracker-panel-shell > * {
   position: relative;
   z-index: 1;
 }
 
-body[data-overlay="true"] .tracker-panel-tabbar {
+body[data-overlay='true'] .tracker-panel-tabbar {
   background: transparent !important;
   border-bottom-color: var(--border-separator) !important;
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  body[data-overlay="true"] .tracker-panel-shell {
+  body[data-overlay='true'] .tracker-panel-shell {
     background: var(--surface-popover);
   }
-  body[data-overlay="true"] .tracker-panel-shell::before,
-  body[data-overlay="true"] .tracker-panel-shell::after {
+  body[data-overlay='true'] .tracker-panel-shell::before,
+  body[data-overlay='true'] .tracker-panel-shell::after {
     display: none;
   }
 }
@@ -782,9 +779,9 @@ body[data-overlay="true"] .tracker-panel-tabbar {
 
 /* Outer panel container — strip bg/border/shadow/radius so the
    .tracker-panel-shell glass is what the user actually sees. */
-body[data-overlay="true"] .tracker-panel-shell aside,
-body[data-overlay="true"] .tracker-panel-shell ul[data-tracker-side],
-body[data-overlay="true"] .tracker-panel-shell > div > div > div[data-tracker-side] {
+body[data-overlay='true'] .tracker-panel-shell aside,
+body[data-overlay='true'] .tracker-panel-shell ul[data-tracker-side],
+body[data-overlay='true'] .tracker-panel-shell > div > div > div[data-tracker-side] {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -792,7 +789,7 @@ body[data-overlay="true"] .tracker-panel-shell > div > div > div[data-tracker-si
 }
 
 /* Header / footer chrome — kill their solid bg + borders. */
-body[data-overlay="true"] .tracker-panel-shell aside > div:not([data-overlay-list-area]) {
+body[data-overlay='true'] .tracker-panel-shell aside > div:not([data-overlay-list-area]) {
   background: transparent !important;
   border-color: var(--border-separator) !important;
 }
@@ -801,35 +798,38 @@ body[data-overlay="true"] .tracker-panel-shell aside > div:not([data-overlay-lis
    but dense enough that card rows stay readable against any
    game scene blurred behind. Light mode = near-white frost,
    dark mode = dark gray frost.                                   */
-body[data-overlay="true"] [data-overlay-list-area] {
+body[data-overlay='true'] [data-overlay-list-area] {
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid var(--border-separator);
 }
-.dark body[data-overlay="true"] [data-overlay-list-area],
-body[data-overlay="true"] .dark [data-overlay-list-area],
-body[data-overlay="true"].dark [data-overlay-list-area] {
+.dark body[data-overlay='true'] [data-overlay-list-area],
+body[data-overlay='true'] .dark [data-overlay-list-area],
+body[data-overlay='true'].dark [data-overlay-list-area] {
   background: rgba(42, 42, 45, 0.78);
 }
 
 /* Footer — needs a separator above to visually detach it. */
-body[data-overlay="true"] .tracker-panel-shell aside > div:last-child:not([data-overlay-list-area]) {
+body[data-overlay='true']
+  .tracker-panel-shell
+  aside
+  > div:last-child:not([data-overlay-list-area]) {
   border-top: 1px solid var(--border-separator) !important;
 }
 
 /* ── Compact density overrides (preserved from existing code) ── */
-[data-density="compact"] .settings-row {
+[data-density='compact'] .settings-row {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 
-[data-density="compact"] .kpi-card {
+[data-density='compact'] .kpi-card {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 
-[data-density="compact"] .recent-match-row {
+[data-density='compact'] .recent-match-row {
   padding-top: 0.375rem;
   padding-bottom: 0.375rem;
 }
@@ -864,8 +864,8 @@ body[data-overlay="true"] .tracker-panel-shell aside > div:last-child:not([data-
 
 .tavern-app-shell,
 .tavern-app-shell *,
-body[data-overlay="true"] .tracker-panel-shell,
-body[data-overlay="true"] .tracker-panel-shell * {
+body[data-overlay='true'] .tracker-panel-shell,
+body[data-overlay='true'] .tracker-panel-shell * {
   letter-spacing: 0;
 }
 
@@ -873,7 +873,11 @@ body[data-overlay="true"] .tracker-panel-shell * {
   color: var(--tavern-text);
   background:
     linear-gradient(90deg, rgba(240, 199, 120, 0.05) 0 1px, transparent 1px 86px),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 2px, rgba(0, 0, 0, 0.08) 2px 8px),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.025) 0 2px,
+      rgba(0, 0, 0, 0.08) 2px 8px
+    ),
     linear-gradient(180deg, #2a101d 0%, var(--tavern-bg) 48%, var(--tavern-bg-deep) 100%);
 }
 
@@ -890,8 +894,7 @@ body[data-overlay="true"] .tracker-panel-shell * {
 }
 
 .tavern-window-titlebar {
-  background:
-    linear-gradient(180deg, rgba(49, 22, 35, 0.98), rgba(29, 14, 23, 0.98));
+  background: linear-gradient(180deg, rgba(49, 22, 35, 0.98), rgba(29, 14, 23, 0.98));
   border-bottom: 1px solid rgba(154, 99, 52, 0.44);
   box-shadow:
     inset 0 -1px 0 rgba(0, 0, 0, 0.28),
@@ -900,11 +903,17 @@ body[data-overlay="true"] .tracker-panel-shell * {
 
 .tavern-titlebar-grip {
   opacity: 0.8;
-  background:
-    linear-gradient(90deg, transparent, rgba(240, 199, 120, 0.18) 24%, rgba(93, 167, 255, 0.12) 50%, rgba(240, 199, 120, 0.18) 76%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(240, 199, 120, 0.18) 24%,
+    rgba(93, 167, 255, 0.12) 50%,
+    rgba(240, 199, 120, 0.18) 76%,
+    transparent
+  );
 }
 
-:root[data-ui-style="tavern"] .tavern-app-frame {
+:root[data-ui-style='tavern'] .tavern-app-frame {
   height: 100%;
   margin: 0;
   border: 0;
@@ -912,31 +921,28 @@ body[data-overlay="true"] .tracker-panel-shell * {
   box-shadow: none;
 }
 
-:root[data-ui-style="tavern"] .tavern-window-titlebar {
-  background:
-    linear-gradient(180deg, rgba(31, 14, 24, 0.98), rgba(42, 19, 30, 0.98));
+:root[data-ui-style='tavern'] .tavern-window-titlebar {
+  background: linear-gradient(180deg, rgba(31, 14, 24, 0.98), rgba(42, 19, 30, 0.98));
   border-bottom: 0;
   box-shadow: none;
 }
 
-:root[data-ui-style="tavern"] .tavern-titlebar-grip {
+:root[data-ui-style='tavern'] .tavern-titlebar-grip {
   opacity: 0;
 }
 
 .tavern-topbar {
-  background:
-    linear-gradient(180deg, rgba(58, 27, 40, 0.98), var(--tavern-surface-strong));
+  background: linear-gradient(180deg, rgba(58, 27, 40, 0.98), var(--tavern-surface-strong));
   border-bottom: 2px solid var(--tavern-border-muted);
   box-shadow:
     inset 0 1px 0 rgba(255, 231, 167, 0.12),
     0 10px 24px rgba(0, 0, 0, 0.25);
 }
 
-:root[data-ui-style="tavern"] .tavern-topbar {
-  background:
-    linear-gradient(180deg, rgba(42, 19, 30, 0.98), rgba(28, 13, 22, 0.98));
+:root[data-ui-style='tavern'] .tavern-topbar {
+  background: linear-gradient(180deg, rgba(42, 19, 30, 0.98), rgba(28, 13, 22, 0.98));
   border-top: 1px solid rgba(240, 199, 120, 0.08);
-  border-bottom: 1px solid rgba(154, 99, 52, 0.30);
+  border-bottom: 1px solid rgba(154, 99, 52, 0.3);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
 }
 
@@ -947,8 +953,7 @@ body[data-overlay="true"] .tracker-panel-shell * {
   color: var(--tavern-gold-soft);
   border: 2px solid var(--tavern-border-hi);
   border-radius: 12px;
-  background:
-    linear-gradient(180deg, rgba(67, 34, 43, 0.98), rgba(35, 15, 23, 0.98));
+  background: linear-gradient(180deg, rgba(67, 34, 43, 0.98), rgba(35, 15, 23, 0.98));
   box-shadow:
     inset 0 1px 0 rgba(255, 231, 167, 0.22),
     0 6px 16px rgba(0, 0, 0, 0.28);
@@ -958,7 +963,9 @@ body[data-overlay="true"] .tracker-panel-shell * {
   color: var(--tavern-bg);
   border-radius: 8px;
   background: linear-gradient(180deg, var(--tavern-gold-soft), var(--tavern-border-hi));
-  box-shadow: 0 0 0 1px rgba(255, 231, 167, 0.36), inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(255, 231, 167, 0.36),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
 }
 
 .tavern-main-tabs {
@@ -980,7 +987,11 @@ body[data-overlay="true"] .tracker-panel-shell * {
   border-radius: 8px;
   background: rgba(15, 10, 16, 0.38);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
 }
 
 .tavern-nav-tab:hover {
@@ -989,13 +1000,13 @@ body[data-overlay="true"] .tracker-panel-shell * {
   background: rgba(55, 31, 39, 0.82);
 }
 
-.tavern-nav-tab[data-active="true"] {
+.tavern-nav-tab[data-active='true'] {
   color: var(--tavern-gold-soft);
   border-color: var(--tavern-border-hi);
   background: linear-gradient(180deg, rgba(86, 39, 50, 0.96), rgba(42, 18, 29, 0.96));
   box-shadow:
-    inset 0 1px 0 rgba(255, 231, 167, 0.20),
-    0 0 0 1px rgba(240, 199, 120, 0.10),
+    inset 0 1px 0 rgba(255, 231, 167, 0.2),
+    0 0 0 1px rgba(240, 199, 120, 0.1),
     0 8px 18px rgba(0, 0, 0, 0.24);
 }
 
@@ -1021,11 +1032,14 @@ body[data-overlay="true"] .tracker-panel-shell * {
 
 .tavern-settings-button {
   color: var(--tavern-text-dim);
-  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  transition:
+    color 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
 }
 
 .tavern-settings-button:hover,
-.tavern-settings-button[data-active="true"] {
+.tavern-settings-button[data-active='true'] {
   color: var(--tavern-gold-soft);
   border-color: var(--tavern-border-hi);
   background: rgba(55, 31, 39, 0.92);
@@ -1035,24 +1049,21 @@ body[data-overlay="true"] .tracker-panel-shell * {
   color: var(--tavern-text);
   border: 1px solid rgba(208, 139, 72, 0.42);
   border-radius: 8px;
-  background:
-    linear-gradient(180deg, rgba(118, 80, 168, 0.92), rgba(38, 27, 70, 0.96));
+  background: linear-gradient(180deg, rgba(118, 80, 168, 0.92), rgba(38, 27, 70, 0.96));
 }
 
 .tavern-main-surface {
   background:
-    linear-gradient(180deg, rgba(14, 9, 14, 0.42), rgba(13, 9, 15, 0.82)),
-    var(--tavern-bg);
+    linear-gradient(180deg, rgba(14, 9, 14, 0.42), rgba(13, 9, 15, 0.82)), var(--tavern-bg);
 }
 
 .tavern-app-shell .tahoe-card {
   color: var(--tavern-text);
   border: 1px solid var(--tavern-border-muted);
   border-radius: 12px;
-  background:
-    linear-gradient(180deg, rgba(42, 27, 36, 0.96), rgba(21, 13, 20, 0.96));
+  background: linear-gradient(180deg, rgba(42, 27, 36, 0.96), rgba(21, 13, 20, 0.96));
   box-shadow:
-    inset 0 1px 0 rgba(255, 231, 167, 0.10),
+    inset 0 1px 0 rgba(255, 231, 167, 0.1),
     0 18px 34px rgba(0, 0, 0, 0.24);
 }
 
@@ -1064,7 +1075,7 @@ body[data-overlay="true"] .tracker-panel-shell * {
 }
 
 .tavern-hero-card::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   background:
@@ -1086,9 +1097,8 @@ body[data-overlay="true"] .tracker-panel-shell * {
   border-color: var(--tavern-border-hi);
 }
 
-body[data-overlay="true"] .tracker-panel-shell {
-  background:
-    linear-gradient(180deg, rgba(38, 24, 34, 0.90), rgba(20, 13, 22, 0.90)) !important;
+body[data-overlay='true'] .tracker-panel-shell {
+  background: linear-gradient(180deg, rgba(38, 24, 34, 0.9), rgba(20, 13, 22, 0.9)) !important;
   backdrop-filter: blur(24px) saturate(145%) brightness(94%);
   -webkit-backdrop-filter: blur(24px) saturate(145%) brightness(94%);
   border: 3px solid var(--tavern-border) !important;
@@ -1099,24 +1109,24 @@ body[data-overlay="true"] .tracker-panel-shell {
     0 20px 54px rgba(0, 0, 0, 0.45) !important;
 }
 
-body[data-overlay="true"] .tracker-panel-shell::before {
+body[data-overlay='true'] .tracker-panel-shell::before {
   display: none;
 }
 
-body[data-overlay="true"] .tracker-panel-shell::after {
+body[data-overlay='true'] .tracker-panel-shell::after {
   background:
-    linear-gradient(180deg, rgba(255, 231, 167, 0.14), rgba(255, 231, 167, 0.00) 24%),
+    linear-gradient(180deg, rgba(255, 231, 167, 0.14), rgba(255, 231, 167, 0) 24%),
     linear-gradient(90deg, rgba(93, 167, 255, 0.08), transparent 42%) !important;
 }
 
-body[data-overlay="true"] .tracker-panel-tabbar {
+body[data-overlay='true'] .tracker-panel-tabbar {
   gap: 6px !important;
   padding: 9px 10px 7px !important;
   background: rgba(16, 10, 17, 0.64) !important;
   border-bottom: 1px solid rgba(154, 99, 52, 0.58) !important;
 }
 
-body[data-overlay="true"] .tracker-tab-pill {
+body[data-overlay='true'] .tracker-tab-pill {
   min-height: 32px;
   flex: 1 1 0;
   justify-content: center;
@@ -1126,122 +1136,127 @@ body[data-overlay="true"] .tracker-tab-pill {
   background: rgba(16, 10, 17, 0.62) !important;
 }
 
-body[data-overlay="true"] .tracker-tab-pill:hover {
+body[data-overlay='true'] .tracker-tab-pill:hover {
   color: var(--tavern-text) !important;
   border-color: rgba(208, 139, 72, 0.68);
   background: rgba(47, 28, 37, 0.88) !important;
 }
 
-body[data-overlay="true"] .tracker-tab-pill[data-active="true"] {
+body[data-overlay='true'] .tracker-tab-pill[data-active='true'] {
   color: var(--tavern-gold-soft) !important;
   border-color: var(--tavern-border-hi);
   background: linear-gradient(180deg, rgba(91, 39, 52, 0.96), rgba(37, 17, 27, 0.96)) !important;
   box-shadow: inset 0 1px 0 rgba(255, 231, 167, 0.18);
 }
 
-body[data-overlay="true"] [data-testid="tracker-tab-effects-badge"],
-body[data-overlay="true"] [data-testid="tracker-tab-graveyard-badge"] {
+body[data-overlay='true'] [data-testid='tracker-tab-effects-badge'],
+body[data-overlay='true'] [data-testid='tracker-tab-graveyard-badge'] {
   color: var(--tavern-bg) !important;
   background: var(--tavern-gold) !important;
 }
 
-body[data-overlay="true"] .tavern-overlay-panel-inner {
+body[data-overlay='true'] .tavern-overlay-panel-inner {
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
 }
 
-body[data-overlay="true"] .tavern-overlay-header {
+body[data-overlay='true'] .tavern-overlay-header {
   padding: 14px 16px 12px !important;
-  background:
-    linear-gradient(180deg, rgba(42, 23, 34, 0.78), rgba(20, 13, 22, 0.38)) !important;
+  background: linear-gradient(180deg, rgba(42, 23, 34, 0.78), rgba(20, 13, 22, 0.38)) !important;
   border-bottom: 1px solid rgba(154, 99, 52, 0.42) !important;
 }
 
-body[data-overlay="true"] [data-overlay-list-area] {
+body[data-overlay='true'] [data-overlay-list-area] {
   padding: 10px !important;
   background: rgba(15, 10, 17, 0.78) !important;
   border-top: 1px solid rgba(154, 99, 52, 0.34) !important;
 }
 
-body[data-overlay="true"] .tavern-overlay-footer {
+body[data-overlay='true'] .tavern-overlay-footer {
   background: rgba(15, 10, 17, 0.64) !important;
   border-top: 1px solid rgba(154, 99, 52, 0.42) !important;
 }
 
-body[data-overlay="true"] .tracker-panel-shell h3 {
+body[data-overlay='true'] .tracker-panel-shell h3 {
   color: var(--tavern-gold) !important;
 }
 
-body[data-overlay="true"] .tavern-board-card {
+body[data-overlay='true'] .tavern-board-card {
   border: 1px solid var(--tavern-border-hi) !important;
   border-radius: 10px !important;
   color: var(--tavern-purple) !important;
-  background:
-    linear-gradient(180deg, rgba(59, 36, 54, 0.90), rgba(21, 13, 21, 0.88)) !important;
+  background: linear-gradient(180deg, rgba(59, 36, 54, 0.9), rgba(21, 13, 21, 0.88)) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 231, 167, 0.12),
     0 8px 18px rgba(0, 0, 0, 0.28) !important;
 }
 
-body[data-overlay="true"] .tavern-board-card[data-tone="success"] {
+body[data-overlay='true'] .tavern-board-card[data-tone='success'] {
   color: var(--tavern-success) !important;
   border-color: rgba(98, 214, 110, 0.68) !important;
   background: linear-gradient(180deg, rgba(38, 75, 44, 0.56), rgba(17, 26, 20, 0.86)) !important;
 }
 
-body[data-overlay="true"] .tavern-board-card[data-tone="danger"] {
+body[data-overlay='true'] .tavern-board-card[data-tone='danger'] {
   color: var(--tavern-danger) !important;
   border-color: rgba(255, 101, 94, 0.72) !important;
   background: linear-gradient(180deg, rgba(92, 34, 37, 0.62), rgba(26, 14, 18, 0.88)) !important;
 }
 
-body[data-overlay="true"] .tavern-face-chip {
+body[data-overlay='true'] .tavern-face-chip {
   border-color: currentColor !important;
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
-body[data-overlay="true"] .tavern-card-row {
+body[data-overlay='true'] .tavern-card-row {
   min-height: 38px;
   margin-bottom: 6px;
   color: var(--tavern-text);
   border: 1px solid var(--tavern-row-border) !important;
   border-radius: 7px !important;
-  background:
-    linear-gradient(90deg, rgba(12, 8, 13, 0.88), var(--tavern-row) 44%, rgba(12, 8, 13, 0.18)) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(12, 8, 13, 0.88),
+    var(--tavern-row) 44%,
+    rgba(12, 8, 13, 0.18)
+  ) !important;
   box-shadow: inset 0 1px 0 rgba(255, 231, 167, 0.06);
 }
 
-body[data-overlay="true"] .tavern-card-row:hover {
+body[data-overlay='true'] .tavern-card-row:hover {
   border-color: var(--tavern-border-hi) !important;
-  background:
-    linear-gradient(90deg, rgba(33, 21, 29, 0.96), var(--tavern-row-hover) 44%, rgba(33, 21, 29, 0.20)) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(33, 21, 29, 0.96),
+    var(--tavern-row-hover) 44%,
+    rgba(33, 21, 29, 0.2)
+  ) !important;
   box-shadow:
     inset 3px 0 0 var(--tavern-border-hi),
-    inset 0 1px 0 rgba(255, 231, 167, 0.10) !important;
+    inset 0 1px 0 rgba(255, 231, 167, 0.1) !important;
 }
 
-body[data-overlay="true"] .tavern-card-row[data-row-state="exiting"] {
-  border-color: rgba(208, 139, 72, 0.80) !important;
+body[data-overlay='true'] .tavern-card-row[data-row-state='exiting'] {
+  border-color: rgba(208, 139, 72, 0.8) !important;
 }
 
-body[data-overlay="true"] .tavern-mana-gem {
+body[data-overlay='true'] .tavern-mana-gem {
   color: var(--tavern-text) !important;
-  border: 1px solid rgba(240, 199, 120, 0.70) !important;
+  border: 1px solid rgba(240, 199, 120, 0.7) !important;
   border-radius: 6px !important;
-  background:
-    linear-gradient(180deg, rgba(72, 148, 225, 0.96), var(--tavern-blue-deep)) !important;
+  background: linear-gradient(180deg, rgba(72, 148, 225, 0.96), var(--tavern-blue-deep)) !important;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.24),
     0 2px 6px rgba(0, 0, 0, 0.28);
 }
 
-body[data-overlay="true"] .tavern-mana-gem-opponent {
+body[data-overlay='true'] .tavern-mana-gem-opponent {
   background: linear-gradient(180deg, rgba(154, 55, 58, 0.96), rgba(72, 23, 31, 0.96)) !important;
 }
 
-body[data-overlay="true"] .tavern-row-count {
+body[data-overlay='true'] .tavern-row-count {
   min-width: 28px;
   padding: 2px 6px;
   color: var(--tavern-gold-soft) !important;
@@ -1251,7 +1266,7 @@ body[data-overlay="true"] .tavern-row-count {
   text-align: center;
 }
 
-body[data-overlay="true"] .tavern-empty-row {
+body[data-overlay='true'] .tavern-empty-row {
   color: var(--tavern-text-dim) !important;
   border-color: rgba(154, 99, 52, 0.42) !important;
   background: rgba(18, 11, 17, 0.58) !important;
@@ -1317,20 +1332,20 @@ body[data-overlay="true"] .tavern-empty-row {
 /* macOS skin for the same post-refresh layout. The class names remain
    tavern-* because they describe layout roles now; data-ui-style controls
    only visual treatment. */
-:root[data-ui-style="macos"] .tavern-app-shell {
+:root[data-ui-style='macos'] .tavern-app-shell {
   color: var(--text);
   background:
     linear-gradient(135deg, rgba(0, 122, 255, 0.05), transparent 34%),
     linear-gradient(315deg, rgba(175, 82, 222, 0.05), transparent 36%);
 }
 
-:root[data-ui-style="macos"].dark .tavern-app-shell {
+:root[data-ui-style='macos'].dark .tavern-app-shell {
   background:
     linear-gradient(135deg, rgba(10, 132, 255, 0.08), transparent 34%),
     linear-gradient(315deg, rgba(191, 90, 242, 0.06), transparent 36%);
 }
 
-:root[data-ui-style="macos"] .tavern-app-frame {
+:root[data-ui-style='macos'] .tavern-app-frame {
   border: 1px solid var(--border-hairline);
   border-top: none;
   border-radius: 0 0 var(--radius-3xl) var(--radius-3xl);
@@ -1340,11 +1355,11 @@ body[data-overlay="true"] .tavern-empty-row {
   -webkit-backdrop-filter: blur(42px) saturate(180%);
 }
 
-:root[data-ui-style="macos"].dark .tavern-app-frame {
+:root[data-ui-style='macos'].dark .tavern-app-frame {
   background: rgba(28, 28, 30, 0.28);
 }
 
-:root[data-ui-style="macos"] .tavern-window-titlebar {
+:root[data-ui-style='macos'] .tavern-window-titlebar {
   background: rgba(250, 250, 252, 0.38);
   border-bottom: 1px solid var(--border-separator);
   box-shadow:
@@ -1354,20 +1369,26 @@ body[data-overlay="true"] .tavern-empty-row {
   -webkit-backdrop-filter: blur(30px) saturate(180%);
 }
 
-:root[data-ui-style="macos"].dark .tavern-window-titlebar {
+:root[data-ui-style='macos'].dark .tavern-window-titlebar {
   background: rgba(28, 28, 30, 0.34);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
-:root[data-ui-style="macos"] .tavern-titlebar-grip {
+:root[data-ui-style='macos'] .tavern-titlebar-grip {
   opacity: 0.75;
-  background:
-    linear-gradient(90deg, transparent, rgba(0, 122, 255, 0.18) 28%, rgba(175, 82, 222, 0.14) 50%, rgba(0, 122, 255, 0.18) 72%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 122, 255, 0.18) 28%,
+    rgba(175, 82, 222, 0.14) 50%,
+    rgba(0, 122, 255, 0.18) 72%,
+    transparent
+  );
 }
 
-:root[data-ui-style="macos"] .tavern-topbar {
+:root[data-ui-style='macos'] .tavern-topbar {
   background: rgba(250, 250, 252, 0.32);
   border-bottom: 1px solid var(--border-separator);
   box-shadow:
@@ -1377,14 +1398,14 @@ body[data-overlay="true"] .tavern-empty-row {
   -webkit-backdrop-filter: blur(30px) saturate(180%);
 }
 
-:root[data-ui-style="macos"].dark .tavern-topbar {
-  background: rgba(28, 28, 30, 0.30);
+:root[data-ui-style='macos'].dark .tavern-topbar {
+  background: rgba(28, 28, 30, 0.3);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 8px 20px rgba(0, 0, 0, 0.28);
 }
 
-:root[data-ui-style="macos"] .tavern-brand-plaque {
+:root[data-ui-style='macos'] .tavern-brand-plaque {
   color: var(--text);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-xl);
@@ -1397,18 +1418,18 @@ body[data-overlay="true"] .tavern-empty-row {
   -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
-:root[data-ui-style="macos"].dark .tavern-brand-plaque {
+:root[data-ui-style='macos'].dark .tavern-brand-plaque {
   background: rgba(38, 38, 40, 0.36);
 }
 
-:root[data-ui-style="macos"] .tavern-brand-icon {
+:root[data-ui-style='macos'] .tavern-brand-icon {
   color: var(--text-on-accent);
   border-radius: var(--radius-lg);
   background: var(--accent);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
-:root[data-ui-style="macos"] .tavern-nav-tab {
+:root[data-ui-style='macos'] .tavern-nav-tab {
   color: var(--text-dim);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
@@ -1416,13 +1437,13 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="macos"] .tavern-nav-tab:hover {
+:root[data-ui-style='macos'] .tavern-nav-tab:hover {
   color: var(--text);
   border-color: var(--border-hairline);
   background: var(--overlay-hover);
 }
 
-:root[data-ui-style="macos"] .tavern-nav-tab[data-active="true"] {
+:root[data-ui-style='macos'] .tavern-nav-tab[data-active='true'] {
   color: var(--text);
   border-color: var(--border-strong);
   background: var(--overlay-surface);
@@ -1431,56 +1452,54 @@ body[data-overlay="true"] .tavern-empty-row {
     var(--shadow-raised);
 }
 
-:root[data-ui-style="macos"].dark .tavern-nav-tab[data-active="true"] {
+:root[data-ui-style='macos'].dark .tavern-nav-tab[data-active='true'] {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
     var(--shadow-raised);
 }
 
-:root[data-ui-style="macos"] .tavern-status-pill,
-:root[data-ui-style="macos"] .tavern-player-pill,
-:root[data-ui-style="macos"] .tavern-settings-button {
+:root[data-ui-style='macos'] .tavern-status-pill,
+:root[data-ui-style='macos'] .tavern-player-pill,
+:root[data-ui-style='macos'] .tavern-settings-button {
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.30);
+  background: rgba(255, 255, 255, 0.3);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
-:root[data-ui-style="macos"].dark .tavern-status-pill,
-:root[data-ui-style="macos"].dark .tavern-player-pill,
-:root[data-ui-style="macos"].dark .tavern-settings-button {
+:root[data-ui-style='macos'].dark .tavern-status-pill,
+:root[data-ui-style='macos'].dark .tavern-player-pill,
+:root[data-ui-style='macos'].dark .tavern-settings-button {
   background: rgba(255, 255, 255, 0.07);
 }
 
-:root[data-ui-style="macos"] .tavern-settings-button {
+:root[data-ui-style='macos'] .tavern-settings-button {
   color: var(--text-dim);
 }
 
-:root[data-ui-style="macos"] .tavern-settings-button:hover,
-:root[data-ui-style="macos"] .tavern-settings-button[data-active="true"] {
+:root[data-ui-style='macos'] .tavern-settings-button:hover,
+:root[data-ui-style='macos'] .tavern-settings-button[data-active='true'] {
   color: var(--accent);
   border-color: var(--border-strong);
   background: var(--overlay-hover);
 }
 
-:root[data-ui-style="macos"] .tavern-avatar-medallion {
+:root[data-ui-style='macos'] .tavern-avatar-medallion {
   color: var(--text-on-accent);
   border: none;
   border-radius: var(--radius-lg);
   background: var(--accent);
 }
 
-:root[data-ui-style="macos"] .tavern-main-surface {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+:root[data-ui-style='macos'] .tavern-main-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
 }
 
-:root[data-ui-style="macos"].dark .tavern-main-surface {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.10));
+:root[data-ui-style='macos'].dark .tavern-main-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.1));
 }
 
-:root[data-ui-style="macos"] .tavern-app-shell .tahoe-card {
+:root[data-ui-style='macos'] .tavern-app-shell .tahoe-card {
   color: var(--text);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-2xl);
@@ -1494,31 +1513,31 @@ body[data-overlay="true"] .tavern-empty-row {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
-:root[data-ui-style="macos"].dark .tavern-app-shell .tahoe-card {
+:root[data-ui-style='macos'].dark .tavern-app-shell .tahoe-card {
   background: rgba(38, 38, 40, 0.38);
   box-shadow:
-    inset 1px 1px 0 rgba(180, 220, 255, 0.30),
+    inset 1px 1px 0 rgba(180, 220, 255, 0.3),
     inset -1px -1px 0 rgba(255, 200, 215, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     var(--shadow-elevated);
 }
 
-:root[data-ui-style="macos"] .tavern-hero-card {
+:root[data-ui-style='macos'] .tavern-hero-card {
   border-width: 1px;
   border-color: var(--border-hairline);
 }
 
-:root[data-ui-style="macos"] .tavern-hero-card::before {
+:root[data-ui-style='macos'] .tavern-hero-card::before {
   background:
     linear-gradient(90deg, var(--accent-translucent), transparent 42%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 34%);
 }
 
-:root[data-ui-style="macos"] .tavern-stat-card:hover {
+:root[data-ui-style='macos'] .tavern-stat-card:hover {
   border-color: var(--border-strong);
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-shell {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tracker-panel-shell {
   background: var(--glass-overlay) !important;
   backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(104%);
@@ -1527,36 +1546,36 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow:
     inset 1px 1px 0 rgba(180, 200, 220, 0.38),
     inset -1px -1px 0 rgba(220, 190, 200, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.50),
-    0 24px 64px -8px rgba(0, 0, 0, 0.20) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 24px 64px -8px rgba(0, 0, 0, 0.2) !important;
 }
 
-:root[data-ui-style="macos"].dark body[data-overlay="true"] .tracker-panel-shell {
+:root[data-ui-style='macos'].dark body[data-overlay='true'] .tracker-panel-shell {
   backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(220%) brightness(96%);
   box-shadow:
     inset 1px 1px 0 rgba(180, 220, 255, 0.45),
-    inset -1px -1px 0 rgba(255, 200, 215, 0.30),
+    inset -1px -1px 0 rgba(255, 200, 215, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
     0 24px 64px -8px rgba(0, 0, 0, 0.45) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-shell::after {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tracker-panel-shell::after {
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.00) 18%
+    rgba(255, 255, 255, 0) 18%
   ) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-tabbar {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tracker-panel-tabbar {
   gap: 4px !important;
   padding: 8px 8px 6px !important;
   background: transparent !important;
   border-bottom: 1px solid var(--border-separator) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-tab-pill {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tracker-tab-pill {
   color: var(--text-mute) !important;
   border: 1px solid transparent;
   border-radius: var(--radius-md) !important;
@@ -1564,57 +1583,57 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-tab-pill:hover {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tracker-tab-pill:hover {
   color: var(--text) !important;
   border-color: var(--border-hairline);
   background: var(--overlay-hover) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-tab-pill[data-active="true"] {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tracker-tab-pill[data-active='true'] {
   color: var(--text-on-accent) !important;
   border-color: transparent;
   background: var(--accent) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] [data-testid="tracker-tab-effects-badge"],
-:root[data-ui-style="macos"] body[data-overlay="true"] [data-testid="tracker-tab-graveyard-badge"] {
+:root[data-ui-style='macos'] body[data-overlay='true'] [data-testid='tracker-tab-effects-badge'],
+:root[data-ui-style='macos'] body[data-overlay='true'] [data-testid='tracker-tab-graveyard-badge'] {
   color: var(--accent) !important;
   background: var(--surface-content) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-overlay-panel-inner {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-overlay-panel-inner {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-overlay-header {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-overlay-header {
   background: transparent !important;
   border-bottom: 1px solid var(--border-separator) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] [data-overlay-list-area] {
+:root[data-ui-style='macos'] body[data-overlay='true'] [data-overlay-list-area] {
   background: rgba(255, 255, 255, 0.82) !important;
   border-top: 1px solid var(--border-separator) !important;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
-:root[data-ui-style="macos"].dark body[data-overlay="true"] [data-overlay-list-area] {
+:root[data-ui-style='macos'].dark body[data-overlay='true'] [data-overlay-list-area] {
   background: rgba(42, 42, 45, 0.78) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-overlay-footer {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-overlay-footer {
   background: transparent !important;
   border-top: 1px solid var(--border-separator) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tracker-panel-shell h3 {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tracker-panel-shell h3 {
   color: var(--text-mute) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-board-card {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-board-card {
   color: var(--accent) !important;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent) !important;
   border-radius: var(--radius-md) !important;
@@ -1622,44 +1641,52 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: var(--shadow-raised) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-board-card[data-tone="success"] {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-board-card[data-tone='success'] {
   color: var(--green) !important;
   border-color: color-mix(in srgb, var(--green) 38%, transparent) !important;
   background: color-mix(in srgb, var(--green) 16%, transparent) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-board-card[data-tone="danger"] {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-board-card[data-tone='danger'] {
   color: var(--red) !important;
   border-color: color-mix(in srgb, var(--red) 38%, transparent) !important;
   background: color-mix(in srgb, var(--red) 16%, transparent) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-face-chip {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-face-chip {
   background: color-mix(in srgb, currentColor 10%, transparent) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-card-row {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-card-row {
   min-height: 36px;
   color: var(--text);
   border: 1px solid var(--border-separator) !important;
   border-radius: var(--radius-sm) !important;
-  background:
-    linear-gradient(90deg, var(--overlay-surface), var(--overlay-surface) 46%, transparent) !important;
+  background: linear-gradient(
+    90deg,
+    var(--overlay-surface),
+    var(--overlay-surface) 46%,
+    transparent
+  ) !important;
   box-shadow: none;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-card-row:hover {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-card-row:hover {
   border-color: var(--border-strong) !important;
-  background:
-    linear-gradient(90deg, var(--overlay-hover), var(--overlay-hover) 46%, transparent) !important;
+  background: linear-gradient(
+    90deg,
+    var(--overlay-hover),
+    var(--overlay-hover) 46%,
+    transparent
+  ) !important;
   box-shadow: inset 3px 0 0 var(--accent) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-card-row[data-row-state="exiting"] {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-card-row[data-row-state='exiting'] {
   border-color: var(--accent) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-mana-gem {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-mana-gem {
   color: var(--text-on-accent) !important;
   border: none !important;
   border-radius: var(--radius-sm) !important;
@@ -1667,18 +1694,18 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: var(--shadow-raised);
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-mana-gem-opponent {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-mana-gem-opponent {
   background: var(--red) !important;
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-row-count {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-row-count {
   color: var(--text) !important;
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-sm);
   background: var(--overlay-surface);
 }
 
-:root[data-ui-style="macos"] body[data-overlay="true"] .tavern-empty-row {
+:root[data-ui-style='macos'] body[data-overlay='true'] .tavern-empty-row {
   color: var(--text-dim) !important;
   border-color: var(--border-hairline) !important;
   background: var(--overlay-surface) !important;
@@ -1687,28 +1714,28 @@ body[data-overlay="true"] .tavern-empty-row {
 /* WeChat dark skin for the same top-navigation layout. This is a visual
    treatment only: dimensions, spacing, and component positions remain the
    same as the current app shell. */
-:root[data-ui-style="wechat"] {
-  --wechat-bg: #1B1B1B;
+:root[data-ui-style='wechat'] {
+  --wechat-bg: #1b1b1b;
   --wechat-frame: #202020;
   --wechat-titlebar: #242424;
-  --wechat-topbar: #2A2A2A;
-  --wechat-main: #1E1E1E;
-  --wechat-panel: #2F2F2F;
+  --wechat-topbar: #2a2a2a;
+  --wechat-main: #1e1e1e;
+  --wechat-panel: #2f2f2f;
   --wechat-panel-soft: #343434;
   --wechat-panel-muted: #282828;
   --wechat-line: rgba(255, 255, 255, 0.08);
   --wechat-line-strong: rgba(255, 255, 255, 0.14);
-  --wechat-text: #E8E8E8;
-  --wechat-text-dim: #B8B8B8;
-  --wechat-text-mute: #8C8C8C;
+  --wechat-text: #e8e8e8;
+  --wechat-text-dim: #b8b8b8;
+  --wechat-text-mute: #8c8c8c;
   --wechat-text-faint: #676767;
-  --wechat-green: #12B76A;
-  --wechat-green-soft: #39D98A;
+  --wechat-green: #12b76a;
+  --wechat-green-soft: #39d98a;
   --wechat-green-dim: rgba(18, 183, 106, 0.16);
-  --wechat-blue: #4DA3FF;
-  --wechat-amber: #E7B65B;
-  --wechat-red: #FF5A5F;
-  --wechat-purple: #8B7CF6;
+  --wechat-blue: #4da3ff;
+  --wechat-amber: #e7b65b;
+  --wechat-red: #ff5a5f;
+  --wechat-purple: #8b7cf6;
 
   --surface-window: var(--wechat-bg);
   --surface-sidebar: var(--wechat-frame);
@@ -1724,7 +1751,7 @@ body[data-overlay="true"] .tavern-empty-row {
   --text-secondary: var(--wechat-text-dim);
   --text-tertiary: var(--wechat-text-mute);
   --text-quaternary: var(--wechat-text-faint);
-  --text-on-accent: #061E11;
+  --text-on-accent: #061e11;
   --green: var(--wechat-green);
   --red: var(--wechat-red);
   --amber: var(--wechat-amber);
@@ -1741,16 +1768,16 @@ body[data-overlay="true"] .tavern-empty-row {
   --overlay-pressed: rgba(255, 255, 255, 0.12);
   --overlay-elevated: rgba(255, 255, 255, 0.07);
   --overlay-input: rgba(255, 255, 255, 0.05);
-  --glass-overlay: rgba(32, 32, 32, 0.90);
+  --glass-overlay: rgba(32, 32, 32, 0.9);
   color-scheme: dark;
 }
 
-:root[data-ui-style="wechat"] .tavern-app-shell {
+:root[data-ui-style='wechat'] .tavern-app-shell {
   color: var(--wechat-text);
   background: var(--wechat-bg);
 }
 
-:root[data-ui-style="wechat"] .tavern-app-frame {
+:root[data-ui-style='wechat'] .tavern-app-frame {
   border: 1px solid var(--wechat-line-strong);
   border-top: none;
   border-radius: 0 0 10px 10px;
@@ -1758,25 +1785,31 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.48);
 }
 
-:root[data-ui-style="wechat"] .tavern-window-titlebar {
+:root[data-ui-style='wechat'] .tavern-window-titlebar {
   background: var(--wechat-titlebar);
   border-bottom: 1px solid var(--wechat-line);
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-titlebar-grip {
+:root[data-ui-style='wechat'] .tavern-titlebar-grip {
   opacity: 0.45;
-  background:
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08) 28%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0.08) 72%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08) 28%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.08) 72%,
+    transparent
+  );
 }
 
-:root[data-ui-style="wechat"] .tavern-topbar {
+:root[data-ui-style='wechat'] .tavern-topbar {
   background: var(--wechat-topbar);
   border-bottom: 1px solid var(--wechat-line);
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-brand-plaque {
+:root[data-ui-style='wechat'] .tavern-brand-plaque {
   color: var(--wechat-text);
   border: 1px solid var(--wechat-line);
   border-radius: 8px;
@@ -1784,8 +1817,8 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-brand-icon,
-:root[data-ui-style="wechat"] .tavern-avatar-medallion {
+:root[data-ui-style='wechat'] .tavern-brand-icon,
+:root[data-ui-style='wechat'] .tavern-avatar-medallion {
   color: var(--wechat-bg);
   border: none;
   border-radius: 8px;
@@ -1793,7 +1826,7 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-nav-tab {
+:root[data-ui-style='wechat'] .tavern-nav-tab {
   color: var(--wechat-text-dim);
   border-color: transparent;
   border-radius: 8px;
@@ -1801,22 +1834,22 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-nav-tab:hover {
+:root[data-ui-style='wechat'] .tavern-nav-tab:hover {
   color: var(--wechat-text);
   border-color: var(--wechat-line);
   background: var(--wechat-panel-soft);
 }
 
-:root[data-ui-style="wechat"] .tavern-nav-tab[data-active="true"] {
+:root[data-ui-style='wechat'] .tavern-nav-tab[data-active='true'] {
   color: var(--wechat-bg);
   border-color: var(--wechat-green);
   background: var(--wechat-green);
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-status-pill,
-:root[data-ui-style="wechat"] .tavern-player-pill,
-:root[data-ui-style="wechat"] .tavern-settings-button {
+:root[data-ui-style='wechat'] .tavern-status-pill,
+:root[data-ui-style='wechat'] .tavern-player-pill,
+:root[data-ui-style='wechat'] .tavern-settings-button {
   color: var(--wechat-text-dim);
   border: 1px solid var(--wechat-line);
   border-radius: 8px;
@@ -1824,64 +1857,64 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-settings-button:hover,
-:root[data-ui-style="wechat"] .tavern-settings-button[data-active="true"] {
+:root[data-ui-style='wechat'] .tavern-settings-button:hover,
+:root[data-ui-style='wechat'] .tavern-settings-button[data-active='true'] {
   color: var(--wechat-green-soft);
-  border-color: rgba(18, 183, 106, 0.40);
+  border-color: rgba(18, 183, 106, 0.4);
   background: var(--wechat-panel-soft);
 }
 
-:root[data-ui-style="wechat"] .tavern-main-surface {
+:root[data-ui-style='wechat'] .tavern-main-surface {
   background: var(--wechat-main);
 }
 
-:root[data-ui-style="wechat"] .tavern-app-shell .tahoe-card {
+:root[data-ui-style='wechat'] .tavern-app-shell .tahoe-card {
   color: var(--wechat-text);
   border: 1px solid var(--wechat-line);
   border-radius: 8px;
   background: var(--wechat-panel);
-  box-shadow: 0 10px 28px -18px rgba(0, 0, 0, 0.70);
+  box-shadow: 0 10px 28px -18px rgba(0, 0, 0, 0.7);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
-:root[data-ui-style="wechat"] .tavern-hero-card {
+:root[data-ui-style='wechat'] .tavern-hero-card {
   border-color: var(--wechat-line-strong);
 }
 
-:root[data-ui-style="wechat"] .tavern-hero-card::before {
+:root[data-ui-style='wechat'] .tavern-hero-card::before {
   background:
     linear-gradient(90deg, var(--wechat-green-dim), transparent 38%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 42%);
 }
 
-:root[data-ui-style="wechat"] .tavern-stat-card:hover {
+:root[data-ui-style='wechat'] .tavern-stat-card:hover {
   border-color: rgba(18, 183, 106, 0.42);
 }
 
-:root[data-ui-style="wechat"] .tahoe-active-pill {
+:root[data-ui-style='wechat'] .tahoe-active-pill {
   color: var(--wechat-bg);
   border-color: var(--wechat-green);
   background: var(--wechat-green);
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] .settings-row .bg-accent,
-:root[data-ui-style="wechat"] .settings-row button.bg-accent {
+:root[data-ui-style='wechat'] .settings-row .bg-accent,
+:root[data-ui-style='wechat'] .settings-row button.bg-accent {
   color: var(--wechat-bg);
   background: var(--wechat-green);
 }
 
-:root[data-ui-style="wechat"] .settings-row .text-on-accent,
-:root[data-ui-style="wechat"] .settings-row .text-text-on-accent {
+:root[data-ui-style='wechat'] .settings-row .text-on-accent,
+:root[data-ui-style='wechat'] .settings-row .text-text-on-accent {
   color: var(--wechat-bg);
 }
 
-:root[data-ui-style="wechat"] .settings-row button:not(.bg-accent):hover {
+:root[data-ui-style='wechat'] .settings-row button:not(.bg-accent):hover {
   background: var(--wechat-panel-soft);
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tracker-panel-shell {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tracker-panel-shell {
   background: rgba(32, 32, 32, 0.92) !important;
   backdrop-filter: blur(18px) saturate(120%);
   -webkit-backdrop-filter: blur(18px) saturate(120%);
@@ -1890,16 +1923,20 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tracker-panel-shell::after {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.00) 18%) !important;
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tracker-panel-shell::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0) 18%
+  ) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tracker-panel-tabbar {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tracker-panel-tabbar {
   background: var(--wechat-titlebar) !important;
   border-bottom: 1px solid var(--wechat-line) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tracker-tab-pill {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tracker-tab-pill {
   color: var(--wechat-text-mute) !important;
   border-color: transparent;
   border-radius: 8px !important;
@@ -1907,51 +1944,53 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tracker-tab-pill:hover {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tracker-tab-pill:hover {
   color: var(--wechat-text) !important;
   border-color: var(--wechat-line);
   background: var(--wechat-panel-soft) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tracker-tab-pill[data-active="true"] {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tracker-tab-pill[data-active='true'] {
   color: var(--wechat-bg) !important;
   border-color: var(--wechat-green);
   background: var(--wechat-green) !important;
   box-shadow: none !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] [data-testid="tracker-tab-effects-badge"],
-:root[data-ui-style="wechat"] body[data-overlay="true"] [data-testid="tracker-tab-graveyard-badge"] {
+:root[data-ui-style='wechat'] body[data-overlay='true'] [data-testid='tracker-tab-effects-badge'],
+:root[data-ui-style='wechat']
+  body[data-overlay='true']
+  [data-testid='tracker-tab-graveyard-badge'] {
   color: var(--wechat-bg) !important;
   background: var(--wechat-green-soft) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-overlay-panel-inner {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-overlay-panel-inner {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-overlay-header {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-overlay-header {
   background: var(--wechat-panel) !important;
   border-bottom: 1px solid var(--wechat-line) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] [data-overlay-list-area] {
+:root[data-ui-style='wechat'] body[data-overlay='true'] [data-overlay-list-area] {
   background: rgba(30, 30, 30, 0.88) !important;
   border-top: 1px solid var(--wechat-line) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-overlay-footer {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-overlay-footer {
   background: var(--wechat-panel) !important;
   border-top: 1px solid var(--wechat-line) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tracker-panel-shell h3 {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tracker-panel-shell h3 {
   color: var(--wechat-text-mute) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-board-card {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-board-card {
   color: var(--wechat-blue) !important;
   border: 1px solid color-mix(in srgb, currentColor 34%, transparent) !important;
   border-radius: 8px !important;
@@ -1959,62 +1998,70 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-board-card[data-tone="success"] {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-board-card[data-tone='success'] {
   color: var(--wechat-green-soft) !important;
   border-color: rgba(18, 183, 106, 0.42) !important;
   background: var(--wechat-green-dim) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-board-card[data-tone="danger"] {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-board-card[data-tone='danger'] {
   color: var(--wechat-red) !important;
   border-color: rgba(255, 90, 95, 0.45) !important;
   background: rgba(255, 90, 95, 0.12) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-face-chip {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-face-chip {
   background: rgba(255, 255, 255, 0.06) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-card-row {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-card-row {
   color: var(--wechat-text);
   border-color: var(--wechat-line) !important;
   border-radius: 7px !important;
-  background:
-    linear-gradient(90deg, rgba(43, 43, 43, 0.96), rgba(43, 43, 43, 0.90) 46%, rgba(43, 43, 43, 0.26)) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(43, 43, 43, 0.96),
+    rgba(43, 43, 43, 0.9) 46%,
+    rgba(43, 43, 43, 0.26)
+  ) !important;
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-card-row:hover {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-card-row:hover {
   border-color: rgba(18, 183, 106, 0.42) !important;
-  background:
-    linear-gradient(90deg, rgba(56, 56, 56, 0.98), rgba(56, 56, 56, 0.92) 46%, rgba(56, 56, 56, 0.30)) !important;
+  background: linear-gradient(
+    90deg,
+    rgba(56, 56, 56, 0.98),
+    rgba(56, 56, 56, 0.92) 46%,
+    rgba(56, 56, 56, 0.3)
+  ) !important;
   box-shadow: inset 3px 0 0 var(--wechat-green) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-card-row[data-row-state="exiting"] {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-card-row[data-row-state='exiting'] {
   border-color: var(--wechat-green) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-mana-gem {
-  color: #FFFFFF !important;
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-mana-gem {
+  color: #ffffff !important;
   border: none !important;
   border-radius: 7px !important;
   background: var(--wechat-blue) !important;
   box-shadow: none;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-mana-gem-opponent {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-mana-gem-opponent {
   background: var(--wechat-red) !important;
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-row-count {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-row-count {
   color: var(--wechat-text) !important;
   border: 1px solid var(--wechat-line);
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.05);
 }
 
-:root[data-ui-style="wechat"] body[data-overlay="true"] .tavern-empty-row {
+:root[data-ui-style='wechat'] body[data-overlay='true'] .tavern-empty-row {
   color: var(--wechat-text-mute) !important;
   border-color: var(--wechat-line) !important;
   background: rgba(255, 255, 255, 0.04) !important;
@@ -2241,7 +2288,7 @@ body[data-overlay="true"] .tavern-empty-row {
 }
 
 /* Fallout 76 / Pip-Boy skin from the supplied Figma file. */
-:root[data-ui-style="fallout76"] {
+:root[data-ui-style='fallout76'] {
   --pip-bg: #050804;
   --pip-dark: #070b06;
   --pip-panel: #0b1409;
@@ -2257,7 +2304,7 @@ body[data-overlay="true"] .tavern-empty-row {
   --pip-red: #e04b34;
   --pip-muted: #8ea57b;
   --pip-text: #dde7c8;
-  --pip-shadow: rgba(109, 255, 85, 0.20);
+  --pip-shadow: rgba(109, 255, 85, 0.2);
 
   --surface-window: var(--pip-bg);
   --surface-sidebar: var(--pip-dark);
@@ -2281,12 +2328,12 @@ body[data-overlay="true"] .tavern-empty-row {
   --border-hi: var(--pip-line-strong);
   --text: var(--pip-text);
   --text-dim: var(--pip-muted);
-  --text-mute: rgba(142, 165, 123, 0.70);
+  --text-mute: rgba(142, 165, 123, 0.7);
   --green: var(--pip-green);
   --red: var(--pip-red);
   --amber: var(--pip-amber);
   --overlay-surface: rgba(11, 20, 9, 0.82);
-  --overlay-hover: rgba(109, 255, 85, 0.10);
+  --overlay-hover: rgba(109, 255, 85, 0.1);
   --overlay-pressed: rgba(109, 255, 85, 0.16);
   --overlay-elevated: rgba(17, 27, 14, 0.92);
   --overlay-input: rgba(5, 8, 4, 0.72);
@@ -2294,42 +2341,50 @@ body[data-overlay="true"] .tavern-empty-row {
   color-scheme: dark;
 }
 
-:root[data-ui-style="fallout76"] .tavern-app-shell {
+:root[data-ui-style='fallout76'] .tavern-app-shell {
   color: var(--pip-text);
-  font-family: "Noto Sans SC", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: 'Noto Sans SC', 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
   background:
     radial-gradient(circle at 20% 12%, rgba(109, 255, 85, 0.08), transparent 28%),
     radial-gradient(circle at 88% 18%, rgba(243, 179, 54, 0.08), transparent 24%),
     linear-gradient(180deg, var(--pip-bg), #020402);
 }
 
-:root[data-ui-style="fallout76"] .tavern-app-shell::before,
-:root[data-ui-style="fallout76"] .tavern-app-shell::after {
-  content: "";
+:root[data-ui-style='fallout76'] .tavern-app-shell::before,
+:root[data-ui-style='fallout76'] .tavern-app-shell::after {
+  content: '';
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
 }
 
-:root[data-ui-style="fallout76"] .tavern-app-shell::before {
+:root[data-ui-style='fallout76'] .tavern-app-shell::before {
   background:
-    repeating-linear-gradient(
-      180deg,
-      rgba(141, 255, 122, 0.045) 0 2px,
-      transparent 2px 50px
-    ),
-    linear-gradient(90deg, rgba(109, 255, 85, 0.025), transparent 18%, transparent 82%, rgba(109, 255, 85, 0.025));
+    repeating-linear-gradient(180deg, rgba(141, 255, 122, 0.045) 0 2px, transparent 2px 50px),
+    linear-gradient(
+      90deg,
+      rgba(109, 255, 85, 0.025),
+      transparent 18%,
+      transparent 82%,
+      rgba(109, 255, 85, 0.025)
+    );
   mix-blend-mode: screen;
 }
 
-:root[data-ui-style="fallout76"] .tavern-app-shell::after {
+:root[data-ui-style='fallout76'] .tavern-app-shell::after {
   background:
     radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.34) 100%),
-    linear-gradient(180deg, rgba(109, 255, 85, 0.04), transparent 18%, transparent 82%, rgba(109, 255, 85, 0.035));
+    linear-gradient(
+      180deg,
+      rgba(109, 255, 85, 0.04),
+      transparent 18%,
+      transparent 82%,
+      rgba(109, 255, 85, 0.035)
+    );
 }
 
-:root[data-ui-style="fallout76"] .tavern-app-frame {
+:root[data-ui-style='fallout76'] .tavern-app-frame {
   position: relative;
   z-index: 2;
   height: 100%;
@@ -2343,19 +2398,25 @@ body[data-overlay="true"] .tavern-empty-row {
     0 0 42px rgba(0, 0, 0, 0.58);
 }
 
-:root[data-ui-style="fallout76"] .tavern-window-titlebar {
+:root[data-ui-style='fallout76'] .tavern-window-titlebar {
   background: var(--pip-dark);
   border-bottom: 1px solid var(--pip-line-strong);
   box-shadow: none;
 }
 
-:root[data-ui-style="fallout76"] .tavern-titlebar-grip {
+:root[data-ui-style='fallout76'] .tavern-titlebar-grip {
   opacity: 0.56;
-  background:
-    linear-gradient(90deg, transparent, rgba(109, 255, 85, 0.18) 18%, rgba(243, 179, 54, 0.24) 50%, rgba(109, 255, 85, 0.18) 82%, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(109, 255, 85, 0.18) 18%,
+    rgba(243, 179, 54, 0.24) 50%,
+    rgba(109, 255, 85, 0.18) 82%,
+    transparent
+  );
 }
 
-:root[data-ui-style="fallout76"] .tavern-topbar {
+:root[data-ui-style='fallout76'] .tavern-topbar {
   height: 86px;
   grid-template-columns: minmax(180px, 260px) minmax(0, 1fr) minmax(248px, max-content);
   gap: 10px;
@@ -2365,7 +2426,7 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: inset 0 -1px 0 rgba(109, 255, 85, 0.08);
 }
 
-:root[data-ui-style="fallout76"] .tavern-brand-plaque {
+:root[data-ui-style='fallout76'] .tavern-brand-plaque {
   min-width: 0;
   width: 100%;
   height: 52px;
@@ -2377,10 +2438,10 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="fallout76"] .tavern-brand-icon,
-:root[data-ui-style="fallout76"] .tavern-avatar-medallion,
-:root[data-ui-style="fallout76"] .fallout-terminal-icon,
-:root[data-ui-style="fallout76"] .fallout-vault-mark {
+:root[data-ui-style='fallout76'] .tavern-brand-icon,
+:root[data-ui-style='fallout76'] .tavern-avatar-medallion,
+:root[data-ui-style='fallout76'] .fallout-terminal-icon,
+:root[data-ui-style='fallout76'] .fallout-vault-mark {
   color: var(--pip-amber);
   border: 1px solid var(--pip-line-strong);
   border-radius: 8px;
@@ -2390,34 +2451,34 @@ body[data-overlay="true"] .tavern-empty-row {
     0 0 12px rgba(109, 255, 85, 0.08);
 }
 
-:root[data-ui-style="fallout76"] .tavern-brand-icon {
+:root[data-ui-style='fallout76'] .tavern-brand-icon {
   font-size: 15px;
   font-weight: 900;
 }
 
-:root[data-ui-style="fallout76"] .tavern-brand-title {
+:root[data-ui-style='fallout76'] .tavern-brand-title {
   color: var(--pip-amber);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 
-:root[data-ui-style="fallout76"] .tavern-brand-subtitle {
+:root[data-ui-style='fallout76'] .tavern-brand-subtitle {
   display: block;
   color: var(--pip-amber);
   opacity: 0.9;
 }
 
-:root[data-ui-style="fallout76"] .tavern-main-tabs {
+:root[data-ui-style='fallout76'] .tavern-main-tabs {
   gap: 6px;
   justify-content: flex-start;
 }
 
-:root[data-ui-style="fallout76"] .tavern-main-tabs > .tavern-nav-tab {
+:root[data-ui-style='fallout76'] .tavern-main-tabs > .tavern-nav-tab {
   flex: 1 1 112px;
   max-width: 132px;
 }
 
-:root[data-ui-style="fallout76"] .tavern-nav-tab {
+:root[data-ui-style='fallout76'] .tavern-nav-tab {
   min-width: 78px;
   height: 64px;
   padding: 0 9px;
@@ -2428,13 +2489,13 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="fallout76"] .tavern-nav-tab:hover {
+:root[data-ui-style='fallout76'] .tavern-nav-tab:hover {
   color: var(--pip-green);
   border-color: var(--pip-green);
   background: rgba(20, 44, 18, 0.78);
 }
 
-:root[data-ui-style="fallout76"] .tavern-nav-tab[data-active="true"] {
+:root[data-ui-style='fallout76'] .tavern-nav-tab[data-active='true'] {
   color: var(--pip-green);
   border-color: var(--pip-green);
   background: #142c12;
@@ -2443,19 +2504,19 @@ body[data-overlay="true"] .tavern-empty-row {
     0 0 16px rgba(109, 255, 85, 0.08);
 }
 
-:root[data-ui-style="fallout76"] .tavern-nav-labels {
+:root[data-ui-style='fallout76'] .tavern-nav-labels {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   line-height: 1.1;
 }
 
-:root[data-ui-style="fallout76"] .tavern-nav-label {
+:root[data-ui-style='fallout76'] .tavern-nav-label {
   font-size: 13px;
   font-weight: 800;
 }
 
-:root[data-ui-style="fallout76"] .tavern-nav-code {
+:root[data-ui-style='fallout76'] .tavern-nav-code {
   display: block;
   margin-top: 5px;
   color: var(--pip-muted);
@@ -2463,13 +2524,13 @@ body[data-overlay="true"] .tavern-empty-row {
   font-weight: 700;
 }
 
-:root[data-ui-style="fallout76"] .tavern-nav-tab[data-active="true"] .tavern-nav-code {
+:root[data-ui-style='fallout76'] .tavern-nav-tab[data-active='true'] .tavern-nav-code {
   color: var(--pip-green);
 }
 
-:root[data-ui-style="fallout76"] .tavern-status-pill,
-:root[data-ui-style="fallout76"] .tavern-player-pill,
-:root[data-ui-style="fallout76"] .tavern-settings-button {
+:root[data-ui-style='fallout76'] .tavern-status-pill,
+:root[data-ui-style='fallout76'] .tavern-player-pill,
+:root[data-ui-style='fallout76'] .tavern-settings-button {
   height: 46px;
   color: var(--pip-amber);
   border: 1px solid var(--pip-line-strong);
@@ -2478,30 +2539,28 @@ body[data-overlay="true"] .tavern-empty-row {
   box-shadow: none;
 }
 
-:root[data-ui-style="fallout76"] .tavern-status-pill {
+:root[data-ui-style='fallout76'] .tavern-status-pill {
   max-width: 176px;
   min-width: 0;
 }
 
-:root[data-ui-style="fallout76"] .tavern-player-pill {
+:root[data-ui-style='fallout76'] .tavern-player-pill {
   max-width: 230px;
   min-width: 0;
 }
 
-:root[data-ui-style="fallout76"] .tavern-settings-button:hover,
-:root[data-ui-style="fallout76"] .tavern-settings-button[data-active="true"] {
+:root[data-ui-style='fallout76'] .tavern-settings-button:hover,
+:root[data-ui-style='fallout76'] .tavern-settings-button[data-active='true'] {
   color: var(--pip-green);
   border-color: var(--pip-green);
   background: #142c12;
 }
 
-:root[data-ui-style="fallout76"] .tavern-main-surface {
-  background:
-    linear-gradient(180deg, rgba(5, 8, 4, 0.94), rgba(2, 4, 2, 0.94)),
-    var(--pip-bg);
+:root[data-ui-style='fallout76'] .tavern-main-surface {
+  background: linear-gradient(180deg, rgba(5, 8, 4, 0.94), rgba(2, 4, 2, 0.94)), var(--pip-bg);
 }
 
-:root[data-ui-style="fallout76"] .tavern-bottom-status {
+:root[data-ui-style='fallout76'] .tavern-bottom-status {
   display: flex;
   min-height: 44px;
   align-items: center;
@@ -2513,26 +2572,26 @@ body[data-overlay="true"] .tavern-empty-row {
   font-size: 12px;
 }
 
-:root[data-ui-style="fallout76"] .tavern-dashboard {
+:root[data-ui-style='fallout76'] .tavern-dashboard {
   padding: 22px 24px;
 }
 
-:root[data-ui-style="fallout76"] .fallout-dashboard-grid {
+:root[data-ui-style='fallout76'] .fallout-dashboard-grid {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) minmax(320px, 500px);
   gap: 24px;
   min-height: 100%;
 }
 
-:root[data-ui-style="fallout76"] .fallout-connection-panel {
+:root[data-ui-style='fallout76'] .fallout-connection-panel {
   min-height: 560px;
 }
 
-:root[data-ui-style="fallout76"] .fallout-page-heading {
+:root[data-ui-style='fallout76'] .fallout-page-heading {
   min-height: 70px;
 }
 
-:root[data-ui-style="fallout76"] .tavern-app-shell .tahoe-card {
+:root[data-ui-style='fallout76'] .tavern-app-shell .tahoe-card {
   color: var(--pip-text);
   border: 1px solid var(--pip-line-strong);
   border-radius: 10px;
@@ -2544,31 +2603,31 @@ body[data-overlay="true"] .tavern-empty-row {
   -webkit-backdrop-filter: none;
 }
 
-:root[data-ui-style="fallout76"] .tavern-hero-card {
+:root[data-ui-style='fallout76'] .tavern-hero-card {
   border-color: var(--pip-line-strong);
 }
 
-:root[data-ui-style="fallout76"] .tavern-hero-card::before {
+:root[data-ui-style='fallout76'] .tavern-hero-card::before {
   background:
     linear-gradient(90deg, rgba(109, 255, 85, 0.08), transparent 36%),
     repeating-linear-gradient(180deg, rgba(141, 255, 122, 0.045) 0 2px, transparent 2px 28px);
 }
 
-:root[data-ui-style="fallout76"] .tavern-stat-card {
+:root[data-ui-style='fallout76'] .tavern-stat-card {
   min-height: 118px;
 }
 
-:root[data-ui-style="fallout76"] .tavern-stat-card:hover,
-:root[data-ui-style="fallout76"] .recent-match-row:hover {
+:root[data-ui-style='fallout76'] .tavern-stat-card:hover,
+:root[data-ui-style='fallout76'] .recent-match-row:hover {
   border-color: var(--pip-green);
 }
 
-:root[data-ui-style="fallout76"] .kpi-card::after,
-:root[data-ui-style="fallout76"] .tahoe-card::after {
+:root[data-ui-style='fallout76'] .kpi-card::after,
+:root[data-ui-style='fallout76'] .tahoe-card::after {
   background: none;
 }
 
-:root[data-ui-style="fallout76"] .fallout-chip {
+:root[data-ui-style='fallout76'] .fallout-chip {
   min-height: 34px;
   display: flex;
   align-items: center;
@@ -2581,137 +2640,283 @@ body[data-overlay="true"] .tavern-empty-row {
   font-weight: 700;
 }
 
-:root[data-ui-style="fallout76"] .fallout-chip-active,
-:root[data-ui-style="fallout76"] .tahoe-active-pill,
-:root[data-ui-style="fallout76"] .settings-row .bg-accent,
-:root[data-ui-style="fallout76"] .settings-row button.bg-accent {
+:root[data-ui-style='fallout76'] .fallout-chip-active,
+:root[data-ui-style='fallout76'] .tahoe-active-pill,
+:root[data-ui-style='fallout76'] .settings-row .bg-accent,
+:root[data-ui-style='fallout76'] .settings-row button.bg-accent {
   color: var(--pip-green);
   border-color: var(--pip-green);
   background: #17351b;
   box-shadow: 0 0 12px rgba(109, 255, 85, 0.08);
 }
 
-:root[data-ui-style="fallout76"] .settings-row .text-on-accent,
-:root[data-ui-style="fallout76"] .settings-row .text-text-on-accent {
+:root[data-ui-style='fallout76'] .settings-row .text-on-accent,
+:root[data-ui-style='fallout76'] .settings-row .text-text-on-accent {
   color: var(--pip-green);
 }
 
-:root[data-ui-style="fallout76"] button,
-:root[data-ui-style="fallout76"] input,
-:root[data-ui-style="fallout76"] select,
-:root[data-ui-style="fallout76"] textarea {
+:root[data-ui-style='fallout76'] button,
+:root[data-ui-style='fallout76'] input,
+:root[data-ui-style='fallout76'] select,
+:root[data-ui-style='fallout76'] textarea {
   border-color: var(--pip-line);
 }
 
-:root[data-ui-style="fallout76"] input,
-:root[data-ui-style="fallout76"] select,
-:root[data-ui-style="fallout76"] textarea {
+:root[data-ui-style='fallout76'] input,
+:root[data-ui-style='fallout76'] select,
+:root[data-ui-style='fallout76'] textarea {
   color: var(--pip-text);
   background: rgba(5, 8, 4, 0.72);
 }
 
-:root[data-ui-style="fallout76"] .recharts-cartesian-grid line {
+:root[data-ui-style='fallout76'] .recharts-cartesian-grid line {
   stroke: rgba(61, 58, 30, 0.75);
 }
 
-:root[data-ui-style="fallout76"] .recharts-line-curve,
-:root[data-ui-style="fallout76"] .recharts-line .recharts-curve {
+:root[data-ui-style='fallout76'] .recharts-line-curve,
+:root[data-ui-style='fallout76'] .recharts-line .recharts-curve {
   stroke: var(--pip-green);
 }
 
-:root[data-ui-style="fallout76"] .recharts-dot,
-:root[data-ui-style="fallout76"] .recharts-line-dot {
+:root[data-ui-style='fallout76'] .recharts-dot,
+:root[data-ui-style='fallout76'] .recharts-line-dot {
   stroke: var(--pip-green);
   fill: var(--pip-bg);
 }
 
-:root[data-ui-style="fallout76"] .recharts-bar-rectangle path {
+:root[data-ui-style='fallout76'] .recharts-bar-rectangle path {
   fill: var(--pip-green);
 }
 
-:root[data-ui-style="fallout76"] body[data-overlay="true"] .tracker-panel-shell {
+:root[data-ui-style='fallout76'] body[data-overlay='true'] .tracker-panel-shell {
   color: var(--pip-text) !important;
   border: 1px solid var(--pip-line-strong) !important;
   border-radius: 10px !important;
-  background: rgba(5, 8, 4, 0.90) !important;
+  background: rgba(5, 8, 4, 0.9) !important;
   box-shadow:
     inset 0 0 0 1px rgba(109, 255, 85, 0.06),
     0 0 32px rgba(0, 0, 0, 0.45) !important;
 }
 
-:root[data-ui-style="fallout76"] body[data-overlay="true"] .tracker-panel-tabbar,
-:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-overlay-header,
-:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-overlay-footer {
+:root[data-ui-style='fallout76'] body[data-overlay='true'] .tracker-panel-tabbar,
+:root[data-ui-style='fallout76'] body[data-overlay='true'] .tavern-overlay-header,
+:root[data-ui-style='fallout76'] body[data-overlay='true'] .tavern-overlay-footer {
   background: var(--pip-dark) !important;
   border-color: var(--pip-line) !important;
 }
 
-:root[data-ui-style="fallout76"] body[data-overlay="true"] .tracker-tab-pill[data-active="true"] {
+:root[data-ui-style='fallout76'] body[data-overlay='true'] .tracker-tab-pill[data-active='true'] {
   color: var(--pip-green) !important;
   border-color: var(--pip-green);
   background: #17351b !important;
 }
 
-:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-card-row {
+:root[data-ui-style='fallout76'] body[data-overlay='true'] .tavern-card-row {
   color: var(--pip-text);
   border-color: var(--pip-line) !important;
-  background: linear-gradient(90deg, var(--pip-row), rgba(13, 22, 11, 0.50)) !important;
+  background: linear-gradient(90deg, var(--pip-row), rgba(13, 22, 11, 0.5)) !important;
 }
 
-:root[data-ui-style="fallout76"] body[data-overlay="true"] .tavern-card-row:hover {
+:root[data-ui-style='fallout76'] body[data-overlay='true'] .tavern-card-row:hover {
   border-color: var(--pip-green) !important;
   box-shadow: inset 3px 0 0 var(--pip-green) !important;
 }
 
 @media (max-width: 1500px) {
-  :root[data-ui-style="fallout76"] .tavern-topbar {
+  :root[data-ui-style='fallout76'] .tavern-topbar {
     grid-template-columns: minmax(160px, 220px) minmax(0, 1fr) minmax(180px, max-content);
   }
 
-  :root[data-ui-style="fallout76"] .tavern-main-tabs > .tavern-nav-tab {
+  :root[data-ui-style='fallout76'] .tavern-main-tabs > .tavern-nav-tab {
     flex-basis: 82px;
   }
 
-  :root[data-ui-style="fallout76"] .tavern-nav-tab {
+  :root[data-ui-style='fallout76'] .tavern-nav-tab {
     min-width: 58px;
     padding-inline: 7px;
   }
 
-  :root[data-ui-style="fallout76"] .tavern-nav-code {
+  :root[data-ui-style='fallout76'] .tavern-nav-code {
     display: none;
   }
 }
 
 @media (max-width: 1180px) {
-  :root[data-ui-style="fallout76"] .fallout-dashboard-grid {
+  :root[data-ui-style='fallout76'] .fallout-dashboard-grid {
     grid-template-columns: 1fr;
   }
 
-  :root[data-ui-style="fallout76"] .fallout-connection-panel {
+  :root[data-ui-style='fallout76'] .fallout-connection-panel {
     min-height: 0;
   }
 }
 
 @media (max-width: 980px) {
-  :root[data-ui-style="fallout76"] .tavern-topbar {
+  :root[data-ui-style='fallout76'] .tavern-topbar {
     height: 64px;
     grid-template-columns: minmax(52px, 140px) minmax(0, 1fr) minmax(0, max-content);
   }
 
-  :root[data-ui-style="fallout76"] .tavern-brand-subtitle,
-  :root[data-ui-style="fallout76"] .tavern-nav-label,
-  :root[data-ui-style="fallout76"] .tavern-nav-code {
+  :root[data-ui-style='fallout76'] .tavern-brand-subtitle,
+  :root[data-ui-style='fallout76'] .tavern-nav-label,
+  :root[data-ui-style='fallout76'] .tavern-nav-code {
     display: none;
   }
 
-  :root[data-ui-style="fallout76"] .tavern-nav-tab {
+  :root[data-ui-style='fallout76'] .tavern-nav-tab {
     width: 48px;
     min-width: 48px;
     height: 48px;
     padding: 0;
   }
 
-  :root[data-ui-style="fallout76"] .tavern-bottom-status {
+  :root[data-ui-style='fallout76'] .tavern-bottom-status {
     display: none;
+  }
+}
+
+/* Dashboard KPI matrix. Keep this after skin-specific card rules so the
+   dashboard summary keeps its denser, scan-friendly shape in every theme. */
+.dashboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 680px;
+}
+
+.tavern-app-shell .dashboard-stat-card {
+  --stat-tone: var(--accent);
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  overflow: hidden;
+  padding: 16px;
+  border-color: color-mix(in srgb, var(--stat-tone) 36%, var(--border));
+  border-left: 3px solid var(--stat-tone);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--stat-tone) 15%, transparent), transparent 58%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-elevated) 92%, transparent),
+      color-mix(in srgb, var(--surface-content) 96%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 26px -20px color-mix(in srgb, var(--stat-tone) 60%, black);
+}
+
+.tavern-app-shell .dashboard-stat-card:hover {
+  border-color: color-mix(in srgb, var(--stat-tone) 62%, var(--border-hi));
+  transform: translateY(-1px);
+}
+
+.dashboard-stat-card[data-tone='deck'] {
+  --stat-tone: var(--accent);
+}
+
+.dashboard-stat-card[data-tone='hand'] {
+  --stat-tone: var(--semantic-info);
+}
+
+.dashboard-stat-card[data-tone='live'],
+.dashboard-stat-card[data-tone='success'] {
+  --stat-tone: var(--green);
+}
+
+.dashboard-stat-card[data-tone='idle'] {
+  --stat-tone: var(--text-tertiary);
+}
+
+.dashboard-stat-card[data-tone='warning'] {
+  --stat-tone: var(--amber);
+}
+
+.dashboard-stat-card[data-tone='danger'] {
+  --stat-tone: var(--red);
+}
+
+.dashboard-stat-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  color: var(--stat-tone);
+  border: 1px solid color-mix(in srgb, var(--stat-tone) 38%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--stat-tone) 12%, transparent);
+}
+
+.dashboard-stat-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.dashboard-stat-label {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-mute);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-stat-value {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-stat-value[data-compact='true'] {
+  color: var(--stat-tone);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.15;
+}
+
+.dashboard-stat-total {
+  color: var(--text-tertiary);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+[data-density='compact'] .tavern-app-shell .dashboard-stat-card {
+  min-height: 84px;
+  padding: 14px;
+}
+
+[data-density='compact'] .dashboard-stat-icon {
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
+}
+
+[data-density='compact'] .dashboard-stat-value {
+  font-size: 26px;
+}
+
+[data-density='compact'] .dashboard-stat-value[data-compact='true'] {
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .dashboard-stat-grid {
+    grid-template-columns: 1fr;
   }
 }

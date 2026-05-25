@@ -49,8 +49,8 @@ const DEFAULT_DENSITY: Density = 'comfortable';
 const DEFAULT_UI_STYLE: UiStyle = 'fallout76';
 const DEFAULT_ACCENT: Accent = 'blue';
 const DEFAULT_THEME: Theme = 'system';
-const DEFAULT_GAME_OVERLAY = false;
-const DEFAULT_GAME_OVERLAY_OPPONENT = false;
+const DEFAULT_GAME_OVERLAY = true;
+const DEFAULT_GAME_OVERLAY_OPPONENT = true;
 
 const VALID_DENSITIES = new Set<string>(['comfortable', 'compact']);
 const VALID_UI_STYLES = new Set<string>(['tavern', 'macos', 'wechat', 'fallout76']);

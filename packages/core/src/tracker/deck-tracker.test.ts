@@ -1538,6 +1538,45 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('backs off Assembly-CSharp module-missing errors before waiting for process re-detection', async () => {
+    const { mirror } = makeMirror();
+    (mirror.getMatchInfo as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('module not found: Assembly-CSharp.dll'),
+    );
+
+    const tracker = new DeckTracker({ mirror });
+    tracker.start();
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(4_999);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(9_999);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(3);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(3);
+
+    tracker.requestImmediateTick();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(4);
+
+    await vi.advanceTimersByTimeAsync(4_999);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(4);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(mirror.getMatchInfo).toHaveBeenCalledTimes(5);
+    tracker.stop();
+  });
+
   it('on returns an unsubscribe function', () => {
     const { mirror } = makeMirror();
     const tracker = new DeckTracker({ mirror });

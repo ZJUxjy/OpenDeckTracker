@@ -110,6 +110,12 @@ const FORMATS: Format[] = ['Standard', 'Wild'];
 const SORTS: PopularDeckSort[] = ['popular', 'winrate', 'updated', 'cheapest'];
 const MAX_DUST_LIMIT = 20000;
 const MAX_DUST_UNLIMITED = MAX_DUST_LIMIT + 500;
+const SYNC_SOURCE_NOTE_KEY = 'decks.finder.syncSourceNote';
+
+function readableSyncSourceNote(translated: string, locale: string): string {
+  if (translated !== SYNC_SOURCE_NOTE_KEY) return translated;
+  return locale === 'zh-CN' ? '数据来自 HSGuru' : 'Data from HSGuru';
+}
 
 function ClassChip({ heroClass, label }: { heroClass: HeroClass; label: string }): ReactElement {
   return (
@@ -144,6 +150,7 @@ interface DeckFinderTabProps {
 
 export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
   const { t, locale } = useTranslation();
+  const syncSourceNote = readableSyncSourceNote(t(SYNC_SOURCE_NOTE_KEY), locale);
   const [decks, setDecks] = useState<readonly PopularDeckEnriched[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [fetchedAt, setFetchedAt] = useState<string | null>(null);
@@ -310,6 +317,9 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
             ? t('decks.finder.syncing', { phase: progress?.phase ?? 'meta' })
             : t('decks.finder.syncButton')}
         </button>
+        <span data-testid="deck-finder-sync-source-note" className="text-text-mute whitespace-nowrap">
+          {syncSourceNote}
+        </span>
         {syncing && (
           <div
             data-testid="deck-finder-sync-progress"

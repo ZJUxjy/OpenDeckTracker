@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { PopularDeckEnriched } from '@hdt/core';
 
 import { DeckFinderTab } from '../src/components/DeckFinderTab';
-import { I18nProvider } from '../src/i18n';
+import { defaultMessages, I18nProvider, type MessagesByLocale } from '../src/i18n';
 
 const FIXTURE: PopularDeckEnriched[] = [
   {
@@ -41,9 +41,12 @@ const FIXTURE: PopularDeckEnriched[] = [
   },
 ];
 
-function renderTab(locale: 'en-US' | 'zh-CN' = 'en-US') {
+function renderTab(locale: 'en-US' | 'zh-CN' = 'en-US', messages?: MessagesByLocale) {
+  const providerProps: { preference: 'en-US' | 'zh-CN'; messages?: MessagesByLocale } = { preference: locale };
+  if (messages) providerProps.messages = messages;
+
   return render(
-    <I18nProvider preference={locale}>
+    <I18nProvider {...providerProps}>
       <DeckFinderTab />
     </I18nProvider>,
   );
@@ -70,6 +73,27 @@ describe('DeckFinderTab', () => {
     await act(async () => { renderTab(); });
     await waitFor(() => expect(screen.getByText('Deck Finder')).toBeInTheDocument());
     expect(screen.getByText('DECKS / FIND')).toBeInTheDocument();
+  });
+
+  it('shows the HSGuru data source note beside the sync button', async () => {
+    await act(async () => { renderTab('zh-CN'); });
+    await waitFor(() => expect(screen.getByText('卡组查找')).toBeInTheDocument());
+
+    expect(screen.getByTestId('deck-finder-sync-button')).toHaveTextContent('同步热门卡组');
+    expect(screen.getByTestId('deck-finder-sync-source-note')).toHaveTextContent('数据来自 HSGuru');
+  });
+
+  it('keeps the HSGuru source note readable when the locale bundle is stale', async () => {
+    const staleMessages = JSON.parse(JSON.stringify(defaultMessages)) as MessagesByLocale;
+    const zhFinder = (staleMessages['zh-CN'] as { decks: { finder: Record<string, unknown> } }).decks.finder;
+    const enFinder = (staleMessages['en-US'] as { decks: { finder: Record<string, unknown> } }).decks.finder;
+    delete zhFinder.syncSourceNote;
+    delete enFinder.syncSourceNote;
+
+    await act(async () => { renderTab('zh-CN', staleMessages); });
+    await waitFor(() => expect(screen.getByText('卡组查找')).toBeInTheDocument());
+
+    expect(screen.getByTestId('deck-finder-sync-source-note')).toHaveTextContent('数据来自 HSGuru');
   });
 
   it('default Standard format pill is selected', async () => {

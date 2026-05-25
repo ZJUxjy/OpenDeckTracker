@@ -18,7 +18,11 @@ import {
   type InterpolationValues,
   type MessagesByLocale,
 } from './messages';
-import { useI18nStore } from './i18n-store';
+import {
+  LANGUAGE_PREFERENCE_CHANGED_EVENT,
+  readStoredPreference,
+  useI18nStore,
+} from './i18n-store';
 import enUS from '../../../../../../resources/locales/en-US.json';
 import zhCN from '../../../../../../resources/locales/zh-CN.json';
 
@@ -75,13 +79,24 @@ export function I18nProvider({
   // locale until refresh. `syncFromExternal` writes through to
   // localStorage without re-broadcasting (no echo loop).
   useEffect(() => {
-    const off = window.hdt?.i18n?.onChanged?.((payload) => {
+    const syncPreference = (payload: { languagePreference?: unknown } | null | undefined) => {
       const next = payload?.languagePreference;
       if (!isLanguagePreference(next)) return;
       useI18nStore.getState().syncFromExternal(next);
-    });
-    return () => off?.();
-  }, []);
+    };
+    const off = window.hdt?.i18n?.onChanged?.(syncPreference);
+    if (preference === undefined) {
+      syncPreference({ languagePreference: readStoredPreference() });
+    }
+    const onLocalPreferenceChanged = (event: Event) => {
+      syncPreference((event as CustomEvent<{ languagePreference?: unknown }>).detail);
+    };
+    window.addEventListener(LANGUAGE_PREFERENCE_CHANGED_EVENT, onLocalPreferenceChanged);
+    return () => {
+      off?.();
+      window.removeEventListener(LANGUAGE_PREFERENCE_CHANGED_EVENT, onLocalPreferenceChanged);
+    };
+  }, [preference]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

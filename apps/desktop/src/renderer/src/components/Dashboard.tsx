@@ -8,10 +8,13 @@ import { useCardDef } from '../hooks/use-card-def';
 import type { HearthWatcherStatusKind } from '@hdt/hearthwatcher';
 
 function useRankLabel(
-  standard: {
-    legendRank: number;
-    starLevel: number;
-  } | null | undefined,
+  standard:
+    | {
+        legendRank: number;
+        starLevel: number;
+      }
+    | null
+    | undefined,
 ): string {
   const { t } = useTranslation();
   if (!standard) return t('dashboard.rankUnavailable');
@@ -20,14 +23,15 @@ function useRankLabel(
   return t('dashboard.rankUnranked');
 }
 
-const WATCHER_COLORS: Record<HearthWatcherStatusKind, string> = {
-  ready: 'text-green',
-  'waiting-for-lines': 'text-amber',
-  'missing-log': 'text-red',
-  'parser-error': 'text-red',
-  lag: 'text-amber',
-  'rotation-or-truncation': 'text-text-dim',
-};
+type StatTone = 'deck' | 'hand' | 'live' | 'idle' | 'warning' | 'danger' | 'success';
+
+function getWatcherTone(kind: HearthWatcherStatusKind | null | undefined): StatTone {
+  if (!kind) return 'warning';
+  if (kind === 'ready') return 'success';
+  if (kind === 'missing-log' || kind === 'parser-error') return 'danger';
+  if (kind === 'rotation-or-truncation') return 'idle';
+  return 'warning';
+}
 
 export function Dashboard() {
   const { t } = useTranslation();
@@ -60,22 +64,34 @@ export function Dashboard() {
           </p>
           <div className="mt-10 space-y-4 text-sm text-green">
             <StatusLine label={t('dashboard.watcher')} value={watcherKindLabel} />
-            <StatusLine label={t('deckTracker.deck')} value={deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')} />
-            <StatusLine label={t('dashboard.hand')} value={String(snapshot?.friendlyHand.length ?? 0)} />
+            <StatusLine
+              label={t('deckTracker.deck')}
+              value={deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')}
+            />
+            <StatusLine
+              label={t('dashboard.hand')}
+              value={String(snapshot?.friendlyHand.length ?? 0)}
+            />
             <StatusLine label={t('fallout.statusBar.database')} value="OK" />
           </div>
         </aside>
 
         <section className="fallout-dashboard-main min-w-0 space-y-4">
           <div className="fallout-page-heading">
-            <h1 className="text-3xl font-black text-green">01 {t('sidebar.deckTracker')} / Dashboard</h1>
+            <h1 className="text-3xl font-black text-green">
+              01 {t('sidebar.deckTracker')} / Dashboard
+            </h1>
             <p className="mt-1 text-sm text-text-dim">{t('onboarding.bannerHsNotRunningBody')}</p>
           </div>
 
           <div className="tahoe-card tavern-hero-card px-7 py-6">
             <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
-              <span className="text-base font-bold text-amber">{t('fallout.dashboard.liveBadge')}</span>
-              <span className="text-xs text-text-mute">{t('dashboard.phase', { phase: phaseLabel })}</span>
+              <span className="text-base font-bold text-amber">
+                {t('fallout.dashboard.liveBadge')}
+              </span>
+              <span className="text-xs text-text-mute">
+                {t('dashboard.phase', { phase: phaseLabel })}
+              </span>
             </div>
             <h2 className="text-[32px] leading-tight font-black text-text tracking-tight mb-3">
               {deck ? deck.name || t('dashboard.unnamedDeck') : t('dashboard.noActiveDeck')}
@@ -87,54 +103,45 @@ export function Dashboard() {
               </span>
               <span className="flex items-center">
                 <Clock size={14} className="mr-1.5 text-text-tertiary" />
-                {snapshot ? new Date(snapshot.updatedAt).toLocaleTimeString() : t('dashboard.waitingForGame')}
+                {snapshot
+                  ? new Date(snapshot.updatedAt).toLocaleTimeString()
+                  : t('dashboard.waitingForGame')}
               </span>
             </div>
           </div>
 
-          <div className="tavern-stat-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="tavern-stat-grid dashboard-stat-grid" data-testid="dashboard-stat-grid">
             <StatCard
+              tone="deck"
               label={t('dashboard.cardsLeft')}
-              icon={<Layers size={18} className="text-accent" />}
+              icon={<Layers size={20} />}
               value={
                 <>
                   {totalRemaining}
-                  <span className="text-base text-text-tertiary font-semibold"> / {totalOriginal}</span>
+                  <span className="dashboard-stat-total"> / {totalOriginal}</span>
                 </>
               }
             />
             <StatCard
+              tone="hand"
               label={t('dashboard.hand')}
-              icon={<Hand size={18} className="text-text-tertiary" />}
+              icon={<Hand size={20} />}
               value={snapshot?.friendlyHand.length ?? 0}
             />
             <StatCard
+              tone={deck ? 'live' : 'idle'}
               label={t('dashboard.status')}
-              icon={<Activity size={18} className={deck ? 'text-green' : 'text-text-tertiary'} />}
-              value={
-                <span className={deck ? 'text-green' : 'text-text'}>
-                  {deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')}
-                </span>
-              }
+              icon={<Activity size={20} />}
+              value={deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')}
             />
             <StatCard
+              tone={getWatcherTone(watcherStatus?.kind)}
               label={t('dashboard.watcher')}
-              icon={
-                <Radio
-                  size={18}
-                  className={watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-tertiary' : 'text-text-tertiary'}
-                />
-              }
-              value={
-                <span
-                  className={`text-sm ${watcherStatus ? WATCHER_COLORS[watcherStatus.kind] ?? 'text-text-tertiary' : 'text-text-tertiary'}`}
-                >
-                  {watcherKindLabel}
-                </span>
-              }
+              icon={<Radio size={20} />}
+              value={watcherKindLabel}
+              compact
             />
           </div>
-
         </section>
 
         <aside className="fallout-dashboard-side space-y-4">
@@ -180,19 +187,25 @@ interface StatCardProps {
   label: string;
   icon: ReactNode;
   value: ReactNode;
+  tone: StatTone;
+  compact?: boolean;
 }
 
-function StatCard({ label, icon, value }: StatCardProps) {
+function StatCard({ label, icon, value, tone, compact = false }: StatCardProps) {
   return (
-    <div className="tahoe-card tavern-stat-card p-5 kpi-card">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-text-tertiary text-[11px] font-semibold uppercase tracking-wider">
-          {label}
-        </span>
+    <div
+      className="tahoe-card tavern-stat-card dashboard-stat-card kpi-card"
+      data-testid="dashboard-stat-card"
+      data-tone={tone}
+    >
+      <div className="dashboard-stat-icon" aria-hidden="true">
         {icon}
       </div>
-      <div className="text-3xl font-black text-text font-mono tabular-nums">
-        {value}
+      <div className="dashboard-stat-copy">
+        <span className="dashboard-stat-label">{label}</span>
+        <div className="dashboard-stat-value" data-compact={compact ? 'true' : undefined}>
+          {value}
+        </div>
       </div>
     </div>
   );

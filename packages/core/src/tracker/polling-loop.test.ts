@@ -95,4 +95,25 @@ describe('PollingLoop', () => {
     expect(fn).toHaveBeenCalledTimes(3);
     loop.stop();
   });
+
+  it('pause stops scheduled ticks until requestImmediate resumes the loop', async () => {
+    const loop = new PollingLoop();
+    const fn = vi.fn();
+    loop.start(100, fn);
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    loop.pause();
+    await vi.advanceTimersByTimeAsync(500);
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    loop.requestImmediate();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fn).toHaveBeenCalledTimes(2);
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(fn).toHaveBeenCalledTimes(3);
+    loop.stop();
+  });
 });

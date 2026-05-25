@@ -29,8 +29,12 @@ describe('AppearanceApplyEffect', () => {
 
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
     expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.purple.accentDark);
-    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(ACCENT_PALETTE.purple.accentDimDark);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
+      ACCENT_PALETTE.purple.accentDark,
+    );
+    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(
+      ACCENT_PALETTE.purple.accentDimDark,
+    );
   });
 
   it('updates inline custom properties when accent changes', async () => {
@@ -50,8 +54,12 @@ describe('AppearanceApplyEffect', () => {
       useAppearanceStore.getState().setAccent('purple');
     });
 
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.purple.accentDark);
-    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(ACCENT_PALETTE.purple.accentDimDark);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
+      ACCENT_PALETTE.purple.accentDark,
+    );
+    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(
+      ACCENT_PALETTE.purple.accentDimDark,
+    );
   });
 
   it('updates data-density when density changes', async () => {
@@ -134,7 +142,9 @@ describe('AppearanceApplyEffect', () => {
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
     expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
     expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.purple.accentLight);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
+      ACCENT_PALETTE.purple.accentLight,
+    );
 
     unmount();
     expect(off).toHaveBeenCalledTimes(1);
@@ -160,7 +170,12 @@ describe('AppearanceApplyEffect', () => {
   it('forces dark color-scheme and terminal accent while the Fallout 76 UI style is active', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', uiStyle: 'fallout76', accent: 'blue', theme: 'light' }),
+      JSON.stringify({
+        density: 'comfortable',
+        uiStyle: 'fallout76',
+        accent: 'blue',
+        theme: 'light',
+      }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -194,7 +209,9 @@ describe('AppearanceApplyEffect', () => {
     unmount();
 
     // Properties should persist after unmount
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(ACCENT_PALETTE.mint.accentDark);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
+      ACCENT_PALETTE.mint.accentDark,
+    );
   });
 
   it('fires overlay:set-enabled on mount when gameOverlay is saved as true', async () => {
@@ -222,6 +239,11 @@ describe('AppearanceApplyEffect', () => {
     const setEnabled = vi.fn();
     (window as any).hdt = { overlay: { setEnabled } };
 
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlay: false }),
+    );
+
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
 
     render(<AppearanceApplyEffect />, {
@@ -240,7 +262,12 @@ describe('AppearanceApplyEffect', () => {
 
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlay: false, gameOverlayOpponent: true }),
+      JSON.stringify({
+        density: 'comfortable',
+        accent: 'blue',
+        gameOverlay: false,
+        gameOverlayOpponent: true,
+      }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -263,7 +290,12 @@ describe('AppearanceApplyEffect', () => {
 
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlay: true, gameOverlayOpponent: true }),
+      JSON.stringify({
+        density: 'comfortable',
+        accent: 'blue',
+        gameOverlay: true,
+        gameOverlayOpponent: true,
+      }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -285,6 +317,11 @@ describe('AppearanceApplyEffect', () => {
     const setEnabledOpponent = vi.fn();
     (window as any).hdt = { overlay: { setEnabled, setEnabledOpponent } };
 
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', accent: 'blue', gameOverlayOpponent: false }),
+    );
+
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
 
     render(<AppearanceApplyEffect />, {
@@ -292,6 +329,25 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(setEnabledOpponent).not.toHaveBeenCalled();
+
+    (window as any).hdt = undefined;
+  });
+
+  it('fires both overlay enables on mount when no overlay preference is stored', async () => {
+    const setEnabled = vi.fn();
+    const setEnabledOpponent = vi.fn();
+    (window as any).hdt = { overlay: { setEnabled, setEnabledOpponent } };
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(setEnabled).toHaveBeenCalledTimes(1);
+    expect(setEnabled).toHaveBeenCalledWith(true);
+    expect(setEnabledOpponent).toHaveBeenCalledTimes(1);
+    expect(setEnabledOpponent).toHaveBeenCalledWith(true);
 
     (window as any).hdt = undefined;
   });

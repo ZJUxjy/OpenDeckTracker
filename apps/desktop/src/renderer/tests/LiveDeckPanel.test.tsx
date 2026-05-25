@@ -240,6 +240,7 @@ describe('LiveDeckPanel sorting', () => {
       pendingSelection: null,
       dialogDismissed: false,
     });
+    window.localStorage.clear();
   });
 
   afterEach(() => {
@@ -438,6 +439,49 @@ describe('LiveDeckPanel sorting', () => {
         expect(within(row).getByTestId('card-row-art')).toBeInTheDocument();
       }
     });
+  });
+
+  it('collapses deck library and hand sections independently and persists the state', async () => {
+    const snap = makeSnapshot({
+      original: [
+        { cardId: 'CS2_029', count: 1 },
+        { cardId: 'CS2_024', count: 1 },
+      ],
+      friendlyHand: ['COST10', 'COST1'],
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    const { unmount } = render(<LiveDeckPanel />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('deck-library-section')).toBeInTheDocument();
+      expect(screen.getAllByTestId('card-copy-row')).toHaveLength(2);
+      expect(screen.getAllByTestId('friendly-hand-row')).toHaveLength(2);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Collapse deck library' }));
+    });
+    expect(screen.queryByTestId('remaining-cards-section')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('friendly-hand-row')).toHaveLength(2);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Collapse current hand' }));
+    });
+    expect(screen.queryByTestId('friendly-hand-row')).not.toBeInTheDocument();
+
+    unmount();
+    render(<LiveDeckPanel />);
+
+    expect(screen.queryByTestId('remaining-cards-section')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('friendly-hand-row')).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Expand deck library' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Expand current hand' }));
+    });
+    expect(screen.getAllByTestId('card-copy-row')).toHaveLength(2);
+    expect(screen.getAllByTestId('friendly-hand-row')).toHaveLength(2);
   });
 
   it('marks extra friendly hand cards with a gift icon', async () => {

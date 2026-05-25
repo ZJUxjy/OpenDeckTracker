@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { I18nProvider } from '../src/i18n';
 import { Settings } from '../src/components/Settings';
+import { useAppearanceStore } from '../src/stores/appearance-store';
 
 function renderSettings(locale?: string) {
   return render(
@@ -16,6 +17,7 @@ describe('Settings — Overlay category', () => {
     localStorage.clear();
     vi.resetModules();
     (window as any).hdt = { overlay: { setEnabled: vi.fn(), setEnabledOpponent: vi.fn() } };
+    useAppearanceStore.setState({ gameOverlay: true, gameOverlayOpponent: true });
   });
 
   it('shows the overlay enable toggle when Overlay category is selected', () => {
@@ -44,21 +46,25 @@ describe('Settings — Overlay category', () => {
     renderSettings();
     fireEvent.click(screen.getByText('In-Game Overlay'));
 
-    const toggle = screen.getByText('Show in-game overlay').closest('.settings-row')!.querySelector('button')!;
+    const toggle = screen
+      .getByText('Show in-game overlay')
+      .closest('.settings-row')!
+      .querySelector('button')!;
     fireEvent.click(toggle);
 
-    const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
+    expect(useAppearanceStore.getState().gameOverlay).toBe(false);
   });
 
-  it('toggle reflects the current store state on render', async () => {
-    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+  it('toggle reflects the current store state on render', () => {
     useAppearanceStore.getState().setGameOverlay(true);
 
     renderSettings();
     fireEvent.click(screen.getByText('In-Game Overlay'));
 
-    const toggle = screen.getByText('Show in-game overlay').closest('.settings-row')!.querySelector('button')!;
+    const toggle = screen
+      .getByText('Show in-game overlay')
+      .closest('.settings-row')!
+      .querySelector('button')!;
     expect(toggle.className).toContain('bg-accent');
   });
 
@@ -84,36 +90,46 @@ describe('Settings — Overlay category', () => {
     renderSettings();
     fireEvent.click(screen.getByText('In-Game Overlay'));
 
-    const opponentToggle = screen.getByText('Show opponent overlay').closest('.settings-row')!.querySelector('button')!;
+    const opponentToggle = screen
+      .getByText('Show opponent overlay')
+      .closest('.settings-row')!
+      .querySelector('button')!;
     fireEvent.click(opponentToggle);
 
-    const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(true);
-    expect(setEnabledOpponent).toHaveBeenCalledWith(true);
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(false);
+    expect(setEnabledOpponent).toHaveBeenCalledWith(false);
   });
 
   it('clicking the player toggle does NOT visually flip the opponent toggle', () => {
     renderSettings();
     fireEvent.click(screen.getByText('In-Game Overlay'));
 
-    const opponentToggle = screen.getByText('Show opponent overlay').closest('.settings-row')!.querySelector('button')!;
+    const opponentToggle = screen
+      .getByText('Show opponent overlay')
+      .closest('.settings-row')!
+      .querySelector('button')!;
     const opponentBefore = opponentToggle.className;
 
-    const playerToggle = screen.getByText('Show in-game overlay').closest('.settings-row')!.querySelector('button')!;
+    const playerToggle = screen
+      .getByText('Show in-game overlay')
+      .closest('.settings-row')!
+      .querySelector('button')!;
     fireEvent.click(playerToggle);
 
     // Player toggle's class should change (flipped); opponent toggle's class should not.
     expect(opponentToggle.className).toBe(opponentBefore);
   });
 
-  it('opponent toggle reflects the current store state on render', async () => {
-    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+  it('opponent toggle reflects the current store state on render', () => {
     useAppearanceStore.getState().setGameOverlayOpponent(true);
 
     renderSettings();
     fireEvent.click(screen.getByText('In-Game Overlay'));
 
-    const opponentToggle = screen.getByText('Show opponent overlay').closest('.settings-row')!.querySelector('button')!;
+    const opponentToggle = screen
+      .getByText('Show opponent overlay')
+      .closest('.settings-row')!
+      .querySelector('button')!;
     expect(opponentToggle.className).toContain('bg-accent');
   });
 

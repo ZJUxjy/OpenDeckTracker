@@ -13,7 +13,7 @@ import {
   type DeckTrackerSnapshot,
 } from '@hdt/core';
 import { clsx } from 'clsx';
-import { ArrowDown, ArrowUp, Gift } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Gift } from 'lucide-react';
 import { useCardPreview, type RowPreviewRequest } from '../hooks/use-card-preview';
 import { getRarityCostBg } from '../lib/rarity';
 import type { CardDef, Rarity } from '@hdt/hearthdb';
@@ -53,6 +53,42 @@ const ART_MASK_STYLE: CSSProperties = {
   maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
   WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
 };
+
+const COLLAPSED_SECTIONS_STORAGE_KEY = 'hdt.liveDeckPanel.collapsedSections';
+
+interface CollapsedSectionsState {
+  deckLibrary: boolean;
+  friendlyHand: boolean;
+}
+
+const DEFAULT_COLLAPSED_SECTIONS: CollapsedSectionsState = {
+  deckLibrary: false,
+  friendlyHand: false,
+};
+
+function readCollapsedSectionsState(): CollapsedSectionsState {
+  if (typeof window === 'undefined') return DEFAULT_COLLAPSED_SECTIONS;
+  try {
+    const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_STORAGE_KEY);
+    if (!raw) return DEFAULT_COLLAPSED_SECTIONS;
+    const parsed = JSON.parse(raw) as Partial<CollapsedSectionsState>;
+    return {
+      deckLibrary: parsed.deckLibrary === true,
+      friendlyHand: parsed.friendlyHand === true,
+    };
+  } catch {
+    return DEFAULT_COLLAPSED_SECTIONS;
+  }
+}
+
+function writeCollapsedSectionsState(next: CollapsedSectionsState): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(COLLAPSED_SECTIONS_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Ignore storage failures; the collapse UI still works for this session.
+  }
+}
 
 /**
  * Live "remaining cards in deck" panel — replaces the mock Decklist
@@ -149,6 +185,9 @@ function compareDeckCopies(
 function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   const { t } = useTranslation();
   const deck = snapshot.deck!;
+  const [collapsedSections, setCollapsedSections] = useState(readCollapsedSectionsState);
+  const deckLibraryCollapsed = collapsedSections.deckLibrary;
+  const friendlyHandCollapsed = collapsedSections.friendlyHand;
   const friendlyBoardAttack = snapshot.boardAttack?.friendly ?? 0;
   const friendlyFaceDamage = snapshot.boardAttackToFace?.friendly ?? friendlyBoardAttack;
   const opposingEffectiveHealth = snapshot.opposingHero?.effectiveHealth ?? null;
@@ -236,6 +275,11 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   const [exitingCopyKeys, setExitingCopyKeys] = useState<Set<string>>(new Set());
   useEffect(() => {
     const prev = prevRemainingRef.current;
+    if (deckLibraryCollapsed) {
+      prevRemainingRef.current = new Map(remainingCount);
+      setExitingCopyKeys((current) => (current.size === 0 ? current : new Set()));
+      return;
+    }
     // First render for this panel state: seed baseline and skip animation.
     if (prev.size === 0) {
       prevRemainingRef.current = new Map(remainingCount);
@@ -258,7 +302,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     });
 
     prevRemainingRef.current = new Map(remainingCount);
-  }, [remainingCount]);
+  }, [deckLibraryCollapsed, remainingCount]);
 
   const handleAnimationEnd = useCallback((copyKey: string) => {
     setExitingCopyKeys((prev) => {
@@ -283,7 +327,16 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     onRowLeave();
   }, [onRowLeave]);
   const handleHandAnimationEnd = useCallback(() => {}, []);
-
+  const setSectionCollapsed = useCallback(
+    (section: keyof CollapsedSectionsState, collapsed: boolean) => {
+      setCollapsedSections((prev) => {
+        const next = { ...prev, [section]: collapsed };
+        writeCollapsedSectionsState(next);
+        return next;
+      });
+    },
+    [],
+  );
   return (
     <aside className="tavern-overlay-panel-inner w-full bg-overlay-surface border border-border flex flex-col h-full shrink-0 shadow-xl rounded-lg overflow-hidden">
       <div className="tavern-overlay-header bg-overlay-surface p-3 border-b border-border cursor-move" style={DRAG_HEADER_STYLE}>
@@ -309,144 +362,168 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
         data-overlay-list-area
         className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
       >
-        {(() => {
-          // Split copies by known deck position. Bottom-marked copies
-          // move into a separate "牌库底" section below the main deck
-          // list (Firestone-style), so the user can see at a glance
-          // what Waveshaping etc. has stacked at the bottom.
-          type Bucket = { main: DeckCopy[]; bottom: DeckCopy[]; top: DeckCopy[] };
-          const split = copies.reduce<Bucket>(
-            (acc, copy) => {
-              const pos = knownPositionForCopy(
-                copy,
-                remainingByCardId,
-                knownPositionsByCardId,
-              );
-              if (pos?.placement === 'bottom') acc.bottom.push(copy);
-              else if (pos?.placement === 'top') acc.top.push(copy);
-              else acc.main.push(copy);
-              return acc;
-            },
-            { main: [], bottom: [], top: [] },
-          );
-          const exitingKeys = [...exitingCopyKeys].filter(
-            (key) => !copies.some((c) => c.copyKey === key),
-          );
-          const renderRow = (
-            copy: Pick<DeckCopy, 'copyKey' | 'cardId' | 'ordinal'>,
-            exiting: boolean,
-          ) => (
-            <CardCopyRow
-              key={copy.copyKey}
-              copyKey={copy.copyKey}
-              cardId={copy.cardId}
-              exiting={exiting}
-              onAnimationEnd={handleAnimationEnd}
-              onMouseEnter={handleRowMouseEnter}
-              onMouseLeave={handleRowMouseLeave}
-              extraDisplay={snapshot.extraDisplay}
-              animalCompanionPoolCardIds={animalCompanionPoolCardIds}
-              hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
-              isExtraCard={isExtraRemainingCopy(
-                copy,
-                remainingByCardId,
-                extraRemainingByCardId,
-              )}
-              knownPosition={knownPositionForCopy(
-                copy,
-                remainingByCardId,
-                knownPositionsByCardId,
-              )}
-            />
-          );
-          return (
-            <>
-              {split.top.length > 0 && (
-                <section
-                  data-testid="deck-top-section"
-                  className="mb-2"
-                >
-                  <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
-                    {t('deckTracker.deckTopSection')}
-                    <span className="ml-2 font-mono tabular-nums text-text-dim">
-                      ({split.top.length})
-                    </span>
-                  </h3>
-                  <div className="space-y-1">
-                    {split.top.map((copy) => renderRow(copy, false))}
-                  </div>
-                </section>
-              )}
-              <section data-testid="remaining-cards-section">
-                <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
-                  {t('deckTracker.remaining')}
-                </h3>
-                <div className="space-y-1">
-                  {split.main.map((copy) => renderRow(copy, exitingCopyKeys.has(copy.copyKey)))}
-                  {exitingKeys.map((copyKey) => {
-                    const cardId = copyKey.split('#')[0]!;
-                    const ordinal = Number(copyKey.split('#')[1] ?? 0);
-                    return renderRow({ copyKey, cardId, ordinal }, true);
+        <section data-testid="deck-library-section">
+          <CollapsibleSectionHeader
+            title={t('deckTracker.deckLibrary')}
+            countLabel={`${totalRemaining} / ${totalOriginal}`}
+            collapsed={deckLibraryCollapsed}
+            ariaLabel={
+              deckLibraryCollapsed
+                ? t('deckTracker.expandDeckLibrary')
+                : t('deckTracker.collapseDeckLibrary')
+            }
+            onToggle={() => setSectionCollapsed('deckLibrary', !deckLibraryCollapsed)}
+          />
+          {!deckLibraryCollapsed && (
+            <div data-testid="deck-library-content" className="mt-2">
+              {(() => {
+                // Split copies by known deck position. Bottom-marked copies
+                // move into a separate "牌库底" section below the main deck
+                // list (Firestone-style), so the user can see at a glance
+                // what Waveshaping etc. has stacked at the bottom.
+                type Bucket = { main: DeckCopy[]; bottom: DeckCopy[]; top: DeckCopy[] };
+                const split = copies.reduce<Bucket>(
+                  (acc, copy) => {
+                    const pos = knownPositionForCopy(
+                      copy,
+                      remainingByCardId,
+                      knownPositionsByCardId,
+                    );
+                    if (pos?.placement === 'bottom') acc.bottom.push(copy);
+                    else if (pos?.placement === 'top') acc.top.push(copy);
+                    else acc.main.push(copy);
+                    return acc;
+                  },
+                  { main: [], bottom: [], top: [] },
+                );
+                const exitingKeys = [...exitingCopyKeys].filter(
+                  (key) => !copies.some((c) => c.copyKey === key),
+                );
+                const renderRow = (
+                  copy: Pick<DeckCopy, 'copyKey' | 'cardId' | 'ordinal'>,
+                  exiting: boolean,
+                ) => (
+                  <CardCopyRow
+                    key={copy.copyKey}
+                    copyKey={copy.copyKey}
+                    cardId={copy.cardId}
+                    exiting={exiting}
+                    onAnimationEnd={handleAnimationEnd}
+                    onMouseEnter={handleRowMouseEnter}
+                    onMouseLeave={handleRowMouseLeave}
+                    extraDisplay={snapshot.extraDisplay}
+                    animalCompanionPoolCardIds={animalCompanionPoolCardIds}
+                    hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
+                    isExtraCard={isExtraRemainingCopy(
+                      copy,
+                      remainingByCardId,
+                      extraRemainingByCardId,
+                    )}
+                    knownPosition={knownPositionForCopy(
+                      copy,
+                      remainingByCardId,
+                      knownPositionsByCardId,
+                    )}
+                  />
+                );
+                return (
+                  <>
+                    {split.top.length > 0 && (
+                      <section
+                        data-testid="deck-top-section"
+                        className="mb-2"
+                      >
+                        <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                          {t('deckTracker.deckTopSection')}
+                          <span className="ml-2 font-mono tabular-nums text-text-dim">
+                            ({split.top.length})
+                          </span>
+                        </h3>
+                        <div className="space-y-1">
+                          {split.top.map((copy) => renderRow(copy, false))}
+                        </div>
+                      </section>
+                    )}
+                    <section data-testid="remaining-cards-section">
+                      <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-text-mute">
+                        {t('deckTracker.remaining')}
+                      </h3>
+                      <div className="space-y-1">
+                        {split.main.map((copy) => renderRow(copy, exitingCopyKeys.has(copy.copyKey)))}
+                        {exitingKeys.map((copyKey) => {
+                          const cardId = copyKey.split('#')[0]!;
+                          const ordinal = Number(copyKey.split('#')[1] ?? 0);
+                          return renderRow({ copyKey, cardId, ordinal }, true);
+                        })}
+                      </div>
+                    </section>
+                    {split.bottom.length > 0 && (
+                      <section
+                        data-testid="deck-bottom-section"
+                        className="mt-3 border-t border-border pt-2"
+                      >
+                        <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                          {t('deckTracker.deckBottomSection')}
+                          <span className="ml-2 font-mono tabular-nums text-text-dim">
+                            ({split.bottom.length})
+                          </span>
+                        </h3>
+                        <div className="space-y-1">
+                          {split.bottom.map((copy) => renderRow(copy, false))}
+                        </div>
+                      </section>
+                    )}
+                  </>
+                );
+              })()}
+              {deck.extras.length > 0 && (
+                <div className="mt-3 px-2 py-1 text-xs text-text-dim border-t border-border pt-2">
+                  {t('deckTracker.extraCards', {
+                    count: deck.extras.reduce((s, c) => s + c.count, 0),
                   })}
                 </div>
-              </section>
-              {split.bottom.length > 0 && (
-                <section
-                  data-testid="deck-bottom-section"
-                  className="mt-3 border-t border-border pt-2"
-                >
-                  <h3 className="px-1 pb-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
-                    {t('deckTracker.deckBottomSection')}
-                    <span className="ml-2 font-mono tabular-nums text-text-dim">
-                      ({split.bottom.length})
-                    </span>
-                  </h3>
-                  <div className="space-y-1">
-                    {split.bottom.map((copy) => renderRow(copy, false))}
-                  </div>
-                </section>
               )}
-            </>
-          );
-        })()}
-        {deck.extras.length > 0 && (
-          <div className="mt-3 px-2 py-1 text-xs text-text-dim border-t border-border pt-2">
-            {t('deckTracker.extraCards', {
-              count: deck.extras.reduce((s, c) => s + c.count, 0),
-            })}
-          </div>
-        )}
-        <section data-testid="friendly-hand-section" className="mt-3 border-t border-border pt-2">
-          <div className="flex items-center justify-between gap-2 px-1 pb-1">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-text-mute">
-              {t('deckTracker.currentHand')}
-            </h3>
-            <span className="font-mono text-[11px] tabular-nums text-text-dim">
-              {friendlyHandRows.length}
-            </span>
-          </div>
-          {friendlyHandRows.length === 0 ? (
-            <div className="tavern-empty-row rounded border border-border bg-overlay-elevated backdrop-blur-xl px-2 py-2 text-center text-xs text-text-dim">
-              {t('deckTracker.emptyHand')}
             </div>
-          ) : (
-            <div className="space-y-1">
-              {friendlyHandRows.map((row, index) => (
-                <CardCopyRow
-                  key={`${row.cardId}-${index}`}
-                  copyKey={`hand-${index}-${row.cardId}`}
-                  cardId={row.cardId}
-                  exiting={false}
-                  testId="friendly-hand-row"
-                  onAnimationEnd={handleHandAnimationEnd}
-                  onMouseEnter={handleRowMouseEnter}
-                  onMouseLeave={handleRowMouseLeave}
-                  extraDisplay={snapshot.extraDisplay}
-                  animalCompanionPoolCardIds={animalCompanionPoolCardIds}
-                  hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
-                  isExtraCard={row.isExtraCard}
-                />
-              ))}
+          )}
+        </section>
+        <section data-testid="friendly-hand-section" className="mt-3 border-t border-border pt-2">
+          <CollapsibleSectionHeader
+            title={t('deckTracker.currentHand')}
+            countLabel={String(friendlyHandRows.length)}
+            collapsed={friendlyHandCollapsed}
+            ariaLabel={
+              friendlyHandCollapsed
+                ? t('deckTracker.expandCurrentHand')
+                : t('deckTracker.collapseCurrentHand')
+            }
+            onToggle={() => setSectionCollapsed('friendlyHand', !friendlyHandCollapsed)}
+          />
+          {!friendlyHandCollapsed && (
+            <div className="mt-2">
+              {friendlyHandRows.length === 0 ? (
+                <div className="tavern-empty-row rounded border border-border bg-overlay-elevated backdrop-blur-xl px-2 py-2 text-center text-xs text-text-dim">
+                  {t('deckTracker.emptyHand')}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {friendlyHandRows.map((row, index) => (
+                    <CardCopyRow
+                      key={`${row.cardId}-${index}`}
+                      copyKey={`hand-${index}-${row.cardId}`}
+                      cardId={row.cardId}
+                      exiting={false}
+                      testId="friendly-hand-row"
+                      onAnimationEnd={handleHandAnimationEnd}
+                      onMouseEnter={handleRowMouseEnter}
+                      onMouseLeave={handleRowMouseLeave}
+                      extraDisplay={snapshot.extraDisplay}
+                      animalCompanionPoolCardIds={animalCompanionPoolCardIds}
+                      hoveredRelatedSourceCardId={hoveredRelatedSourceCardId}
+                      isExtraCard={row.isExtraCard}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -465,6 +542,41 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
       </div>
 
     </aside>
+  );
+}
+
+function CollapsibleSectionHeader({
+  title,
+  countLabel,
+  collapsed,
+  ariaLabel,
+  onToggle,
+}: {
+  title: string;
+  countLabel: string;
+  collapsed: boolean;
+  ariaLabel: string;
+  onToggle: () => void;
+}) {
+  const Icon = collapsed ? ChevronRight : ChevronDown;
+  return (
+    <button
+      type="button"
+      aria-expanded={!collapsed}
+      aria-label={ariaLabel}
+      className="flex h-8 w-full items-center justify-between gap-2 rounded border border-border bg-overlay-elevated px-2 text-left text-text hover:border-border-hi hover:bg-overlay-hover"
+      onClick={onToggle}
+    >
+      <span className="flex min-w-0 items-center gap-1.5">
+        <Icon className="h-3.5 w-3.5 shrink-0 text-text-dim" strokeWidth={2.2} />
+        <span className="truncate text-[11px] font-semibold uppercase tracking-wider text-text-mute">
+          {title}
+        </span>
+      </span>
+      <span className="shrink-0 font-mono text-[11px] tabular-nums text-text-dim">
+        {countLabel}
+      </span>
+    </button>
   );
 }
 

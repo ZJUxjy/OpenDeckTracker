@@ -9,6 +9,7 @@ import {
 } from './locale';
 
 export const LANGUAGE_PREFERENCE_STORAGE_KEY = 'hdt.languagePreference';
+export const LANGUAGE_PREFERENCE_CHANGED_EVENT = 'hdt:language-preference-changed';
 
 interface I18nStoreState {
   languagePreference: LanguagePreference;
@@ -28,6 +29,7 @@ export const useI18nStore = create<I18nStoreState>((set, get) => ({
   setLanguagePreference: (preference) => {
     writeStoredPreference(preference);
     set({ languagePreference: preference });
+    notifyLanguagePreferenceChanged(preference);
     // Push the change to the other BrowserWindows (overlays + card
     // preview) so their in-memory I18n store updates in lockstep.
     // Each renderer process has its own JS heap; localStorage is
@@ -38,6 +40,7 @@ export const useI18nStore = create<I18nStoreState>((set, get) => ({
     if (get().languagePreference === preference) return;
     writeStoredPreference(preference);
     set({ languagePreference: preference });
+    notifyLanguagePreferenceChanged(preference);
   },
   getActiveLocale: (systemLanguage = getSystemLanguage()) =>
     resolveAppLocale(get().languagePreference, systemLanguage),
@@ -55,6 +58,15 @@ function broadcastLanguagePreference(preference: LanguagePreference): void {
   if (result && typeof result.catch === 'function') {
     void result.catch(() => undefined);
   }
+}
+
+function notifyLanguagePreferenceChanged(preference: LanguagePreference): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(
+    new CustomEvent(LANGUAGE_PREFERENCE_CHANGED_EVENT, {
+      detail: { languagePreference: preference },
+    }),
+  );
 }
 
 export function readStoredPreference(): LanguagePreference {

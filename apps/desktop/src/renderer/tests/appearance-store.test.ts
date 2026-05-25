@@ -14,6 +14,8 @@ describe('appearance store', () => {
     expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
     expect(useAppearanceStore.getState().accent).toBe('blue');
     expect(useAppearanceStore.getState().theme).toBe('system');
+    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(true);
   });
 
   it('round-trips preferences through localStorage', async () => {
@@ -30,8 +32,8 @@ describe('appearance store', () => {
         uiStyle: 'macos',
         accent: 'purple',
         theme: 'dark',
-        gameOverlay: false,
-        gameOverlayOpponent: false,
+        gameOverlay: true,
+        gameOverlayOpponent: true,
       }),
     );
 
@@ -57,8 +59,8 @@ describe('appearance store', () => {
       uiStyle: 'macos',
       accent: 'blue',
       theme: 'system',
-      gameOverlay: false,
-      gameOverlayOpponent: false,
+      gameOverlay: true,
+      gameOverlayOpponent: true,
     });
     (window as any).hdt = undefined;
   });
@@ -166,9 +168,9 @@ describe('appearance store', () => {
     }
   });
 
-  it('defaults gameOverlay to false when nothing is stored', async () => {
+  it('defaults gameOverlay to true when nothing is stored', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().gameOverlay).toBe(false);
+    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
   });
 
   it('round-trips gameOverlay through localStorage', async () => {
@@ -185,15 +187,21 @@ describe('appearance store', () => {
   });
 
   it('handles legacy payload without gameOverlay gracefully', async () => {
-    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density: 'compact', accent: 'purple' }));
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'compact', accent: 'purple' }),
+    );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
-    expect(useAppearanceStore.getState().gameOverlay).toBe(false);
+    expect(useAppearanceStore.getState().gameOverlay).toBe(true);
   });
 
   it('handles legacy payload without uiStyle gracefully', async () => {
-    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify({ density: 'compact', accent: 'purple' }));
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'compact', accent: 'purple' }),
+    );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
@@ -216,9 +224,9 @@ describe('appearance store', () => {
     (window as any).hdt = undefined;
   });
 
-  it('defaults gameOverlayOpponent to false when nothing is stored', async () => {
+  it('defaults gameOverlayOpponent to true when nothing is stored', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(false);
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(true);
   });
 
   it('round-trips gameOverlayOpponent through localStorage', async () => {
@@ -241,7 +249,7 @@ describe('appearance store', () => {
     );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(false);
+    expect(useAppearanceStore.getState().gameOverlayOpponent).toBe(true);
     expect(useAppearanceStore.getState().gameOverlay).toBe(true);
   });
 

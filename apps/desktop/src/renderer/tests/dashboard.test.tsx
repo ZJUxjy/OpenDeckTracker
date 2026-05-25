@@ -8,10 +8,9 @@ import { routes } from '../src/routes';
 import { useDeckTrackerStore } from '../src/stores/deck-tracker-store';
 
 function renderRoute(initialEntry = '/') {
-  const router = createMemoryRouter(
-    [{ path: '/', element: <App />, children: routes }],
-    { initialEntries: [initialEntry] },
-  );
+  const router = createMemoryRouter([{ path: '/', element: <App />, children: routes }], {
+    initialEntries: [initialEntry],
+  });
   return render(<RouterProvider router={router} />);
 }
 
@@ -62,7 +61,9 @@ describe('Dashboard rank display', () => {
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(false);
 
     renderRoute();
-    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
 
     expect(screen.getByText(/Rank:/)).toBeInTheDocument();
     expect(screen.getByText(/Unavailable/)).toBeInTheDocument();
@@ -73,32 +74,54 @@ describe('Dashboard rank display', () => {
 
   it('shows "Star N" when starLevel > 0 and not legend', async () => {
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
-    window.hdt.hearthmirror.getBattleTag = vi.fn().mockResolvedValue({ name: 'P', fullBattleTag: 'P#1' });
+    window.hdt.hearthmirror.getBattleTag = vi
+      .fn()
+      .mockResolvedValue({ name: 'P', fullBattleTag: 'P#1' });
     window.hdt.hearthmirror.getMedalInfo = vi.fn().mockResolvedValue({
-      standard: { legendRank: 0, starLevel: 5, bestStarLevel: 5, winStreak: 0, seasonGames: 10, seasonWins: 6 },
+      standard: {
+        legendRank: 0,
+        starLevel: 5,
+        bestStarLevel: 5,
+        winStreak: 0,
+        seasonGames: 10,
+        seasonWins: 6,
+      },
       wild: null,
       classic: null,
       twist: null,
     });
 
     renderRoute();
-    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
 
     expect(screen.getByText(/Star 5/)).toBeInTheDocument();
   });
 
   it('shows "Legend N" when legendRank > 0', async () => {
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
-    window.hdt.hearthmirror.getBattleTag = vi.fn().mockResolvedValue({ name: 'P', fullBattleTag: 'P#1' });
+    window.hdt.hearthmirror.getBattleTag = vi
+      .fn()
+      .mockResolvedValue({ name: 'P', fullBattleTag: 'P#1' });
     window.hdt.hearthmirror.getMedalInfo = vi.fn().mockResolvedValue({
-      standard: { legendRank: 42, starLevel: 51, bestStarLevel: 51, winStreak: 0, seasonGames: 50, seasonWins: 30 },
+      standard: {
+        legendRank: 42,
+        starLevel: 51,
+        bestStarLevel: 51,
+        winStreak: 0,
+        seasonGames: 50,
+        seasonWins: 30,
+      },
       wild: null,
       classic: null,
       twist: null,
     });
 
     renderRoute();
-    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
 
     expect(screen.getByText(/Legend 42/)).toBeInTheDocument();
   });
@@ -107,7 +130,9 @@ describe('Dashboard rank display', () => {
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(false);
 
     renderRoute('/overlay');
-    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
 
     expect(screen.queryByText(/Control Warrior/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Control Odyn Warrior/i)).not.toBeInTheDocument();
@@ -140,9 +165,31 @@ describe('Dashboard rank display', () => {
     });
 
     renderRoute();
-    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(screen.getByText('Fireball')).toBeInTheDocument();
+  });
+
+  it('renders dashboard stats as a semantic status grid', async () => {
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
+    useDeckTrackerStore.setState({ snapshot: makeSnapshot() });
+
+    renderRoute();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+
+    expect(screen.getByTestId('dashboard-stat-grid')).toHaveClass('dashboard-stat-grid');
+    expect(screen.getAllByTestId('dashboard-stat-card').map((card) => card.dataset.tone)).toEqual([
+      'deck',
+      'hand',
+      'idle',
+      'warning',
+    ]);
   });
 });

@@ -57,6 +57,7 @@ const INTERVAL_PRE_MATCH_MS = 500;
 const INTERVAL_IN_MATCH_MS = 500;
 /** Adaptive catch-up — fired right after observing a hand-size delta. */
 const INTERVAL_IMMEDIATE_MS = 0;
+const ASSEMBLY_CSHARP_RETRY_DELAYS_MS = [5_000, 10_000] as const;
 
 /** Snapshot pushed over IPC + reflected in the renderer Zustand store. */
 export interface OpponentCardRecord {
@@ -205,6 +206,10 @@ export interface DeckTrackerEvent {
 export type DeckTrackerEventName = DeckTrackerEvent['type'];
 type Handler = (event: DeckTrackerEvent) => void;
 
+function isAssemblyCSharpModuleMiss(message: string): boolean {
+  return /module not found:\s*Assembly-CSharp\.dll/i.test(message);
+}
+
 /**
  * Per-match state machine driver. Polls `HearthMirror`, mutates a
  * `Game` instance, computes the renderer-visible snapshot, emits
@@ -223,6 +228,7 @@ export class DeckTracker {
   private game: Game;
   private currentSnapshot: DeckTrackerSnapshot;
   private previousFriendlyHandSize = 0;
+  private assemblyCSharpModuleMisses = 0;
   private opponentRecordOrder = 0;
   private readonly opponentEntityOrders = new Map<number, number>();
   private readonly transientGraveyardOriginEntityIds = new Set<number>();
@@ -649,6 +655,7 @@ export class DeckTracker {
 
   start(): void {
     if (this.loop.isRunning()) return;
+    this.assemblyCSharpModuleMisses = 0;
     this.loop.start(
       INTERVAL_IDLE_MS,
       () => this.tick(),
@@ -663,6 +670,7 @@ export class DeckTracker {
    * IDLE-cadence 2s timer before noticing.
    */
   requestImmediateTick(): void {
+    this.assemblyCSharpModuleMisses = 0;
     this.loop.requestImmediate();
   }
 
@@ -886,6 +894,7 @@ export class DeckTracker {
       }
       this.previousFriendlyHandSize = handSize;
     }
+    this.assemblyCSharpModuleMisses = 0;
   }
 
   // ── Helpers ────────────────────────────────────────────────────────
@@ -1274,6 +1283,21 @@ export class DeckTracker {
     };
     this.currentSnapshot = errorSnapshot;
     this.emit({ type: 'error', snapshot: errorSnapshot, error: message });
+    this.applyAssemblyCSharpModuleMissBackoff(message);
+  }
+
+  private applyAssemblyCSharpModuleMissBackoff(message: string): void {
+    if (!isAssemblyCSharpModuleMiss(message)) {
+      this.assemblyCSharpModuleMisses = 0;
+      return;
+    }
+    const delay = ASSEMBLY_CSHARP_RETRY_DELAYS_MS[this.assemblyCSharpModuleMisses];
+    this.assemblyCSharpModuleMisses += 1;
+    if (delay === undefined) {
+      this.loop.pause();
+      return;
+    }
+    this.loop.setInterval(delay);
   }
 
   private applyIdentifiedDeck(identified: IdentifiedDeck): void {

@@ -20,6 +20,7 @@ import { CardPreviewWindow } from './card-preview-window';
 import { getHearthMirror } from './hearthmirror';
 import { initAutoUpdate } from './auto-update';
 import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
+import { computeOverlayPanelBounds } from './overlay-layout';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -84,11 +85,8 @@ if (!gotLock) {
     // Layout (matches user request):
     //   • opponent panel anchored to the LEFT edge of HS
     //   • player panel anchored to the RIGHT edge of HS
-    //   • panel height = 80% of HS height
-    //   • 10% top padding, 10% bottom padding
-    const PANEL_WIDTH = 320;
-    const PANEL_HEIGHT_RATIO = 0.8;
-    const PANEL_TOP_PAD_RATIO = 0.1;
+    //   • panel height = 80% of HS height, capped at 80% of 1080p
+    //   • 10% top padding
 
     const tracker = createHearthstoneWindowTracker({
       getWindow: () => getHearthMirror().getHearthstoneWindow(),
@@ -112,22 +110,9 @@ if (!gotLock) {
         const hsDip = screen.screenToDipRect(null, {
           x: hs.x, y: hs.y, width: hs.width, height: hs.height,
         });
-        const h = Math.round(hsDip.height * PANEL_HEIGHT_RATIO);
-        const y = hsDip.y + Math.round(hsDip.height * PANEL_TOP_PAD_RATIO);
-        // opponent on LEFT
-        opponentOverlay.setBounds({
-          x: hsDip.x + 8,
-          y,
-          width: PANEL_WIDTH,
-          height: h,
-        });
-        // player on RIGHT
-        playerOverlay.setBounds({
-          x: hsDip.x + hsDip.width - PANEL_WIDTH - 8,
-          y,
-          width: PANEL_WIDTH,
-          height: h,
-        });
+        const bounds = computeOverlayPanelBounds(hsDip);
+        opponentOverlay.setBounds(bounds.opponent);
+        playerOverlay.setBounds(bounds.player);
       } else {
         if (event.kind === 'visibility') {
           playerOverlay.setVisibleOnScreen(event.visible);

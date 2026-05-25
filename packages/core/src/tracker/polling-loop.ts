@@ -15,6 +15,7 @@
 export class PollingLoop {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private running = false;
+  private paused = false;
   private intervalMs = 2000;
   private fn: (() => void | Promise<void>) | null = null;
   private onError: ((err: unknown) => void) | undefined;
@@ -27,6 +28,7 @@ export class PollingLoop {
   start(intervalMs: number, fn: () => void | Promise<void>, onError?: (err: unknown) => void): void {
     if (this.running) return;
     this.running = true;
+    this.paused = false;
     this.intervalMs = intervalMs;
     this.fn = fn;
     this.onError = onError;
@@ -41,14 +43,26 @@ export class PollingLoop {
   /** Schedule the next tick to fire as soon as possible (~0ms). */
   requestImmediate(): void {
     if (!this.running) return;
+    this.paused = false;
     if (this.timer !== null) {
       clearTimeout(this.timer);
     }
     this.timer = setTimeout(this.tick, 0);
   }
 
+  /** Keep the loop running but stop scheduling ticks until resumed. */
+  pause(): void {
+    if (!this.running) return;
+    this.paused = true;
+    if (this.timer !== null) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+  }
+
   stop(): void {
     this.running = false;
+    this.paused = false;
     if (this.timer !== null) {
       clearTimeout(this.timer);
       this.timer = null;
@@ -68,7 +82,7 @@ export class PollingLoop {
     } catch (err) {
       this.onError?.(err);
     }
-    if (this.running) {
+    if (this.running && !this.paused) {
       this.timer = setTimeout(this.tick, this.intervalMs);
     }
   };
