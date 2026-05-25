@@ -13,7 +13,7 @@ const bolideBehemoth: EffectDef = {
   id: 'bolide-behemoth',
   sourceCardId: 'GDB_434',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default bolideBehemoth;

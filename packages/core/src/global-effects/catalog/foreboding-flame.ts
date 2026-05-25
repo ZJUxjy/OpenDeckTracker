@@ -13,7 +13,7 @@ const forebodingFlame: EffectDef = {
   id: 'foreboding-flame',
   sourceCardId: 'GDB_121',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default forebodingFlame;

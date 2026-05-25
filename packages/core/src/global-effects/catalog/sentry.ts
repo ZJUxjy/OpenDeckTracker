@@ -13,7 +13,7 @@ const sentry: EffectDef = {
   id: 'sentry',
   sourceCardId: 'SC_764',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default sentry;

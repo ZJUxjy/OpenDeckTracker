@@ -14,7 +14,7 @@ const lightshow: EffectDef = {
   id: 'lightshow',
   sourceCardId: 'ETC_528',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default lightshow;

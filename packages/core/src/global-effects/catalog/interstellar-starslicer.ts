@@ -13,7 +13,7 @@ const interstellarStarslicer: EffectDef = {
   id: 'interstellar-starslicer',
   sourceCardId: 'GDB_726',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default interstellarStarslicer;

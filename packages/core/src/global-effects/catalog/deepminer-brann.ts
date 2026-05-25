@@ -16,7 +16,7 @@ const deepminerBrann: EffectDef = {
   id: 'deepminer-brann',
   sourceCardId: 'DEEP_020',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
   pending: true,
 };
 

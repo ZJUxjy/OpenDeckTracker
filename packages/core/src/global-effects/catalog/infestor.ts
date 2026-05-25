@@ -12,7 +12,7 @@ const infestor: EffectDef = {
   id: 'infestor',
   sourceCardId: 'SC_002',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default infestor;

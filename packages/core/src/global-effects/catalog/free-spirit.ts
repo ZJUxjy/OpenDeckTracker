@@ -13,7 +13,7 @@ const freeSpirit: EffectDef = {
   id: 'free-spirit',
   sourceCardId: 'ETC_382',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default freeSpirit;
