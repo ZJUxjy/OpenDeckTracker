@@ -12,7 +12,7 @@ const artanis: EffectDef = {
   id: 'artanis',
   sourceCardId: 'SC_754',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default artanis;

@@ -15,7 +15,7 @@ const photonCannon: EffectDef = {
   id: 'photon-cannon',
   sourceCardId: 'SC_753',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
   pending: true,
 };
 

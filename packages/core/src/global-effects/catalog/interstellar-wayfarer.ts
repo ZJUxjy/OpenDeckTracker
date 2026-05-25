@@ -12,7 +12,7 @@ const interstellarWayfarer: EffectDef = {
   id: 'interstellar-wayfarer',
   sourceCardId: 'GDB_721',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default interstellarWayfarer;

@@ -13,7 +13,7 @@ const groovyCat: EffectDef = {
   id: 'groovy-cat',
   sourceCardId: 'ETC_385',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default groovyCat;

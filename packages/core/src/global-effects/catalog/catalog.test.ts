@@ -16,10 +16,15 @@ describe('EFFECT_CATALOG', () => {
     expect(new Set(sources).size).toBe(sources.length);
   });
 
-  it('every entry is a Standard caster effect (M1)', () => {
+  it('every entry is a caster-owned effect', () => {
     for (const def of EFFECT_CATALOG) {
-      expect(def.mode, `${def.id} mode`).toBe('STANDARD');
       expect(def.side, `${def.id} side`).toBe('caster');
+    }
+  });
+
+  it('catalog modes are STANDARD or WILD', () => {
+    for (const def of EFFECT_CATALOG) {
+      expect(['STANDARD', 'WILD'], `${def.id} mode`).toContain(def.mode);
     }
   });
 

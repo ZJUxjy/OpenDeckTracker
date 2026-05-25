@@ -13,7 +13,7 @@ const inzah: EffectDef = {
   id: 'inzah',
   sourceCardId: 'ETC_371',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default inzah;

@@ -14,7 +14,7 @@ const starlightGroove: EffectDef = {
   id: 'starlight-groove',
   sourceCardId: 'ETC_330',
   side: 'caster',
-  mode: 'STANDARD',
+  mode: 'WILD',
 };
 
 export default starlightGroove;
