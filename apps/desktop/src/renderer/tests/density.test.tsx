@@ -14,19 +14,19 @@ const themeCss = read('styles/theme.css');
 
 describe('compact density CSS rules', () => {
   it('declares a [data-density="compact"] selector', () => {
-    expect(themeCss).toMatch(/\[data-density="compact"\]/);
+    expect(themeCss).toMatch(/\[data-density=['"]compact['"]\]/);
   });
 
   it('targets settings rows, KPI cards, and recent-match rows', () => {
-    expect(themeCss).toMatch(/\[data-density="compact"\]\s*\.settings-row/);
-    expect(themeCss).toMatch(/\[data-density="compact"\]\s*\.kpi-card/);
-    expect(themeCss).toMatch(/\[data-density="compact"\]\s*\.recent-match-row/);
+    expect(themeCss).toMatch(/\[data-density=['"]compact['"]\]\s*\.settings-row/);
+    expect(themeCss).toMatch(/\[data-density=['"]compact['"]\]\s*\.kpi-card/);
+    expect(themeCss).toMatch(/\[data-density=['"]compact['"]\]\s*\.recent-match-row/);
   });
 
   it('does NOT target gameplay-critical surfaces (LiveDeckPanel, OpponentCardsPanel, Decklist)', () => {
-    expect(themeCss).not.toMatch(/\[data-density="compact"\].*LiveDeckPanel/i);
-    expect(themeCss).not.toMatch(/\[data-density="compact"\].*OpponentCardsPanel/i);
-    expect(themeCss).not.toMatch(/\[data-density="compact"\].*Decklist/i);
+    expect(themeCss).not.toMatch(/\[data-density=['"]compact['"]\].*LiveDeckPanel/i);
+    expect(themeCss).not.toMatch(/\[data-density=['"]compact['"]\].*OpponentCardsPanel/i);
+    expect(themeCss).not.toMatch(/\[data-density=['"]compact['"]\].*Decklist/i);
   });
 });
 

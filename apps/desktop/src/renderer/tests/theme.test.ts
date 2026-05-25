@@ -12,29 +12,29 @@ const themeCss = readFileSync(
 
 describe('macOS Liquid Glass theme tokens', () => {
   it('declares macOS System Blue as default light accent', () => {
-    expect(themeCss).toMatch(/--accent:\s*#007AFF;/);
+    expect(themeCss).toMatch(/--accent:\s*#007aff;/i);
   });
 
   it('declares macOS Dark mode accent in .dark scope', () => {
-    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--accent:\s*#0A84FF;/);
+    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--accent:\s*#0A84FF;/i);
   });
 
   it('declares the macOS surface ladder in :root (light) and .dark', () => {
     // Light defaults — true light mode
-    expect(themeCss).toMatch(/--surface-window:\s*#F4F4F6;/);
-    expect(themeCss).toMatch(/--surface-content:\s*#FFFFFF;/);
+    expect(themeCss).toMatch(/--surface-window:\s*#F4F4F6;/i);
+    expect(themeCss).toMatch(/--surface-content:\s*#FFFFFF;/i);
     // Dark overrides
-    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--surface-window:\s*#1C1C1E;/);
-    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--surface-content:\s*#242427;/);
+    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--surface-window:\s*#1C1C1E;/i);
+    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--surface-content:\s*#242427;/i);
   });
 
   it('declares light-mode text as dark (for true light backgrounds)', () => {
-    expect(themeCss).toMatch(/--text-primary:\s*#1C1C1E;/);
+    expect(themeCss).toMatch(/--text-primary:\s*#1C1C1E;/i);
     expect(themeCss).toMatch(/--text-secondary:\s*rgba\(0,\s*0,\s*0,/);
   });
 
   it('declares dark-mode text as light', () => {
-    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--text-primary:\s*#F4F4F8;/);
+    expect(themeCss).toMatch(/\.dark\s*\{[\s\S]*--text-primary:\s*#F4F4F8;/i);
   });
 
   it('declares dark-mode borders (dark-with-alpha for light mode)', () => {
@@ -143,18 +143,18 @@ describe('macOS Liquid Glass theme tokens', () => {
   });
 
   it('declares the WeChat UI skin without replacing the top-navigation layout', () => {
-    expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s*\{/);
-    expect(themeCss).toMatch(/--wechat-green:\s*#12B76A;/);
-    expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s+\.tavern-topbar\s*\{/);
-    expect(themeCss).toMatch(/:root\[data-ui-style="wechat"\]\s+\.tavern-main-surface\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='wechat'\]\s*\{/);
+    expect(themeCss).toMatch(/--wechat-green:\s*#12B76A;/i);
+    expect(themeCss).toMatch(/:root\[data-ui-style='wechat'\]\s+\.tavern-topbar\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='wechat'\]\s+\.tavern-main-surface\s*\{/);
   });
 
   it('declares the Fallout 76 Pip-Boy UI skin and terminal chrome', () => {
-    expect(themeCss).toMatch(/:root\[data-ui-style="fallout76"\]\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='fallout76'\]\s*\{/);
     expect(themeCss).toMatch(/--pip-green:\s*#6dff55;/i);
     expect(themeCss).toMatch(/--pip-amber:\s*#f3b336;/i);
-    expect(themeCss).toMatch(/:root\[data-ui-style="fallout76"\]\s+\.tavern-topbar\s*\{/);
-    expect(themeCss).toMatch(/:root\[data-ui-style="fallout76"\]\s+\.tavern-bottom-status\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='fallout76'\]\s+\.tavern-topbar\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='fallout76'\]\s+\.tavern-bottom-status\s*\{/);
     expect(themeCss).toMatch(/repeating-linear-gradient\(\s*180deg,[\s\S]*rgba\(141,\s*255,\s*122,\s*0\.045\)/);
   });
 
@@ -174,7 +174,7 @@ describe('macOS Liquid Glass theme tokens', () => {
 
   it('keeps the tavern desktop shell from drawing a full-window gold frame', () => {
     expect(themeCss).toMatch(
-      /:root\[data-ui-style="tavern"\]\s+\.tavern-app-frame\s*\{[\s\S]*border:\s*0;/,
+      /:root\[data-ui-style='tavern'\]\s+\.tavern-app-frame\s*\{[\s\S]*border:\s*0;/,
     );
   });
 });

@@ -481,13 +481,13 @@ export class DeckTracker {
     if (!extractor) return;
     const ctx = this.deckPositionExtractCtx?.();
     if (!ctx) {
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `[deck-position] no extractCtx wired; cardId=${event.cardId} entityId=${event.entityId}`,
       );
       return;
     }
-    // eslint-disable-next-line no-console
+     
     console.log(
       `[deck-position] extractor START cardId=${event.cardId} entityId=${event.entityId} ` +
       `event.controllerId=${event.controllerId} ` +
@@ -500,13 +500,13 @@ export class DeckTracker {
       .then(
         (placements) => {
           if (placements === null || placements.length === 0) {
-            // eslint-disable-next-line no-console
+             
             console.warn(
               `[deck-position] extractor RETURNED EMPTY cardId=${event.cardId} entityId=${event.entityId}`,
             );
             return;
           }
-          // eslint-disable-next-line no-console
+           
           console.log(
             `[deck-position] extractor RESOLVED cardId=${event.cardId} placements=${JSON.stringify(placements)}`,
           );
@@ -515,7 +515,7 @@ export class DeckTracker {
           this.emit({ type: 'state-change', snapshot: this.currentSnapshot });
         },
         (err) => {
-          // eslint-disable-next-line no-console
+           
           console.error(
             `[deck-position] extractor THREW cardId=${event.cardId}`,
             err,
@@ -1366,7 +1366,7 @@ export class DeckTracker {
     // `pnpm dev` can see what failed. The renderer's bottom-bar "Error"
     // pill only reflects that *some* tick failed; without this log the
     // operator has no way to see which line threw.
-    // eslint-disable-next-line no-console
+     
     console.error('[deck-tracker] tick error:', message, stack ?? '');
     const errorSnapshot: DeckTrackerSnapshot = {
       ...this.currentSnapshot,
