@@ -23,6 +23,17 @@ Its only job is to answer three yes/no questions in time-boxed fashion:
    inside the addon to read the Hearthstone window frame and
    fullscreen flag?
 
+## Prerequisites
+
+Before running the spike on a real Apple Silicon machine:
+
+- **rustc ≥ 1.88** (napi 3.9 requires it). Run `rustup update stable`
+  if you're on an older toolchain — known mismatch on the dev machine
+  was 1.79.
+- **macOS 12+** on Apple Silicon.
+- **Hearthstone Mac client** installed at `/Applications/Hearthstone/`
+  (or any path containing `/MacOS/Hearthstone`).
+
 ## Build & sign
 
 ```bash
@@ -33,6 +44,13 @@ bash ../../scripts/codesign-mac-spike.sh
 Expected output: `hearthmirror-mac-spike.darwin-arm64.node` next to
 `package.json`, and `codesign -dv` reporting the entitlements above
 applied.
+
+## Note on `.cargo/config.toml`
+
+The spike ships its own `.cargo/config.toml` that overrides the global
+USTC git-mirror replacement with the Tuna sparse mirror. This avoids
+an unrelated mirror outage from blocking spike validation. The file
+is deleted at teardown along with the rest of the package.
 
 ## Reference
 

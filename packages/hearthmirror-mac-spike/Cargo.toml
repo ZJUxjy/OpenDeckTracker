@@ -17,15 +17,20 @@ napi-derive = "3"
 # macOS-only deps. Gated by [target."cfg(target_os = ...)"] so that running
 # `cargo check` from a non-mac host (e.g. our CI Windows runner) does not
 # attempt to fetch / build these.
+#
+# Versions chosen 2026-05 — objc2 family 0.3.x was a long stable series
+# but is being superseded by 0.6/0.3-paired releases. We use:
+#   - objc2 0.6.x (current major)
+#   - objc2-* framework crates 0.3.x (matched series)
 [target."cfg(target_os = \"macos\")".dependencies]
 mach2 = "0.4"
 libproc = "0.14"
 core-foundation = "0.10"
-core-graphics = "0.24"
-objc2 = "0.5"
-objc2-app-kit = { version = "0.2", features = ["NSWorkspace", "NSRunningApplication"] }
-objc2-application-services = { version = "0.2", features = ["AXUIElement", "AXValue"] }
-objc2-foundation = { version = "0.2", features = ["NSString", "NSArray", "NSDictionary", "NSValue"] }
+core-graphics = "0.25"
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSWorkspace", "NSRunningApplication"] }
+objc2-application-services = { version = "0.3", features = ["AXUIElement", "AXValue"] }
+objc2-foundation = { version = "0.3", features = ["NSString", "NSArray", "NSDictionary", "NSValue"] }
 
 [build-dependencies]
 napi-build = "2"

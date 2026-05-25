@@ -1,0 +1,14 @@
+# Spike-local cargo config (deleted at teardown).
+#
+# The user's global ~/.cargo/config replaces crates-io with a USTC
+# git mirror that is intermittently unreachable. We redirect the
+# same `ustc` source name to a working sparse mirror.
+#
+# Tuna (Tsinghua) provides a sparse mirror that's faster and not
+# subject to the git-fetch flakiness:
+
+[source.ustc]
+registry = "sparse+https://mirrors.tuna.tsinghua.edu.cn/crates.io-index/"
+
+[net]
+git-fetch-with-cli = true
