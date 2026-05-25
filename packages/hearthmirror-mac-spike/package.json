@@ -1,0 +1,22 @@
+{
+  "name": "@hdt/hearthmirror-mac-spike",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.cjs",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "napi build --platform --release --target aarch64-apple-darwin",
+    "build:debug": "napi build --platform --target aarch64-apple-darwin",
+    "sign": "../../scripts/codesign-mac-spike.sh"
+  },
+  "napi": {
+    "name": "hearthmirror-mac-spike",
+    "triples": {
+      "defaults": false,
+      "additional": ["aarch64-apple-darwin"]
+    }
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3"
+  }
+}

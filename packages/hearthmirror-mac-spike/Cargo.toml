@@ -1,0 +1,34 @@
+[package]
+name = "hearthmirror-mac-spike"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+# Throw-away spike crate for ADR 0002 validation.
+# Deleted at the end of `spike-hearthmirror-mac-bridge`. Do not depend on this.
+
+[dependencies]
+napi = { version = "3", default-features = false, features = ["napi9", "async"] }
+napi-derive = "3"
+
+# macOS-only deps. Gated by [target."cfg(target_os = ...)"] so that running
+# `cargo check` from a non-mac host (e.g. our CI Windows runner) does not
+# attempt to fetch / build these.
+[target."cfg(target_os = \"macos\")".dependencies]
+mach2 = "0.4"
+libproc = "0.14"
+core-foundation = "0.10"
+core-graphics = "0.24"
+objc2 = "0.5"
+objc2-app-kit = { version = "0.2", features = ["NSWorkspace", "NSRunningApplication"] }
+objc2-application-services = { version = "0.2", features = ["AXUIElement", "AXValue"] }
+objc2-foundation = { version = "0.2", features = ["NSString", "NSArray", "NSDictionary", "NSValue"] }
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true

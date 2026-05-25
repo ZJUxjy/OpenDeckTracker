@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Required for task_for_pid + mach_vm_read_overwrite against another
+       running process. Without this entitlement (and without code signing),
+       task_for_pid returns KERN_NO_ACCESS / KERN_FAILURE on macOS 12+. -->
+  <key>com.apple.security.cs.debugger</key>
+  <true/>
+
+  <!-- The dev Electron binary loads .node addons at runtime; with hardened
+       runtime turned on, library validation refuses to load addons that
+       are not signed by the same team. ad-hoc signing makes every addon
+       count as a different "team", so we have to opt out. -->
+  <key>com.apple.security.cs.disable-library-validation</key>
+  <true/>
+
+  <!-- Allows the host process itself to be a debugger target. Useful
+       during development; harmless for spike scope. -->
+  <key>com.apple.security.get-task-allow</key>
+  <true/>
+</dict>
+</plist>

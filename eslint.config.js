@@ -16,6 +16,7 @@ export default tseslint.config(
       '**/coverage/**',
       'figma_design/**',
       'packages/hearthmirror/native/**',
+      'packages/hearthmirror-mac-spike/**',
     ],
   },
   js.configs.recommended,
