@@ -10,7 +10,6 @@ import {
   cardTileCachePath,
   cardTileCacheUrl,
   cleanLegacyTileCacheDirs,
-  clearFileExistenceCache,
   enforceCardImageCacheCap,
   ensureCardImageCached,
   ensureCardImagesCachedBatch,
@@ -70,7 +69,7 @@ describe('card image cache', () => {
 
   it('downloads an image once and returns the cached local URL on later requests', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse());
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse()));
     vi.stubGlobal('fetch', fetchMock);
 
     const first = await ensureCardImageCached('CS2_029', { root });
@@ -79,7 +78,8 @@ describe('card image cache', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(second.url).toBe(first.url);
     expect(first.url).toMatch(/^hdt-card-image:\/\//);
-    await expect(stat(first.path)).resolves.toMatchObject({ isFile: expect.any(Function) });
+    const fileStat = await stat(first.path);
+    expect(fileStat.isFile()).toBe(true);
   });
 
   it('falls back to enUS when the primary zhCN image is missing', async () => {
@@ -126,7 +126,7 @@ describe('card tile cache', () => {
 
   it('downloads a tile once and returns the cached local URL on later requests', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse());
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse()));
     vi.stubGlobal('fetch', fetchMock);
 
     const first = await ensureCardTileCached('CS2_029', { root });
@@ -135,12 +135,13 @@ describe('card tile cache', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(first.url).toBe('hdt-card-image://tile/CS2_029.png');
     expect(second.url).toBe(first.url);
-    await expect(stat(first.path)).resolves.toMatchObject({ isFile: expect.any(Function) });
+    const tileStat = await stat(first.path);
+    expect(tileStat.isFile()).toBe(true);
   });
 
   it('throws when the CDN tile fetch fails with a non-retryable status', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse(404));
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse(404)));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(ensureCardTileCached('NONEXISTENT_CARD', { root })).rejects.toThrow(/failed to download/i);
@@ -179,7 +180,7 @@ describe('card tile cache', () => {
 
   it('hits the CDN exactly once per cardId via the URL builder', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse());
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse()));
     vi.stubGlobal('fetch', fetchMock);
 
     await ensureCardTileCached('CS2_029', { root, fetchImpl: fetchMock as typeof fetch });
@@ -193,10 +194,14 @@ describe('card tile cache', () => {
     const root = await createTempRoot();
     // 100x100 PNG: 20px white border on left+right, colored center.
     const png = makeBorderedPng(100, 100, { left: 20, right: 20, top: 0, bottom: 0 });
-    const fetchMock = vi.fn(async () => new Response(new Uint8Array(png), {
-      status: 200,
-      headers: { 'content-type': 'image/png' },
-    }));
+    const fetchMock = vi.fn(() =>
+      Promise.resolve(
+        new Response(new Uint8Array(png), {
+          status: 200,
+          headers: { 'content-type': 'image/png' },
+        }),
+      ),
+    );
 
     await ensureCardTileCached('CS2_029', {
       root,
@@ -443,7 +448,7 @@ describe('trimWhiteBorders', () => {
 describe('ensureCardImagesCachedBatch', () => {
   it('downloads multiple images in parallel', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse());
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse()));
     vi.stubGlobal('fetch', fetchMock);
 
     const results = await ensureCardImagesCachedBatch(['CS2_029', 'CS2_030'], { root });
@@ -472,7 +477,7 @@ describe('ensureCardImagesCachedBatch', () => {
 describe('ensureCardTilesCachedBatch', () => {
   it('downloads multiple tiles in parallel', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse());
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse()));
     vi.stubGlobal('fetch', fetchMock);
 
     const results = await ensureCardTilesCachedBatch(['CS2_029', 'CS2_030'], { root });
@@ -487,7 +492,7 @@ describe('ensureCardTilesCachedBatch', () => {
 describe('fileExistenceCache', () => {
   it('caches stat results across multiple lookups', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse());
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse()));
     vi.stubGlobal('fetch', fetchMock);
 
     const first = await ensureCardImageCached('CS2_029', { root });
@@ -502,7 +507,7 @@ describe('fileExistenceCache', () => {
 
   it('clears cached entries after enforceCardImageCacheCap removes files', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi.fn(async () => pngResponse());
+    const fetchMock = vi.fn(() => Promise.resolve(pngResponse()));
     vi.stubGlobal('fetch', fetchMock);
     const fs = await import('node:fs/promises');
     const now = Date.now();

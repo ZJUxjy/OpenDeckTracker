@@ -612,7 +612,7 @@ function KeyCardRow({
   const def = useCardDef(cardId);
   const name = def?.name ?? fallbackName;
   const cost = def?.cost ?? fallbackCost;
-  const rarity = def?.rarity as Rarity | undefined;
+  const rarity = def?.rarity;
   const tileUrl = useCardTileUrl(cardId);
   const ref = useRef<HTMLDivElement>(null);
   return (

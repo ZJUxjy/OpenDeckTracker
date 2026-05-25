@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process';
+import { accessSync } from 'node:fs';
 import { access, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { HearthWatcherDiagnostic } from './types/diagnostics';
@@ -129,7 +130,7 @@ function detectHearthstoneInstallDir(): string | null {
       for (const sub of ['battle\\Hearthstone', 'Hearthstone']) {
         const candidate = `${root}\\${sub}\\`;
         try {
-          require('node:fs').accessSync(candidate);
+          accessSync(candidate);
           return candidate.replace(/[\\/]$/, '');
         } catch {
           // ignore

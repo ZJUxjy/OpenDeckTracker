@@ -154,7 +154,9 @@ export async function ensureSetLogoCached(
 
   const promise = downloadSetLogo(setCode, remoteUrl, filePath, url, options.fetchImpl);
   inFlight.set(key, promise);
-  promise.finally(() => { inFlight.delete(key); });
+  void promise.finally(() => {
+    inFlight.delete(key);
+  });
   return promise;
 }
 

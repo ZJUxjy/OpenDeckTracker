@@ -92,7 +92,11 @@ function isHearthstoneRunning(): Promise<boolean> {
       { windowsHide: true, timeout: TASKLIST_TIMEOUT_MS },
       (err, stdout) => {
         if (err) {
-          reject(err);
+          reject(
+            err instanceof Error
+              ? err
+              : new Error(typeof err === 'string' ? err : 'tasklist failed'),
+          );
           return;
         }
         // CSV row format: "Hearthstone.exe","12345","Console","1","350,000 K"

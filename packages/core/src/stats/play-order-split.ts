@@ -30,7 +30,8 @@ export function computePlayOrderSplit(matches: MatchHistoryRecord[]): PlayOrderS
     else if (m.result === 'loss') bucket.losses += 1;
     // unknown-result matches don't count toward wins/losses
   }
-  for (const bucket of Object.values(split)) {
+  for (const key of ['first', 'coin', 'unknown'] as const) {
+    const bucket = split[key];
     const known = bucket.wins + bucket.losses;
     bucket.winrate = known === 0 ? null : Math.round((bucket.wins / known) * 1000) / 10;
   }

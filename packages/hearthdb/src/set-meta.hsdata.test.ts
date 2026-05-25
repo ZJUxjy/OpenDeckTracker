@@ -52,7 +52,7 @@ describeIfData('set-meta vs real card database', () => {
     // future maintainers spot drift; does not block CI.
     const missing = [...setsInData.keys()].filter((code) => !SET_LABELS[code]);
     if (missing.length > 0) {
-      // eslint-disable-next-line no-console
+       
       console.warn(
         `[set-meta] ${missing.length} set codes in production data have no SET_LABELS entry: ${missing.join(', ')}`,
       );

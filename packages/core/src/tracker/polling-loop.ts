@@ -32,7 +32,9 @@ export class PollingLoop {
     this.intervalMs = intervalMs;
     this.fn = fn;
     this.onError = onError;
-    this.timer = setTimeout(this.tick, 0);
+    this.timer = setTimeout(() => {
+      void this.tick();
+    }, 0);
   }
 
   /** Update the polling interval. Takes effect on the NEXT scheduled tick. */
@@ -47,7 +49,9 @@ export class PollingLoop {
     if (this.timer !== null) {
       clearTimeout(this.timer);
     }
-    this.timer = setTimeout(this.tick, 0);
+    this.timer = setTimeout(() => {
+      void this.tick();
+    }, 0);
   }
 
   /** Keep the loop running but stop scheduling ticks until resumed. */
@@ -83,7 +87,9 @@ export class PollingLoop {
       this.onError?.(err);
     }
     if (this.running && !this.paused) {
-      this.timer = setTimeout(this.tick, this.intervalMs);
+      this.timer = setTimeout(() => {
+        void this.tick();
+      }, this.intervalMs);
     }
   };
 }

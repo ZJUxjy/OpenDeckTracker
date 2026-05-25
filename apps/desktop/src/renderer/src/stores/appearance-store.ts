@@ -148,8 +148,8 @@ function writeStored(s: StoredShape): void {
 function broadcastStored(s: StoredShape): void {
   if (typeof window === 'undefined') return;
   const result = window.hdt?.appearance?.broadcast?.(s);
-  if (result && typeof result.catch === 'function') {
-    void result.catch(() => undefined);
+  if (result !== undefined) {
+    void Promise.resolve(result).catch(() => undefined);
   }
 }
 
@@ -196,7 +196,7 @@ export const useAppearanceStore = create<AppearanceState>((set) => ({
     writeStored(stored);
     broadcastStored(stored);
     set({ gameOverlay: next });
-    window.hdt?.overlay?.setEnabled?.(next);
+    void window.hdt?.overlay?.setEnabled?.(next);
   },
   setGameOverlayOpponent: (next) => {
     const s = useAppearanceStore.getState();
@@ -204,7 +204,7 @@ export const useAppearanceStore = create<AppearanceState>((set) => ({
     writeStored(stored);
     broadcastStored(stored);
     set({ gameOverlayOpponent: next });
-    window.hdt?.overlay?.setEnabledOpponent?.(next);
+    void window.hdt?.overlay?.setEnabledOpponent?.(next);
   },
   silentSetGameOverlay: (next) => {
     const s = useAppearanceStore.getState();

@@ -4,7 +4,6 @@ import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 import {
-  type Deck,
   type DeckCard,
   type DeckDetail,
   type DeckSource,

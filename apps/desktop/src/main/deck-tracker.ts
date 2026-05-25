@@ -827,7 +827,8 @@ function numericEntityRef(ref: unknown): number | null {
 function zoneFromPowerTag(value: unknown): Zone | undefined {
   if (value === undefined) return undefined;
   if (typeof value === 'number') return zoneFromNumber(value);
-  const normalized = String(value).toUpperCase();
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.toUpperCase();
   switch (normalized) {
     case 'INVALID':
       return 'INVALID';

@@ -17,6 +17,7 @@ vi.mock('electron', () => {
   return { ipcMain, BrowserWindow };
 });
 
+import { decodeDeck } from '@hdt/hearthdb';
 import * as electron from 'electron';
 import type {
   DeckTrackerSnapshot,
@@ -318,7 +319,6 @@ describe('computePredictions (helper)', () => {
 
 function decodeDeckHelper(deckstring: string): { cards: { dbfId: number; count: number }[] } | null {
   try {
-    const { decodeDeck } = require('@hdt/hearthdb') as typeof import('@hdt/hearthdb');
     const bp = decodeDeck(deckstring);
     return { cards: bp.cards };
   } catch {

@@ -277,7 +277,7 @@ function DeckPopupRow({
   const def = useCardDef(row.cardId);
   const name = def?.name ?? row.fallbackName;
   const cost = def?.cost ?? row.cost;
-  const rarity = def?.rarity as Rarity | undefined;
+  const rarity = def?.rarity;
   const tileUrl = useCardTileUrl(row.cardId);
   const ref = useRef<HTMLDivElement>(null);
 

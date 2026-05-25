@@ -90,7 +90,7 @@ function kebabCase(s: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-const ds: Dataset = JSON.parse(readFileSync(DATA_PATH, 'utf8'));
+const ds = JSON.parse(readFileSync(DATA_PATH, 'utf8')) as Dataset;
 
 const lines: string[] = [];
 lines.push('/**');

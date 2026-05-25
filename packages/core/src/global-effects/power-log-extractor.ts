@@ -60,14 +60,14 @@ export async function readBeastSpawnsAfter(
   const waitMs = options?.waitMs ?? DEFAULT_WAIT_MS;
   const deadline = Date.now() + waitMs;
 
-  // eslint-disable-next-line no-console
+   
   console.log(
     `[global-effects] extractor START cardId=${event.cardId} entityId=${event.entityId} bufferSize=${ctx.recentEvents.length}`,
   );
 
   let found = scanForSpawns(ctx.recentEvents, event, count, lookahead);
   if (found.length >= count) {
-    // eslint-disable-next-line no-console
+     
     console.log(
       `[global-effects] extractor PASS-1 cardId=${event.cardId} pool=${found.slice(0, count).join(',')}`,
     );
@@ -80,7 +80,7 @@ export async function readBeastSpawnsAfter(
     attempts++;
     const remaining = deadline - Date.now();
     if (remaining <= 0) {
-      // eslint-disable-next-line no-console
+       
       console.log(
         `[global-effects] extractor TIMEOUT cardId=${event.cardId} attempts=${attempts} found=${found.join(',')}`,
       );
@@ -90,7 +90,7 @@ export async function readBeastSpawnsAfter(
     const more = await ctx.waitForMoreEvents(stepMs);
     found = scanForSpawns(more, event, count, lookahead);
     if (found.length >= count) {
-      // eslint-disable-next-line no-console
+       
       console.log(
         `[global-effects] extractor PASS-N cardId=${event.cardId} attempts=${attempts} pool=${found.slice(0, count).join(',')}`,
       );
@@ -106,7 +106,7 @@ function scanForSpawns(
   lookahead: number,
 ): string[] {
   const startIdx = findCastIndex(events, cast);
-  // eslint-disable-next-line no-console
+   
   console.log(
     `[global-effects] extractor scan cardId=${cast.cardId} entityId=${cast.entityId} startIdx=${startIdx} bufferSize=${events.length}`,
   );

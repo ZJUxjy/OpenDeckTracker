@@ -55,8 +55,8 @@ function broadcastLanguagePreference(preference: LanguagePreference): void {
   // Riding language on that channel was wiping every other window's
   // visual appearance whenever the user toggled language.
   const result = window.hdt?.i18n?.broadcast?.({ languagePreference: preference });
-  if (result && typeof result.catch === 'function') {
-    void result.catch(() => undefined);
+  if (result !== undefined) {
+    void Promise.resolve(result).catch(() => undefined);
   }
 }
 
