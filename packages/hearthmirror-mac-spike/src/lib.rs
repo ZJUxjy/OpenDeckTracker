@@ -4,9 +4,10 @@
 //!   1. ad-hoc signed napi-rs `darwin-arm64` addon can call
 //!      `task_for_pid` + `mach_vm_read_overwrite` against Hearthstone.
 //!   2. The resulting `.node` is loadable by Electron 37 / Node 22.
-//!   3. `CGWindowListCopyWindowInfo` + Accessibility API can read the
-//!      Hearthstone window frame and fullscreen state from inside the
-//!      addon.
+//!   3. `CGWindowListCopyWindowInfo` can read the Hearthstone window
+//!      frame from inside the addon, plus a heuristic fullscreen
+//!      check (frame ≈ main-display bounds). Real AX-based fullscreen
+//!      detection is Phase 1 work (see ADR 0002).
 //!
 //! All non-mac targets get inert stubs that return Err — the napi
 //! surface stays the same so Windows builds (which never load this
@@ -105,6 +106,8 @@ mod mac {
     /// and the CN client).
     const TARGET_BIN_NEEDLE: &str = "/MacOS/Hearthstone";
 
+    use std::ptr;
+
     pub fn spike_read_macho_impl() -> napi::Result<MachoSpikeResult> {
         let pid = find_hearthstone_pid()?;
         let task = open_task(pid)?;
@@ -149,7 +152,7 @@ mod mac {
     pub fn spike_read_window_impl() -> napi::Result<WindowSpikeResult> {
         let pid = find_hearthstone_pid()?;
         let frame = window::find_hearthstone_window_frame(pid)?;
-        let fullscreen = window::is_hearthstone_fullscreen(pid).unwrap_or(false);
+        let fullscreen = window::looks_fullscreen(&frame);
         Ok(WindowSpikeResult {
             pid,
             x: frame.x,
@@ -185,10 +188,10 @@ mod mac {
         // `&mut task` is a valid out-pointer.
         let kr = unsafe { task_for_pid(mach_task_self(), pid as i32, &mut task) };
         if kr != KERN_SUCCESS {
-            // KERN_NO_ACCESS (8) and KERN_FAILURE (5) are the two we
-            // expect for the unsigned-binary scenario; both must be
-            // surfaced verbatim so the spike report's negative test
-            // can prove that signing is required.
+            // KERN_NO_ACCESS (8) is the typical failure when this
+            // process is missing `com.apple.security.cs.debugger`
+            // (or is unsigned). Surface the kernel return verbatim
+            // so the spike report can quote the real symptom.
             let label = if kr == KERN_NO_ACCESS {
                 "KERN_NO_ACCESS"
             } else {
@@ -224,7 +227,16 @@ mod mac {
             )));
         }
 
-        let all_image_infos_addr: u64 = info.all_image_info_addr;
+        // mach2's `task_dyld_info` is `#[repr(C, packed(4))]`; reading
+        // a u64 field directly out of a packed struct is a recent
+        // rustc lint (`unaligned_references`). Use `read_unaligned`
+        // to stay clear of that on rustc 1.85+.
+        // SAFETY: `info` is a fully-initialised value of the right
+        // type sitting on our own stack; a misaligned u64 read on
+        // arm64 is allowed (no SIGBUS) and read_unaligned is the
+        // documented escape hatch for packed-struct field access.
+        let all_image_infos_addr: u64 =
+            unsafe { ptr::read_unaligned(ptr::addr_of!(info.all_image_info_addr)) };
         if all_image_infos_addr == 0 {
             return Err(napi::Error::from_reason(
                 "dyld_all_image_infos address is 0 — process may still be very early in startup",
@@ -329,18 +341,20 @@ mod mac {
         Ok(String::from_utf8_lossy(&buf[..end]).into_owned())
     }
 
-    // ─── window probe (Core Graphics + Accessibility) ──────────────
+    // ─── window probe (Core Graphics — frame + heuristic fullscreen) ──
 
-    mod window {
+    pub mod window {
         use core_foundation::array::{CFArray, CFArrayRef};
-        use core_foundation::base::{CFType, TCFType};
-        use core_foundation::boolean::CFBoolean;
+        use core_foundation::base::{CFType, CFTypeRef, TCFType, ToVoid};
         use core_foundation::dictionary::CFDictionary;
         use core_foundation::number::CFNumber;
         use core_foundation::string::CFString;
         use core_graphics::display::{
+            CGDisplayBounds, CGMainDisplayID, CGWindowListCopyWindowInfo,
+        };
+        use core_graphics::window::{
             kCGNullWindowID, kCGWindowListExcludeDesktopElements,
-            kCGWindowListOptionOnScreenOnly, CGWindowListCopyWindowInfo,
+            kCGWindowListOptionOnScreenOnly,
         };
 
         pub struct Frame {
@@ -352,8 +366,8 @@ mod mac {
 
         pub fn find_hearthstone_window_frame(pid: u32) -> napi::Result<Frame> {
             let opts = kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements;
-            // SAFETY: CG returns a +1 retained CFArray; we wrap with
-            // wrap_under_create_rule which adopts the retain count.
+            // SAFETY: CG returns a +1 retained CFArray; wrap_under_create_rule
+            // adopts that retain count.
             let array_ref: CFArrayRef =
                 unsafe { CGWindowListCopyWindowInfo(opts, kCGNullWindowID) };
             if array_ref.is_null() {
@@ -361,7 +375,11 @@ mod mac {
                     "CGWindowListCopyWindowInfo returned null",
                 ));
             }
-            let array: CFArray<CFDictionary<CFString, CFType>> =
+            // Untyped CFDictionary (K=V=*const c_void). The typed
+            // `CFDictionary<CFString, CFType>` form fails
+            // `CFType::downcast` because it does not implement
+            // `ConcreteCFType` — see B2 in the spike review.
+            let array: CFArray<CFDictionary> =
                 unsafe { CFArray::wrap_under_create_rule(array_ref) };
 
             let key_owner_pid = CFString::from_static_string("kCGWindowOwnerPID");
@@ -369,35 +387,27 @@ mod mac {
             let key_bounds = CFString::from_static_string("kCGWindowBounds");
 
             let mut best: Option<Frame> = None;
-            for i in 0..array.len() {
-                let Some(dict) = array.get(i) else { continue };
+            for dict_ref in array.iter() {
+                let dict: &CFDictionary = &dict_ref;
 
-                let Some(owner_pid_value) = dict.find(&key_owner_pid) else { continue };
-                let Some(owner_pid_num) = owner_pid_value.downcast::<CFNumber>() else { continue };
-                let Some(owner_pid_i64) = owner_pid_num.to_i64() else { continue };
+                let Some(owner_pid_i64) = dict_get_i64(dict, &key_owner_pid) else { continue };
                 if owner_pid_i64 as u32 != pid {
                     continue;
                 }
 
                 // Layer 0 is the normal app window layer; the screen-saver
                 // / dock / spotlight live on other layers.
-                if let Some(layer_v) = dict.find(&key_layer) {
-                    if let Some(layer_n) = layer_v.downcast::<CFNumber>() {
-                        if layer_n.to_i64().unwrap_or(0) != 0 {
-                            continue;
-                        }
+                if let Some(layer) = dict_get_i64(dict, &key_layer) {
+                    if layer != 0 {
+                        continue;
                     }
                 }
 
-                let Some(bounds_v) = dict.find(&key_bounds) else { continue };
-                let Some(bounds) = bounds_v.downcast::<CFDictionary<CFString, CFType>>() else {
-                    continue;
-                };
-                let frame = read_bounds(&bounds);
-                let Some(frame) = frame else { continue };
+                let Some(bounds_dict) = dict_get_dict(dict, &key_bounds) else { continue };
+                let Some(frame) = read_bounds(&bounds_dict) else { continue };
 
-                // Pick the largest matching window (HS often has tiny
-                // helper windows on the same pid).
+                // Pick the largest matching window — HS occasionally has
+                // tiny helper windows on the same pid (1×1 IME hosts etc).
                 if best
                     .as_ref()
                     .map(|f| (frame.w as i64) * (frame.h as i64) > (f.w as i64) * (f.h as i64))
@@ -414,50 +424,66 @@ mod mac {
             })
         }
 
-        fn read_bounds(d: &CFDictionary<CFString, CFType>) -> Option<Frame> {
+        fn dict_get_i64(d: &CFDictionary, key: &CFString) -> Option<i64> {
+            // `CFDictionary::find<T: ToVoid<K>>` requires the key type
+            // to satisfy ToVoid<K>. K is *const c_void here, and only
+            // `*const c_void: ToVoid<*const c_void>` exists, so we
+            // first lower the CFString to a void ptr.
+            let raw = d.find(key.to_void())?;
+            let cf_ref: CFTypeRef = *raw;
+            if cf_ref.is_null() {
+                return None;
+            }
+            // SAFETY: cf_ref came out of a CFDictionary returned by CG;
+            // values inside are +0 retained CF objects, so we re-wrap
+            // them with `wrap_under_get_rule` (which retains).
+            let cf: CFType = unsafe { CFType::wrap_under_get_rule(cf_ref) };
+            cf.downcast::<CFNumber>()?.to_i64()
+        }
+
+        fn dict_get_dict(d: &CFDictionary, key: &CFString) -> Option<CFDictionary> {
+            let raw = d.find(key.to_void())?;
+            let cf_ref: CFTypeRef = *raw;
+            if cf_ref.is_null() {
+                return None;
+            }
+            // SAFETY: same as dict_get_i64.
+            let cf: CFType = unsafe { CFType::wrap_under_get_rule(cf_ref) };
+            cf.downcast::<CFDictionary>()
+        }
+
+        fn read_bounds(d: &CFDictionary) -> Option<Frame> {
             let kx = CFString::from_static_string("X");
             let ky = CFString::from_static_string("Y");
             let kw = CFString::from_static_string("Width");
             let kh = CFString::from_static_string("Height");
-            let take = |k: &CFString| -> Option<i32> {
-                let v = d.find(k)?;
-                let n = v.downcast::<CFNumber>()?;
-                Some(n.to_i32().unwrap_or(0))
-            };
             Some(Frame {
-                x: take(&kx)?,
-                y: take(&ky)?,
-                w: take(&kw)?,
-                h: take(&kh)?,
+                x: dict_get_i64(d, &kx)? as i32,
+                y: dict_get_i64(d, &ky)? as i32,
+                w: dict_get_i64(d, &kw)? as i32,
+                h: dict_get_i64(d, &kh)? as i32,
             })
         }
 
-        /// Best-effort fullscreen detection. Returns Some(true) only if
-        /// Accessibility API explicitly reports `AXFullScreen = true`
-        /// for the focused window of the target pid; returns Some(false)
-        /// if it explicitly reports false; returns None on any error,
-        /// in which case the caller treats it as "unknown — assume not
-        /// fullscreen". This matches HSTracker SizeHelper's fallback.
-        pub fn is_hearthstone_fullscreen(pid: u32) -> Option<bool> {
-            // The spike intentionally keeps AX wiring minimal — the
-            // window frame from CG is enough for spike scope, and a
-            // false negative here is acceptable. A proper AX wrapper
-            // is Phase 1 work in the production crate. We fall back to
-            // a heuristic: if the window covers the full main screen,
-            // call it fullscreen.
-            //
-            // Suppress unused-pid warning; we keep the signature as
-            // the eventual contract but currently rely on the caller
-            // passing the same pid we used for the frame query.
-            let _ = pid;
-            None
+        /// Spike-grade fullscreen heuristic: if the window frame
+        /// matches the main display's resolution within a small
+        /// tolerance (covers titlebar/notch padding), call it
+        /// fullscreen. A proper AX-based check
+        /// (`kAXFullScreenAttribute`) is Phase 1 work in the
+        /// production crate — see ADR 0002 and spec §Scenario D.
+        pub fn looks_fullscreen(frame: &Frame) -> bool {
+            // SAFETY: CGMainDisplayID + CGDisplayBounds are pure
+            // read-only Core Graphics calls on the running display.
+            let bounds = unsafe {
+                let id = CGMainDisplayID();
+                CGDisplayBounds(id)
+            };
+            let display_w = bounds.size.width.round() as i32;
+            let display_h = bounds.size.height.round() as i32;
+            // Tolerance: 4px around each edge absorbs display scale
+            // rounding and titlebar swallow.
+            (frame.w - display_w).abs() <= 4 && (frame.h - display_h).abs() <= 4
         }
-
-        // CFBoolean kept around so that adding the AX integration in a
-        // follow-up patch (during real-machine run) doesn't have to
-        // re-import the crate.
-        #[allow(dead_code)]
-        fn _silence_unused(_: CFBoolean) {}
     }
 
     // Dropping a mach port name is technically `mach_port_deallocate`,

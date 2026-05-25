@@ -2,22 +2,38 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <!-- Required for task_for_pid + mach_vm_read_overwrite against another
-       running process. Without this entitlement (and without code signing),
-       task_for_pid returns KERN_NO_ACCESS / KERN_FAILURE on macOS 12+. -->
-  <key>com.apple.security.cs.debugger</key>
-  <true/>
+    <!--
+        Dev-only entitlements for the spike Electron run.
 
-  <!-- The dev Electron binary loads .node addons at runtime; with hardened
-       runtime turned on, library validation refuses to load addons that
-       are not signed by the same team. ad-hoc signing makes every addon
-       count as a different "team", so we have to opt out. -->
-  <key>com.apple.security.cs.disable-library-validation</key>
-  <true/>
+        task_for_pid path:
+          - cs.debugger              required to call task_for_pid against
+                                     a process we don't own (Hearthstone).
+          - get-task-allow           lets us be debugged ourselves; not
+                                     strictly needed for the spike but
+                                     useful when poking with lldb.
 
-  <!-- Allows the host process itself to be a debugger target. Useful
-       during development; harmless for spike scope. -->
-  <key>com.apple.security.get-task-allow</key>
-  <true/>
+        Electron 37 / V8 (Hardened Runtime) path:
+          - cs.allow-jit                            V8 needs RWX pages.
+          - cs.allow-unsigned-executable-memory     fallback when JIT
+                                                    pages aren't tagged.
+          - cs.disable-library-validation           lets the unsigned
+                                                    napi-rs .node addon
+                                                    load inside Electron.
+
+        These four CS flags MUST stay in sync with whatever Apple
+        ships in Electron's default Helper entitlements file —
+        otherwise our re-sign overwrites the original signature with
+        a strictly weaker grant set and Electron crashes on launch.
+    -->
+    <key>com.apple.security.cs.debugger</key>
+    <true/>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.get-task-allow</key>
+    <true/>
 </dict>
 </plist>

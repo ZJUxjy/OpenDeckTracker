@@ -32,7 +32,7 @@ ADR 0001 已敲定 Windows 端的 HearthMirror 桥接方案（64-bit napi-rs Rus
    - macOS 编译走 `MonoAbi64`（HS Mac 客户端是 64-bit Mono）。
    - **既有 Windows 32-bit 反射代码不动**——所有偏移、字段类型、`RemotePtr32` 字面量保持原样，只是把它们放到 `MonoAbi32` impl 里。
 3. **macOS 进程内存底层**用 [`mach2`](https://crates.io/crates/mach2) crate 调 `task_for_pid(mach_task_self(), pid, &task)` + `mach_vm_read_overwrite`；模块枚举用 [`libproc`](https://crates.io/crates/libproc) + Mach-O 头解析。
-4. **窗口层**用 [`objc2`](https://crates.io/crates/objc2) + [`objc2-app-kit`](https://crates.io/crates/objc2-app-kit) + [`core-foundation`](https://crates.io/crates/core-foundation) crate 调 `CGWindowListCopyWindowInfo`、`AXUIElementCreateApplication`、`NSWorkspace.sharedWorkspace`。
+4. **窗口层**用 [`core-foundation`](https://crates.io/crates/core-foundation) + [`core-graphics`](https://crates.io/crates/core-graphics) crate 调 `CGWindowListCopyWindowInfo` 拿 frame；fullscreen 真值检测（`AXUIElement` + `kAXFullScreenAttribute`）与 `NSWorkspace` 进程发现 / 焦点跟随放到 Phase 1 实装（spike 阶段先用 frame≈display-bounds 启发式打底，避免引入 `objc2` 系列依赖）。
 5. **代码签名 + Notarization 是硬依赖**：发布 .app 必须由 Apple Developer ID Application 证书签名，entitlements 启用 `com.apple.security.cs.debugger` + Hardened Runtime；否则 `task_for_pid` 直接拒绝。开发期 ad-hoc 签名（`codesign --sign - --entitlements ...`）足以通过。
 6. **不出 universal binary**：napi-rs 二进制只发 `darwin-arm64`。Intel Mac 用户用 v0.6.0 Windows 端 + Parallels 等方案，不在本路线覆盖范围。
 

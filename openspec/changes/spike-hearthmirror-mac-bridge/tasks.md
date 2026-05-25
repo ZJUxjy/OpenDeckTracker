@@ -43,12 +43,20 @@
   [dependencies]
   napi = { version = "3", default-features = false, features = ["napi9", "async"] }
   napi-derive = "3"
+
+  # macOS-only deps. Gated by [target."cfg(target_os = ...)"] so that
+  # running `cargo check` from a non-mac host (e.g. Windows CI) does
+  # not attempt to fetch / build these.
+  #
+  # Spike scope intentionally avoids the objc2 family for fullscreen
+  # detection. We use a "frame == primary display resolution" heuristic
+  # (see lib.rs window::looks_fullscreen). Real AX-based detection is
+  # Phase 1 work in the production hearthmirror crate.
+  [target."cfg(target_os = \"macos\")".dependencies]
   mach2 = "0.4"
   libproc = "0.14"
   core-foundation = "0.10"
-  objc2 = "0.5"
-  objc2-app-kit = "0.2"
-  objc2-application-services = "0.2"
+  core-graphics = "0.25"
 
   [build-dependencies]
   napi-build = "2"
@@ -72,11 +80,19 @@
   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
   <plist version="1.0">
   <dict>
+    <!-- task_for_pid path -->
     <key>com.apple.security.cs.debugger</key>
     <true/>
-    <key>com.apple.security.cs.disable-library-validation</key>
-    <true/>
     <key>com.apple.security.get-task-allow</key>
+    <true/>
+    <!-- Electron 37 / V8 (Hardened Runtime) path - MUST stay in sync with
+         Electron's default Helper entitlements; otherwise our re-sign
+         strips JIT permission and Electron crashes on launch. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
   </dict>
   </plist>
@@ -342,7 +358,8 @@
 - [ ] 5.4 把主进程 stdout 中 `[mac-spike:macho]` 与 `[mac-spike:window]` 行**完整复制**到 spike 报告暂存区（不要立刻关掉终端）。
 - [ ] 5.5 验证 macho 行匹配正则 `\[mac-spike:macho\] OK:.*"pid":\s*\d+.*"baseAddress":\s*"0x[0-9A-Fa-f]+".*"headerHex":\s*"(CF FA ED FE|FE ED FA CF)`。
 - [ ] 5.6 验证 window 行 `fullscreen: false`，且 `width / height` 与肉眼可见的 HS 窗口大小吻合（±2 像素）。
-- [ ] 5.7 切 HS 到全屏模式，再点一次主窗口的 reload（或重启 `pnpm dev`），验证 `[mac-spike:window] OK: ... fullscreen: true ...` 且尺寸等于显示器分辨率。
+- [ ] 5.7 切 HS 到全屏（绿色交通灯 → "Enter Full Screen"）或手动把 HS 窗口缩放到主显示器大小，重启 `pnpm dev`，验证 `[mac-spike:window] OK: ... fullscreen: true ...` 且尺寸等于显示器分辨率。
+  > **注意**：本 spike 的 `fullscreen` 是**启发式** —— `window::looks_fullscreen()` 只检查 frame 是否在 ±4px 容差内匹配主显示器分辨率（见 spec scenario D 与 ADR 0002）。真正的 AX 全屏判定（`kAXFullScreenAttribute`）放到 Phase 1。如果该启发式在你机器上不可靠（notch padding / scaled display 等），按 specs scenario "Heuristic fullscreen flake" 处理 —— 仍可升 Validated，但要开 follow-up change `investigate-mac-fullscreen-detection`。
 - [ ] 5.8 关闭 Electron（Ctrl+C 终端）。
 
 ## 6. 真机验证 — 场景 B（HS 未运行）
@@ -353,20 +370,12 @@
 - [ ] 6.4 主窗口必须正常显示 OpenDeckTracker，点击 Sidebar 各 Tab 切换正常（不闪退）。
 - [ ] 6.5 关闭 Electron。
 
-## 7. 真机验证 — 场景 C（HS 运行 + spike 二进制未签名）
+## 7. 签名要求的正向验证（替代原 Scenario C）
 
-- [ ] 7.1 启动 Hearthstone。
-- [ ] 7.2 在仓库根执行：
+> **历史背景**：原 §7 的 "unsigned binary fails" 负向测试已经在自我审查中被识别为方法论错误（B4） —— `task_for_pid` 检查的是**调用进程**（Electron）而非加载的 `.node`，所以即使 addon 自己未签名、只要 Electron 已经签好 `cs.debugger`，调用仍会成功。负向证据由 Phase 4（release packaging）的 notarization → install 链路提供。本 spike 的签名必要性靠 §5 正向证据闭环：§5.1 必须先跑过 `codesign-mac-spike.sh`，§5.5 才会出 OK。
 
-  ```bash
-  codesign --remove-signature packages/hearthmirror-mac-spike/hearthmirror-mac-spike.darwin-arm64.node
-  ```
-
-- [ ] 7.3 仓库根执行 `pnpm dev`，等待主进程 stdout。
-- [ ] 7.4 必须打印 `[mac-spike:macho] FAIL: task_for_pid failed: kern_return = 5`（或 `= 8`/其他 kern code，关键是含 `task_for_pid failed`）。
-- [ ] 7.5 Electron 不崩溃。
-- [ ] 7.6 关闭 Electron。
-- [ ] 7.7 重新签名 `bash scripts/codesign-mac-spike.sh`，准备进入 §8。
+- [ ] 7.1 在 spike report 中明确记录："Scenario C 已替换为正向验证 —— §5.1 跑过 `codesign-mac-spike.sh`，§5.5 OK 即视为签名链路有效"。
+- [ ] 7.2 把本节的删除决定（reference 到 spec.md 中的 "Note on signing" 段）写进 spike report 的 Encountered Issues。
 
 ## 8. 写 spike 报告
 
@@ -403,17 +412,29 @@
   ## Scenario B — HS not running (PASS/FAIL)
   <verbatim stdout 行>
 
-  ## Scenario C — HS running + unsigned (PASS/FAIL)
-  <verbatim stdout 行 + 看到的 kern_return 数值>
-
   ## Scenario D — Window probe (PASS/FAIL)
-  <桌面模式 stdout + 全屏模式 stdout + 与肉眼对照的截图说明>
+  <桌面模式 stdout + maximised/full-display 模式 stdout + 与肉眼对照的截图说明；
+   注明 `fullscreen: true` 是 frame≈display-bounds 启发式，不是 AX 真值>
+
+  ## Signing Validation (replaces original Scenario C)
+  <说明：scenario A 的 PASS 已经隐含 codesign-mac-spike.sh 链路有效。
+   原计划的 "unsigned binary fails" 负向测试因为 task_for_pid 检查
+   calling process (Electron) 而非 addon，方法论上不成立，已抛弃；
+   负向证据由 Phase 4 release packaging 的 notarization→install 链路提供。>
+
+  ## Dev-Machine Workarounds
+  <记录本机为完成 spike 必须做的非默认配置 / 临时绕过：
+   - rustc 升级到 ≥ 1.88 的实际命令；
+   - cargo crates-io mirror 是否换过（spike 包 .cargo/config.toml 的来由）；
+   - codesign 是否需要重做 dev Electron 才能跑通；
+   - 任何「在干净的 macOS 上别人复现可能踩的坑」。
+   这一段重点是**别人复现需要知道什么**，不是发牢骚。>
 
   ## Encountered Issues
-  <真实坑：task_for_pid 是否在 macOS 14+ 上需要额外步骤 / arm64e PAC 是否对 main image base 透明 / objc2 是否需要额外 frameworks linker flag / Electron 是否需要重新签 / npm 是否会把 .node 拷成只读丢签名>
+  <真实坑：task_for_pid 是否在 macOS 14+ 上需要额外步骤 / arm64e PAC 是否对 main image base 透明 / Electron 是否需要重新签 / npm 是否会把 .node 拷成只读丢签名 / 启发式 fullscreen 在你机器上是否可靠>
 
   ## Recommendations for Phase 1
-  <基于 spike 经验给出的 3-5 条建议，例如：read_image_base 实际用了什么 API / 是否要走 dyld_all_image_infos / 哪个 mach API 报了什么错>
+  <基于 spike 经验给出的 3-5 条建议，例如：read_image_base 实际用了什么 API / 是否要走 dyld_all_image_infos / 哪个 mach API 报了什么错 / AX 全屏检测放 Phase 1 第几步>
 
   ## Hearthstone Process Info Observed
   - PID: <实际 PID>
@@ -421,10 +442,10 @@
   - Mach-O Magic: <CF FA ED FE 或 FE ED FA CF>
   - First 16 bytes: <full hex>
   - Window frame (windowed): <{x, y, w, h}>
-  - Window frame (fullscreen): <{x, y, w, h}>
+  - Window frame (covering display): <{x, y, w, h}>
   ```
 
-- [ ] 8.2 把 §5 / §6 / §7 中观察到的真实数据填入。
+- [ ] 8.2 把 §5 / §6 中观察到的真实数据填入；§7 已删除 Scenario C，对应位置写"signing validated positively, see §5.1+§5.5"。
 - [ ] 8.3 commit：`git add docs/spikes/0006-hearthmirror-mac-spike-report.md && git commit -m "docs(spike): write 0006 hearthmirror mac spike report with results"`。
 
 ## 9. 升级 ADR 0002 状态为 Validated
@@ -436,13 +457,14 @@
   ```markdown
   ### Validation Outcome (filled by spike-hearthmirror-mac-bridge)
   This decision was validated by spike `docs/spikes/0006-hearthmirror-mac-spike-report.md`
-  on <YYYY-MM-DD>. All four Acceptance Criteria scenarios (A: signed read ok,
-  B: not-running graceful, C: unsigned blocked, D: window probe) passed in the
-  local environment.
+  on <YYYY-MM-DD>. All three Acceptance Criteria scenarios (A: signed read ok,
+  B: not-running graceful, D: window probe + heuristic fullscreen) passed in
+  the local environment. The original Scenario C ("unsigned binary fails")
+  was removed as methodologically unsound — see spec §"Note on signing".
   ```
 
-  > 如果场景 C 失败但 A/B/D 通过：使用 PARTIAL caveat 措辞，并在 `openspec/changes/.NEXT.md` 加 follow-up `investigate-mac-codesign-entitlement-flow`（见 specs §scenario C-only failure）。
-  > 如果场景 A 失败：**不**升级 ADR 状态，按 specs §scenario A failure 走 fallback。
+  > 如果场景 D 的启发式 fullscreen 不稳：使用 PARTIAL caveat 措辞，开 follow-up change `investigate-mac-fullscreen-detection`（见 specs §"Heuristic fullscreen flake"）。
+  > 如果场景 A 失败：**不**升级 ADR 状态，按 specs §"Scenario A failure (hard fail)" 走 fallback。
 - [ ] 9.3 commit：`git add docs/adr && git commit -m "docs(adr): upgrade 0002 status to Validated after mac spike pass"`。
 
 ## 10. Teardown — 删除所有 spike 代码
@@ -454,17 +476,19 @@
   ```
 
 - [ ] 10.2 在 `apps/desktop/src/main/index.ts` 中删除 `=== SPIKE TRIGGER: spike-hearthmirror-mac-bridge ===` 至 `=== END SPIKE ===` 之间的全部代码（包括边界注释行）。
-- [ ] 10.3 在 `apps/desktop/package.json` 的 `dependencies` 中删除 `"@hdt/hearthmirror-mac-spike"` 一行。
+- [ ] 10.3 在 `apps/desktop/package.json` 的 `devDependencies` 中删除 `"@hdt/hearthmirror-mac-spike"` 一行。
 - [ ] 10.4 在根 `eslint.config.js` 的 `ignores` 数组中删除 `'packages/hearthmirror-mac-spike/**'` 一行。
 - [ ] 10.5 把 `scripts/codesign-mac-spike.sh` 移到 `scripts/archive/`（如果 Phase 4 可能复用）或 `git rm`（如果 Phase 4 会重新写）。本 change 默认走 archive。
 - [ ] 10.6 仓库根执行 `pnpm install` 重新生成 lockfile（删除 spike workspace）。
-- [ ] 10.7 验证 spike 残留为零：
+- [ ] 10.7 验证 spike 残留为零（全仓 grep，仅排除 docs/ 与 openspec/）：
 
   ```bash
-  rg -i 'hearthmirror-mac-spike|spikeRead(Macho|HearthstoneWindow)' apps/desktop/src packages
+  rg -i 'hearthmirror-mac-spike|spikeRead(Macho|HearthstoneWindow)' \
+    --glob '!docs/**' --glob '!openspec/**' .
   ```
 
-  期望：无任何匹配（spike report 与 ADR 在 docs/ 下，被命令排除）。
+  期望：无任何匹配。`docs/spikes/0006-*` 与 `docs/adr/0002-*` 是 spike 的持久产物，特意被排除；`openspec/changes/spike-hearthmirror-mac-bridge/**` 在 archive 之前自然还在，archive 时连同移走。
+  > **为何要全仓 grep**：原本只 grep `apps/desktop/src packages`，会漏掉 `apps/desktop/package.json`（依赖项）、`eslint.config.js`（ignore）、`pnpm-lock.yaml`、`scripts/codesign-mac-spike.sh` 这些 spike 副产物。全仓扫才能保证零残留。
 - [ ] 10.8 commit：`git add . && git commit -m "chore(spike): teardown hearthmirror-mac-spike after validation"`。
 
 ## 11. 最终质量门 + OpenSpec 验收
@@ -481,6 +505,15 @@
 
   全部退出码 0。
   > **注意**：本路线图阶段 macOS 端 CI runner 还未加（Phase 4 才加），所以 GitHub Actions 仍只跑 Windows runner。本地 macOS 跑通即可。
+- [ ] 11.1.5 验证 native 依赖在 darwin-arm64 上能 rebuild（不属于 spike 本身但属于路线图体检）：
+
+  ```bash
+  # 主项目用了 better-sqlite3 之类需要 rebuild 的 native module
+  pnpm --filter @hdt/desktop run rebuild
+  pnpm --filter @hdt/desktop run electron:test || true   # 如有 e2e
+  ```
+
+  期望：rebuild 成功产出 darwin-arm64 binary（`*.node` 文件）；如果有 e2e，至少能启动到 main window。这一步**不**作为 spike validation 阻塞门，但失败的话要在 spike report 的 Encountered Issues 里点名记录，方便 Phase 4 的打包链路提前应对。
 - [ ] 11.2 把本文件 1.x ~ 10.x 任务全部标 `[x]`。
 - [ ] 11.3 同步 `openspec/changes/.NEXT.md`：把 `spike-hearthmirror-mac-bridge` 加为新条目并标 ✓，"下一步" 加上 `refactor-hearthmirror-platform-traits`（Phase 1 第一个 change）。
 - [ ] 11.4 `openspec validate spike-hearthmirror-mac-bridge --strict` → `Change is valid`。

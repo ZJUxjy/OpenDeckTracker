@@ -31,7 +31,7 @@ apps/desktop/package.json                          # 依赖添加 + 删除
 - 在真实 Apple Silicon 机器上跑通 `task_for_pid` + `mach_vm_read_overwrite`，证明 ADR 0002 选定方案可行。
 - 输出可复现的命令序列与签名脚本，让 Phase 1 各 change 直接复用。
 - 验证 napi-rs `darwin-arm64` 工件能被 Electron 37 + Node 22 主进程加载。
-- 验证 `CGWindowListCopyWindowInfo` + AX API 在桌面 + 全屏两种模式下都能拿到所需信息。
+- 验证 `CGWindowListCopyWindowInfo` 在桌面 + 主显示器尺寸两种模式下都能拿到 frame；fullscreen 用 frame≈display-bounds 启发式打底（AX 真值检测放 Phase 1）。
 - 输出三元组兼容性记录（macOS 版本 / 芯片代号 / Hearthstone build）。
 - 升级 ADR 0002 状态到 `Validated`。
 
@@ -99,7 +99,7 @@ apps/desktop/package.json                          # 依赖添加 + 删除
 
 - macOS 12+ 上 ad-hoc 签名 + entitlements 足以让 `task_for_pid` 工作（HSTracker 开发期就是这么干的）。
 - 关 SIP 是 nuclear option，会污染开发机环境，不推荐。
-- ad-hoc 签名同时验证签名链路本身没有问题（场景 C 的负向测试就是用「不签」来反证签名是必要的）。
+- ad-hoc 签名链路本身的有效性靠**场景 A 正向闭环**证明（场景 A 必须先跑过 `codesign-mac-spike.sh` 才会 PASS）；签名必要性的负向证据由 Phase 4 release packaging 的 notarization → install 链路覆盖。原计划的「场景 C：未签名 → 失败」自我审查中被判方法论错误（`task_for_pid` 检查 calling Electron 而非 addon），已抛弃。
 
 ### Decision 4: 不做性能 benchmark
 
@@ -139,7 +139,12 @@ apps/desktop/package.json                          # 依赖添加 + 删除
 ### Spike 失败概率不为零
 
 [Risk] `task_for_pid` 在某些 macOS 14+ 上对未由 Developer ID 签名的二进制更严格，可能 ad-hoc 签名也拿不到 task port。
-Mitigation: 场景 C 已经设计为「负向测试」——如果 ad-hoc 签名也拿不到 task port，spike report 会指出来，触发 ADR 0002 fallback（方案 B 借 HSTracker dylib）。
+Mitigation: 如果场景 A 在 ad-hoc 签名 + cs.debugger entitlement 下仍拿不到 task port，spike 直接走 ADR 0002 fallback（方案 B 借 HSTracker dylib），写 ADR 0003 记录决策切换。
+
+### 启发式 fullscreen 不区分 spaces fullscreen 与 maximised
+
+[Risk] 本 spike 的 `looks_fullscreen()` 仅看 frame 是否 ≈ 主显示器分辨率，不区分 macOS 真 spaces "Enter Full Screen" vs 手动最大化；外接 4K + scaled / 带 notch 的 MacBook 上 ±4px 容差可能不够。
+Mitigation: 视为 spike PARTIAL pass —— spec scenario "Heuristic fullscreen flake" 允许仍升 Validated，但要开 follow-up change `investigate-mac-fullscreen-detection` 在 Phase 1 用 AX 真值（`kAXFullScreenAttribute`）替换。
 
 ### arm64e PAC（Pointer Authentication Codes）干扰
 
@@ -165,7 +170,7 @@ Mitigation: spike 出口前 teardown 全部 spike 代码 + 二进制；spike 期
 
 1. 创建 spike 包骨架（task §1）。
 2. 写 Rust spike 代码 + 编译 + ad-hoc 签名（task §2-§3）。
-3. 主进程加触发块（task §4），用户在真机上跑 4 个场景（task §5-§7）。
+3. 主进程加触发块（task §4），用户在真机上跑 3 个场景（task §5-§6，§7 是已抛弃的 Scenario C 的占位说明）。
 4. 写 spike report（task §8），升级 ADR 0002（task §9）。
 5. Teardown spike 包 + 主进程触发 + 依赖（task §10）。
 6. 跑质量门 + OpenSpec 验收（task §11）。
@@ -174,7 +179,7 @@ Mitigation: spike 出口前 teardown 全部 spike 代码 + 二进制；spike 期
 
 ## Open Questions
 
-- 场景 C 的「未签名」如何精确制造？是 `codesign --remove-signature` 后再跑？还是用未签名的 spike 二进制直接覆盖？需要 spike 期间用户实际操作时确认命令序列。
 - Hearthstone CN 服 Mac 客户端 bundle id 是 `unity.Blizzard Entertainment.Hearthstone` 还是国服特殊变体？spike report 必须记录实际值。
 - napi-rs 3.x 是否对 `aarch64-apple-darwin` 提供 prebuild？或者必须在 macOS runner 上现编？影响 Phase 4 的 CI 配置。
-- `objc2-app-kit` / `objc2-application-services` 在 Apple Silicon 上是否需要额外的 frameworks linker flag？
+- 启发式 fullscreen 在带 notch 的 MacBook（M1/M2/M3 Pro/Max）+ menu bar 隐藏 / 显示组合下，是否还能保持 ±4px 容差？跑 spike 时记录实际 frame 与 `CGDisplayBounds` 数值。
+- 是否需要在 spike report 中记录 `dyld_all_image_infos` 在 macOS 12 vs 14 vs 15 上的字段布局差异？目前只读 `infoArray` + 头三个字段，理论上稳定。

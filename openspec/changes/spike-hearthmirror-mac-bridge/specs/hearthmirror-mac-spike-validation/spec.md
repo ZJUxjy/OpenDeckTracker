@@ -1,10 +1,12 @@
 ## ADDED Requirements
 
-### Requirement: Mac spike must validate ADR 0002 chosen option in 4 real-world scenarios
+### Requirement: Mac spike must validate ADR 0002 chosen option in 3 real-world scenarios
 
-The change `spike-hearthmirror-mac-bridge` SHALL produce evidence that the Rust + napi-rs + cfg-platform-split architecture chosen by [ADR 0002](../../../../docs/adr/0002-hearthmirror-mac-bridge.md) is viable on real Apple Silicon hardware running macOS 12+. The evidence MUST be in the form of `docs/spikes/0006-hearthmirror-mac-spike-report.md` with verbatim console output for each of the four acceptance scenarios.
+The change `spike-hearthmirror-mac-bridge` SHALL produce evidence that the Rust + napi-rs + cfg-platform-split architecture chosen by [ADR 0002](../../../../docs/adr/0002-hearthmirror-mac-bridge.md) is viable on real Apple Silicon hardware running macOS 12+. The evidence MUST be in the form of `docs/spikes/0006-hearthmirror-mac-spike-report.md` with verbatim console output for each of the three acceptance scenarios.
 
 The spike MUST be executed on **Apple Silicon** hardware (arm64); the Intel path is explicitly out of scope and SHALL NOT be tested.
+
+> **Note on signing.** The original plan included a "Scenario C: unsigned binary fails" negative test. We removed it after the self-review revealed the test is methodologically unsound — `task_for_pid` checks the *calling* process (Electron), not the loaded `.node` addon, so an Electron host with `cs.debugger` would still succeed even if the addon is unsigned. The signing requirement is instead validated *positively*: Scenario A only passes after `scripts/codesign-mac-spike.sh` runs, and Phase 4 (release packaging) covers the negative path through the formal notarization → install pipeline.
 
 #### Scenario: Hearthstone running + spike binary signed → reads Mach-O magic
 
@@ -24,24 +26,16 @@ The spike MUST be executed on **Apple Silicon** hardware (arm64); the Intel path
 - **AND** Electron main window MUST not crash and MUST remain responsive
 - **AND** the failure MUST NOT cascade into other initialization paths
 
-#### Scenario: Hearthstone running + spike binary unsigned → entitlement enforcement proven
-
-- **GIVEN** a freshly built `@hdt/hearthmirror-mac-spike` `.node` binary with its signature explicitly removed via `codesign --remove-signature`
-- **AND** Hearthstone Mac client is running
-- **WHEN** Electron main process starts and triggers `spikeReadMacho()`
-- **THEN** main process stdout MUST print a line containing `task_for_pid failed` and one of `KERN_FAILURE`, `KERN_NO_ACCESS`, `KERN_NOT_PERMITTED`, or numeric kern code 5
-- **AND** the spike report MUST capture this line verbatim as the negative-validation proof that signing is necessary
-- **AND** Electron MUST not crash
-
-#### Scenario: Window probe returns valid frame and fullscreen state
+#### Scenario: Window probe returns valid frame and heuristic fullscreen state
 
 - **GIVEN** Hearthstone Mac client is running in **windowed mode** at a known size (e.g. 1920×1080 in a window)
 - **WHEN** main process triggers `spikeReadHearthstoneWindow()`
 - **THEN** stdout MUST print `[mac-spike:window] OK: { x: <num>, y: <num>, width: 1920, height: 1080, fullscreen: false }` (numbers may differ by ±2 due to titlebar)
-- **GIVEN** Hearthstone Mac client is then switched to **fullscreen mode** on the main display
+- **GIVEN** Hearthstone Mac client is then **maximised to cover the main display** (either via the green traffic-light "fullscreen" gesture or by manually resizing to the display bounds)
 - **WHEN** main process triggers `spikeReadHearthstoneWindow()` again
 - **THEN** stdout MUST print `[mac-spike:window] OK: { x: 0, y: 0, width: <screen.width>, height: <screen.height>, fullscreen: true }`
-- **AND** both lines MUST be captured verbatim in the spike report
+- **AND** the spike report MUST capture both lines verbatim
+- **AND** the spike report MUST note that `fullscreen: true` here is a **heuristic** (window frame matches main-display bounds within ±4px) — true AX-based detection (`kAXFullScreenAttribute`) is deferred to Phase 1, see ADR 0002.
 
 ### Requirement: Spike report SHALL document compatibility tuple
 
@@ -70,10 +64,11 @@ The teardown step MUST delete:
 
 - The entire `packages/hearthmirror-mac-spike/` directory.
 - The Spike trigger block in `apps/desktop/src/main/index.ts` (delimited by `// === SPIKE TRIGGER` and `// === END SPIKE`).
-- The `"@hdt/hearthmirror-mac-spike": "workspace:*"` line in `apps/desktop/package.json`.
+- The `"@hdt/hearthmirror-mac-spike": "workspace:*"` line in `apps/desktop/package.json`'s `devDependencies`.
 - The `scripts/codesign-mac-spike.sh` helper (or move it to `scripts/archive/` if it's deemed reusable for Phase 1).
 - Any spike-specific entries in `eslint.config.js` ignore lists.
 - Any TypeScript declaration files for the spike module.
+- Any spike-only entries that landed in `pnpm-lock.yaml` (re-running `pnpm install` after deletion is sufficient).
 
 The teardown step MUST NOT delete:
 
@@ -84,33 +79,33 @@ The teardown step MUST NOT delete:
 #### Scenario: Zero-residue grep gate
 
 - **WHEN** teardown completes
-- **AND** the change runs `rg -i 'hearthmirror-mac-spike|spikeRead(Macho|HearthstoneWindow)' apps/desktop/src packages` from the repo root
-- **THEN** the command MUST exit non-zero with no matches printed (after excluding the spike report which is allowed to reference these names in prose)
+- **AND** the change runs `rg -i 'hearthmirror-mac-spike|spikeRead(Macho|HearthstoneWindow)' --glob '!docs/**' --glob '!openspec/**' .` from the repo root
+- **THEN** the command MUST exit non-zero with no matches printed
 - **OR** the change MUST NOT be archived
 
 ### Requirement: ADR 0002 status upgrade gate
 
-The spike SHALL upgrade `docs/adr/0002-hearthmirror-mac-bridge.md` from `Status: Accepted (...)` to `Status: Validated (<date>)` only if all four acceptance scenarios pass.
-
-If scenario C alone fails (signing flow has unknown issues but core memory read works), the spike MAY upgrade to `Validated` with a caveat appended in the Consequences section, AND a follow-up change `investigate-mac-codesign-entitlement-flow` MUST be filed.
+The spike SHALL upgrade `docs/adr/0002-hearthmirror-mac-bridge.md` from `Status: Accepted (...)` to `Status: Validated (<date>)` only if all three acceptance scenarios pass.
 
 If scenario A fails (cannot read Mach-O magic at all), the spike MUST NOT upgrade ADR 0002, MUST file a new ADR 0003 documenting the fallback decision (option B: HSTracker HearthMirror dylib), and MUST update `openspec/changes/.NEXT.md` with the revised next step.
 
+If the windowed-mode part of scenario D passes but the heuristic-fullscreen part is unreliable on the spike machine (e.g. notch padding or scaled display defeats the ±4px tolerance), the spike MAY still upgrade ADR 0002 to `Validated`, but MUST file a follow-up change `investigate-mac-fullscreen-detection` and reference it in the ADR's Consequences section.
+
 #### Scenario: All-pass upgrade
 
-- **GIVEN** scenarios A, B, C, D all printed expected output
+- **GIVEN** scenarios A, B, D all printed expected output
 - **WHEN** the spike author updates ADR 0002
 - **THEN** the file's first frontmatter line MUST read `> **Status**: Validated (<YYYY-MM-DD>)`
 - **AND** a "### Validation" subsection MUST be appended to Consequences linking the spike report
 - **AND** `openspec/changes/.NEXT.md` MUST mark this change as ✓ and set next = `refactor-hearthmirror-platform-traits`
 
-#### Scenario: Scenario C-only failure
+#### Scenario: Heuristic fullscreen flake
 
-- **GIVEN** A, B, D passed but C printed unexpected output (e.g. unsigned binary somehow still got task port, or signed binary failed with a different error)
+- **GIVEN** A and B passed but the heuristic-fullscreen check in D was unreliable on the spike machine
 - **WHEN** the spike author writes the report
-- **THEN** ADR 0002 Status MAY be upgraded to `Validated` with a caveat in Consequences
-- **AND** a follow-up change `investigate-mac-codesign-entitlement-flow` MUST be filed under `openspec/changes/`
-- **AND** `.NEXT.md` MUST list this follow-up before `refactor-hearthmirror-platform-traits`
+- **THEN** ADR 0002 Status MAY still be upgraded to `Validated`
+- **AND** a follow-up change `investigate-mac-fullscreen-detection` MUST be filed under `openspec/changes/`
+- **AND** `.NEXT.md` MUST list this follow-up alongside `refactor-hearthmirror-platform-traits`
 
 #### Scenario: Scenario A failure (hard fail)
 
