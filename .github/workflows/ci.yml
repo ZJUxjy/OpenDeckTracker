@@ -21,6 +21,22 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Cache hsdata CardDefs.xml
+        id: hsdata-cache
+        uses: actions/cache@v4
+        with:
+          path: data/cards/hsdata
+          key: hsdata-carddefs-master
+
+      - name: Fetch hsdata CardDefs.xml
+        if: steps.hsdata-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path data/cards/hsdata | Out-Null
+          Invoke-WebRequest `
+            -Uri "https://raw.githubusercontent.com/HearthSim/hsdata/master/CardDefs.xml" `
+            -OutFile data/cards/hsdata/CardDefs.xml
+
       - run: pnpm cards:convert
 
       - run: pnpm lint
