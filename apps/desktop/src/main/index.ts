@@ -54,7 +54,36 @@ if (!gotLock) {
     win.focus();
   });
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
+    // === SPIKE TRIGGER: spike-hearthmirror-mac-bridge (remove on teardown) ===
+    // Darwin-only. Loads the throw-away @hdt/hearthmirror-mac-spike addon
+    // and prints a single-line stdout result for each scenario so the spike
+    // report can capture verbatim. Windows / Linux skip the entire block.
+    if (process.platform === 'darwin') {
+      try {
+        const mod = await import('@hdt/hearthmirror-mac-spike');
+        const { spikeReadMacho, spikeReadHearthstoneWindow } = mod as {
+          spikeReadMacho: () => Promise<unknown>;
+          spikeReadHearthstoneWindow: () => Promise<unknown>;
+        };
+        try {
+          const r = await spikeReadMacho();
+          console.log('[mac-spike:macho] OK:', JSON.stringify(r));
+        } catch (e) {
+          console.log('[mac-spike:macho] FAIL:', (e as Error).message);
+        }
+        try {
+          const w = await spikeReadHearthstoneWindow();
+          console.log('[mac-spike:window] OK:', JSON.stringify(w));
+        } catch (e) {
+          console.log('[mac-spike:window] FAIL:', (e as Error).message);
+        }
+      } catch (loadErr) {
+        console.log('[mac-spike] MODULE LOAD FAIL:', (loadErr as Error).message);
+      }
+    }
+    // === END SPIKE ===
+
     const devUrl = process.env['ELECTRON_RENDERER_URL'];
     const rendererUrl = devUrl ?? join(__dirname, '../renderer/index.html');
     const preloadPath = join(__dirname, '../preload/index.js');

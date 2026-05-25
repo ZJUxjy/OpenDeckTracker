@@ -81,6 +81,9 @@ importers:
       '@hdt/hearthmirror':
         specifier: workspace:*
         version: link:../../packages/hearthmirror
+      '@hdt/hearthmirror-mac-spike':
+        specifier: workspace:*
+        version: link:../../packages/hearthmirror-mac-spike
       '@hdt/hearthmirror-native':
         specifier: workspace:*
         version: link:../../packages/hearthmirror/native
@@ -194,6 +197,12 @@ importers:
       '@hdt/hearthmirror-native':
         specifier: workspace:*
         version: link:native
+
+  packages/hearthmirror-mac-spike:
+    devDependencies:
+      '@napi-rs/cli':
+        specifier: ^3
+        version: 3.6.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(@types/node@25.6.0)
 
   packages/hearthmirror/native:
     devDependencies:
