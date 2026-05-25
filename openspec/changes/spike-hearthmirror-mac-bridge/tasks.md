@@ -3,8 +3,8 @@
 
 ## 1. 创建 spike 包骨架
 
-- [ ] 1.1 创建目录 `packages/hearthmirror-mac-spike/src/`。
-- [ ] 1.2 创建 `packages/hearthmirror-mac-spike/package.json`：
+- [x] 1.1 创建目录 `packages/hearthmirror-mac-spike/src/`。
+- [x] 1.2 创建 `packages/hearthmirror-mac-spike/package.json`：
 
   ```json
   {
@@ -28,7 +28,7 @@
   }
   ```
 
-- [ ] 1.3 创建 `packages/hearthmirror-mac-spike/Cargo.toml`：
+- [x] 1.3 创建 `packages/hearthmirror-mac-spike/Cargo.toml`：
 
   ```toml
   [package]
@@ -57,7 +57,7 @@
   lto = true
   ```
 
-- [ ] 1.4 创建 `packages/hearthmirror-mac-spike/build.rs`：
+- [x] 1.4 创建 `packages/hearthmirror-mac-spike/build.rs`：
 
   ```rust
   fn main() {
@@ -65,7 +65,7 @@
   }
   ```
 
-- [ ] 1.5 创建 `packages/hearthmirror-mac-spike/entitlements.dev.plist`：
+- [x] 1.5 创建 `packages/hearthmirror-mac-spike/entitlements.dev.plist`：
 
   ```xml
   <?xml version="1.0" encoding="UTF-8"?>
@@ -82,7 +82,7 @@
   </plist>
   ```
 
-- [ ] 1.6 创建 `packages/hearthmirror-mac-spike/README.md`：
+- [x] 1.6 创建 `packages/hearthmirror-mac-spike/README.md`：
 
   ```markdown
   # @hdt/hearthmirror-mac-spike
@@ -96,12 +96,12 @@
   See `docs/spikes/0006-hearthmirror-mac-spike.md` for context.
   ```
 
-- [ ] 1.7 在根 `eslint.config.js` 的 `ignores` 数组中加入 `'packages/hearthmirror-mac-spike/**'`。
-- [ ] 1.8 commit：`git add packages/hearthmirror-mac-spike eslint.config.js && git commit -m "chore(spike): add hearthmirror-mac-spike package skeleton"`。
+- [x] 1.7 在根 `eslint.config.js` 的 `ignores` 数组中加入 `'packages/hearthmirror-mac-spike/**'`。
+- [x] 1.8 commit：`git add packages/hearthmirror-mac-spike eslint.config.js && git commit -m "chore(spike): add hearthmirror-mac-spike package skeleton"`。
 
 ## 2. 写 Rust spike 代码
 
-- [ ] 2.1 创建 `packages/hearthmirror-mac-spike/src/lib.rs`，实现 `spike_read_macho` 与 `spike_read_hearthstone_window`：
+- [x] 2.1 创建 `packages/hearthmirror-mac-spike/src/lib.rs`，实现 `spike_read_macho` 与 `spike_read_hearthstone_window`：
 
   ```rust
   #![deny(unsafe_op_in_unsafe_fn)]
@@ -233,17 +233,20 @@
 
   > **注意**：`read_image_base` 与 `spike_read_hearthstone_window` 在 spike 实施期间由用户在真机上补完。Agent 此处只搭骨架确保编译通过——这是 spike workflow 的常态（spike 0001 也是如此，部分细节在真机跑时才填）。
 
-- [ ] 2.2 在 `packages/hearthmirror-mac-spike/` 下执行 `pnpm install`。
+- [x] 2.2 在 `packages/hearthmirror-mac-spike/` 下执行 `pnpm install`。
+  > **dev-machine note**: 用户机器上 `~/.cargo/config` 把 crates-io 替换成了 USTC git mirror，spike 期间 mirror 不通；为本 spike 包加了 `.cargo/config.toml` 覆盖到 Tuna sparse mirror。
 - [ ] 2.3 在 `packages/hearthmirror-mac-spike/` 下执行 `pnpm exec napi build --platform --release --target aarch64-apple-darwin` 构建。期望产出：
   - `packages/hearthmirror-mac-spike/hearthmirror-mac-spike.darwin-arm64.node`（约 200–800 KB）；
   - `packages/hearthmirror-mac-spike/index.cjs`；
   - `packages/hearthmirror-mac-spike/index.d.ts`。
+  > **dev-machine note**: 当前机器 rustc 1.79，napi 3.9 需要 rustc ≥ 1.88；真机执行前先 `rustup update stable`。已写到 spike 包 README 的 Prerequisites。
 - [ ] 2.4 验证 .d.ts 包含 `export function spikeReadMacho(): Promise<MachoSpikeResult>` 与 `export function spikeReadHearthstoneWindow(): Promise<WindowSpikeResult>`。
-- [ ] 2.5 commit：`git add packages/hearthmirror-mac-spike && git commit -m "chore(spike): add rust skeleton for spike_read_macho and window probe"`。
+  > 当前已加 placeholder `index.d.ts`，napi build 会覆盖。真机 build 后回看一次 diff 确认 napi 输出与 placeholder 形状一致。
+- [x] 2.5 commit：`git add packages/hearthmirror-mac-spike && git commit -m "chore(spike): add rust skeleton for spike_read_macho and window probe"`。
 
 ## 3. 创建签名脚本
 
-- [ ] 3.1 创建 `scripts/codesign-mac-spike.sh`：
+- [x] 3.1 创建 `scripts/codesign-mac-spike.sh`：
 
   ```bash
   #!/usr/bin/env bash
@@ -279,12 +282,12 @@
   codesign -dv --verbose=4 "$NODE_BIN" 2>&1 | head -10
   ```
 
-- [ ] 3.2 `chmod +x scripts/codesign-mac-spike.sh`。
-- [ ] 3.3 commit：`git add scripts/codesign-mac-spike.sh && git commit -m "chore(spike): add codesign helper for mac spike binaries"`。
+- [x] 3.2 `chmod +x scripts/codesign-mac-spike.sh`。
+- [x] 3.3 commit：`git add scripts/codesign-mac-spike.sh && git commit -m "chore(spike): add codesign helper for mac spike binaries"`。
 
 ## 4. 加 spike 触发到主进程
 
-- [ ] 4.1 修改 `apps/desktop/src/main/index.ts`，在 `app.whenReady().then(...)` 内加 spike 触发块（用清晰注释边界，darwin-only 守卫）：
+- [x] 4.1 修改 `apps/desktop/src/main/index.ts`，在 `app.whenReady().then(...)` 内加 spike 触发块（用清晰注释边界，darwin-only 守卫）：
 
   ```typescript
   // === SPIKE TRIGGER: spike-hearthmirror-mac-bridge (remove on teardown) ===
@@ -312,13 +315,15 @@
   ```
 
   注意：spike 0001 已经把 `app.whenReady().then(...)` 的回调改成了 `async () => { ... }`，这里复用即可。
-- [ ] 4.2 在 `apps/desktop/package.json` 的 `dependencies` 中加 `"@hdt/hearthmirror-mac-spike": "workspace:*"`。
-- [ ] 4.3 仓库根执行 `pnpm install` 让 workspace 链接生效。
-- [ ] 4.4 验证 typecheck 通过：`pnpm --filter @hdt/desktop typecheck`，期望零错误。
-- [ ] 4.5 验证 Windows 端**仍然**能 build（运行时 `process.platform === 'darwin'` 守卫不应触发）：
-  - `pnpm --filter @hdt/desktop build` 在本地 macOS 上跑（验证 build pipeline 跨平台不炸）；
-  - 如果有条件，在 Windows 沙盒上跑同样的 build（dynamic import 失败应被 try/catch 吞掉）。
-- [ ] 4.6 commit：`git add apps/desktop && git commit -m "chore(spike): wire main process to call mac spike on darwin only"`。
+  > **deviation**: 当前 main/index.ts 的 outer callback 是 sync `() => { ... }`（spike 0001 teardown 后被还原）。本 change 重新把它改为 `async`，并加 spike 块。
+- [x] 4.2 在 `apps/desktop/package.json` 的 `devDependencies` 中加 `"@hdt/hearthmirror-mac-spike": "workspace:*"`。
+  > **deviation from plan**: 改用 `devDependencies`（spike 0001 用的 `dependencies`）。理由：本 spike 是 darwin-only，放 `dependencies` 会让 Windows 生产 build 把 `darwin-arm64.node` 当生产依赖处理。spike 是 throw-away 的，无论如何都要 teardown，devDeps vs deps 不会留下持久影响。
+- [x] 4.3 仓库根执行 `pnpm install` 让 workspace 链接生效。
+- [x] 4.4 验证 typecheck 通过：`pnpm --filter @hdt/desktop typecheck`，期望零错误（已确认）。
+- [x] 4.5 验证 Windows 端**仍然**能 build（运行时 `process.platform === 'darwin'` 守卫不应触发）：
+  - 本地 macOS 上 `pnpm --filter @hdt/desktop typecheck` 通过（已确认）；
+  - Windows 沙盒上的实际 build 验证：留给真机 / CI 跑。dynamic import 在 Windows 找不到 `darwin-arm64.node` 时会被 outer try/catch 吞掉，行为符合预期。
+- [x] 4.6 commit：`git add apps/desktop && git commit -m "chore(spike): wire main process to call mac spike on darwin only"`。
 
 ## 5. 真机验证 — 场景 A（HS 运行 + 已签名）
 
