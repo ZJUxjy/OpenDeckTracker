@@ -21,6 +21,7 @@
 /** Current Standard-legal set codes, oldest first. */
 export const STANDARD_SET_CODES: readonly string[] = [
   'SET_1810', // Core
+  'SET_1935', // The Great Dark Beyond
   'SET_1941', // Event
   'SET_1946', // Into the Emerald Dream
   'SET_1952', // The Lost City of Un'Goro
@@ -36,6 +37,7 @@ export const STANDARD_SET_CODES: readonly string[] = [
 export const SET_LABELS: Record<string, { 'en-US': string; 'zh-CN': string }> = {
   // ── Standard ──────────────────────────────────────────────
   SET_1810: { 'en-US': 'Core',                       'zh-CN': '核心' },
+  SET_1935: { 'en-US': 'The Great Dark Beyond',      'zh-CN': '大黑暗彼岸' },
   SET_1941: { 'en-US': 'Event',                      'zh-CN': '活动' },
   SET_1946: { 'en-US': 'Into the Emerald Dream',     'zh-CN': '漫游翡翠梦境' },
   SET_1952: { 'en-US': "The Lost City of Un'Goro",   'zh-CN': '安戈洛龟途' },
@@ -48,7 +50,6 @@ export const SET_LABELS: Record<string, { 'en-US': string; 'zh-CN': string }> = 
   SET_1892: { 'en-US': 'Showdown in the Badlands',   'zh-CN': '决战荒芜之地' },
   SET_1897: { 'en-US': "Whizbang's Workshop",        'zh-CN': '砰砰实验室' },
   SET_1905: { 'en-US': 'Perils in Paradise',         'zh-CN': '天堂危机' },
-  SET_1935: { 'en-US': 'The Great Dark Beyond',      'zh-CN': '大黑暗彼岸' },
 
   // ── Wild expansions ───────────────────────────────────────
   SET_3:    { 'en-US': 'Legacy',                     'zh-CN': '传承' },
