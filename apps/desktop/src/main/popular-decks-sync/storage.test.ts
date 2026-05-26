@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { PopularDeck } from '@hdt/core';
 import type { PopularDeckSourceSnapshot } from './provider-types';
-import { loadCache, saveCache, SYNCED_FILENAME, SYNCED_TMP_FILENAME } from './storage';
+import { loadCache, saveCache, SYNCED_FILENAME, SYNCED_TMP_FILENAME, type SyncedSnapshotV2 } from './storage';
 
 const VALID_DECK: PopularDeck = {
   id: 'tempo-rogue-1',
@@ -101,6 +101,20 @@ describe('loadCache', () => {
     expect(await loadCache(dir)).toBeNull();
   });
 
+  it('returns null for schema version 2 snapshots with invalid optional source fields', async () => {
+    writeFileSync(
+      join(dir, SYNCED_FILENAME),
+      JSON.stringify({
+        schemaVersion: 2,
+        fetchedAt: '2026-05-09T00:00:00Z',
+        decks: [VALID_DECK],
+        sources: [{ id: 'hsguru', label: 'HSGuru', enabled: true, status: 'ok', deckCount: '1' }],
+      }),
+    );
+
+    expect(await loadCache(dir)).toBeNull();
+  });
+
   it('returns null when any deck fails the shape check', async () => {
     writeFileSync(
       join(dir, SYNCED_FILENAME),
@@ -122,7 +136,7 @@ describe('loadCache', () => {
   });
 
   it('reads back a schema version 2 snapshot saved via saveCache', async () => {
-    const snapshot = {
+    const snapshot: SyncedSnapshotV2 = {
       schemaVersion: 2 as const,
       fetchedAt: '2026-05-09T12:00:00Z',
       decks: [VALID_DECK],

@@ -84,9 +84,10 @@ function isPopularDeckSourceSnapshot(value: unknown): value is PopularDeckSource
 /**
  * Reads the synced snapshot from `<dir>/synced.json`. Returns `null`
  * when the file is absent, malformed JSON, has an unsupported schema,
- * or contains any deck that fails the `PopularDeck` shape check. The
- * intent is that ANY corruption falls back silently to the bundled
- * seed rather than surfacing an error to the user.
+ * contains any deck that fails the `PopularDeck` shape check, or has
+ * invalid schema version 2 source diagnostics. The intent is that ANY
+ * corruption falls back silently to the bundled seed rather than
+ * surfacing an error to the user.
  */
 export async function loadCache(dir: string): Promise<SyncedSnapshot | null> {
   const path = join(dir, SYNCED_FILENAME);
