@@ -64,6 +64,8 @@ export class PopularDeckProviderError extends Error {
     super(message);
     this.name = 'PopularDeckProviderError';
     this.code = code;
-    this.reason = reason;
+    if (reason !== undefined) {
+      this.reason = reason;
+    }
   }
 }
