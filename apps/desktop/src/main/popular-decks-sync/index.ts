@@ -214,4 +214,4 @@ function classifyError(e: unknown, fallback: string): string {
 // Re-export storage / fetcher types for IPC consumers.
 export { loadCache, saveCache, type SyncedSnapshot } from './storage';
 export type { FetchImpl } from './fetcher';
-export type { SyncProgress, SyncPhase } from './provider-types';
+export type { ProgressCallback, SyncProgress, SyncPhase } from './provider-types';

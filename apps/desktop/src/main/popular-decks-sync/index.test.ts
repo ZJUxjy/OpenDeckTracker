@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { PopularDeck } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { decodeDeck } from '@hdt/hearthdb';
-import { PopularDeckSyncOrchestrator } from './index';
+import { PopularDeckSyncOrchestrator, type ProgressCallback } from './index';
 import {
   PopularDeckProviderError,
   type PopularDeckProvider,
@@ -125,6 +125,14 @@ afterEach(() => {
 });
 
 describe('PopularDeckSyncOrchestrator.startSync', () => {
+  it('re-exports ProgressCallback for existing sync consumers', () => {
+    const cb: ProgressCallback = (progress) => {
+      expect(progress.phase).toBe('persist');
+    };
+
+    cb({ phase: 'persist', completed: 0, total: 1 });
+  });
+
   it('returns ok with fetchedAt + count and writes synced.json', async () => {
     const orch = makeOrchestrator({ cacheDir: dir });
     const progress: SyncProgress[] = [];
