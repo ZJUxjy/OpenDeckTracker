@@ -2,16 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { PopularDeck } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import { decodeDeck } from '@hdt/hearthdb';
-import { PopularDeckSyncOrchestrator, type ProgressCallback } from './index';
 import {
-  PopularDeckProviderError,
-  type PopularDeckProvider,
-  type PopularDeckSourceSnapshot,
+  PopularDeckSyncOrchestrator,
   type SyncProgress,
-} from './provider-types';
+} from './index';
 import { SYNCED_FILENAME } from './storage';
 
 const ROGUE_DECKSTRING =
@@ -72,49 +68,6 @@ function makeOrchestrator(opts: {
   });
 }
 
-const SUCCESS_DECK: PopularDeck = {
-  id: 'tempo-rogue-1',
-  name: 'Tempo Rogue',
-  class: 'ROGUE',
-  format: 'Standard',
-  archetype: 'Tempo',
-  deckstring: ROGUE_DECKSTRING,
-  winratePercent: 50.2,
-  gamesCount: 100,
-  author: 'test-provider',
-  updatedAt: '2026-05-09',
-};
-
-function fakeProvider(
-  init: {
-    id: 'hsguru' | 'hsreplay' | 'lushi';
-    label: string;
-    defaultEnabled?: boolean;
-    status?: ReturnType<PopularDeckProvider['getStatus']>;
-    sync?: PopularDeckProvider['sync'];
-  },
-): PopularDeckProvider {
-  return {
-    id: init.id,
-    label: init.label,
-    defaultEnabled: init.defaultEnabled ?? true,
-    getStatus: () => init.status ?? { status: 'supported' },
-    sync:
-      init.sync ??
-      vi.fn(async (ctx) => ({
-        decks: [SUCCESS_DECK],
-        source: {
-          id: init.id,
-          label: init.label,
-          enabled: true,
-          status: 'ok',
-          fetchedAt: ctx.fetchedAt,
-          deckCount: 1,
-        } satisfies PopularDeckSourceSnapshot,
-      })),
-  };
-}
-
 let dir: string;
 
 beforeEach(() => {
@@ -125,14 +78,6 @@ afterEach(() => {
 });
 
 describe('PopularDeckSyncOrchestrator.startSync', () => {
-  it('re-exports ProgressCallback for existing sync consumers', () => {
-    const cb: ProgressCallback = (progress) => {
-      expect(progress.phase).toBe('persist');
-    };
-
-    cb({ phase: 'persist', completed: 0, total: 1 });
-  });
-
   it('returns ok with fetchedAt + count and writes synced.json', async () => {
     const orch = makeOrchestrator({ cacheDir: dir });
     const progress: SyncProgress[] = [];
@@ -144,145 +89,8 @@ describe('PopularDeckSyncOrchestrator.startSync', () => {
     });
     expect(existsSync(join(dir, SYNCED_FILENAME))).toBe(true);
     const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
-    expect(onDisk.schemaVersion).toBe(2);
     expect(onDisk.decks).toHaveLength(1);
     expect(onDisk.decks[0].class).toBe('ROGUE');
-    expect(onDisk.sources).toEqual([
-      {
-        id: 'hsguru',
-        label: 'HSGuru',
-        enabled: true,
-        status: 'ok',
-        fetchedAt: '2026-05-09T12:00:00.000Z',
-        deckCount: 1,
-      },
-      {
-        id: 'hsreplay',
-        label: 'HSReplay',
-        enabled: false,
-        status: 'unsupported',
-        reason: 'blocked-by-cloudflare',
-      },
-      {
-        id: 'lushi',
-        label: 'Lushi',
-        enabled: false,
-        status: 'unsupported',
-        reason: 'no-public-deck-api-found',
-      },
-    ]);
-  });
-
-  it('records unsupported providers without invoking their sync functions', async () => {
-    const supported = fakeProvider({ id: 'hsguru', label: 'HSGuru' });
-    const unsupportedSync = vi.fn();
-    const unsupported = fakeProvider({
-      id: 'hsreplay',
-      label: 'HSReplay',
-      defaultEnabled: false,
-      status: { status: 'unsupported', reason: 'blocked-by-cloudflare' },
-      sync: unsupportedSync,
-    });
-    const orch = new PopularDeckSyncOrchestrator({
-      fetchImpl: vi.fn(),
-      getCardLookup: () => () => null,
-      cacheDir: dir,
-      delay: async () => undefined,
-      now: () => new Date('2026-05-09T12:00:00Z'),
-      providers: [supported, unsupported],
-    });
-
-    const result = await orch.startSync(() => undefined);
-    expect(result).toEqual({
-      ok: true,
-      fetchedAt: '2026-05-09T12:00:00.000Z',
-      count: 1,
-    });
-    expect(unsupportedSync).not.toHaveBeenCalled();
-    const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
-    expect(onDisk.sources).toEqual([
-      {
-        id: 'hsguru',
-        label: 'HSGuru',
-        enabled: true,
-        status: 'ok',
-        fetchedAt: '2026-05-09T12:00:00.000Z',
-        deckCount: 1,
-      },
-      {
-        id: 'hsreplay',
-        label: 'HSReplay',
-        enabled: false,
-        status: 'unsupported',
-        reason: 'blocked-by-cloudflare',
-      },
-    ]);
-  });
-
-  it('captures one provider failure while persisting successful provider decks', async () => {
-    const failing = fakeProvider({
-      id: 'hsreplay',
-      label: 'HSReplay',
-      sync: vi.fn(async () => {
-        throw new PopularDeckProviderError('network-failed', 'blocked');
-      }),
-    });
-    const successful = fakeProvider({ id: 'hsguru', label: 'HSGuru' });
-    const orch = new PopularDeckSyncOrchestrator({
-      fetchImpl: vi.fn(),
-      getCardLookup: () => () => null,
-      cacheDir: dir,
-      delay: async () => undefined,
-      now: () => new Date('2026-05-09T12:00:00Z'),
-      providers: [failing, successful],
-    });
-
-    const result = await orch.startSync(() => undefined);
-    expect(result).toEqual({
-      ok: true,
-      fetchedAt: '2026-05-09T12:00:00.000Z',
-      count: 1,
-    });
-    const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
-    expect(onDisk.sources).toEqual([
-      {
-        id: 'hsreplay',
-        label: 'HSReplay',
-        enabled: true,
-        status: 'failed',
-        error: 'network-failed',
-      },
-      {
-        id: 'hsguru',
-        label: 'HSGuru',
-        enabled: true,
-        status: 'ok',
-        fetchedAt: '2026-05-09T12:00:00.000Z',
-        deckCount: 1,
-      },
-    ]);
-  });
-
-  it('returns the first provider error when every enabled provider fails', async () => {
-    const failing = fakeProvider({
-      id: 'hsguru',
-      label: 'HSGuru',
-      sync: vi.fn(async () => {
-        throw new PopularDeckProviderError('parse-failed', 'empty');
-      }),
-    });
-    const orch = new PopularDeckSyncOrchestrator({
-      fetchImpl: vi.fn(),
-      getCardLookup: () => () => null,
-      cacheDir: dir,
-      delay: async () => undefined,
-      now: () => new Date('2026-05-09T12:00:00Z'),
-      providers: [failing],
-    });
-
-    const result = await orch.startSync(() => undefined);
-    expect(result).toEqual({ ok: false, error: 'parse-failed' });
-    expect(existsSync(join(dir, SYNCED_FILENAME))).toBe(false);
   });
 
   it('emits progress events for every phase in order', async () => {

@@ -1,22 +1,22 @@
 import type { PopularDeck } from '@hdt/core';
-import { createPopularDeckProviders } from './provider-registry';
 import {
-  PopularDeckProviderError,
-  type PopularDeckProvider,
-  type PopularDeckProviderContext,
-  type PopularDeckSourceSnapshot,
-  type ProgressCallback,
-  type SyncProgress,
-  type SyncPhase,
-} from './provider-types';
-import {
-  loadCache,
-  saveCache,
-  type SyncedSnapshot,
-  type SyncedSnapshotV2,
-} from './storage';
-import type { FetchImpl } from './fetcher';
-import type { TransformContext } from './transformer';
+  fetchHsguruArchetypeVariants,
+  fetchHsguruMeta,
+  type FetchImpl,
+  ARCHETYPE_DELAY_MS,
+} from './fetcher';
+import { parseDeckVariants, parseLegendArchetypes } from './parser';
+import { transformVariant, type TransformContext } from './transformer';
+import { loadCache, saveCache, type SyncedSnapshot } from './storage';
+
+export type SyncPhase = 'meta' | 'variants' | 'transform' | 'persist';
+
+export interface SyncProgress {
+  phase: SyncPhase;
+  completed: number;
+  total: number;
+  currentLabel?: string;
+}
 
 export type StartSyncResult =
   | { ok: true; fetchedAt: string; count: number }
@@ -39,10 +39,9 @@ export interface SyncDeps {
   /** Cap on archetypes/variants per archetype. */
   archetypeLimit?: number;
   variantLimit?: number;
-  /** Override for tests; default uses the built-in provider registry. */
-  providers?: PopularDeckProvider[];
 }
 
+export type ProgressCallback = (progress: SyncProgress) => void;
 export type SnapshotChangeCallback = (snapshot: SyncedSnapshot | null) => void;
 
 export class PopularDeckSyncOrchestrator {
@@ -110,81 +109,113 @@ export class PopularDeckSyncOrchestrator {
     const fetchedAt = now().toISOString();
     console.log('[popular-decks-sync] start', { fetchedAt, cacheDir: this.deps.cacheDir });
 
-    const providers = this.deps.providers ?? createPopularDeckProviders();
-    const decks: PopularDeck[] = [];
-    const sources: PopularDeckSourceSnapshot[] = [];
-    let enabledSupportedProviders = 0;
-    let firstFailure: string | null = null;
-
-    for (const provider of providers) {
-      const providerStatus = provider.getStatus();
-      const enabled = provider.defaultEnabled;
-
-      if (providerStatus.status === 'unsupported') {
-        sources.push({
-          id: provider.id,
-          label: provider.label,
-          enabled: false,
-          status: 'unsupported',
-          reason: providerStatus.reason,
-        });
-        continue;
-      }
-
-      if (!enabled) {
-        sources.push({
-          id: provider.id,
-          label: provider.label,
-          enabled: false,
-          status: 'disabled',
-        });
-        continue;
-      }
-
-      enabledSupportedProviders++;
-      const context: PopularDeckProviderContext = {
-        fetchImpl: this.deps.fetchImpl,
-        delay,
-        findByDbfId: lookup,
-        fetchedAt,
-        archetypeLimit,
-        variantLimit,
-        progressCb,
+    // Phase 1: meta
+    progressCb({ phase: 'meta', completed: 0, total: 1 });
+    let metaHtml: string;
+    const metaStart = Date.now();
+    try {
+      metaHtml = await fetchHsguruMeta(
+        { fetchImpl: this.deps.fetchImpl, delay },
         signal,
-      };
+      );
+    } catch (e) {
+      console.error('[popular-decks-sync] meta fetch failed', {
+        elapsedMs: Date.now() - metaStart,
+        name: (e as Error)?.name,
+        message: (e as Error)?.message,
+      });
+      return { ok: false, error: classifyError(e, 'network-failed') };
+    }
+    console.log('[popular-decks-sync] meta fetched', {
+      elapsedMs: Date.now() - metaStart,
+      bytes: metaHtml.length,
+    });
+    const archetypes = parseLegendArchetypes(metaHtml, archetypeLimit);
+    if (archetypes.length === 0) {
+      console.warn('[popular-decks-sync] meta parse yielded 0 archetypes (DOM changed?)');
+      return { ok: false, error: 'parse-failed' };
+    }
+    console.log(`[popular-decks-sync] parsed ${archetypes.length} archetypes`);
+    progressCb({ phase: 'meta', completed: 1, total: 1 });
 
+    // Phase 2: variants (one round-trip set per archetype)
+    const variantsByArchetype: Array<{
+      archetype: typeof archetypes[number];
+      variants: ReturnType<typeof parseDeckVariants>;
+    }> = [];
+    for (let i = 0; i < archetypes.length; i++) {
+      if (signal.aborted) return { ok: false, error: 'aborted' };
+      const archetype = archetypes[i]!;
+      progressCb({
+        phase: 'variants',
+        completed: i,
+        total: archetypes.length,
+        currentLabel: archetype.archetype,
+      });
+      let result: { html: string; url: string } | null;
+      const variantStart = Date.now();
       try {
-        const result = await provider.sync(context);
-        decks.push(...result.decks);
-        sources.push(result.source);
+        result = await fetchHsguruArchetypeVariants(
+          archetype.archetype,
+          { fetchImpl: this.deps.fetchImpl, delay },
+          signal,
+        );
       } catch (e) {
-        const error = classifyError(e, 'sync-failed');
-        firstFailure ??= error;
-        sources.push({
-          id: provider.id,
-          label: provider.label,
-          enabled: true,
-          status: 'failed',
-          error,
+        console.error('[popular-decks-sync] variants fetch failed', {
+          archetype: archetype.archetype,
+          elapsedMs: Date.now() - variantStart,
+          name: (e as Error)?.name,
+          message: (e as Error)?.message,
         });
-        if (error === 'aborted') return { ok: false, error };
+        return { ok: false, error: classifyError(e, 'network-failed') };
+      }
+      const variants = result ? parseDeckVariants(result.html, variantLimit) : [];
+      console.log(
+        `[popular-decks-sync] variants ${i + 1}/${archetypes.length} ${archetype.archetype}: ${variants.length} decks (${Date.now() - variantStart}ms)`,
+      );
+      variantsByArchetype.push({ archetype, variants });
+      if (i < archetypes.length - 1) await delay(ARCHETYPE_DELAY_MS);
+    }
+    progressCb({
+      phase: 'variants',
+      completed: archetypes.length,
+      total: archetypes.length,
+    });
+
+    // Phase 3: transform
+    const decks: PopularDeck[] = [];
+    const totalVariants = variantsByArchetype.reduce((s, x) => s + x.variants.length, 0);
+    let processed = 0;
+    progressCb({ phase: 'transform', completed: 0, total: Math.max(totalVariants, 1) });
+    for (const { archetype, variants } of variantsByArchetype) {
+      for (const variant of variants) {
+        const deck = transformVariant(archetype, variant, fetchedAt, {
+          findByDbfId: lookup,
+        });
+        if (deck) decks.push(deck);
+        processed++;
+        progressCb({
+          phase: 'transform',
+          completed: processed,
+          total: Math.max(totalVariants, 1),
+          currentLabel: archetype.archetype,
+        });
       }
     }
-
-    if (enabledSupportedProviders === 0) {
-      return { ok: false, error: 'no-enabled-providers' };
-    }
-
+    console.log(
+      `[popular-decks-sync] transform: ${decks.length} valid decks (skipped ${totalVariants - decks.length})`,
+    );
     if (decks.length === 0) {
-      return { ok: false, error: firstFailure ?? 'parse-failed' };
+      console.warn('[popular-decks-sync] transform yielded 0 decks — every variant rejected');
+      return { ok: false, error: 'parse-failed' };
     }
 
+    // Phase 4: persist
     progressCb({ phase: 'persist', completed: 0, total: 1 });
-    const snapshot: SyncedSnapshotV2 = {
-      schemaVersion: 2,
+    const snapshot: SyncedSnapshot = {
+      schemaVersion: 1,
       fetchedAt,
       decks,
-      sources,
     };
     try {
       await saveCache(this.deps.cacheDir, snapshot);
@@ -205,7 +236,6 @@ export class PopularDeckSyncOrchestrator {
 }
 
 function classifyError(e: unknown, fallback: string): string {
-  if (e instanceof PopularDeckProviderError) return e.code;
   const err = e as { name?: string; message?: string } | null;
   if (err?.name === 'AbortError' || err?.message === 'aborted') return 'aborted';
   return fallback;
@@ -214,4 +244,3 @@ function classifyError(e: unknown, fallback: string): string {
 // Re-export storage / fetcher types for IPC consumers.
 export { loadCache, saveCache, type SyncedSnapshot } from './storage';
 export type { FetchImpl } from './fetcher';
-export type { ProgressCallback, SyncProgress, SyncPhase } from './provider-types';
