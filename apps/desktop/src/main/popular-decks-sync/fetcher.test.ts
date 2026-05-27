@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fetchHsguruArchetypeVariants, fetchHsguruMeta, fetchHsguruText } from './fetcher';
+import {
+  fetchHsguruArchetypeVariants,
+  fetchHsguruDeckDetail,
+  fetchHsguruMeta,
+  fetchHsguruText,
+} from './fetcher';
 
 function okResponse(body: string): Response {
   return new Response(body, { status: 200, statusText: 'OK' });
@@ -47,6 +52,23 @@ describe('fetchHsguruMeta', () => {
     await fetchHsguruMeta({ fetchImpl });
     const url = fetchImpl.mock.calls[0]![0];
     expect(url).toBe('https://www.hsguru.com/meta?rank=legend&sort_by=total');
+  });
+});
+
+describe('fetchHsguruDeckDetail', () => {
+  it('fetches HSGuru deck detail HTML by URL', async () => {
+    const fetchImpl = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
+      async () => okResponse('<html>deck</html>'),
+    );
+    await expect(
+      fetchHsguruDeckDetail('https://www.hsguru.com/deck/39958736', { fetchImpl }),
+    ).resolves.toBe('<html>deck</html>');
+    expect(fetchImpl).toHaveBeenCalledWith(
+      'https://www.hsguru.com/deck/39958736',
+      expect.objectContaining({
+        headers: expect.objectContaining({ accept: 'text/html,application/xhtml+xml' }),
+      }),
+    );
   });
 });
 

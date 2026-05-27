@@ -6,7 +6,26 @@
  * independently because the spider runs in a separate Node CLI environment.
  */
 
+import type { MatchupHeroClass, PopularDeckClassMatchup } from '@hdt/core';
+
 const BASE_URL = 'https://www.hsguru.com';
+
+const CLASS_NAME_TO_HERO_CLASS: Readonly<Record<string, MatchupHeroClass>> = {
+  'Death Knight': 'DEATHKNIGHT',
+  'Demon Hunter': 'DEMONHUNTER',
+  Druid: 'DRUID',
+  Hunter: 'HUNTER',
+  Mage: 'MAGE',
+  Paladin: 'PALADIN',
+  Priest: 'PRIEST',
+  Rogue: 'ROGUE',
+  Shaman: 'SHAMAN',
+  Warlock: 'WARLOCK',
+  Warrior: 'WARRIOR',
+};
+
+const CLASS_ROW_PATTERN =
+  /(Death Knight|Demon Hunter|Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)\s+(\d+(?:\.\d+)?)%?\s+([\d,]+)\s+\((\d+(?:\.\d+)?)%\)/g;
 
 export interface HsguruArchetypeRow {
   archetype: string;
@@ -104,6 +123,32 @@ export function parseDeckVariants(html: string, limit = 5): HsguruDeckVariant[] 
   }
 
   return variants;
+}
+
+export function parseDeckClassMatchups(html: string): PopularDeckClassMatchup[] {
+  if (!html.includes('Class') || !html.includes('Winrate') || !html.includes('Total Games')) {
+    return [];
+  }
+
+  const text = decodeHtml(html)
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const rows: PopularDeckClassMatchup[] = [];
+  for (const match of text.matchAll(CLASS_ROW_PATTERN)) {
+    const className = match[1] ?? '';
+    const opponentClass = CLASS_NAME_TO_HERO_CLASS[className];
+    if (!opponentClass) continue;
+
+    rows.push({
+      opponentClass,
+      winratePercent: Number(match[2] ?? '0'),
+      gamesCount: Number((match[3] ?? '0').replace(/,/g, '')),
+      popularityPercent: Number(match[4] ?? '0'),
+    });
+  }
+  return rows;
 }
 
 export function buildDeckUrls(archetype: string): readonly string[] {

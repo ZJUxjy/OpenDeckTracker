@@ -61,6 +61,14 @@ export async function fetchHsguruMeta(
   return fetchHsguruText(HSGURU_META_URL, deps, signal);
 }
 
+export async function fetchHsguruDeckDetail(
+  deckUrl: string,
+  deps: FetcherDeps,
+  signal?: AbortSignal,
+): Promise<string> {
+  return fetchHsguruText(deckUrl, deps, signal);
+}
+
 /**
  * Tries the documented HSGuru deck list URL variants in order until
  * one returns a non-empty body (HSGuru renames query parameters from
