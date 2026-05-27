@@ -34,6 +34,9 @@ const SYNCED_DECK: PopularDeck = {
   gamesCount: 100,
   author: 'hsguru',
   updatedAt: '2026-05-09',
+  classMatchups: [
+    { opponentClass: 'MAGE', winratePercent: 60, gamesCount: 10, popularityPercent: 20 },
+  ],
 };
 
 function setup(source: PopularDecksDataSource) {
@@ -66,6 +69,9 @@ describe('popular-decks:list IPC', () => {
     expect(result.fetchedAt).toBe('2026-05-09T12:00:00Z');
     expect(result.decks).toHaveLength(1);
     expect(result.decks[0]!.id).toBe('tempo-rogue-1');
+    expect(result.decks[0]!.classMatchups).toEqual([
+      { opponentClass: 'MAGE', winratePercent: 60, gamesCount: 10, popularityPercent: 20 },
+    ]);
   });
 
   it('falls back to seed with fetchedAt=null when cache absent', async () => {
