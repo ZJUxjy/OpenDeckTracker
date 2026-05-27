@@ -34,6 +34,15 @@ export type PopularDeckArchetype =
   | 'Tempo'
   | 'Ramp';
 
+export type MatchupHeroClass = Exclude<HeroClass, 'NEUTRAL'>;
+
+export interface PopularDeckClassMatchup {
+  opponentClass: MatchupHeroClass;
+  winratePercent: number;
+  gamesCount: number;
+  popularityPercent: number;
+}
+
 export interface PopularDeck {
   id: string;
   name: string;
@@ -45,6 +54,7 @@ export interface PopularDeck {
   gamesCount: number;
   author: string;
   updatedAt: string;
+  classMatchups?: readonly PopularDeckClassMatchup[];
 }
 
 export interface PopularDeckKeyCard {
