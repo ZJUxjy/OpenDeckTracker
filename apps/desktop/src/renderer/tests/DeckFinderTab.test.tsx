@@ -14,6 +14,10 @@ const FIXTURE: PopularDeckEnriched[] = [
     manaCurve: [0, 6, 8, 6, 4, 2, 2, 2], cardNames: ['Fireball', 'Polymorph', 'Frostbolt'],
     deckCardList: [],
     keyCards: [{ cardId: 'CS2_029', name: 'Fireball', count: 2, cost: 4 }, { cardId: 'NEW_010', name: 'Polymorph', count: 2, cost: 4 }],
+    classMatchups: [
+      { opponentClass: 'HUNTER', winratePercent: 66.1, gamesCount: 56, popularityPercent: 24.2 },
+      { opponentClass: 'WARRIOR', winratePercent: 40, gamesCount: 5, popularityPercent: 10 },
+    ],
   },
   {
     id: 'warrior1', name: 'Control Warrior', class: 'WARRIOR', format: 'Standard', archetype: 'Control',
@@ -180,6 +184,33 @@ describe('DeckFinderTab', () => {
       // Both row + detail render the name; so we expect at least 2 occurrences
       expect(screen.getAllByText('Aggro Fire Mage').length).toBeGreaterThanOrEqual(2);
     });
+  });
+
+  it('renders class matchup winrates for the selected synced deck', async () => {
+    await act(async () => { renderTab(); });
+    await waitFor(() => expect(screen.queryAllByText('Aggro Fire Mage').length).toBeGreaterThan(0));
+
+    const table = screen.getByTestId('deck-finder-class-matchups');
+    expect(table).toHaveTextContent('CLASS MATCHUPS');
+
+    const hunter = screen.getByTestId('deck-finder-class-matchup-HUNTER');
+    expect(hunter).toHaveTextContent('Hunter');
+    expect(hunter).toHaveTextContent('66.1%');
+    expect(hunter).toHaveTextContent('56');
+    expect(hunter.className).toContain('bg-green/30');
+
+    const warrior = screen.getByTestId('deck-finder-class-matchup-WARRIOR');
+    expect(warrior).toHaveTextContent('40%');
+    expect(warrior.className).toContain('bg-red/15');
+  });
+
+  it('hides the class matchup section when the selected deck has no matchup data', async () => {
+    const user = userEvent.setup();
+    await act(async () => { renderTab(); });
+    await waitFor(() => expect(screen.queryAllByText('Control Warrior').length).toBe(1));
+
+    await user.click(screen.getByText('Control Warrior'));
+    await waitFor(() => expect(screen.queryByTestId('deck-finder-class-matchups')).toBeNull());
   });
 
   it('renders key-card copy counts in a readable badge', async () => {

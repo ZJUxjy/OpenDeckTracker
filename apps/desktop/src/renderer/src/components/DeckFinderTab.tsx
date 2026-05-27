@@ -4,6 +4,8 @@ import {
   sortPopularDecks,
   type Format,
   type HeroClass,
+  type MatchupHeroClass,
+  type PopularDeckClassMatchup,
   type PopularDeckEnriched,
   type PopularDeckKeyCard,
   type PopularDeckSort,
@@ -86,7 +88,7 @@ function syncErrorKey(error: string): string {
   }
 }
 
-const CLASSES: HeroClass[] = [
+const CLASSES: MatchupHeroClass[] = [
   'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE', 'PALADIN',
   'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK', 'WARRIOR',
 ];
@@ -132,6 +134,17 @@ function winrateColor(pct: number): string {
   if (pct >= 55) return 'text-green';
   if (pct >= 50) return 'text-accent';
   return 'text-amber';
+}
+
+function matchupCellColor(pct: number): string {
+  if (pct >= 60) return 'bg-green/30 text-green border-green/40';
+  if (pct >= 50) return 'bg-green/15 text-green border-green/30';
+  if (pct >= 40) return 'bg-red/15 text-red border-red/30';
+  return 'bg-red/30 text-red border-red/40';
+}
+
+function formatPercent(pct: number): string {
+  return `${pct.toFixed(1).replace(/\.0$/, '')}%`;
 }
 
 function formatGames(n: number): string {
@@ -530,6 +543,8 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
               </div>
             </div>
 
+            <ClassMatchupsTable matchups={selected.classMatchups} />
+
             <div>
               <div className="text-[9px] text-text-mute font-mono tracking-[0.14em] mb-1.5">
                 {t('decks.finder.manaCurveLabel')}
@@ -560,6 +575,54 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ClassMatchupsTable({
+  matchups,
+}: {
+  matchups: readonly PopularDeckClassMatchup[] | undefined;
+}): ReactElement | null {
+  const { t } = useTranslation();
+  if (!matchups || matchups.length === 0) return null;
+
+  const sortedMatchups = [...matchups].sort(
+    (a, b) => CLASSES.indexOf(a.opponentClass) - CLASSES.indexOf(b.opponentClass),
+  );
+
+  return (
+    <div
+      data-testid="deck-finder-class-matchups"
+      role="region"
+      aria-label={t('decks.finder.classMatchupsAriaLabel')}
+    >
+      <div className="text-[9px] text-text-mute font-mono tracking-[0.14em] mb-2">
+        {t('decks.finder.classMatchupsLabel')}
+      </div>
+      <div className="grid grid-cols-2 gap-1">
+        {sortedMatchups.map((matchup) => (
+          <div
+            key={matchup.opponentClass}
+            data-testid={`deck-finder-class-matchup-${matchup.opponentClass}`}
+            className={`min-h-[58px] rounded-sm border px-2 py-1.5 ${matchupCellColor(matchup.winratePercent)}`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-[10px] font-semibold text-text leading-tight truncate">
+                {t(CLASS_LABEL_KEYS[matchup.opponentClass])}
+              </span>
+              <span className="font-mono text-sm font-bold leading-none">
+                {formatPercent(matchup.winratePercent)}
+              </span>
+            </div>
+            <div className="mt-1 text-[10px] font-mono text-text-dim leading-tight">
+              {formatGames(matchup.gamesCount)} {t('decks.finder.classMatchupsGamesSuffix')}
+              <span className="mx-1 text-text-mute">·</span>
+              {t('decks.finder.classMatchupsPopularityLabel')} {formatPercent(matchup.popularityPercent)}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
