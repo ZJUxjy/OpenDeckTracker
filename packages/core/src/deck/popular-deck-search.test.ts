@@ -14,9 +14,6 @@ const D = (over: Partial<PopularDeckEnriched>): PopularDeckEnriched => ({
   dustCost: over.dustCost ?? 5000,
   author: over.author ?? 'tester',
   updatedAt: over.updatedAt ?? '2026-04-20',
-  classMatchups: over.classMatchups ?? [
-    { opponentClass: 'DRUID', winratePercent: 55.5, gamesCount: 20, popularityPercent: 12.3 },
-  ],
   manaCurve: over.manaCurve ?? [0, 0, 0, 0, 0, 0, 0, 0],
   keyCards: over.keyCards ?? [],
   cardNames: over.cardNames ?? [],
