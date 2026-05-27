@@ -5,6 +5,7 @@ import type { SetProgress } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
 import { SetTile } from './SetTile';
+import marchOfTheLichKingBg from '../assets/collection/march-of-the-lich-king-bg.png';
 
 interface ProgressResponse {
   standard: SetProgress[];
@@ -29,6 +30,9 @@ const TAB_ORDER: TabId[] = ['cards', 'cardBacks', 'heroes', 'coins', 'packs'];
 // without an official logo can opt back into a class-themed band if
 // the uniform-neutral look ever feels too samey.
 const SET_ACCENT: Record<string, string> = {};
+const SET_BACKGROUND_IMAGES: Record<string, string> = {
+  SET_1869: marchOfTheLichKingBg,
+};
 
 function accentFor(setCode: string): string {
   return SET_ACCENT[setCode] ?? 'var(--class-neutral)';
@@ -187,6 +191,9 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
               accent={accentFor(row.setCode)}
               {...(coverCardIds?.get(row.setCode) !== undefined
                 ? { coverCardId: coverCardIds.get(row.setCode)! }
+                : {})}
+              {...(SET_BACKGROUND_IMAGES[row.setCode] !== undefined
+                ? { backgroundImageUrl: SET_BACKGROUND_IMAGES[row.setCode] }
                 : {})}
               onClick={onOpenSet}
             />

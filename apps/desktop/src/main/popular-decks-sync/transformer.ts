@@ -4,7 +4,7 @@ import {
   type CardDef,
   type DeckBlueprint,
 } from '@hdt/hearthdb';
-import type { Format, HeroClass, PopularDeck } from '@hdt/core';
+import type { Format, HeroClass, PopularDeck, PopularDeckClassMatchup } from '@hdt/core';
 import type { HsguruArchetypeRow, HsguruDeckVariant } from './parser';
 import { classifyArchetypeLabel } from './classifier';
 
@@ -75,6 +75,7 @@ export function transformVariant(
   variant: HsguruDeckVariant,
   fetchedAt: string,
   ctx: TransformContext,
+  classMatchups: readonly PopularDeckClassMatchup[] = [],
 ): PopularDeck | null {
   let blueprint: DeckBlueprint;
   try {
@@ -97,5 +98,6 @@ export function transformVariant(
     gamesCount: variant.games,
     author: 'hsguru',
     updatedAt: fetchedAt.slice(0, 10),
+    ...(classMatchups.length > 0 ? { classMatchups: [...classMatchups] } : {}),
   };
 }

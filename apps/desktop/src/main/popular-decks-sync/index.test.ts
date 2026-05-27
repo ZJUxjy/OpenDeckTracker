@@ -29,6 +29,13 @@ const ARCHETYPE_HTML = `
   </div>
 `;
 
+const DECK_DETAIL_HTML = `
+  Class Winrate Total Games
+  Mage 60.0 10 (20.0%)
+  Warrior 40.0 5 (10.0%)
+  Total 53.3 15
+`;
+
 function fakeHeroCard(heroDbfId: number, cardClass: string): CardDef {
   return {
     id: `H${heroDbfId}`,
@@ -56,6 +63,9 @@ function makeOrchestrator(opts: {
     vi.fn(async (url: string) => {
       if (url.includes('/meta?')) {
         return new Response(opts.metaHtml ?? META_HTML, { status: 200 });
+      }
+      if (url.includes('/deck/39285857')) {
+        return new Response(DECK_DETAIL_HTML, { status: 200 });
       }
       return new Response(opts.archetypeHtml ?? ARCHETYPE_HTML, { status: 200 });
     });
@@ -91,6 +101,47 @@ describe('PopularDeckSyncOrchestrator.startSync', () => {
     const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
     expect(onDisk.decks).toHaveLength(1);
     expect(onDisk.decks[0].class).toBe('ROGUE');
+  });
+
+  it('fetches deck detail pages and persists class matchups', async () => {
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (url.includes('/meta?')) return new Response(META_HTML, { status: 200 });
+      if (url.includes('/deck/39285857')) {
+        return new Response(DECK_DETAIL_HTML, { status: 200 });
+      }
+      return new Response(ARCHETYPE_HTML, { status: 200 });
+    });
+    const orch = makeOrchestrator({ cacheDir: dir, fetchSpy });
+    const result = await orch.startSync(() => undefined);
+    expect(result.ok).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://www.hsguru.com/deck/39285857',
+      expect.any(Object),
+    );
+    const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
+    expect(onDisk.schemaVersion).toBe(2);
+    expect(onDisk.decks[0].classMatchups).toEqual([
+      { opponentClass: 'MAGE', winratePercent: 60, gamesCount: 10, popularityPercent: 20 },
+      { opponentClass: 'WARRIOR', winratePercent: 40, gamesCount: 5, popularityPercent: 10 },
+    ]);
+  });
+
+  it('keeps the deck when its detail page fetch fails', async () => {
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (url.includes('/meta?')) return new Response(META_HTML, { status: 200 });
+      if (url.includes('/deck/39285857')) throw new Error('detail failed');
+      return new Response(ARCHETYPE_HTML, { status: 200 });
+    });
+    const orch = makeOrchestrator({ cacheDir: dir, fetchSpy });
+    const result = await orch.startSync(() => undefined);
+    expect(result).toEqual({
+      ok: true,
+      fetchedAt: '2026-05-09T12:00:00.000Z',
+      count: 1,
+    });
+    const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
+    expect(onDisk.decks[0].id).toBe('tempo-rogue-39285857');
+    expect(onDisk.decks[0].classMatchups).toBeUndefined();
   });
 
   it('emits progress events for every phase in order', async () => {

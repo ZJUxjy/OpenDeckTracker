@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import {
   buildDeckUrls,
   decodeHtml,
+  parseDeckClassMatchups,
   parseDeckVariants,
   parseLegendArchetypes,
 } from './parser';
@@ -11,6 +12,7 @@ import {
 const FIX_DIR = join(__dirname, '__fixtures__');
 const META_HTML = readFileSync(join(FIX_DIR, 'hsguru-meta.html'), 'utf-8');
 const ARCHETYPE_HTML = readFileSync(join(FIX_DIR, 'hsguru-archetype.html'), 'utf-8');
+const DECK_DETAIL_HTML = readFileSync(join(FIX_DIR, 'hsguru-deck-detail.html'), 'utf-8');
 
 describe('parseLegendArchetypes', () => {
   it('extracts archetype rows from the meta fixture', () => {
@@ -60,6 +62,67 @@ describe('parseDeckVariants', () => {
 
   it('returns empty array for empty input', () => {
     expect(parseDeckVariants('')).toEqual([]);
+  });
+});
+
+describe('parseDeckClassMatchups', () => {
+  it('extracts opponent class matchup rows from the deck detail fixture', () => {
+    const rows = parseDeckClassMatchups(DECK_DETAIL_HTML);
+    expect(rows).toHaveLength(11);
+    expect(rows[0]).toEqual({
+      opponentClass: 'DEATHKNIGHT',
+      winratePercent: 40,
+      gamesCount: 5,
+      popularityPercent: 2.2,
+    });
+    expect(rows.find((r) => r.opponentClass === 'WARLOCK')).toEqual({
+      opponentClass: 'WARLOCK',
+      winratePercent: 77.8,
+      gamesCount: 9,
+      popularityPercent: 3.9,
+    });
+  });
+
+  it('skips the Total row', () => {
+    const rows = parseDeckClassMatchups(DECK_DETAIL_HTML);
+    expect(rows.map((r) => r.opponentClass)).not.toContain('NEUTRAL');
+    expect(rows).toHaveLength(11);
+  });
+
+  it('returns an empty array when the class matchup table is absent', () => {
+    expect(parseDeckClassMatchups('<html><body>No stats here</body></html>')).toEqual([]);
+  });
+
+  it('supports compact text-rendered HSGuru output', () => {
+    const html = [
+      'Class Winrate Total Games',
+      'Druid 44.0 50 (21.6%)',
+      'Warrior 33.3 9 (3.9%)',
+      'Total 55.4 231',
+    ].join('\n');
+    expect(parseDeckClassMatchups(html)).toEqual([
+      { opponentClass: 'DRUID', winratePercent: 44, gamesCount: 50, popularityPercent: 21.6 },
+      { opponentClass: 'WARRIOR', winratePercent: 33.3, gamesCount: 9, popularityPercent: 3.9 },
+    ]);
+  });
+
+  it('ignores class-shaped stats outside the matchup table', () => {
+    const html = `
+      <table>
+        <thead><tr><th>Class</th><th>Winrate</th><th>Total Games</th></tr></thead>
+        <tbody>
+          <tr><td>Druid</td><td>44.0</td><td>50 (21.6%)</td></tr>
+          <tr><td>Total</td><td>55.4</td><td>231</td></tr>
+        </tbody>
+      </table>
+      <section>
+        <h2>Related Decks</h2>
+        <div>Token Druid 99.9 4,551 (3.9%)</div>
+      </section>
+    `;
+    expect(parseDeckClassMatchups(html)).toEqual([
+      { opponentClass: 'DRUID', winratePercent: 44, gamesCount: 50, popularityPercent: 21.6 },
+    ]);
   });
 });
 

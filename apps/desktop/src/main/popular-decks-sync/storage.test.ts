@@ -41,7 +41,7 @@ describe('loadCache', () => {
   it('returns null when the schemaVersion is unsupported', async () => {
     writeFileSync(
       join(dir, SYNCED_FILENAME),
-      JSON.stringify({ schemaVersion: 2, fetchedAt: '2026-05-09T00:00:00Z', decks: [VALID_DECK] }),
+      JSON.stringify({ schemaVersion: 3, fetchedAt: '2026-05-09T00:00:00Z', decks: [VALID_DECK] }),
     );
     expect(await loadCache(dir)).toBeNull();
   });
@@ -76,12 +76,55 @@ describe('loadCache', () => {
     const loaded = await loadCache(dir);
     expect(loaded).toEqual(snapshot);
   });
+
+  it('loads legacy schema v1 snapshots without class matchups', async () => {
+    const snapshot = {
+      schemaVersion: 1,
+      fetchedAt: '2026-05-09T00:00:00Z',
+      decks: [VALID_DECK],
+    };
+    writeFileSync(join(dir, SYNCED_FILENAME), JSON.stringify(snapshot));
+    expect(await loadCache(dir)).toEqual(snapshot);
+  });
+
+  it('reads back schema v2 snapshots with class matchups', async () => {
+    const deckWithMatchups: PopularDeck = {
+      ...VALID_DECK,
+      classMatchups: [
+        { opponentClass: 'MAGE', winratePercent: 60, gamesCount: 10, popularityPercent: 20 },
+      ],
+    };
+    const snapshot = {
+      schemaVersion: 2 as const,
+      fetchedAt: '2026-05-09T12:00:00Z',
+      decks: [deckWithMatchups],
+    };
+    await saveCache(dir, snapshot);
+    expect(await loadCache(dir)).toEqual(snapshot);
+  });
+
+  it('returns null when classMatchups have invalid shape', async () => {
+    writeFileSync(
+      join(dir, SYNCED_FILENAME),
+      JSON.stringify({
+        schemaVersion: 2,
+        fetchedAt: '2026-05-09T00:00:00Z',
+        decks: [
+          {
+            ...VALID_DECK,
+            classMatchups: [{ opponentClass: 'MAGE', winratePercent: 'great' }],
+          },
+        ],
+      }),
+    );
+    expect(await loadCache(dir)).toBeNull();
+  });
 });
 
 describe('saveCache', () => {
   it('writes synced.json atomically (tmp removed after rename)', async () => {
     await saveCache(dir, {
-      schemaVersion: 1,
+      schemaVersion: 2,
       fetchedAt: '2026-05-09T00:00:00Z',
       decks: [VALID_DECK],
     });
@@ -92,7 +135,7 @@ describe('saveCache', () => {
   it('creates the directory if missing', async () => {
     const nested = join(dir, 'nested', 'subdir');
     await saveCache(nested, {
-      schemaVersion: 1,
+      schemaVersion: 2,
       fetchedAt: '2026-05-09T00:00:00Z',
       decks: [VALID_DECK],
     });

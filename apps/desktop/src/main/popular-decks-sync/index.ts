@@ -1,11 +1,12 @@
-import type { PopularDeck } from '@hdt/core';
+import type { PopularDeck, PopularDeckClassMatchup } from '@hdt/core';
 import {
   fetchHsguruArchetypeVariants,
+  fetchHsguruDeckDetail,
   fetchHsguruMeta,
   type FetchImpl,
   ARCHETYPE_DELAY_MS,
 } from './fetcher';
-import { parseDeckVariants, parseLegendArchetypes } from './parser';
+import { parseDeckClassMatchups, parseDeckVariants, parseLegendArchetypes } from './parser';
 import { transformVariant, type TransformContext } from './transformer';
 import { loadCache, saveCache, type SyncedSnapshot } from './storage';
 
@@ -189,9 +190,32 @@ export class PopularDeckSyncOrchestrator {
     progressCb({ phase: 'transform', completed: 0, total: Math.max(totalVariants, 1) });
     for (const { archetype, variants } of variantsByArchetype) {
       for (const variant of variants) {
-        const deck = transformVariant(archetype, variant, fetchedAt, {
-          findByDbfId: lookup,
-        });
+        let classMatchups: readonly PopularDeckClassMatchup[] = [];
+        try {
+          const detailHtml = await fetchHsguruDeckDetail(
+            variant.deckUrl,
+            { fetchImpl: this.deps.fetchImpl, delay },
+            signal,
+          );
+          classMatchups = parseDeckClassMatchups(detailHtml);
+        } catch (e) {
+          if (classifyError(e, 'detail-failed') === 'aborted') {
+            return { ok: false, error: 'aborted' };
+          }
+          console.warn('[popular-decks-sync] deck detail fetch failed', {
+            deckId: variant.deckId,
+            deckUrl: variant.deckUrl,
+            name: (e as Error)?.name,
+            message: (e as Error)?.message,
+          });
+        }
+        const deck = transformVariant(
+          archetype,
+          variant,
+          fetchedAt,
+          { findByDbfId: lookup },
+          classMatchups,
+        );
         if (deck) decks.push(deck);
         processed++;
         progressCb({
@@ -213,7 +237,7 @@ export class PopularDeckSyncOrchestrator {
     // Phase 4: persist
     progressCb({ phase: 'persist', completed: 0, total: 1 });
     const snapshot: SyncedSnapshot = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       fetchedAt,
       decks,
     };
