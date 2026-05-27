@@ -73,6 +73,15 @@ describe('transformVariant', () => {
     expect(out!.name).toBe('Harold Rogue');
   });
 
+  it('attaches class matchup rows when provided', () => {
+    const out = transformVariant(ARCHETYPE, VARIANT_ROGUE, FETCHED_AT, rogueCtx(), [
+      { opponentClass: 'MAGE', winratePercent: 61.5, gamesCount: 13, popularityPercent: 8.1 },
+    ]);
+    expect(out?.classMatchups).toEqual([
+      { opponentClass: 'MAGE', winratePercent: 61.5, gamesCount: 13, popularityPercent: 8.1 },
+    ]);
+  });
+
   it('produces stable ids for the same (archetype, deckId)', () => {
     const a = transformVariant(ARCHETYPE, VARIANT_ROGUE, FETCHED_AT, rogueCtx());
     const b = transformVariant(ARCHETYPE, VARIANT_ROGUE, FETCHED_AT, rogueCtx());

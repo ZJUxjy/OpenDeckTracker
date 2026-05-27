@@ -1,13 +1,20 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { Format, HeroClass, PopularDeck, PopularDeckArchetype } from '@hdt/core';
+import type {
+  Format,
+  HeroClass,
+  MatchupHeroClass,
+  PopularDeck,
+  PopularDeckArchetype,
+} from '@hdt/core';
 
 export const SYNCED_FILENAME = 'synced.json';
 export const SYNCED_TMP_FILENAME = 'synced.json.tmp';
-export const SYNCED_SCHEMA_VERSION = 1;
+export const SYNCED_SCHEMA_VERSION = 2;
+export type SyncedSchemaVersion = 1 | 2;
 
 export interface SyncedSnapshot {
-  schemaVersion: 1;
+  schemaVersion: SyncedSchemaVersion;
   fetchedAt: string;
   decks: PopularDeck[];
 }
@@ -22,6 +29,30 @@ const FORMAT_VALUES: ReadonlySet<string> = new Set<Format>([
 const ARCHETYPE_VALUES: ReadonlySet<string> = new Set<PopularDeckArchetype>([
   'Aggro', 'Midrange', 'Control', 'Combo', 'Tempo', 'Ramp',
 ]);
+const MATCHUP_HERO_CLASS_VALUES: ReadonlySet<string> = new Set<MatchupHeroClass>([
+  'DEATHKNIGHT', 'DEMONHUNTER', 'DRUID', 'HUNTER', 'MAGE', 'PALADIN',
+  'PRIEST', 'ROGUE', 'SHAMAN', 'WARLOCK', 'WARRIOR',
+]);
+
+function isPercent(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function isClassMatchup(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v['opponentClass'] === 'string'
+    && MATCHUP_HERO_CLASS_VALUES.has(v['opponentClass'] as string)
+    && isPercent(v['winratePercent'])
+    && isNonNegativeInteger(v['gamesCount'])
+    && isPercent(v['popularityPercent'])
+  );
+}
 
 function isPopularDeck(value: unknown): value is PopularDeck {
   if (typeof value !== 'object' || value === null) return false;
@@ -37,6 +68,10 @@ function isPopularDeck(value: unknown): value is PopularDeck {
     && typeof v['gamesCount'] === 'number'
     && typeof v['author'] === 'string'
     && typeof v['updatedAt'] === 'string'
+    && (
+      v['classMatchups'] === undefined ||
+      (Array.isArray(v['classMatchups']) && v['classMatchups'].every(isClassMatchup))
+    )
   );
 }
 
@@ -63,13 +98,13 @@ export async function loadCache(dir: string): Promise<SyncedSnapshot | null> {
   }
   if (typeof parsed !== 'object' || parsed === null) return null;
   const obj = parsed as Record<string, unknown>;
-  if (obj['schemaVersion'] !== SYNCED_SCHEMA_VERSION) return null;
+  if (obj['schemaVersion'] !== 1 && obj['schemaVersion'] !== SYNCED_SCHEMA_VERSION) return null;
   if (typeof obj['fetchedAt'] !== 'string') return null;
   const decks = obj['decks'];
   if (!Array.isArray(decks) || decks.length === 0) return null;
   if (!decks.every(isPopularDeck)) return null;
   return {
-    schemaVersion: SYNCED_SCHEMA_VERSION,
+    schemaVersion: obj['schemaVersion'] as SyncedSchemaVersion,
     fetchedAt: obj['fetchedAt'],
     decks: decks as PopularDeck[],
   };
