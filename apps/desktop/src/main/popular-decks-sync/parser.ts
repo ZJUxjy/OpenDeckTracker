@@ -26,6 +26,7 @@ const CLASS_NAME_TO_HERO_CLASS: Readonly<Record<string, MatchupHeroClass>> = {
 
 const CLASS_ROW_PATTERN =
   /(Death Knight|Demon Hunter|Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)\s+(\d+(?:\.\d+)?)%?\s+([\d,]+)\s+\((\d+(?:\.\d+)?)%\)/g;
+const TOTAL_ROW_PATTERN = /\bTotal\s+\d+(?:\.\d+)?%?\s+[\d,]+/i;
 
 export interface HsguruArchetypeRow {
   archetype: string;
@@ -51,6 +52,32 @@ export function decodeHtml(value: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>');
+}
+
+function htmlCellText(value: string): string {
+  return decodeHtml(value)
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseMatchupCells(
+  className: string,
+  winrateText: string,
+  gamesText: string,
+): PopularDeckClassMatchup | undefined {
+  const opponentClass = CLASS_NAME_TO_HERO_CLASS[className.trim()];
+  const winrateMatch = winrateText.match(/(\d+(?:\.\d+)?)%?/);
+  const gamesMatch = gamesText.match(/([\d,]+)\s+\((\d+(?:\.\d+)?)%\)/);
+
+  if (!opponentClass || !winrateMatch || !gamesMatch) return undefined;
+
+  return {
+    opponentClass,
+    winratePercent: Number(winrateMatch[1] ?? '0'),
+    gamesCount: Number((gamesMatch[1] ?? '0').replace(/,/g, '')),
+    popularityPercent: Number(gamesMatch[2] ?? '0'),
+  };
 }
 
 export function parseLegendArchetypes(html: string, limit = 20): HsguruArchetypeRow[] {
@@ -130,13 +157,46 @@ export function parseDeckClassMatchups(html: string): PopularDeckClassMatchup[] 
     return [];
   }
 
+  const tableRows: PopularDeckClassMatchup[] = [];
+  for (const tableMatch of html.matchAll(/<table[^>]*>([\s\S]*?)<\/table>/gi)) {
+    const table = tableMatch[1] ?? '';
+    const tableText = htmlCellText(table);
+    if (
+      !tableText.includes('Class') ||
+      !tableText.includes('Winrate') ||
+      !tableText.includes('Total Games')
+    ) {
+      continue;
+    }
+
+    for (const rowMatch of table.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+      const row = rowMatch[1] ?? '';
+      const cells = Array.from(row.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi), (match) =>
+        htmlCellText(match[1] ?? ''),
+      );
+      if (cells.length < 3) continue;
+
+      const matchup = parseMatchupCells(cells[0] ?? '', cells[1] ?? '', cells[2] ?? '');
+      if (matchup) tableRows.push(matchup);
+    }
+  }
+  if (tableRows.length > 0) return tableRows;
+
   const text = decodeHtml(html)
-    .replace(/<[^>]+>/g, ' ')
+    .replace(/<[^>]+>/g, '\n')
     .replace(/\s+/g, ' ')
     .trim();
+  const headerMatch = text.match(/Class\s+Winrate\s+Total Games/i);
+  if (!headerMatch || headerMatch.index === undefined) return [];
+
+  const afterHeader = text.slice(headerMatch.index + headerMatch[0].length);
+  const totalMatch = afterHeader.match(TOTAL_ROW_PATTERN);
+  if (!totalMatch || totalMatch.index === undefined) return [];
+
+  const matchupText = afterHeader.slice(0, totalMatch.index);
 
   const rows: PopularDeckClassMatchup[] = [];
-  for (const match of text.matchAll(CLASS_ROW_PATTERN)) {
+  for (const match of matchupText.matchAll(CLASS_ROW_PATTERN)) {
     const className = match[1] ?? '';
     const opponentClass = CLASS_NAME_TO_HERO_CLASS[className];
     if (!opponentClass) continue;

@@ -105,6 +105,25 @@ describe('parseDeckClassMatchups', () => {
       { opponentClass: 'WARRIOR', winratePercent: 33.3, gamesCount: 9, popularityPercent: 3.9 },
     ]);
   });
+
+  it('ignores class-shaped stats outside the matchup table', () => {
+    const html = `
+      <table>
+        <thead><tr><th>Class</th><th>Winrate</th><th>Total Games</th></tr></thead>
+        <tbody>
+          <tr><td>Druid</td><td>44.0</td><td>50 (21.6%)</td></tr>
+          <tr><td>Total</td><td>55.4</td><td>231</td></tr>
+        </tbody>
+      </table>
+      <section>
+        <h2>Related Decks</h2>
+        <div>Token Druid 99.9 4,551 (3.9%)</div>
+      </section>
+    `;
+    expect(parseDeckClassMatchups(html)).toEqual([
+      { opponentClass: 'DRUID', winratePercent: 44, gamesCount: 50, popularityPercent: 21.6 },
+    ]);
+  });
 });
 
 describe('decodeHtml', () => {
