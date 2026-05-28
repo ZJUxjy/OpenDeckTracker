@@ -33,6 +33,27 @@ describe('fetchHsguruText', () => {
     ).rejects.toThrow(/503/);
   });
 
+  it('falls back to browser HTML fetch on HSGuru 403 responses', async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response('<title>Just a moment...</title>', { status: 403, statusText: 'Forbidden' }),
+    );
+    const browserFetchText = vi.fn(async () => '<html>browser ok</html>');
+
+    await expect(
+      fetchHsguruText('https://www.hsguru.com/meta', { fetchImpl, browserFetchText }),
+    ).resolves.toBe('<html>browser ok</html>');
+    expect(browserFetchText).toHaveBeenCalledWith('https://www.hsguru.com/meta', undefined);
+  });
+
+  it('falls back when a 200 response contains a Cloudflare challenge page', async () => {
+    const fetchImpl = vi.fn(async () => okResponse('<title>Just a moment...</title>'));
+    const browserFetchText = vi.fn(async () => '<html>browser ok</html>');
+
+    await expect(
+      fetchHsguruText('https://www.hsguru.com/meta', { fetchImpl, browserFetchText }),
+    ).resolves.toBe('<html>browser ok</html>');
+  });
+
   it('rejects with AbortError when the outer signal is already aborted', async () => {
     const fetchImpl = vi.fn(async () => okResponse('x'));
     const controller = new AbortController();

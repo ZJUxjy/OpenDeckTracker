@@ -8,7 +8,7 @@ import {
   PopularDeckSyncOrchestrator,
   type SyncProgress,
 } from './index';
-import { SYNCED_FILENAME } from './storage';
+import { saveCache, SYNCED_FILENAME } from './storage';
 
 const ROGUE_DECKSTRING =
   'AAECAaIHCsODB9GdB+ylB4aoB4eoB4ioB9C/B4rUB5vUB4jZBwr3nwT3gQeQgweMrQfHrgfZrweaswe0wQedxQfVxQcAAA==';
@@ -21,11 +21,29 @@ const META_HTML = `
   </tr>
 `;
 
+const TWO_ARCHETYPE_META_HTML = `
+  ${META_HTML}
+  <tr>
+    <td><a href="/archetype/Control%20Priest">Control Priest</a></td>
+    <td><span>49.8</span></td>
+    <td>  8.0% (30000) </td>
+  </tr>
+`;
+
 const ARCHETYPE_HTML = `
   <div id="deck_stats-39285857">
     <a class="basic-black-text" href="/deck/39285857">Harold Rogue</a>
     <span style="font-size: 0; line-size: 0; display: block">${ROGUE_DECKSTRING}</span>
     <div>D0nkey<span>50.2</span><div class="column tag">Games: 43449</div></div>
+  </div>
+`;
+
+const TWO_VARIANT_ARCHETYPE_HTML = `
+  ${ARCHETYPE_HTML}
+  <div id="deck_stats-39285858">
+    <a class="basic-black-text" href="/deck/39285858">Harold Rogue 2</a>
+    <span style="font-size: 0; line-size: 0; display: block">${ROGUE_DECKSTRING}</span>
+    <div>D0nkey<span>49.9</span><div class="column tag">Games: 30000</div></div>
   </div>
 `;
 
@@ -126,6 +144,97 @@ describe('PopularDeckSyncOrchestrator.startSync', () => {
     ]);
   });
 
+  it('reuses cached class matchups for unchanged HSGuru deck ids', async () => {
+    const cachedMatchups = [
+      { opponentClass: 'MAGE' as const, winratePercent: 55.5, gamesCount: 22, popularityPercent: 7.5 },
+    ];
+    await saveCache(dir, {
+      schemaVersion: 2,
+      fetchedAt: '2026-05-08T12:00:00.000Z',
+      decks: [{
+        id: 'tempo-rogue-39285857',
+        name: 'Harold Rogue',
+        class: 'ROGUE',
+        format: 'Standard',
+        archetype: 'Tempo',
+        deckstring: ROGUE_DECKSTRING,
+        winratePercent: 50.2,
+        gamesCount: 43449,
+        author: 'hsguru',
+        updatedAt: '2026-05-08',
+        classMatchups: cachedMatchups,
+      }],
+    });
+
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (url.includes('/meta?')) return new Response(META_HTML, { status: 200 });
+      if (url.includes('/deck/39285857')) throw new Error('detail should be reused');
+      return new Response(ARCHETYPE_HTML, { status: 200 });
+    });
+    const orch = makeOrchestrator({ cacheDir: dir, fetchSpy });
+    await orch.loadCacheOnce();
+
+    const result = await orch.startSync(() => undefined);
+
+    expect(result.ok).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalledWith(
+      'https://www.hsguru.com/deck/39285857',
+      expect.any(Object),
+    );
+    const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
+    expect(onDisk.decks[0].classMatchups).toEqual(cachedMatchups);
+  });
+
+  it('fetches deck detail pages with bounded parallelism', async () => {
+    let inFlightDetails = 0;
+    let maxInFlightDetails = 0;
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (url.includes('/meta?')) return new Response(META_HTML, { status: 200 });
+      if (url.includes('/deck/')) {
+        inFlightDetails++;
+        maxInFlightDetails = Math.max(maxInFlightDetails, inFlightDetails);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        inFlightDetails--;
+        return new Response(DECK_DETAIL_HTML, { status: 200 });
+      }
+      return new Response(TWO_VARIANT_ARCHETYPE_HTML, { status: 200 });
+    });
+    const orch = makeOrchestrator({ cacheDir: dir, fetchSpy });
+
+    const result = await orch.startSync(() => undefined);
+
+    expect(result).toEqual({
+      ok: true,
+      fetchedAt: '2026-05-09T12:00:00.000Z',
+      count: 2,
+    });
+    expect(maxInFlightDetails).toBeGreaterThan(1);
+  });
+
+  it('fetches archetype variant pages with bounded parallelism', async () => {
+    let inFlightVariants = 0;
+    let maxInFlightVariants = 0;
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (url.includes('/meta?')) return new Response(TWO_ARCHETYPE_META_HTML, { status: 200 });
+      if (url.includes('/deck/')) return new Response(DECK_DETAIL_HTML, { status: 200 });
+      inFlightVariants++;
+      maxInFlightVariants = Math.max(maxInFlightVariants, inFlightVariants);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      inFlightVariants--;
+      return new Response(ARCHETYPE_HTML, { status: 200 });
+    });
+    const orch = makeOrchestrator({ cacheDir: dir, fetchSpy });
+
+    const result = await orch.startSync(() => undefined);
+
+    expect(result).toEqual({
+      ok: true,
+      fetchedAt: '2026-05-09T12:00:00.000Z',
+      count: 2,
+    });
+    expect(maxInFlightVariants).toBeGreaterThan(1);
+  });
+
   it('keeps the deck when its detail page fetch fails', async () => {
     const fetchSpy = vi.fn(async (url: string) => {
       if (url.includes('/meta?')) return new Response(META_HTML, { status: 200 });
@@ -150,11 +259,11 @@ describe('PopularDeckSyncOrchestrator.startSync', () => {
     await orch.startSync((p) => phases.push(p.phase));
     expect(phases).toContain('meta');
     expect(phases).toContain('variants');
-    expect(phases).toContain('transform');
+    expect(phases).toContain('details');
     expect(phases).toContain('persist');
     expect(phases.indexOf('meta')).toBeLessThan(phases.indexOf('variants'));
-    expect(phases.indexOf('variants')).toBeLessThan(phases.indexOf('transform'));
-    expect(phases.indexOf('transform')).toBeLessThan(phases.indexOf('persist'));
+    expect(phases.indexOf('variants')).toBeLessThan(phases.indexOf('details'));
+    expect(phases.indexOf('details')).toBeLessThan(phases.indexOf('persist'));
     expect(phases[phases.length - 1]).toBe('persist');
   });
 

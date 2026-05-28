@@ -33,7 +33,7 @@ function getRarityCostBg(rarity: Rarity | undefined): string {
 }
 
 type SyncProgress = {
-  phase: 'meta' | 'variants' | 'transform' | 'persist';
+  phase: 'meta' | 'variants' | 'details' | 'persist';
   completed: number;
   total: number;
   currentLabel?: string;
@@ -41,16 +41,36 @@ type SyncProgress = {
 
 function progressPercent(p: SyncProgress | null): number {
   if (!p) return 0;
-  // Phase weights: meta 5%, variants 60%, transform 15%, persist 20%
+  // Phase weights: meta 5%, variants 40%, details 50%, persist 5%.
   const weights: Record<SyncProgress['phase'], [number, number]> = {
     meta: [0, 0.05],
-    variants: [0.05, 0.65],
-    transform: [0.65, 0.8],
-    persist: [0.8, 1],
+    variants: [0.05, 0.45],
+    details: [0.45, 0.95],
+    persist: [0.95, 1],
   };
   const [start, end] = weights[p.phase];
   const frac = p.total > 0 ? p.completed / p.total : 1;
   return Math.min(100, Math.round((start + (end - start) * frac) * 100));
+}
+
+function syncPhaseLabel(
+  p: SyncProgress | null,
+  t: ReturnType<typeof useTranslation>['t'],
+): string {
+  if (!p || p.phase === 'meta') return t('decks.finder.syncPhaseMeta');
+  if (p.phase === 'variants') {
+    return t('decks.finder.syncPhaseVariants', {
+      completed: p.completed,
+      total: p.total,
+    });
+  }
+  if (p.phase === 'details') {
+    return t('decks.finder.syncPhaseDetails', {
+      completed: p.completed,
+      total: p.total,
+    });
+  }
+  return t('decks.finder.syncPhasePersist');
 }
 
 function formatLastUpdated(fetchedAt: string | null, locale: string): string | null {
@@ -327,7 +347,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
           className="px-3 py-1.5 rounded-sm bg-overlay-surface border border-border text-text hover:border-accent hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer tracking-[0.12em] font-bold"
         >
           {syncing
-            ? t('decks.finder.syncing', { phase: progress?.phase ?? 'meta' })
+            ? t('decks.finder.syncing', { phase: syncPhaseLabel(progress, t) })
             : t('decks.finder.syncButton')}
         </button>
         <span data-testid="deck-finder-sync-source-note" className="text-text-mute whitespace-nowrap">

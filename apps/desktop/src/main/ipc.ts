@@ -57,6 +57,7 @@ import {
   PopularDeckSyncOrchestrator,
   type SyncedSnapshot,
 } from './popular-decks-sync';
+import { HsguruBrowserFetcher } from './popular-decks-sync/browser-fetcher';
 import { registerPopularDecksSyncIpc } from './popular-decks-sync/ipc';
 import { net } from 'electron';
 import type { CardPreviewWindow, ExtraPreviewPayload, PreviewAnchor } from './card-preview-window';
@@ -379,8 +380,10 @@ export function registerIpc(overlay?: OverlayControllers): void {
   let popularDecksCardDb: import('@hdt/hearthdb').CardDb | null = null;
   let popularDecksSnapshot: SyncedSnapshot | null = null;
   const popularDecksCacheDir = join(app.getPath('userData'), 'popular-decks');
+  const hsguruBrowserFetcher = new HsguruBrowserFetcher({ maxWindows: 4 });
   const popularDecksSync = new PopularDeckSyncOrchestrator({
     fetchImpl: (url, init) => net.fetch(url, init as Parameters<typeof net.fetch>[1]),
+    browserFetchText: (url, signal) => hsguruBrowserFetcher.fetchText(url, signal),
     getCardLookup: () =>
       popularDecksCardDb
         ? (dbfId: number) => popularDecksCardDb!.findByDbfId(dbfId) ?? null
@@ -417,6 +420,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
 
   app.on('before-quit', () => {
     popularDecksSync.abort();
+    hsguruBrowserFetcher.dispose();
     disposePopularDecksSyncIpc();
     disposeOpponentDeckPredictionIpc();
   });

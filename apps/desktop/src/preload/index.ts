@@ -13,7 +13,7 @@ type PopularDecksListResult = {
 };
 
 type PopularDecksSyncProgress = {
-  phase: 'meta' | 'variants' | 'transform' | 'persist';
+  phase: 'meta' | 'variants' | 'details' | 'persist';
   completed: number;
   total: number;
   currentLabel?: string;

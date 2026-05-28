@@ -5,9 +5,15 @@ const REQUEST_TIMEOUT_MS = 45_000;
 export const ARCHETYPE_DELAY_MS = 1_000;
 
 export type FetchImpl = (url: string, init?: RequestInit) => Promise<Response>;
+export type BrowserFetchText = (url: string, signal?: AbortSignal) => Promise<string>;
 
 export interface FetcherDeps {
   fetchImpl: FetchImpl;
+  /**
+   * Optional Electron/Chromium fallback. HSGuru currently returns Cloudflare
+   * challenge pages to Node/Electron net fetch but allows a real browser page.
+   */
+  browserFetchText?: BrowserFetchText;
   /** Override for tests (default: real timer-backed delay). */
   delay?: (ms: number) => Promise<void>;
 }
@@ -21,6 +27,24 @@ function checkAborted(signal: AbortSignal | undefined): void {
     err.name = 'AbortError';
     throw err;
   }
+}
+
+function looksLikeBrowserChallenge(html: string): boolean {
+  return html.includes('<title>Just a moment...</title>')
+    || html.includes('Checking if the site connection is secure')
+    || html.includes('cf-browser-verification');
+}
+
+async function fallbackToBrowser(
+  url: string,
+  deps: FetcherDeps,
+  signal: AbortSignal | undefined,
+): Promise<string> {
+  if (!deps.browserFetchText) {
+    throw new Error('HSGuru browser fallback unavailable');
+  }
+  checkAborted(signal);
+  return deps.browserFetchText(url, signal);
 }
 
 export async function fetchHsguruText(
@@ -45,15 +69,23 @@ export async function fetchHsguruText(
       },
     });
     if (!response.ok) {
+      if (response.status === 403 && deps.browserFetchText) {
+        return fallbackToBrowser(url, deps, signal);
+      }
       throw new Error(`Request failed: ${response.status} ${response.statusText}`);
     }
-    return await response.text();
+    const html = await response.text();
+    if (deps.browserFetchText && looksLikeBrowserChallenge(html)) {
+      return fallbackToBrowser(url, deps, signal);
+    }
+    return html;
   } finally {
     clearTimeout(timeout);
     signal?.removeEventListener('abort', onOuterAbort);
   }
 }
 
+export const __TEST_ONLY = { looksLikeBrowserChallenge };
 export async function fetchHsguruMeta(
   deps: FetcherDeps,
   signal?: AbortSignal,
@@ -75,8 +107,7 @@ export async function fetchHsguruDeckDetail(
  * time to time; the spider keeps a candidate list as a safety net).
  *
  * Inserts a `delay` between candidate requests so a retry-storm does
- * not hammer the server. The delay is also applied between archetypes
- * by the orchestrator (`startSync`).
+ * not hammer the server.
  */
 export async function fetchHsguruArchetypeVariants(
   archetypeLabel: string,

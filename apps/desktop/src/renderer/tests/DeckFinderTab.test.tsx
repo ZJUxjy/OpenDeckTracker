@@ -56,6 +56,13 @@ function renderTab(locale: 'en-US' | 'zh-CN' = 'en-US', messages?: MessagesByLoc
   );
 }
 
+type TestSyncProgress = {
+  phase: 'meta' | 'variants' | 'details' | 'persist';
+  completed: number;
+  total: number;
+  currentLabel?: string;
+};
+
 describe('DeckFinderTab', () => {
   let popularDecksSaved: typeof window.hdt.popularDecks;
 
@@ -85,6 +92,44 @@ describe('DeckFinderTab', () => {
 
     expect(screen.getByTestId('deck-finder-sync-button')).toHaveTextContent('同步热门卡组');
     expect(screen.getByTestId('deck-finder-sync-source-note')).toHaveTextContent('数据来自 HSGuru');
+  });
+
+  it('shows detailed progress while syncing class matchup winrates', async () => {
+    let progressHandler: ((progress: TestSyncProgress) => void) | undefined;
+    let resolveSync: ((value: { ok: true; fetchedAt: string; count: number }) => void) | undefined;
+    const syncPromise = new Promise<{ ok: true; fetchedAt: string; count: number }>((resolve) => {
+      resolveSync = resolve;
+    });
+    (window as { hdt: { popularDecks: typeof window.hdt.popularDecks } }).hdt.popularDecks = {
+      ...window.hdt.popularDecks,
+      syncStart: vi.fn().mockReturnValue(syncPromise),
+      onSyncProgress: vi.fn((cb: (progress: TestSyncProgress) => void) => {
+        progressHandler = cb;
+        return () => undefined;
+      }),
+    };
+
+    await act(async () => { renderTab('zh-CN'); });
+    await waitFor(() => expect(screen.getByText('卡组查找')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTestId('deck-finder-sync-button'));
+    await waitFor(() =>
+      expect(screen.getByTestId('deck-finder-sync-button')).toHaveTextContent('读取环境列表'),
+    );
+
+    act(() => {
+      progressHandler?.({ phase: 'details', completed: 37, total: 100 });
+    });
+
+    expect(screen.getByTestId('deck-finder-sync-button')).toHaveTextContent('职业胜率 37/100');
+
+    await act(async () => {
+      resolveSync?.({ ok: true, fetchedAt: '2026-05-09T12:00:00Z', count: FIXTURE.length });
+      await syncPromise;
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('deck-finder-sync-button')).toHaveTextContent('同步热门卡组'),
+    );
   });
 
   it('keeps the HSGuru source note readable when the locale bundle is stale', async () => {

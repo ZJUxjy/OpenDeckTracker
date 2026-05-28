@@ -1,16 +1,16 @@
 import type { PopularDeck, PopularDeckClassMatchup } from '@hdt/core';
 import {
+  type BrowserFetchText,
   fetchHsguruArchetypeVariants,
   fetchHsguruDeckDetail,
   fetchHsguruMeta,
   type FetchImpl,
-  ARCHETYPE_DELAY_MS,
 } from './fetcher';
 import { parseDeckClassMatchups, parseDeckVariants, parseLegendArchetypes } from './parser';
 import { transformVariant, type TransformContext } from './transformer';
 import { loadCache, saveCache, type SyncedSnapshot } from './storage';
 
-export type SyncPhase = 'meta' | 'variants' | 'transform' | 'persist';
+export type SyncPhase = 'meta' | 'variants' | 'details' | 'persist';
 
 export interface SyncProgress {
   phase: SyncPhase;
@@ -34,12 +34,17 @@ export interface SyncDeps {
   getCardLookup: () => TransformContext['findByDbfId'] | null;
   /** Directory where `synced.json` lives (typically `<userData>/popular-decks`). */
   cacheDir: string;
+  browserFetchText?: BrowserFetchText;
   /** Override for tests; default uses real setTimeout-backed delay. */
   delay?: (ms: number) => Promise<void>;
   now?: () => Date;
   /** Cap on archetypes/variants per archetype. */
   archetypeLimit?: number;
   variantLimit?: number;
+  /** Cap on parallel HSGuru archetype deck-list page fetches. */
+  variantConcurrency?: number;
+  /** Cap on parallel HSGuru deck-detail page fetches. */
+  detailConcurrency?: number;
 }
 
 export type ProgressCallback = (progress: SyncProgress) => void;
@@ -107,6 +112,15 @@ export class PopularDeckSyncOrchestrator {
     const now = this.deps.now ?? (() => new Date());
     const archetypeLimit = this.deps.archetypeLimit ?? 20;
     const variantLimit = this.deps.variantLimit ?? 5;
+    const variantConcurrency = this.deps.variantConcurrency ?? 4;
+    const detailConcurrency = this.deps.detailConcurrency ?? 4;
+    const fetcherDeps = {
+      fetchImpl: this.deps.fetchImpl,
+      delay,
+      ...(this.deps.browserFetchText ? { browserFetchText: this.deps.browserFetchText } : {}),
+    };
+    const cachedSnapshot = this.snapshot ?? await this.loadCacheOnce();
+    const cachedMatchupsByDeckId = buildCachedClassMatchupsByDeckId(cachedSnapshot);
     const fetchedAt = now().toISOString();
     console.log('[popular-decks-sync] start', { fetchedAt, cacheDir: this.deps.cacheDir });
 
@@ -116,7 +130,7 @@ export class PopularDeckSyncOrchestrator {
     const metaStart = Date.now();
     try {
       metaHtml = await fetchHsguruMeta(
-        { fetchImpl: this.deps.fetchImpl, delay },
+        fetcherDeps,
         signal,
       );
     } catch (e) {
@@ -140,97 +154,133 @@ export class PopularDeckSyncOrchestrator {
     progressCb({ phase: 'meta', completed: 1, total: 1 });
 
     // Phase 2: variants (one round-trip set per archetype)
-    const variantsByArchetype: Array<{
+    const variantsByArchetypeResults: Array<{
       archetype: typeof archetypes[number];
       variants: ReturnType<typeof parseDeckVariants>;
-    }> = [];
-    for (let i = 0; i < archetypes.length; i++) {
-      if (signal.aborted) return { ok: false, error: 'aborted' };
-      const archetype = archetypes[i]!;
-      progressCb({
-        phase: 'variants',
-        completed: i,
-        total: archetypes.length,
-        currentLabel: archetype.archetype,
-      });
-      let result: { html: string; url: string } | null;
-      const variantStart = Date.now();
-      try {
-        result = await fetchHsguruArchetypeVariants(
-          archetype.archetype,
-          { fetchImpl: this.deps.fetchImpl, delay },
-          signal,
+    } | null> = new Array(archetypes.length).fill(null);
+    let completedArchetypes = 0;
+    progressCb({
+      phase: 'variants',
+      completed: 0,
+      total: archetypes.length,
+      ...(archetypes[0] ? { currentLabel: archetypes[0].archetype } : {}),
+    });
+    try {
+      await runLimitedConcurrency(archetypes, variantConcurrency, async (archetype, index) => {
+        if (signal.aborted) throw abortError();
+        let result: { html: string; url: string } | null;
+        const variantStart = Date.now();
+        try {
+          result = await fetchHsguruArchetypeVariants(
+            archetype.archetype,
+            fetcherDeps,
+            signal,
+          );
+        } catch (e) {
+          console.error('[popular-decks-sync] variants fetch failed', {
+            archetype: archetype.archetype,
+            elapsedMs: Date.now() - variantStart,
+            name: (e as Error)?.name,
+            message: (e as Error)?.message,
+          });
+          throw e;
+        }
+        const variants = result ? parseDeckVariants(result.html, variantLimit) : [];
+        console.log(
+          `[popular-decks-sync] variants ${completedArchetypes + 1}/${archetypes.length} ${archetype.archetype}: ${variants.length} decks (${Date.now() - variantStart}ms)`,
         );
-      } catch (e) {
-        console.error('[popular-decks-sync] variants fetch failed', {
-          archetype: archetype.archetype,
-          elapsedMs: Date.now() - variantStart,
-          name: (e as Error)?.name,
-          message: (e as Error)?.message,
+        variantsByArchetypeResults[index] = { archetype, variants };
+        completedArchetypes++;
+        progressCb({
+          phase: 'variants',
+          completed: completedArchetypes,
+          total: archetypes.length,
+          currentLabel: archetype.archetype,
         });
-        return { ok: false, error: classifyError(e, 'network-failed') };
-      }
-      const variants = result ? parseDeckVariants(result.html, variantLimit) : [];
-      console.log(
-        `[popular-decks-sync] variants ${i + 1}/${archetypes.length} ${archetype.archetype}: ${variants.length} decks (${Date.now() - variantStart}ms)`,
-      );
-      variantsByArchetype.push({ archetype, variants });
-      if (i < archetypes.length - 1) await delay(ARCHETYPE_DELAY_MS);
+      });
+    } catch (e) {
+      return { ok: false, error: classifyError(e, 'network-failed') };
     }
+    const variantsByArchetype = variantsByArchetypeResults.filter(
+      (result): result is NonNullable<typeof result> => result !== null,
+    );
     progressCb({
       phase: 'variants',
       completed: archetypes.length,
       total: archetypes.length,
     });
 
-    // Phase 3: transform
-    const decks: PopularDeck[] = [];
+    // Phase 3: deck details + transform
+    const detailTasks = variantsByArchetype.flatMap(({ archetype, variants }) =>
+      variants.map((variant) => ({ archetype, variant })),
+    );
+    const decksByTask: Array<PopularDeck | null> = new Array(detailTasks.length).fill(null);
     const totalVariants = variantsByArchetype.reduce((s, x) => s + x.variants.length, 0);
     let processed = 0;
-    progressCb({ phase: 'transform', completed: 0, total: Math.max(totalVariants, 1) });
-    for (const { archetype, variants } of variantsByArchetype) {
-      for (const variant of variants) {
-        let classMatchups: readonly PopularDeckClassMatchup[] = [];
-        try {
-          const detailHtml = await fetchHsguruDeckDetail(
-            variant.deckUrl,
-            { fetchImpl: this.deps.fetchImpl, delay },
-            signal,
-          );
-          classMatchups = parseDeckClassMatchups(detailHtml);
-        } catch (e) {
-          if (classifyError(e, 'detail-failed') === 'aborted') {
-            return { ok: false, error: 'aborted' };
-          }
-          console.warn('[popular-decks-sync] deck detail fetch failed', {
-            deckId: variant.deckId,
-            deckUrl: variant.deckUrl,
-            name: (e as Error)?.name,
-            message: (e as Error)?.message,
-          });
-        }
-        const deck = transformVariant(
+    progressCb({ phase: 'details', completed: 0, total: Math.max(totalVariants, 1) });
+    try {
+      await runLimitedConcurrency(detailTasks, detailConcurrency, async ({ archetype, variant }, index) => {
+        if (signal.aborted) throw abortError();
+        const baseDeck = transformVariant(
           archetype,
           variant,
           fetchedAt,
           { findByDbfId: lookup },
-          classMatchups,
         );
-        if (deck) decks.push(deck);
+        if (!baseDeck) {
+          processed++;
+          progressCb({
+            phase: 'details',
+            completed: processed,
+            total: Math.max(totalVariants, 1),
+            currentLabel: archetype.archetype,
+          });
+          return;
+        }
+
+        let classMatchups = cachedMatchupsByDeckId.get(variant.deckId) ?? [];
+        if (classMatchups.length === 0) {
+          try {
+            const detailHtml = await fetchHsguruDeckDetail(
+              variant.deckUrl,
+              fetcherDeps,
+              signal,
+            );
+            classMatchups = parseDeckClassMatchups(detailHtml);
+          } catch (e) {
+            if (classifyError(e, 'detail-failed') === 'aborted') throw e;
+            console.warn('[popular-decks-sync] deck detail fetch failed', {
+              deckId: variant.deckId,
+              deckUrl: variant.deckUrl,
+              name: (e as Error)?.name,
+              message: (e as Error)?.message,
+            });
+          }
+        }
+
+        decksByTask[index] = classMatchups.length > 0
+          ? { ...baseDeck, classMatchups: [...classMatchups] }
+          : baseDeck;
         processed++;
         progressCb({
-          phase: 'transform',
+          phase: 'details',
           completed: processed,
           total: Math.max(totalVariants, 1),
           currentLabel: archetype.archetype,
         });
+      });
+    } catch (e) {
+      if (classifyError(e, 'detail-failed') === 'aborted') {
+        return { ok: false, error: 'aborted' };
       }
+      throw e;
     }
+    const decks = decksByTask.filter((deck): deck is PopularDeck => deck !== null);
     console.log(
-      `[popular-decks-sync] transform: ${decks.length} valid decks (skipped ${totalVariants - decks.length})`,
+      `[popular-decks-sync] details: ${decks.length} valid decks (skipped ${totalVariants - decks.length})`,
     );
     if (decks.length === 0) {
-      console.warn('[popular-decks-sync] transform yielded 0 decks — every variant rejected');
+      console.warn('[popular-decks-sync] details yielded 0 decks — every variant rejected');
       return { ok: false, error: 'parse-failed' };
     }
 
@@ -263,6 +313,53 @@ function classifyError(e: unknown, fallback: string): string {
   const err = e as { name?: string; message?: string } | null;
   if (err?.name === 'AbortError' || err?.message === 'aborted') return 'aborted';
   return fallback;
+}
+
+function abortError(): Error {
+  const err = new Error('aborted');
+  err.name = 'AbortError';
+  return err;
+}
+
+function buildCachedClassMatchupsByDeckId(
+  snapshot: SyncedSnapshot | null,
+): ReadonlyMap<number, readonly PopularDeckClassMatchup[]> {
+  const map = new Map<number, readonly PopularDeckClassMatchup[]>();
+  for (const deck of snapshot?.decks ?? []) {
+    if (!deck.classMatchups || deck.classMatchups.length === 0) continue;
+    const deckId = hsguruDeckIdFromPopularDeckId(deck.id);
+    if (deckId !== null) map.set(deckId, deck.classMatchups);
+  }
+  return map;
+}
+
+function hsguruDeckIdFromPopularDeckId(id: string): number | null {
+  const match = /-(\d+)$/.exec(id);
+  if (!match) return null;
+  const deckId = Number(match[1]);
+  return Number.isSafeInteger(deckId) ? deckId : null;
+}
+
+async function runLimitedConcurrency<T>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<void>,
+): Promise<void> {
+  const limit = Math.max(1, Math.floor(concurrency));
+  let nextIndex = 0;
+
+  async function runWorker(): Promise<void> {
+    while (nextIndex < items.length) {
+      const index = nextIndex++;
+      await worker(items[index]!, index);
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    () => runWorker(),
+  );
+  await Promise.all(workers);
 }
 
 // Re-export storage / fetcher types for IPC consumers.
