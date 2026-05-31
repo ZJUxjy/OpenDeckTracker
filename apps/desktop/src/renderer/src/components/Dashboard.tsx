@@ -44,6 +44,19 @@ function getWatcherTone(kind: HearthWatcherStatusKind | null | undefined): StatT
   return 'warning';
 }
 
+function formatElapsedDuration(startedAt: number | null | undefined, updatedAt: number | null | undefined): string {
+  if (startedAt == null || updatedAt == null || updatedAt < startedAt) return '--:--';
+  const totalSeconds = Math.floor((updatedAt - startedAt) / 1000);
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  const minutesTotal = Math.floor(totalSeconds / 60);
+  if (minutesTotal >= 60) {
+    const hours = Math.floor(minutesTotal / 60);
+    const minutes = String(minutesTotal % 60).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  }
+  return `${String(minutesTotal).padStart(2, '0')}:${seconds}`;
+}
+
 export function Dashboard() {
   const { t } = useTranslation();
   const snapshot = useDeckTrackerStore((s) => s.snapshot);
@@ -96,7 +109,7 @@ export function Dashboard() {
             <MiniMeta
               icon={<Clock size={16} />}
               label={t('dashboard.reference.duration')}
-              value={snapshot ? new Date(snapshot.updatedAt).toLocaleTimeString() : '--:--'}
+              value={formatElapsedDuration(snapshot?.matchStartedAt, snapshot?.updatedAt)}
             />
           </footer>
         </section>

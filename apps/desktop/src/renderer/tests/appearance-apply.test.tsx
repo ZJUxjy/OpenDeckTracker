@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, act } from '@testing-library/react';
-import { APPEARANCE_STORAGE_KEY, ACCENT_PALETTE } from '../src/stores/appearance-store';
+import { APPEARANCE_STORAGE_KEY } from '../src/stores/appearance-store';
 
 describe('AppearanceApplyEffect', () => {
   beforeEach(() => {
@@ -28,16 +28,14 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
-      ACCENT_PALETTE.purple.accentDark,
-    );
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
     expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(
-      ACCENT_PALETTE.purple.accentDimDark,
+      'rgba(47, 224, 122, 0.18)',
     );
   });
 
-  it('updates inline custom properties when accent changes', async () => {
+  it('keeps reference custom properties stable when accent changes', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
       JSON.stringify({ density: 'comfortable', uiStyle: 'macos', accent: 'blue' }),
@@ -54,11 +52,9 @@ describe('AppearanceApplyEffect', () => {
       useAppearanceStore.getState().setAccent('purple');
     });
 
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
-      ACCENT_PALETTE.purple.accentDark,
-    );
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
     expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(
-      ACCENT_PALETTE.purple.accentDimDark,
+      'rgba(47, 224, 122, 0.18)',
     );
   });
 
@@ -91,19 +87,19 @@ describe('AppearanceApplyEffect', () => {
       useAppearanceStore.getState().setUiStyle('macos');
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
 
     act(() => {
       useAppearanceStore.getState().setUiStyle('wechat');
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('wechat');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
 
     act(() => {
       useAppearanceStore.getState().setUiStyle('fallout76');
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
   });
 
   it('applies appearance updates broadcast from another renderer window', async () => {
@@ -138,20 +134,18 @@ describe('AppearanceApplyEffect', () => {
       });
     });
 
-    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
+    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
-    expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
-      ACCENT_PALETTE.purple.accentLight,
-    );
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
 
     unmount();
     expect(off).toHaveBeenCalledTimes(1);
     (window as any).hdt = undefined;
   });
 
-  it('forces dark color-scheme while the WeChat UI style is active', async () => {
+  it('migrates legacy WeChat style to reference dark color-scheme', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
       JSON.stringify({ density: 'comfortable', uiStyle: 'wechat', accent: 'blue', theme: 'light' }),
@@ -165,6 +159,7 @@ describe('AppearanceApplyEffect', () => {
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
     expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
   });
 
   it('forces dark color-scheme and arcane accent while the reference UI style is active', async () => {
@@ -189,7 +184,7 @@ describe('AppearanceApplyEffect', () => {
     expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
   });
 
-  it('forces dark color-scheme and terminal accent while the Fallout 76 UI style is active', async () => {
+  it('migrates legacy Fallout 76 style to reference dark color-scheme and accent', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
       JSON.stringify({
@@ -208,7 +203,8 @@ describe('AppearanceApplyEffect', () => {
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
     expect(document.documentElement.style.colorScheme).toBe('dark');
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#6DFF55');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
   });
 
   it('inline properties persist after unmount (page-lifetime behavior)', async () => {
@@ -231,9 +227,7 @@ describe('AppearanceApplyEffect', () => {
     unmount();
 
     // Properties should persist after unmount
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe(
-      ACCENT_PALETTE.mint.accentDark,
-    );
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
   });
 
   it('fires overlay:set-enabled on mount when gameOverlay is saved as true', async () => {

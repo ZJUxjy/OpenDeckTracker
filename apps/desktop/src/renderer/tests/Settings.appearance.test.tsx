@@ -39,10 +39,11 @@ describe('Settings — Appearance category', () => {
     expect(screen.getAllByText('System').length).toBeGreaterThan(0);
     expect(screen.getByText('English')).toBeInTheDocument();
 
-    expect(screen.getByText('Fallout 76')).toBeInTheDocument();
-    expect(screen.getByText('Tavern')).toBeInTheDocument();
-    expect(screen.getByText('macOS')).toBeInTheDocument();
-    expect(screen.getByText('WeChat Dark')).toBeInTheDocument();
+    expect(screen.getByText('Arcane')).toBeInTheDocument();
+    expect(screen.queryByText('Fallout 76')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tavern')).not.toBeInTheDocument();
+    expect(screen.queryByText('macOS')).not.toBeInTheDocument();
+    expect(screen.queryByText('WeChat Dark')).not.toBeInTheDocument();
 
     expect(screen.getByText('Comfortable')).toBeInTheDocument();
     expect(screen.getByText('Compact')).toBeInTheDocument();
@@ -66,31 +67,13 @@ describe('Settings — Appearance category', () => {
     expect(useAppearanceStore.getState().accent).toBe('purple');
   });
 
-  it('clicking macOS UI style button updates UI style', async () => {
+  it('clicking Arcane UI style button keeps the reference UI style', async () => {
     renderSettings();
 
-    fireEvent.click(screen.getByText('macOS'));
+    fireEvent.click(screen.getByText('Arcane'));
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
-  });
-
-  it('clicking WeChat UI style button updates UI style', async () => {
-    renderSettings();
-
-    fireEvent.click(screen.getByText('WeChat Dark'));
-
-    const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().uiStyle).toBe('wechat');
-  });
-
-  it('clicking Fallout 76 UI style button updates UI style', async () => {
-    renderSettings();
-
-    fireEvent.click(screen.getByText('Fallout 76'));
-
-    const { useAppearanceStore } = await import('../src/stores/appearance-store');
-    expect(useAppearanceStore.getState().uiStyle).toBe('fallout76');
+    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
   });
 
   it('clicking Light theme button updates theme to light', async () => {
@@ -107,10 +90,11 @@ describe('Settings — Appearance category', () => {
 
     expect(screen.getByText('舒适')).toBeInTheDocument();
     expect(screen.getByText('紧凑')).toBeInTheDocument();
-    expect(screen.getByText('Fallout 76')).toBeInTheDocument();
-    expect(screen.getByText('酒馆')).toBeInTheDocument();
-    expect(screen.getByText('macOS')).toBeInTheDocument();
-    expect(screen.getByText('微信深色')).toBeInTheDocument();
+    expect(screen.getByText('奥术')).toBeInTheDocument();
+    expect(screen.queryByText('Fallout 76')).not.toBeInTheDocument();
+    expect(screen.queryByText('酒馆')).not.toBeInTheDocument();
+    expect(screen.queryByText('macOS')).not.toBeInTheDocument();
+    expect(screen.queryByText('微信深色')).not.toBeInTheDocument();
     // Theme picker labels in Chinese
     expect(screen.getByText('浅色')).toBeInTheDocument();
     expect(screen.getByText('深色')).toBeInTheDocument();

@@ -22,14 +22,14 @@ describe('appearance store', () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     useAppearanceStore.getState().setDensity('compact');
-    useAppearanceStore.getState().setUiStyle('macos');
+    useAppearanceStore.getState().setUiStyle('reference');
     useAppearanceStore.getState().setAccent('purple');
     useAppearanceStore.getState().setTheme('dark');
 
     expect(localStorage.getItem(APPEARANCE_STORAGE_KEY)).toBe(
       JSON.stringify({
         density: 'compact',
-        uiStyle: 'macos',
+        uiStyle: 'reference',
         accent: 'purple',
         theme: 'dark',
         gameOverlay: true,
@@ -41,7 +41,7 @@ describe('appearance store', () => {
     vi.resetModules();
     const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
     expect(fresh.getState().density).toBe('compact');
-    expect(fresh.getState().uiStyle).toBe('macos');
+    expect(fresh.getState().uiStyle).toBe('reference');
     expect(fresh.getState().accent).toBe('purple');
     expect(fresh.getState().theme).toBe('dark');
   });
@@ -51,12 +51,12 @@ describe('appearance store', () => {
     (window as any).hdt = { appearance: { broadcast } };
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
-    useAppearanceStore.getState().setUiStyle('macos');
+    useAppearanceStore.getState().setUiStyle('reference');
 
     expect(broadcast).toHaveBeenCalledTimes(1);
     expect(broadcast).toHaveBeenCalledWith({
       density: 'comfortable',
-      uiStyle: 'macos',
+      uiStyle: 'reference',
       accent: 'blue',
       theme: 'system',
       gameOverlay: true,
@@ -80,14 +80,14 @@ describe('appearance store', () => {
     });
 
     expect(useAppearanceStore.getState().density).toBe('compact');
-    expect(useAppearanceStore.getState().uiStyle).toBe('wechat');
+    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
     expect(useAppearanceStore.getState().accent).toBe('purple');
     expect(useAppearanceStore.getState().theme).toBe('dark');
     expect(useAppearanceStore.getState().gameOverlay).toBe(true);
     expect(setEnabled).not.toHaveBeenCalled();
     expect(JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!)).toMatchObject({
       density: 'compact',
-      uiStyle: 'wechat',
+      uiStyle: 'reference',
       accent: 'purple',
       theme: 'dark',
       gameOverlay: true,
@@ -95,30 +95,30 @@ describe('appearance store', () => {
     (window as any).hdt = undefined;
   });
 
-  it('round-trips the WeChat UI style through localStorage', async () => {
+  it('migrates the legacy WeChat UI style to reference through localStorage', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     useAppearanceStore.getState().setUiStyle('wechat');
 
     const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
-    expect(stored.uiStyle).toBe('wechat');
+    expect(stored.uiStyle).toBe('reference');
 
     vi.resetModules();
     const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
-    expect(fresh.getState().uiStyle).toBe('wechat');
+    expect(fresh.getState().uiStyle).toBe('reference');
   });
 
-  it('round-trips the Fallout 76 UI style through localStorage', async () => {
+  it('migrates the legacy Fallout 76 UI style to reference through localStorage', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
     useAppearanceStore.getState().setUiStyle('fallout76');
 
     const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
-    expect(stored.uiStyle).toBe('fallout76');
+    expect(stored.uiStyle).toBe('reference');
 
     vi.resetModules();
     const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
-    expect(fresh.getState().uiStyle).toBe('fallout76');
+    expect(fresh.getState().uiStyle).toBe('reference');
   });
 
   it('round-trips the reference UI style through localStorage', async () => {
@@ -220,6 +220,19 @@ describe('appearance store', () => {
 
     expect(useAppearanceStore.getState().uiStyle).toBe('reference');
     expect(useAppearanceStore.getState().density).toBe('compact');
+  });
+
+  it('migrates stored legacy UI styles to reference', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'compact', uiStyle: 'macos', accent: 'purple' }),
+    );
+
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+
+    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
+    expect(useAppearanceStore.getState().density).toBe('compact');
+    expect(useAppearanceStore.getState().accent).toBe('purple');
   });
 
   it('fires window.hdt.overlay.setEnabled when setGameOverlay is called', async () => {

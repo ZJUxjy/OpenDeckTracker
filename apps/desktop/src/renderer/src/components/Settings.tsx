@@ -5,6 +5,7 @@ import { useI18nStore } from '../i18n/i18n-store';
 import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme, type UiStyle } from '../stores/appearance-store';
 
 const ALL_ACCENTS: Accent[] = ['blue', 'red', 'orange', 'yellow', 'green', 'mint', 'purple', 'pink'];
+const UI_STYLE_OPTIONS: UiStyle[] = ['reference'];
 const ACCENT_LABELS: Record<Accent, string> = {
   blue: 'Blue', red: 'Red', orange: 'Orange', yellow: 'Yellow',
   green: 'Green', mint: 'Mint', purple: 'Purple', pink: 'Pink',
@@ -126,7 +127,7 @@ export function Settings() {
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.uiStyle.description')}</p>
                     </div>
                     <div className="flex rounded-md border border-border bg-overlay-surface p-1">
-                      {(['reference', 'fallout76', 'tavern', 'macos', 'wechat'] as UiStyle[]).map((opt) => (
+                      {UI_STYLE_OPTIONS.map((opt) => (
                         <button
                           key={opt}
                           type="button"

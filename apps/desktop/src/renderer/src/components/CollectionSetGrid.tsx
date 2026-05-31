@@ -125,13 +125,12 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
           <Search size={18} aria-hidden="true" />
           <input
             data-testid="tile-search"
+            aria-label={t('collection.filter.search')}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('collection.filter.search')}
           />
-          <span className="reference-kbd">Ctrl</span>
-          <span className="reference-kbd">K</span>
         </label>
         <div className="reference-segment">
           {(['standard', 'wild'] as const).map((fmt) => (

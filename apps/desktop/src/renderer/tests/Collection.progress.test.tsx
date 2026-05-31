@@ -419,6 +419,20 @@ describe('Collection — set progress', () => {
     expect(screen.getByText("Whizbang's Workshop")).toBeInTheDocument();
   });
 
+  it('gives the set search field a real accessible name without fake shortcut text', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810' })],
+      wild: [],
+      mirrorAlive: true,
+    });
+    renderWithLocale('en-US');
+    await screen.findByText('Core');
+
+    expect(screen.getByRole('textbox', { name: 'Search sets…' })).toBeInTheDocument();
+    expect(screen.queryByText('Ctrl')).not.toBeInTheDocument();
+    expect(screen.queryByText('K')).not.toBeInTheDocument();
+  });
+
   it('uses cached ownedCards from collection progress in the set detail view', async () => {
     const cachedCard = {
       id: 'CARD_CACHED',
