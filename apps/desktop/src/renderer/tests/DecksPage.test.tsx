@@ -118,4 +118,18 @@ describe('DecksPage wiring', () => {
     // is reserved for a real-browser e2e.
     expect(getById).not.toHaveBeenCalled();
   });
+
+  it('bounds tab panels so overflowing tab content can scroll vertically', async () => {
+    let rendered: ReturnType<typeof renderPage> | null = null;
+    await act(async () => {
+      rendered = renderPage();
+      await Promise.resolve();
+    });
+    const { container } = rendered!;
+
+    expect(container.querySelector('.reference-decks')).toHaveClass('min-h-0');
+    for (const panel of container.querySelectorAll('[role="tabpanel"]')) {
+      expect(panel).toHaveClass('min-h-0');
+    }
+  });
 });

@@ -185,6 +185,14 @@ describe('DeckFinderTab', () => {
     expect(metas.some((el) => /by\s+thalia/i.test(el.textContent ?? ''))).toBe(false);
   });
 
+  it('renders class portrait images in the list and detail header', async () => {
+    await act(async () => { renderTab(); });
+    await waitFor(() => expect(screen.queryAllByText('Aggro Fire Mage').length).toBeGreaterThan(0));
+
+    expect(screen.getByTestId('deck-finder-list-class-portrait-MAGE')).toBeInTheDocument();
+    expect(screen.getByTestId('deck-finder-detail-class-portrait-MAGE')).toBeInTheDocument();
+  });
+
   it('clicking the MAGE class chip narrows the list', async () => {
     const user = userEvent.setup();
     await act(async () => { renderTab(); });

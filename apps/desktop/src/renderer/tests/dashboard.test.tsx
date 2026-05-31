@@ -205,4 +205,22 @@ describe('Dashboard rank display', () => {
       'warning',
     ]);
   });
+
+  it('formats match time as elapsed duration instead of a wall-clock timestamp', async () => {
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
+    useDeckTrackerStore.setState({
+      snapshot: makeSnapshot({
+        phase: 'IN_MATCH',
+        matchStartedAt: 1_000,
+        updatedAt: 301_000,
+      } as Partial<DeckTrackerSnapshot>),
+    });
+
+    renderRoute();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+
+    expect(screen.getByText('05:00')).toBeInTheDocument();
+  });
 });

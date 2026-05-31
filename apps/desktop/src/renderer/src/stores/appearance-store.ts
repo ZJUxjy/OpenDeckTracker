@@ -5,7 +5,7 @@ export const APPEARANCE_STORAGE_KEY = 'hdt.appearance';
 export type Density = 'comfortable' | 'compact';
 
 /** Visual skin only; layout stays the current top-navigation structure. */
-export type UiStyle = 'tavern' | 'macos' | 'wechat' | 'fallout76';
+export type UiStyle = 'reference' | 'tavern' | 'macos' | 'wechat' | 'fallout76';
 
 /** macOS Sequoia / iOS system accent colors. */
 export type Accent =
@@ -46,14 +46,18 @@ export const ACCENT_PALETTE: Record<Accent, AccentValues> = {
 };
 
 const DEFAULT_DENSITY: Density = 'comfortable';
-const DEFAULT_UI_STYLE: UiStyle = 'fallout76';
+const DEFAULT_UI_STYLE: UiStyle = 'reference';
 const DEFAULT_ACCENT: Accent = 'blue';
 const DEFAULT_THEME: Theme = 'system';
 const DEFAULT_GAME_OVERLAY = true;
 const DEFAULT_GAME_OVERLAY_OPPONENT = true;
 
 const VALID_DENSITIES = new Set<string>(['comfortable', 'compact']);
-const VALID_UI_STYLES = new Set<string>(['tavern', 'macos', 'wechat', 'fallout76']);
+// The renderer pages were redesigned as a single reference skin. Keep the
+// legacy union type for payload compatibility, but migrate all stale values
+// back to reference so old localStorage/broadcasts cannot activate a skin
+// whose variables no longer cover the current markup.
+const VALID_UI_STYLES = new Set<string>(['reference']);
 const VALID_ACCENTS = new Set<string>(['blue','red','orange','yellow','green','mint','purple','pink']);
 const VALID_THEMES = new Set<string>(['system', 'light', 'dark']);
 
@@ -111,6 +115,10 @@ function coerceAccent(raw: unknown): Accent {
   return LEGACY_ACCENT_MIGRATION[raw] ?? DEFAULT_ACCENT;
 }
 
+function coerceUiStyle(raw: unknown): UiStyle {
+  return typeof raw === 'string' && VALID_UI_STYLES.has(raw) ? 'reference' : DEFAULT_UI_STYLE;
+}
+
 function readStored(): StoredShape {
   if (typeof localStorage === 'undefined') return { ...DEFAULTS };
 
@@ -127,7 +135,7 @@ function coerceStoredShape(raw: unknown): StoredShape {
   const parsed = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
   return {
     density: VALID_DENSITIES.has(parsed['density'] as string) ? parsed['density'] as Density : DEFAULT_DENSITY,
-    uiStyle: VALID_UI_STYLES.has(parsed['uiStyle'] as string) ? parsed['uiStyle'] as UiStyle : DEFAULT_UI_STYLE,
+    uiStyle: coerceUiStyle(parsed['uiStyle']),
     accent: coerceAccent(parsed['accent']),
     theme: VALID_THEMES.has(parsed['theme'] as string) ? parsed['theme'] as Theme : DEFAULT_THEME,
     gameOverlay: typeof parsed['gameOverlay'] === 'boolean' ? parsed['gameOverlay'] : DEFAULT_GAME_OVERLAY,
@@ -171,10 +179,11 @@ export const useAppearanceStore = create<AppearanceState>((set) => ({
   },
   setUiStyle: (next) => {
     const s = useAppearanceStore.getState();
-    const stored = { density: s.density, uiStyle: next, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent };
+    const uiStyle = coerceUiStyle(next);
+    const stored = { density: s.density, uiStyle, accent: s.accent, theme: s.theme, gameOverlay: s.gameOverlay, gameOverlayOpponent: s.gameOverlayOpponent };
     writeStored(stored);
     broadcastStored(stored);
-    set({ uiStyle: next });
+    set({ uiStyle });
   },
   setAccent: (next) => {
     const s = useAppearanceStore.getState();

@@ -1,5 +1,13 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  CircleDollarSign,
+  Grid2X2,
+  Package,
+  Search,
+  Sparkles,
+  UserRound,
+} from 'lucide-react';
 import { SET_LABELS } from '@hdt/hearthdb';
 import type { SetProgress } from '@hdt/core';
 
@@ -24,6 +32,13 @@ interface CollectionSetGridProps {
 type TabId = 'cards' | 'cardBacks' | 'heroes' | 'coins' | 'packs';
 
 const TAB_ORDER: TabId[] = ['cards', 'cardBacks', 'heroes', 'coins', 'packs'];
+const TAB_ICONS = {
+  cards: Sparkles,
+  cardBacks: Grid2X2,
+  heroes: UserRound,
+  coins: CircleDollarSign,
+  packs: Package,
+} satisfies Record<TabId, typeof Sparkles>;
 
 // Per-set accent override map. Currently empty — every set falls
 // through to var(--class-neutral). Kept as a map so older Wild sets
@@ -73,12 +88,13 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
   }, [progress, activeFormat, search, locale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="space-y-5">
+    <div className="reference-collection-grid-shell">
       {/* Tab bar (Cards / Card Backs / Heroes / Lucky Coins / Card Packs) */}
-      <div className="flex items-center gap-1" role="tablist" aria-label="Collection categories">
+      <div className="reference-category-tabs" role="tablist" aria-label="Collection categories">
         {TAB_ORDER.map((tab) => {
           const isActive = tab === activeTab;
           const isCards = tab === 'cards';
+          const Icon = TAB_ICONS[tab];
           return (
             <button
               key={tab}
@@ -89,16 +105,12 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
               aria-disabled={!isCards}
               disabled={!isCards}
               onClick={() => { if (isCards) setActiveTab(tab); }}
-              className={
-                'flex items-center gap-2 px-3.5 py-2 rounded-md text-sm transition-colors ' +
-                (isActive
-                  ? 'bg-overlay-surface text-text font-semibold border border-border-hairline'
-                  : 'text-text-secondary font-medium hover:text-text disabled:cursor-not-allowed disabled:opacity-70')
-              }
+              className={isActive ? 'is-active' : ''}
             >
+              <Icon size={17} aria-hidden="true" />
               {t(`collection.tabs.${tab}`)}
               {!isCards && (
-                <span className="rounded-full bg-overlay-surface text-text-tertiary text-[9px] font-medium px-1.5 py-0.5">
+                <span className="reference-coming-soon">
                   {t('collection.tabs.comingSoon')}
                 </span>
               )}
@@ -108,27 +120,25 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
       </div>
 
       {/* Filter row: search + standard/wild segment */}
-      <div className="flex items-center gap-3">
-        <input
-          data-testid="tile-search"
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('collection.filter.search')}
-          className="h-9 flex-1 max-w-xs px-3 rounded-md bg-card border border-border-hairline text-sm text-text placeholder:text-text-tertiary"
-        />
-        <div className="ml-auto flex bg-overlay-surface dark:bg-black/20 rounded-md p-1 border border-border-hairline">
+      <div className="reference-filter-row">
+        <label className="reference-search-box">
+          <Search size={18} aria-hidden="true" />
+          <input
+            data-testid="tile-search"
+            aria-label={t('collection.filter.search')}
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('collection.filter.search')}
+          />
+        </label>
+        <div className="reference-segment">
           {(['standard', 'wild'] as const).map((fmt) => (
             <button
               key={fmt}
               type="button"
               onClick={() => setActiveFormat(fmt)}
-              className={
-                'px-4 py-1.5 rounded text-sm font-semibold transition-all ' +
-                (activeFormat === fmt
-                  ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
-                  : 'text-text-secondary hover:text-text')
-              }
+              className={activeFormat === fmt ? 'is-active' : ''}
             >
               {t(`collection.progress.tab${fmt === 'standard' ? 'Standard' : 'Wild'}`)}
             </button>
@@ -139,12 +149,12 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
       {/* Mirror / cached banner */}
       {!progress.mirrorAlive && (
         <div
-          className="tahoe-card p-4 flex items-center space-x-3"
+          className="reference-warning-banner"
           data-testid="collection-banner"
           data-banner-source={progress.source ?? 'empty'}
         >
-          <AlertTriangle size={20} className="text-accent shrink-0" />
-          <p className="text-text-secondary text-sm">
+          <AlertTriangle size={20} />
+          <p>
             {progress.source === 'cache' && progress.lastUpdatedAt
               ? t('collection.progress.cachedBanner', {
                   date: new Date(progress.lastUpdatedAt).toLocaleString(locale),
@@ -155,30 +165,36 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
       )}
 
       {/* Overall Progress */}
-      <div className="tahoe-card p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-text">{t('collection.overallProgress')}</h2>
-          <div className="text-right">
-            <span className="text-accent font-bold text-2xl font-mono tabular-nums">{totalOwned}</span>
-            <span className="text-text-tertiary font-medium font-mono tabular-nums"> / {totalMax}</span>
+      <div className="reference-panel reference-overall-progress">
+        <ProgressRing percent={percentage} label={t('collection.reference.completion')} />
+        <div className="reference-overall-copy">
+          <div>
+            <h2>{t('collection.overallProgress')}</h2>
+            <p>
+              {t('collection.reference.collectedLine', {
+                owned: totalOwned,
+                total: totalMax,
+              })}
+            </p>
           </div>
+          <div className="reference-overall-count">
+            <b>{totalOwned}</b>
+            <span> / {totalMax}</span>
+          </div>
+          <div className="reference-progress-bar">
+            <span style={{ width: `${percentage}%` }} />
+          </div>
+          <p className="reference-progress-caption">
+            {t('collection.percentComplete', { percent: percentage })}
+          </p>
         </div>
-        <div className="w-full bg-black/8 dark:bg-white/8 rounded-full h-3 mb-2 overflow-hidden">
-          <div
-            className="bg-accent h-3 rounded-full transition-all duration-1000 ease-out"
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-        <p className="text-text-secondary text-sm font-medium">
-          {t('collection.percentComplete', { percent: percentage })}
-        </p>
       </div>
 
       {/* Section heading + tile grid */}
-      <h2 className="text-xl font-bold text-text mt-2">{t('collection.expansions')}</h2>
+      <h2 className="reference-section-title">{t('collection.expansions')}</h2>
       <div
         data-testid="set-grid"
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+        className="reference-expansion-grid grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
       >
         {filteredRows.map((row) => {
           const label = labelFor(row.setCode);
@@ -199,6 +215,31 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
             />
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function ProgressRing({ percent, label }: { percent: number; label: string }) {
+  const radius = 50;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - percent / 100);
+  return (
+    <div className="reference-progress-ring" aria-label={`${percent}%`}>
+      <svg viewBox="0 0 116 116" aria-hidden="true">
+        <circle cx="58" cy="58" r={radius} className="reference-progress-ring-track" />
+        <circle
+          cx="58"
+          cy="58"
+          r={radius}
+          className="reference-progress-ring-value"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div>
+        <b>{percent}%</b>
+        <span>{label}</span>
       </div>
     </div>
   );

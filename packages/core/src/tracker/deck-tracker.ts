@@ -80,6 +80,8 @@ export interface DeckTrackerSnapshot {
   phase: MatchPhase;
   /** Match metadata (game/format/mission/players) — null in IDLE. */
   matchInfo: MatchInfo | null;
+  /** Wall-clock timestamp for the current match start; null outside a match. */
+  matchStartedAt?: number | null;
   /** Identified deck (name + 30-card original list) — null until identified. */
   deck: {
     id: number;
@@ -1315,6 +1317,7 @@ export class DeckTracker {
     return {
       phase: this.game.phase,
       matchInfo,
+      matchStartedAt: this.game.startedAt,
       deck,
       pendingDeckSelection,
       friendlyHand,
@@ -2061,6 +2064,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
   return {
     phase: 'IDLE',
     matchInfo: null,
+    matchStartedAt: null,
     deck: null,
     pendingDeckSelection: null,
     friendlyHand: [],

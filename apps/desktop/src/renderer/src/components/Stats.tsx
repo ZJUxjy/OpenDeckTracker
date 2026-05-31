@@ -152,8 +152,8 @@ export function Stats() {
   }));
 
   return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="px-8 py-7 space-y-5 max-w-7xl mx-auto w-full">
+    <div className="reference-page reference-stats flex-1 h-full min-h-0 overflow-y-auto">
+      <div className="reference-stats-content space-y-5 w-full">
         {/* Header */}
         <div
           className="flex flex-wrap items-start justify-between gap-4"
