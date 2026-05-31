@@ -11,6 +11,7 @@
     },
     "playerFallback": "PlayerOne",
     "subtitle": "Hearthstone smart tracker",
+    "primaryNavigation": "Primary navigation",
     "versionAriaLabel": "App version"
   },
   "sidebar": {
@@ -290,6 +291,7 @@
       "uiStyle": {
         "title": "UI style",
         "description": "Switch the visual skin while keeping the current layout.",
+        "reference": "Arcane",
         "fallout76": "Fallout 76",
         "tavern": "Tavern",
         "macos": "macOS",
@@ -652,6 +654,8 @@
     "waitingForGame": "Waiting for game",
     "cardsLeft": "Cards Left",
     "hand": "Hand",
+    "handCountValue": "{count} cards",
+    "connection": "Hearthstone connection",
     "status": "Status",
     "statusLive": "Live",
     "statusIdle": "Idle",
@@ -664,6 +668,16 @@
       "parser-error": "parser error",
       "lag": "lag",
       "rotation-or-truncation": "log rotated"
+    },
+    "reference": {
+      "subtitle": "Track matches in real time, record cards, and read the board state.",
+      "noActivity": "You are not in a match or the game is not connected.",
+      "noDeckSelected": "No deck selected or loaded.",
+      "mode": "Mode",
+      "modeStandard": "Standard",
+      "rank": "Rank",
+      "duration": "Match time",
+      "opponentHint": "Opponent cards will appear here as they are revealed."
     }
   },
   "collection": {
@@ -687,6 +701,12 @@
       "title": "Mass Disenchant Available",
       "body": "You have {count} duplicate cards that can be safely disenchanted.",
       "action": "Disenchant Extra Cards (+{dust} Dust)"
+    },
+    "reference": {
+      "liveReady": "Live collection data loaded",
+      "cacheReady": "Local cache is ready",
+      "collectedLine": "Collected {owned} of {total}",
+      "completion": "Completion"
     },
     "progress": {
       "tabStandard": "Standard",

@@ -26,33 +26,33 @@ export function DecksPage(): ReactElement {
     <Tabs.Root
       value={active}
       onValueChange={(v) => setActive(v as ActiveTab)}
-      className="flex-1 flex flex-col h-full overflow-hidden"
+      className="reference-page reference-decks flex-1 flex flex-col h-full min-h-0 overflow-hidden"
     >
       <Tabs.List
         aria-label={t('decks.tabs.ariaLabel')}
-        className="flex shrink-0 border-b border-border px-6"
+        className="reference-page-tabs flex shrink-0"
       >
         <Tabs.Trigger
           value="saved"
-          className="px-4 py-3 text-sm font-medium text-text-dim data-[state=active]:text-accent data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text transition-colors"
+          className="reference-page-tab"
         >
           {t('decks.tabs.saved')}
         </Tabs.Trigger>
         <Tabs.Trigger
           value="finder"
-          className="px-4 py-3 text-sm font-medium text-text-dim data-[state=active]:text-accent data-[state=active]:border-b-2 data-[state=active]:border-accent hover:text-text transition-colors"
+          className="reference-page-tab"
         >
           {t('decks.tabs.finder')}
         </Tabs.Trigger>
       </Tabs.List>
 
-      <Tabs.Content value="saved" className="flex-1 overflow-hidden focus:outline-none">
+      <Tabs.Content value="saved" className="flex-1 min-h-0 overflow-hidden focus:outline-none">
         <SavedDecksTab
           openEditorForDeckId={openEditorForDeckId}
           onEditorOpened={() => setOpenEditorForDeckId(null)}
         />
       </Tabs.Content>
-      <Tabs.Content value="finder" className="flex-1 overflow-hidden focus:outline-none">
+      <Tabs.Content value="finder" className="flex-1 min-h-0 overflow-hidden focus:outline-none">
         <DeckFinderTab onImported={onImportedFromFinder} />
       </Tabs.Content>
     </Tabs.Root>

@@ -11,6 +11,7 @@
     },
     "playerFallback": "玩家",
     "subtitle": "炉石智能记牌器",
+    "primaryNavigation": "主导航",
     "versionAriaLabel": "应用版本"
   },
   "sidebar": {
@@ -290,6 +291,7 @@
       "uiStyle": {
         "title": "界面风格",
         "description": "切换视觉皮肤，同时保持当前布局不变。",
+        "reference": "奥术",
         "fallout76": "Fallout 76",
         "tavern": "酒馆",
         "macos": "macOS",
@@ -652,6 +654,8 @@
     "waitingForGame": "等待对局",
     "cardsLeft": "剩余卡牌",
     "hand": "手牌",
+    "handCountValue": "{count} 张",
+    "connection": "炉石传说连接状态",
     "status": "状态",
     "statusLive": "进行中",
     "statusIdle": "空闲",
@@ -664,6 +668,16 @@
       "parser-error": "解析错误",
       "lag": "延迟",
       "rotation-or-truncation": "日志切换"
+    },
+    "reference": {
+      "subtitle": "实时追踪对局，记录卡牌，洞察战局。",
+      "noActivity": "当前未处于对局中或未成功连接游戏。",
+      "noDeckSelected": "未选择或未加载卡组。",
+      "mode": "模式",
+      "modeStandard": "标准模式",
+      "rank": "段位",
+      "duration": "对局时长",
+      "opponentHint": "对局中将自动收集并显示对手使用的卡牌。"
     }
   },
   "collection": {
@@ -687,6 +701,12 @@
       "title": "可批量分解",
       "body": "你有 {count} 张多余的卡可以安全分解。",
       "action": "分解多余卡牌（+{dust} 奥术之尘）"
+    },
+    "reference": {
+      "liveReady": "实时收藏数据已加载",
+      "cacheReady": "本地缓存已就绪",
+      "collectedLine": "已收集 {owned} 张，共 {total} 张",
+      "completion": "完成度"
     },
     "progress": {
       "tabStandard": "标准",

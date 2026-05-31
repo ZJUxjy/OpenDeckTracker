@@ -7,13 +7,11 @@ import { Settings } from './components/Settings';
 import { OverlayView } from './components/OverlayView';
 import { OpponentOverlayView } from './components/OpponentOverlayView';
 import { CardPreviewView } from './components/CardPreviewView';
-import { TrackerStatusBanner } from './components/TrackerStatusBanner';
 
 function TrackerRoute() {
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <TrackerStatusBanner />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         <Dashboard />
       </div>
     </div>

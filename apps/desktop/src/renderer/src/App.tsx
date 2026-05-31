@@ -14,6 +14,9 @@ import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
 import { useTranslation } from './i18n';
 import { useAppearanceStore } from './stores/appearance-store';
+import { ReferenceStatusSidebar } from './components/ReferenceStatusSidebar';
+import heroArt from './assets/reference-ui/hero.png';
+import logoHsCut from './assets/reference-ui/logo-hs-cut.png';
 
 import { useHearthWatcherStatus } from './hooks/use-hearthwatcher-status';
 
@@ -98,10 +101,14 @@ export default function App() {
   const isActive = (id: string) =>
     location.pathname === `/${id}` || (id === 'tracker' && location.pathname === '/');
   const statusIconClass = isAlive ? (battleTag ? 'text-green' : 'text-amber') : 'text-text-mute';
+  const showStatusSidebar =
+    location.pathname === '/' ||
+    location.pathname === '/tracker' ||
+    location.pathname === '/stats';
 
   return (
     <div className="tavern-app-shell flex h-screen text-text font-sans overflow-hidden">
-      <div className="tavern-app-frame flex h-full min-w-0 flex-1 flex-col">
+      <div className="tavern-app-frame flex h-full min-h-0 min-w-0 flex-1 flex-col">
         <div
           className="tavern-window-titlebar flex h-8 shrink-0 items-center px-5 pr-[148px]"
           aria-hidden
@@ -110,24 +117,31 @@ export default function App() {
           <div className="tavern-titlebar-grip h-px w-full" />
         </div>
         <header
-          className="tavern-topbar tahoe-topbar grid h-16 shrink-0 items-center gap-3 px-5 relative z-50"
+          className="tavern-topbar tahoe-topbar grid shrink-0 items-center gap-3 px-5 relative z-50"
           style={{ WebkitAppRegion: 'drag' } as CSSProperties}
         >
           <button
             type="button"
+            aria-label="OpenDeckTracker"
             className="tavern-brand-plaque flex min-w-0 items-center"
             style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
             onClick={() => {
               void navigate('/tracker');
             }}
           >
+            <span className="tavern-brand-emblem" aria-hidden="true">
+              <img src={logoHsCut} alt="" />
+            </span>
             <span className="tavern-brand-copy flex min-w-0 flex-col">
               <span className="tavern-brand-title min-w-0 truncate text-lg font-black tracking-wide">OpenDeckTracker</span>
+              <span className="tavern-brand-subtitle min-w-0 truncate text-xs font-semibold">
+                {t('app.subtitle')}
+              </span>
             </span>
           </button>
 
           <nav
-            aria-label="Primary"
+            aria-label={t('app.primaryNavigation')}
             className="tavern-main-tabs flex min-w-0 flex-1 items-center justify-start gap-2"
             style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
           >
@@ -137,6 +151,7 @@ export default function App() {
                 <button
                   key={item.id}
                   type="button"
+                  aria-label={t(item.labelKey)}
                   data-active={active ? 'true' : 'false'}
                   className="tavern-nav-tab flex min-w-0 items-center justify-center gap-2"
                   onClick={() => {
@@ -164,6 +179,7 @@ export default function App() {
                   ? (battleTag ? t('app.status.gameRunning') : t('app.status.notLoggedIn'))
                   : t('app.status.gameNotRunning')}
               </span>
+              <span className="reference-status-chevron" aria-hidden="true" />
             </span>
             <div
               data-testid="player-identity"
@@ -190,8 +206,16 @@ export default function App() {
           </div>
         </header>
 
-        <main className="tavern-main-surface flex-1 flex overflow-hidden relative">
-          <Outlet />
+        <main className="tavern-main-surface flex-1 min-h-0 flex overflow-hidden relative">
+          <div
+            className="reference-global-hero"
+            style={{ '--reference-hero': `url(${heroArt})` } as CSSProperties}
+            aria-hidden="true"
+          />
+          {showStatusSidebar ? <ReferenceStatusSidebar /> : null}
+          <section className="reference-route-surface min-w-0 min-h-0 flex flex-1 flex-col overflow-hidden">
+            <Outlet />
+          </section>
         </main>
         <footer
           className="tavern-bottom-status shrink-0"

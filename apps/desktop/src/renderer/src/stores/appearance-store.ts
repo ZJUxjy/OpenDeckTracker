@@ -5,7 +5,7 @@ export const APPEARANCE_STORAGE_KEY = 'hdt.appearance';
 export type Density = 'comfortable' | 'compact';
 
 /** Visual skin only; layout stays the current top-navigation structure. */
-export type UiStyle = 'tavern' | 'macos' | 'wechat' | 'fallout76';
+export type UiStyle = 'reference' | 'tavern' | 'macos' | 'wechat' | 'fallout76';
 
 /** macOS Sequoia / iOS system accent colors. */
 export type Accent =
@@ -46,14 +46,14 @@ export const ACCENT_PALETTE: Record<Accent, AccentValues> = {
 };
 
 const DEFAULT_DENSITY: Density = 'comfortable';
-const DEFAULT_UI_STYLE: UiStyle = 'fallout76';
+const DEFAULT_UI_STYLE: UiStyle = 'reference';
 const DEFAULT_ACCENT: Accent = 'blue';
 const DEFAULT_THEME: Theme = 'system';
 const DEFAULT_GAME_OVERLAY = true;
 const DEFAULT_GAME_OVERLAY_OPPONENT = true;
 
 const VALID_DENSITIES = new Set<string>(['comfortable', 'compact']);
-const VALID_UI_STYLES = new Set<string>(['tavern', 'macos', 'wechat', 'fallout76']);
+const VALID_UI_STYLES = new Set<string>(['reference', 'tavern', 'macos', 'wechat', 'fallout76']);
 const VALID_ACCENTS = new Set<string>(['blue','red','orange','yellow','green','mint','purple','pink']);
 const VALID_THEMES = new Set<string>(['system', 'light', 'dark']);
 

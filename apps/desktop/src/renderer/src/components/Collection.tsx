@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Database } from 'lucide-react';
+import { BookOpen, Database, Sparkles } from 'lucide-react';
 import type { SetProgress } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
@@ -195,50 +195,53 @@ export function Collection() {
   }, [selectedSetCode, progress]);
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-
-      <div className="px-8 pt-7 pb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0">
-        <div className="flex flex-col w-full sm:w-auto mb-4 sm:mb-0">
-          <h1 className="text-2xl font-bold text-text mb-1 flex items-center">
-            <BookOpen size={22} className="mr-3 text-accent" />
+    <div className="reference-page reference-collection flex-1 h-full min-h-0 overflow-y-auto">
+      <div className="reference-page-heading reference-collection-heading">
+        <h1>
+          <BookOpen size={30} aria-hidden="true" />
             {t('collection.title')}
-          </h1>
-          <p className="text-text-secondary text-sm">{t('collection.subtitle')}</p>
+        </h1>
+        <p>{t('collection.subtitle')}</p>
+      </div>
+
+      <div className="reference-collection-actions">
+        <div className="reference-cache-banner">
+          <Sparkles size={18} aria-hidden="true" />
+          <b>{progress?.source === 'live' ? t('collection.reference.liveReady') : t('collection.reference.cacheReady')}</b>
+          {progress?.lastUpdatedAt ? (
+            <span>{new Date(progress.lastUpdatedAt).toLocaleString()}</span>
+          ) : null}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="reference-collection-tools">
           <CollectionSyncButton state={syncState} onClick={handleSyncClick} />
           {dbStats && (
-            <div className="tahoe-card px-4 py-3 flex items-center space-x-3">
-              <Database size={20} className="text-green opacity-80" />
-              <div className="flex flex-col">
-                <span className="text-[10px] text-text-tertiary font-bold uppercase tracking-wider">{t('collection.dbCards')}</span>
-                <span className="text-green font-bold text-lg font-mono tabular-nums leading-tight">{dbStats.total.toLocaleString()}</span>
+            <div className="reference-db-pill">
+              <Database size={18} />
+              <div>
+                <span>{t('collection.dbCards')}</span>
+                <b>{dbStats.total.toLocaleString()}</b>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 px-8 pb-8 overflow-y-auto">
-        <div className="max-w-7xl mx-auto">
-          {progress && selectedSetCode === null && (
-            <CollectionSetGrid
-              progress={progress}
-              coverCardIds={coverCardIds}
-              onOpenSet={(code) => setSelectedSetCode(code)}
-            />
-          )}
-          {progress && selectedSetCode !== null && selectedRow !== null && (
-            <CollectionSetDetail
-              setCode={selectedSetCode}
-              row={selectedRow}
-              ownedByDbfId={ownedByDbfId}
-              onBack={() => setSelectedSetCode(null)}
-            />
-          )}
-        </div>
-      </div>
+      {progress && selectedSetCode === null && (
+        <CollectionSetGrid
+          progress={progress}
+          coverCardIds={coverCardIds}
+          onOpenSet={(code) => setSelectedSetCode(code)}
+        />
+      )}
+      {progress && selectedSetCode !== null && selectedRow !== null && (
+        <CollectionSetDetail
+          setCode={selectedSetCode}
+          row={selectedRow}
+          ownedByDbfId={ownedByDbfId}
+          onBack={() => setSelectedSetCode(null)}
+        />
+      )}
     </div>
   );
 }

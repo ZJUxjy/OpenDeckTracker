@@ -80,7 +80,7 @@ export function SavedDecksTab({ openEditorForDeckId, onEditorOpened }: SavedDeck
   }, [openEditorForDeckId, onEditorOpened]);
 
   return (
-    <div className="flex-1 h-full overflow-hidden">
+    <div className="flex-1 h-full min-h-0 overflow-hidden">
       <SavedDecksList
         onCreate={() => {
           void onCreate();

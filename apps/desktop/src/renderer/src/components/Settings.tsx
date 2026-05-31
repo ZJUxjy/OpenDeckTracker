@@ -54,7 +54,7 @@ export function Settings() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden text-text">
+    <div className="flex-1 h-full min-h-0 flex flex-col overflow-hidden text-text">
 
       {/* Header */}
       <div className="px-8 pt-7 pb-4 shrink-0 z-10 sticky top-0">
@@ -62,10 +62,10 @@ export function Settings() {
         <p className="text-text-secondary text-sm">{t('settings.subtitle')}</p>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden" data-testid="settings-content-row">
 
         {/* Settings Sidebar — Apple-style nested category list */}
-        <div className="w-60 flex flex-col overflow-y-auto">
+        <div className="w-60 min-h-0 flex flex-col overflow-y-auto">
           <div className="px-3 py-2 space-y-1">
             {categories.map((cat) => (
               <button
@@ -85,7 +85,7 @@ export function Settings() {
         </div>
 
         {/* Settings Content Area */}
-        <div className="flex-1 overflow-y-auto px-8 pb-8">
+        <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
           <div className="max-w-3xl space-y-8">
             
             {activeCategory === 'appearance' && (
@@ -126,7 +126,7 @@ export function Settings() {
                       <p className="text-text-mute text-sm mt-0.5">{t('settings.appearance.uiStyle.description')}</p>
                     </div>
                     <div className="flex rounded-md border border-border bg-overlay-surface p-1">
-                      {(['fallout76', 'tavern', 'macos', 'wechat'] as UiStyle[]).map((opt) => (
+                      {(['reference', 'fallout76', 'tavern', 'macos', 'wechat'] as UiStyle[]).map((opt) => (
                         <button
                           key={opt}
                           type="button"

@@ -85,7 +85,7 @@ describe('AppearanceApplyEffect', () => {
       wrapper: ({ children }) => <>{children}</>,
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
 
     act(() => {
       useAppearanceStore.getState().setUiStyle('macos');
@@ -125,7 +125,7 @@ describe('AppearanceApplyEffect', () => {
       wrapper: ({ children }) => <>{children}</>,
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('fallout76');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
 
     act(() => {
       onChanged?.({
@@ -165,6 +165,28 @@ describe('AppearanceApplyEffect', () => {
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
     expect(document.documentElement.style.colorScheme).toBe('dark');
+  });
+
+  it('forces dark color-scheme and arcane accent while the reference UI style is active', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({
+        density: 'comfortable',
+        uiStyle: 'reference',
+        accent: 'blue',
+        theme: 'light',
+      }),
+    );
+
+    const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
+
+    render(<AppearanceApplyEffect />, {
+      wrapper: ({ children }) => <>{children}</>,
+    });
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.colorScheme).toBe('dark');
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
   });
 
   it('forces dark color-scheme and terminal accent while the Fallout 76 UI style is active', async () => {

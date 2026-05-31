@@ -795,7 +795,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
   if (decks.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center h-full p-12 text-text"
+        className="flex flex-col items-center justify-center h-full min-h-0 overflow-y-auto p-12 text-text"
         data-testid="decks-empty-state"
       >
         <h2 className="text-xl font-semibold text-text mb-2">{t('decks.list.empty.title')}</h2>
@@ -823,7 +823,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
   }
 
   return (
-    <div className="p-6 overflow-y-auto h-full">
+    <div className="p-6 overflow-y-auto h-full min-h-0">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
         <div>
           <h1 className="text-2xl font-bold text-text">{t('decks.list.title')}</h1>

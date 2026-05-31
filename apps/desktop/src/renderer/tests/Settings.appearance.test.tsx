@@ -119,4 +119,11 @@ describe('Settings — Appearance category', () => {
     // System Settings displays them.
     expect(screen.getByRole('button', { name: 'Blue' })).toBeInTheDocument();
   });
+
+  it('keeps the settings page bounded while the sidebar and detail pane scroll', () => {
+    const { container } = renderSettings();
+
+    expect(container.firstElementChild).toHaveClass('h-full', 'min-h-0');
+    expect(container.querySelector('[data-testid="settings-content-row"]')).toHaveClass('min-h-0');
+  });
 });

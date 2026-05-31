@@ -51,6 +51,14 @@ function applyFalloutAccent() {
   root.style.setProperty('--accent-translucent', 'rgba(109, 255, 85, 0.16)');
 }
 
+function applyReferenceAccent() {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.style.setProperty('--accent', '#2FE07A');
+  root.style.setProperty('--accent-dim', 'rgba(47, 224, 122, 0.18)');
+  root.style.setProperty('--accent-translucent', 'rgba(47, 224, 122, 0.16)');
+}
+
 function applyDensity(density: string) {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute('data-density', density);
@@ -67,7 +75,7 @@ function applyUiStyle(uiStyle: UiStyle) {
  *     for OS prefers-color-scheme changes when in 'system' mode
  *   • accent — writes --accent / --accent-dim to <html> in the
  *     mode-correct variant
- *   • UI style — writes data-ui-style="tavern|macos|wechat|fallout76"
+   *   • UI style — writes data-ui-style="reference|tavern|macos|wechat|fallout76"
  *   • density — writes data-density="..."
  *   • initial overlay enable — re-fires the IPC once on app boot if
  *     the user had overlays enabled previously
@@ -113,10 +121,11 @@ export function AppearanceApplyEffect() {
   // they're in the same effect. The WeChat and Fallout 76 skins are
   // intentionally dark.
   useEffect(() => {
-    const isFixedDarkSkin = uiStyle === 'wechat' || uiStyle === 'fallout76';
+    const isFixedDarkSkin = uiStyle === 'reference' || uiStyle === 'wechat' || uiStyle === 'fallout76';
     const isDark = isFixedDarkSkin ? true : resolveIsDark(theme);
     applyTheme(isDark);
-    if (uiStyle === 'fallout76') applyFalloutAccent();
+    if (uiStyle === 'reference') applyReferenceAccent();
+    else if (uiStyle === 'fallout76') applyFalloutAccent();
     else applyAccent(accent, isDark);
 
     if (isFixedDarkSkin) return;

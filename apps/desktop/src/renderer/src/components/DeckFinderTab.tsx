@@ -18,6 +18,17 @@ import { useCardDef } from '../hooks/use-card-def';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useCardPreview } from '../hooks/use-card-preview';
 import { ManaCurveChart } from './ManaCurveChart';
+import deathKnightPortrait from '../assets/reference-ui/portrait/deathknight.png';
+import demonHunterPortrait from '../assets/reference-ui/portrait/demonhunter.png';
+import druidPortrait from '../assets/reference-ui/portrait/druid.png';
+import hunterPortrait from '../assets/reference-ui/portrait/hunter.png';
+import magePortrait from '../assets/reference-ui/portrait/mage.png';
+import paladinPortrait from '../assets/reference-ui/portrait/paladin.png';
+import priestPortrait from '../assets/reference-ui/portrait/priest.png';
+import roguePortrait from '../assets/reference-ui/portrait/rogue.png';
+import shamanPortrait from '../assets/reference-ui/portrait/shaman.png';
+import warlockPortrait from '../assets/reference-ui/portrait/warlock.png';
+import warriorPortrait from '../assets/reference-ui/portrait/warrior.png';
 
 const ART_MASK_STYLE: CSSProperties = {
   maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
@@ -128,6 +139,20 @@ const CLASS_LABEL_KEYS: Record<HeroClass, string> = {
   NEUTRAL: 'decks.finder.classNeutral',
 };
 
+const CLASS_PORTRAITS: Partial<Record<HeroClass, string>> = {
+  DEATHKNIGHT: deathKnightPortrait,
+  DEMONHUNTER: demonHunterPortrait,
+  DRUID: druidPortrait,
+  HUNTER: hunterPortrait,
+  MAGE: magePortrait,
+  PALADIN: paladinPortrait,
+  PRIEST: priestPortrait,
+  ROGUE: roguePortrait,
+  SHAMAN: shamanPortrait,
+  WARLOCK: warlockPortrait,
+  WARRIOR: warriorPortrait,
+};
+
 const FORMATS: Format[] = ['Standard', 'Wild'];
 const SORTS: PopularDeckSort[] = ['popular', 'winrate', 'updated', 'cheapest'];
 const MAX_DUST_LIMIT = 20000;
@@ -142,11 +167,59 @@ function readableSyncSourceNote(translated: string, locale: string): string {
 function ClassChip({ heroClass, label }: { heroClass: HeroClass; label: string }): ReactElement {
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-5 h-5 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-[9px] font-bold border border-border-hi">
-        {heroClass.slice(0, 2)}
-      </div>
+      <ClassPortrait
+        heroClass={heroClass}
+        label={label}
+        size="sm"
+        testIdPrefix="deck-finder-filter-class-portrait"
+        decorative
+      />
       <span>{label}</span>
     </div>
+  );
+}
+
+function ClassPortrait({
+  heroClass,
+  label,
+  size,
+  testIdPrefix,
+  decorative = false,
+}: {
+  heroClass: HeroClass;
+  label: string;
+  size: 'sm' | 'md' | 'lg';
+  testIdPrefix: string;
+  decorative?: boolean;
+}): ReactElement {
+  const src = CLASS_PORTRAITS[heroClass];
+  const sizeClass = size === 'sm'
+    ? 'w-5 h-5 text-[9px]'
+    : size === 'lg'
+      ? 'w-9 h-9 text-xs'
+      : 'w-7 h-7 text-[10px]';
+
+  return (
+    <span
+      className={clsx(
+        'reference-class-portrait rounded-full bg-overlay-elevated flex items-center justify-center text-text font-bold border border-border-hi overflow-hidden shrink-0',
+        sizeClass,
+      )}
+      aria-label={src || decorative ? undefined : label}
+    >
+      {src ? (
+        <img
+          data-testid={`${testIdPrefix}-${heroClass}`}
+          src={src}
+          alt={decorative ? '' : label}
+          aria-hidden={decorative ? 'true' : undefined}
+          className="h-full w-full object-cover"
+          draggable={false}
+        />
+      ) : (
+        <span data-testid={`${testIdPrefix}-fallback-${heroClass}`}>{heroClass.slice(0, 2)}</span>
+      )}
+    </span>
   );
 }
 
@@ -315,9 +388,9 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
   };
 
   return (
-    <div className="flex-1 h-full overflow-hidden flex flex-col">
+    <div className="flex-1 h-full min-h-0 overflow-y-auto flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border flex items-baseline gap-4">
+      <div className="px-6 py-4 border-b border-border flex items-baseline gap-4 shrink-0">
         <div>
           <div className="text-[11px] text-text-mute font-mono tracking-[0.14em]">
             {t('decks.finder.eyebrow')}
@@ -337,7 +410,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       {/* Sync row */}
       <div
         data-testid="deck-finder-sync-row"
-        className="px-6 py-2 border-b border-border flex items-center gap-3 font-mono text-[10px] text-text-dim tracking-[0.06em]"
+        className="px-6 py-2 border-b border-border flex items-center gap-3 font-mono text-[10px] text-text-dim tracking-[0.06em] shrink-0"
       >
         <button
           type="button"
@@ -381,7 +454,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Filter row 1: includes/excludes + format pills */}
-      <div className="px-6 py-2.5 border-b border-border grid grid-cols-[1fr_1fr_auto] gap-2.5 items-center">
+      <div className="px-6 py-2.5 border-b border-border grid grid-cols-[1fr_1fr_auto] gap-2.5 items-center shrink-0">
         <div className="relative">
           <input
             value={includesCard}
@@ -420,7 +493,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Filter row 2: class chips */}
-      <div className="px-6 py-2.5 border-b border-border flex gap-1.5 items-center flex-wrap">
+      <div className="px-6 py-2.5 border-b border-border flex gap-1.5 items-center flex-wrap shrink-0">
         <button
           onClick={() => setClassFilter('all')}
           className={`px-3 py-1 rounded-full font-mono text-[11px] tracking-[0.08em] font-semibold cursor-pointer ${
@@ -451,7 +524,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Filter row 3: max dust + sort */}
-      <div className="px-6 py-2.5 border-b border-border flex gap-4 items-center font-mono text-[10px] text-text-dim tracking-[0.06em]">
+      <div className="px-6 py-2.5 border-b border-border flex gap-4 items-center font-mono text-[10px] text-text-dim tracking-[0.06em] shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-text-mute tracking-[0.12em]">{t('decks.finder.maxDustLabel')}</span>
           <input
@@ -486,7 +559,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Body */}
-      <div className="flex-1 grid grid-cols-[1.4fr_1fr] overflow-hidden">
+      <div className="flex-1 min-h-[420px] grid grid-cols-[1.4fr_1fr] overflow-hidden">
         {/* List */}
         <div className="overflow-auto border-r border-border">
           {loaded && sorted.length === 0 && (
@@ -504,9 +577,12 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
                   active ? 'border-l-accent bg-accent-dim/30' : 'border-l-transparent hover:bg-overlay-surface'
                 }`}
               >
-                <div className="w-7 h-7 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-[10px] font-bold border border-border-hi">
-                  {d.class.slice(0, 2)}
-                </div>
+                <ClassPortrait
+                  heroClass={d.class}
+                  label={t(CLASS_LABEL_KEYS[d.class])}
+                  size="md"
+                  testIdPrefix="deck-finder-list-class-portrait"
+                />
                 <div className="min-w-0">
                   <div className="text-sm font-semibold tracking-tight text-text">{d.name}</div>
                   <div
@@ -535,9 +611,12 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
         {selected && (
           <div className="overflow-auto p-5 flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-overlay-elevated flex items-center justify-center text-text text-xs font-bold border border-border-hi">
-                {selected.class.slice(0, 2)}
-              </div>
+              <ClassPortrait
+                heroClass={selected.class}
+                label={t(CLASS_LABEL_KEYS[selected.class])}
+                size="lg"
+                testIdPrefix="deck-finder-detail-class-portrait"
+              />
               <div className="flex-1 min-w-0">
                 <div className="text-lg font-semibold tracking-tight text-text">{selected.name}</div>
                 <div className="text-[10px] text-text-mute font-mono tracking-[0.1em] mt-0.5 uppercase">
