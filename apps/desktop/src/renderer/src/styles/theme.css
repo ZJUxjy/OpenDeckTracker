@@ -3613,7 +3613,8 @@ body[data-overlay='true'] .tavern-empty-row {
 }
 
 .reference-collection {
-  padding-top: 26px;
+  padding-top: 18px;
+  scroll-padding-top: 18px;
 }
 
 .reference-collection-heading h1 {
@@ -3710,7 +3711,7 @@ body[data-overlay='true'] .tavern-empty-row {
 .reference-collection-grid-shell {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .reference-category-tabs {
@@ -3835,8 +3836,9 @@ body[data-overlay='true'] .tavern-empty-row {
 .reference-overall-progress {
   display: flex;
   align-items: center;
-  gap: 28px;
-  padding: 22px 26px;
+  gap: 24px;
+  min-height: 132px;
+  padding: 18px 24px;
 }
 
 .reference-progress-ring {
@@ -3946,7 +3948,7 @@ body[data-overlay='true'] .tavern-empty-row {
 }
 
 .reference-section-title {
-  margin: 10px 0 2px;
+  margin: 8px 0 2px;
   color: var(--ref-ink);
   font-size: 19px;
   font-weight: 900;
@@ -3959,6 +3961,9 @@ body[data-overlay='true'] .tavern-empty-row {
 }
 
 :root[data-ui-style='reference'] .reference-exp-card {
+  display: flex;
+  min-height: 360px;
+  flex-direction: column;
   border: 1px solid var(--ref-line);
   border-radius: var(--ref-radius);
   background: var(--ref-panel);
@@ -3998,29 +4003,49 @@ body[data-overlay='true'] .tavern-empty-row {
 .reference-exp-title {
   padding-inline: 16px;
   text-align: left;
+  min-height: 52px;
 }
 
 .reference-exp-body {
   position: relative;
-  padding: 10px 16px 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px 12px;
+  margin-top: auto;
+  padding: 8px 16px 16px;
 }
 
 .reference-exp-progress-line {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 12px;
+  align-items: center;
   color: var(--ref-ink-mute);
 }
 
+.reference-exp-progress-line span:first-child {
+  min-width: 0;
+}
+
+.reference-exp-progress-line span:last-child {
+  white-space: nowrap;
+}
+
 .reference-exp-percent {
-  position: absolute;
-  right: 16px;
-  bottom: 30px;
+  position: static;
+  grid-column: 1 / -1;
+  justify-self: end;
   color: var(--ref-green);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 900;
+  line-height: 1;
 }
 
 .reference-exp-bar {
+  grid-column: 1 / -1;
   height: 8px;
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 .reference-exp-bar > div:not(.is-complete) {
@@ -4113,4 +4138,190 @@ body[data-overlay='true'] .tavern-empty-row {
   .reference-dashboard-grid {
     grid-template-columns: minmax(0, 1fr) 330px;
   }
+}
+
+/* Settings — align with Reference (Arcane) page chrome */
+.reference-settings {
+  padding-bottom: 24px;
+}
+
+.reference-settings-layout {
+  position: relative;
+  z-index: 1;
+  gap: 24px;
+}
+
+.reference-settings-nav {
+  display: flex;
+  width: 220px;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.reference-settings-nav button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 11px 16px;
+  border: 1px solid var(--ref-line);
+  border-radius: 11px;
+  background: var(--ref-panel);
+  color: var(--ref-ink-dim);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.reference-settings-nav button:hover {
+  border-color: var(--ref-line-strong);
+  background: var(--ref-panel-hover);
+  color: var(--ref-ink);
+}
+
+.reference-settings-nav button.is-active {
+  border-color: var(--ref-green-line);
+  background: linear-gradient(180deg, rgba(47, 224, 122, 0.18), rgba(47, 224, 122, 0.06));
+  color: var(--ref-green-bright);
+  box-shadow: 0 8px 22px -12px var(--ref-green-glow);
+}
+
+.reference-settings-panel {
+  max-width: 920px;
+}
+
+.reference-settings .settings-row {
+  padding: 18px 22px;
+}
+
+.reference-settings .settings-row h3 {
+  color: var(--ref-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.reference-settings .settings-row p {
+  margin-top: 4px;
+  color: var(--ref-ink-mute);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.reference-settings-version {
+  color: var(--ref-ink-mute);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.reference-settings-hint {
+  padding-inline: 4px;
+  color: var(--ref-ink-mute);
+  font-size: 12px;
+}
+
+.reference-settings-error {
+  padding-inline: 4px;
+  color: var(--ref-red);
+  font-size: 12px;
+}
+
+.reference-settings-disclaimer {
+  padding: 16px 18px;
+}
+
+.reference-settings-disclaimer p {
+  color: var(--ref-ink-mute);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.reference-accent-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.reference-accent-swatch {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ref-line);
+  border-radius: 999px;
+  transition: outline-color 120ms ease, transform 120ms ease;
+}
+
+.reference-accent-swatch:hover {
+  transform: scale(1.06);
+}
+
+.reference-accent-swatch.is-active {
+  outline: 2px solid var(--ref-green-bright);
+  outline-offset: 2px;
+}
+
+.reference-toggle {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  border: 1px solid var(--ref-line);
+  border-radius: 999px;
+  background: var(--ref-inset);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.reference-toggle span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--ref-ink-dim);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.reference-toggle.is-on {
+  border-color: var(--ref-green-line);
+  background: linear-gradient(180deg, rgba(47, 224, 122, 0.35), rgba(47, 224, 122, 0.12));
+}
+
+.reference-toggle.is-on span {
+  transform: translateX(22px);
+  background: var(--ref-green-bright);
+}
+
+.reference-action-button {
+  min-height: 38px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(180deg, var(--ref-green-bright), var(--ref-green));
+  color: #042a16;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 8px 20px -10px var(--ref-green-glow);
+}
+
+.reference-action-button:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.reference-ghost-button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--ref-line);
+  border-radius: 9px;
+  background: var(--ref-panel);
+  color: var(--ref-ink-dim);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reference-ghost-button:hover {
+  border-color: var(--ref-line-strong);
+  color: var(--ref-ink);
 }

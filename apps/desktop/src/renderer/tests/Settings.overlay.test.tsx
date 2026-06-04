@@ -65,7 +65,8 @@ describe('Settings — Overlay category', () => {
       .getByText('Show in-game overlay')
       .closest('.settings-row')!
       .querySelector('button')!;
-    expect(toggle.className).toContain('bg-accent');
+    expect(toggle.className).toContain('is-on');
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
   });
 
   it('renders Chinese labels under zh-CN locale', () => {
@@ -130,7 +131,8 @@ describe('Settings — Overlay category', () => {
       .getByText('Show opponent overlay')
       .closest('.settings-row')!
       .querySelector('button')!;
-    expect(opponentToggle.className).toContain('bg-accent');
+    expect(opponentToggle.className).toContain('is-on');
+    expect(opponentToggle).toHaveAttribute('aria-checked', 'true');
   });
 
   it('renders Chinese labels for the opponent toggle under zh-CN locale', () => {

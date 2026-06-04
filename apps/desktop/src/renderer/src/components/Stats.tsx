@@ -36,6 +36,8 @@ const emptySummary = {
   [CLASS_STATS_KEY]: [],
 } as unknown as StatsSummary;
 
+const desktopStatsUnavailableMessage = 'Stats are unavailable outside the desktop app.';
+
 export function Stats() {
   const { t } = useTranslation();
   const [timeFilter, setTimeFilter] = useState<StatsTimeFilter>('season');
@@ -56,9 +58,22 @@ export function Stats() {
     let cancelled = false;
     setIsLoading(true);
     setError(null);
+    const statsApi = window.hdt?.stats;
+    const recordingsApi = window.hdt?.recordings;
+
+    if (statsApi === undefined) {
+      setSummary(emptySummary);
+      setRecentMatches([]);
+      setRecordings([]);
+      setError(desktopStatsUnavailableMessage);
+      setIsLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     void Promise.all([
-      window.hdt.stats.getSummary(timeFilter, {
+      statsApi.getSummary(timeFilter, {
         formatFilter,
         matchModeFilter,
         includeMatchupMatrix: true,
@@ -66,8 +81,9 @@ export function Stats() {
         includePlayOrderSplit: true,
         timeSeriesGranularity: granularity,
       }),
-      window.hdt.stats.listRecent(timeFilter, 5, { formatFilter, matchModeFilter }),
-      window.hdt.recordings.list().catch(() => [] as MatchRecordingSummary[]),
+      statsApi.listRecent(timeFilter, 5, { formatFilter, matchModeFilter }),
+      recordingsApi?.list().catch(() => [] as MatchRecordingSummary[]) ??
+        Promise.resolve([] as MatchRecordingSummary[]),
     ])
       .then(([nextSummary, nextRecent, nextRecordings]) => {
         if (cancelled) return;
@@ -92,7 +108,16 @@ export function Stats() {
 
   useEffect(() => {
     let cancelled = false;
-    void window.hdt.decks
+    const decksApi = window.hdt?.decks;
+    if (decksApi === undefined) {
+      setSavedDecks([]);
+      setSelectedSavedDeckId(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void decksApi
       .list()
       .then((decks) => {
         if (cancelled) return;
@@ -117,7 +142,15 @@ export function Stats() {
       return;
     }
     let cancelled = false;
-    void window.hdt.stats
+    const statsApi = window.hdt?.stats;
+    if (statsApi === undefined) {
+      setDeckMatchups([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void statsApi
       .getSavedDeckMatchups(selectedSavedDeckId, timeFilter, {
         formatFilter,
         matchModeFilter,

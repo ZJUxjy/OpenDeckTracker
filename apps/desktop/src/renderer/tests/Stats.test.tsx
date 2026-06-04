@@ -77,6 +77,19 @@ function mockStatsApi(args: {
 }
 
 describe('Stats', () => {
+  it('shows an unavailable state instead of crashing when the desktop API is missing', async () => {
+    const savedHdt = window.hdt;
+    (window as unknown as { hdt: typeof window.hdt | undefined }).hdt = undefined;
+
+    try {
+      render(<Stats />);
+
+      expect(await screen.findByText(/stats are unavailable outside the desktop app/i)).toBeInTheDocument();
+    } finally {
+      (window as unknown as { hdt: typeof window.hdt }).hdt = savedHdt;
+    }
+  });
+
   it('shows empty states instead of mock matches when history is empty', async () => {
     mockStatsApi({ summary: emptyStatsSummary(), recent: [] });
 
