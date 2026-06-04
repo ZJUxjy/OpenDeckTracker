@@ -65,18 +65,18 @@ describe('SetTile', () => {
     expect(screen.queryByTestId('tile-complete-badge')).not.toBeInTheDocument();
   });
 
-  it('applies amber color to copies value when ownedCopies is partial', () => {
+  it('applies partial tone to copies value when ownedCopies is partial', () => {
     renderTile({
       row: row({ setCode: 'B', ownedCopies: 100, totalCopies: 526 }),
     });
-    expect(screen.getByTestId('tile-copies-value').className).toContain('amber');
+    expect(screen.getByTestId('tile-copies-value')).toHaveAttribute('data-tone', 'partial');
   });
 
-  it('applies red color to copies value when ownedCopies is zero', () => {
+  it('applies empty tone to copies value when ownedCopies is zero', () => {
     renderTile({
       row: row({ setCode: 'C', ownedCopies: 0, totalCopies: 526 }),
     });
-    expect(screen.getByTestId('tile-copies-value').className).toContain('red');
+    expect(screen.getByTestId('tile-copies-value')).toHaveAttribute('data-tone', 'empty');
   });
 
   it('shows MINI-SET badge when mini prop is true', () => {
@@ -94,7 +94,7 @@ describe('SetTile', () => {
     });
     const background = screen.getByTestId('tile-cover-background') as HTMLImageElement;
     expect(background.src).toBe('asset://march-of-the-lich-king-bg.png');
-    expect(background.className).toContain('opacity-30');
+    expect(background.className).toContain('reference-exp-cover-bg');
   });
 
   it('calls onClick with set code when clicked', () => {

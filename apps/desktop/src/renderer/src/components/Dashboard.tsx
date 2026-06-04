@@ -74,7 +74,7 @@ export function Dashboard() {
     : t('dashboard.watcherDisconnected');
 
   return (
-    <div className="reference-page reference-dashboard flex-1 h-full min-h-0 overflow-y-auto">
+    <div className="reference-page reference-dashboard flex-1 h-full min-h-0 overflow-hidden">
       <section className="reference-page-heading">
         <h1>
           <span>01 {t('sidebar.deckTracker')} / </span>

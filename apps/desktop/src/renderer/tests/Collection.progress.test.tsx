@@ -352,7 +352,7 @@ describe('Collection — set progress', () => {
     expect(await screen.findByText('Core')).toBeInTheDocument();
   });
 
-  it('renders set tiles in a 5-column layout at xl', async () => {
+  it('renders set tiles in the reference expansion grid', async () => {
     mockProgressApi({
       standard: [row({ setCode: 'SET_1810' }), row({ setCode: 'SET_1897' })],
       wild: [],
@@ -360,7 +360,7 @@ describe('Collection — set progress', () => {
     });
     renderWithLocale('en-US');
     const grid = await screen.findByTestId('set-grid');
-    expect(grid.className).toContain('xl:grid-cols-5');
+    expect(grid.className).toContain('reference-expansion-grid');
   });
 
   it('renders 5 tabs with only the cards tab active and interactive', async () => {

@@ -133,7 +133,7 @@ export default function App() {
               <img src={logoHsCut} alt="" />
             </span>
             <span className="tavern-brand-copy flex min-w-0 flex-col">
-              <span className="tavern-brand-title min-w-0 truncate text-lg font-black tracking-wide">OpenDeckTracker</span>
+              <span className="tavern-brand-title min-w-0 text-lg font-black tracking-wide">OpenDeckTracker</span>
               <span className="tavern-brand-subtitle min-w-0 truncate text-xs font-semibold">
                 {t('app.subtitle')}
               </span>

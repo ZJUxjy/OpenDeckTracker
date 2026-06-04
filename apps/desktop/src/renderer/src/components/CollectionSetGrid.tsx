@@ -192,10 +192,7 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
 
       {/* Section heading + tile grid */}
       <h2 className="reference-section-title">{t('collection.expansions')}</h2>
-      <div
-        data-testid="set-grid"
-        className="reference-expansion-grid grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-      >
+      <div className="reference-expansion-grid" data-testid="set-grid">
         {filteredRows.map((row) => {
           const label = labelFor(row.setCode);
           return (

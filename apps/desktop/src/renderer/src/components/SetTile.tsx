@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import type { SetProgress } from '@hdt/core';
 import { useTranslation } from '../i18n';
 import { useCardImageUrl } from '../hooks/use-card-image-url';
@@ -14,9 +14,23 @@ interface SetTileProps {
   onClick: (setCode: string) => void;
 }
 
+type StatTone = 'complete' | 'empty' | 'partial' | 'neutral';
+
 // Module-level memo: an unknown set always resolves to null. Cache that
 // negative result so we don't ping the IPC again on every re-render.
 const setLogoUrls = new Map<string, string | null>();
+
+function uniqueTone(row: SetProgress): StatTone {
+  if (row.totalCards > 0 && row.ownedUniqueCards === row.totalCards) return 'complete';
+  if (row.ownedUniqueCards === 0) return 'empty';
+  return 'neutral';
+}
+
+function copiesTone(row: SetProgress): StatTone {
+  if (row.totalCopies > 0 && row.ownedCopies === row.totalCopies) return 'complete';
+  if (row.ownedCopies === 0) return 'empty';
+  return 'partial';
+}
 
 export function SetTile({
   row,
@@ -63,36 +77,17 @@ export function SetTile({
   const pct = row.totalCards > 0 ? row.ownedUniqueCards / row.totalCards : 0;
   const pctPercent = Math.round(pct * 100);
 
-  const copiesColor =
-    row.totalCopies > 0 && row.ownedCopies === row.totalCopies
-      ? 'text-green'
-      : row.ownedCopies === 0
-        ? 'text-red'
-        : 'text-amber';
-
-  const uniqueColor =
-    row.totalCards > 0 && row.ownedUniqueCards === row.totalCards
-      ? 'text-green'
-      : 'text-text';
-
   return (
     <button
       type="button"
       onClick={() => onClick(row.setCode)}
       data-testid={`set-tile-${row.setCode}`}
-      className={
-        'tahoe-card reference-exp-card relative overflow-hidden text-left transition-transform hover:scale-[1.01] ' +
-        (selected ? 'ring-2 ring-accent' : '')
-      }
+      className={`reference-exp-card${selected ? ' is-selected' : ''}`}
     >
-      {/* Cover band — prefer official set logo (transparent PNG, contained
-          and centered against the accent fill), fall back to representative
-          card art (cropped to its illustration). Accent color is always
-          painted underneath so the band is never blank. */}
       <div
         data-testid="tile-cover"
-        className="relative h-[140px] overflow-hidden"
-        style={{ backgroundColor: accent }}
+        className="reference-exp-cover"
+        style={{ '--exp-accent': accent } as CSSProperties}
       >
         {backgroundImageUrl ? (
           <>
@@ -102,10 +97,9 @@ export function SetTile({
               alt=""
               aria-hidden
               loading="lazy"
-              className="absolute inset-0 w-full h-full object-cover opacity-30 scale-[1.04]"
-              style={{ objectPosition: 'center 48%' }}
+              className="reference-exp-cover-bg"
             />
-            <div className="absolute inset-0 bg-black/35" aria-hidden />
+            <div className="reference-exp-cover-shade" aria-hidden />
           </>
         ) : null}
         {logoUrl ? (
@@ -115,7 +109,7 @@ export function SetTile({
             alt=""
             aria-hidden
             loading="lazy"
-            className="relative z-10 w-full h-full object-contain p-3"
+            className="reference-exp-cover-logo"
           />
         ) : cardCoverUrl ? (
           <img
@@ -123,66 +117,57 @@ export function SetTile({
             alt=""
             aria-hidden
             loading="lazy"
-            className="relative z-10 w-full h-full object-cover"
-            style={{ objectPosition: 'center 18%' }}
+            className="reference-exp-cover-art"
           />
         ) : null}
         {mini && (
           <span
             data-testid="tile-mini-badge"
-            className="reference-mini-badge absolute z-20 top-2 right-2"
-            style={{ color: accent }}
+            className="reference-mini-badge reference-exp-mini-badge"
           >
             {t('collection.tile.miniSet')}
           </span>
         )}
-      </div>
-
-      {/* Label sits below the cover, centered */}
-      <div
-        data-testid="tile-label"
-        className="reference-exp-title px-3 pt-3 text-text font-bold text-base leading-tight"
-      >
-        {label}
-      </div>
-
-      {/* Info */}
-      <div className="reference-exp-body flex flex-col gap-1.5 px-4 pt-2 pb-3">
-        <div className="reference-exp-progress-line flex items-center justify-between text-xs">
-          <span className="text-text-secondary font-medium">{t('collection.tile.uniqueLabel')}</span>
-          <span
-            data-testid="tile-unique-value"
-            className={`font-semibold font-mono tabular-nums ${uniqueColor}`}
-          >
-            {row.ownedUniqueCards} / {row.totalCards}
-          </span>
-        </div>
-        <div className="reference-exp-progress-line flex items-center justify-between text-xs">
-          <span className="text-text-secondary font-medium">{t('collection.tile.copiesLabel')}</span>
-          <span
-            data-testid="tile-copies-value"
-            className={`font-semibold font-mono tabular-nums ${copiesColor}`}
-          >
-            {row.ownedCopies} / {row.totalCopies}
-          </span>
-        </div>
-        <div className="reference-exp-percent">{pctPercent}%</div>
-        <div className="reference-progress-bar reference-exp-bar">
+        {complete && (
           <div
-            className={pct === 1 ? 'is-complete' : ''}
-            style={{ width: `${Math.max(0, Math.min(100, pct * 100))}%` }}
-          />
-        </div>
+            data-testid="tile-complete-badge"
+            className="reference-exp-badge reference-exp-complete-badge"
+          >
+            {t('collection.complete')}
+          </div>
+        )}
       </div>
 
-      {complete && (
-        <div
-          data-testid="tile-complete-badge"
-          className="reference-exp-badge absolute top-2 left-2"
-        >
-          {t('collection.complete')}
+      <div className="reference-exp-content">
+        <div data-testid="tile-label" className="reference-exp-title">
+          {label}
         </div>
-      )}
+
+        <dl className="reference-exp-stats">
+          <div className="reference-exp-stat">
+            <dt>{t('collection.tile.uniqueLabel')}</dt>
+            <dd data-testid="tile-unique-value" data-tone={uniqueTone(row)}>
+              {row.ownedUniqueCards} / {row.totalCards}
+            </dd>
+          </div>
+          <div className="reference-exp-stat">
+            <dt>{t('collection.tile.copiesLabel')}</dt>
+            <dd data-testid="tile-copies-value" data-tone={copiesTone(row)}>
+              {row.ownedCopies} / {row.totalCopies}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="reference-exp-progress">
+          <div className="reference-progress-bar reference-exp-bar">
+            <div
+              className={pct === 1 ? 'is-complete' : ''}
+              style={{ width: `${Math.max(0, Math.min(100, pct * 100))}%` }}
+            />
+          </div>
+          <span className="reference-exp-percent">{pctPercent}%</span>
+        </div>
+      </div>
     </button>
   );
 }
