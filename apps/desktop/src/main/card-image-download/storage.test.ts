@@ -80,6 +80,58 @@ describe('loadProgress', () => {
   });
 });
 
+describe('loadProgress validation', () => {
+  it('returns null for invalid types value', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ types: ['render', 'invalid'] as unknown as ('render' | 'tile')[] });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when paused is not boolean', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ paused: 'false' as unknown as boolean });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when stats contains negative number', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ stats: { ...makeProgress().stats, failed: -1 } });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when stats contains NaN', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ stats: { ...makeProgress().stats, failed: NaN } });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when cardIds contains non-string', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ cardIds: [123] as unknown as string[] });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when stoppedAt is a number', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ stoppedAt: 123 as unknown as string });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when stats key is missing', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress() as unknown as Record<string, unknown>;
+    delete progress['stats'];
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+});
+
 describe('saveProgress', () => {
   it('writes a tmp file and renames atomically', async () => {
     const dir = await makeTempDir();
@@ -90,5 +142,33 @@ describe('saveProgress', () => {
     expect(files.some((f) => f.endsWith('.tmp'))).toBe(false);
     const raw = await readFile(path.join(dir, 'bulk-download-progress.json'), 'utf8');
     expect(JSON.parse(raw)).toEqual(progress);
+  });
+
+  it('ignores orphaned tmp file and loads valid progress', async () => {
+    const dir = await makeTempDir();
+    const expected = makeProgress();
+    await writeFile(path.join(dir, 'bulk-download-progress.json.tmp'), JSON.stringify({ invalid: true }));
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(expected));
+    const loaded = await loadProgress(dir);
+    expect(loaded).toEqual(expected);
+  });
+
+  it('creates nested directories when needed', async () => {
+    const dir = await makeTempDir();
+    const nested = path.join(dir, 'a', 'b', 'c');
+    const progress = makeProgress();
+    await saveProgress(nested, progress);
+    const loaded = await loadProgress(nested);
+    expect(loaded).toEqual(progress);
+  });
+
+  it('overwrites an existing progress file', async () => {
+    const dir = await makeTempDir();
+    const first = makeProgress({ cardIds: ['CS2_029'] });
+    const second = makeProgress({ cardIds: ['EX1_277'] });
+    await saveProgress(dir, first);
+    await saveProgress(dir, second);
+    const loaded = await loadProgress(dir);
+    expect(loaded).toEqual(second);
   });
 });
