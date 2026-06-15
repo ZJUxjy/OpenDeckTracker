@@ -99,4 +99,23 @@ describe('preload api', () => {
       handler,
     );
   });
+
+  it('exposes card image bulk download channels', async () => {
+    mocks.ipcRenderer.invoke.mockResolvedValue({ ok: true, status: { state: 'running' } });
+    await import('./index');
+    const api = mocks.exposed as {
+      cardImages: {
+        bulkDownload: {
+          start: (types: string[], force?: boolean) => Promise<unknown>;
+        };
+      };
+    };
+    const result = await api.cardImages.bulkDownload.start(['render'], true);
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith(
+      'card-image-bulk-download:start',
+      ['render'],
+      true,
+    );
+    expect(result).toEqual({ ok: true, status: { state: 'running' } });
+  });
 });

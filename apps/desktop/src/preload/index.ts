@@ -85,6 +85,19 @@ import type {
 import type { LiveDeckSnapshotInput } from '../main/deck-store';
 import type { LiveDeckSyncResult } from '../main/deck-sync-host';
 import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
+import {
+  CARD_IMAGE_BULK_DOWNLOAD_ABORT_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_PAUSE_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_PROGRESS_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_RESUME_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_START_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_STATUS_CHANNEL,
+} from '../main/card-image-download/ipc';
+import type {
+  BulkDownloadStatus,
+  BulkDownloadType,
+  StartBulkDownloadResult,
+} from '../main/card-image-download/index';
 import type {
   AccountId,
   ArenaInfo,
@@ -142,6 +155,23 @@ const api = {
       ipcRenderer.invoke('card-images:get', cardId, locale),
     getTile: (cardId: string): Promise<{ url: string } | null> =>
       ipcRenderer.invoke('card-images:getTile', cardId),
+    bulkDownload: {
+      start: (types: BulkDownloadType[], force?: boolean): Promise<StartBulkDownloadResult> =>
+        ipcRenderer.invoke(CARD_IMAGE_BULK_DOWNLOAD_START_CHANNEL, types, force),
+      pause: (): Promise<void> => ipcRenderer.invoke(CARD_IMAGE_BULK_DOWNLOAD_PAUSE_CHANNEL),
+      resume: (): Promise<StartBulkDownloadResult> =>
+        ipcRenderer.invoke(CARD_IMAGE_BULK_DOWNLOAD_RESUME_CHANNEL),
+      abort: (): Promise<void> => ipcRenderer.invoke(CARD_IMAGE_BULK_DOWNLOAD_ABORT_CHANNEL),
+      getStatus: (): Promise<BulkDownloadStatus> =>
+        ipcRenderer.invoke(CARD_IMAGE_BULK_DOWNLOAD_STATUS_CHANNEL),
+      onProgress: (cb: (status: BulkDownloadStatus) => void): (() => void) => {
+        const handler = (_e: IpcRendererEvent, status: BulkDownloadStatus): void => cb(status);
+        ipcRenderer.on(CARD_IMAGE_BULK_DOWNLOAD_PROGRESS_CHANNEL, handler);
+        return () => {
+          ipcRenderer.removeListener(CARD_IMAGE_BULK_DOWNLOAD_PROGRESS_CHANNEL, handler);
+        };
+      },
+    },
   },
   setLogos: {
     get: (setCode: string): Promise<{ url: string } | null> =>
