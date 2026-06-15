@@ -456,10 +456,10 @@ describe('ensureCardImagesCachedBatch', () => {
 
   it('returns null for individual failures without aborting the batch', async () => {
     const root = await createTempRoot();
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(pngResponse())
-      .mockResolvedValueOnce(pngResponse(404));
+    const fetchMock = vi.fn(async (url: string) => {
+      if (String(url).includes('NONEXISTENT')) return pngResponse(404);
+      return pngResponse();
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     const results = await ensureCardImagesCachedBatch(['CS2_029', 'NONEXISTENT'], { root });
