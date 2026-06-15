@@ -60,6 +60,9 @@ import {
 import { HsguruBrowserFetcher } from './popular-decks-sync/browser-fetcher';
 import { registerPopularDecksSyncIpc } from './popular-decks-sync/ipc';
 import { net } from 'electron';
+import { CardImageBulkDownloadOrchestrator } from './card-image-download/orchestrator';
+import { registerCardImageBulkDownloadIpc } from './card-image-download/ipc';
+import { loadCollectibleCardIds } from './card-image-download/card-ids';
 import type { CardPreviewWindow, ExtraPreviewPayload, PreviewAnchor } from './card-preview-window';
 
 export interface OverlayControllers {
@@ -406,6 +409,14 @@ export function registerIpc(overlay?: OverlayControllers): void {
   registerPopularDecksIpc(popularDecksDataSource);
   const disposePopularDecksSyncIpc = registerPopularDecksSyncIpc(popularDecksSync);
 
+  // Bulk card-image pre-download. Shares the on-demand card-image cache root.
+  const cardImageBulkDownload = new CardImageBulkDownloadOrchestrator({
+    cacheRoot: cardImageRoot,
+    getCardIds: () => loadCollectibleCardIds('zhCN'),
+    fetchImpl: (url, init) => net.fetch(url as string | Request, init as Parameters<typeof net.fetch>[1]),
+  });
+  const disposeCardImageBulkDownloadIpc = registerCardImageBulkDownloadIpc(cardImageBulkDownload);
+
   // Opponent deck prediction: matches each deck-tracker snapshot against
   // the synced popular decks list, broadcasts a top-N ranking. The same
   // data sources as popular-decks:list are reused so a sync immediately
@@ -419,6 +430,8 @@ export function registerIpc(overlay?: OverlayControllers): void {
   });
 
   app.on('before-quit', () => {
+    cardImageBulkDownload.abort();
+    disposeCardImageBulkDownloadIpc();
     popularDecksSync.abort();
     hsguruBrowserFetcher.dispose();
     disposePopularDecksSyncIpc();
