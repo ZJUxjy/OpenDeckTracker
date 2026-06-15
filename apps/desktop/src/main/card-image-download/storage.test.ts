@@ -130,6 +130,50 @@ describe('loadProgress validation', () => {
     await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
     await expect(loadProgress(dir)).resolves.toBeNull();
   });
+
+  it('returns null when completedCardIds contains non-string', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ completedCardIds: [123] as unknown as string[] });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when failedCardIds contains non-string', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ failedCardIds: [123] as unknown as string[] });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when startedAt is not a valid date', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ startedAt: 'not-a-date' });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when updatedAt is not a valid date', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ updatedAt: 'not-a-date' });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when stats is missing a sub-field', async () => {
+    const dir = await makeTempDir();
+    const stats = { ...makeProgress().stats } as unknown as Record<string, unknown>;
+    delete stats['downloadedRenders'];
+    const progress = makeProgress({ stats: stats as BulkDownloadProgress['stats'] });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
+
+  it('returns null when types is empty', async () => {
+    const dir = await makeTempDir();
+    const progress = makeProgress({ types: [] as unknown as ('render' | 'tile')[] });
+    await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
+    await expect(loadProgress(dir)).resolves.toBeNull();
+  });
 });
 
 describe('saveProgress', () => {

@@ -43,17 +43,22 @@ function isBulkDownloadProgress(value: unknown): value is BulkDownloadProgress {
   if (typeof value !== 'object' || value === null) return false;
   const v = value as Record<string, unknown>;
   if (v['schemaVersion'] !== BULK_DOWNLOAD_PROGRESS_SCHEMA_VERSION) return false;
-  if (typeof v['startedAt'] !== 'string') return false;
-  if (typeof v['updatedAt'] !== 'string') return false;
-  if ('stoppedAt' in v && typeof v['stoppedAt'] !== 'string') return false;
+  if (!isDateString(v['startedAt'])) return false;
+  if (!isDateString(v['updatedAt'])) return false;
+  if ('stoppedAt' in v && !isDateString(v['stoppedAt'])) return false;
   if (!isStringArray(v['cardIds'])) return false;
   if (!isStringArray(v['completedCardIds'])) return false;
   if (!isStringArray(v['failedCardIds'])) return false;
   if (typeof v['paused'] !== 'boolean') return false;
   if (!isStringArray(v['types'])) return false;
+  if (v['types'].length === 0) return false;
   if (!v['types'].every((t) => t === 'render' || t === 'tile')) return false;
   if (!isStats(v['stats'])) return false;
   return true;
+}
+
+function isDateString(value: unknown): value is string {
+  return typeof value === 'string' && !Number.isNaN(Date.parse(value));
 }
 
 function isStringArray(value: unknown): value is string[] {
