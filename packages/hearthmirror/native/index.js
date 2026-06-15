@@ -559,6 +559,15 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
 }
 
 if (!nativeBinding) {
+  // The Rust crate is Windows-only. On macOS (and any other platform without
+  // a published native artifact) fall back to a no-op stub so the Electron
+  // shell and renderer can still be started for UI development.
+  if (process.platform === 'darwin') {
+    nativeBinding = require('./stub')
+  }
+}
+
+if (!nativeBinding) {
   if (loadErrors.length > 0) {
     throw new Error(
       `Cannot find native binding. ` +
