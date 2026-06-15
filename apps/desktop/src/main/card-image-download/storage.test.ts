@@ -163,7 +163,7 @@ describe('loadProgress validation', () => {
     const dir = await makeTempDir();
     const stats = { ...makeProgress().stats } as unknown as Record<string, unknown>;
     delete stats['downloadedRenders'];
-    const progress = makeProgress({ stats: stats as BulkDownloadProgress['stats'] });
+    const progress = makeProgress({ stats: stats as unknown as BulkDownloadProgress['stats'] });
     await writeFile(path.join(dir, 'bulk-download-progress.json'), JSON.stringify(progress));
     await expect(loadProgress(dir)).resolves.toBeNull();
   });
