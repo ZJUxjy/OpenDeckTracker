@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 import { access, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import type { HearthWatcherDiagnostic } from './types/diagnostics';
 
 export interface LogDiscoveryOptions {
@@ -95,6 +95,18 @@ export function standardPowerLogPaths(env: NodeJS.ProcessEnv = process.env): str
   }
   if (env['ProgramFiles(x86)']) {
     candidates.push(join(env['ProgramFiles(x86)'], 'Hearthstone', 'Logs', 'Power.log'));
+  }
+  if (env.HOME) {
+    // macOS. Built with posix.join so the candidates are deterministic
+    // regardless of the OS the discovery/tests run on (macOS paths are always
+    // POSIX, and this package's CI runs on Windows). Confirmed-first ordering:
+    // /Applications/Hearthstone/Logs is the verified location on a real macOS
+    // install; the ~/Library variants are unverified fallbacks.
+    candidates.push('/Applications/Hearthstone/Logs/Power.log');
+    candidates.push(posix.join(env.HOME, 'Library', 'Logs', 'Hearthstone', 'Power.log'));
+    candidates.push(
+      posix.join(env.HOME, 'Library', 'Logs', 'Blizzard', 'Hearthstone', 'Power.log'),
+    );
   }
   return [...new Set(candidates)];
 }
