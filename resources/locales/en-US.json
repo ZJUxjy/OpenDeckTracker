@@ -324,6 +324,20 @@
       "viewThirdPartyNotices": "Third-Party Notices",
       "openFailed": "Failed to open the file. It may be missing or inaccessible.",
       "disclaimer": "OpenDeckTracker is an independent third-party tool. It is not affiliated with, endorsed by, or sponsored by Blizzard Entertainment, Inc. Hearthstone is a trademark of Blizzard Entertainment, Inc. Use of this software in conjunction with Hearthstone may be subject to Blizzard's terms of service; the user assumes all associated risks."
+    },
+    "cardImages": {
+      "title": "Card images",
+      "description": "Pre-download all collectible card images (full art and tiles) so they appear instantly later.",
+      "download": "Download",
+      "resume": "Resume",
+      "pause": "Pause",
+      "abort": "Abort",
+      "downloading": "Downloading…",
+      "completed": "Completed",
+      "completedWithErrors": "Completed with {count} errors",
+      "failed": "Download failed",
+      "diskSpaceError": "Not enough disk space",
+      "unavailable": "Download service is unavailable"
     }
   },
   "fallout": {

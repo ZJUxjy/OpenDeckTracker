@@ -324,6 +324,20 @@
       "viewThirdPartyNotices": "第三方组件声明",
       "openFailed": "无法打开文件，可能不存在或无访问权限。",
       "disclaimer": "OpenDeckTracker 是独立的第三方工具，与暴雪娱乐（Blizzard Entertainment, Inc.）无任何附属、背书或赞助关系。《炉石传说》是暴雪娱乐的注册商标。本软件配合《炉石传说》使用须遵守暴雪的服务条款，相关风险由用户自行承担。"
+    },
+    "cardImages": {
+      "title": "卡牌图片",
+      "description": "提前下载所有可收集卡牌的完整卡图和缩略图，之后无需等待即可显示。",
+      "download": "下载",
+      "resume": "继续",
+      "pause": "暂停",
+      "abort": "中止",
+      "downloading": "下载中…",
+      "completed": "已完成",
+      "completedWithErrors": "已完成，{count} 张失败",
+      "failed": "下载失败",
+      "diskSpaceError": "磁盘空间不足",
+      "unavailable": "下载服务不可用"
     }
   },
   "fallout": {
