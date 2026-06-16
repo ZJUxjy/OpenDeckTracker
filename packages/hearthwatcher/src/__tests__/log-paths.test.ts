@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { discoverPowerLog, standardPowerLogPaths } from '..';
+import { discoverPowerLog, REQUIRED_LOG_CONFIG, standardPowerLogPaths } from '..';
 
 describe('discoverPowerLog', () => {
   it('uses explicit override when it exists', async () => {
@@ -101,4 +101,19 @@ describe('discoverPowerLog', () => {
       expect(result.diagnostic).toBeNull();
     },
   );
+
+  it('includes actionable log.config guidance in the macOS missing-log diagnostic', async () => {
+    const result = await discoverPowerLog({
+      env: { HOME: '/Users/me' },
+      detectInstallDir: () => null,
+      exists: async () => false,
+      readDir: async () => [],
+    });
+    expect(result.powerLogPath).toBeNull();
+    expect(result.diagnostic?.kind).toBe('missing-log');
+    expect(result.diagnostic?.expectedLogConfigPath).toBe(
+      '/Users/me/Library/Preferences/Blizzard/Hearthstone/log.config',
+    );
+    expect(result.diagnostic?.requiredLogConfig).toBe(REQUIRED_LOG_CONFIG);
+  });
 });

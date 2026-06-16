@@ -1,6 +1,7 @@
 import { execSync } from 'node:child_process';
 import { access, readdir } from 'node:fs/promises';
 import { join, posix } from 'node:path';
+import { logConfigPath, REQUIRED_LOG_CONFIG } from './log-config';
 import type { HearthWatcherDiagnostic } from './types/diagnostics';
 
 export interface LogDiscoveryOptions {
@@ -24,16 +25,16 @@ export async function discoverPowerLog(
 ): Promise<LogDiscoveryResult> {
   const exists = options.exists ?? pathExists;
   const readDir = options.readDir ?? readdir;
+  const env = options.env ?? process.env;
   if (options.overridePath !== undefined) {
     const found = await exists(options.overridePath);
     return {
       powerLogPath: found ? options.overridePath : null,
       searchedPaths: [options.overridePath],
-      diagnostic: found ? null : missingDiagnostic([options.overridePath]),
+      diagnostic: found ? null : missingDiagnostic([options.overridePath], env),
     };
   }
 
-  const env = options.env ?? process.env;
   const explicitCandidates = uniquePaths(options.candidatePaths ?? []);
   for (const candidate of explicitCandidates) {
     if (await exists(candidate)) {
@@ -81,7 +82,7 @@ export async function discoverPowerLog(
   return {
     powerLogPath: null,
     searchedPaths: [...searchedPaths, ...scannedPaths],
-    diagnostic: missingDiagnostic([...searchedPaths, ...scannedPaths]),
+    diagnostic: missingDiagnostic([...searchedPaths, ...scannedPaths], env),
   };
 }
 
@@ -219,7 +220,28 @@ async function pathExists(path: string): Promise<boolean> {
   }
 }
 
-function missingDiagnostic(searchedPaths: string[]): HearthWatcherDiagnostic {
+function missingDiagnostic(
+  searchedPaths: string[],
+  env: NodeJS.ProcessEnv,
+): HearthWatcherDiagnostic {
+  const isMac = Boolean(env.HOME) && !env.LOCALAPPDATA;
+  if (isMac) {
+    let expectedLogConfigPath: string | undefined;
+    try {
+      expectedLogConfigPath = logConfigPath(env);
+    } catch {
+      expectedLogConfigPath = undefined;
+    }
+    return {
+      kind: 'missing-log',
+      message:
+        'Power.log was not found. Create the Hearthstone log.config with a [Power] section, then restart Hearthstone.',
+      searchedPaths,
+      ...(expectedLogConfigPath !== undefined ? { expectedLogConfigPath } : {}),
+      requiredLogConfig: REQUIRED_LOG_CONFIG,
+      timestamp: Date.now(),
+    };
+  }
   return {
     kind: 'missing-log',
     message: 'Power.log was not found. Enable Hearthstone logging and restart the game.',

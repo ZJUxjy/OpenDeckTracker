@@ -14,6 +14,8 @@ export interface HearthWatcherDiagnostic {
   recordType?: string;
   line?: string;
   droppedLines?: number;
+  expectedLogConfigPath?: string;
+  requiredLogConfig?: string;
   timestamp: number;
 }
 
