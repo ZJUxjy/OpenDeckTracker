@@ -63,4 +63,53 @@ describe('ensureLogConfig', () => {
     expect(written).not.toContain('ConsolePrinting=true');
     expect(written).toContain('Verbose=true');
   });
+
+  it('collapses duplicate keys so it converges on the second run', async () => {
+    let stored =
+      '[Power]\nLogLevel=1\nFilePrinting=true\nConsolePrinting=false\nScreenPrinting=false\nVerbose=true\nVerbose=false\n';
+    const opts = {
+      configPath,
+      readFile: async () => stored,
+      writeFile: async (_p: string, c: string) => {
+        stored = c;
+      },
+      mkdir: async () => {},
+    };
+    const first = await ensureLogConfig(opts);
+    expect(first.changed).toBe(true);
+    const second = await ensureLogConfig(opts);
+    expect(second.changed).toBe(false);
+    expect(stored.match(/Verbose=/g)?.length).toBe(1);
+    expect(stored).toContain('Verbose=true');
+    expect(stored).not.toContain('Verbose=false');
+  });
+
+  it('treats a CRLF Power block as valid and does not rewrite it', async () => {
+    const crlf = REQUIRED_LOG_CONFIG.replace(/\n/g, '\r\n');
+    const writeFile = vi.fn(async () => {});
+    const result = await ensureLogConfig({
+      configPath,
+      readFile: async () => crlf,
+      writeFile,
+      mkdir: async () => {},
+    });
+    expect(result.changed).toBe(false);
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it('appends a Power section when the file has only other zones', async () => {
+    let written = '';
+    const result = await ensureLogConfig({
+      configPath,
+      readFile: async () => '[Decks]\nLogLevel=1\n',
+      writeFile: async (_p, c) => {
+        written = c;
+      },
+      mkdir: async () => {},
+    });
+    expect(result.changed).toBe(true);
+    expect(written).toContain('[Decks]');
+    expect(written).toContain('[Power]');
+    expect(written).toContain('Verbose=true');
+  });
 });

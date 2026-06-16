@@ -137,14 +137,19 @@ function mergePowerSection(content: string): string {
     sections.push(power);
   }
   for (const [key, value] of REQUIRED_POWER_KEYS) {
-    const idx = power.lines.findIndex((line) => {
+    const matches: number[] = [];
+    power.lines.forEach((line, i) => {
       const m = /^\s*([^=\s]+)\s*=/.exec(line);
-      return m?.[1] === key;
+      if (m?.[1] === key) matches.push(i);
     });
-    if (idx >= 0) {
-      power.lines[idx] = `${key}=${value}`;
-    } else {
+    if (matches.length === 0) {
       power.lines.push(`${key}=${value}`);
+    } else {
+      power.lines[matches[0]!] = `${key}=${value}`;
+      // Drop later duplicate occurrences (descending so earlier indices stay valid).
+      for (let j = matches.length - 1; j >= 1; j--) {
+        power.lines.splice(matches[j]!, 1);
+      }
     }
   }
   return serializeSections(sections);
@@ -159,6 +164,8 @@ function serializeSections(sections: IniSection[]): string {
   return parts.join('\n');
 }
 
+// Hand-rolls dirname instead of node:path's `dirname` because the path may be
+// win32-style even on a POSIX host (e.g. in tests), so it must handle both separators.
 function parentDir(path: string): string {
   const idx = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
   return idx >= 0 ? path.slice(0, idx) : path;
