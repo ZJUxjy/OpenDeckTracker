@@ -4,8 +4,19 @@ export { LogFileWatcher } from './log-file-watcher';
 export type { LogFileReadMode, LogFileWatcherOptions } from './log-file-watcher';
 export { discoverPowerLog, standardPowerLogPaths } from './log-paths';
 export type { LogDiscoveryOptions, LogDiscoveryResult } from './log-paths';
-export { ensureLogConfig, logConfigPath, REQUIRED_LOG_CONFIG } from './log-config';
-export type { LogConfigOptions, LogConfigResult } from './log-config';
+export {
+  CLIENT_CONFIG_CONTENTS,
+  ensureClientConfig,
+  ensureLogConfig,
+  logConfigPath,
+  REQUIRED_LOG_CONFIG,
+} from './log-config';
+export type {
+  ClientConfigOptions,
+  ClientConfigResult,
+  LogConfigOptions,
+  LogConfigResult,
+} from './log-config';
 export { findCurrentMatchStartOffset } from './log/match-boundary';
 export { parseLogLine } from './log-line';
 export type { LogLine } from './log-line';

@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ensureLogConfig, logConfigPath, REQUIRED_LOG_CONFIG } from '..';
+import {
+  CLIENT_CONFIG_CONTENTS,
+  ensureClientConfig,
+  ensureLogConfig,
+  logConfigPath,
+  REQUIRED_LOG_CONFIG,
+} from '..';
 
 describe('logConfigPath', () => {
   it('returns the macOS log.config path from HOME', () => {
@@ -111,5 +117,55 @@ describe('ensureLogConfig', () => {
     expect(written).toContain('[Decks]');
     expect(written).toContain('[Power]');
     expect(written).toContain('Verbose=true');
+  });
+});
+
+describe('ensureClientConfig', () => {
+  it('writes client.config to the default install dir when missing', async () => {
+    const writeFile = vi.fn(async () => {});
+    const result = await ensureClientConfig({
+      readFile: async () => null,
+      writeFile,
+    });
+    expect(result.path).toBe('/Applications/Hearthstone/client.config');
+    expect(result.changed).toBe(true);
+    expect(result.written).toBe(true);
+    expect(writeFile).toHaveBeenCalledWith(
+      '/Applications/Hearthstone/client.config',
+      CLIENT_CONFIG_CONTENTS,
+    );
+  });
+
+  it('is idempotent when the contents already match', async () => {
+    const writeFile = vi.fn(async () => {});
+    const result = await ensureClientConfig({
+      readFile: async () => CLIENT_CONFIG_CONTENTS,
+      writeFile,
+    });
+    expect(result.changed).toBe(false);
+    expect(result.written).toBe(false);
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it('returns an error instead of throwing when the write is not permitted', async () => {
+    const result = await ensureClientConfig({
+      readFile: async () => null,
+      writeFile: async () => {
+        throw new Error('EACCES: permission denied');
+      },
+    });
+    expect(result.written).toBe(false);
+    expect(result.changed).toBe(false);
+    expect(result.error).toContain('EACCES');
+  });
+
+  it('honors a custom install dir', async () => {
+    const writeFile = vi.fn(async () => {});
+    const result = await ensureClientConfig({
+      installDir: '/Volumes/Games/Hearthstone',
+      readFile: async () => null,
+      writeFile,
+    });
+    expect(result.path).toBe('/Volumes/Games/Hearthstone/client.config');
   });
 });

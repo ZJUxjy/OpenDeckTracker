@@ -170,3 +170,51 @@ function parentDir(path: string): string {
   const idx = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
   return idx >= 0 ? path.slice(0, idx) : path;
 }
+
+/** Exact contents HSTracker writes to disable Hearthstone's log size limit. */
+export const CLIENT_CONFIG_CONTENTS = '[Log]\nFileSizeLimit.Int=-1';
+
+export interface ClientConfigOptions {
+  installDir?: string;
+  readFile?: (path: string) => Promise<string | null>;
+  writeFile?: (path: string, contents: string) => Promise<void>;
+}
+
+export interface ClientConfigResult {
+  path: string;
+  changed: boolean;
+  written: boolean;
+  error?: string;
+}
+
+/**
+ * Best-effort, opt-in writer for Hearthstone's client.config (disables the log
+ * file-size limit). Lives alongside Hearthstone.app, not inside the bundle.
+ * Unlike HSTracker it does not swallow write failures silently — a permission
+ * error is returned in `error` rather than thrown, so the caller can surface it.
+ */
+export async function ensureClientConfig(
+  options: ClientConfigOptions = {},
+): Promise<ClientConfigResult> {
+  const installDir = options.installDir ?? '/Applications/Hearthstone';
+  const path = posix.join(installDir, 'client.config');
+  const readFile = options.readFile ?? defaultReadFile;
+  const writeFile = options.writeFile ?? defaultWriteFile;
+
+  const existing = await readFile(path);
+  if (existing === CLIENT_CONFIG_CONTENTS) {
+    return { path, changed: false, written: false };
+  }
+
+  try {
+    await writeFile(path, CLIENT_CONFIG_CONTENTS);
+    return { path, changed: true, written: true };
+  } catch (err) {
+    return {
+      path,
+      changed: false,
+      written: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
