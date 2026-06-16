@@ -224,20 +224,17 @@ function missingDiagnostic(
   searchedPaths: string[],
   env: NodeJS.ProcessEnv,
 ): HearthWatcherDiagnostic {
+  // Stricter than standardPowerLogPaths' HOME-only gate: a Windows env that
+  // exports HOME (LOCALAPPDATA also set) still gets the non-mac diagnostic.
   const isMac = Boolean(env.HOME) && !env.LOCALAPPDATA;
   if (isMac) {
-    let expectedLogConfigPath: string | undefined;
-    try {
-      expectedLogConfigPath = logConfigPath(env);
-    } catch {
-      expectedLogConfigPath = undefined;
-    }
+    // isMac guarantees env.HOME is set, so logConfigPath(env) cannot throw here.
     return {
       kind: 'missing-log',
       message:
         'Power.log was not found. Create the Hearthstone log.config with a [Power] section, then restart Hearthstone.',
       searchedPaths,
-      ...(expectedLogConfigPath !== undefined ? { expectedLogConfigPath } : {}),
+      expectedLogConfigPath: logConfigPath(env),
       requiredLogConfig: REQUIRED_LOG_CONFIG,
       timestamp: Date.now(),
     };
