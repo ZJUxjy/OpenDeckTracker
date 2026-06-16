@@ -1,5 +1,5 @@
-﻿import { useEffect, useState, type ReactNode } from 'react';
-import { Info, Monitor, Palette } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Database, Info, Monitor, Palette } from 'lucide-react';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
 import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme, type UiStyle } from '../stores/appearance-store';
@@ -14,6 +14,7 @@ const ACCENT_LABELS: Record<Accent, string> = {
 const categories = [
   { id: 'appearance', labelKey: 'settings.appearance.categoryLabel', icon: Palette },
   { id: 'overlay', labelKey: 'settings.overlay', icon: Monitor },
+  { id: 'data', labelKey: 'settings.data', icon: Database },
   { id: 'about', labelKey: 'settings.about.categoryLabel', icon: Info },
 ];
 
@@ -231,6 +232,8 @@ export function Settings() {
               </div>
             )}
 
+            {activeCategory === 'data' && <DataPanel />}
+
             {activeCategory === 'about' && <AboutPanel />}
 
             {activeCategory === 'overlay' && (
@@ -261,6 +264,161 @@ export function Settings() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+type BulkDownloadState =
+  | 'idle'
+  | 'running'
+  | 'paused'
+  | 'completed'
+  | 'completed-with-errors'
+  | 'failed';
+
+type BulkDownloadStatus = {
+  state: BulkDownloadState;
+  progress: {
+    completed: number;
+    total: number;
+    failed: number;
+    currentCardId: string | null;
+  };
+  stats: {
+    downloadedRenders: number;
+    downloadedTiles: number;
+    skippedRenders: number;
+    skippedTiles: number;
+    failed: number;
+  };
+};
+
+function DataPanel() {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<BulkDownloadStatus | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const api = typeof window !== 'undefined' ? window.hdt?.cardImages?.bulkDownload : undefined;
+
+  useEffect(() => {
+    let alive = true;
+    setError(null);
+
+    const refresh = async () => {
+      try {
+        const s = await api?.getStatus();
+        if (alive && s) setStatus(s);
+      } catch {
+        // ignore
+      }
+    };
+    void refresh();
+
+    const unsubscribe = api?.onProgress((s) => {
+      if (alive) setStatus(s);
+    });
+
+    return () => {
+      alive = false;
+      unsubscribe?.();
+    };
+  }, [api]);
+
+  const run = async (action: 'start' | 'resume') => {
+    setError(null);
+    if (!api) {
+      setError(t('settings.cardImages.unavailable'));
+      return;
+    }
+    try {
+      const result = await (action === 'start' ? api.start(['render', 'tile']) : api.resume());
+      if (!result.ok) {
+        if ('error' in result && result.error === 'insufficient-disk-space') {
+          setError(t('settings.cardImages.diskSpaceError'));
+        } else {
+          setError(t('settings.cardImages.failed'));
+        }
+      } else {
+        setStatus(result.status);
+      }
+    } catch {
+      setError(t('settings.cardImages.failed'));
+    }
+  };
+
+  const handlePause = () => {
+    try {
+      api?.pause();
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleAbort = () => {
+    try {
+      api?.abort();
+    } catch {
+      // ignore
+    }
+  };
+
+  const progressText = status ? `${status.progress.completed}/${status.progress.total}` : '0/0';
+  const percent =
+    status && status.progress.total > 0
+      ? Math.round((status.progress.completed / status.progress.total) * 100)
+      : 0;
+
+  const primaryLabel =
+    status?.state === 'paused'
+      ? t('settings.cardImages.resume')
+      : status?.state === 'running'
+        ? t('settings.cardImages.downloading')
+        : t('settings.cardImages.download');
+
+  return (
+    <div className="space-y-4 animate-in fade-in duration-300">
+      <SettingsRow
+        title={t('settings.cardImages.title')}
+        description={t('settings.cardImages.description')}
+        control={
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => run(status?.state === 'paused' ? 'resume' : 'start')}
+              disabled={status?.state === 'running'}
+              className="reference-action-button disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {primaryLabel}
+            </button>
+            {status?.state === 'running' && (
+              <>
+                <button type="button" onClick={handlePause} className="reference-ghost-button">
+                  {t('settings.cardImages.pause')}
+                </button>
+                <button type="button" onClick={handleAbort} className="reference-ghost-button">
+                  {t('settings.cardImages.abort')}
+                </button>
+              </>
+            )}
+          </div>
+        }
+      />
+
+      {status && status.progress.total > 0 && (
+        <div className="reference-panel px-5 py-4 space-y-2">
+          <div className="reference-progress-bar">
+            <span style={{ width: `${percent}%` }} />
+          </div>
+          <p className="reference-progress-caption">
+            {progressText} ({percent}%)
+            {status.state === 'completed' && ` — ${t('settings.cardImages.completed')}`}
+            {status.state === 'completed-with-errors' &&
+              ` — ${t('settings.cardImages.completedWithErrors', { count: status.progress.failed })}`}
+          </p>
+        </div>
+      )}
+
+      {error && <p className="reference-settings-error">{error}</p>}
     </div>
   );
 }
