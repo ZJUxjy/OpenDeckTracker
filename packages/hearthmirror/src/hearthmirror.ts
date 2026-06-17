@@ -2,6 +2,7 @@
 
 import * as native from '@hdt/hearthmirror-native';
 import { MirrorError, MirrorErrorCode } from './errors';
+import { loadMacWindowProvider, type MacWindowProvider } from './mac-window';
 import type {
   AccountId,
   ArenaInfo,
@@ -67,9 +68,22 @@ const CP437_BYTE_BY_CHAR = new Map<string, number>(
 
 const UTF8_DECODER = new TextDecoder('utf-8');
 
+export interface HearthMirrorDeps {
+  platform?: NodeJS.Platform;
+  macWindow?: MacWindowProvider | null;
+}
+
 /** Thin wrapper around the napi-rs facade with TS-idiomatic shapes. */
 export class HearthMirror {
   private _connected = false;
+  private readonly platform: NodeJS.Platform;
+  private readonly macWindow: MacWindowProvider | null;
+
+  constructor(deps: HearthMirrorDeps = {}) {
+    this.platform = deps.platform ?? process.platform;
+    this.macWindow =
+      deps.macWindow !== undefined ? deps.macWindow : loadMacWindowProvider(this.platform);
+  }
 
   get isConnected(): boolean {
     return this._connected;
@@ -96,6 +110,13 @@ export class HearthMirror {
    * throws — callers can't distinguish those two cases (and shouldn't need to).
    */
   async getHearthstoneWindow(): Promise<HearthstoneWindow | null> {
+    if (this.platform === 'darwin') {
+      try {
+        return this.macWindow?.getHearthstoneWindow() ?? null;
+      } catch {
+        return null;
+      }
+    }
     try {
       const r = await native.getHearthstoneWindow();
       if (!r) return null;
@@ -114,6 +135,7 @@ export class HearthMirror {
   }
 
   placeWindowAboveHearthstone(nativeWindowHandle: Uint8Array): boolean {
+    if (this.platform === 'darwin') return false;
     try {
       return native.placeWindowAboveHearthstone(nativeWindowHandle);
     } catch {
@@ -122,6 +144,7 @@ export class HearthMirror {
   }
 
   subscribeToHearthstoneWindowEvents(onWindowChanged: () => void): (() => void) | null {
+    if (this.platform === 'darwin') return null;
     try {
       const subscriptionId = native.subscribeHearthstoneWindowEvents(onWindowChanged);
       return () => {

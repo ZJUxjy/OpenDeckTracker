@@ -197,6 +197,9 @@ importers:
       '@hdt/hearthmirror-native':
         specifier: workspace:*
         version: link:native
+      '@hdt/hs-window-mac':
+        specifier: workspace:*
+        version: link:../hs-window-mac
 
   packages/hearthmirror/native:
     devDependencies:
