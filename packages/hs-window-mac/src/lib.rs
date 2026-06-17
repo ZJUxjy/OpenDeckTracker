@@ -5,6 +5,8 @@
 #![warn(clippy::expect_used)]
 
 mod selection;
+#[cfg(target_os = "macos")]
+mod mac;
 
 use napi_derive::napi;
 
@@ -35,9 +37,14 @@ pub struct WindowInfo {
     pub height: f64,
 }
 
-// Body is filled in Task 3 once src/mac.rs exists. Returns None for now so
-// the crate compiles and loads on every platform.
 #[napi]
 pub fn get_hearthstone_window() -> Option<HearthstoneWindow> {
-    None
+    #[cfg(target_os = "macos")]
+    {
+        mac::get_hearthstone_window()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        None
+    }
 }
