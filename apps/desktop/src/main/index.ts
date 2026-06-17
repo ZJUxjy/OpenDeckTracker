@@ -21,6 +21,7 @@ import { getHearthMirror } from './hearthmirror';
 import { initAutoUpdate } from './auto-update';
 import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
 import { computeOverlayPanelBounds } from './overlay-layout';
+import { toDipBounds } from './overlay-coords';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -104,14 +105,12 @@ if (!gotLock) {
     };
     tracker.subscribe((event) => {
       if (event.kind === 'bounds') {
-        // GetWindowRect returns PHYSICAL pixels; BrowserWindow.setBounds
-        // expects DIPs. On HiDPI displays (e.g. 4K @ 200% scale, 1 DIP =
-        // 2 physical pixels) we must convert or the panel renders at the
-        // wrong size and position.
+        // Windows: GetWindowRect returns PHYSICAL pixels; convert to DIP.
+        // macOS: CGWindow bounds are already points (== DIP); identity.
         const hs = event.bounds;
-        const hsDip = screen.screenToDipRect(null, {
-          x: hs.x, y: hs.y, width: hs.width, height: hs.height,
-        });
+        const hsDip = toDipBounds(process.platform, hs, (r) =>
+          screen.screenToDipRect(null, { x: r.x, y: r.y, width: r.width, height: r.height }),
+        );
         const bounds = computeOverlayPanelBounds(hsDip);
         opponentOverlay.setBounds(bounds.opponent);
         playerOverlay.setBounds(bounds.player);
