@@ -30,6 +30,7 @@ import {
   type HeroVitals,
 } from './board-attack';
 import { nextPhase } from './phase-machine';
+import { resolvePhaseSignals, type LogPhaseSignals } from './phase-signals';
 import { PollingLoop } from './polling-loop';
 import { GlobalEffectsRegistry } from '../global-effects/registry';
 import { EFFECT_CATALOG } from '../global-effects/catalog';
@@ -331,6 +332,7 @@ export class DeckTracker {
   private readonly deckPositionExtractCtx:
     | (() => ExtractCtx)
     | null;
+  private readonly logPhaseSignals: () => LogPhaseSignals;
   /**
    * Once-per-match memoised opponent class. Cleared on PRE_MATCH entry
    * and POST_MATCH → IDLE. Avoids UI flicker if the hero entity is
@@ -398,6 +400,12 @@ export class DeckTracker {
     opponentCardSuppressor?: (cardId: string) => boolean;
     /** Optional CardDb-backed metadata lookup for card-specific extra displays. */
     cardMetadataLookup?: ExtraDisplayCardLookup;
+    /**
+     * Optional provider of log-derived phase signals (macOS path).
+     * When unset, all log signals default to false so Windows behavior
+     * (mirror authoritative) is unchanged.
+     */
+    logPhaseSignals?: () => LogPhaseSignals;
   }) {
     this.mirror = args.mirror;
     this.boardAttackContextProvider = args.boardAttackContextProvider ?? null;
@@ -426,6 +434,7 @@ export class DeckTracker {
       ...(args.extractCtx !== undefined ? { extractCtx: args.extractCtx } : {}),
     });
     this.deckPositionExtractCtx = args.extractCtx ?? null;
+    this.logPhaseSignals = args.logPhaseSignals ?? (() => ({ matchActive: false, inPlay: false, gameOver: false }));
     this.currentSnapshot = blankSnapshot();
   }
 
@@ -800,12 +809,15 @@ export class DeckTracker {
       ]);
     }
 
-    const target = nextPhase(previousPhase, {
-      hasMatchInfo: matchInfo !== null,
-      hasDeckState: deckState !== null,
-      isGameOver: isGameOverFlag,
-      isSpectating,
-    });
+    const target = nextPhase(previousPhase, resolvePhaseSignals(
+      {
+        hasMatchInfo: matchInfo !== null,
+        hasDeckState: deckState !== null,
+        isGameOver: isGameOverFlag,
+        isSpectating,
+      },
+      this.logPhaseSignals(),
+    ));
 
     // Lifecycle transitions.
     if (previousPhase === 'IDLE' && target === 'PRE_MATCH') {

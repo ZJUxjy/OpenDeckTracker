@@ -202,6 +202,8 @@ export type {
 export { PollingLoop } from './tracker/polling-loop';
 export { nextPhase } from './tracker/phase-machine';
 export type { PhaseSignals } from './tracker/phase-machine';
+export { resolvePhaseSignals } from './tracker/phase-signals';
+export type { LogPhaseSignals, MirrorPhaseSignals } from './tracker/phase-signals';
 
 // Global-effects domain.
 export type {
