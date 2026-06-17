@@ -8,7 +8,7 @@
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
-    "predev": "pnpm run rebuild:native",
+    "predev": "node scripts/build-mac-window.mjs && pnpm run rebuild:native",
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "start": "electron-vite preview",
