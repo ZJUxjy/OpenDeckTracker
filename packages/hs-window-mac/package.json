@@ -1,0 +1,24 @@
+{
+  "name": "@hdt/hs-window-mac",
+  "version": "0.6.0",
+  "private": true,
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform"
+  },
+  "napi": {
+    "name": "hs-window-mac",
+    "triples": {
+      "defaults": false,
+      "additional": [
+        "aarch64-apple-darwin"
+      ]
+    }
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.6.2"
+  }
+}
