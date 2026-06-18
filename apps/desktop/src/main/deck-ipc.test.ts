@@ -48,6 +48,8 @@ const ALL_CHANNELS = [
   'decks:export-json',
   'decks:save-from-live',
   'decks:set-sort-index',
+  'decks:get-active',
+  'decks:set-active',
 ];
 
 const ALL_CHANNELS_WITH_SYNC = [...ALL_CHANNELS, 'decks:sync-from-live'];
@@ -82,6 +84,8 @@ function makeStubStore(overrides: Partial<DeckStore> = {}): DeckStore {
     listVersions: vi.fn(() => []),
     schemaVersion: vi.fn(() => 1),
     close: vi.fn(),
+    getActiveDeckId: vi.fn(() => null),
+    setActiveDeckId: vi.fn(),
     ...overrides,
   } as DeckStore;
 }
@@ -104,7 +108,7 @@ function makeOptions(overrides: Partial<DeckIpcOptions> = {}): DeckIpcOptions {
 }
 
 describe('deck-ipc', () => {
-  it('registers exactly one handler per surface method (12 total)', () => {
+  it('registers exactly one handler per surface method (14 total)', () => {
     mocks.handlers.clear();
     mocks.ipcMain.handle.mockClear();
     registerDeckIpc(makeOptions());
@@ -124,7 +128,7 @@ describe('deck-ipc', () => {
     registerDeckIpc(makeOptions());
 
     expect(mocks.ipcMain.removeHandler).toHaveBeenCalled();
-    // handlers map should still have all 12 channels (last registration wins)
+    // handlers map should still have all 14 channels (last registration wins)
     for (const ch of ALL_CHANNELS) expect(mocks.handlers.has(ch)).toBe(true);
   });
 
