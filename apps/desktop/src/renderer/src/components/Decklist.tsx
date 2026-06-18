@@ -449,16 +449,20 @@ function DeckDetailPanel({
 
 function DeckRow({
   deck,
+  activeDeckId,
   onEdit,
   onDuplicate,
   onExport,
   onDelete,
+  onSetActive,
 }: {
   deck: DeckSummary;
+  activeDeckId: string | null;
   onEdit: (id: string) => void;
   onDuplicate: (id: string) => void;
   onExport: (id: string) => void;
   onDelete: (id: string) => void;
+  onSetActive: (id: string) => void;
 }): ReactElement {
   const { locale, t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -567,6 +571,18 @@ function DeckRow({
           </div>
         </div>
         <CountBadge count={deck.cardCount} />
+        <button
+          type="button"
+          onClick={() => onSetActive(deck.id)}
+          aria-pressed={activeDeckId === deck.id}
+          className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+            activeDeckId === deck.id
+              ? 'bg-accent text-bg'
+              : 'bg-overlay-elevated hover:bg-border-hi text-text-dim hover:text-text'
+          }`}
+        >
+          {activeDeckId === deck.id ? t('decks.list.row.currentDeck') : t('decks.list.row.setCurrentDeck')}
+        </button>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button
@@ -718,6 +734,16 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
   const [classFilter, setClassFilter] = useState<ClassFilter>('ALL');
   const [formatFilter, setFormatFilter] = useState<FormatFilter>('ALL');
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('ALL');
+  const [activeDeckId, setActiveDeckId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void window.hdt.decks.getActive().then(setActiveDeckId);
+  }, []);
+
+  const handleSetActive = async (id: string): Promise<void> => {
+    await window.hdt.decks.setActive(id);
+    setActiveDeckId(id);
+  };
 
   const filteredDecks = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -915,10 +941,12 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
                   <DeckRow
                     key={d.id}
                     deck={d}
+                    activeDeckId={activeDeckId}
                     onEdit={(id) => props.onEdit?.(id)}
                     onExport={(id) => props.onExport?.(id)}
                     onDuplicate={onDuplicate}
                     onDelete={onDelete}
+                    onSetActive={(id) => { void handleSetActive(id); }}
                   />
                 ))}
               </div>

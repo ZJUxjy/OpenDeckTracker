@@ -182,7 +182,9 @@
         "noCards": "No cards in this deck.",
         "copyCode": "Copy deck code",
         "copied": "Copied",
-        "copyFailed": "Copy failed"
+        "copyFailed": "Copy failed",
+        "currentDeck": "Current deck",
+        "setCurrentDeck": "Set as current deck"
       }
     },
     "editor": {
