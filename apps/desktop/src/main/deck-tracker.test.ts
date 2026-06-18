@@ -48,6 +48,11 @@ vi.mock('@hdt/core', () => ({
   CardPlayedDetector: vi.fn().mockImplementation(() => mocks.cardPlayedDetector),
   zoneFromNumber: (value: number) =>
     ({ 0: 'INVALID', 1: 'PLAY', 2: 'DECK', 3: 'HAND', 4: 'GRAVEYARD', 5: 'REMOVEDFROMGAME', 6: 'SETASIDE', 7: 'SECRET' })[value] ?? 'INVALID',
+  createLocalPlayerResolver: () => ({
+    observe: vi.fn(),
+    reset: vi.fn(),
+    localControllerId: null,
+  }),
 }));
 
 vi.mock('./hearthmirror', () => ({
