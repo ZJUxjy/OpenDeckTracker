@@ -34,6 +34,7 @@ import {
 } from './card-image-cache';
 import { getHearthMirror } from './hearthmirror';
 import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
+import { reduceLogMatchState, initialLogMatchState, type LogMatchState } from './log-match-state';
 import { liveMatchIdentity } from './match-identity';
 import { recordCompletedMatch } from './stats-host';
 
@@ -70,6 +71,7 @@ import { recordCompletedMatch } from './stats-host';
 let tracker: DeckTracker | null = null;
 let lastTrackerTraceSignature: string | null = null;
 let trackerTraceErrorLogged = false;
+let logMatchState: LogMatchState = initialLogMatchState();
 
 /**
  * CardDb reference used by `cardClassLookup` to resolve `HERO_*` cardIds
@@ -469,6 +471,7 @@ export function startDeckTracker(): void {
     cardClassLookup,
     opponentCardSuppressor: isStartOfGameDisappearCard,
     cardMetadataLookup,
+    logPhaseSignals: () => logMatchState,
   });
   // Live detector that turns the upstream PowerEvent stream into
   // `card:played` calls on the tracker's global-effects registry.
@@ -564,6 +567,7 @@ export function startDeckTracker(): void {
     tracker?.stop();
     tracker = null;
     cardPlayedDetector = null;
+    logMatchState = initialLogMatchState();
   });
 }
 
@@ -643,6 +647,7 @@ export function forwardPowerEventToDeckTracker(
     const playerEntityId = numericEntityRef(event.entity);
     if (playerEntityId !== null) tracker?.recordCurrentPlayerChange(playerEntityId);
   }
+  logMatchState = reduceLogMatchState(logMatchState, event, phase);
   pushPowerEvent(event);
   const logUpdates = logUpdatesFromPowerEvent(event);
   if (logUpdates.length > 0) {
@@ -653,11 +658,6 @@ export function forwardPowerEventToDeckTracker(
   }
   cardPlayedDetector?.handle(event);
   reducePowerEvent(boardAttackState, event);
-  // Phase is currently informational — every consumer above wants
-  // both replay and live. Recorders that should NOT receive replay
-  // (match-recording-recorder, power-match-recorder) are gated
-  // upstream in `hearthwatcher-host.ts`.
-  void phase;
 }
 
 function extraDisplayTagUpdatesFromPowerEvent(
@@ -709,7 +709,7 @@ function scriptValueTagUpdates(
  * safe to gate on. FINAL_GAMEOVER is excluded since it marks the
  * post-match cleanup — the gate is cleared by phase→IDLE anyway.
  */
-function isRealMatchStepValue(value: unknown): boolean {
+export function isRealMatchStepValue(value: unknown): boolean {
   if (typeof value !== 'string') return false;
   switch (value.toUpperCase()) {
     case 'BEGIN_FIRST':
