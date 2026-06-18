@@ -75,6 +75,8 @@ export interface DeckStore {
   findByLiveDeckId(liveDeckId: number): DeckDetail | null;
   listVersions(id: string): DeckVersion[];
   schemaVersion(): number;
+  getActiveDeckId(): string | null;
+  setActiveDeckId(id: string | null): void;
   close(): void;
 }
 
@@ -273,6 +275,24 @@ export function createDeckStore(dbPath: string): DeckStore {
     writeDeckCards(id, cards);
     writeVersionRow(id, 1, cards, now);
     return deckFromId(id)!;
+  }
+
+  function getActiveDeckId(): string | null {
+    const row = db.prepare<[string]>(`SELECT value FROM app_meta WHERE key = ?`).get('activeDeckId') as
+      | { value: string }
+      | undefined;
+    return row ? row.value : null;
+  }
+
+  function setActiveDeckId(id: string | null): void {
+    if (id === null) {
+      db.prepare<[string]>(`DELETE FROM app_meta WHERE key = ?`).run('activeDeckId');
+      return;
+    }
+    db.prepare<[string, string]>(
+      `INSERT INTO app_meta (key, value) VALUES (?, ?)
+       ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+    ).run('activeDeckId', id);
   }
 
   return {
@@ -481,6 +501,9 @@ export function createDeckStore(dbPath: string): DeckStore {
       return row?.version ?? 0;
     },
 
+    getActiveDeckId,
+    setActiveDeckId,
+
     close() {
       db.close();
     },
@@ -568,6 +591,8 @@ function initializeSchema(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS schema_version (
       version INTEGER NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   `);
 
   const existing = db.prepare(`SELECT version FROM schema_version LIMIT 1`).get() as
