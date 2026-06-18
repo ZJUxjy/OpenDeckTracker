@@ -154,14 +154,14 @@ if (!gotLock) {
 
     const cardPreview = new CardPreviewWindow({ rendererUrl, preloadPath });
 
-    registerIpc({
+    const deckStore = registerIpc({
       enablePlayerOverlay,
       disablePlayerOverlay,
       enableOpponentOverlay,
       disableOpponentOverlay,
       cardPreview,
     });
-    startDeckTracker();
+    startDeckTracker(deckStore);
     startHearthWatcher();
     // Global edge-signal for "Hearthstone appeared / disappeared".
     // Subscribers (HearthMirror via deck-tracker, HearthWatcher) wire

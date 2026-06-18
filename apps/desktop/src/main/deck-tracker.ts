@@ -39,6 +39,8 @@ import { reduceLogMatchState, initialLogMatchState, type LogMatchState } from '.
 import { isRealMatchStepValue } from './match-step-values';
 import { liveMatchIdentity } from './match-identity';
 import { recordCompletedMatch } from './stats-host';
+import { applyActiveDeck } from './apply-active-deck';
+import type { DeckStore } from './deck-store';
 
 /**
  * Per-app session DeckTracker host.
@@ -482,7 +484,7 @@ function preloadCardTiles(cardIds: string[]): void {
   );
 }
 
-export function startDeckTracker(): void {
+export function startDeckTracker(deckStore: DeckStore): void {
   if (tracker !== null) return;
   const mirror = getHearthMirror();
   tracker = new DeckTracker({
@@ -530,6 +532,16 @@ export function startDeckTracker(): void {
   tracker.on('match-started', (event: DeckTrackerEvent) => {
     preloadedTileCardIds.clear();
     console.log(`[deck-tracker] match-started deck=${event.snapshot?.deck?.id ?? 'null'}`);
+    applyActiveDeck({
+      tracker: {
+        setOriginalDeck: (d) => tracker!.setOriginalDeck(d),
+        selectSavedDeck: (id, v) => tracker!.selectSavedDeck(id, v),
+        getLocalOriginalDeck: () => tracker!.getGame().localPlayer.originalDeck ?? null,
+      },
+      mirrorAbsent: mirrorAbsent(),
+      getActiveDeckId: () => deckStore.getActiveDeckId(),
+      getDeckById: (id) => deckStore.getById(id),
+    });
     broadcast('deck-tracker:event', { type: event.type, snapshot: event.snapshot });
   });
   tracker.on('match-ended', (event: DeckTrackerEvent) => {
