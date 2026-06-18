@@ -21,10 +21,16 @@ const mocks = vi.hoisted(() => {
     reset: vi.fn(),
   };
 
+  const deckStore = {
+    getActiveDeckId: vi.fn(() => null as string | null),
+    getById: vi.fn(() => null),
+  };
+
   return {
     handlers,
     tracker,
     cardPlayedDetector,
+    deckStore,
     DeckTracker: vi.fn(() => tracker),
     getHearthMirror: vi.fn(() => ({ })),
     recordCompletedMatch: vi.fn(),
@@ -42,6 +48,11 @@ vi.mock('@hdt/core', () => ({
   CardPlayedDetector: vi.fn().mockImplementation(() => mocks.cardPlayedDetector),
   zoneFromNumber: (value: number) =>
     ({ 0: 'INVALID', 1: 'PLAY', 2: 'DECK', 3: 'HAND', 4: 'GRAVEYARD', 5: 'REMOVEDFROMGAME', 6: 'SETASIDE', 7: 'SECRET' })[value] ?? 'INVALID',
+  createLocalPlayerResolver: () => ({
+    observe: vi.fn(),
+    reset: vi.fn(),
+    localControllerId: null,
+  }),
 }));
 
 vi.mock('./hearthmirror', () => ({
@@ -95,7 +106,7 @@ describe('deck-tracker main host', () => {
 
   it('records completed matches before broadcasting match-ended', async () => {
     const { startDeckTracker } = await import('./deck-tracker');
-    startDeckTracker();
+    startDeckTracker(mocks.deckStore as never);
 
     const event: DeckTrackerEvent = {
       type: 'match-ended',
@@ -117,7 +128,7 @@ describe('deck-tracker main host', () => {
       startedAt: 1_000,
     });
     const { startDeckTracker } = await import('./deck-tracker');
-    startDeckTracker();
+    startDeckTracker(mocks.deckStore as never);
 
     const event: DeckTrackerEvent = {
       type: 'match-ended',
@@ -151,7 +162,7 @@ describe('deck-tracker main host', () => {
 
   it('forwards Power.log entity updates into the core tracker state', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
-    startDeckTracker();
+    startDeckTracker(mocks.deckStore as never);
 
     forwardPowerEventToDeckTracker(
       {
@@ -172,7 +183,7 @@ describe('deck-tracker main host', () => {
 
   it('backfills card id and controller from TAG_CHANGE entity refs', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
-    startDeckTracker();
+    startDeckTracker(mocks.deckStore as never);
 
     forwardPowerEventToDeckTracker(
       {
@@ -194,7 +205,7 @@ describe('deck-tracker main host', () => {
 
   it('exposes opposing hero effective health through the board attack context', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
-    startDeckTracker();
+    startDeckTracker(mocks.deckStore as never);
 
     forwardPowerEventToDeckTracker(
       {
@@ -240,7 +251,7 @@ describe('deck-tracker main host', () => {
 
   it('exposes hero attack availability through the board attack context', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
-    startDeckTracker();
+    startDeckTracker(mocks.deckStore as never);
 
     forwardPowerEventToDeckTracker(
       {
@@ -293,7 +304,7 @@ describe('deck-tracker main host', () => {
     // tracker's resolved local controller is 2 (the user is player 2).
     // The board-attack context must trust the tracker, not matchInfo.
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
-    startDeckTracker();
+    startDeckTracker(mocks.deckStore as never);
 
     forwardPowerEventToDeckTracker(
       {

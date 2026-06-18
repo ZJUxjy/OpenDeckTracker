@@ -182,7 +182,9 @@
         "noCards": "此卡组中没有卡牌。",
         "copyCode": "复制卡组码",
         "copied": "已复制",
-        "copyFailed": "复制失败"
+        "copyFailed": "复制失败",
+        "currentDeck": "当前牌组",
+        "setCurrentDeck": "设为当前牌组"
       }
     },
     "editor": {

@@ -45,7 +45,7 @@ import {
   registerPlayerProfileIpc,
 } from './player-profile-ipc';
 import { join } from 'node:path';
-import { createDeckStore } from './deck-store';
+import { createDeckStore, type DeckStore } from './deck-store';
 import { registerDeckIpc } from './deck-ipc';
 import { makeCollectibleLookup, makeDeckCodecLookup, makeHeroClassLookup } from './deck-card-lookup';
 import { registerCollectionProgressIpc } from './collection-progress';
@@ -79,7 +79,7 @@ function toHearthstoneLocale(appLocale?: string): 'enUS' | 'zhCN' {
   return appLocale === 'zh-CN' ? 'zhCN' : 'enUS';
 }
 
-export function registerIpc(overlay?: OverlayControllers): void {
+export function registerIpc(overlay?: OverlayControllers): DeckStore {
   ipcMain.handle('app:getVersion', () => app.getVersion());
   ipcMain.handle('appearance:broadcast', (event, payload: unknown) => {
     for (const win of BrowserWindow.getAllWindows()) {
@@ -505,6 +505,7 @@ export function registerIpc(overlay?: OverlayControllers): void {
       console.warn('[deck-sync] initial sync failed', err);
     });
   });
+  return deckStore;
 }
 
 const inMemoryImageCache = new InMemoryImageCache({

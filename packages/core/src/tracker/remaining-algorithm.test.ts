@@ -260,6 +260,67 @@ describe('computeRemaining', () => {
     });
     expect(result.remaining.entries()).toEqual([{ cardId: 'Fireball', count: 2 }]);
   });
+
+  describe('no-deck fallback (originalDeck is empty)', () => {
+    it('returns observed-leaving cards as remaining when originalDeck is empty', () => {
+      // Simulates: user has no imported deck; cards have left the DECK zone
+      // (now in HAND/PLAY/GRAVEYARD). The overlay should show those revealed cards.
+      const emptyDeck = DeckSnapshot.fromDeckCards([]);
+      const result = computeRemaining({
+        originalDeck: emptyDeck,
+        seenEntities: [e(1, 'Fireball', 'HAND'), e(2, 'Wisp', 'PLAY')],
+        deckEntities: [],
+        localControllerId: 1,
+      });
+      // Should surface the two observed cards, not an empty list
+      expect(result.remaining.total()).toBeGreaterThan(0);
+      expect(result.remaining.countOf('Fireball')).toBe(1);
+      expect(result.remaining.countOf('Wisp')).toBe(1);
+    });
+
+    it('no-deck fallback: multiple copies of the same card are each counted', () => {
+      const emptyDeck = DeckSnapshot.fromDeckCards([]);
+      const result = computeRemaining({
+        originalDeck: emptyDeck,
+        seenEntities: [e(1, 'Fireball', 'HAND'), e(2, 'Fireball', 'GRAVEYARD')],
+        deckEntities: [],
+        localControllerId: 1,
+      });
+      expect(result.remaining.countOf('Fireball')).toBe(2);
+    });
+
+    it('no-deck fallback: created entities are still excluded', () => {
+      const emptyDeck = DeckSnapshot.fromDeckCards([]);
+      const created = new Entity({
+        entityId: 1,
+        cardId: 'Discovered',
+        zone: 'HAND',
+        controllerId: 1,
+        info: { created: true },
+      });
+      const result = computeRemaining({
+        originalDeck: emptyDeck,
+        seenEntities: [created, e(2, 'OriginalCard', 'HAND')],
+        deckEntities: [],
+        localControllerId: 1,
+      });
+      // Created card should not appear; only the non-created card
+      expect(result.remaining.countOf('Discovered')).toBe(0);
+      expect(result.remaining.countOf('OriginalCard')).toBe(1);
+    });
+
+    it('no-deck fallback: opposing controller entities are still excluded', () => {
+      const emptyDeck = DeckSnapshot.fromDeckCards([]);
+      const result = computeRemaining({
+        originalDeck: emptyDeck,
+        seenEntities: [e(1, 'OpponentCard', 'HAND', 2), e(2, 'MyCard', 'HAND', 1)],
+        deckEntities: [],
+        localControllerId: 1,
+      });
+      expect(result.remaining.countOf('OpponentCard')).toBe(0);
+      expect(result.remaining.countOf('MyCard')).toBe(1);
+    });
+  });
 });
 
 describe('gatherSeenEntities', () => {

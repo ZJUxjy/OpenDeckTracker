@@ -111,7 +111,7 @@ export function Settings() {
     { value: 'zh-CN', label: t('settings.languageChinese') },
   ];
 
-  const activeCategoryMeta = categories.find((cat) => cat.id === activeCategory) ?? categories[0];
+  const activeCategoryMeta = categories.find((cat) => cat.id === activeCategory) ?? categories[0]!;
 
   return (
     <div className="reference-page reference-settings flex-1 h-full min-h-0 flex flex-col overflow-hidden">

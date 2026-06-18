@@ -92,6 +92,8 @@ function makeStore(initial: DeckDetail[] = []): DeckStore {
     }),
     listVersions: vi.fn(() => []),
     schemaVersion: vi.fn(() => 1),
+    getActiveDeckId: vi.fn(() => null),
+    setActiveDeckId: vi.fn(),
     close: vi.fn(),
   };
 }

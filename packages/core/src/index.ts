@@ -202,6 +202,10 @@ export type {
 export { PollingLoop } from './tracker/polling-loop';
 export { nextPhase } from './tracker/phase-machine';
 export type { PhaseSignals } from './tracker/phase-machine';
+export { resolvePhaseSignals } from './tracker/phase-signals';
+export type { LogPhaseSignals, MirrorPhaseSignals } from './tracker/phase-signals';
+export { createLocalPlayerResolver } from './tracker/local-player-resolver';
+export type { LocalPlayerResolver, ZoneEntityObservation } from './tracker/local-player-resolver';
 
 // Global-effects domain.
 export type {

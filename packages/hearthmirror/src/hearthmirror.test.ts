@@ -67,7 +67,7 @@ describe('HearthMirror', () => {
   let mirror: HearthMirror;
 
   beforeEach(() => {
-    mirror = new HearthMirror();
+    mirror = new HearthMirror({ platform: 'win32' });
     vi.clearAllMocks();
   });
 
@@ -513,5 +513,35 @@ describe('HearthMirror', () => {
 
       expect(() => unsubscribe?.()).not.toThrow();
     });
+  });
+});
+
+describe('HearthMirror macOS window delegation', () => {
+  it('delegates getHearthstoneWindow to the mac provider on darwin', async () => {
+    const win = {
+      x: 1, y: 2, width: 3, height: 4,
+      minimized: false, visible: true, foreground: true,
+    };
+    const mirror = new HearthMirror({
+      platform: 'darwin',
+      macWindow: { getHearthstoneWindow: () => win },
+    });
+    await expect(mirror.getHearthstoneWindow()).resolves.toEqual(win);
+  });
+
+  it('returns null subscription on darwin so the tracker fast-polls', () => {
+    const mirror = new HearthMirror({
+      platform: 'darwin',
+      macWindow: { getHearthstoneWindow: () => null },
+    });
+    expect(mirror.subscribeToHearthstoneWindowEvents(() => {})).toBeNull();
+  });
+
+  it('reports placeWindowAboveHearthstone=false on darwin', () => {
+    const mirror = new HearthMirror({
+      platform: 'darwin',
+      macWindow: { getHearthstoneWindow: () => null },
+    });
+    expect(mirror.placeWindowAboveHearthstone(new Uint8Array())).toBe(false);
   });
 });

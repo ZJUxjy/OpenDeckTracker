@@ -37,6 +37,7 @@ const mocks = vi.hoisted(() => {
       this._currentBounds = { ...rect };
     });
     getBounds = vi.fn(() => ({ ...this._currentBounds }));
+    setVisibleOnAllWorkspaces = vi.fn();
     on = vi.fn((event: string, handler: () => void) => {
       (this._listeners[event] ??= []).push(handler);
       return this;
@@ -77,6 +78,9 @@ function makeManager(extra: Partial<OverlayManagerOptions> = {}) {
   return new OverlayManager({
     rendererUrl: '/fake/renderer/index.html',
     preloadPath: '/fake/preload.js',
+    // Default to win32 so existing tests exercise the non-darwin (no
+    // foreground-gate) path.  Darwin-specific tests pass platform explicitly.
+    platform: 'win32',
     ...extra,
   });
 }
@@ -445,5 +449,40 @@ describe('OverlayManager', () => {
           (mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset,
         ).toEqual({ dx: 10, dy: -5 });
       });
+  });
+});
+
+describe('OverlayManager darwin foreground gate', () => {
+  it('on darwin stays hidden until Hearthstone is frontmost', () => {
+    const mgr = new OverlayManager({
+      rendererUrl: 'r',
+      preloadPath: 'p',
+      platform: 'darwin',
+    });
+    mgr.enable();
+    mgr.setVisibleOnScreen(true);
+    mgr.setInActiveMatch(true);
+    // foreground still false → must be hidden
+    const win = mocks.windows.at(-1)!;
+    expect(win.isVisible()).toBe(false);
+
+    mgr.setTargetForeground(true);
+    expect(win.isVisible()).toBe(true);
+
+    mgr.setTargetForeground(false);
+    expect(win.isVisible()).toBe(false);
+  });
+
+  it('on win32 ignores foreground for visibility', () => {
+    const mgr = new OverlayManager({
+      rendererUrl: 'r',
+      preloadPath: 'p',
+      platform: 'win32',
+    });
+    mgr.enable();
+    mgr.setVisibleOnScreen(true);
+    mgr.setInActiveMatch(true);
+    const win = mocks.windows.at(-1)!;
+    expect(win.isVisible()).toBe(true); // shown without foreground
   });
 });

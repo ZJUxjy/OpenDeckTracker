@@ -30,6 +30,7 @@ import {
   type HeroVitals,
 } from './board-attack';
 import { nextPhase } from './phase-machine';
+import { resolvePhaseSignals, type LogPhaseSignals } from './phase-signals';
 import { PollingLoop } from './polling-loop';
 import { GlobalEffectsRegistry } from '../global-effects/registry';
 import { EFFECT_CATALOG } from '../global-effects/catalog';
@@ -331,6 +332,7 @@ export class DeckTracker {
   private readonly deckPositionExtractCtx:
     | (() => ExtractCtx)
     | null;
+  private readonly logPhaseSignals: () => LogPhaseSignals;
   /**
    * Once-per-match memoised opponent class. Cleared on PRE_MATCH entry
    * and POST_MATCH → IDLE. Avoids UI flicker if the hero entity is
@@ -398,6 +400,12 @@ export class DeckTracker {
     opponentCardSuppressor?: (cardId: string) => boolean;
     /** Optional CardDb-backed metadata lookup for card-specific extra displays. */
     cardMetadataLookup?: ExtraDisplayCardLookup;
+    /**
+     * Optional provider of log-derived phase signals (macOS path).
+     * When unset, all log signals default to false so Windows behavior
+     * (mirror authoritative) is unchanged.
+     */
+    logPhaseSignals?: () => LogPhaseSignals;
   }) {
     this.mirror = args.mirror;
     this.boardAttackContextProvider = args.boardAttackContextProvider ?? null;
@@ -426,6 +434,7 @@ export class DeckTracker {
       ...(args.extractCtx !== undefined ? { extractCtx: args.extractCtx } : {}),
     });
     this.deckPositionExtractCtx = args.extractCtx ?? null;
+    this.logPhaseSignals = args.logPhaseSignals ?? (() => ({ matchActive: false, inPlay: false, gameOver: false }));
     this.currentSnapshot = blankSnapshot();
   }
 
@@ -800,12 +809,15 @@ export class DeckTracker {
       ]);
     }
 
-    const target = nextPhase(previousPhase, {
-      hasMatchInfo: matchInfo !== null,
-      hasDeckState: deckState !== null,
-      isGameOver: isGameOverFlag,
-      isSpectating,
-    });
+    const target = nextPhase(previousPhase, resolvePhaseSignals(
+      {
+        hasMatchInfo: matchInfo !== null,
+        hasDeckState: deckState !== null,
+        isGameOver: isGameOverFlag,
+        isSpectating,
+      },
+      this.logPhaseSignals(),
+    ));
 
     // Lifecycle transitions.
     if (previousPhase === 'IDLE' && target === 'PRE_MATCH') {
@@ -1021,6 +1033,34 @@ export class DeckTracker {
         : localControllerId === 1
           ? 2
           : 1;
+    this.setControllerIds(localControllerId, opposingControllerId, {
+      localName: info.localPlayer?.name,
+      opposingName: info.opposingPlayer?.name,
+    });
+  }
+
+  /**
+   * Mirror-absent identity: set the local player's controllerId from a
+   * log-resolved value (see LocalPlayerResolver). Reuses applyMatchInfo's
+   * controller reconciliation + idempotency (no Player-object churn), without
+   * needing MatchInfo.
+   */
+  applyLocalControllerId(localControllerId: number): void {
+    const opposingControllerId = localControllerId === 1 ? 2 : 1;
+    this.setControllerIds(localControllerId, opposingControllerId);
+  }
+
+  /**
+   * Shared controller-setting code path for `applyMatchInfo` and
+   * `applyLocalControllerId`. Reconciles the friendly/opposing controllerIds
+   * while preserving the existing Player objects when the IDs are unchanged
+   * (recreating them would wipe `originalDeck` + entity bindings).
+   */
+  private setControllerIds(
+    localControllerId: number,
+    opposingControllerId: number,
+    names?: { localName?: string | undefined; opposingName?: string | undefined },
+  ): void {
     // Idempotency: don't recreate Player objects (which would wipe
     // originalDeck + entity bindings) if the IDs already match.
     if (
@@ -1029,9 +1069,8 @@ export class DeckTracker {
     ) {
       // Names can still drift; keep them in sync by writing through
       // the public `name` field (mutable on Player).
-      this.game.localPlayer.name = info.localPlayer?.name ?? this.game.localPlayer.name;
-      this.game.opposingPlayer.name =
-        info.opposingPlayer?.name ?? this.game.opposingPlayer.name;
+      this.game.localPlayer.name = names?.localName ?? this.game.localPlayer.name;
+      this.game.opposingPlayer.name = names?.opposingName ?? this.game.opposingPlayer.name;
       return;
     }
     // Carry the already-identified deck (whether picked via the
@@ -1043,9 +1082,9 @@ export class DeckTracker {
     const previousOriginalDeck = this.game.localPlayer.originalDeck;
     this.game.setPlayers({
       localControllerId,
-      localName: info.localPlayer?.name ?? '',
+      localName: names?.localName ?? '',
       opposingControllerId,
-      opposingName: info.opposingPlayer?.name ?? '',
+      opposingName: names?.opposingName ?? '',
     });
     if (previousOriginalDeck !== null) {
       this.game.localPlayer.originalDeck = previousOriginalDeck;

@@ -60,6 +60,8 @@ Object.defineProperty(window, 'hdt', {
           finishedAt: 0,
         }),
       setSortIndex: async () => Promise.resolve(undefined),
+      getActive: async () => Promise.resolve(null),
+      setActive: async () => Promise.resolve(undefined),
     },
     hearthmirror: {
       isAlive: async () => Promise.resolve(false),

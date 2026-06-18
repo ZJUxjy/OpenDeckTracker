@@ -35,7 +35,7 @@ export default defineConfig({
         // does runtime path resolution to the platform-specific .node
         // file that lives under `packages/hearthmirror/native/`. If
         // bundled, the relative require breaks.
-        external: ['@hdt/hearthmirror-native'],
+        external: ['@hdt/hearthmirror-native', '@hdt/hs-window-mac'],
       },
     },
   },
@@ -56,7 +56,7 @@ export default defineConfig({
         // Electron sandbox: true requires CommonJS preload. Force .js + cjs.
         output: { format: 'cjs', entryFileNames: '[name].js' },
         // Same reason as main — native addon must not be bundled.
-        external: ['@hdt/hearthmirror-native'],
+        external: ['@hdt/hearthmirror-native', '@hdt/hs-window-mac'],
       },
     },
   },

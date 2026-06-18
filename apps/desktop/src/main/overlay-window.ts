@@ -6,6 +6,7 @@ export interface OverlayManagerOptions {
   routeHash?: string;
   onFocusChange?: () => void;
   placeWindowAboveHearthstone?: (nativeWindowHandle: Uint8Array) => boolean;
+  platform?: NodeJS.Platform;
 }
 
 export interface BoundsRect {
@@ -88,11 +89,13 @@ export class OverlayManager {
   private isApplyingTrackerBounds = false;
   private readonly opts: OverlayManagerOptions;
   private readonly routeHash: string;
+  private readonly platform: NodeJS.Platform;
   private readonly zOrderReassertHandles = new Set<ReturnType<typeof setTimeout>>();
 
   constructor(opts: OverlayManagerOptions) {
     this.opts = opts;
     this.routeHash = opts.routeHash ?? '/overlay';
+    this.platform = opts.platform ?? process.platform;
   }
 
   enable(): void {
@@ -226,6 +229,10 @@ export class OverlayManager {
 
     this.win.setAlwaysOnTop(false);
 
+    if (this.platform === 'darwin') {
+      this.win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    }
+
     this.win.on('moved', () => {
       if (this.isApplyingTrackerBounds) return;
       if (this.lastTrackerBounds === null) return;
@@ -265,7 +272,8 @@ export class OverlayManager {
   }
 
   private shouldBeShown(): boolean {
-    return this.userEnabled && this.visibleOnScreen && this.inActiveMatch;
+    const base = this.userEnabled && this.visibleOnScreen && this.inActiveMatch;
+    return this.platform === 'darwin' ? base && this.targetForeground : base;
   }
 
   private syncVisibility(): void {

@@ -66,6 +66,19 @@ export function computeRemaining(args: {
   }
 
   const seenSnapshot = DeckSnapshot.fromCardIds(seenCardIds);
+
+  // No-deck fallback: when the player has no imported deck, show the cards
+  // observed leaving the DECK zone (the revealed/known cards) rather than
+  // an empty list.  This mirrors HSTracker's `currentDeck == nil` behaviour.
+  if (originalDeck.isEmpty()) {
+    return {
+      remaining: seenSnapshot,
+      baseRemaining: seenSnapshot,
+      extraRemaining: [],
+      extras: [],
+    };
+  }
+
   const baseRemaining = originalDeck.subtract(seenSnapshot);
   const knownDeckSnapshot = DeckSnapshot.fromCardIds(deckCardIds);
   const shuffledIntoDeck = baseRemaining.extras(knownDeckSnapshot);
