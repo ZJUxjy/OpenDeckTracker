@@ -1,6 +1,6 @@
 import type { EventPhase, PowerEvent } from '@hdt/hearthwatcher';
 import type { LogPhaseSignals } from '@hdt/core';
-import { isRealMatchStepValue } from './deck-tracker';
+import { isRealMatchStepValue } from './match-step-values';
 
 export type LogMatchState = LogPhaseSignals;
 
