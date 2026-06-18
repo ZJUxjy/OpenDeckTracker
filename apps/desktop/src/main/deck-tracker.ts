@@ -3,6 +3,7 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import {
   CardPlayedDetector,
+  createLocalPlayerResolver,
   DeckTracker,
   type ComputeBoardAttackOptions,
   type DeckTrackerEvent,
@@ -73,6 +74,25 @@ let tracker: DeckTracker | null = null;
 let lastTrackerTraceSignature: string | null = null;
 let trackerTraceErrorLogged = false;
 let logMatchState: LogMatchState = initialLogMatchState();
+
+/**
+ * Mirror-absent identity resolver. On macOS HearthMirror's memory mirror is
+ * unavailable, so `getMatchInfo` is null and the tracker's local
+ * `controllerId` stays at its default. This resolver derives the local
+ * player's controllerId from Power.log HAND entities with a known cardId
+ * (the client only logs the local player's own card ids). Reset on each
+ * `create-game` and on teardown.
+ */
+const localPlayerResolver = createLocalPlayerResolver();
+
+/**
+ * True when HearthMirror's memory mirror is unavailable (macOS). In that
+ * case we fall back to the Power.log-derived local controllerId rather than
+ * the mirror's MatchInfo.
+ */
+function mirrorAbsent(): boolean {
+  return process.platform === 'darwin';
+}
 
 /**
  * CardDb reference used by `cardClassLookup` to resolve `HERO_*` cardIds
@@ -569,6 +589,7 @@ export function startDeckTracker(): void {
     tracker = null;
     cardPlayedDetector = null;
     logMatchState = initialLogMatchState();
+    localPlayerResolver.reset();
   });
 }
 
@@ -607,6 +628,7 @@ export function forwardPowerEventToDeckTracker(
     resetBoardAttackState();
     cardPlayedDetector?.reset();
     tracker?.resetGlobalEffects();
+    localPlayerResolver.reset();
   }
   // Overlay-visibility gate flip is driven by STEP advancing to the
   // mulligan phase, not by CREATE_GAME. Hearthstone fires CREATE_GAME
@@ -653,6 +675,22 @@ export function forwardPowerEventToDeckTracker(
   const logUpdates = logUpdatesFromPowerEvent(event);
   if (logUpdates.length > 0) {
     tracker?.applyLogDerivedEntityUpdates(logUpdates);
+    // Mirror-absent identity: feed HAND-with-cardId observations to the
+    // resolver so it can derive the local controllerId from the log. The
+    // resolver only cares about entries that carry both a controllerId and
+    // a cardId (the local player's own cards); skip incomplete updates so
+    // the required-field shape of ZoneEntityObservation is satisfied.
+    localPlayerResolver.observe(
+      logUpdates.flatMap((u) =>
+        u.zone !== undefined && u.controllerId !== undefined && u.cardId !== undefined
+          ? [{ zone: u.zone, controllerId: u.controllerId, cardId: u.cardId }]
+          : [],
+      ),
+    );
+    const localId = localPlayerResolver.localControllerId;
+    if (localId !== null && mirrorAbsent()) {
+      tracker?.applyLocalControllerId(localId);
+    }
   }
   for (const tagUpdate of extraDisplayTagUpdatesFromPowerEvent(event)) {
     tracker?.recordExtraDisplayEntityTag(tagUpdate);

@@ -1033,6 +1033,34 @@ export class DeckTracker {
         : localControllerId === 1
           ? 2
           : 1;
+    this.setControllerIds(localControllerId, opposingControllerId, {
+      localName: info.localPlayer?.name,
+      opposingName: info.opposingPlayer?.name,
+    });
+  }
+
+  /**
+   * Mirror-absent identity: set the local player's controllerId from a
+   * log-resolved value (see LocalPlayerResolver). Reuses applyMatchInfo's
+   * controller reconciliation + idempotency (no Player-object churn), without
+   * needing MatchInfo.
+   */
+  applyLocalControllerId(localControllerId: number): void {
+    const opposingControllerId = localControllerId === 1 ? 2 : 1;
+    this.setControllerIds(localControllerId, opposingControllerId);
+  }
+
+  /**
+   * Shared controller-setting code path for `applyMatchInfo` and
+   * `applyLocalControllerId`. Reconciles the friendly/opposing controllerIds
+   * while preserving the existing Player objects when the IDs are unchanged
+   * (recreating them would wipe `originalDeck` + entity bindings).
+   */
+  private setControllerIds(
+    localControllerId: number,
+    opposingControllerId: number,
+    names?: { localName?: string | undefined; opposingName?: string | undefined },
+  ): void {
     // Idempotency: don't recreate Player objects (which would wipe
     // originalDeck + entity bindings) if the IDs already match.
     if (
@@ -1041,9 +1069,8 @@ export class DeckTracker {
     ) {
       // Names can still drift; keep them in sync by writing through
       // the public `name` field (mutable on Player).
-      this.game.localPlayer.name = info.localPlayer?.name ?? this.game.localPlayer.name;
-      this.game.opposingPlayer.name =
-        info.opposingPlayer?.name ?? this.game.opposingPlayer.name;
+      this.game.localPlayer.name = names?.localName ?? this.game.localPlayer.name;
+      this.game.opposingPlayer.name = names?.opposingName ?? this.game.opposingPlayer.name;
       return;
     }
     // Carry the already-identified deck (whether picked via the
@@ -1055,9 +1082,9 @@ export class DeckTracker {
     const previousOriginalDeck = this.game.localPlayer.originalDeck;
     this.game.setPlayers({
       localControllerId,
-      localName: info.localPlayer?.name ?? '',
+      localName: names?.localName ?? '',
       opposingControllerId,
-      opposingName: info.opposingPlayer?.name ?? '',
+      opposingName: names?.opposingName ?? '',
     });
     if (previousOriginalDeck !== null) {
       this.game.localPlayer.originalDeck = previousOriginalDeck;
