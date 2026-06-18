@@ -240,6 +240,8 @@ const api = {
       ipcRenderer.invoke('decks:sync-from-live'),
     setSortIndex: (id: string, sortIndex: number): Promise<void> =>
       ipcRenderer.invoke('decks:set-sort-index', id, sortIndex),
+    getActive: (): Promise<string | null> => ipcRenderer.invoke('decks:get-active'),
+    setActive: (id: string | null): Promise<void> => ipcRenderer.invoke('decks:set-active', id),
   },
   hearthmirror: {
     isAlive: (): Promise<boolean> => ipcRenderer.invoke('hearthmirror:isAlive'),

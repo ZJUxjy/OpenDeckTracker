@@ -49,6 +49,8 @@ const CHANNELS = {
   saveFromLive: 'decks:save-from-live',
   syncFromLive: 'decks:sync-from-live',
   setSortIndex: 'decks:set-sort-index',
+  getActive: 'decks:get-active',
+  setActive: 'decks:set-active',
 } as const;
 
 /**
@@ -166,6 +168,9 @@ export function registerDeckIpc(options: DeckIpcOptions): void {
   ipcMain.handle(CHANNELS.setSortIndex, (_e, id: string, sortIndex: number): void => {
     store.setSortIndex(id, sortIndex);
   });
+
+  ipcMain.handle(CHANNELS.getActive, (): string | null => store.getActiveDeckId());
+  ipcMain.handle(CHANNELS.setActive, (_e, id: string | null): void => store.setActiveDeckId(id));
 
   if (syncFromLive !== undefined) {
     ipcMain.handle(CHANNELS.syncFromLive, (): Promise<LiveDeckSyncResult> => syncFromLive());
