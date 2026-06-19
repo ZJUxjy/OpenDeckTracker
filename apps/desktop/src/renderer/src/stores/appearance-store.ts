@@ -5,7 +5,7 @@ export const APPEARANCE_STORAGE_KEY = 'hdt.appearance';
 export type Density = 'comfortable' | 'compact';
 
 /** Visual skin only; layout stays the current top-navigation structure. */
-export type UiStyle = 'reference' | 'tavern' | 'macos' | 'wechat' | 'fallout76';
+export type UiStyle = 'reference' | 'macos';
 
 /** macOS Sequoia / iOS system accent colors. */
 export type Accent =
@@ -53,11 +53,11 @@ const DEFAULT_GAME_OVERLAY = true;
 const DEFAULT_GAME_OVERLAY_OPPONENT = true;
 
 const VALID_DENSITIES = new Set<string>(['comfortable', 'compact']);
-// The renderer pages were redesigned as a single reference skin. Keep the
-// legacy union type for payload compatibility, but migrate all stale values
-// back to reference so old localStorage/broadcasts cannot activate a skin
-// whose variables no longer cover the current markup.
-const VALID_UI_STYLES = new Set<string>(['reference']);
+// Two visual skins are supported: the default "reference" (Arcane) shell and
+// "macos" (Liquid Glass). Stale values from older builds (tavern / wechat /
+// fallout76) coerce back to the default so old localStorage/broadcasts cannot
+// activate a skin whose variables no longer cover the current markup.
+const VALID_UI_STYLES = new Set<string>(['reference', 'macos']);
 const VALID_ACCENTS = new Set<string>(['blue','red','orange','yellow','green','mint','purple','pink']);
 const VALID_THEMES = new Set<string>(['system', 'light', 'dark']);
 
@@ -116,7 +116,7 @@ function coerceAccent(raw: unknown): Accent {
 }
 
 function coerceUiStyle(raw: unknown): UiStyle {
-  return typeof raw === 'string' && VALID_UI_STYLES.has(raw) ? 'reference' : DEFAULT_UI_STYLE;
+  return typeof raw === 'string' && VALID_UI_STYLES.has(raw) ? (raw as UiStyle) : DEFAULT_UI_STYLE;
 }
 
 function readStored(): StoredShape {

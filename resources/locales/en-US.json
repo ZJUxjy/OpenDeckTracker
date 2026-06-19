@@ -294,10 +294,7 @@
         "title": "UI style",
         "description": "Switch the visual skin while keeping the current layout.",
         "reference": "Arcane",
-        "fallout76": "Fallout 76",
-        "tavern": "Tavern",
-        "macos": "macOS",
-        "wechat": "WeChat Dark"
+        "macos": "macOS"
       },
       "accent": {
         "title": "Accent color",

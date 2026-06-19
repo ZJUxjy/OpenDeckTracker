@@ -14,7 +14,6 @@ import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
 import { useTranslation } from './i18n';
 import { useAppearanceStore } from './stores/appearance-store';
-import { ReferenceStatusSidebar } from './components/ReferenceStatusSidebar';
 import heroArt from './assets/reference-ui/hero.png';
 import logoHsCut from './assets/reference-ui/logo-hs-cut.png';
 
@@ -101,10 +100,6 @@ export default function App() {
   const isActive = (id: string) =>
     location.pathname === `/${id}` || (id === 'tracker' && location.pathname === '/');
   const statusIconClass = isAlive ? (battleTag ? 'text-green' : 'text-amber') : 'text-text-mute';
-  const showStatusSidebar =
-    location.pathname === '/' ||
-    location.pathname === '/tracker' ||
-    location.pathname === '/stats';
 
   return (
     <div className="tavern-app-shell flex h-screen text-text font-sans overflow-hidden">
@@ -212,7 +207,6 @@ export default function App() {
             style={{ '--reference-hero': `url(${heroArt})` } as CSSProperties}
             aria-hidden="true"
           />
-          {showStatusSidebar ? <ReferenceStatusSidebar /> : null}
           <section className="reference-route-surface min-w-0 min-h-0 flex flex-1 flex-col overflow-hidden">
             <Outlet />
           </section>

@@ -95,30 +95,37 @@ describe('appearance store', () => {
     (window as any).hdt = undefined;
   });
 
-  it('migrates the legacy WeChat UI style to reference through localStorage', async () => {
+  it('round-trips the macOS UI style through localStorage', async () => {
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
-    useAppearanceStore.getState().setUiStyle('wechat');
+    useAppearanceStore.getState().setUiStyle('macos');
 
     const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
-    expect(stored.uiStyle).toBe('reference');
+    expect(stored.uiStyle).toBe('macos');
 
     vi.resetModules();
     const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
-    expect(fresh.getState().uiStyle).toBe('reference');
+    expect(fresh.getState().uiStyle).toBe('macos');
   });
 
-  it('migrates the legacy Fallout 76 UI style to reference through localStorage', async () => {
+  it('migrates the legacy WeChat UI style to reference when read from localStorage', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', uiStyle: 'wechat', accent: 'blue', theme: 'system' }),
+    );
+
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
+  });
 
-    useAppearanceStore.getState().setUiStyle('fallout76');
+  it('migrates the legacy Fallout 76 UI style to reference when read from localStorage', async () => {
+    localStorage.setItem(
+      APPEARANCE_STORAGE_KEY,
+      JSON.stringify({ density: 'comfortable', uiStyle: 'fallout76', accent: 'blue', theme: 'system' }),
+    );
 
-    const stored = JSON.parse(localStorage.getItem(APPEARANCE_STORAGE_KEY)!);
-    expect(stored.uiStyle).toBe('reference');
-
-    vi.resetModules();
-    const { useAppearanceStore: fresh } = await import('../src/stores/appearance-store');
-    expect(fresh.getState().uiStyle).toBe('reference');
+    const { useAppearanceStore } = await import('../src/stores/appearance-store');
+    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
   });
 
   it('round-trips the reference UI style through localStorage', async () => {
@@ -222,7 +229,7 @@ describe('appearance store', () => {
     expect(useAppearanceStore.getState().density).toBe('compact');
   });
 
-  it('migrates stored legacy UI styles to reference', async () => {
+  it('preserves a stored macOS UI style and other prefs', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
       JSON.stringify({ density: 'compact', uiStyle: 'macos', accent: 'purple' }),
@@ -230,7 +237,7 @@ describe('appearance store', () => {
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
 
-    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
     expect(useAppearanceStore.getState().density).toBe('compact');
     expect(useAppearanceStore.getState().accent).toBe('purple');
   });

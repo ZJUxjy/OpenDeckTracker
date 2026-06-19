@@ -13,7 +13,6 @@ const root = resolve(__dirname, '..');
 const IN_SCOPE_FILES = [
   'src/App.tsx',
   'src/routes.tsx',
-  'src/components/Sidebar.tsx',
   'src/components/Dashboard.tsx',
   'src/components/LiveDeckPanel.tsx',
   'src/components/OpponentCardsPanel.tsx',

@@ -81,8 +81,11 @@ describe('Dashboard rank display', () => {
       await vi.advanceTimersByTimeAsync(100);
     });
 
+    // The removed status sidebar used to show a "Match in progress" banner; it
+    // must not appear anywhere now. An idle, deckless tracker shows the Live
+    // panel's "No Active Deck" empty state instead.
     expect(screen.queryByRole('heading', { name: 'Match in progress' })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Waiting for a match' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'No Active Deck' })).toBeInTheDocument();
   });
 
   it('shows "Star N" when starLevel > 0 and not legend', async () => {

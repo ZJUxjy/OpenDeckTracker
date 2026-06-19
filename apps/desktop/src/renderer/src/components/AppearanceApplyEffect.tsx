@@ -43,14 +43,6 @@ function applyAccent(accent: import('../stores/appearance-store').Accent, isDark
   );
 }
 
-function applyFalloutAccent() {
-  if (typeof document === 'undefined') return;
-  const root = document.documentElement;
-  root.style.setProperty('--accent', '#6DFF55');
-  root.style.setProperty('--accent-dim', 'rgba(109, 255, 85, 0.18)');
-  root.style.setProperty('--accent-translucent', 'rgba(109, 255, 85, 0.16)');
-}
-
 function applyReferenceAccent() {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
@@ -75,7 +67,7 @@ function applyUiStyle(uiStyle: UiStyle) {
  *     for OS prefers-color-scheme changes when in 'system' mode
  *   • accent — writes --accent / --accent-dim to <html> in the
  *     mode-correct variant
-   *   • UI style — writes data-ui-style="reference|tavern|macos|wechat|fallout76"
+ *   • UI style — writes data-ui-style="reference|macos"
  *   • density — writes data-density="..."
  *   • initial overlay enable — re-fires the IPC once on app boot if
  *     the user had overlays enabled previously
@@ -118,14 +110,14 @@ export function AppearanceApplyEffect() {
   }, [uiStyle]);
 
   // Theme + accent — accent depends on the resolved dark state, so
-  // they're in the same effect. The WeChat and Fallout 76 skins are
-  // intentionally dark.
+  // they're in the same effect. The reference (Arcane) skin is
+  // intentionally dark + fixed green; macOS follows the theme
+  // preference and the user-picked accent.
   useEffect(() => {
-    const isFixedDarkSkin = uiStyle === 'reference' || uiStyle === 'wechat' || uiStyle === 'fallout76';
+    const isFixedDarkSkin = uiStyle === 'reference';
     const isDark = isFixedDarkSkin ? true : resolveIsDark(theme);
     applyTheme(isDark);
     if (uiStyle === 'reference') applyReferenceAccent();
-    else if (uiStyle === 'fallout76') applyFalloutAccent();
     else applyAccent(accent, isDark);
 
     if (isFixedDarkSkin) return;

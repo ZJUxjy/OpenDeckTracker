@@ -5,7 +5,7 @@ import { useI18nStore } from '../i18n/i18n-store';
 import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme, type UiStyle } from '../stores/appearance-store';
 
 const ALL_ACCENTS: Accent[] = ['blue', 'red', 'orange', 'yellow', 'green', 'mint', 'purple', 'pink'];
-const UI_STYLE_OPTIONS: UiStyle[] = ['reference'];
+const UI_STYLE_OPTIONS: UiStyle[] = ['reference', 'macos'];
 const ACCENT_LABELS: Record<Accent, string> = {
   blue: 'Blue', red: 'Red', orange: 'Orange', yellow: 'Yellow',
   green: 'Green', mint: 'Mint', purple: 'Purple', pink: 'Pink',
@@ -194,41 +194,48 @@ export function Settings() {
                   }
                 />
 
-                <SettingsRow
-                  title={t('settings.appearance.theme.title')}
-                  description={t('settings.appearance.theme.description')}
-                  control={
-                    <SettingsSegment
-                      label={t('settings.appearance.theme.title')}
-                      options={(['system', 'light', 'dark'] as Theme[]).map((opt) => ({
-                        value: opt,
-                        label: t(`settings.appearance.theme.${opt}`),
-                      }))}
-                      value={theme}
-                      onChange={setTheme}
-                    />
-                  }
-                />
-
-                <SettingsRow
-                  title={t('settings.appearance.accent.title')}
-                  description={t('settings.appearance.accent.description')}
-                  control={
-                    <div className="reference-accent-swatches shrink-0">
-                      {ALL_ACCENTS.map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => setAccent(opt)}
-                          className={`reference-accent-swatch ${accent === opt ? 'is-active' : ''}`}
-                          style={{ backgroundColor: ACCENT_PALETTE[opt].accentLight }}
-                          aria-label={ACCENT_LABELS[opt]}
-                          title={ACCENT_LABELS[opt]}
+                {/* Theme + accent only apply to the macOS skin. The reference
+                    (Arcane) skin is fixed dark + green, so these controls are
+                    hidden for it to avoid exposing no-op options. */}
+                {uiStyle === 'macos' && (
+                  <>
+                    <SettingsRow
+                      title={t('settings.appearance.theme.title')}
+                      description={t('settings.appearance.theme.description')}
+                      control={
+                        <SettingsSegment
+                          label={t('settings.appearance.theme.title')}
+                          options={(['system', 'light', 'dark'] as Theme[]).map((opt) => ({
+                            value: opt,
+                            label: t(`settings.appearance.theme.${opt}`),
+                          }))}
+                          value={theme}
+                          onChange={setTheme}
                         />
-                      ))}
-                    </div>
-                  }
-                />
+                      }
+                    />
+
+                    <SettingsRow
+                      title={t('settings.appearance.accent.title')}
+                      description={t('settings.appearance.accent.description')}
+                      control={
+                        <div className="reference-accent-swatches shrink-0">
+                          {ALL_ACCENTS.map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setAccent(opt)}
+                              className={`reference-accent-swatch ${accent === opt ? 'is-active' : ''}`}
+                              style={{ backgroundColor: ACCENT_PALETTE[opt].accentLight }}
+                              aria-label={ACCENT_LABELS[opt]}
+                              title={ACCENT_LABELS[opt]}
+                            />
+                          ))}
+                        </div>
+                      }
+                    />
+                  </>
+                )}
               </div>
             )}
 

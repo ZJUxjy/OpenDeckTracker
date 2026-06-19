@@ -18,7 +18,7 @@ describe('AppearanceApplyEffect', () => {
   it('sets data-density, data-ui-style, and accent custom properties from store state on mount', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'compact', uiStyle: 'macos', accent: 'purple' }),
+      JSON.stringify({ density: 'compact', uiStyle: 'macos', accent: 'purple', theme: 'light' }),
     );
 
     const { AppearanceApplyEffect } = await import('../src/components/AppearanceApplyEffect');
@@ -28,17 +28,16 @@ describe('AppearanceApplyEffect', () => {
     });
 
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
-    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(
-      'rgba(47, 224, 122, 0.18)',
-    );
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
+    // macOS skin honours the user-picked accent (purple, light variant).
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#AF52DE');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
-  it('keeps reference custom properties stable when accent changes', async () => {
+  it('updates accent custom properties when accent changes under the macOS skin', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', uiStyle: 'macos', accent: 'blue' }),
+      JSON.stringify({ density: 'comfortable', uiStyle: 'macos', accent: 'blue', theme: 'light' }),
     );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
@@ -48,14 +47,13 @@ describe('AppearanceApplyEffect', () => {
       wrapper: ({ children }) => <>{children}</>,
     });
 
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#007AFF');
+
     act(() => {
       useAppearanceStore.getState().setAccent('purple');
     });
 
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
-    expect(document.documentElement.style.getPropertyValue('--accent-dim')).toBe(
-      'rgba(47, 224, 122, 0.18)',
-    );
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#AF52DE');
   });
 
   it('updates data-density when density changes', async () => {
@@ -87,16 +85,10 @@ describe('AppearanceApplyEffect', () => {
       useAppearanceStore.getState().setUiStyle('macos');
     });
 
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
 
     act(() => {
-      useAppearanceStore.getState().setUiStyle('wechat');
-    });
-
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
-
-    act(() => {
-      useAppearanceStore.getState().setUiStyle('fallout76');
+      useAppearanceStore.getState().setUiStyle('reference');
     });
 
     expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
@@ -134,11 +126,11 @@ describe('AppearanceApplyEffect', () => {
       });
     });
 
-    expect(useAppearanceStore.getState().uiStyle).toBe('reference');
+    expect(useAppearanceStore.getState().uiStyle).toBe('macos');
     expect(document.documentElement.getAttribute('data-density')).toBe('compact');
-    expect(document.documentElement.getAttribute('data-ui-style')).toBe('reference');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
+    expect(document.documentElement.getAttribute('data-ui-style')).toBe('macos');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#AF52DE');
 
     unmount();
     expect(off).toHaveBeenCalledTimes(1);
@@ -210,7 +202,7 @@ describe('AppearanceApplyEffect', () => {
   it('inline properties persist after unmount (page-lifetime behavior)', async () => {
     localStorage.setItem(
       APPEARANCE_STORAGE_KEY,
-      JSON.stringify({ density: 'comfortable', uiStyle: 'macos', accent: 'blue' }),
+      JSON.stringify({ density: 'comfortable', uiStyle: 'macos', accent: 'blue', theme: 'light' }),
     );
 
     const { useAppearanceStore } = await import('../src/stores/appearance-store');
@@ -226,8 +218,8 @@ describe('AppearanceApplyEffect', () => {
 
     unmount();
 
-    // Properties should persist after unmount
-    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#2FE07A');
+    // Properties should persist after unmount (macOS skin, mint light accent).
+    expect(document.documentElement.style.getPropertyValue('--accent')).toBe('#00C7BE');
   });
 
   it('fires overlay:set-enabled on mount when gameOverlay is saved as true', async () => {

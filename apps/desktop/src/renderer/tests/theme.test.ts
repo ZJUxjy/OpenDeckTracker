@@ -142,23 +142,26 @@ describe('macOS Liquid Glass theme tokens', () => {
     expect(themeCss).toMatch(/\.tahoe-active-pill\s*\{/);
   });
 
-  it('declares the WeChat UI skin without replacing the top-navigation layout', () => {
-    expect(themeCss).toMatch(/:root\[data-ui-style='wechat'\]\s*\{/);
-    expect(themeCss).toMatch(/--wechat-green:\s*#12B76A;/i);
-    expect(themeCss).toMatch(/:root\[data-ui-style='wechat'\]\s+\.tavern-topbar\s*\{/);
-    expect(themeCss).toMatch(/:root\[data-ui-style='wechat'\]\s+\.tavern-main-surface\s*\{/);
+  it('declares the macOS skin over the shared top-navigation layout', () => {
+    expect(themeCss).toMatch(/:root\[data-ui-style='macos'\]\s+\.tavern-app-shell\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='macos'\]\s+\.tavern-topbar\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='macos'\]\s+\.tavern-app-frame\s*\{/);
   });
 
-  it('declares the Fallout 76 Pip-Boy UI skin and terminal chrome', () => {
-    expect(themeCss).toMatch(/:root\[data-ui-style='fallout76'\]\s*\{/);
-    expect(themeCss).toMatch(/--pip-green:\s*#6dff55;/i);
-    expect(themeCss).toMatch(/--pip-amber:\s*#f3b336;/i);
-    expect(themeCss).toMatch(/:root\[data-ui-style='fallout76'\]\s+\.tavern-topbar\s*\{/);
-    expect(themeCss).toMatch(/:root\[data-ui-style='fallout76'\]\s+\.tavern-bottom-status\s*\{/);
-    expect(themeCss).toMatch(/repeating-linear-gradient\(\s*180deg,[\s\S]*rgba\(141,\s*255,\s*122,\s*0\.045\)/);
+  it('declares the reference (Arcane) skin over the shared top-navigation layout', () => {
+    expect(themeCss).toMatch(/:root\[data-ui-style='reference'\]\s+\.tavern-app-shell\s*\{/);
+    expect(themeCss).toMatch(/:root\[data-ui-style='reference'\]\s+\.tavern-topbar\s*\{/);
   });
 
-  it('uses the Fallout 76 control positions as the shared desktop layout', () => {
+  it('no longer ships the removed wechat / fallout76 / tavern skins', () => {
+    expect(themeCss).not.toMatch(/:root\[data-ui-style='wechat'\]/);
+    expect(themeCss).not.toMatch(/:root\[data-ui-style='fallout76'\]/);
+    expect(themeCss).not.toMatch(/:root\[data-ui-style='tavern'\]/);
+    expect(themeCss).not.toMatch(/--wechat-/);
+    expect(themeCss).not.toMatch(/--pip-/);
+  });
+
+  it('uses shared desktop control positions across every skin', () => {
     expect(themeCss).toMatch(/\.tavern-topbar\s*\{[\s\S]*height:\s*86px;[\s\S]*grid-template-columns:\s*minmax\(180px,\s*260px\)\s+minmax\(0,\s*1fr\)\s+minmax\(248px,\s*max-content\);/);
     expect(themeCss).toMatch(/\.tavern-brand-plaque\s*\{[\s\S]*height:\s*52px;/);
     expect(themeCss).toMatch(/\.tavern-main-tabs\s*>\s*\.tavern-nav-tab\s*\{[\s\S]*flex:\s*1\s+1\s+112px;[\s\S]*max-width:\s*132px;/);
@@ -170,11 +173,5 @@ describe('macOS Liquid Glass theme tokens', () => {
     expect(themeCss).toMatch(/\.tavern-brand-title,\s*[\s\S]*\.tavern-brand-subtitle\s*\{[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/);
     expect(themeCss).toMatch(/\.tavern-nav-label\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*text-overflow:\s*ellipsis;[\s\S]*white-space:\s*nowrap;/);
     expect(themeCss).toMatch(/\.tavern-bottom-status\s*>\s*span\s*\{[\s\S]*overflow:\s*hidden;[\s\S]*text-overflow:\s*ellipsis;/);
-  });
-
-  it('keeps the tavern desktop shell from drawing a full-window gold frame', () => {
-    expect(themeCss).toMatch(
-      /:root\[data-ui-style='tavern'\]\s+\.tavern-app-frame\s*\{[\s\S]*border:\s*0;/,
-    );
   });
 });
