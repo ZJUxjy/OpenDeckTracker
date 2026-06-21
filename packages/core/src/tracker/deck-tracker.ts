@@ -373,6 +373,12 @@ export class DeckTracker {
    * once per Power.log line.
    */
   private currentTurnController: number | null = null;
+  /**
+   * Optional fallback provider for the local controllerId, used when
+   * HearthMirror's MatchInfo reports an invalid player id (0 or missing).
+   * The host typically wires this to the Power.log local-player resolver.
+   */
+  private readonly fallbackLocalControllerIdProvider: (() => number | null) | null = null;
 
   constructor(args: {
     mirror: HearthMirror;
@@ -406,12 +412,20 @@ export class DeckTracker {
      * (mirror authoritative) is unchanged.
      */
     logPhaseSignals?: () => LogPhaseSignals;
+    /**
+     * Optional fallback for the local player's controllerId when HearthMirror's
+     * MatchInfo returns an invalid id (0 or missing). Used on Windows when the
+     * mirror field drifts, so the tracker can still seed the correct local
+     * identity from the Power.log.
+     */
+    fallbackLocalControllerIdProvider?: () => number | null;
   }) {
     this.mirror = args.mirror;
     this.boardAttackContextProvider = args.boardAttackContextProvider ?? null;
     this.cardClassLookup = args.cardClassLookup ?? null;
     this.opponentCardSuppressor = args.opponentCardSuppressor ?? null;
     this.cardMetadataLookup = args.cardMetadataLookup ?? null;
+    this.fallbackLocalControllerIdProvider = args.fallbackLocalControllerIdProvider ?? null;
     // In-game memory-field identifier ONLY. The dialog fallback flow
     // is intentionally NOT wired in here as a "blocking identifier"
     // (which would deadlock against the dialog event being shown):
@@ -1024,8 +1038,22 @@ export class DeckTracker {
     // identities at their post-`reset` defaults and lets a later
     // `applyMatchInfo` call (we now also fire at IN_MATCH) lock them
     // in once MatchInfo is reliable.
-    const localControllerId = validControllerId(info.localPlayer?.id);
-    if (localControllerId === undefined) return;
+    let localControllerId = validControllerId(info.localPlayer?.id);
+    const fallbackId =
+      localControllerId === undefined
+        ? validControllerId(this.fallbackLocalControllerIdProvider?.() ?? undefined)
+        : undefined;
+    if (fallbackId !== undefined) {
+      // HearthMirror returned an invalid local player id (0 or missing), but
+      // the host has a Power.log-derived fallback. Use it so the user going
+      // second doesn't get their cards filed under the opponent.
+      localControllerId = fallbackId;
+    }
+    if (localControllerId === undefined) {
+      // Mirror not ready yet and no log fallback — keep defaults and retry
+      // on the next tick (IN_MATCH re-fires this method).
+      return;
+    }
     const reflectedOpponentId = validControllerId(info.opposingPlayer?.id);
     const opposingControllerId =
       reflectedOpponentId !== undefined && reflectedOpponentId !== localControllerId
@@ -1033,6 +1061,10 @@ export class DeckTracker {
         : localControllerId === 1
           ? 2
           : 1;
+    // eslint-disable-next-line no-console
+    console.log(
+      `[deck-tracker] applyMatchInfo raw local=${info.localPlayer?.id} opposing=${info.opposingPlayer?.id} fallback=${fallbackId ?? 'none'} resolved local=${localControllerId} opposing=${opposingControllerId}`,
+    );
     this.setControllerIds(localControllerId, opposingControllerId, {
       localName: info.localPlayer?.name,
       opposingName: info.opposingPlayer?.name,

@@ -199,6 +199,13 @@ export class Game {
       if (update.zone !== undefined) existing.zone = update.zone;
       if (update.controllerId !== undefined) existing.controllerId = update.controllerId;
       if (update.info !== undefined) existing.info = { ...existing.info, ...update.info };
+      // Capture the first observed zone for origin classification. This lets
+      // us distinguish a card that started in HAND (e.g. the starting hand
+      // before a mulligan) from a generated card that first appears in DECK
+      // or SETASIDE and is later shuffled into the library.
+      if (existing.info.originalZone === undefined && existing.zone !== 'INVALID') {
+        existing.info.originalZone = existing.zone;
+      }
       classifyLogDerivedEntity(existing);
       return;
     }
@@ -211,6 +218,10 @@ export class Game {
     };
     if (update.info !== undefined) entityArgs.info = update.info;
     const entity = new Entity(entityArgs);
+    // New entities start with their first observed zone.
+    if (entity.info.originalZone === undefined && entity.zone !== 'INVALID') {
+      entity.info.originalZone = entity.zone;
+    }
     classifyLogDerivedEntity(entity);
     this.entities.set(update.entityId, entity);
   }
@@ -224,6 +235,18 @@ export class Game {
 
 function classifyLogDerivedEntity(entity: Entity): void {
   if (entity.controllerId === 0) return;
+
+  // A card first observed in HAND is an original-deck card (starting hand or
+  // a normal draw). A later mulligan that puts it back into DECK must not be
+  // misclassified as a generated shuffle-in.
+  if (
+    entity.info.originalZone === 'HAND' &&
+    entity.info.originalController === undefined &&
+    entity.info.created !== true
+  ) {
+    entity.info.originalController = entity.controllerId;
+    return;
+  }
 
   if (
     entity.info.originalController === undefined &&

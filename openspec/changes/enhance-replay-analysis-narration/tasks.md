@@ -1,0 +1,55 @@
+## 1. Core Analysis Projection
+
+- [x] 1.1 Add failing unit tests in `packages/core/src/recordings/game-progress-analysis.test.ts` covering local play, opponent public play, ignored unsupported events, and contiguous `sequence`; include assertions like `expect(events[0]).toMatchObject({ kind: 'card-played', actor: 'local', cardId: 'MEND_300', sourceEventIndex: 3 })`; run `pnpm --filter @hdt/core test -- src/recordings/game-progress-analysis.test.ts`; expected output: test file runs and fails because `game-progress-analysis` does not exist.
+- [x] 1.2 Implement `packages/core/src/recordings/game-progress-analysis.ts` with `GameProgressAnalysisEvent`, `GameProgressAnalysisActor`, and `deriveGameProgressAnalysisEvents(args)` using `RecordingEventLike`, previous/current entity maps, `localControllerId`, and `sourceEventIndex`; run `pnpm --filter @hdt/core test -- src/recordings/game-progress-analysis.test.ts`; expected output: all tests in that file pass.
+- [x] 1.3 Export the new analysis types/functions from `packages/core/src/index.ts`; run `pnpm --filter @hdt/core typecheck`; expected output: `tsc` exits 0.
+- [x] 1.4 Commit core analysis projection with `git add packages/core/src/recordings/game-progress-analysis.ts packages/core/src/recordings/game-progress-analysis.test.ts packages/core/src/index.ts && git commit -m "feat(core): add game progress analysis projection"`; expected output: commit succeeds.
+
+## 2. Core Narration Frames
+
+- [x] 2.1 Add failing tests in `packages/core/src/recordings/game-progress-narration.test.ts` for zh-CN local play text, opponent play text, card-name fallback, hidden-card omission, and deterministic output; include assertions like `expect(frame.text).toContain('驯服宠物')` and `expect(frame.facts).toMatchObject({ cardId: 'MEND_300' })`; run `pnpm --filter @hdt/core test -- src/recordings/game-progress-narration.test.ts`; expected output: test file fails because narrator module does not exist.
+- [x] 2.2 Implement `packages/core/src/recordings/game-progress-narration.ts` with `GameProgressNarrationFrame`, `CardNameResolver`, and `narrateGameProgressEvents(events, { resolveCardName })`; run `pnpm --filter @hdt/core test -- src/recordings/game-progress-narration.test.ts`; expected output: all narration tests pass.
+- [x] 2.3 Ensure narrator returns stable `sequence`, `sourceEventIndex`, `eventKind`, `text`, and `facts`; run `pnpm --filter @hdt/core test -- src/recordings/game-progress-analysis.test.ts src/recordings/game-progress-narration.test.ts`; expected output: both test files pass.
+- [x] 2.4 Export narration types/functions from `packages/core/src/index.ts`; run `pnpm --filter @hdt/core typecheck`; expected output: `tsc` exits 0.
+- [x] 2.5 Commit core narration with `git add packages/core/src/recordings/game-progress-narration.ts packages/core/src/recordings/game-progress-narration.test.ts packages/core/src/index.ts && git commit -m "feat(core): add zh-CN game progress narration"`; expected output: commit succeeds.
+
+## 3. Recording Model and Store Compatibility
+
+- [x] 3.1 Add failing tests in `packages/core/src/recordings/match-recording.test.ts` asserting `createEmptyMatchRecording()` initializes `analysisEvents: []` and `narrationFrames: []`, and `buildMatchRecordingSummary()` returns `analysisEventCount`/`narrationFrameCount`; run `pnpm --filter @hdt/core test -- src/recordings/match-recording.test.ts`; expected output: tests fail before type/model updates.
+- [x] 3.2 Update `packages/core/src/recordings/match-recording.ts` to add `analysisEvents`, `narrationFrames`, `analysisEventCount`, and `narrationFrameCount` types and defaults; run `pnpm --filter @hdt/core test -- src/recordings/match-recording.test.ts`; expected output: tests pass.
+- [x] 3.3 Add failing legacy-load tests in `apps/desktop/src/main/match-recording-store.test.ts` with a recording JSON missing analysis/narration fields and assertions `detail.analysisEvents` equals `[]`, `detail.narrationFrames` equals `[]`, and summary counts are `0`; run `pnpm --filter @hdt/desktop test -- src/main/match-recording-store.test.ts`; expected output: test fails before normalization.
+- [x] 3.4 Update `apps/desktop/src/main/match-recording-store.ts` to normalize missing analysis/narration arrays and invalid frame source indexes while preserving valid frames; run `pnpm --filter @hdt/desktop test -- src/main/match-recording-store.test.ts`; expected output: store tests pass.
+- [x] 3.5 Commit recording model/store compatibility with `git add packages/core/src/recordings/match-recording.ts packages/core/src/recordings/match-recording.test.ts apps/desktop/src/main/match-recording-store.ts apps/desktop/src/main/match-recording-store.test.ts && git commit -m "feat(recordings): persist analysis narration fields"`; expected output: commit succeeds.
+
+## 4. Main Recorder Integration
+
+- [x] 4.1 Add failing tests in `apps/desktop/src/main/match-recording-recorder.test.ts` asserting a local `BLOCK_START PLAY` event appends one analysis event and one narration frame with the same `sourceEventIndex`; run `pnpm --filter @hdt/desktop test -- src/main/match-recording-recorder.test.ts`; expected output: tests fail before recorder integration.
+- [x] 4.2 Update `apps/desktop/src/main/match-recording-recorder.ts` to call core analysis/narration functions after `deriveTimelineEvents`, using a zh-CN card-name resolver injected through recorder options; run `pnpm --filter @hdt/desktop test -- src/main/match-recording-recorder.test.ts`; expected output: recorder tests pass.
+- [x] 4.3 Add a failing derivation-failure test in `apps/desktop/src/main/match-recording-recorder.test.ts` where narrator throws and raw events/timeline still persist; run `pnpm --filter @hdt/desktop test -- src/main/match-recording-recorder.test.ts`; expected output: new test fails before error isolation.
+- [x] 4.4 Add per-event error isolation in `apps/desktop/src/main/match-recording-recorder.ts` so analysis/narration failures do not prevent raw event storage; run `pnpm --filter @hdt/desktop test -- src/main/match-recording-recorder.test.ts`; expected output: all recorder tests pass.
+- [x] 4.5 Commit recorder integration with `git add apps/desktop/src/main/match-recording-recorder.ts apps/desktop/src/main/match-recording-recorder.test.ts && git commit -m "feat(desktop): derive narration during match recording"`; expected output: commit succeeds.
+
+## 5. Live Narration Feed IPC
+
+- [x] 5.1 Add failing tests in `apps/desktop/src/main/game-progress-narration-host.test.ts` for `appendFrame`, bounded recent buffer, subscription callback order, unsubscribe behavior, and buffer clearing on new game; run `pnpm --filter @hdt/desktop test -- src/main/game-progress-narration-host.test.ts`; expected output: test file fails because host module does not exist.
+- [x] 5.2 Implement `apps/desktop/src/main/game-progress-narration-host.ts` with a bounded in-memory buffer and `subscribe`, `appendFrame`, `getRecentFrames`, and `clear` methods; run `pnpm --filter @hdt/desktop test -- src/main/game-progress-narration-host.test.ts`; expected output: host tests pass.
+- [x] 5.3 Wire the host into `apps/desktop/src/main/hearthwatcher-host.ts` and `apps/desktop/src/main/match-recording-recorder.ts` so new frames are broadcast live and the buffer clears on `create-game`; run `pnpm --filter @hdt/desktop test -- src/main/hearthwatcher-host.test.ts src/main/match-recording-recorder.test.ts`; expected output: both test files pass.
+- [x] 5.4 Add preload tests in `apps/desktop/src/preload/index.test.ts` asserting `window.hdt.gameProgressNarration.getRecent()` invokes `game-progress-narration:get-recent` and `subscribe()` listens to `game-progress-narration:frame`; run `pnpm --filter @hdt/desktop test -- src/preload/index.test.ts`; expected output: tests fail before preload API exists.
+- [x] 5.5 Update `apps/desktop/src/preload/index.ts`, `apps/desktop/src/main/ipc.ts`, and the renderer global typing to expose read-only live narration APIs; run `pnpm --filter @hdt/desktop test -- src/preload/index.test.ts src/main/hearthwatcher-host.test.ts`; expected output: tests pass.
+- [x] 5.6 Commit live narration feed with `git add apps/desktop/src/main/game-progress-narration-host.ts apps/desktop/src/main/game-progress-narration-host.test.ts apps/desktop/src/main/hearthwatcher-host.ts apps/desktop/src/main/ipc.ts apps/desktop/src/preload/index.ts apps/desktop/src/preload/index.test.ts && git commit -m "feat(desktop): expose live game narration feed"`; expected output: commit succeeds.
+
+## 6. Recording Viewer Surface
+
+- [x] 6.1 Add failing tests in `apps/desktop/src/renderer/tests/MatchRecordingViewer.test.tsx` asserting narration frames render in order and empty recordings show the narration empty state; include assertions like `expect(screen.getByTestId('recording-narration').textContent).toContain('我方使用了驯服宠物')`; run `pnpm --filter @hdt/desktop test -- src/renderer/tests/MatchRecordingViewer.test.tsx`; expected output: tests fail before UI update.
+- [x] 6.2 Update `apps/desktop/src/renderer/src/components/MatchRecordingViewer.tsx` to render a compact narration section using existing theme tokens and no hidden/fabricated text; run `pnpm --filter @hdt/desktop test -- src/renderer/tests/MatchRecordingViewer.test.tsx`; expected output: viewer tests pass.
+- [x] 6.3 Add i18n keys for narration section labels and empty state in `apps/desktop/src/renderer/src/i18n/*.ts` or the existing locale dictionary files used by the Stats viewer; run `pnpm --filter @hdt/desktop test -- src/renderer/tests/MatchRecordingViewer.test.tsx`; expected output: no missing-label assertions fail.
+- [x] 6.4 Commit viewer surface with `git add apps/desktop/src/renderer/src/components/MatchRecordingViewer.tsx apps/desktop/src/renderer/tests/MatchRecordingViewer.test.tsx apps/desktop/src/renderer/src/i18n && git commit -m "feat(ui): show recording narration frames"`; expected output: commit succeeds.
+
+## 7. End-to-End Verification
+
+- [x] 7.1 Run `pnpm --filter @hdt/core test -- src/recordings`; expected output: all core recording analysis/narration tests pass.
+- [x] 7.2 Run `pnpm --filter @hdt/core typecheck`; expected output: `tsc` exits 0.
+- [x] 7.3 Run `pnpm --filter @hdt/desktop test -- src/main/match-recording-recorder.test.ts src/main/match-recording-store.test.ts src/main/game-progress-narration-host.test.ts src/preload/index.test.ts src/renderer/tests/MatchRecordingViewer.test.tsx`; expected output: all listed desktop tests pass.
+- [x] 7.4 Run `pnpm --filter @hdt/desktop typecheck`; expected output: `tsc -p tsconfig.json --noEmit` exits 0.
+- [ ] 7.5 Manually start a Hearthstone match with `pnpm --filter @hdt/desktop dev`; expected output: live logs show narration frames for public local/opponent card plays, `recordings:get` returns the same frames after completion, and hidden opponent hand/deck cards are not named.
+- [x] 7.6 Commit final verification fixes with `git add . && git commit -m "test(recordings): verify game narration pipeline"` if any verification-only changes were needed; expected output: commit succeeds or no-op if the working tree is already clean.

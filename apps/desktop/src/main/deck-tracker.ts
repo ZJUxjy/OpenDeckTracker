@@ -113,6 +113,12 @@ function maybeWriteTrackerTrace(snapshot: DeckTrackerSnapshot): void {
 
   const payload = {
     phase: snapshot.phase,
+    matchInfo: snapshot.matchInfo === null ? null : {
+      localPlayerId: snapshot.matchInfo.localPlayer?.id ?? null,
+      opposingPlayerId: snapshot.matchInfo.opposingPlayer?.id ?? null,
+      localPlayerName: snapshot.matchInfo.localPlayer?.name ?? null,
+      opposingPlayerName: snapshot.matchInfo.opposingPlayer?.name ?? null,
+    },
     deck: snapshot.deck === null ? null : {
       id: snapshot.deck.id,
       name: snapshot.deck.name,
@@ -495,6 +501,7 @@ export function startDeckTracker(deckStore: DeckStore): void {
     opponentCardSuppressor: isStartOfGameDisappearCard,
     cardMetadataLookup,
     logPhaseSignals: () => logMatchState,
+    fallbackLocalControllerIdProvider: () => localPlayerResolver.localControllerId,
   });
   // Live detector that turns the upstream PowerEvent stream into
   // `card:played` calls on the tracker's global-effects registry.
