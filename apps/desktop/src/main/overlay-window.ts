@@ -80,13 +80,6 @@ export class OverlayManager {
    * Lives only in memory — not persisted across app restarts.
    */
   private userOffset: UserOffset = { dx: 0, dy: 0 };
-  /**
-   * Set true around an internal `BrowserWindow.setBounds(...)` call
-   * and cleared in the next microtask. Suppresses the `moved` event
-   * that fires as a side-effect of our own bounds application, so we
-   * only treat true user drags as offset updates.
-   */
-  private isApplyingTrackerBounds = false;
   private readonly opts: OverlayManagerOptions;
   private readonly routeHash: string;
   private readonly platform: NodeJS.Platform;
@@ -181,11 +174,7 @@ export class OverlayManager {
           ? ` (tracker ${trackerRect.x},${trackerRect.y} + offset ${this.userOffset.dx},${this.userOffset.dy})`
           : ''),
     );
-    this.isApplyingTrackerBounds = true;
     this.win.setBounds(clamped);
-    queueMicrotask(() => {
-      this.isApplyingTrackerBounds = false;
-    });
     this.lastAppliedBounds = { ...clamped };
     this.syncZOrder();
   }
@@ -234,10 +223,15 @@ export class OverlayManager {
     }
 
     this.win.on('moved', () => {
-      if (this.isApplyingTrackerBounds) return;
-      if (this.lastTrackerBounds === null) return;
       if (!this.win || this.win.isDestroyed()) return;
       const cur = this.win.getBounds();
+      // Our own setBounds echoes back as a `moved` event, but it lands on a
+      // later event-loop turn than the apply call — so a timing-based flag
+      // (cleared via microtask) cannot reliably suppress it. Instead,
+      // recognise the echo deterministically: the OS reports exactly the
+      // rect we just applied. Only divergent bounds are treated as a drag.
+      if (this.lastAppliedBounds && boundsEqual(this.lastAppliedBounds, cur)) return;
+      if (this.lastTrackerBounds === null) return;
       this.userOffset = {
         dx: cur.x - this.lastTrackerBounds.x,
         dy: cur.y - this.lastTrackerBounds.y,

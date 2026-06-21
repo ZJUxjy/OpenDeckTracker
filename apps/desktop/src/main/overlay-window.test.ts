@@ -403,15 +403,36 @@ describe('OverlayManager', () => {
     expect(applied.x + applied.width).toBeLessThanOrEqual(1920);
   });
 
-  it('programmatic setBounds does not update userOffset (flag suppresses)', () => {
+  it('programmatic setBounds does not update userOffset (echo recognised by bounds equality)', () => {
     const mgr = makeManager();
     mgr.enable();
     const win = lastWindow();
 
     // No user offset yet. Tracker emits — `moved` event fires from the
-    // BrowserWindow.setBounds mock side-effect (we simulate by emitting
-    // while the flag is still set, before the microtask clears it).
+    // BrowserWindow.setBounds mock side-effect. The handler recognises our
+    // own echo because the window bounds equal lastAppliedBounds.
     mgr.setBounds({ x: 200, y: 50, width: 320, height: 800 });
+    win._currentBounds = { x: 200, y: 50, width: 320, height: 800 };
+    win._emit('moved');
+
+    expect((mgr as unknown as { userOffset: { dx: number; dy: number } }).userOffset).toEqual({
+      dx: 0,
+      dy: 0,
+    });
+  });
+
+  it('setBounds echo on a later macrotask does not update userOffset', async () => {
+    const mgr = makeManager();
+    mgr.enable();
+    const win = lastWindow();
+
+    // Tracker applies bounds, then the OS emits `moved` on a later event-
+    // loop turn (a real macrotask, not a microtask). The previous microtask-
+    // based flag would already have cleared by this point and misclassified
+    // the echo as a user drag; the bounds-equality check suppresses it
+    // regardless of timing.
+    mgr.setBounds({ x: 200, y: 50, width: 320, height: 800 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
     win._currentBounds = { x: 200, y: 50, width: 320, height: 800 };
     win._emit('moved');
 
