@@ -62,6 +62,26 @@ describe('LogFileWatcher', () => {
     watcher.stop();
   });
 
+  it('reassembles a multibyte UTF-8 char split across reads', async () => {
+    const path = join(dir, 'Power.log');
+    await writeFile(path, '');
+    const lines: string[] = [];
+    const watcher = new LogFileWatcher({ path, pollIntervalMs: 10 });
+    watcher.onLine((line) => lines.push(line));
+
+    await watcher.start();
+    // '中' is the 3-byte sequence E4 B8 AD. Write the first two bytes only,
+    // then complete the codepoint plus its newline on the next poll.
+    await appendFile(path, Buffer.from([0xe4, 0xb8]));
+    await watcher.poll();
+    expect(lines).toEqual([]);
+    await appendFile(path, Buffer.concat([Buffer.from([0xad]), Buffer.from('\n')]));
+    await watcher.poll();
+
+    expect(lines).toEqual(['中']);
+    watcher.stop();
+  });
+
   it('resets after truncation', async () => {
     const path = join(dir, 'Power.log');
     await writeFile(path, 'existing\n');

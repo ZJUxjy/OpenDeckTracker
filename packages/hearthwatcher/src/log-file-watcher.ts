@@ -32,7 +32,10 @@ export class LogFileWatcher {
   private readonly diagnosticHandlers = new Set<DiagnosticHandler>();
   private timer: NodeJS.Timeout | null = null;
   private offset = 0;
-  private partial = '';
+  // Held as raw bytes (not a decoded string) so a multi-byte UTF-8 sequence
+  // split across a read boundary (the 256 KB tick cap or a short OS read) is
+  // reassembled on the next chunk instead of being turned into U+FFFD.
+  private partial = Buffer.alloc(0);
   private started = false;
   private polling = false;
 
@@ -100,7 +103,7 @@ export class LogFileWatcher {
       const info = await stat(this.path);
       if (info.size < this.offset) {
         this.offset = 0;
-        this.partial = '';
+        this.partial = Buffer.alloc(0);
         this.emitDiagnostic({
           kind: 'rotation-or-truncation',
           message: `Log file was truncated or rotated: ${this.path}`,
@@ -142,11 +145,24 @@ export class LogFileWatcher {
     if (result.bytesRead <= 0) return;
     this.offset += result.bytesRead;
 
-    const text = this.partial + buffer.subarray(0, result.bytesRead).toString('utf8');
+    // Concatenate the leftover bytes from the previous chunk with the new
+    // bytes, then split at the last line terminator. Everything up to it is
+    // complete (no codepoint can straddle it — \n/\r are single-byte in
+    // UTF-8 and never appear as continuation bytes), so we decode only the
+    // complete span. The trailing bytes stay raw for the next chunk.
+    const combined = Buffer.concat([this.partial, buffer.subarray(0, result.bytesRead)]);
+    const lastNewline = combined.lastIndexOf(0x0a);
+    if (lastNewline === -1) {
+      this.partial = combined;
+      return;
+    }
+    const text = combined.subarray(0, lastNewline).toString('utf8');
+    this.partial = combined.subarray(lastNewline + 1);
+
     const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     const parts = normalized.split('\n');
-    this.partial = parts.pop() ?? '';
-
+    // `parts` now contains only complete lines (the trailing fragment lives
+    // in `this.partial` as raw bytes), so there is no partial tail to pop.
     const lines = parts.filter((line) => line.length > 0);
     if (lines.length > this.maxBufferedLines) {
       const dropped = lines.length - this.maxBufferedLines;
