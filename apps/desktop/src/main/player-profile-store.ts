@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { openWithIntegrityGuard } from './db/open-with-recovery';
 import type { AccountId, BattleTag } from '@hdt/hearthmirror';
 
 export interface PlayerProfileSnapshot {
@@ -33,7 +34,7 @@ interface PlayerProfileRow {
 
 export function createPlayerProfileStore(dbPath: string): PlayerProfileStore {
   mkdirSync(dirname(dbPath), { recursive: true });
-  const db = new Database(dbPath);
+  const db = openWithIntegrityGuard(dbPath);
   initializeSchema(db);
 
   const upsertStmt = db.prepare(`

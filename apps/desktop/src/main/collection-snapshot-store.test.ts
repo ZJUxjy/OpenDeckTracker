@@ -1,4 +1,5 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -254,9 +255,17 @@ describe('collection-snapshot-store', () => {
     }
   });
 
-  it('returns null gracefully when the underlying db is corrupt', async () => {
+  it('renames a corrupt db and starts fresh', async () => {
     const dbPath = join(dir, 'corrupt.sqlite');
     await writeFile(dbPath, 'not a real sqlite db');
-    expect(() => createCollectionSnapshotStore(dbPath)).toThrow();
+    const store = createCollectionSnapshotStore(dbPath);
+    try {
+      expect(store.get()).toBeNull();
+      const files = readdirSync(dir);
+      expect(files).toContain('corrupt.sqlite');
+      expect(files.some((f) => f.startsWith('corrupt.corrupt-') && f.endsWith('.db'))).toBe(true);
+    } finally {
+      store.close();
+    }
   });
 });

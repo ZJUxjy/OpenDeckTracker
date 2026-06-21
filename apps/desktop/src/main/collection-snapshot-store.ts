@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { openWithIntegrityGuard } from './db/open-with-recovery';
 import type { CollectionCard } from '@hdt/hearthmirror';
 
 export interface CollectionSnapshot {
@@ -28,19 +29,8 @@ interface CardRow {
 
 export function createCollectionSnapshotStore(dbPath: string): CollectionSnapshotStore {
   mkdirSync(dirname(dbPath), { recursive: true });
-  let db: Database.Database;
-  const opened = new Database(dbPath);
-  try {
-    initializeSchema(opened);
-    db = opened;
-  } catch (err) {
-    try {
-      opened.close();
-    } catch {
-      // already broken; release the handle so callers can retry
-    }
-    throw err;
-  }
+  const db = openWithIntegrityGuard(dbPath);
+  initializeSchema(db);
 
   const selectMeta = db.prepare('SELECT key, value FROM collection_meta WHERE key = ?');
   const selectMetaPair = db.prepare(

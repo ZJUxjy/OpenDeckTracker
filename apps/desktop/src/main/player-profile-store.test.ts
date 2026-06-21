@@ -1,4 +1,5 @@
 import { mkdtemp, rm } from 'node:fs/promises';
+import { readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -67,5 +68,19 @@ describe('player-profile-store', () => {
     const snapshot = store.get();
     expect(snapshot!.accountId).toBeNull();
     store.close();
+  });
+
+  it('integrity guard renames a corrupt player-profile.sqlite and starts fresh', () => {
+    const dbPath = join(dir, 'profile.sqlite');
+    writeFileSync(dbPath, Buffer.from('this is not a sqlite file'));
+    const store = createPlayerProfileStore(dbPath);
+    try {
+      expect(store.get()).toBeNull();
+      const files = readdirSync(dir);
+      expect(files).toContain('profile.sqlite');
+      expect(files.some((f) => f.startsWith('profile.corrupt-') && f.endsWith('.db'))).toBe(true);
+    } finally {
+      store.close();
+    }
   });
 });

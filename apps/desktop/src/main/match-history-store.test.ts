@@ -1,4 +1,5 @@
 import { mkdtemp, rm } from 'node:fs/promises';
+import { readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -318,5 +319,19 @@ describe('match-history-store', () => {
     const fresh = all.find((r) => r.fingerprint === 'post-migration');
     expect(fresh?.playerClass).toBe('MAGE');
     store.close();
+  });
+
+  it('integrity guard renames a corrupt stats.sqlite and starts fresh', () => {
+    const dbPath = join(dir, 'stats.sqlite');
+    writeFileSync(dbPath, Buffer.from('this is not a sqlite file'));
+    const store = createMatchHistoryStore(dbPath);
+    try {
+      expect(store.listRecent({ filter: 'all-time', limit: 10 })).toEqual([]);
+      const files = readdirSync(dir);
+      expect(files).toContain('stats.sqlite');
+      expect(files.some((f) => f.startsWith('stats.corrupt-') && f.endsWith('.db'))).toBe(true);
+    } finally {
+      store.close();
+    }
   });
 });

@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { openWithIntegrityGuard } from './db/open-with-recovery';
 import {
   classifyMatchMode,
   filterMatchesByTime,
@@ -47,7 +48,7 @@ interface MatchHistoryRow {
 
 export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
   mkdirSync(dirname(dbPath), { recursive: true });
-  const db = new Database(dbPath);
+  const db = openWithIntegrityGuard(dbPath);
   initializeSchema(db);
 
   const insertStmt = db.prepare(`

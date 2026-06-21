@@ -1,7 +1,8 @@
 import Database from 'better-sqlite3';
-import { mkdirSync, renameSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { openWithIntegrityGuard } from './db/open-with-recovery';
 
 import {
   type Deck,
@@ -508,42 +509,6 @@ export function createDeckStore(dbPath: string): DeckStore {
       db.close();
     },
   };
-}
-
-function openWithIntegrityGuard(dbPath: string): Database.Database {
-  let db: Database.Database | null = null;
-  try {
-    db = new Database(dbPath);
-    const row = db.pragma('integrity_check', { simple: true }) as string;
-    if (row !== 'ok') {
-      db.close();
-      db = null;
-      moveCorruptAside(dbPath);
-      db = new Database(dbPath);
-    }
-  } catch {
-    if (db) {
-      try {
-        db.close();
-      } catch {
-        /* ignore */
-      }
-      db = null;
-    }
-    moveCorruptAside(dbPath);
-    db = new Database(dbPath);
-  }
-  db.pragma('journal_mode = WAL');
-  return db;
-}
-
-function moveCorruptAside(dbPath: string): void {
-  try {
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
-    renameSync(dbPath, `${dbPath.replace(/\.db$/, '')}.corrupt-${ts}.db`);
-  } catch {
-    // already gone or unreadable; allow fresh open
-  }
 }
 
 function initializeSchema(db: Database.Database): void {
