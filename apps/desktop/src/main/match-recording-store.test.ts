@@ -200,4 +200,19 @@ describe('match-recording-store', () => {
     expect(store.listCompleted()).toEqual([]);
     expect(store.loadRecording('bad')).toBeNull();
   });
+
+  it('rejects recordingId with path traversal characters', () => {
+    const store = createMatchRecordingStore(dir);
+    const malicious = ['../../etc/passwd', '..\\foo', 'a/b', 'a\\b', 'a:b', 'a b', 'a.b', '..'];
+
+    for (const id of malicious) {
+      expect(() => store.loadRecording(id)).toThrow();
+      // The write path is only reachable with server-generated ids today,
+      // but guarding it is defence-in-depth.
+      expect(() => store.appendRawEvent(id, { type: 'x' })).toThrow();
+    }
+
+    // Nothing outside the recordings root was touched.
+    expect(existsSync(join(dir, '..', '..', 'etc'))).toBe(false);
+  });
 });

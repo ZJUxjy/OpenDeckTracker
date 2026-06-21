@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import {
   buildMatchRecordingSummary,
   type GameProgressAnalysisEvent,
@@ -9,6 +9,29 @@ import {
   type MatchRecordingSummary,
   type RawEventRef,
 } from '@hdt/core';
+
+// Both real id shapes are confined to [A-Za-z0-9_-]: the recorder-generated
+// `${isoStamp}_${hex}` and the `match-v2-${ts}-${seq}` fingerprint. This
+// rejects any path metacharacter (`..`, `/`, `\`, `:`, …) before it reaches
+// join(); a follow-up path.relative() containment check is defence-in-depth.
+const RECORDING_ID_RE = /^[A-Za-z0-9_-]+$/;
+
+function assertValidRecordingId(recordingId: string): void {
+  if (!RECORDING_ID_RE.test(recordingId)) {
+    throw new Error(`invalid recordingId: ${recordingId}`);
+  }
+}
+
+function resolveRecordingDir(rootDir: string, recordingId: string): string {
+  assertValidRecordingId(recordingId);
+  const rootPath = resolve(rootDir);
+  const resolvedDir = resolve(rootPath, recordingId);
+  const rel = relative(rootPath, resolvedDir);
+  if (rel.startsWith('..') || isAbsolute(rel)) {
+    throw new Error('invalid recording path outside recordings root');
+  }
+  return resolvedDir;
+}
 
 export interface MatchRecordingStore {
   appendRawEvent(recordingId: string, event: unknown): void;
@@ -59,7 +82,7 @@ export function createMatchRecordingStore(rootDir: string): MatchRecordingStore 
 }
 
 function ensureRecordingDir(rootDir: string, recordingId: string): string {
-  const dir = join(rootDir, recordingId);
+  const dir = resolveRecordingDir(rootDir, recordingId);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -72,7 +95,7 @@ function readRecordingDirs(rootDir: string): string[] {
 }
 
 function readRecordingFile(rootDir: string, recordingId: string): MatchRecording | null {
-  const path = join(rootDir, recordingId, 'recording.json');
+  const path = join(resolveRecordingDir(rootDir, recordingId), 'recording.json');
   if (!existsSync(path)) return null;
   try {
     return normalizeRecording(JSON.parse(readFileSync(path, 'utf8')) as MatchRecording);
@@ -129,7 +152,7 @@ function resolveRecordingId(rootDir: string, idOrFingerprint: string): string | 
 }
 
 function readRawEvents(rootDir: string, recordingId: string): unknown[] {
-  const path = join(rootDir, recordingId, 'events.jsonl');
+  const path = join(resolveRecordingDir(rootDir, recordingId), 'events.jsonl');
   if (!existsSync(path)) return [];
   const lines = readFileSync(path, 'utf8').split(/\r?\n/).filter((line) => line.length > 0);
   const events: unknown[] = [];
