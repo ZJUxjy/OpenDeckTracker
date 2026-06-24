@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DeckTrackerEvent, DeckTrackerEventName, NormalizedCompletedMatch } from '@hdt/core';
 
+type HeraldTriggerEvent = { entityId: number; blockType: 'TRIGGER' | 'POWER' };
+
 const mocks = vi.hoisted(() => {
   const handlers = new Map<string, (event: unknown) => void>();
+  let heraldTriggerEmit: ((event: HeraldTriggerEvent) => void) | null = null;
   const tracker = {
     on: vi.fn((event: string, handler: (event: unknown) => void) => {
       handlers.set(event, handler);
@@ -13,10 +16,15 @@ const mocks = vi.hoisted(() => {
     getSnapshot: vi.fn(() => null),
     applyLogDerivedEntityUpdates: vi.fn(),
     resetGlobalEffects: vi.fn(),
+    recordHeraldTriggered: vi.fn(),
     selectDeckById: vi.fn(async () => undefined),
     cancelDeckSelection: vi.fn(),
   };
   const cardPlayedDetector = {
+    handle: vi.fn(),
+    reset: vi.fn(),
+  };
+  const heraldTriggerDetector = {
     handle: vi.fn(),
     reset: vi.fn(),
   };
@@ -30,6 +38,11 @@ const mocks = vi.hoisted(() => {
     handlers,
     tracker,
     cardPlayedDetector,
+    heraldTriggerDetector,
+    setHeraldTriggerEmit: (emit: (event: HeraldTriggerEvent) => void) => {
+      heraldTriggerEmit = emit;
+    },
+    getHeraldTriggerEmit: () => heraldTriggerEmit,
     deckStore,
     DeckTracker: vi.fn(() => tracker),
     getHearthMirror: vi.fn(() => ({ })),
@@ -46,6 +59,12 @@ const mocks = vi.hoisted(() => {
 vi.mock('@hdt/core', () => ({
   DeckTracker: mocks.DeckTracker,
   CardPlayedDetector: vi.fn().mockImplementation(() => mocks.cardPlayedDetector),
+  HeraldTriggerDetector: vi.fn().mockImplementation((args: {
+    emit: (event: HeraldTriggerEvent) => void;
+  }) => {
+    mocks.setHeraldTriggerEmit(args.emit);
+    return mocks.heraldTriggerDetector;
+  }),
   zoneFromNumber: (value: number) =>
     ({ 0: 'INVALID', 1: 'PLAY', 2: 'DECK', 3: 'HAND', 4: 'GRAVEYARD', 5: 'REMOVEDFROMGAME', 6: 'SETASIDE', 7: 'SECRET' })[value] ?? 'INVALID',
   createLocalPlayerResolver: () => ({
@@ -179,6 +198,39 @@ describe('deck-tracker main host', () => {
     expect(mocks.tracker.applyLogDerivedEntityUpdates).toHaveBeenCalledWith([
       { entityId: 42, cardId: 'MEND_300', zone: 'HAND', controllerId: 2 },
     ]);
+  });
+
+  it('forwards Herald trigger detector events to the tracker', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    const event = {
+      type: 'block-start',
+      blockType: 'TRIGGER',
+      entity: '[entityName=Herald Minion id=22 zone=PLAY cardId=CATA_158 player=1]',
+      effectCardId: '',
+      raw: '',
+      content: '',
+    };
+    forwardPowerEventToDeckTracker(event as never, 'replay');
+
+    expect(mocks.heraldTriggerDetector.handle).toHaveBeenCalledWith(event);
+
+    mocks.getHeraldTriggerEmit()?.({ entityId: 22, blockType: 'TRIGGER' });
+
+    expect(mocks.tracker.recordHeraldTriggered).toHaveBeenCalledWith({
+      entityId: 22,
+      blockType: 'TRIGGER',
+    });
+  });
+
+  it('resets the Herald trigger detector on create-game', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    forwardPowerEventToDeckTracker({ type: 'create-game', raw: '', content: '' } as never, 'replay');
+
+    expect(mocks.heraldTriggerDetector.reset).toHaveBeenCalled();
   });
 
   it('backfills card id and controller from TAG_CHANGE entity refs', async () => {

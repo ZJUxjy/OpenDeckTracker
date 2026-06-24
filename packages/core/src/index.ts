@@ -46,6 +46,11 @@ export {
   isHeraldRelatedCard,
 } from './tracker/herald';
 export type { HeraldCardMetadata, HeraldTriggerTiming } from './tracker/herald';
+export { HeraldTriggerDetector } from './tracker/herald-trigger-detector';
+export type {
+  HeraldTriggerBlockType,
+  HeraldTriggerEvent,
+} from './tracker/herald-trigger-detector';
 export type {
   KnownDeckPosition,
   DeckPositionPlacement,

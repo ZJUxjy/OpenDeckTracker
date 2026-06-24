@@ -5,6 +5,7 @@ import {
   CardPlayedDetector,
   createLocalPlayerResolver,
   DeckTracker,
+  HeraldTriggerDetector,
   type ComputeBoardAttackOptions,
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
@@ -239,6 +240,7 @@ function isStartOfGameDisappearCard(cardId: string): boolean {
   return false;
 }
 let cardPlayedDetector: CardPlayedDetector | null = null;
+let heraldTriggerDetector: HeraldTriggerDetector | null = null;
 
 // ── Board-attack tag overlay ────────────────────────────────────────
 //
@@ -508,6 +510,9 @@ export function startDeckTracker(deckStore: DeckStore): void {
   cardPlayedDetector = new CardPlayedDetector({
     emit: (event) => tracker?.recordCardPlayed(event),
   });
+  heraldTriggerDetector = new HeraldTriggerDetector({
+    emit: (event) => tracker?.recordHeraldTriggered(event),
+  });
 
   let lastPhaseLogged: string | null = null;
   let lastDeckIdLogged: number | string | null = null;
@@ -607,6 +612,7 @@ export function startDeckTracker(deckStore: DeckStore): void {
     tracker?.stop();
     tracker = null;
     cardPlayedDetector = null;
+    heraldTriggerDetector = null;
     logMatchState = initialLogMatchState();
     localPlayerResolver.reset();
   });
@@ -646,6 +652,7 @@ export function forwardPowerEventToDeckTracker(
     resetPowerEventBuffer();
     resetBoardAttackState();
     cardPlayedDetector?.reset();
+    heraldTriggerDetector?.reset();
     tracker?.resetGlobalEffects();
     localPlayerResolver.reset();
   }
@@ -711,6 +718,7 @@ export function forwardPowerEventToDeckTracker(
       tracker?.applyLocalControllerId(localId);
     }
   }
+  heraldTriggerDetector?.handle(event);
   for (const tagUpdate of extraDisplayTagUpdatesFromPowerEvent(event)) {
     tracker?.recordExtraDisplayEntityTag(tagUpdate);
   }
