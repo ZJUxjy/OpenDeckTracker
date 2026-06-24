@@ -2,7 +2,6 @@ import type { PowerEvent } from '@hdt/hearthwatcher';
 
 export type HeraldTriggerBlockType = 'TRIGGER' | 'POWER';
 
-const REFIRE_SUPPRESS_MS = 3000;
 const HERALD_BLOCK_TYPES: ReadonlySet<HeraldTriggerBlockType> = new Set(['TRIGGER', 'POWER']);
 
 export interface HeraldTriggerEvent {
@@ -11,20 +10,16 @@ export interface HeraldTriggerEvent {
 }
 
 export class HeraldTriggerDetector {
-  private readonly lastFiredAt = new Map<string, number>();
   private readonly emit: (event: HeraldTriggerEvent) => void;
-  private readonly clock: () => number;
 
   constructor(args: {
     emit: (event: HeraldTriggerEvent) => void;
-    clock?: () => number;
   }) {
     this.emit = args.emit;
-    this.clock = args.clock ?? (() => Date.now());
   }
 
   reset(): void {
-    this.lastFiredAt.clear();
+    // The detector is stateless; keep the hook for new-game reset wiring.
   }
 
   handle(event: PowerEvent): void {
@@ -34,12 +29,6 @@ export class HeraldTriggerDetector {
     const entityId = entityIdOf(event.entity);
     if (entityId === null) return;
 
-    const now = this.clock();
-    const key = `${entityId}:${blockType}`;
-    const previous = this.lastFiredAt.get(key);
-    if (previous !== undefined && now - previous < REFIRE_SUPPRESS_MS) return;
-
-    this.lastFiredAt.set(key, now);
     this.emit({ entityId, blockType });
   }
 }
