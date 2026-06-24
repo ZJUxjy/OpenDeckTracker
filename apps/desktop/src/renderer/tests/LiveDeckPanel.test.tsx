@@ -91,6 +91,9 @@ const CARD_DEFS: Record<
     type?: string;
     spellSchool?: string;
     races?: string[];
+    mechanics?: string[];
+    referencedTags?: string[];
+    text?: string;
   }
 > = {
   CS2_106: { name: 'Fen Creeper', cost: 5, rarity: 'COMMON' },
@@ -108,6 +111,22 @@ const CARD_DEFS: Record<
   COST10: { name: 'Left Card', cost: 10, rarity: 'COMMON' },
   CORE_BT_427: { name: 'Soul Feast', cost: 1, rarity: 'RARE', type: 'SPELL' },
   CATA_529: { name: 'Felfused Fel-Fisher', cost: 6, rarity: 'RARE', type: 'MINION' },
+  CATA_497: {
+    name: '奥卓克希昂',
+    cost: 6,
+    rarity: 'LEGENDARY',
+    type: 'MINION',
+    mechanics: ['HERALD', 'BATTLECRY'],
+    text: '<b>战吼：</b><b>兆示</b>{0}。',
+  },
+  CATA_190h: {
+    name: '灭世者死亡之翼',
+    cost: 10,
+    rarity: 'LEGENDARY',
+    type: 'HERO',
+    referencedTags: ['HERALD'],
+    text: '<b>战吼：</b>选择并释放{0}项灾变！<i><b>兆示</b>两次后升级。</i>',
+  },
   TIME_714: { name: 'Time Lord Ebonok', cost: 6, rarity: 'LEGENDARY', type: 'MINION' },
   OPP_LAST_A: { name: 'Opponent Last Turn A', cost: 3, rarity: 'COMMON', type: 'MINION' },
   OPP_LAST_B: { name: 'Opponent Last Turn B', cost: 4, rarity: 'COMMON', type: 'MINION' },
@@ -205,6 +224,9 @@ vi.mock('../src/hooks/use-card-def', () => ({
       type: def.type ?? 'SPELL',
       ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
       ...(def.races ? { races: def.races } : {}),
+      ...(def.mechanics ? { mechanics: def.mechanics } : {}),
+      ...(def.referencedTags ? { referencedTags: def.referencedTags } : {}),
+      ...(def.text ? { text: def.text } : {}),
       collectible: true,
     };
   },
@@ -232,6 +254,9 @@ describe('LiveDeckPanel sorting', () => {
             type: def.type ?? 'SPELL',
             ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
             ...(def.races ? { races: def.races } : {}),
+            ...(def.mechanics ? { mechanics: def.mechanics } : {}),
+            ...(def.referencedTags ? { referencedTags: def.referencedTags } : {}),
+            ...(def.text ? { text: def.text } : {}),
             collectible: true,
           };
         }),
@@ -755,6 +780,10 @@ describe('LiveDeckPanel row rarity + portrait', () => {
             set: 'TEST',
             type: def.type ?? 'SPELL',
             ...(def.spellSchool ? { spellSchool: def.spellSchool } : {}),
+            ...(def.races ? { races: def.races } : {}),
+            ...(def.mechanics ? { mechanics: def.mechanics } : {}),
+            ...(def.referencedTags ? { referencedTags: def.referencedTags } : {}),
+            ...(def.text ? { text: def.text } : {}),
             collectible: true,
           };
         }),
@@ -1056,6 +1085,84 @@ describe('LiveDeckPanel hover', () => {
   afterEach(() => {
     vi.useRealTimers();
     (window as { hdt: typeof window.hdt }).hdt = savedHdt;
+  });
+
+  it('shows the Herald count on Herald caster card previews', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_497', count: 1 }],
+      extraDisplay: {
+        counters: { heraldCountThisGame: 2 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    expect(row).toHaveAttribute('data-extra-preview', 'extra');
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    const call = cardPreviewShowEnhancedExtra.mock.calls.at(-1)!;
+    expect(call[0]).toBe('CATA_497');
+    expect(call[1]).toEqual({
+      title: '奥卓克希昂',
+      lines: ['本局已兆示：2 次'],
+    });
+  });
+
+  it('shows the Herald count on Herald payoff card previews', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_190h', count: 1 }],
+      extraDisplay: {
+        counters: { heraldCountThisGame: 1 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    const call = cardPreviewShowEnhancedExtra.mock.calls.at(-1)!;
+    expect(call[0]).toBe('CATA_190h');
+    expect(call[1]).toEqual({
+      title: '灭世者死亡之翼',
+      lines: ['本局已兆示：1 次'],
+    });
+  });
+
+  it('renders a compact Herald chip in the deck panel header', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_497', count: 1 }],
+      extraDisplay: {
+        counters: { heraldCountThisGame: 3 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    expect(screen.getByTestId('herald-counter-chip')).toHaveTextContent('兆示 3');
   });
 
   it('invokes cardPreview.show after the hover-delay threshold', () => {

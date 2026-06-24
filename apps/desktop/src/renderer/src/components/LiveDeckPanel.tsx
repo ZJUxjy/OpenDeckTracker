@@ -8,7 +8,9 @@ import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import {
   expandDeckToCopies,
   formatCostReductionHoverLine,
+  HERALD_COUNTER_KEY,
   getCostReductionRule,
+  isHeraldRelatedCard,
   type DeckLadderWinrateStats,
   type DeckCopy,
   type DeckTrackerSnapshot,
@@ -155,11 +157,20 @@ interface DeckPanelInnerProps {
   snapshot: NonNullable<ReturnType<typeof useDeckTrackerStore.getState>['snapshot']>;
 }
 
+type CardDefSummary = {
+  name: string;
+  cost?: number;
+  type?: string;
+  mechanics?: readonly string[];
+  referencedTags?: readonly string[];
+  text?: string;
+};
+
 /** Compare two cardIds by (cost ↑, name ↑, cardId ↑). Returns 0 on full tie. */
 function compareByCardDef(
   aCardId: string,
   bCardId: string,
-  defs: Map<string, { name: string; cost?: number }>,
+  defs: ReadonlyMap<string, CardDefSummary>,
 ): number {
   const defA = defs.get(aCardId);
   const defB = defs.get(bCardId);
@@ -177,7 +188,7 @@ function compareByCardDef(
 function compareDeckCopies(
   a: DeckCopy,
   b: DeckCopy,
-  defs: Map<string, { name: string; cost?: number }>,
+  defs: ReadonlyMap<string, CardDefSummary>,
 ): number {
   const cmp = compareByCardDef(a.cardId, b.cardId, defs);
   return cmp !== 0 ? cmp : a.ordinal - b.ordinal;
@@ -253,15 +264,36 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
         .filter((row) => row.cardId !== ''),
     [snapshot.friendlyHand, snapshot.friendlyHandExtras],
   );
-  const cardIds = useMemo(
-    () => [...new Set([...deck.original, ...deck.remaining].map((e) => e.cardId))],
-    [deck.original, deck.remaining],
+  const allVisibleCardIds = useMemo(
+    () => [
+      ...new Set([
+        ...deck.remaining.map((e) => e.cardId),
+        ...friendlyHandRows.map((row) => row.cardId),
+      ]),
+    ],
+    [deck.remaining, friendlyHandRows],
   );
-  const cardDefs = useCardDefs(cardIds);
+  const cardDefIds = useMemo(
+    () => [
+      ...new Set([
+        ...allVisibleCardIds,
+        ...(snapshot.extraDisplay?.friendlyBoard ?? []).map((record) => record.cardId),
+      ]),
+    ],
+    [allVisibleCardIds, snapshot.extraDisplay?.friendlyBoard],
+  );
+  const cardDefs = useCardDefs(cardDefIds);
   const animalCompanionPoolCardIds = useMemo(
     () => resolveCurrentAnimalCompanionPool(snapshot.friendlyEffects),
     [snapshot.friendlyEffects],
   );
+  const heraldCount = Number(snapshot.extraDisplay?.counters?.[HERALD_COUNTER_KEY] ?? 0);
+  const hasHeraldContext =
+    allVisibleCardIds.some((cardId) => isHeraldRelatedCard(cardDefs.get(cardId))) ||
+    (snapshot.extraDisplay?.friendlyBoard ?? []).some((record) =>
+      isHeraldRelatedCard(cardDefs.get(record.cardId)),
+    ) ||
+    heraldCount > 0;
 
   const totalOriginal = deck.original.reduce((s, c) => s + c.count, 0);
   const totalRemaining = deck.remaining.reduce((s, c) => s + c.count, 0);
@@ -395,6 +427,7 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
           faceDamage={friendlyFaceDamage}
           opposingEffectiveHealth={opposingEffectiveHealth}
         />
+        <KeywordCounterStrip heraldCount={heraldCount} showHerald={hasHeraldContext} />
       </div>
 
       <div
@@ -743,15 +776,36 @@ function FaceDamageChip({
   );
 }
 
+function KeywordCounterStrip({
+  heraldCount,
+  showHerald,
+}: {
+  heraldCount: number;
+  showHerald: boolean;
+}) {
+  if (!showHerald) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5" data-testid="keyword-counter-strip">
+      <span
+        data-testid="herald-counter-chip"
+        className="inline-flex items-center gap-1 rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent"
+        title="本局已兆示次数"
+      >
+        <span>兆示</span>
+        {' '}
+        <span className="font-mono tabular-nums">{heraldCount}</span>
+      </span>
+    </div>
+  );
+}
+
 /**
  * Hook to collect card definitions for all cardIds. Returns a Map
- * keyed by cardId with name/cost for sorting.
+ * keyed by cardId with name/cost for sorting and lightweight keyword metadata.
  */
-function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: number }> {
+function useCardDefs(cardIds: string[]): Map<string, CardDefSummary> {
   const locale = useLocale();
-  const [defs, setDefs] = useState<Map<string, { name: string; cost?: number }>>(
-    () => new Map(),
-  );
+  const [defs, setDefs] = useState<Map<string, CardDefSummary>>(() => new Map());
 
   useEffect(() => {
     let alive = true;
@@ -759,7 +813,7 @@ function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: numb
     const api = window.hdt?.cards;
 
     if (!api || ids.length === 0) {
-      const fallback = new Map<string, { name: string; cost?: number }>();
+      const fallback = new Map<string, CardDefSummary>();
       for (const id of ids) {
         fallback.set(id, { name: id });
       }
@@ -772,14 +826,10 @@ function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: numb
     void Promise.all(ids.map(async (id) => [id, await api.findById(id, locale)] as const)).then(
       (rows) => {
         if (!alive) return;
-        const next = new Map<string, { name: string; cost?: number }>();
+        const next = new Map<string, CardDefSummary>();
         for (const [id, def] of rows) {
           if (def) {
-            if (def.cost !== undefined) {
-              next.set(id, { name: def.name, cost: def.cost });
-            } else {
-              next.set(id, { name: def.name });
-            }
+            next.set(id, summarizeCardDef(def));
           } else {
             next.set(id, { name: id });
           }
@@ -794,6 +844,17 @@ function useCardDefs(cardIds: string[]): Map<string, { name: string; cost?: numb
   }, [cardIds, locale]);
 
   return defs;
+}
+
+function summarizeCardDef(def: CardDef): CardDefSummary {
+  return {
+    name: def.name,
+    ...(def.cost !== undefined ? { cost: def.cost } : {}),
+    ...(def.type ? { type: def.type } : {}),
+    ...(def.mechanics ? { mechanics: def.mechanics } : {}),
+    ...(def.referencedTags ? { referencedTags: def.referencedTags } : {}),
+    ...(def.text ? { text: def.text } : {}),
+  };
 }
 
 function resolveCurrentAnimalCompanionPool(
@@ -1072,6 +1133,10 @@ function buildRowExtraDisplay(
   ) {
     const bindings = computeBindings(cardId, candidate, def, extraDisplay);
     extraLines.push(expandTemplate(template, bindings));
+  }
+  if (isHeraldRelatedCard(def)) {
+    const heraldCount = Number(extraDisplay?.counters?.[HERALD_COUNTER_KEY] ?? 0);
+    extraLines.push(`本局已兆示：${heraldCount} 次`);
   }
   const emptyPoolWarning =
     isLastTurnHistory &&
