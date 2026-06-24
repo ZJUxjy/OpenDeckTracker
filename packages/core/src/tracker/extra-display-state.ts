@@ -1,4 +1,5 @@
 import type { CardPlayedEvent } from '../global-effects/types';
+import { HERALD_COUNTER_KEY, heraldTriggerTiming } from './herald';
 
 export interface ExtraDisplayCardMetadata {
   id?: string;
@@ -184,6 +185,10 @@ export class MatchExtraDisplayState {
       this.increment('totalOverloadedCrystalsThisGame', overloadAmount);
     }
 
+    if (heraldTriggerTiming(metadata) === 'play') {
+      this.increment(HERALD_COUNTER_KEY, 1);
+    }
+
     if (metadata.type !== 'SPELL') return;
     this.increment('spellsCastThisGame', 1);
     this.increment('friendlySpellsCastThisTurn', 1);
@@ -219,6 +224,24 @@ export class MatchExtraDisplayState {
     const metadata = metadataForPlayedEvent(args.event, args.cardLookup);
     if (metadata.type !== 'MINION') return;
     this.opponentMinionsPlayedCurrentOpponentTurn.set(args.event.entityId, args.event.cardId);
+  }
+
+  recordHeraldTriggered(args: {
+    cardId: string;
+    blockType: string;
+    isFriendly: boolean;
+    cardLookup: ExtraDisplayCardLookup | null;
+  }): void {
+    if (!args.isFriendly) return;
+    const metadata = args.cardLookup?.(args.cardId) ?? { id: args.cardId };
+    const timing = heraldTriggerTiming(metadata);
+    const blockType = args.blockType.toUpperCase();
+    if (timing === 'trigger' && blockType === 'TRIGGER') {
+      this.increment(HERALD_COUNTER_KEY, 1);
+    }
+    if (timing === 'power' && blockType === 'POWER') {
+      this.increment(HERALD_COUNTER_KEY, 1);
+    }
   }
 
   opponentMinionsPlayedLastTurnStillInPlay(

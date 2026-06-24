@@ -19,6 +19,27 @@ const lookup: ExtraDisplayCardLookup = (cardId) => {
   if (cardId === 'OVERLOAD_TWO') {
     return { type: 'SPELL', cost: 2, mechanics: ['OVERLOAD'], text: 'Overload: (2)' };
   }
+  if (cardId === 'HERALD_BATTLECRY') {
+    return {
+      type: 'MINION',
+      mechanics: ['HERALD', 'BATTLECRY'],
+      text: '<b>Battlecry:</b> <b>Herald</b> {0}.',
+    };
+  }
+  if (cardId === 'HERALD_DEATHRATTLE') {
+    return {
+      type: 'MINION',
+      mechanics: ['HERALD', 'DEATHRATTLE'],
+      text: '<b>Deathrattle:</b> <b>Herald</b> {0}.',
+    };
+  }
+  if (cardId === 'HERALD_LOCATION') {
+    return {
+      type: 'LOCATION',
+      mechanics: ['HERALD'],
+      text: '<b>Herald</b> {0}. Draw a card.',
+    };
+  }
   if (cardId === 'OPP_MINION_A' || cardId === 'OPP_MINION_B') {
     return { type: 'MINION', cost: 3 };
   }
@@ -260,6 +281,67 @@ describe('MatchExtraDisplayState', () => {
       cardLookup: lookup,
     });
     expect(state.snapshot().counters.felSpellsCastThisGame ?? 0).toBe(0);
+  });
+
+  it('counts play-timed Herald cards when the local player plays them', () => {
+    const state = new MatchExtraDisplayState();
+
+    state.recordCardPlayed({
+      event: baseEvent('HERALD_BATTLECRY', 500),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    expect(state.snapshot().counters.heraldCountThisGame).toBe(1);
+  });
+
+  it('does not count deathrattle or location Herald cards on ordinary play', () => {
+    const state = new MatchExtraDisplayState();
+
+    state.recordCardPlayed({
+      event: baseEvent('HERALD_DEATHRATTLE', 501),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+    state.recordCardPlayed({
+      event: baseEvent('HERALD_LOCATION', 502),
+      localControllerId: 1,
+      cardLookup: lookup,
+    });
+
+    expect(state.snapshot().counters.heraldCountThisGame ?? 0).toBe(0);
+  });
+
+  it('counts non-play Herald triggers when their block timing matches', () => {
+    const state = new MatchExtraDisplayState();
+
+    state.recordHeraldTriggered({
+      cardId: 'HERALD_DEATHRATTLE',
+      blockType: 'TRIGGER',
+      isFriendly: true,
+      cardLookup: lookup,
+    });
+    state.recordHeraldTriggered({
+      cardId: 'HERALD_LOCATION',
+      blockType: 'POWER',
+      isFriendly: true,
+      cardLookup: lookup,
+    });
+
+    expect(state.snapshot().counters.heraldCountThisGame).toBe(2);
+  });
+
+  it('ignores opponent Herald triggers for the local extra-display counter', () => {
+    const state = new MatchExtraDisplayState();
+
+    state.recordHeraldTriggered({
+      cardId: 'HERALD_DEATHRATTLE',
+      blockType: 'TRIGGER',
+      isFriendly: false,
+      cardLookup: lookup,
+    });
+
+    expect(state.snapshot().counters.heraldCountThisGame ?? 0).toBe(0);
   });
 
   it('tracks opponent minions played last turn that remain on board for Ebonok', () => {

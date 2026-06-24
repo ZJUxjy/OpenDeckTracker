@@ -1579,6 +1579,58 @@ describe('DeckTracker', () => {
     expect(tracker.getSnapshot().extraDisplay?.counters['cardState.RLK_101']).toBe(3);
   });
 
+  it('records non-play Herald triggers through entity ownership resolution', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) =>
+        cardId === 'HERALD_DEATHRATTLE'
+          ? {
+              type: 'MINION',
+              mechanics: ['HERALD', 'DEATHRATTLE'],
+              text: '<b>Deathrattle:</b> <b>Herald</b> {0}.',
+            }
+          : null,
+    });
+
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      {
+        entityId: 700,
+        cardId: 'HERALD_DEATHRATTLE',
+        zone: 'GRAVEYARD',
+        controllerId: 1,
+        info: { originalController: 1 },
+      },
+    ]);
+    tracker.recordHeraldTriggered({ entityId: 700, blockType: 'TRIGGER' });
+
+    expect(tracker.getSnapshot().extraDisplay?.counters.heraldCountThisGame).toBe(1);
+  });
+
+  it('ignores non-play Herald triggers when historical ownership is unknown', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) =>
+        cardId === 'HERALD_DEATHRATTLE'
+          ? {
+              type: 'MINION',
+              mechanics: ['HERALD', 'DEATHRATTLE'],
+              text: '<b>Deathrattle:</b> <b>Herald</b> {0}.',
+            }
+          : null,
+    });
+
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 701, cardId: 'HERALD_DEATHRATTLE', zone: 'GRAVEYARD', controllerId: 1 },
+    ]);
+    tracker.recordHeraldTriggered({ entityId: 701, blockType: 'TRIGGER' });
+
+    expect(tracker.getSnapshot().extraDisplay?.counters.heraldCountThisGame ?? 0).toBe(0);
+  });
+
   it('builds extra-display deck pools from remaining deck metadata', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

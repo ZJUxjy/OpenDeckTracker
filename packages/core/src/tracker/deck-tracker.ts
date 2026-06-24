@@ -678,6 +678,20 @@ export class DeckTracker {
     this.currentSnapshot = this.buildSnapshot();
   }
 
+  recordHeraldTriggered(args: { entityId: number; blockType: string }): void {
+    const entity = this.game.entities.get(args.entityId);
+    if (!entity) return;
+    const historyController = this.resolveHistoryController(entity);
+    if (historyController === null) return;
+    this.extraDisplayState.recordHeraldTriggered({
+      cardId: entity.cardId,
+      blockType: args.blockType,
+      isFriendly: historyController === this.game.localPlayer.controllerId,
+      cardLookup: this.cardMetadataLookup,
+    });
+    this.currentSnapshot = this.buildSnapshot();
+  }
+
   /**
    * Drop all active global effects. Called automatically on
    * IDLE → PRE_MATCH and POST_MATCH → IDLE transitions; exposed
