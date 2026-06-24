@@ -37,6 +37,15 @@ export type {
   ExtraDisplaySnapshot,
 } from './tracker/extra-display-state';
 export { OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL } from './tracker/extra-display-state';
+export {
+  HERALD_COUNTER_KEY,
+  heraldBlockTypeForTiming,
+  heraldTriggerTiming,
+  isHeraldCaster,
+  isHeraldPayoff,
+  isHeraldRelatedCard,
+} from './tracker/herald';
+export type { HeraldCardMetadata, HeraldTriggerTiming } from './tracker/herald';
 export type {
   KnownDeckPosition,
   DeckPositionPlacement,

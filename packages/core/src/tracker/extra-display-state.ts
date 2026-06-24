@@ -7,6 +7,7 @@ export interface ExtraDisplayCardMetadata {
   spellSchool?: string;
   races?: readonly string[];
   mechanics?: readonly string[];
+  referencedTags?: readonly string[];
   cost?: number;
   attack?: number;
   health?: number;
