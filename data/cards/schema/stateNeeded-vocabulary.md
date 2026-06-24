@@ -40,6 +40,7 @@ name a real tracker state source, not a generic placeholder such as
 | `heroPowerUsesThisGame` | Hero Power uses by the player this game. |
 | `heroPowerUsedThisTurn` | Whether the player used the Hero Power this turn. |
 | `heroPowerImbueCountThisGame` | Times the player's Hero Power has been imbued this game. |
+| `heraldCountThisGame` | Times the player has triggered Herald / 兆示 this game. |
 | `cardsDiscardedThisGame` | Cards discarded by the player this game. |
 | `friendlyCharacterAttacksThisGame` | Friendly character attacks this game. |
 | `lastPlayedCardCost` | Cost of the player's most recently played card. |
