@@ -120,4 +120,21 @@ describe('convertHsdataCardsForTest', () => {
     expect(metadata.source).toContain('hsdata-mini.xml');
     expect(metadata.generatedAt).toEqual(expect.any(String));
   });
+
+  it('preserves Herald mechanics and referenced tags from hsdata XML', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'hdt-hsdata-herald-'));
+    const heraldXml = path.join(root, 'scripts/fixtures/hsdata-herald.xml');
+
+    await convertHsdataCardsForTest(heraldXml, dir, {
+      generatedAt: '2026-06-24T00:00:00.000Z',
+      locales: ['enUS'],
+    });
+
+    const cards = JSON.parse(
+      await readFile(path.join(dir, 'cards.collectible.enUS.json'), 'utf8'),
+    ) as Array<{ id: string; mechanics?: string[]; referencedTags?: string[] }>;
+
+    expect(cards.find((card) => card.id === 'TEST_HERALD_CASTER')?.mechanics).toContain('HERALD');
+    expect(cards.find((card) => card.id === 'TEST_HERALD_PAYOFF')?.referencedTags).toContain('HERALD');
+  });
 });

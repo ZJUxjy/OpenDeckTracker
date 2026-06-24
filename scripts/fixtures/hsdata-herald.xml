@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CardDefs build="245096">
+  <Entity CardID="TEST_HERALD_CASTER" ID="900001" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString">
+      <enUS>Herald Caster</enUS>
+      <zhCN>兆示施放者</zhCN>
+    </Tag>
+    <Tag enumID="184" name="CARDTEXT" type="LocString">
+      <enUS>&lt;b&gt;Battlecry:&lt;/b&gt; &lt;b&gt;Herald&lt;/b&gt; {0}.</enUS>
+      <zhCN>&lt;b&gt;战吼：&lt;/b&gt;&lt;b&gt;兆示&lt;/b&gt;{0}。</zhCN>
+    </Tag>
+    <Tag enumID="48" name="COST" type="Int" value="2"/>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="1980"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="9"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="4"/>
+    <Tag enumID="203" name="RARITY" type="Int" value="3"/>
+    <Tag enumID="218" name="BATTLECRY" type="Int" value="1"/>
+    <Tag enumID="321" name="COLLECTIBLE" type="Int" value="1"/>
+    <Tag enumID="4309" name="HERALD" type="Int" value="1"/>
+  </Entity>
+  <Entity CardID="TEST_HERALD_PAYOFF" ID="900002" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString">
+      <enUS>Herald Payoff</enUS>
+      <zhCN>兆示收益牌</zhCN>
+    </Tag>
+    <Tag enumID="184" name="CARDTEXT" type="LocString">
+      <enUS>&lt;b&gt;Battlecry:&lt;/b&gt; If you Heralded twice, draw 2 cards.</enUS>
+      <zhCN>&lt;b&gt;战吼：&lt;/b&gt;如果你已经兆示两次，抽两张牌。</zhCN>
+    </Tag>
+    <Tag enumID="48" name="COST" type="Int" value="5"/>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="1980"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="1"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="4"/>
+    <Tag enumID="203" name="RARITY" type="Int" value="5"/>
+    <Tag enumID="321" name="COLLECTIBLE" type="Int" value="1"/>
+    <ReferencedTag enumID="4309" name="HERALD" type="Int" value="1"/>
+  </Entity>
+</CardDefs>

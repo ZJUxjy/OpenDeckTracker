@@ -84,5 +84,6 @@ export interface CardDef {
   spellSchool?: SpellSchool;
   races?: CardRace[];
   mechanics?: string[];
+  referencedTags?: string[];
   collectible: boolean;
 }

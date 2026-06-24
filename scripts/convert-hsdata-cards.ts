@@ -114,6 +114,7 @@ const MECHANIC_TAGS = new Set([
   'FORGE',
   'FREEZE',
   'FRENZY',
+  'HERALD',
   'IMMUNE',
   'INFUSE',
   'INSPIRE',
@@ -148,6 +149,7 @@ interface RawEntity {
   /** All CARDRACE tag values (multi-race cards repeat this tag). */
   raceValues: number[];
   mechanics: Set<string>;
+  referencedTags: Set<string>;
 }
 
 interface ConversionResult {
@@ -268,6 +270,7 @@ function normalizeCard(entity: RawEntity, locale: Locale): CardDef {
   const races = collectRaces(entity.raceValues);
   if (races.length > 0) card.races = races;
   if (entity.mechanics.size > 0) card.mechanics = [...entity.mechanics].sort();
+  if (entity.referencedTags.size > 0) card.referencedTags = [...entity.referencedTags].sort();
 
   return card;
 }
@@ -290,6 +293,7 @@ function stableCard(card: CardDef): CardDef {
   if (card.spellSchool !== undefined) out.spellSchool = card.spellSchool;
   if (card.races !== undefined) out.races = card.races;
   if (card.mechanics !== undefined) out.mechanics = card.mechanics;
+  if (card.referencedTags !== undefined) out.referencedTags = card.referencedTags;
   out.collectible = card.collectible;
   return out;
 }
@@ -340,11 +344,25 @@ async function parseHsdataXml(inputPath: string): Promise<{ build: string; entit
     if (node.name === 'Entity') {
       const id = attr(node, 'CardID') ?? '';
       const dbfId = parseInteger(attr(node, 'ID'), `${id || '<missing CardID>'}: ID`);
-      currentEntity = { id, dbfId, loc: {}, ints: {}, raceValues: [], mechanics: new Set() };
+      currentEntity = {
+        id,
+        dbfId,
+        loc: {},
+        ints: {},
+        raceValues: [],
+        mechanics: new Set(),
+        referencedTags: new Set(),
+      };
       return;
     }
 
     if (!currentEntity) return;
+
+    if (node.name === 'ReferencedTag') {
+      const tagName = attr(node, 'name') ?? '';
+      if (tagName !== '') currentEntity.referencedTags.add(tagName);
+      return;
+    }
 
     if (node.name === 'Tag') {
       const tagName = attr(node, 'name') ?? '';
