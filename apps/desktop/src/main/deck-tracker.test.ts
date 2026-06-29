@@ -6,6 +6,19 @@ type HeraldTriggerEvent = { entityId: number; blockType: 'TRIGGER' | 'POWER' };
 const mocks = vi.hoisted(() => {
   const handlers = new Map<string, (event: unknown) => void>();
   let heraldTriggerEmit: ((event: HeraldTriggerEvent) => void) | null = null;
+  let localControllerId: number | null = null;
+  const localPlayerResolver = {
+    observe: vi.fn(),
+    observeTrustedLocalControllerId: vi.fn((controllerId: number) => {
+      localControllerId = controllerId;
+    }),
+    reset: vi.fn(() => {
+      localControllerId = null;
+    }),
+    get localControllerId() {
+      return localControllerId;
+    },
+  };
   const tracker = {
     on: vi.fn((event: string, handler: (event: unknown) => void) => {
       handlers.set(event, handler);
@@ -15,6 +28,7 @@ const mocks = vi.hoisted(() => {
     stop: vi.fn(),
     getSnapshot: vi.fn(() => null),
     applyLogDerivedEntityUpdates: vi.fn(),
+    applyLocalControllerId: vi.fn(),
     resetGlobalEffects: vi.fn(),
     recordHeraldTriggered: vi.fn(),
     selectDeckById: vi.fn(async () => undefined),
@@ -47,6 +61,10 @@ const mocks = vi.hoisted(() => {
     DeckTracker: vi.fn(() => tracker),
     getHearthMirror: vi.fn(() => ({ })),
     recordCompletedMatch: vi.fn(),
+    localPlayerResolver,
+    resetLocalControllerId: () => {
+      localControllerId = null;
+    },
     liveMatchIdentity: {
       current: vi.fn((): { fingerprint: string; startedAt: number } | null => null),
     },
@@ -67,11 +85,7 @@ vi.mock('@hdt/core', () => ({
   }),
   zoneFromNumber: (value: number) =>
     ({ 0: 'INVALID', 1: 'PLAY', 2: 'DECK', 3: 'HAND', 4: 'GRAVEYARD', 5: 'REMOVEDFROMGAME', 6: 'SETASIDE', 7: 'SECRET' })[value] ?? 'INVALID',
-  createLocalPlayerResolver: () => ({
-    observe: vi.fn(),
-    reset: vi.fn(),
-    localControllerId: null,
-  }),
+  createLocalPlayerResolver: () => mocks.localPlayerResolver,
 }));
 
 vi.mock('./hearthmirror', () => ({
@@ -119,7 +133,9 @@ describe('deck-tracker main host', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.handlers.clear();
+    mocks.resetLocalControllerId();
     mocks.liveMatchIdentity.current.mockReturnValue(null);
+    mocks.tracker.getSnapshot.mockReturnValue(null);
     vi.resetModules();
   });
 
@@ -253,6 +269,45 @@ describe('deck-tracker main host', () => {
     expect(mocks.tracker.applyLogDerivedEntityUpdates).toHaveBeenCalledWith([
       { entityId: 42, cardId: 'MEND_300', zone: 'GRAVEYARD', controllerId: 1 },
     ]);
+  });
+  it('uses local-player TRIGGER reveals as trusted local controller evidence', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+    mocks.tracker.getSnapshot.mockReturnValue({
+      matchInfo: {
+        localPlayer: { name: '纯金的小铁人#5630' },
+      },
+    } as never);
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'block-start',
+        blockType: 'TRIGGER',
+        entity: '纯金的小铁人#5630',
+        effectCardId: 'System.Collections.Generic.List`1[System.String]',
+        target: null,
+        subOption: -1,
+        raw: '',
+        content:
+          'BLOCK_START BlockType=TRIGGER Entity=纯金的小铁人#5630 EffectCardId=System.Collections.Generic.List`1[System.String] EffectIndex=-1 Target=0 SubOption=-1 TriggerKeyword=TAG_NOT_SET',
+      },
+      'live',
+    );
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'show-entity',
+        entity:
+          '[entityName=UNKNOWN ENTITY [cardType=INVALID] id=39 zone=DECK zonePos=0 cardId= player=2]',
+        cardId: 'CATA_111',
+        tags: { PLAYER_ID: 2, ZONE: 'DECK' },
+        raw: '',
+        content:
+          'SHOW_ENTITY - Updating Entity=[entityName=UNKNOWN ENTITY [cardType=INVALID] id=39 zone=DECK zonePos=0 cardId= player=2] CardID=CATA_111',
+      },
+      'live',
+    );
+
+    expect(mocks.localPlayerResolver.observeTrustedLocalControllerId).toHaveBeenCalledWith(2);
   });
 
   it('exposes opposing hero effective health through the board attack context', async () => {

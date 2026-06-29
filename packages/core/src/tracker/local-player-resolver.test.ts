@@ -36,4 +36,21 @@ describe('LocalPlayerResolver', () => {
     r.observe([{ zone: 'HAND', controllerId: 2, cardId: 'CS2_063' }]); // opponent card later revealed
     expect(r.localControllerId).toBe(1);
   });
+
+  it('resolves from a trusted local controller observation', () => {
+    const resolver = createLocalPlayerResolver();
+
+    resolver.observeTrustedLocalControllerId(2);
+
+    expect(resolver.localControllerId).toBe(2);
+  });
+
+  it('does not replace an already resolved controller', () => {
+    const resolver = createLocalPlayerResolver();
+
+    resolver.observeTrustedLocalControllerId(2);
+    resolver.observeTrustedLocalControllerId(1);
+
+    expect(resolver.localControllerId).toBe(2);
+  });
 });

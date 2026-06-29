@@ -102,6 +102,43 @@ describe('CardPlayedDetector', () => {
     expect(emit.mock.calls[0]?.[0]).toMatchObject({ cardId: 'CATA_216' });
   });
 
+  it('emits when an opponent hand card is revealed by SHOW_ENTITY already in PLAY', () => {
+    const emit = vi.fn();
+    const det = new CardPlayedDetector({ emit, clock: () => 12_000 });
+
+    det.handle({
+      type: 'block-start',
+      blockType: 'PLAY',
+      entity:
+        '[entityName=UNKNOWN ENTITY [cardType=INVALID] id=52 zone=HAND zonePos=2 cardId= player=2]',
+      effectCardId: '',
+      target: null,
+      subOption: null,
+      raw: '',
+      content:
+        'BLOCK_START BlockType=PLAY Entity=[entityName=UNKNOWN ENTITY [cardType=INVALID] id=52 zone=HAND zonePos=2 cardId= player=2] EffectCardId= EffectIndex=0 Target=0 SubOption=-1',
+    });
+    det.handle({
+      type: 'show-entity',
+      entity:
+        '[entityName=UNKNOWN ENTITY [cardType=INVALID] id=52 zone=HAND zonePos=2 cardId= player=2]',
+      cardId: 'CORE_EX1_193',
+      tags: { PLAYER_ID: 2, ZONE: 'PLAY', JUST_PLAYED: 1 },
+      raw: '',
+      content:
+        'SHOW_ENTITY - Updating Entity=[entityName=UNKNOWN ENTITY [cardType=INVALID] id=52 zone=HAND zonePos=2 cardId= player=2] CardID=CORE_EX1_193 tag=ZONE value=PLAY tag=JUST_PLAYED value=1',
+    });
+
+    expect(emit).toHaveBeenCalledTimes(1);
+    expect(emit.mock.calls[0]?.[0]).toEqual({
+      cardId: 'CORE_EX1_193',
+      controllerId: 2,
+      entityId: 52,
+      timestamp: 12_000,
+      isManualPlay: true,
+    });
+  });
+
   it('does not double-fire on PLAY→PLAY tag refreshes', () => {
     const emit = vi.fn();
     const det = new CardPlayedDetector({ emit });

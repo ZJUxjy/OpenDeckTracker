@@ -241,6 +241,7 @@ function isStartOfGameDisappearCard(cardId: string): boolean {
 }
 let cardPlayedDetector: CardPlayedDetector | null = null;
 let heraldTriggerDetector: HeraldTriggerDetector | null = null;
+let localPlayerTriggerRevealPending = false;
 
 // ── Board-attack tag overlay ────────────────────────────────────────
 //
@@ -264,6 +265,10 @@ function boolTag(value: unknown): boolean {
   if (value === 1 || value === true) return true;
   if (typeof value === 'string') return value === 'True' || value === '1';
   return false;
+}
+
+function resetLocalPlayerTriggerRevealContext(): void {
+  localPlayerTriggerRevealPending = false;
 }
 
 function isWeaponEntity(tags: Readonly<Record<string, unknown>>): boolean {
@@ -390,6 +395,47 @@ function buildBoardAttackContext(
     friendlyHero: heroVitalsForController(localId),
     opposingHero: opposingHeroVitals(localId),
   };
+}
+
+function localPlayerNameFromSnapshot(): string | null {
+  const name = tracker?.getSnapshot()?.matchInfo?.localPlayer?.name?.trim();
+  return name && name.length > 0 ? name : null;
+}
+
+function isLocalPlayerTriggerBlock(event: PowerEvent): boolean {
+  if (event.type !== 'block-start' || event.blockType !== 'TRIGGER') return false;
+  if (typeof event.entity !== 'string') return false;
+  const localName = localPlayerNameFromSnapshot();
+  return localName !== null && event.entity.trim() === localName;
+}
+
+function controllerIdFromRef(value: unknown): number | undefined {
+  if (typeof value !== 'string') return undefined;
+  const match = /\bplayer=(\d+)/i.exec(value);
+  return match?.[1] === undefined ? undefined : Number(match[1]);
+}
+
+function maybeObserveLocalPlayerTriggerReveal(event: PowerEvent): void {
+  if (event.type === 'block-start') {
+    localPlayerTriggerRevealPending = isLocalPlayerTriggerBlock(event);
+    return;
+  }
+  if (event.type === 'block-end') {
+    localPlayerTriggerRevealPending = false;
+    return;
+  }
+  if (!localPlayerTriggerRevealPending || event.type !== 'show-entity') return;
+
+  const controllerId =
+    numericTag(event.tags['CONTROLLER']) ??
+    numericTag(event.tags['PLAYER_ID']) ??
+    controllerIdFromRef(event.entity);
+  const zone = zoneFromPowerTag(event.tags['ZONE']);
+  localPlayerTriggerRevealPending = false;
+  if (event.cardId.length === 0) return;
+  if (controllerId === undefined) return;
+  if (zone !== 'DECK' && zone !== 'HAND') return;
+  localPlayerResolver.observeTrustedLocalControllerId(controllerId);
 }
 
 // ── PowerEvent ring buffer for the global-effects extractCtx ─────────
@@ -655,6 +701,7 @@ export function forwardPowerEventToDeckTracker(
     heraldTriggerDetector?.reset();
     tracker?.resetGlobalEffects();
     localPlayerResolver.reset();
+    resetLocalPlayerTriggerRevealContext();
   }
   // Overlay-visibility gate flip is driven by STEP advancing to the
   // mulligan phase, not by CREATE_GAME. Hearthstone fires CREATE_GAME
@@ -696,6 +743,7 @@ export function forwardPowerEventToDeckTracker(
     const playerEntityId = numericEntityRef(event.entity);
     if (playerEntityId !== null) tracker?.recordCurrentPlayerChange(playerEntityId);
   }
+  maybeObserveLocalPlayerTriggerReveal(event);
   logMatchState = reduceLogMatchState(logMatchState, event, phase);
   pushPowerEvent(event);
   const logUpdates = logUpdatesFromPowerEvent(event);

@@ -7,6 +7,7 @@ export interface ZoneEntityObservation {
 export interface LocalPlayerResolver {
   readonly localControllerId: number | null;
   observe(updates: readonly ZoneEntityObservation[]): void;
+  observeTrustedLocalControllerId(controllerId: number): void;
   reset(): void;
 }
 
@@ -31,6 +32,11 @@ export function createLocalPlayerResolver(): LocalPlayerResolver {
           return;
         }
       }
+    },
+    observeTrustedLocalControllerId(controllerId): void {
+      if (resolved !== null) return;
+      if (controllerId !== 1 && controllerId !== 2) return;
+      resolved = controllerId;
     },
     reset(): void {
       resolved = null;

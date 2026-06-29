@@ -66,7 +66,20 @@ export class CardPlayedDetector {
     if (event.type === 'show-entity') {
       const id = entityIdOf(event.entity);
       if (id === null) return;
+      const previousZone = this.entities.get(id)?.zone ?? zoneFromRef(event.entity);
       this.recordEntity(id, event.cardId, event.tags);
+      const known = this.entities.get(id);
+      if (
+        known &&
+        isPlayZone(readTagString(event.tags['ZONE'])) &&
+        truthyPowerTag(event.tags['JUST_PLAYED']) &&
+        previousZone !== 'PLAY' &&
+        previousZone !== '1' &&
+        known.cardId !== '' &&
+        known.controllerId !== 0
+      ) {
+        this.fireEmit(id, known, isHandZone(previousZone));
+      }
       return;
     }
     if (event.type === 'change-entity') {
@@ -230,6 +243,12 @@ function readTagString(v: unknown): string | null {
   return null;
 }
 
+function zoneFromRef(ref: number | string | null | undefined): string | null {
+  if (typeof ref !== 'string') return null;
+  const match = /\bzone=([A-Za-z0-9_]+)/i.exec(ref);
+  return match?.[1] ?? null;
+}
+
 function numberOf(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v;
   if (typeof v === 'string') {
@@ -242,4 +261,13 @@ function numberOf(v: unknown): number | null {
 function isHandZone(zone: string | null): boolean {
   const normalized = zone?.toUpperCase();
   return normalized === 'HAND' || normalized === '3';
+}
+
+function isPlayZone(zone: string | null): boolean {
+  const normalized = zone?.toUpperCase();
+  return normalized === 'PLAY' || normalized === '1';
+}
+
+function truthyPowerTag(value: unknown): boolean {
+  return value === 1 || value === true || value === '1' || value === 'True';
 }
