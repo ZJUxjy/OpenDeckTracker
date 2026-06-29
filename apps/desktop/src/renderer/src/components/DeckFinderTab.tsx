@@ -661,7 +661,11 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
               <div className="text-[9px] text-text-mute font-mono tracking-[0.14em] mb-2">
                 {t('decks.finder.keyCardsLabel')}
               </div>
-              <KeyCardsList keyCards={selected.keyCards} />
+              <KeyCardsList
+                cards={
+                  selected.deckCardList.length > 0 ? selected.deckCardList : selected.keyCards
+                }
+              />
             </div>
 
             <div className="flex gap-2 mt-auto pt-2">
@@ -728,20 +732,22 @@ function ClassMatchupsTable({
 }
 
 /**
- * Renders the deck's top-N cards with locale-correct names (resolved at
- * render time against the active locale's CardDb), tile art, and the
- * existing card-preview hover. Mirrors LiveDeckPanel's row treatment so
- * the Deck Finder feels consistent with the in-game tracker.
+ * Renders the deck's full card list (cost order) in two columns with
+ * locale-correct names, tile art, and card-preview hover.
  */
-function KeyCardsList({ keyCards }: { keyCards: readonly PopularDeckKeyCard[] }): ReactElement {
+function KeyCardsList({
+  cards,
+}: {
+  cards: readonly PopularDeckKeyCard[];
+}): ReactElement {
   const { onRowEnter, onRowLeave } = useCardPreview();
   const handleEnter = useCallback(
     (cardId: string, el: HTMLDivElement) => onRowEnter(cardId, el),
     [onRowEnter],
   );
   return (
-    <div className="flex flex-col gap-0.5">
-      {keyCards.map((kc, i) => (
+    <div className="grid grid-cols-2 gap-x-1 gap-y-0.5">
+      {cards.map((kc, i) => (
         <KeyCardRow
           key={`${kc.cardId}-${i}`}
           cardId={kc.cardId}
