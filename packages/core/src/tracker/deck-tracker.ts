@@ -568,7 +568,9 @@ export class DeckTracker {
       const after = this.game.entities.get(update.entityId);
       if (!after) continue;
 
-      if (isPlayableHistoryOriginZone(after.zone)) {
+      if (isCreatedDeckTransientOrigin(after)) {
+        this.transientGraveyardOriginEntityIds.add(after.entityId);
+      } else if (isPlayableHistoryOriginZone(after.zone)) {
         this.transientGraveyardOriginEntityIds.delete(after.entityId);
         this.suppressedGraveyardEntityIds.delete(after.entityId);
       } else if (isTransientChoiceZone(after.zone)) {
@@ -687,6 +689,31 @@ export class DeckTracker {
       cardId: entity.cardId,
       blockType: args.blockType,
       isFriendly: historyController === this.game.localPlayer.controllerId,
+      cardLookup: this.cardMetadataLookup,
+    });
+    this.currentSnapshot = this.buildSnapshot();
+  }
+
+  recordPrepareAction(args: {
+    entityId: number;
+    controllerId: number;
+    baseCost: number;
+    effectiveCost: number;
+    discount: number;
+  }): void {
+    const localControllerId = this.game.localPlayer.controllerId;
+    if (localControllerId === null) return;
+    if (args.controllerId !== localControllerId) return;
+    const entity = this.game.entities.get(args.entityId);
+    const cardId = entity?.cardId ?? '';
+    if (cardId === '') return;
+    this.extraDisplayState.recordPrepareAction({
+      entityId: args.entityId,
+      cardId,
+      isFriendly: true,
+      baseCost: args.baseCost,
+      effectiveCost: args.effectiveCost,
+      discount: args.discount,
       cardLookup: this.cardMetadataLookup,
     });
     this.currentSnapshot = this.buildSnapshot();
@@ -1255,6 +1282,9 @@ export class DeckTracker {
         .sort((a, b) => a.zonePosition - b.zonePosition || a.entityId - b.entityId) ?? [];
     const friendlyHand = friendlyHandRows.map((c) => c.cardId);
     let friendlyHandExtras = friendlyHandRows.map(() => false);
+    if (handState !== null) {
+      this.extraDisplayState.syncPreparedHandEntities(friendlyHandRows);
+    }
 
     let deck: DeckTrackerSnapshot['deck'] = null;
     const original = this.game.localPlayer.originalDeck;
@@ -1645,6 +1675,7 @@ export class DeckTracker {
     add('deckMinionsRemaining', filter(deckCards, (m) => m.type === 'MINION'));
     add('deathrattleMinionsRemainingInDeck', filter(deckCards, (m) => m.type === 'MINION' && hasMetadataMechanic(m, 'DEATHRATTLE')));
     add('deathrattleCardsRemainingInDeck', filter(deckCards, (m) => hasMetadataMechanic(m, 'DEATHRATTLE')));
+    add('demonsRemainingInDeck', filter(deckCards, (m) => m.type === 'MINION' && hasMetadataRace(m, 'DEMON')));
     add('holySpellsRemainingInDeck', filter(deckCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'HOLY'));
     add('shadowSpellsRemainingInDeck', filter(deckCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'SHADOW'));
     add('felSpellsInDeck', filter(deckCards, (m) => m.type === 'SPELL' && normalizeMetadataToken(m.spellSchool) === 'FEL'));
@@ -1862,6 +1893,13 @@ function isHistoryTrackableCardId(
 
 function isTransientChoiceZone(zone: Zone | undefined): boolean {
   return zone === 'SETASIDE' || zone === 'REMOVEDFROMGAME';
+}
+
+function isCreatedDeckTransientOrigin(entity: {
+  zone: Zone;
+  info: { created?: boolean; originalZone?: Zone };
+}): boolean {
+  return entity.zone === 'DECK' && entity.info.created === true && entity.info.originalZone === 'DECK';
 }
 
 function isPlayableHistoryOriginZone(zone: Zone): boolean {

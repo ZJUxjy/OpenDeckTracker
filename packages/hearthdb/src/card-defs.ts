@@ -73,6 +73,8 @@ export interface CardDef {
   dbfId: number;
   name: string;
   cost?: number;
+  /** Mana cost to perform the Prepare deck action from hand, when present in hsdata. */
+  deckActionCost?: number;
   attack?: number;
   health?: number;
   armor?: number;

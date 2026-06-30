@@ -35,6 +35,7 @@ export type {
   ExtraDisplayCardMetadata,
   ExtraDisplayPoolEntry,
   ExtraDisplaySnapshot,
+  PreparedHandEntry,
 } from './tracker/extra-display-state';
 export { OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL } from './tracker/extra-display-state';
 export {
@@ -51,6 +52,15 @@ export type {
   HeraldTriggerBlockType,
   HeraldTriggerEvent,
 } from './tracker/herald-trigger-detector';
+export {
+  PREPARE_COUNTER_KEY,
+  isPrepareCaster,
+  isPreparePayoff,
+  isPrepareRelatedCard,
+} from './tracker/prepare';
+export type { PrepareCardMetadata } from './tracker/prepare';
+export { PrepareActionDetector } from './tracker/prepare-action-detector';
+export type { PrepareActionEvent } from './tracker/prepare-action-detector';
 export type {
   KnownDeckPosition,
   DeckPositionPlacement,

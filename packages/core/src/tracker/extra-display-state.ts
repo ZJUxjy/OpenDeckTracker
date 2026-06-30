@@ -1,5 +1,6 @@
 import type { CardPlayedEvent } from '../global-effects/types';
 import { HERALD_COUNTER_KEY, heraldTriggerTiming } from './herald';
+import { PREPARE_COUNTER_KEY, isPrepareRelatedCard } from './prepare';
 
 export interface ExtraDisplayCardMetadata {
   id?: string;
@@ -20,6 +21,15 @@ export interface ExtraDisplayPoolEntry {
   count: number;
 }
 
+export interface PreparedHandEntry {
+  entityId: number;
+  cardId: string;
+  baseCost: number;
+  effectiveCost: number;
+  discount: number;
+  preparedAtTurn: number;
+}
+
 export interface ExtraDisplaySnapshot {
   /** Stable scalar states keyed by the review vocabulary names where possible. */
   counters: Record<string, number>;
@@ -29,6 +39,8 @@ export interface ExtraDisplaySnapshot {
     friendlyDeadMinionsThisGameUnique: ExtraDisplayPoolEntry[];
     [key: string]: ExtraDisplayPoolEntry[];
   };
+  /** Hand entities that currently carry a Prepare discount. */
+  preparedHand?: PreparedHandEntry[];
 }
 
 export type ExtraDisplayCardLookup = (cardId: string) => ExtraDisplayCardMetadata | null;
@@ -74,6 +86,7 @@ export class MatchExtraDisplayState {
   private activeTurnControllerId: number | null = null;
   private readonly opponentMinionsPlayedCurrentOpponentTurn = new Map<number, string>();
   private opponentMinionsPlayedLastOpponentTurn = new Map<number, string>();
+  private readonly preparedHandEntities = new Map<number, PreparedHandEntry>();
 
   reset(): void {
     this.currentTurn = null;
@@ -89,6 +102,7 @@ export class MatchExtraDisplayState {
     this.activeTurnControllerId = null;
     this.opponentMinionsPlayedCurrentOpponentTurn.clear();
     this.opponentMinionsPlayedLastOpponentTurn.clear();
+    this.preparedHandEntities.clear();
   }
 
   setOriginalDeckCardIds(cardIds: Iterable<string>): void {
@@ -189,6 +203,8 @@ export class MatchExtraDisplayState {
       this.increment(HERALD_COUNTER_KEY, 1);
     }
 
+    this.preparedHandEntities.delete(args.event.entityId);
+
     if (metadata.type !== 'SPELL') return;
     this.increment('spellsCastThisGame', 1);
     this.increment('friendlySpellsCastThisTurn', 1);
@@ -241,6 +257,40 @@ export class MatchExtraDisplayState {
     }
     if (timing === 'power' && blockType === 'POWER') {
       this.increment(HERALD_COUNTER_KEY, 1);
+    }
+  }
+
+  recordPrepareAction(args: {
+    entityId: number;
+    cardId: string;
+    isFriendly: boolean;
+    baseCost: number;
+    effectiveCost: number;
+    discount: number;
+    cardLookup: ExtraDisplayCardLookup | null;
+  }): void {
+    if (!args.isFriendly) return;
+    const metadata = args.cardLookup?.(args.cardId) ?? { id: args.cardId };
+    if (!isPrepareRelatedCard(metadata)) return;
+    if (args.discount <= 0) return;
+
+    this.increment(PREPARE_COUNTER_KEY, 1);
+    this.preparedHandEntities.set(args.entityId, {
+      entityId: args.entityId,
+      cardId: args.cardId,
+      baseCost: args.baseCost,
+      effectiveCost: args.effectiveCost,
+      discount: args.discount,
+      preparedAtTurn: this.currentTurn ?? 0,
+    });
+  }
+
+  syncPreparedHandEntities(hand: readonly { entityId: number; cardId: string }[]): void {
+    const handIds = new Set(hand.map((entry) => entry.entityId));
+    for (const entityId of [...this.preparedHandEntities.keys()]) {
+      if (!handIds.has(entityId)) {
+        this.preparedHandEntities.delete(entityId);
+      }
     }
   }
 
@@ -349,9 +399,13 @@ export class MatchExtraDisplayState {
     pools['graveyardPool.CORE_ICC_835'] = pools.friendlyDeadTauntMinionsThisGameUnique ?? [];
     pools['graveyardPool.CORE_DAL_721'] = pools.friendlyDeadUndeadThisGameUnique ?? [];
     pools['graveyardPool.EDR_238'] = pools.distinctFriendlyDeadMinionsCostGte8 ?? [];
+    const preparedHand = [...this.preparedHandEntities.values()].sort(
+      (a, b) => a.entityId - b.entityId,
+    );
     return {
       counters: Object.fromEntries([...this.counters.entries()].sort(([a], [b]) => a.localeCompare(b))),
       pools,
+      ...(preparedHand.length > 0 ? { preparedHand } : {}),
     };
   }
 

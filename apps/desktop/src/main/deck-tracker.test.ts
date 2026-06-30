@@ -31,6 +31,7 @@ const mocks = vi.hoisted(() => {
     applyLocalControllerId: vi.fn(),
     resetGlobalEffects: vi.fn(),
     recordHeraldTriggered: vi.fn(),
+    recordPrepareAction: vi.fn(),
     selectDeckById: vi.fn(async () => undefined),
     cancelDeckSelection: vi.fn(),
   };
@@ -39,6 +40,10 @@ const mocks = vi.hoisted(() => {
     reset: vi.fn(),
   };
   const heraldTriggerDetector = {
+    handle: vi.fn(),
+    reset: vi.fn(),
+  };
+  const prepareActionDetector = {
     handle: vi.fn(),
     reset: vi.fn(),
   };
@@ -53,6 +58,7 @@ const mocks = vi.hoisted(() => {
     tracker,
     cardPlayedDetector,
     heraldTriggerDetector,
+    prepareActionDetector,
     setHeraldTriggerEmit: (emit: (event: HeraldTriggerEvent) => void) => {
       heraldTriggerEmit = emit;
     },
@@ -83,6 +89,7 @@ vi.mock('@hdt/core', () => ({
     mocks.setHeraldTriggerEmit(args.emit);
     return mocks.heraldTriggerDetector;
   }),
+  PrepareActionDetector: vi.fn().mockImplementation(() => mocks.prepareActionDetector),
   zoneFromNumber: (value: number) =>
     ({ 0: 'INVALID', 1: 'PLAY', 2: 'DECK', 3: 'HAND', 4: 'GRAVEYARD', 5: 'REMOVEDFROMGAME', 6: 'SETASIDE', 7: 'SECRET' })[value] ?? 'INVALID',
   createLocalPlayerResolver: () => mocks.localPlayerResolver,
@@ -270,6 +277,7 @@ describe('deck-tracker main host', () => {
       { entityId: 42, cardId: 'MEND_300', zone: 'GRAVEYARD', controllerId: 1 },
     ]);
   });
+
   it('uses local-player TRIGGER reveals as trusted local controller evidence', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
     startDeckTracker(mocks.deckStore as never);

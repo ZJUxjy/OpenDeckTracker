@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CardDefs build="245096">
+  <Entity CardID="TEST_PREPARE_CASTER" ID="900101" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString">
+      <enUS>Prepare Caster</enUS>
+      <zhCN>预备施放者</zhCN>
+    </Tag>
+    <Tag enumID="184" name="CARDTEXT" type="LocString">
+      <enUS>&lt;b&gt;Prepare&lt;/b&gt; Draw a card.</enUS>
+      <zhCN>&lt;b&gt;预备&lt;/b&gt;抽一张牌。</zhCN>
+    </Tag>
+    <Tag enumID="48" name="COST" type="Int" value="3"/>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="1988"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="12"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="4"/>
+    <Tag enumID="203" name="RARITY" type="Int" value="4"/>
+    <Tag enumID="321" name="COLLECTIBLE" type="Int" value="1"/>
+    <Tag enumID="1743" name="DECK_ACTION_COST" type="Int" value="1"/>
+    <Tag enumID="4354" name="PREPARE" type="Int" value="1"/>
+  </Entity>
+  <Entity CardID="TEST_PREPARE_REF" ID="900102" version="2">
+    <Tag enumID="185" name="CARDNAME" type="LocString">
+      <enUS>Prepare Reference</enUS>
+      <zhCN>预备引用牌</zhCN>
+    </Tag>
+    <Tag enumID="184" name="CARDTEXT" type="LocString">
+      <enUS>Cards with &lt;b&gt;Prepare&lt;/b&gt; cost less.</enUS>
+      <zhCN>带&lt;b&gt;预备&lt;/b&gt;的牌花费更少。</zhCN>
+    </Tag>
+    <Tag enumID="48" name="COST" type="Int" value="2"/>
+    <Tag enumID="183" name="CARD_SET" type="Int" value="1988"/>
+    <Tag enumID="199" name="CLASS" type="Int" value="12"/>
+    <Tag enumID="202" name="CARDTYPE" type="Int" value="4"/>
+    <Tag enumID="203" name="RARITY" type="Int" value="3"/>
+    <Tag enumID="321" name="COLLECTIBLE" type="Int" value="1"/>
+    <ReferencedTag enumID="4354" name="PREPARE" type="Int" value="1"/>
+  </Entity>
+</CardDefs>

@@ -9,8 +9,10 @@ import {
   expandDeckToCopies,
   formatCostReductionHoverLine,
   HERALD_COUNTER_KEY,
+  PREPARE_COUNTER_KEY,
   getCostReductionRule,
   isHeraldRelatedCard,
+  isPrepareRelatedCard,
   type DeckLadderWinrateStats,
   type DeckCopy,
   type DeckTrackerSnapshot,
@@ -288,12 +290,20 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     [snapshot.friendlyEffects],
   );
   const heraldCount = Number(snapshot.extraDisplay?.counters?.[HERALD_COUNTER_KEY] ?? 0);
+  const prepareCount = Number(snapshot.extraDisplay?.counters?.[PREPARE_COUNTER_KEY] ?? 0);
   const hasHeraldContext =
     allVisibleCardIds.some((cardId) => isHeraldRelatedCard(cardDefs.get(cardId))) ||
     (snapshot.extraDisplay?.friendlyBoard ?? []).some((record) =>
       isHeraldRelatedCard(cardDefs.get(record.cardId)),
     ) ||
     heraldCount > 0;
+  const hasPrepareContext =
+    allVisibleCardIds.some((cardId) => isPrepareRelatedCard(cardDefs.get(cardId))) ||
+    (snapshot.extraDisplay?.friendlyBoard ?? []).some((record) =>
+      isPrepareRelatedCard(cardDefs.get(record.cardId)),
+    ) ||
+    prepareCount > 0 ||
+    (snapshot.extraDisplay?.preparedHand?.length ?? 0) > 0;
 
   const totalOriginal = deck.original.reduce((s, c) => s + c.count, 0);
   const totalRemaining = deck.remaining.reduce((s, c) => s + c.count, 0);
@@ -427,7 +437,12 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
           faceDamage={friendlyFaceDamage}
           opposingEffectiveHealth={opposingEffectiveHealth}
         />
-        <KeywordCounterStrip heraldCount={heraldCount} showHerald={hasHeraldContext} />
+        <KeywordCounterStrip
+          heraldCount={heraldCount}
+          showHerald={hasHeraldContext}
+          prepareCount={prepareCount}
+          showPrepare={hasPrepareContext}
+        />
       </div>
 
       <div
@@ -779,22 +794,39 @@ function FaceDamageChip({
 function KeywordCounterStrip({
   heraldCount,
   showHerald,
+  prepareCount,
+  showPrepare,
 }: {
   heraldCount: number;
   showHerald: boolean;
+  prepareCount: number;
+  showPrepare: boolean;
 }) {
-  if (!showHerald) return null;
+  if (!showHerald && !showPrepare) return null;
   return (
     <div className="mt-2 flex flex-wrap gap-1.5" data-testid="keyword-counter-strip">
-      <span
-        data-testid="herald-counter-chip"
-        className="inline-flex items-center gap-1 rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent"
-        title="本局已兆示次数"
-      >
-        <span>兆示</span>
-        {' '}
-        <span className="font-mono tabular-nums">{heraldCount}</span>
-      </span>
+      {showHerald ? (
+        <span
+          data-testid="herald-counter-chip"
+          className="inline-flex items-center gap-1 rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent"
+          title="本局已兆示次数"
+        >
+          <span>兆示</span>
+          {' '}
+          <span className="font-mono tabular-nums">{heraldCount}</span>
+        </span>
+      ) : null}
+      {showPrepare ? (
+        <span
+          data-testid="prepare-counter-chip"
+          className="inline-flex items-center gap-1 rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent"
+          title="本局已预备次数"
+        >
+          <span>预备</span>
+          {' '}
+          <span className="font-mono tabular-nums">{prepareCount}</span>
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -955,6 +987,8 @@ function CardCopyRow({
   const { t } = useTranslation();
   const def = useCardDef(cardId);
   const cost = def?.cost ?? 0;
+  const preparedEntry = extraDisplay?.preparedHand?.find((entry) => entry.cardId === cardId);
+  const displayCost = preparedEntry?.effectiveCost ?? cost;
   const name = def?.name ?? cardId;
   const rarity = def?.rarity as Rarity | undefined;
   const tileUrl = useCardTileUrl(cardId);
@@ -1007,7 +1041,7 @@ function CardCopyRow({
             getRarityCostBg(rarity),
           )}
         >
-          {cost}
+          {displayCost}
         </div>
         <div className="flex-1 min-w-0 px-2">
           <div
@@ -1022,6 +1056,14 @@ function CardCopyRow({
           >
             {name}
           </div>
+          {preparedEntry ? (
+            <div
+              data-testid="prepare-hand-badge"
+              className="text-[10px] font-semibold text-accent"
+            >
+              预备 -{preparedEntry.discount}
+            </div>
+          ) : null}
         </div>
         {isExtraCard ? (
           <div
@@ -1137,6 +1179,33 @@ function buildRowExtraDisplay(
   if (isHeraldRelatedCard(def)) {
     const heraldCount = Number(extraDisplay?.counters?.[HERALD_COUNTER_KEY] ?? 0);
     extraLines.push(`本局已兆示：${heraldCount} 次`);
+  }
+  if (isPrepareRelatedCard(def)) {
+    const prepareCount = Number(extraDisplay?.counters?.[PREPARE_COUNTER_KEY] ?? 0);
+    extraLines.push(`本局已预备：${prepareCount} 次`);
+    const preparedEntry = extraDisplay?.preparedHand?.find((entry) => entry.cardId === cardId);
+    if (preparedEntry) {
+      extraLines.push(
+        `已预备，费用 -${preparedEntry.discount}（当前 ${preparedEntry.effectiveCost}）`,
+      );
+    }
+  }
+  if (cardId === 'JAIL_407') {
+    const onBoard = (extraDisplay?.friendlyBoard ?? []).some((record) => record.cardId === cardId);
+    if (onBoard) {
+      extraLines.push(`本回合已打出：${Number(extraDisplay?.counters?.cardsPlayedThisTurn ?? 0)} 张`);
+    }
+  }
+  if (cardId === 'JAIL_906') {
+    const demons = extraDisplay?.pools?.demonsRemainingInDeck ?? [];
+    const demonCount = demons.reduce((sum, entry) => sum + entry.count, 0);
+    extraLines.push(`牌库恶魔：${demonCount}`);
+  }
+  if (cardId === 'CATA_EVENT_402') {
+    const played = Number(extraDisplay?.counters?.cardsPlayedThisTurn ?? 0);
+    extraLines.push(
+      played > 0 ? '连击：已满足' : '连击：本回合尚未打出其他牌',
+    );
   }
   const emptyPoolWarning =
     isLastTurnHistory &&

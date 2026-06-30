@@ -41,6 +41,8 @@ name a real tracker state source, not a generic placeholder such as
 | `heroPowerUsedThisTurn` | Whether the player used the Hero Power this turn. |
 | `heroPowerImbueCountThisGame` | Times the player's Hero Power has been imbued this game. |
 | `heraldCountThisGame` | Times the player has triggered Herald / 兆示 this game. |
+| `prepareCountThisGame` | Times the player has Prepared a card this game. |
+| `bribeCoinsGivenToOpponentThisGame` | Coins granted to the opponent by Bribe effects this game. |
 | `cardsDiscardedThisGame` | Cards discarded by the player this game. |
 | `friendlyCharacterAttacksThisGame` | Friendly character attacks this game. |
 | `lastPlayedCardCost` | Cost of the player's most recently played card. |
@@ -89,6 +91,7 @@ name a real tracker state source, not a generic placeholder such as
 | `deckMinionsRemaining` | Minion cards remaining in the player's deck. |
 | `deathrattleMinionsRemainingInDeck` | Deathrattle minions remaining in deck. |
 | `deathrattleCardsRemainingInDeck` | Deathrattle cards remaining in deck. |
+| `demonsRemainingInDeck` | Demon minion cards remaining in deck. |
 | `holySpellsRemainingInDeck` | Holy spells remaining in deck. |
 | `shadowSpellsRemainingInDeck` | Shadow spells remaining in deck. |
 
@@ -128,6 +131,34 @@ name a real tracker state source, not a generic placeholder such as
 | `transformedMinionOriginalEntityMap` | Mapping from transformed entities to original minions. |
 | `absorbedSpellEntity` | Spell absorbed by this entity. |
 | `bloodsportMinionsInHand` | Bloodsport-tagged minions in hand. |
+
+## EVH / Prepare (逃离紫罗兰监狱)
+
+| Key | Meaning |
+|---|---|
+| `prepareCountThisGame` | Times the local player Prepared a card this game. |
+| `preparedDiscountForEntity` | Marker that Prepare discount is stored per hand entity. |
+| `handEntityEffectiveCost` | Current COST tag for a hand entity (may differ from card def). |
+| `preparedHandEntities` | Snapshot list of hand entities carrying a Prepare discount. |
+
+## EVH / Disguise (planned)
+
+| Key | Meaning |
+|---|---|
+| `minionBoardSideForEntity` | Whether a controlled minion sits on the friendly or opposing board. |
+| `disguisedMinionsPlayedThisGame` | Disguised minions played to the opposing board this game. |
+
+## EVH / Bribe
+
+| Key | Meaning |
+|---|---|
+| `bribeCoinsGivenToOpponentThisGame` | Coins granted to the opponent by Bribe effects this game. |
+
+## EVH / Deck Pools
+
+| Key | Meaning |
+|---|---|
+| `demonsRemainingInDeck` | Demon minion cards remaining in the player's deck. |
 
 ## Card-Specific Fallbacks
 

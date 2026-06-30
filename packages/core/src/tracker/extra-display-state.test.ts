@@ -344,6 +344,66 @@ describe('MatchExtraDisplayState', () => {
     expect(state.snapshot().counters.heraldCountThisGame ?? 0).toBe(0);
   });
 
+  it('counts local Prepare actions and tracks prepared hand entities', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordTurnChange(4);
+
+    state.recordPrepareAction({
+      entityId: 88,
+      cardId: 'CATA_EVENT_401',
+      isFriendly: true,
+      baseCost: 3,
+      effectiveCost: 0,
+      discount: 3,
+      cardLookup: (cardId) =>
+        cardId === 'CATA_EVENT_401' ? { mechanics: ['PREPARE'] } : null,
+    });
+
+    const snapshot = state.snapshot();
+    expect(snapshot.counters.prepareCountThisGame).toBe(1);
+    expect(snapshot.preparedHand).toEqual([
+      {
+        entityId: 88,
+        cardId: 'CATA_EVENT_401',
+        baseCost: 3,
+        effectiveCost: 0,
+        discount: 3,
+        preparedAtTurn: 4,
+      },
+    ]);
+  });
+
+  it('drops prepared hand tracking when the entity leaves hand', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordPrepareAction({
+      entityId: 90,
+      cardId: 'JAIL_407',
+      isFriendly: true,
+      baseCost: 6,
+      effectiveCost: 2,
+      discount: 4,
+      cardLookup: (cardId) =>
+        cardId === 'JAIL_407' ? { mechanics: ['PREPARE'] } : null,
+    });
+    state.syncPreparedHandEntities([]);
+    expect(state.snapshot().preparedHand).toBeUndefined();
+  });
+
+  it('ignores opponent Prepare actions for the local extra-display counter', () => {
+    const state = new MatchExtraDisplayState();
+    state.recordPrepareAction({
+      entityId: 91,
+      cardId: 'JAIL_407',
+      isFriendly: false,
+      baseCost: 6,
+      effectiveCost: 2,
+      discount: 4,
+      cardLookup: (cardId) =>
+        cardId === 'JAIL_407' ? { mechanics: ['PREPARE'] } : null,
+    });
+    expect(state.snapshot().counters.prepareCountThisGame ?? 0).toBe(0);
+  });
+
   it('tracks opponent minions played last turn that remain on board for Ebonok', () => {
     const state = new MatchExtraDisplayState();
     state.recordOpponentCardPlayed({

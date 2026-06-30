@@ -4,8 +4,10 @@ import { dirname, resolve } from 'node:path';
 import {
   CardPlayedDetector,
   createLocalPlayerResolver,
+  DeckSnapshot,
   DeckTracker,
   HeraldTriggerDetector,
+  PrepareActionDetector,
   type ComputeBoardAttackOptions,
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
@@ -74,6 +76,7 @@ import type { DeckStore } from './deck-store';
  */
 
 let tracker: DeckTracker | null = null;
+let deckStoreRef: DeckStore | null = null;
 let lastTrackerTraceSignature: string | null = null;
 let trackerTraceErrorLogged = false;
 let logMatchState: LogMatchState = initialLogMatchState();
@@ -241,6 +244,7 @@ function isStartOfGameDisappearCard(cardId: string): boolean {
 }
 let cardPlayedDetector: CardPlayedDetector | null = null;
 let heraldTriggerDetector: HeraldTriggerDetector | null = null;
+let prepareActionDetector: PrepareActionDetector | null = null;
 let localPlayerTriggerRevealPending = false;
 
 // ── Board-attack tag overlay ────────────────────────────────────────
@@ -540,6 +544,7 @@ function preloadCardTiles(cardIds: string[]): void {
 
 export function startDeckTracker(deckStore: DeckStore): void {
   if (tracker !== null) return;
+  deckStoreRef = deckStore;
   const mirror = getHearthMirror();
   tracker = new DeckTracker({
     mirror,
@@ -558,6 +563,9 @@ export function startDeckTracker(deckStore: DeckStore): void {
   });
   heraldTriggerDetector = new HeraldTriggerDetector({
     emit: (event) => tracker?.recordHeraldTriggered(event),
+  });
+  prepareActionDetector = new PrepareActionDetector({
+    emit: (event) => tracker?.recordPrepareAction(event),
   });
 
   let lastPhaseLogged: string | null = null;
@@ -590,16 +598,33 @@ export function startDeckTracker(deckStore: DeckStore): void {
   tracker.on('match-started', (event: DeckTrackerEvent) => {
     preloadedTileCardIds.clear();
     console.log(`[deck-tracker] match-started deck=${event.snapshot?.deck?.id ?? 'null'}`);
-    applyActiveDeck({
-      tracker: {
-        setOriginalDeck: (d) => tracker!.setOriginalDeck(d),
-        selectSavedDeck: (id, v) => tracker!.selectSavedDeck(id, v),
-        getLocalOriginalDeck: () => tracker!.getGame().localPlayer.originalDeck ?? null,
-      },
-      mirrorAbsent: mirrorAbsent(),
-      getActiveDeckId: () => deckStore.getActiveDeckId(),
-      getDeckById: (id) => deckStore.getById(id),
-    });
+    void (async () => {
+      let useLocalActiveDeck = mirrorAbsent();
+      if (!useLocalActiveDeck) {
+        try {
+          const liveDecks = await mirror.getDecks();
+          if (liveDecks === null) {
+            useLocalActiveDeck = true;
+            console.warn(
+              '[deck-tracker] getDecks unavailable at match-start — using active saved deck if set',
+            );
+          }
+        } catch (err) {
+          useLocalActiveDeck = true;
+          console.warn('[deck-tracker] getDecks failed at match-start', err);
+        }
+      }
+      applyActiveDeck({
+        tracker: {
+          setOriginalDeck: (d) => tracker!.setOriginalDeck(d),
+          selectSavedDeck: (id, v) => tracker!.selectSavedDeck(id, v),
+          getLocalOriginalDeck: () => tracker!.getGame().localPlayer.originalDeck ?? null,
+        },
+        mirrorAbsent: useLocalActiveDeck,
+        getActiveDeckId: () => deckStore.getActiveDeckId(),
+        getDeckById: (id) => deckStore.getById(id),
+      });
+    })();
     broadcast('deck-tracker:event', { type: event.type, snapshot: event.snapshot });
   });
   tracker.on('match-ended', (event: DeckTrackerEvent) => {
@@ -659,6 +684,7 @@ export function startDeckTracker(deckStore: DeckStore): void {
     tracker = null;
     cardPlayedDetector = null;
     heraldTriggerDetector = null;
+    prepareActionDetector = null;
     logMatchState = initialLogMatchState();
     localPlayerResolver.reset();
   });
@@ -699,6 +725,7 @@ export function forwardPowerEventToDeckTracker(
     resetBoardAttackState();
     cardPlayedDetector?.reset();
     heraldTriggerDetector?.reset();
+    prepareActionDetector?.reset();
     tracker?.resetGlobalEffects();
     localPlayerResolver.reset();
     resetLocalPlayerTriggerRevealContext();
@@ -767,6 +794,7 @@ export function forwardPowerEventToDeckTracker(
     }
   }
   heraldTriggerDetector?.handle(event);
+  prepareActionDetector?.handle(event);
   for (const tagUpdate of extraDisplayTagUpdatesFromPowerEvent(event)) {
     tracker?.recordExtraDisplayEntityTag(tagUpdate);
   }
@@ -1069,7 +1097,16 @@ export function registerDeckTrackerIpc(): void {
   ipcMain.handle(
     'deck-tracker:select-saved-deck',
     (_, savedDeckId: string, savedDeckVersion: number) => {
-      tracker?.selectSavedDeck(savedDeckId, savedDeckVersion);
+      if (tracker === null) return;
+      const saved = deckStoreRef?.getById(savedDeckId) ?? null;
+      if (saved !== null) {
+        tracker.setOriginalDeck({
+          deckId: 0,
+          name: saved.name,
+          originalDeck: DeckSnapshot.fromDeckCards(saved.cards),
+        });
+      }
+      tracker.selectSavedDeck(savedDeckId, savedDeckVersion);
     },
   );
 

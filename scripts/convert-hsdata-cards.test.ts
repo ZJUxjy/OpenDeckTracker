@@ -137,4 +137,28 @@ describe('convertHsdataCardsForTest', () => {
     expect(cards.find((card) => card.id === 'TEST_HERALD_CASTER')?.mechanics).toContain('HERALD');
     expect(cards.find((card) => card.id === 'TEST_HERALD_PAYOFF')?.referencedTags).toContain('HERALD');
   });
+
+  it('preserves Prepare mechanics, referenced tags, and deck action cost from hsdata XML', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'hdt-hsdata-prepare-'));
+    const prepareXml = path.join(root, 'scripts/fixtures/hsdata-prepare.xml');
+
+    await convertHsdataCardsForTest(prepareXml, dir, {
+      generatedAt: '2026-06-29T00:00:00.000Z',
+      locales: ['enUS'],
+    });
+
+    const cards = JSON.parse(
+      await readFile(path.join(dir, 'cards.collectible.enUS.json'), 'utf8'),
+    ) as Array<{
+      id: string;
+      mechanics?: string[];
+      referencedTags?: string[];
+      deckActionCost?: number;
+    }>;
+
+    const caster = cards.find((card) => card.id === 'TEST_PREPARE_CASTER');
+    expect(caster?.mechanics).toContain('PREPARE');
+    expect(caster?.deckActionCost).toBe(1);
+    expect(cards.find((card) => card.id === 'TEST_PREPARE_REF')?.referencedTags).toContain('PREPARE');
+  });
 });

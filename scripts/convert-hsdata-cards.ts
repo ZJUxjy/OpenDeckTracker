@@ -126,6 +126,7 @@ const MECHANIC_TAGS = new Set([
   'OVERKILL',
   'OVERLOAD',
   'POISONOUS',
+  'PREPARE',
   'QUEST',
   'QUICKDRAW',
   'REBORN',
@@ -261,6 +262,9 @@ function normalizeCard(entity: RawEntity, locale: Locale): CardDef {
     chooseLoc(entity.loc, 'CARDTEXT', locale, '');
   if (text !== '') card.text = text;
   if (entity.ints.COST !== undefined) card.cost = entity.ints.COST;
+  if (entity.ints.DECK_ACTION_COST !== undefined) {
+    card.deckActionCost = entity.ints.DECK_ACTION_COST;
+  }
   if (entity.ints.ATK !== undefined) card.attack = entity.ints.ATK;
   if (entity.ints.HEALTH !== undefined) card.health = entity.ints.HEALTH;
   if (entity.ints.ARMOR !== undefined) card.armor = entity.ints.ARMOR;
@@ -282,6 +286,7 @@ function stableCard(card: CardDef): CardDef {
     name: card.name,
   } as CardDef;
   if (card.cost !== undefined) out.cost = card.cost;
+  if (card.deckActionCost !== undefined) out.deckActionCost = card.deckActionCost;
   if (card.attack !== undefined) out.attack = card.attack;
   if (card.health !== undefined) out.health = card.health;
   if (card.armor !== undefined) out.armor = card.armor;

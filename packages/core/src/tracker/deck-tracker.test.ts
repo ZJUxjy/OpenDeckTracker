@@ -1426,6 +1426,43 @@ describe('DeckTracker', () => {
     expect(snapshot.extraDisplay?.pools.friendlyDeadMinionsThisGameUnique).toEqual([]);
   });
 
+  it('keeps Dark Gift discover options revealed from deck out of graveyard records', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) => {
+        if (cardId === 'DARK_GIFT_OPTION') {
+          return { type: 'MINION', cost: 2, mechanics: ['DEATHRATTLE'] };
+        }
+        return null;
+      },
+    });
+    tracker.getGame().setPlayers({
+      localControllerId: 1,
+      localName: 'Local',
+      opposingControllerId: 2,
+      opposingName: 'Opponent',
+    });
+
+    tracker.applyLogDerivedEntityUpdates([
+      {
+        entityId: 93,
+        cardId: 'DARK_GIFT_OPTION',
+        zone: 'DECK',
+        controllerId: 1,
+        info: { created: true, playedByController: 1 },
+      },
+    ]);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 93, zone: 'GRAVEYARD' },
+    ]);
+
+    const snapshot = tracker.getSnapshot();
+    expect(snapshot.friendlyGraveyard).toEqual([]);
+    expect(snapshot.extraDisplay?.counters.friendlyMinionDeathsThisGame).toBeUndefined();
+    expect(snapshot.extraDisplay?.pools.friendlyDeadMinionsThisGameUnique).toEqual([]);
+  });
+
   it('records a chosen generated card once it leaves the transient choice zone for play', () => {
     const { mirror } = makeMirror();
     const tracker = new DeckTracker({
@@ -1629,6 +1666,48 @@ describe('DeckTracker', () => {
     tracker.recordHeraldTriggered({ entityId: 701, blockType: 'TRIGGER' });
 
     expect(tracker.getSnapshot().extraDisplay?.counters.heraldCountThisGame ?? 0).toBe(0);
+  });
+
+  it('counts local Prepare actions for Prepare-related cards', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) =>
+        cardId === 'CATA_EVENT_401'
+          ? { type: 'MINION', referencedTags: ['PREPARE'], cost: 3 }
+          : null,
+    });
+
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      {
+        entityId: 880,
+        cardId: 'CATA_EVENT_401',
+        zone: 'HAND',
+        controllerId: 1,
+        info: { originalController: 1 },
+      },
+    ]);
+    tracker.recordPrepareAction({
+      entityId: 880,
+      controllerId: 1,
+      baseCost: 3,
+      effectiveCost: 0,
+      discount: 3,
+    });
+
+    const snapshot = tracker.getSnapshot().extraDisplay!;
+    expect(snapshot.counters.prepareCountThisGame).toBe(1);
+    expect(snapshot.preparedHand).toEqual([
+      {
+        entityId: 880,
+        cardId: 'CATA_EVENT_401',
+        baseCost: 3,
+        effectiveCost: 0,
+        discount: 3,
+        preparedAtTurn: 0,
+      },
+    ]);
   });
 
   it('builds extra-display deck pools from remaining deck metadata', async () => {

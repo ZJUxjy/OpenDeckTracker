@@ -127,6 +127,22 @@ const CARD_DEFS: Record<
     referencedTags: ['HERALD'],
     text: '<b>战吼：</b>选择并释放{0}项灾变！<i><b>兆示</b>两次后升级。</i>',
   },
+  CATA_EVENT_401: {
+    name: '坑道地卜师',
+    cost: 3,
+    rarity: 'EPIC',
+    type: 'MINION',
+    referencedTags: ['PREPARE'],
+    text: '<b>预备</b>。<b>法术伤害+1</b>',
+  },
+  JAIL_407: {
+    name: '大头目梵妮莎',
+    cost: 6,
+    rarity: 'LEGENDARY',
+    type: 'MINION',
+    mechanics: ['PREPARE'],
+    text: '<b>预备</b>。在你使用一张牌后，随机获取一张<b>战吼</b>随从牌，其法力值消耗减少（2）点。',
+  },
   TIME_714: { name: 'Time Lord Ebonok', cost: 6, rarity: 'LEGENDARY', type: 'MINION' },
   OPP_LAST_A: { name: 'Opponent Last Turn A', cost: 3, rarity: 'COMMON', type: 'MINION' },
   OPP_LAST_B: { name: 'Opponent Last Turn B', cost: 4, rarity: 'COMMON', type: 'MINION' },
@@ -1163,6 +1179,86 @@ describe('LiveDeckPanel hover', () => {
     render(<LiveDeckPanel />);
 
     expect(screen.getByTestId('herald-counter-chip')).toHaveTextContent('兆示 3');
+  });
+
+  it('shows the Prepare count on Prepare card previews', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_EVENT_401', count: 1 }],
+      extraDisplay: {
+        counters: { prepareCountThisGame: 2 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    const call = cardPreviewShowEnhancedExtra.mock.calls.at(-1)!;
+    expect(call[0]).toBe('CATA_EVENT_401');
+    expect(call[1]).toEqual({
+      title: '坑道地卜师',
+      lines: ['本局已预备：2 次'],
+    });
+  });
+
+  it('renders a compact Prepare chip in the deck panel header', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CATA_EVENT_401', count: 1 }],
+      extraDisplay: {
+        counters: { prepareCountThisGame: 1 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    expect(screen.getByTestId('prepare-counter-chip')).toHaveTextContent('预备 1');
+  });
+
+  it('shows a Prepare discount badge on prepared hand cards', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'JAIL_407', count: 1 }],
+      remaining: [],
+      friendlyHand: ['JAIL_407'],
+      extraDisplay: {
+        counters: { prepareCountThisGame: 1 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        preparedHand: [
+          {
+            entityId: 42,
+            cardId: 'JAIL_407',
+            baseCost: 6,
+            effectiveCost: 2,
+            discount: 4,
+            preparedAtTurn: 3,
+          },
+        ],
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+
+    expect(screen.getByTestId('prepare-hand-badge')).toHaveTextContent('预备 -4');
+    expect(screen.getByText('2')).toBeTruthy();
   });
 
   it('invokes cardPreview.show after the hover-delay threshold', () => {
