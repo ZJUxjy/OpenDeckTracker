@@ -19,10 +19,17 @@ function resolveIconPath(): string | undefined {
   return candidates.find((p) => p && existsSync(p));
 }
 
+/** Opaque fallback matching the reference (Arcane) shell — used in dev when
+ *  Acrylic + fully-transparent backgroundColor reads as a black hole before
+ *  the renderer paints, or when DWM material init fails on some Windows SKUs. */
+const DEV_WIN_BACKGROUND = '#05090a';
+
 export function createMainWindow(): BrowserWindow {
   const iconPath = resolveIconPath();
   const isWin = process.platform === 'win32';
   const isMac = process.platform === 'darwin';
+  const isDevRenderer = Boolean(process.env['ELECTRON_RENDERER_URL']);
+  const useWinAcrylic = isWin && !isDevRenderer;
 
   // Tahoe-grade Liquid Glass on the actual OS window:
   //   • Windows 11 22H2+ → backgroundMaterial: 'mica' (real desktop
@@ -45,15 +52,20 @@ export function createMainWindow(): BrowserWindow {
     width: 1280,
     height: 800,
     title: 'OpenDeckTracker',
+    // Hide until the first frame is ready — avoids a blank transparent
+    // window flashing black on Windows while Vite/Electron loads the page.
+    show: false,
     // Fully-transparent backgroundColor so DWM can substitute the
     // backdrop material. On non-vibrancy systems (Linux / older
     // Windows) we use a neutral light gray that reads correctly in
     // light mode. Dark mode on those platforms is handled by the
     // renderer's .dark class painting opaque dark surfaces.
+    // Dev (`ELECTRON_RENDERER_URL`) uses an opaque dark fallback on
+    // Windows so a failed/slow Acrylic init never reads as a black screen.
     // Dynamic theme-synced backgroundColor via nativeTheme is a
     // future enhancement tracked in the theme system roadmap.
-    backgroundColor: isWin || isMac ? '#00000000' : '#F0F0F2',
-    ...(isWin
+    backgroundColor: useWinAcrylic || isMac ? '#00000000' : isWin ? DEV_WIN_BACKGROUND : '#F0F0F2',
+    ...(useWinAcrylic
       ? {
           // Acrylic — not Mica — for the Tahoe-style iridescent
           // Liquid Glass look. Mica only tints the desktop wallpaper
@@ -78,7 +90,16 @@ export function createMainWindow(): BrowserWindow {
             height: 32,
           },
         }
-      : {}),
+      : isWin
+        ? {
+            titleBarStyle: 'hidden' as const,
+            titleBarOverlay: {
+              color: DEV_WIN_BACKGROUND,
+              symbolColor: '#C8C8CD',
+              height: 32,
+            },
+          }
+        : {}),
     ...(isMac
       ? {
           vibrancy: 'sidebar' as const,
@@ -102,7 +123,7 @@ export function createMainWindow(): BrowserWindow {
   // the material — the constructor option alone has been observed
   // to silently fail on certain SKUs. setBackgroundMaterial is a
   // no-op on platforms that don't support it.
-  if (isWin) {
+  if (useWinAcrylic) {
     try {
       win.setBackgroundMaterial?.('acrylic');
     } catch {
@@ -116,11 +137,25 @@ export function createMainWindow(): BrowserWindow {
     // no DWM backdrop behind it.
   }
 
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
   win.webContents.on('will-navigate', (e) => e.preventDefault());
   win.webContents.on('will-attach-webview', (e) => e.preventDefault());
 
   const devUrl = process.env['ELECTRON_RENDERER_URL'];
   if (devUrl) {
+    win.webContents.on('did-fail-load', (_event, code, description, url) => {
+      console.error('[main-window] did-fail-load', { code, description, url });
+    });
+    win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+      const tag = level >= 2 ? 'error' : level === 1 ? 'warn' : 'log';
+      console[tag === 'log' ? 'log' : tag](`[renderer] ${message}`, { line, sourceId });
+    });
+    win.webContents.once('did-finish-load', () => {
+      win.webContents.openDevTools({ mode: 'detach' });
+    });
     void win.loadURL(devUrl);
   } else {
     void win.loadFile(join(__dirname, '../renderer/index.html'));

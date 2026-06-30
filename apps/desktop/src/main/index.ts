@@ -40,6 +40,12 @@ const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
 } else {
+  // Corrupted or full disk caches can spam CreateMapBlock errors and
+  // occasionally interfere with dev-server loads; skip HTTP caching in dev.
+  if (!app.isPackaged) {
+    app.commandLine.appendSwitch('disable-http-cache');
+  }
+
   // Track the main window explicitly. `BrowserWindow.getAllWindows()[0]`
   // would happily return an overlay or the card-preview window — neither
   // is what the user expects when they double-click the desktop icon a

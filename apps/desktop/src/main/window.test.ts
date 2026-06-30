@@ -5,8 +5,12 @@ const mocks = vi.hoisted(() => {
 
   class MockWindow {
     _opts: Record<string, unknown>;
-    _listeners: Record<string, Array<() => void>> = {};
-    webContents = { on: vi.fn() };
+    _listeners: Record<string, Array<(...args: unknown[]) => void>> = {};
+    webContents = {
+      on: vi.fn(),
+      once: vi.fn(),
+      openDevTools: vi.fn(),
+    };
 
     constructor(opts: Record<string, unknown>) {
       this._opts = opts;
@@ -16,7 +20,12 @@ const mocks = vi.hoisted(() => {
     loadURL = vi.fn(() => Promise.resolve());
     loadFile = vi.fn(() => Promise.resolve());
     setBackgroundMaterial = vi.fn();
-    on = vi.fn((event: string, handler: () => void) => {
+    show = vi.fn();
+    on = vi.fn((event: string, handler: (...args: unknown[]) => void) => {
+      (this._listeners[event] ??= []).push(handler);
+      return this;
+    });
+    once = vi.fn((event: string, handler: (...args: unknown[]) => void) => {
       (this._listeners[event] ??= []).push(handler);
       return this;
     });
@@ -88,8 +97,28 @@ afterEach(() => {
 });
 
 describe('createMainWindow', () => {
-  it('enables transparent Windows acrylic material at creation', () => {
+  it('uses opaque dev fallback on Windows when ELECTRON_RENDERER_URL is set', () => {
     stubPlatform('win32');
+
+    const win = createMainWindow();
+
+    expect(mocks.BrowserWindow).toHaveBeenCalledTimes(1);
+    expect(lastWindow()).toBe(win);
+    expect(lastWindow()._opts.show).toBe(false);
+    expect(lastWindow()._opts.backgroundColor).toBe('#05090a');
+    expect(lastWindow()._opts.backgroundMaterial).toBeUndefined();
+    expect(lastWindow()._opts.titleBarStyle).toBe('hidden');
+    expect(lastWindow()._opts.titleBarOverlay).toEqual({
+      color: '#05090a',
+      symbolColor: '#C8C8CD',
+      height: 32,
+    });
+    expect(lastWindow().setBackgroundMaterial).not.toHaveBeenCalled();
+  });
+
+  it('enables transparent Windows acrylic material in packaged builds', () => {
+    stubPlatform('win32');
+    delete process.env['ELECTRON_RENDERER_URL'];
 
     const win = createMainWindow();
 
