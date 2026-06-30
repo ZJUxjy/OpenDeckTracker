@@ -18,9 +18,10 @@ use windows::Win32::System::Threading::{
     OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetForegroundWindow, GetWindow, GetWindowRect,
-    GetWindowThreadProcessId, IsIconic, IsWindowVisible, SetWindowPos, GW_HWNDPREV, HWND_NOTOPMOST,
-    HWND_TOP, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, SWP_SHOWWINDOW,
+    EnumWindows, GetClassNameW, GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowRect,
+    GetWindowThreadProcessId, IsIconic, IsWindowVisible, SetWindowPos, GWL_EXSTYLE, GW_HWNDPREV,
+    HWND_NOTOPMOST, HWND_TOP, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE,
+    SWP_SHOWWINDOW, WS_EX_TOPMOST,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -125,6 +126,26 @@ fn find_hearthstone_hwnd() -> Option<HWND> {
     }
 }
 
+fn window_above(hwnd: HWND) -> HWND {
+    // SAFETY: `hwnd` is a top-level window handle found/enumerated by Win32;
+    // GetWindow is read-only. Null means there is no previous z-order entry.
+    unsafe { GetWindow(hwnd, GW_HWNDPREV) }.unwrap_or(HWND(null_mut()))
+}
+
+fn is_topmost_window(hwnd: HWND) -> bool {
+    // SAFETY: GetWindowLongPtrW with GWL_EXSTYLE is read-only for a valid HWND.
+    let ex_style = unsafe { GetWindowLongPtrW(hwnd, GWL_EXSTYLE) } as u32;
+    (ex_style & WS_EX_TOPMOST.0) != 0
+}
+
+fn should_reposition_overlay(
+    overlay_is_topmost: bool,
+    window_above_hearthstone: HWND,
+    overlay_hwnd: HWND,
+) -> bool {
+    overlay_is_topmost || window_above_hearthstone != overlay_hwnd
+}
+
 /// Keep an overlay as a normal, non-topmost window immediately above
 /// Hearthstone in z-order. This lets the overlay remain visible over the
 /// game on a secondary monitor without floating over unrelated foreground
@@ -141,10 +162,18 @@ pub fn place_window_above_hearthstone(overlay_hwnd: HWND) -> windows::core::Resu
     }
 
     let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_SHOWWINDOW;
-    // SAFETY: both HWNDs are top-level windows. We only change z-order /
-    // visibility and explicitly avoid activation or geometry changes.
-    unsafe {
-        SetWindowPos(overlay_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, flags)?;
+    let overlay_is_topmost = is_topmost_window(overlay_hwnd);
+    let current_above_hearthstone = window_above(hearthstone_hwnd);
+    if !should_reposition_overlay(overlay_is_topmost, current_above_hearthstone, overlay_hwnd) {
+        return Ok(true);
+    }
+
+    if overlay_is_topmost {
+        // SAFETY: both HWNDs are top-level windows. We only change z-order /
+        // visibility and explicitly avoid activation or geometry changes.
+        unsafe {
+            SetWindowPos(overlay_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, flags)?;
+        }
     }
 
     // hWndInsertAfter is the window that should precede the positioned
@@ -152,9 +181,7 @@ pub fn place_window_above_hearthstone(overlay_hwnd: HWND) -> windows::core::Resu
     // covering unrelated foreground windows, insert it after the current
     // window immediately above Hearthstone. If Hearthstone is already top
     // of the non-topmost stack, HWND_TOP is the correct boundary.
-    // SAFETY: hearthstone_hwnd was just found; GetWindow is read-only.
-    let insert_after =
-        unsafe { GetWindow(hearthstone_hwnd, GW_HWNDPREV) }.unwrap_or(HWND(null_mut()));
+    let insert_after = window_above(hearthstone_hwnd);
     if insert_after == overlay_hwnd {
         return Ok(true);
     }
@@ -198,4 +225,35 @@ pub fn get_hearthstone_window() -> Option<HearthstoneWindow> {
         visible,
         foreground,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn hwnd(raw: isize) -> HWND {
+        HWND(raw as *mut _)
+    }
+
+    #[test]
+    fn non_topmost_overlay_already_above_hearthstone_needs_no_reposition() {
+        let overlay = hwnd(1);
+        assert!(!should_reposition_overlay(false, overlay, overlay));
+    }
+
+    #[test]
+    fn topmost_overlay_above_hearthstone_still_needs_reposition() {
+        let overlay = hwnd(1);
+        assert!(should_reposition_overlay(true, overlay, overlay));
+    }
+
+    #[test]
+    fn different_window_above_hearthstone_needs_reposition() {
+        assert!(should_reposition_overlay(false, hwnd(2), hwnd(1)));
+    }
+
+    #[test]
+    fn no_window_above_hearthstone_needs_reposition_to_top() {
+        assert!(should_reposition_overlay(false, HWND(null_mut()), hwnd(1)));
+    }
 }
