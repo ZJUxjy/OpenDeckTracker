@@ -248,7 +248,7 @@ describe('createHearthstoneWindowTracker', () => {
     events.length = 0;
 
     result = null;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       await vi.advanceTimersByTimeAsync(200);
       await vi.advanceTimersByTimeAsync(0);
     }
@@ -272,7 +272,7 @@ describe('createHearthstoneWindowTracker', () => {
     events.length = 0;
 
     result = HS_MINIMIZED;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       await vi.advanceTimersByTimeAsync(200);
       await vi.advanceTimersByTimeAsync(0);
     }
@@ -306,6 +306,65 @@ describe('createHearthstoneWindowTracker', () => {
 
     const visEvent = events.find((e) => e.kind === 'visibility');
     expect(visEvent).toBeUndefined();
+    tracker.stop();
+  });
+
+  it('does not emit visibility=false from a burst of native false reads without elapsed grace time', async () => {
+    let result: HearthstoneWindow | null = HS_VISIBLE;
+    const notifyWindowEvent: { current?: () => void } = {};
+    const subscribeToWindowEvents = vi.fn((notify: () => void) => {
+      notifyWindowEvent.current = notify;
+      return vi.fn();
+    });
+    const getWindow = vi.fn(async () => result);
+    const tracker = createHearthstoneWindowTracker({
+      getWindow,
+      subscribeToWindowEvents,
+      watchdogIntervalMs: 1000,
+    });
+    const { events, cb } = collect();
+    tracker.subscribe(cb);
+
+    tracker.addClient();
+    await Promise.resolve();
+    await Promise.resolve();
+    events.length = 0;
+
+    result = null;
+    for (let i = 0; i < 5; i++) {
+      notifyWindowEvent.current?.();
+      await Promise.resolve();
+      await Promise.resolve();
+    }
+
+    const visFalse = events.find((e) => e.kind === 'visibility' && !e.visible);
+    expect(visFalse).toBeUndefined();
+    tracker.stop();
+  });
+
+  it('emits visibility=false once the false state persists past the grace period', async () => {
+    let result: HearthstoneWindow | null = HS_VISIBLE;
+    const getWindow = vi.fn(async () => result);
+    const tracker = createHearthstoneWindowTracker({ getWindow, intervalMs: 200 });
+    const { events, cb } = collect();
+    tracker.subscribe(cb);
+
+    tracker.addClient();
+    await Promise.resolve();
+    await Promise.resolve();
+    events.length = 0;
+
+    result = null;
+    for (let i = 0; i < 5; i++) {
+      await vi.advanceTimersByTimeAsync(200);
+      await vi.advanceTimersByTimeAsync(0);
+    }
+    expect(events.find((e) => e.kind === 'visibility')).toBeUndefined();
+
+    await vi.advanceTimersByTimeAsync(200);
+    await vi.advanceTimersByTimeAsync(0);
+    const last = events[events.length - 1];
+    expect(last).toEqual({ kind: 'visibility', visible: false });
     tracker.stop();
   });
 

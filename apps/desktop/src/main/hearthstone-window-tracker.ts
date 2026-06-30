@@ -25,13 +25,20 @@ export interface CreateOptions {
   getWindow: () => Promise<HearthstoneWindow | null>;
   intervalMs?: number;
   watchdogIntervalMs?: number;
+  /**
+   * Deprecated count-based throttle compatibility: when provided,
+   * converted to a time grace using `intervalMs`.
+   */
   falseStreakThreshold?: number;
+  /** Minimum wall-clock time a missing/minimized HS window must persist before hiding overlays. */
+  falseVisibilityGraceMs?: number;
   subscribeToWindowEvents?: WindowEventSubscription;
 }
 
 const DEFAULT_INTERVAL_MS = 200;
 const DEFAULT_WATCHDOG_INTERVAL_MS = 1000;
 const DEFAULT_FALSE_STREAK = 5;
+const DEFAULT_FALSE_VISIBILITY_GRACE_MS = DEFAULT_FALSE_STREAK * DEFAULT_INTERVAL_MS;
 
 function boundsEqual(a: BoundsRect, b: BoundsRect): boolean {
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
@@ -40,12 +47,17 @@ function boundsEqual(a: BoundsRect, b: BoundsRect): boolean {
 export function createHearthstoneWindowTracker(opts: CreateOptions): HearthstoneWindowTracker {
   const intervalMs = opts.intervalMs ?? DEFAULT_INTERVAL_MS;
   const watchdogIntervalMs = opts.watchdogIntervalMs ?? DEFAULT_WATCHDOG_INTERVAL_MS;
-  const falseStreakThreshold = opts.falseStreakThreshold ?? DEFAULT_FALSE_STREAK;
+  const falseVisibilityGraceMs =
+    opts.falseVisibilityGraceMs ??
+    (opts.falseStreakThreshold !== undefined
+      ? opts.falseStreakThreshold * intervalMs
+      : DEFAULT_FALSE_VISIBILITY_GRACE_MS);
 
   let clientCount = 0;
   let pollHandle: ReturnType<typeof setInterval> | null = null;
   let unsubscribeWindowEvents: (() => void) | null = null;
   let falseStreak = 0;
+  let firstFalseAtMs: number | null = null;
   let lastBounds: BoundsRect | null = null;
   let lastVisible = false;
   let lastForeground = false;
@@ -94,6 +106,7 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
       if (isPresent && result !== null) {
         // Reset streak — any present reading clears the throttle.
         falseStreak = 0;
+        firstFalseAtMs = null;
         const next: BoundsRect = {
           x: result.x, y: result.y, width: result.width, height: result.height,
         };
@@ -120,9 +133,13 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
           emit({ kind: 'foreground', foreground: false });
         }
         falseStreak++;
-        if (falseStreak >= falseStreakThreshold && lastVisible) {
+        if (firstFalseAtMs === null) firstFalseAtMs = Date.now();
+        const falseElapsedMs = Date.now() - firstFalseAtMs;
+        if (falseElapsedMs >= falseVisibilityGraceMs && lastVisible) {
           lastVisible = false;
-          console.log(`[overlay-tracker] emit visibility: false (streak=${falseStreak})`);
+          console.log(
+            `[overlay-tracker] emit visibility: false (streak=${falseStreak} elapsed=${falseElapsedMs}ms)`,
+          );
           emit({ kind: 'visibility', visible: false });
         }
       }
@@ -164,6 +181,7 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
   function start(): void {
     if (pollHandle !== null) return;
     falseStreak = 0;
+    firstFalseAtMs = null;
     const eventSourceActive = startWindowEvents();
     requestPoll();
     const activeIntervalMs = eventSourceActive ? watchdogIntervalMs : intervalMs;
@@ -178,6 +196,7 @@ export function createHearthstoneWindowTracker(opts: CreateOptions): Hearthstone
     }
     pollAgain = false;
     falseStreak = 0;
+    firstFalseAtMs = null;
     lastBounds = null;
     lastVisible = false;
     lastForeground = false;

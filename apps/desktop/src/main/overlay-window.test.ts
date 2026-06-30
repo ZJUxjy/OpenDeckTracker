@@ -89,6 +89,10 @@ function lastWindow() {
   return mocks.windows[mocks.windows.length - 1]!;
 }
 
+function applyTrackerBounds(mgr: OverlayManager): void {
+  mgr.setBounds({ x: 100, y: 50, width: 320, height: 800 });
+}
+
 beforeEach(() => {
   mocks.windows.length = 0;
   vi.clearAllMocks();
@@ -164,10 +168,26 @@ describe('OverlayManager', () => {
     expect(lastWindow().isVisible()).toBe(false);
   });
 
+  it('does not show before tracker bounds have been applied', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+
+    const win = lastWindow();
+    expect(win.showInactive).not.toHaveBeenCalled();
+    expect(win.isVisible()).toBe(false);
+
+    applyTrackerBounds(mgr);
+    expect(win.showInactive).toHaveBeenCalledTimes(1);
+    expect(win.isVisible()).toBe(true);
+  });
+
   it('setVisibleOnScreen(true) + setInActiveMatch(true) after enable() shows above Hearthstone even in background', () => {
     const placeWindowAboveHearthstone = vi.fn(() => true);
     const mgr = makeManager({ placeWindowAboveHearthstone });
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
 
@@ -181,6 +201,7 @@ describe('OverlayManager', () => {
   it('setTargetForeground(true) switches the visible overlay to screen-saver topmost', () => {
     const mgr = makeManager();
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     const win = lastWindow();
@@ -197,6 +218,7 @@ describe('OverlayManager', () => {
     vi.useFakeTimers();
     const mgr = makeManager();
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     const win = lastWindow();
@@ -217,34 +239,106 @@ describe('OverlayManager', () => {
     expect(win.moveTop).toHaveBeenCalledTimes(3);
   });
 
-  it('setVisibleOnScreen(false) after showing hides the window', () => {
+  it('reasserts z-order on a low-frequency heartbeat while foreground', async () => {
+    vi.useFakeTimers();
     const mgr = makeManager();
     mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+
+    mgr.setTargetForeground(true);
+    await vi.advanceTimersByTimeAsync(250);
+    win.setAlwaysOnTop.mockClear();
+    win.moveTop.mockClear();
+
+    await vi.advanceTimersByTimeAsync(749);
+    expect(win.setAlwaysOnTop).not.toHaveBeenCalled();
+    expect(win.moveTop).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
+    expect(win.moveTop).toHaveBeenCalledTimes(1);
+  });
+
+  it('setVisibleOnScreen(false) after showing hides after a short debounce', async () => {
+    vi.useFakeTimers();
+    const mgr = makeManager();
+    mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     mgr.setTargetForeground(true);
     expect(lastWindow().isVisible()).toBe(true);
 
     mgr.setVisibleOnScreen(false);
-    expect(lastWindow().hide).toHaveBeenCalled();
+    expect(lastWindow().hide).not.toHaveBeenCalled();
+    expect(lastWindow().isVisible()).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(349);
+    expect(lastWindow().hide).not.toHaveBeenCalled();
+    expect(lastWindow().isVisible()).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(1);
+    expect(lastWindow().hide).toHaveBeenCalledTimes(1);
     expect(lastWindow().isVisible()).toBe(false);
   });
 
-  it('setInActiveMatch(false) hides the window even if visibleOnScreen is true', () => {
+  it('cancels a pending debounced hide when visibility recovers', async () => {
+    vi.useFakeTimers();
     const mgr = makeManager();
     mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    expect(lastWindow().isVisible()).toBe(true);
+
+    mgr.setVisibleOnScreen(false);
+    await vi.advanceTimersByTimeAsync(200);
+    mgr.setVisibleOnScreen(true);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(lastWindow().hide).not.toHaveBeenCalled();
+    expect(lastWindow().isVisible()).toBe(true);
+  });
+
+  it('repeated visible syncs do not call showInactive again', () => {
+    const mgr = makeManager();
+    mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+    expect(win.showInactive).toHaveBeenCalledTimes(1);
+
+    mgr.setVisibleOnScreen(true);
+    mgr.setTargetForeground(false);
+
+    expect(win.showInactive).toHaveBeenCalledTimes(1);
+    expect(win.isVisible()).toBe(true);
+  });
+
+  it('setInActiveMatch(false) hides the window after debounce even if visibleOnScreen is true', async () => {
+    vi.useFakeTimers();
+    const mgr = makeManager();
+    mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     mgr.setTargetForeground(true);
     expect(lastWindow().isVisible()).toBe(true);
 
     mgr.setInActiveMatch(false);
+    expect(lastWindow().isVisible()).toBe(true);
+    await vi.advanceTimersByTimeAsync(350);
     expect(lastWindow().isVisible()).toBe(false);
   });
 
   it('disable() hides without destroying', () => {
     const mgr = makeManager();
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     mgr.setTargetForeground(true);
@@ -257,6 +351,7 @@ describe('OverlayManager', () => {
   it('disable() resets visibleOnScreen so re-enable does not flash a stale visible window', () => {
     const mgr = makeManager();
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     mgr.setTargetForeground(true);
@@ -273,6 +368,7 @@ describe('OverlayManager', () => {
     const placeWindowAboveHearthstone = vi.fn(() => true);
     const mgr = makeManager({ placeWindowAboveHearthstone });
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setInActiveMatch(true);
     mgr.setVisibleOnScreen(true);
     mgr.setTargetForeground(true);
@@ -474,13 +570,15 @@ describe('OverlayManager', () => {
 });
 
 describe('OverlayManager darwin foreground gate', () => {
-  it('on darwin stays hidden until Hearthstone is frontmost', () => {
+  it('on darwin stays hidden until Hearthstone is frontmost', async () => {
+    vi.useFakeTimers();
     const mgr = new OverlayManager({
       rendererUrl: 'r',
       preloadPath: 'p',
       platform: 'darwin',
     });
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setVisibleOnScreen(true);
     mgr.setInActiveMatch(true);
     // foreground still false → must be hidden
@@ -491,6 +589,8 @@ describe('OverlayManager darwin foreground gate', () => {
     expect(win.isVisible()).toBe(true);
 
     mgr.setTargetForeground(false);
+    expect(win.isVisible()).toBe(true);
+    await vi.advanceTimersByTimeAsync(350);
     expect(win.isVisible()).toBe(false);
   });
 
@@ -501,6 +601,7 @@ describe('OverlayManager darwin foreground gate', () => {
       platform: 'win32',
     });
     mgr.enable();
+    applyTrackerBounds(mgr);
     mgr.setVisibleOnScreen(true);
     mgr.setInActiveMatch(true);
     const win = mocks.windows.at(-1)!;

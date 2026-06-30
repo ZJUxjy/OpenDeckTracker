@@ -21,6 +21,9 @@ interface UserOffset {
   dy: number;
 }
 
+const HIDE_DEBOUNCE_MS = 350;
+const Z_ORDER_HEARTBEAT_MS = 1000;
+
 function boundsEqual(a: BoundsRect, b: BoundsRect): boolean {
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
 }
@@ -84,6 +87,9 @@ export class OverlayManager {
   private readonly routeHash: string;
   private readonly platform: NodeJS.Platform;
   private readonly zOrderReassertHandles = new Set<ReturnType<typeof setTimeout>>();
+  private hideTimer: ReturnType<typeof setTimeout> | null = null;
+  private zOrderHeartbeatHandle: ReturnType<typeof setInterval> | null = null;
+  private currentShown = false;
 
   constructor(opts: OverlayManagerOptions) {
     this.opts = opts;
@@ -101,9 +107,8 @@ export class OverlayManager {
   disable(): void {
     this.userEnabled = false;
     this.visibleOnScreen = false;
-    this.clearZOrderReasserts();
     console.log(`[overlay-mgr ${this.routeHash}] disable()`);
-    this.syncVisibility();
+    this.hideImmediately();
   }
 
   setVisibleOnScreen(visible: boolean): void {
@@ -122,6 +127,7 @@ export class OverlayManager {
         this.scheduleZOrderReassert();
       } else {
         this.clearZOrderReasserts();
+        this.updateZOrderHeartbeat();
       }
       return;
     }
@@ -177,15 +183,19 @@ export class OverlayManager {
     this.win.setBounds(clamped);
     this.lastAppliedBounds = { ...clamped };
     this.syncZOrder();
+    this.syncVisibility();
   }
 
   dispose(): void {
+    this.clearPendingHide();
+    this.stopZOrderHeartbeat();
     this.clearZOrderReasserts();
     if (this.win && !this.win.isDestroyed()) {
       this.win.destroy();
     }
     this.win = null;
     this.windowFocused = false;
+    this.currentShown = false;
   }
 
   private createWindow(): void {
@@ -270,34 +280,91 @@ export class OverlayManager {
     return this.platform === 'darwin' ? base && this.targetForeground : base;
   }
 
+  private shouldBeVisibleNow(): boolean {
+    return this.shouldBeShown() && this.lastAppliedBounds !== null;
+  }
+
+  private isWindowVisible(): boolean {
+    if (!this.win || this.win.isDestroyed()) return false;
+    try {
+      return this.win.isVisible();
+    } catch {
+      return this.currentShown;
+    }
+  }
+
   private syncVisibility(): void {
     if (!this.win || this.win.isDestroyed()) {
       console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
       return;
     }
-    const shouldShow = this.shouldBeShown();
+    const shouldShow = this.shouldBeVisibleNow();
     console.log(
-      `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} inActiveMatch=${this.inActiveMatch} targetForeground=${this.targetForeground} → ${shouldShow ? 'show' : 'hide'}`,
+      `[overlay-mgr ${this.routeHash}] syncVisibility: userEnabled=${this.userEnabled} visibleOnScreen=${this.visibleOnScreen} inActiveMatch=${this.inActiveMatch} targetForeground=${this.targetForeground} boundsReady=${this.lastAppliedBounds !== null} → ${shouldShow ? 'show' : 'hide'}`,
     );
     if (shouldShow) {
-      this.win.showInactive();
+      this.clearPendingHide();
+      if (!this.currentShown || !this.isWindowVisible()) {
+        this.win.showInactive();
+        this.currentShown = true;
+      }
       this.syncZOrder();
+      this.updateZOrderHeartbeat();
     } else {
+      this.updateZOrderHeartbeat();
       this.clearZOrderReasserts();
-      this.win.hide();
-      this.win.setAlwaysOnTop(false);
+      this.scheduleHide();
     }
+  }
+
+  private clearPendingHide(): void {
+    if (this.hideTimer === null) return;
+    clearTimeout(this.hideTimer);
+    this.hideTimer = null;
+  }
+
+  private scheduleHide(): void {
+    if (!this.win || this.win.isDestroyed()) {
+      this.currentShown = false;
+      this.clearPendingHide();
+      return;
+    }
+    if (!this.currentShown && !this.isWindowVisible()) {
+      return;
+    }
+    if (this.hideTimer !== null) return;
+    this.hideTimer = setTimeout(() => {
+      this.hideTimer = null;
+      this.hideImmediately();
+    }, HIDE_DEBOUNCE_MS);
+    (this.hideTimer as { unref?: () => void }).unref?.();
+  }
+
+  private hideImmediately(): void {
+    this.clearPendingHide();
+    this.stopZOrderHeartbeat();
+    this.clearZOrderReasserts();
+    if (!this.win || this.win.isDestroyed()) {
+      this.currentShown = false;
+      return;
+    }
+    if (this.currentShown || this.isWindowVisible()) {
+      this.win.hide();
+    }
+    this.win.setAlwaysOnTop(false);
+    this.currentShown = false;
   }
 
   private scheduleZOrderReassert(): void {
     this.clearZOrderReasserts();
-    if (!this.targetForeground || !this.shouldBeShown()) return;
+    if (!this.targetForeground || !this.shouldBeVisibleNow()) return;
     for (const delayMs of [50, 250]) {
       const handle = setTimeout(() => {
         this.zOrderReassertHandles.delete(handle);
-        if (!this.targetForeground) return;
+        if (!this.targetForeground || !this.shouldBeVisibleNow()) return;
         this.syncZOrder();
       }, delayMs);
+      (handle as { unref?: () => void }).unref?.();
       this.zOrderReassertHandles.add(handle);
     }
   }
@@ -309,9 +376,44 @@ export class OverlayManager {
     this.zOrderReassertHandles.clear();
   }
 
+  private updateZOrderHeartbeat(): void {
+    if (this.targetForeground && this.shouldBeVisibleNow() && this.currentShown) {
+      this.startZOrderHeartbeat();
+    } else {
+      this.stopZOrderHeartbeat();
+    }
+  }
+
+  private startZOrderHeartbeat(): void {
+    if (this.zOrderHeartbeatHandle !== null) return;
+    this.zOrderHeartbeatHandle = setInterval(() => {
+      if (!this.targetForeground || !this.shouldBeVisibleNow()) {
+        this.stopZOrderHeartbeat();
+        return;
+      }
+      if (!this.win || this.win.isDestroyed()) {
+        this.currentShown = false;
+        this.stopZOrderHeartbeat();
+        return;
+      }
+      if (!this.isWindowVisible()) {
+        this.win.showInactive();
+        this.currentShown = true;
+      }
+      this.syncZOrder();
+    }, Z_ORDER_HEARTBEAT_MS);
+    (this.zOrderHeartbeatHandle as { unref?: () => void }).unref?.();
+  }
+
+  private stopZOrderHeartbeat(): void {
+    if (this.zOrderHeartbeatHandle === null) return;
+    clearInterval(this.zOrderHeartbeatHandle);
+    this.zOrderHeartbeatHandle = null;
+  }
+
   private syncZOrder(): void {
     if (!this.win || this.win.isDestroyed()) return;
-    if (!this.shouldBeShown()) return;
+    if (!this.shouldBeVisibleNow()) return;
     if (this.targetForeground) {
       this.win.setAlwaysOnTop(true, 'screen-saver');
       (this.win as { moveTop?: () => void }).moveTop?.();
