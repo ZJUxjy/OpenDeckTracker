@@ -535,6 +535,52 @@ describe('createDeckStore', () => {
     }
   });
 
+  it('pruneLiveSyncedDecks removes hearthstone-live rows absent from the keep set', () => {
+    const store = createDeckStore(dbPath());
+    try {
+      const lookup = makeCardLookup([
+        { cardId: 'A', class: 'DRUID', rarity: 'COMMON', type: 'SPELL', collectible: true },
+      ]);
+      const kept = store.saveFromLive(
+        {
+          name: 'Kept',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 1 }],
+          liveDeckId: 10,
+        },
+        lookup,
+      );
+      const stale = store.saveFromLive(
+        {
+          name: 'Stale',
+          class: 'DRUID',
+          format: 'Standard',
+          cards: [{ cardId: 'A', count: 2 }],
+          liveDeckId: 20,
+        },
+        lookup,
+      );
+      const manual = store.create({
+        name: 'Manual',
+        class: 'DRUID',
+        format: 'Standard',
+        cards: [{ cardId: 'A', count: 1 }],
+      });
+      store.setActiveDeckId(stale.id);
+
+      const removed = store.pruneLiveSyncedDecks(new Set([10]));
+
+      expect(removed).toBe(1);
+      expect(store.getById(kept.id)?.id).toBe(kept.id);
+      expect(store.getById(stale.id)).toBeNull();
+      expect(store.getById(manual.id)?.id).toBe(manual.id);
+      expect(store.getActiveDeckId()).toBeNull();
+    } finally {
+      store.close();
+    }
+  });
+
   it('saveFromLive throws NonCollectibleSnapshotError for a non-collectible card', () => {
     const store = createDeckStore(dbPath());
     try {

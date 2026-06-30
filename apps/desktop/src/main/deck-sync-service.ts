@@ -21,6 +21,8 @@ export interface DeckSyncResult {
   skippedNonCollectible: number;
   /** Number of live decks skipped because the hero card had no class mapping. */
   skippedUnknownClass: number;
+  /** Number of previously synced live decks removed because they are no longer in-game. */
+  removed: number;
   /** Populated when `source === 'error'`. */
   error?: string;
 }
@@ -68,6 +70,7 @@ export function createDeckSyncService(deps: DeckSyncDependencies): {
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
       };
 
       let live: readonly LiveDeck[] | null = null;
@@ -161,6 +164,15 @@ export function createDeckSyncService(deps: DeckSyncDependencies): {
           }
           console.error('[deck-sync] saveFromLive failed', err);
         }
+      }
+
+      const keepLiveDeckIds = new Set(live.map((deck) => deck.id));
+      result.removed = deps.store.pruneLiveSyncedDecks(keepLiveDeckIds);
+      if (result.removed > 0) {
+        console.log('[deck-sync] pruned stale live-synced decks', {
+          removed: result.removed,
+          keepCount: keepLiveDeckIds.size,
+        });
       }
 
       return result;

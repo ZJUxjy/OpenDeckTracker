@@ -8,6 +8,7 @@ export interface LiveDeckSyncResult {
   synced: number;
   skippedNonCollectible: number;
   skippedUnknownClass: number;
+  removed: number;
   error?: string;
   startedAt: number;
   finishedAt: number;
@@ -54,6 +55,7 @@ export function createDeckSyncHost(options: DeckSyncHostOptions = {}): DeckSyncH
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
         startedAt,
         finishedAt: now(),
       };
@@ -67,6 +69,7 @@ export function createDeckSyncHost(options: DeckSyncHostOptions = {}): DeckSyncH
         synced: inner.synced,
         skippedNonCollectible: inner.skippedNonCollectible,
         skippedUnknownClass: inner.skippedUnknownClass,
+        removed: inner.removed,
         startedAt,
         finishedAt,
       };
@@ -81,6 +84,7 @@ export function createDeckSyncHost(options: DeckSyncHostOptions = {}): DeckSyncH
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
         error: message,
         startedAt,
         finishedAt: now(),

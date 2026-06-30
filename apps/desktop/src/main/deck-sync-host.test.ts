@@ -14,6 +14,7 @@ describe('deck-sync-host', () => {
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
       })),
     });
 
@@ -31,6 +32,7 @@ describe('deck-sync-host', () => {
         synced: 2,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
       })),
     });
 
@@ -54,6 +56,7 @@ describe('deck-sync-host', () => {
         synced: 1,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
       };
     });
     const host = createDeckSyncHost({ service: { syncOnce } });
@@ -88,6 +91,7 @@ describe('deck-sync-host', () => {
         synced: 3,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
       })),
     );
 
@@ -103,6 +107,7 @@ describe('deck-sync-host', () => {
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
         error: 'boom',
       })),
     });

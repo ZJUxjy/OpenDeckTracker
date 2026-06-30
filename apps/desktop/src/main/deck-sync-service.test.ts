@@ -90,6 +90,18 @@ function makeStore(initial: DeckDetail[] = []): DeckStore {
       const id = byLiveId.get(liveDeckId);
       return id !== undefined ? (records.get(id) ?? null) : null;
     }),
+    pruneLiveSyncedDecks: vi.fn((keepLiveDeckIds: ReadonlySet<number>) => {
+      let removed = 0;
+      for (const [id, deck] of records) {
+        if (deck.source !== 'hearthstone-live') continue;
+        const liveId = deck.liveDeckId ?? null;
+        if (liveId !== null && keepLiveDeckIds.has(liveId)) continue;
+        records.delete(id);
+        if (liveId !== null) byLiveId.delete(liveId);
+        removed += 1;
+      }
+      return removed;
+    }),
     listVersions: vi.fn(() => []),
     schemaVersion: vi.fn(() => 1),
     getActiveDeckId: vi.fn(() => null),
@@ -309,5 +321,95 @@ describe('deck-sync-service', () => {
     expect(result.synced).toBe(0);
     expect(result.skippedUnknownClass).toBe(1);
     expect(store.saveFromLive).not.toHaveBeenCalled();
+  });
+
+  it('removes live-synced decks that are no longer in the game', async () => {
+    const stale: DeckDetail = {
+      id: 'synced-stale',
+      name: 'Deleted In Game',
+      class: 'MAGE',
+      format: 'Standard',
+      cards: [{ cardId: 'CARD_A', count: 30 }],
+      version: 1,
+      notes: '',
+      tags: [],
+      createdAt: 0,
+      updatedAt: 0,
+      source: 'hearthstone-live',
+      liveDeckId: 99,
+    };
+    const kept: DeckDetail = {
+      id: 'synced-kept',
+      name: 'Still In Game',
+      class: 'HUNTER',
+      format: 'Standard',
+      cards: [{ cardId: 'CARD_A', count: 30 }],
+      version: 1,
+      notes: '',
+      tags: [],
+      createdAt: 0,
+      updatedAt: 0,
+      source: 'hearthstone-live',
+      liveDeckId: 1,
+    };
+    const manual: DeckDetail = {
+      id: 'manual-1',
+      name: 'Manual Deck',
+      class: 'DRUID',
+      format: 'Standard',
+      cards: [{ cardId: 'CARD_A', count: 30 }],
+      version: 1,
+      notes: '',
+      tags: [],
+      createdAt: 0,
+      updatedAt: 0,
+      source: 'manual',
+    };
+    const store = makeStore([stale, kept, manual]);
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks: async () => [liveDeck({ id: 1 })],
+      resolveHeroClass: () => 'HUNTER',
+      collectibleLookup: () => ({ collectible: true }),
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(result.removed).toBe(1);
+    expect(store.getById('synced-stale')).toBeNull();
+    expect(store.getById('synced-kept')).not.toBeNull();
+    expect(store.getById('manual-1')).not.toBeNull();
+    expect(store.pruneLiveSyncedDecks).toHaveBeenCalledWith(new Set([1]));
+  });
+
+  it('does not prune when live decks are unavailable', async () => {
+    const store = makeStore([
+      {
+        id: 'synced-1',
+        name: 'Live Deck',
+        class: 'HUNTER',
+        format: 'Standard',
+        cards: [{ cardId: 'CARD_A', count: 30 }],
+        version: 1,
+        notes: '',
+        tags: [],
+        createdAt: 0,
+        updatedAt: 0,
+        source: 'hearthstone-live',
+        liveDeckId: 1,
+      },
+    ]);
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks: async () => null,
+      resolveHeroClass: () => 'HUNTER',
+      collectibleLookup: () => ({ collectible: true }),
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(result.removed).toBe(0);
+    expect(store.pruneLiveSyncedDecks).not.toHaveBeenCalled();
+    expect(store.getById('synced-1')).not.toBeNull();
   });
 });

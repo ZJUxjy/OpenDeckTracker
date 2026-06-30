@@ -74,6 +74,11 @@ export interface DeckStore {
    * matching `source: 'hearthstone-live'` record exists.
    */
   findByLiveDeckId(liveDeckId: number): DeckDetail | null;
+  /**
+   * Remove `source: 'hearthstone-live'` rows whose `liveDeckId` is absent
+   * from the current in-game deck set. Manual decks are untouched.
+   */
+  pruneLiveSyncedDecks(keepLiveDeckIds: ReadonlySet<number>): number;
   listVersions(id: string): DeckVersion[];
   schemaVersion(): number;
   getActiveDeckId(): string | null;
@@ -471,6 +476,31 @@ export function createDeckStore(dbPath: string): DeckStore {
 
     findByLiveDeckId(liveDeckId) {
       return findByLiveDeckIdInternal(liveDeckId);
+    },
+
+    pruneLiveSyncedDecks(keepLiveDeckIds) {
+      const rows = db
+        .prepare(`SELECT id, live_deck_id FROM decks WHERE source = 'hearthstone-live'`)
+        .all() as { id: string; live_deck_id: number | null }[];
+      const toRemove = rows.filter(
+        (row) => row.live_deck_id === null || !keepLiveDeckIds.has(row.live_deck_id),
+      );
+      if (toRemove.length === 0) return 0;
+
+      const activeId = getActiveDeckId();
+      const tx = db.transaction((deckIds: string[]) => {
+        for (const deckId of deckIds) {
+          db.prepare(`DELETE FROM deck_version_cards WHERE deck_id = ?`).run(deckId);
+          db.prepare(`DELETE FROM deck_versions WHERE deck_id = ?`).run(deckId);
+          db.prepare(`DELETE FROM deck_cards WHERE deck_id = ?`).run(deckId);
+          db.prepare(`DELETE FROM decks WHERE id = ?`).run(deckId);
+        }
+        if (activeId !== null && deckIds.includes(activeId)) {
+          setActiveDeckId(null);
+        }
+      });
+      tx(toRemove.map((row) => row.id));
+      return toRemove.length;
     },
 
     listVersions(id) {
