@@ -22,6 +22,7 @@ import { initAutoUpdate } from './auto-update';
 import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
 import { computeOverlayPanelBounds } from './overlay-layout';
 import { toDipBounds } from './overlay-coords';
+import { createOverlayActiveMatchGate } from './overlay-active-match-gate';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -190,20 +191,17 @@ if (!gotLock) {
     // newly-launched game, and the IN_MATCH phase covers the case
     // where the tracker was started mid-match (no live `create-game`
     // event arrives, but HearthMirror still surfaces deckState).
-    let phaseSignal: string = 'IDLE';
-    let livePowerSignal = false;
-    const recomputeOverlayGate = (): void => {
-      const active = phaseSignal === 'IN_MATCH' || livePowerSignal;
-      playerOverlay.setInActiveMatch(active);
-      opponentOverlay.setInActiveMatch(active);
-    };
+    const overlayActiveMatchGate = createOverlayActiveMatchGate({
+      setActive: (active) => {
+        playerOverlay.setInActiveMatch(active);
+        opponentOverlay.setInActiveMatch(active);
+      },
+    });
     onDeckTrackerPhase((phase) => {
-      phaseSignal = phase;
-      recomputeOverlayGate();
+      overlayActiveMatchGate.setPhase(phase);
     });
     onLiveMatchChange((active) => {
-      livePowerSignal = active;
-      recomputeOverlayGate();
+      overlayActiveMatchGate.setLiveMatchActive(active);
     });
 
     const mainWindow = createMainWindow();
@@ -228,6 +226,7 @@ if (!gotLock) {
     app.on('before-quit', () => {
       hearthstoneProcessMonitor.stop();
       tracker.stop();
+      overlayActiveMatchGate.dispose();
       playerOverlay.dispose();
       opponentOverlay.dispose();
       cardPreview.dispose();
