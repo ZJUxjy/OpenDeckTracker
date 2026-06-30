@@ -3,8 +3,12 @@ import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { CardDef } from '@hdt/hearthdb';
-import { decodeDeck } from '@hdt/hearthdb';
+import type { PopularDeck } from '@hdt/core';
+import { DeckFormat, decodeDeck, encodeDeck } from '@hdt/hearthdb';
 import {
+  applyWildVariantPolicy,
+  DEFAULT_WILD_ARCHETYPE_LIMIT,
+  DEFAULT_WILD_VARIANT_PER_NAME_LIMIT,
   PopularDeckSyncOrchestrator,
   type SyncProgress,
 } from './index';
@@ -12,6 +16,13 @@ import { saveCache, SYNCED_FILENAME } from './storage';
 
 const ROGUE_DECKSTRING =
   'AAECAaIHCsODB9GdB+ylB4aoB4eoB4ioB9C/B4rUB5vUB4jZBwr3nwT3gQeQgweMrQfHrgfZrweaswe0wQedxQfVxQcAAA==';
+const ROGUE_BLUEPRINT = decodeDeck(ROGUE_DECKSTRING);
+const ROGUE_HERO_DBFID = ROGUE_BLUEPRINT.heroes[0]!;
+const WILD_ROGUE_DECKSTRING = encodeDeck({
+  format: DeckFormat.Wild,
+  heroes: [ROGUE_HERO_DBFID],
+  cards: ROGUE_BLUEPRINT.cards,
+});
 
 const META_HTML = `
   <tr>
@@ -30,6 +41,14 @@ const TWO_ARCHETYPE_META_HTML = `
   </tr>
 `;
 
+const WILD_META_HTML = `
+  <tr>
+    <td><a href="/archetype/Wild%20Rogue">Wild Rogue</a></td>
+    <td><span>51.5</span></td>
+    <td>  9.0% (25000) </td>
+  </tr>
+`;
+
 const ARCHETYPE_HTML = `
   <div id="deck_stats-39285857">
     <a class="basic-black-text" href="/deck/39285857">Harold Rogue</a>
@@ -44,6 +63,14 @@ const TWO_VARIANT_ARCHETYPE_HTML = `
     <a class="basic-black-text" href="/deck/39285858">Harold Rogue 2</a>
     <span style="font-size: 0; line-size: 0; display: block">${ROGUE_DECKSTRING}</span>
     <div>D0nkey<span>49.9</span><div class="column tag">Games: 30000</div></div>
+  </div>
+`;
+
+const WILD_ARCHETYPE_HTML = `
+  <div id="deck_stats-49285857">
+    <a class="basic-black-text" href="/deck/49285857">Wild Rogue</a>
+    <span style="font-size: 0; line-size: 0; display: block">${WILD_ROGUE_DECKSTRING}</span>
+    <div>D0nkey<span>51.5</span><div class="column tag">Games: 25000</div></div>
   </div>
 `;
 
@@ -72,10 +99,10 @@ function makeOrchestrator(opts: {
   metaHtml?: string;
   archetypeHtml?: string;
   fetchSpy?: ReturnType<typeof vi.fn>;
+  formats?: readonly ('standard' | 'wild')[];
 }) {
-  const heroDbfId = decodeDeck(ROGUE_DECKSTRING).heroes[0]!;
   const lookup = (dbfId: number): CardDef | null =>
-    dbfId === heroDbfId ? fakeHeroCard(heroDbfId, 'ROGUE') : null;
+    dbfId === ROGUE_HERO_DBFID ? fakeHeroCard(ROGUE_HERO_DBFID, 'ROGUE') : null;
   const fetchImpl =
     opts.fetchSpy ??
     vi.fn(async (url: string) => {
@@ -93,7 +120,24 @@ function makeOrchestrator(opts: {
     cacheDir: opts.cacheDir,
     delay: async () => undefined,
     now: () => new Date('2026-05-09T12:00:00Z'),
+    formats: opts.formats ?? ['standard'],
   });
+}
+
+function popularDeck(over: Partial<PopularDeck> & Pick<PopularDeck, 'id' | 'name' | 'format' | 'gamesCount'>): PopularDeck {
+  return {
+    id: over.id,
+    name: over.name,
+    class: over.class ?? 'ROGUE',
+    format: over.format,
+    archetype: over.archetype ?? 'Tempo',
+    deckstring: over.deckstring ?? ROGUE_DECKSTRING,
+    winratePercent: over.winratePercent ?? 50,
+    gamesCount: over.gamesCount,
+    author: over.author ?? 'hsguru',
+    updatedAt: over.updatedAt ?? '2026-05-09',
+    ...(over.classMatchups ? { classMatchups: over.classMatchups } : {}),
+  };
 }
 
 let dir: string;
@@ -119,6 +163,45 @@ describe('PopularDeckSyncOrchestrator.startSync', () => {
     const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
     expect(onDisk.decks).toHaveLength(1);
     expect(onDisk.decks[0].class).toBe('ROGUE');
+  });
+
+  it('fetches Standard and Wild formats by default', async () => {
+    const fetchSpy = vi.fn(async (url: string) => {
+      if (url.includes('/meta?') && url.includes('format=2')) {
+        return new Response(META_HTML, { status: 200 });
+      }
+      if (url.includes('/meta?') && url.includes('format=1')) {
+        return new Response(WILD_META_HTML, { status: 200 });
+      }
+      if (url.includes('/deck/')) {
+        return new Response(DECK_DETAIL_HTML, { status: 200 });
+      }
+      if (url.includes('format=1')) {
+        return new Response(WILD_ARCHETYPE_HTML, { status: 200 });
+      }
+      return new Response(ARCHETYPE_HTML, { status: 200 });
+    });
+    const orch = new PopularDeckSyncOrchestrator({
+      fetchImpl: fetchSpy,
+      getCardLookup: () => (dbfId: number) =>
+        dbfId === ROGUE_HERO_DBFID ? fakeHeroCard(ROGUE_HERO_DBFID, 'ROGUE') : null,
+      cacheDir: dir,
+      delay: async () => undefined,
+      now: () => new Date('2026-05-09T12:00:00Z'),
+    });
+
+    const result = await orch.startSync(() => undefined);
+
+    expect(result).toEqual({
+      ok: true,
+      fetchedAt: '2026-05-09T12:00:00.000Z',
+      count: 2,
+    });
+    const requestedUrls = fetchSpy.mock.calls.map((call) => call[0]);
+    expect(requestedUrls).toContain('https://www.hsguru.com/meta?format=2&rank=legend&sort_by=total');
+    expect(requestedUrls).toContain('https://www.hsguru.com/meta?format=1&rank=legend&sort_by=total');
+    const onDisk = JSON.parse(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8'));
+    expect(onDisk.decks.map((deck: PopularDeck) => deck.format).sort()).toEqual(['Standard', 'Wild']);
   });
 
   it('fetches deck detail pages and persists class matchups', async () => {
@@ -328,6 +411,37 @@ describe('PopularDeckSyncOrchestrator.startSync', () => {
     });
     const result = await orch.startSync(() => undefined);
     expect(result).toEqual({ ok: false, error: 'card-db-not-ready' });
+  });
+});
+
+describe('applyWildVariantPolicy', () => {
+  it('keeps only the three hottest Wild variants for the same deck name', () => {
+    const standard = popularDeck({
+      id: 'standard-1',
+      name: 'Wild Rogue',
+      format: 'Standard',
+      gamesCount: 10,
+    });
+    const decks = [
+      standard,
+      popularDeck({ id: 'wild-100', name: 'Wild Rogue', format: 'Wild', gamesCount: 100 }),
+      popularDeck({ id: 'wild-500', name: 'Wild Rogue', format: 'Wild', gamesCount: 500 }),
+      popularDeck({ id: 'wild-300', name: 'Wild Rogue', format: 'Wild', gamesCount: 300 }),
+      popularDeck({ id: 'wild-200', name: 'Wild Rogue', format: 'Wild', gamesCount: 200 }),
+      popularDeck({ id: 'wild-other', name: 'Other Rogue', format: 'Wild', gamesCount: 1 }),
+    ];
+
+    expect(applyWildVariantPolicy(decks).map((deck) => deck.id)).toEqual([
+      'standard-1',
+      'wild-500',
+      'wild-300',
+      'wild-200',
+      'wild-other',
+    ]);
+  });
+
+  it('uses a default Wild fetch budget that can collect at least 200 variants', () => {
+    expect(DEFAULT_WILD_ARCHETYPE_LIMIT * DEFAULT_WILD_VARIANT_PER_NAME_LIMIT).toBeGreaterThanOrEqual(200);
   });
 });
 

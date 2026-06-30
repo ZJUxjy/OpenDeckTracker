@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  buildMetaUrl,
   buildDeckUrls,
   decodeHtml,
   parseDeckClassMatchups,
@@ -62,6 +63,34 @@ describe('parseDeckVariants', () => {
 
   it('returns empty array for empty input', () => {
     expect(parseDeckVariants('')).toEqual([]);
+  });
+
+  it('parses variants with absolute deck URLs and trailing Games stats (2026 layout)', () => {
+    const html = `
+      <div id="deck_stats-40218671" class="column is-narrow">
+        <h2 class="deck-title">
+          <a class="basic-black-text" href="https://www.hsguru.com/deck/40218671">Harold Rogue</a>
+          <span style="font-size: 0; line-size: 0; display: block">
+            AAECAaIHCqGBB5KDB4KYB9GdB+ylB9C/B/bJB4rUB5vUB4jZBwqRnwT3nwTTngaQgwfBlwfHrge0wQfAwQedxQfVxQcAAA==
+          </span>
+        </h2>
+        <div class="columns is-multiline is-mobile is-text-overflow">
+          <span class="tag column">
+            <span class="tw-text-center basic-black-text"><span>52.9</span></span>
+          </span>
+          <div class="column tag">Games: 64,483</div>
+        </div>
+      </div>`;
+    const variants = parseDeckVariants(html, 1);
+    expect(variants).toHaveLength(1);
+    expect(variants[0]).toMatchObject({
+      deckId: 40218671,
+      title: 'Harold Rogue',
+      winrate: 52.9,
+      games: 64483,
+      deckUrl: 'https://www.hsguru.com/deck/40218671',
+    });
+    expect(variants[0]?.code).toMatch(/^AAEC/);
   });
 });
 
@@ -137,5 +166,23 @@ describe('buildDeckUrls', () => {
     const urls = buildDeckUrls('Tempo Rogue');
     expect(urls.length).toBeGreaterThan(1);
     expect(urls.every((u) => u.includes('Tempo%20Rogue'))).toBe(true);
+    expect(urls.every((u) => u.includes('format=2'))).toBe(true);
+  });
+
+  it('uses the Wild format parameter for Wild deck pages', () => {
+    const urls = buildDeckUrls('Tempo Rogue', 'wild');
+    expect(urls.length).toBeGreaterThan(1);
+    expect(urls.every((u) => u.includes('format=1'))).toBe(true);
+  });
+});
+
+describe('buildMetaUrl', () => {
+  it('builds explicit Standard and Wild meta URLs', () => {
+    expect(buildMetaUrl('standard')).toBe(
+      'https://www.hsguru.com/meta?format=2&rank=legend&sort_by=total',
+    );
+    expect(buildMetaUrl('wild')).toBe(
+      'https://www.hsguru.com/meta?format=1&rank=legend&sort_by=total',
+    );
   });
 });

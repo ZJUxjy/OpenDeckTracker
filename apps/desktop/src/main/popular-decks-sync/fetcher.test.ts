@@ -66,13 +66,22 @@ describe('fetchHsguruText', () => {
 });
 
 describe('fetchHsguruMeta', () => {
-  it('hits the legend meta URL', async () => {
+  it('hits the Standard legend meta URL by default', async () => {
     const fetchImpl = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
       async () => okResponse('<html/>'),
     );
     await fetchHsguruMeta({ fetchImpl });
     const url = fetchImpl.mock.calls[0]![0];
-    expect(url).toBe('https://www.hsguru.com/meta?rank=legend&sort_by=total');
+    expect(url).toBe('https://www.hsguru.com/meta?format=2&rank=legend&sort_by=total');
+  });
+
+  it('hits the Wild legend meta URL when requested', async () => {
+    const fetchImpl = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(
+      async () => okResponse('<html/>'),
+    );
+    await fetchHsguruMeta({ fetchImpl }, undefined, 'wild');
+    const url = fetchImpl.mock.calls[0]![0];
+    expect(url).toBe('https://www.hsguru.com/meta?format=1&rank=legend&sort_by=total');
   });
 });
 
@@ -111,6 +120,14 @@ describe('fetchHsguruArchetypeVariants', () => {
     const result = await fetchHsguruArchetypeVariants('Tempo Rogue', { fetchImpl, delay });
     expect(result?.html).toBe('<html>variants</html>');
     expect(result?.url).toContain('archetype=');
+    expect(result?.url).toContain('format=2');
+  });
+
+  it('includes the Wild format parameter on variant candidates', async () => {
+    const fetchImpl = vi.fn(async () => okResponse('<html>variants</html>'));
+    const delay = vi.fn(async () => undefined);
+    const result = await fetchHsguruArchetypeVariants('Tempo Rogue', { fetchImpl, delay }, undefined, 'wild');
+    expect(result?.url).toContain('format=1');
   });
 
   it('aborts mid-loop when signal is aborted', async () => {

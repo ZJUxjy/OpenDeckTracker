@@ -6,11 +6,26 @@ import {
   fetchHsguruMeta,
   type FetchImpl,
 } from './fetcher';
-import { parseDeckClassMatchups, parseDeckVariants, parseLegendArchetypes } from './parser';
+import {
+  parseDeckClassMatchups,
+  parseDeckVariants,
+  parseLegendArchetypes,
+  type HsguruArchetypeRow,
+  type HsguruFormat,
+} from './parser';
 import { transformVariant, type TransformContext } from './transformer';
 import { loadCache, saveCache, type SyncedSnapshot } from './storage';
 
 export type SyncPhase = 'meta' | 'variants' | 'details' | 'persist';
+export type HsguruSyncFormat = HsguruFormat;
+
+export const DEFAULT_STANDARD_ARCHETYPE_LIMIT = 20;
+export const DEFAULT_STANDARD_VARIANT_LIMIT = 5;
+export const DEFAULT_WILD_ARCHETYPE_LIMIT = 100;
+export const DEFAULT_WILD_VARIANT_LIMIT = 10;
+export const DEFAULT_WILD_VARIANT_PER_NAME_LIMIT = 3;
+
+const DEFAULT_SYNC_FORMATS: readonly HsguruSyncFormat[] = ['standard', 'wild'];
 
 export interface SyncProgress {
   phase: SyncPhase;
@@ -41,6 +56,12 @@ export interface SyncDeps {
   /** Cap on archetypes/variants per archetype. */
   archetypeLimit?: number;
   variantLimit?: number;
+  /** Formats to sync. Default syncs both Standard and Wild. */
+  formats?: readonly HsguruSyncFormat[];
+  /** Wild uses a wider fetch budget because the Wild meta is flatter and changes faster. */
+  wildArchetypeLimit?: number;
+  wildVariantLimit?: number;
+  wildVariantPerNameLimit?: number;
   /** Cap on parallel HSGuru archetype deck-list page fetches. */
   variantConcurrency?: number;
   /** Cap on parallel HSGuru deck-detail page fetches. */
@@ -49,6 +70,18 @@ export interface SyncDeps {
 
 export type ProgressCallback = (progress: SyncProgress) => void;
 export type SnapshotChangeCallback = (snapshot: SyncedSnapshot | null) => void;
+
+interface SyncPlan {
+  format: HsguruSyncFormat;
+  archetypeLimit: number;
+  variantLimit: number;
+}
+
+interface PlannedArchetype {
+  row: HsguruArchetypeRow;
+  format: HsguruSyncFormat;
+  variantLimit: number;
+}
 
 export class PopularDeckSyncOrchestrator {
   private inFlight = false;
@@ -110,8 +143,7 @@ export class PopularDeckSyncOrchestrator {
     const delay = this.deps.delay ?? ((ms: number) =>
       new Promise<void>((r) => setTimeout(r, ms)));
     const now = this.deps.now ?? (() => new Date());
-    const archetypeLimit = this.deps.archetypeLimit ?? 20;
-    const variantLimit = this.deps.variantLimit ?? 5;
+    const syncPlans = buildSyncPlans(this.deps);
     const variantConcurrency = this.deps.variantConcurrency ?? 4;
     const detailConcurrency = this.deps.detailConcurrency ?? 4;
     const fetcherDeps = {
@@ -125,77 +157,104 @@ export class PopularDeckSyncOrchestrator {
     console.log('[popular-decks-sync] start', { fetchedAt, cacheDir: this.deps.cacheDir });
 
     // Phase 1: meta
-    progressCb({ phase: 'meta', completed: 0, total: 1 });
-    let metaHtml: string;
-    const metaStart = Date.now();
-    try {
-      metaHtml = await fetchHsguruMeta(
-        fetcherDeps,
-        signal,
-      );
-    } catch (e) {
-      console.error('[popular-decks-sync] meta fetch failed', {
+    progressCb({ phase: 'meta', completed: 0, total: syncPlans.length });
+    const plannedArchetypes: PlannedArchetype[] = [];
+    let completedMeta = 0;
+    for (const plan of syncPlans) {
+      let metaHtml: string;
+      const metaStart = Date.now();
+      try {
+        metaHtml = await fetchHsguruMeta(
+          fetcherDeps,
+          signal,
+          plan.format,
+        );
+      } catch (e) {
+        console.error('[popular-decks-sync] meta fetch failed', {
+          format: plan.format,
+          elapsedMs: Date.now() - metaStart,
+          name: (e as Error)?.name,
+          message: (e as Error)?.message,
+        });
+        return { ok: false, error: classifyError(e, 'network-failed') };
+      }
+      console.log('[popular-decks-sync] meta fetched', {
+        format: plan.format,
         elapsedMs: Date.now() - metaStart,
-        name: (e as Error)?.name,
-        message: (e as Error)?.message,
+        bytes: metaHtml.length,
       });
-      return { ok: false, error: classifyError(e, 'network-failed') };
+      const rows = parseLegendArchetypes(metaHtml, plan.archetypeLimit);
+      console.log(`[popular-decks-sync] parsed ${rows.length} ${plan.format} archetypes`);
+      for (const row of rows) {
+        plannedArchetypes.push({
+          row,
+          format: plan.format,
+          variantLimit: plan.variantLimit,
+        });
+      }
+      completedMeta++;
+      progressCb({
+        phase: 'meta',
+        completed: completedMeta,
+        total: syncPlans.length,
+        currentLabel: plan.format,
+      });
     }
-    console.log('[popular-decks-sync] meta fetched', {
-      elapsedMs: Date.now() - metaStart,
-      bytes: metaHtml.length,
-    });
-    const archetypes = parseLegendArchetypes(metaHtml, archetypeLimit);
-    if (archetypes.length === 0) {
+    if (plannedArchetypes.length === 0) {
       console.warn('[popular-decks-sync] meta parse yielded 0 archetypes (DOM changed?)');
       return { ok: false, error: 'parse-failed' };
     }
-    console.log(`[popular-decks-sync] parsed ${archetypes.length} archetypes`);
-    progressCb({ phase: 'meta', completed: 1, total: 1 });
 
     // Phase 2: variants (one round-trip set per archetype)
     const variantsByArchetypeResults: Array<{
-      archetype: typeof archetypes[number];
+      archetype: HsguruArchetypeRow;
+      format: HsguruSyncFormat;
       variants: ReturnType<typeof parseDeckVariants>;
-    } | null> = new Array(archetypes.length).fill(null);
+    } | null> = new Array(plannedArchetypes.length).fill(null);
     let completedArchetypes = 0;
     progressCb({
       phase: 'variants',
       completed: 0,
-      total: archetypes.length,
-      ...(archetypes[0] ? { currentLabel: archetypes[0].archetype } : {}),
+      total: plannedArchetypes.length,
+      ...(plannedArchetypes[0] ? { currentLabel: plannedArchetypes[0].row.archetype } : {}),
     });
     try {
-      await runLimitedConcurrency(archetypes, variantConcurrency, async (archetype, index) => {
+      await runLimitedConcurrency(plannedArchetypes, variantConcurrency, async (planned, index) => {
         if (signal.aborted) throw abortError();
         let result: { html: string; url: string } | null;
         const variantStart = Date.now();
         try {
           result = await fetchHsguruArchetypeVariants(
-            archetype.archetype,
+            planned.row.archetype,
             fetcherDeps,
             signal,
+            planned.format,
           );
         } catch (e) {
           console.error('[popular-decks-sync] variants fetch failed', {
-            archetype: archetype.archetype,
+            archetype: planned.row.archetype,
+            format: planned.format,
             elapsedMs: Date.now() - variantStart,
             name: (e as Error)?.name,
             message: (e as Error)?.message,
           });
           throw e;
         }
-        const variants = result ? parseDeckVariants(result.html, variantLimit) : [];
+        const variants = result ? parseDeckVariants(result.html, planned.variantLimit) : [];
         console.log(
-          `[popular-decks-sync] variants ${completedArchetypes + 1}/${archetypes.length} ${archetype.archetype}: ${variants.length} decks (${Date.now() - variantStart}ms)`,
+          `[popular-decks-sync] variants ${completedArchetypes + 1}/${plannedArchetypes.length} ${planned.format} ${planned.row.archetype}: ${variants.length} decks (${Date.now() - variantStart}ms)`,
         );
-        variantsByArchetypeResults[index] = { archetype, variants };
+        variantsByArchetypeResults[index] = {
+          archetype: planned.row,
+          format: planned.format,
+          variants,
+        };
         completedArchetypes++;
         progressCb({
           phase: 'variants',
           completed: completedArchetypes,
-          total: archetypes.length,
-          currentLabel: archetype.archetype,
+          total: plannedArchetypes.length,
+          currentLabel: planned.row.archetype,
         });
       });
     } catch (e) {
@@ -206,8 +265,8 @@ export class PopularDeckSyncOrchestrator {
     );
     progressCb({
       phase: 'variants',
-      completed: archetypes.length,
-      total: archetypes.length,
+      completed: plannedArchetypes.length,
+      total: plannedArchetypes.length,
     });
 
     // Phase 3: deck details + transform
@@ -283,13 +342,27 @@ export class PopularDeckSyncOrchestrator {
       console.warn('[popular-decks-sync] details yielded 0 decks — every variant rejected');
       return { ok: false, error: 'parse-failed' };
     }
+    const persistedDecks = applyWildVariantPolicy(
+      decks,
+      this.deps.wildVariantPerNameLimit ?? DEFAULT_WILD_VARIANT_PER_NAME_LIMIT,
+    );
+    if (syncPlans.some((plan) => plan.format === 'wild')) {
+      const wildCount = persistedDecks.filter((deck) => deck.format === 'Wild').length;
+      if (wildCount < 200) {
+        console.warn('[popular-decks-sync] fewer than 200 Wild decks collected', {
+          wildCount,
+          archetypeLimit: this.deps.wildArchetypeLimit ?? DEFAULT_WILD_ARCHETYPE_LIMIT,
+          variantLimit: this.deps.wildVariantLimit ?? DEFAULT_WILD_VARIANT_LIMIT,
+        });
+      }
+    }
 
     // Phase 4: persist
     progressCb({ phase: 'persist', completed: 0, total: 1 });
     const snapshot: SyncedSnapshot = {
       schemaVersion: 2,
       fetchedAt,
-      decks,
+      decks: persistedDecks,
     };
     try {
       await saveCache(this.deps.cacheDir, snapshot);
@@ -304,9 +377,69 @@ export class PopularDeckSyncOrchestrator {
     this.lastFetchedAt = fetchedAt;
     for (const cb of this.snapshotListeners) cb(snapshot);
     progressCb({ phase: 'persist', completed: 1, total: 1 });
-    console.log(`[popular-decks-sync] done: ${decks.length} decks → ${this.deps.cacheDir}/synced.json`);
-    return { ok: true, fetchedAt, count: decks.length };
+    console.log(`[popular-decks-sync] done: ${persistedDecks.length} decks → ${this.deps.cacheDir}/synced.json`);
+    return { ok: true, fetchedAt, count: persistedDecks.length };
   }
+}
+
+function buildSyncPlans(deps: SyncDeps): SyncPlan[] {
+  const formats = deps.formats && deps.formats.length > 0
+    ? deps.formats
+    : DEFAULT_SYNC_FORMATS;
+  const seen = new Set<HsguruSyncFormat>();
+  const plans: SyncPlan[] = [];
+  for (const format of formats) {
+    if (seen.has(format)) continue;
+    seen.add(format);
+    if (format === 'wild') {
+      plans.push({
+        format,
+        archetypeLimit: deps.wildArchetypeLimit ?? DEFAULT_WILD_ARCHETYPE_LIMIT,
+        variantLimit: deps.wildVariantLimit ?? DEFAULT_WILD_VARIANT_LIMIT,
+      });
+    } else {
+      plans.push({
+        format,
+        archetypeLimit: deps.archetypeLimit ?? DEFAULT_STANDARD_ARCHETYPE_LIMIT,
+        variantLimit: deps.variantLimit ?? DEFAULT_STANDARD_VARIANT_LIMIT,
+      });
+    }
+  }
+  return plans;
+}
+
+export function applyWildVariantPolicy(
+  decks: readonly PopularDeck[],
+  perNameLimit = DEFAULT_WILD_VARIANT_PER_NAME_LIMIT,
+): PopularDeck[] {
+  const limit = Math.max(1, Math.floor(perNameLimit));
+  const wildByName = new Map<string, Array<{ deck: PopularDeck; index: number }>>();
+  decks.forEach((deck, index) => {
+    if (deck.format !== 'Wild') return;
+    const key = normalizeDeckName(deck.name);
+    const group = wildByName.get(key) ?? [];
+    group.push({ deck, index });
+    wildByName.set(key, group);
+  });
+
+  const keptWildDecks = new Set<PopularDeck>();
+  for (const group of wildByName.values()) {
+    group
+      .slice()
+      .sort((a, b) =>
+        b.deck.gamesCount - a.deck.gamesCount ||
+        b.deck.winratePercent - a.deck.winratePercent ||
+        a.index - b.index,
+      )
+      .slice(0, limit)
+      .forEach(({ deck }) => keptWildDecks.add(deck));
+  }
+
+  return decks.filter((deck) => deck.format !== 'Wild' || keptWildDecks.has(deck));
+}
+
+function normalizeDeckName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
 }
 
 function classifyError(e: unknown, fallback: string): string {

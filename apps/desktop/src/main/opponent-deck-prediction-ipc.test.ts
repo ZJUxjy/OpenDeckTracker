@@ -33,7 +33,7 @@ import {
 
 // Real (small) deckstrings won't decode without a real CardDb. Tests
 // inject a CardDb stub that maps known dbfIds → cardIds.
-import { encodeDeck, DeckFormat, type CardDb, type CardDef } from '@hdt/hearthdb';
+import { decodeDeck, encodeDeck, DeckFormat, type CardDb, type CardDef } from '@hdt/hearthdb';
 
 function fakeCardDb(map: Record<number, { id: string; cardClass?: string }>): CardDb {
   return {
@@ -93,12 +93,15 @@ function snapshot(over: Partial<DeckTrackerSnapshot>): DeckTrackerSnapshot {
 
 const FIREBALL_DBFID = 315;
 const ARCANE_INTELLECT_DBFID = 555;
+const MANA_WYRM_DBFID = 405;
 const FIREBALL_CARD_ID = 'CS2_029';
 const ARCANE_INTELLECT_CARD_ID = 'CS2_023';
+const MANA_WYRM_CARD_ID = 'NEW1_012';
 
 const cardDb = fakeCardDb({
   [FIREBALL_DBFID]: { id: FIREBALL_CARD_ID },
   [ARCANE_INTELLECT_DBFID]: { id: ARCANE_INTELLECT_CARD_ID },
+  [MANA_WYRM_DBFID]: { id: MANA_WYRM_CARD_ID },
 });
 
 const MAGE_DECKSTRING = encodeDeck({
@@ -107,8 +110,19 @@ const MAGE_DECKSTRING = encodeDeck({
   cards: [
     { dbfId: FIREBALL_DBFID, count: 2 },
     { dbfId: ARCANE_INTELLECT_DBFID, count: 2 },
+    { dbfId: MANA_WYRM_DBFID, count: 1 },
   ],
 });
+
+function predictionReadyRevealed(): OpponentCardRecord[] {
+  return [
+    record({ entityId: 1, cardId: FIREBALL_CARD_ID }),
+    record({ entityId: 2, cardId: FIREBALL_CARD_ID }),
+    record({ entityId: 3, cardId: ARCANE_INTELLECT_CARD_ID }),
+    record({ entityId: 4, cardId: ARCANE_INTELLECT_CARD_ID }),
+    record({ entityId: 5, cardId: MANA_WYRM_CARD_ID }),
+  ];
+}
 
 function popularDeck(over: Partial<PopularDeckEnriched> & { id: string }): PopularDeckEnriched {
   return {
@@ -182,7 +196,7 @@ describe('opponent-deck-prediction IPC', () => {
       getSnapshot: () =>
         snapshot({
           opponent: {
-            revealed: [record({ entityId: 1, cardId: FIREBALL_CARD_ID })],
+            revealed: predictionReadyRevealed(),
             graveyard: [],
           },
           opponentClass: 'MAGE',
@@ -204,7 +218,7 @@ describe('opponent-deck-prediction IPC', () => {
   it('idempotent: same snapshot + cache returns identical results', async () => {
     const snap = snapshot({
       opponent: {
-        revealed: [record({ entityId: 1, cardId: FIREBALL_CARD_ID })],
+        revealed: predictionReadyRevealed(),
         graveyard: [],
       },
       opponentClass: 'MAGE',
@@ -250,7 +264,7 @@ describe('opponent-deck-prediction IPC', () => {
     triggerSnapshot!(
       snapshot({
         opponent: {
-          revealed: [record({ entityId: 1, cardId: FIREBALL_CARD_ID })],
+          revealed: predictionReadyRevealed(),
           graveyard: [],
         },
         opponentClass: 'MAGE',
@@ -314,11 +328,42 @@ describe('computePredictions (helper)', () => {
     );
     expect(result).toEqual([]);
   });
+
+  it('waits until five opponent cards have been revealed before predicting', () => {
+    const ready = predictionReadyRevealed();
+    const firstFour = computePredictions(
+      snapshot({
+        opponent: {
+          revealed: ready.slice(0, 4),
+          graveyard: [],
+        },
+        opponentClass: 'MAGE',
+      }),
+      POPULAR_DECKS,
+      cardDb,
+      lookupBuilder as unknown as Parameters<typeof computePredictions>[3],
+    );
+    expect(firstFour).toEqual([]);
+
+    const five = computePredictions(
+      snapshot({
+        opponent: {
+          revealed: ready,
+          graveyard: [],
+        },
+        opponentClass: 'MAGE',
+      }),
+      POPULAR_DECKS,
+      cardDb,
+      lookupBuilder as unknown as Parameters<typeof computePredictions>[3],
+    );
+    expect(five).toHaveLength(1);
+    expect(five[0]!.deck.id).toBe('mage-fb');
+  });
 });
 
 function decodeDeckHelper(deckstring: string): { cards: { dbfId: number; count: number }[] } | null {
   try {
-    const { decodeDeck } = require('@hdt/hearthdb') as typeof import('@hdt/hearthdb');
     const bp = decodeDeck(deckstring);
     return { cards: bp.cards };
   } catch {

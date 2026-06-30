@@ -49,6 +49,8 @@ const FORMAT_BY_NUMBER: Readonly<Record<number, Format>> = {
   4: 'Twist',
 };
 
+const MIN_REVEALED_CARDS_FOR_PREDICTION = 5;
+
 interface DeckCardLookupCacheEntry {
   decks: readonly PopularDeckEnriched[];
   cardDb: CardDb | null;
@@ -105,6 +107,19 @@ function formatFromMatchInfo(snapshot: DeckTrackerSnapshot): Format | null {
   return FORMAT_BY_NUMBER[formatType] ?? null;
 }
 
+function isCoinLikeCard(cardId: string): boolean {
+  if (cardId === 'GAME_005') return true;
+  if (cardId.endsWith('_COIN')) return true;
+  if (cardId.includes('COIN')) return true;
+  return false;
+}
+
+function countPredictionEligibleRevealedCards(
+  records: DeckTrackerSnapshot['opponent']['revealed'],
+): number {
+  return records.filter((record) => !record.created && !isCoinLikeCard(record.cardId)).length;
+}
+
 export function computePredictions(
   snapshot: DeckTrackerSnapshot | null,
   popularDecks: readonly PopularDeckEnriched[],
@@ -112,7 +127,9 @@ export function computePredictions(
   cachedLookup: ReturnType<typeof makeCachedLookup>,
 ): OpponentDeckPrediction[] {
   if (!snapshot) return [];
-  if (snapshot.opponent.revealed.length === 0) return [];
+  if (countPredictionEligibleRevealedCards(snapshot.opponent.revealed) < MIN_REVEALED_CARDS_FOR_PREDICTION) {
+    return [];
+  }
   if (popularDecks.length === 0) return [];
 
   const observedCards = snapshot.opponent.revealed.map((r) => ({

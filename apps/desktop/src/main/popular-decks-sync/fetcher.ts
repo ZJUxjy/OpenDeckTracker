@@ -1,4 +1,4 @@
-import { buildDeckUrls, HSGURU_META_URL } from './parser';
+import { buildDeckUrls, buildMetaUrl, type HsguruFormat } from './parser';
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
 const REQUEST_TIMEOUT_MS = 45_000;
@@ -89,8 +89,9 @@ export const __TEST_ONLY = { looksLikeBrowserChallenge };
 export async function fetchHsguruMeta(
   deps: FetcherDeps,
   signal?: AbortSignal,
+  format: HsguruFormat = 'standard',
 ): Promise<string> {
-  return fetchHsguruText(HSGURU_META_URL, deps, signal);
+  return fetchHsguruText(buildMetaUrl(format), deps, signal);
 }
 
 export async function fetchHsguruDeckDetail(
@@ -113,9 +114,10 @@ export async function fetchHsguruArchetypeVariants(
   archetypeLabel: string,
   deps: FetcherDeps,
   signal?: AbortSignal,
+  format: HsguruFormat = 'standard',
 ): Promise<{ html: string; url: string } | null> {
   const delay = deps.delay ?? realDelay;
-  const candidates = buildDeckUrls(archetypeLabel);
+  const candidates = buildDeckUrls(archetypeLabel, format);
   for (let i = 0; i < candidates.length; i++) {
     checkAborted(signal);
     const url = candidates[i]!;

@@ -10,6 +10,13 @@ import type { MatchupHeroClass, PopularDeckClassMatchup } from '@hdt/core';
 
 const BASE_URL = 'https://www.hsguru.com';
 
+export type HsguruFormat = 'standard' | 'wild';
+
+const FORMAT_PARAM: Readonly<Record<HsguruFormat, number>> = {
+  standard: 2,
+  wild: 1,
+};
+
 const CLASS_NAME_TO_HERO_CLASS: Readonly<Record<string, MatchupHeroClass>> = {
   'Death Knight': 'DEATHKNIGHT',
   'Demon Hunter': 'DEMONHUNTER',
@@ -118,38 +125,68 @@ export function parseDeckVariants(html: string, limit = 5): HsguruDeckVariant[] 
 
   for (const block of html.split('<div id="deck_stats-').slice(1)) {
     const deckIdMatch = block.match(/^(\d+)"/);
-    const titleMatch = block.match(
-      /<a class="basic-black-text" href="\/deck\/(\d+)">\s*([^<]+?)\s*<\/a>/,
-    );
-    const codeMatch = block.match(
-      /<span style="font-size: 0; line-size: 0; display: block">\s*([A-Za-z0-9+/=]+)\s*<\/span>/,
-    );
-    const donkeyIdx = block.indexOf('D0nkey');
-    const statsBlock = donkeyIdx >= 0 ? block.slice(donkeyIdx) : '';
-    const statsMatch = statsBlock.match(
-      /<span>([\d.]+)<\/span>[\s\S]*?<div class="column tag">\s*Games:\s*(\d+)\s*<\/div>/,
-    );
+    if (!deckIdMatch) continue;
 
-    if (!deckIdMatch || !titleMatch || !codeMatch || !statsMatch) continue;
-    const deckIdStr = deckIdMatch[1] ?? '0';
+    const titleMatch = block.match(
+      /<a class="basic-black-text" href="(?:https:\/\/www\.hsguru\.com)?\/deck\/(\d+)">\s*([^<]+?)\s*<\/a>/,
+    );
+    const code = extractDeckCode(block);
+    const stats = extractDeckVariantStats(block);
+
+    if (!titleMatch || !code || !stats) continue;
+    const deckIdStr = deckIdMatch[1] ?? titleMatch[1] ?? '0';
     const title = titleMatch[2] ?? '';
-    const code = codeMatch[1] ?? '';
-    const wr = statsMatch[1] ?? '0';
-    const games = statsMatch[2] ?? '0';
 
     variants.push({
       deckId: Number(deckIdStr),
       title: decodeHtml(title.trim()),
       deckUrl: `${BASE_URL}/deck/${deckIdStr}`,
-      code: code.trim(),
-      winrate: Number(wr),
-      games: Number(games),
+      code,
+      winrate: stats.winrate,
+      games: stats.games,
     });
 
     if (variants.length >= limit) break;
   }
 
   return variants;
+}
+
+/** Pull a deckstring from the variant block — HSGuru hides it in a
+ *  zero-size span, a clipboard payload, or inline after the card list. */
+function extractDeckCode(block: string): string | null {
+  const hiddenSpan = block.match(
+    /<span style="font-size: 0; line-size: 0; display: block">\s*([A-Za-z0-9+/=]+)\s*<\/span>/,
+  );
+  if (hiddenSpan?.[1]) return hiddenSpan[1].trim();
+
+  const clipboard = block.match(/data-clipboard-text="[\s\S]*?(AAE[A-Za-z0-9+/=]+)/);
+  if (clipboard?.[1]) return clipboard[1].trim();
+
+  const inline = block.match(/(AAE[A-Za-z0-9+/=]{20,})/);
+  return inline?.[1]?.trim() ?? null;
+}
+
+/** Winrate + games moved below the expanded card list; locate via the
+ *  trailing `Games:` tag instead of the legacy D0nkey marker. */
+function extractDeckVariantStats(block: string): { winrate: number; games: number } | null {
+  const gamesMatch = block.match(/<div class="column tag">\s*Games:\s*([\d,]+)\s*<\/div>/i);
+  if (!gamesMatch) return null;
+
+  const games = Number((gamesMatch[1] ?? '0').replace(/,/g, ''));
+  const gamesIdx = gamesMatch.index ?? block.length;
+  const statsTail = block.slice(Math.max(0, gamesIdx - 1_500), gamesIdx + gamesMatch[0].length);
+
+  const labeledWr = [
+    ...statsTail.matchAll(
+      /<span class="tw-text-center basic-black-text">\s*<span>([\d.]+)<\/span>/g,
+    ),
+  ].at(-1)?.[1];
+  const genericWr = [...statsTail.matchAll(/<span>([\d.]+)<\/span>/g)].at(-1)?.[1];
+  const winrateText = labeledWr ?? genericWr;
+  if (!winrateText) return null;
+
+  return { winrate: Number(winrateText), games };
 }
 
 export function parseDeckClassMatchups(html: string): PopularDeckClassMatchup[] {
@@ -211,17 +248,22 @@ export function parseDeckClassMatchups(html: string): PopularDeckClassMatchup[] 
   return rows;
 }
 
-export function buildDeckUrls(archetype: string): readonly string[] {
+export function buildMetaUrl(format: HsguruFormat = 'standard'): string {
+  return `${BASE_URL}/meta?format=${FORMAT_PARAM[format]}&rank=legend&sort_by=total`;
+}
+
+export function buildDeckUrls(archetype: string, format: HsguruFormat = 'standard'): readonly string[] {
   const encoded = encodeURIComponent(archetype);
+  const prefix = `${BASE_URL}/decks?format=${FORMAT_PARAM[format]}&rank=legend&order_by=total`;
   return [
-    `${BASE_URL}/decks?rank=legend&order_by=total&min_games=50&player_deck_archetype[]=${encoded}`,
-    `${BASE_URL}/decks?rank=legend&order_by=total&archetype=${encoded}`,
-    `${BASE_URL}/decks?rank=legend&order_by=total&archetypes=${encoded}`,
-    `${BASE_URL}/decks?rank=legend&order_by=total&deck_archetype=${encoded}`,
-    `${BASE_URL}/decks?rank=legend&order_by=total&deck_archetypes=${encoded}`,
-    `${BASE_URL}/decks?rank=legend&order_by=total&selected_archetypes=${encoded}`,
+    `${prefix}&min_games=50&player_deck_archetype[]=${encoded}`,
+    `${prefix}&archetype=${encoded}`,
+    `${prefix}&archetypes=${encoded}`,
+    `${prefix}&deck_archetype=${encoded}`,
+    `${prefix}&deck_archetypes=${encoded}`,
+    `${prefix}&selected_archetypes=${encoded}`,
   ];
 }
 
 export const HSGURU_BASE_URL = BASE_URL;
-export const HSGURU_META_URL = `${BASE_URL}/meta?rank=legend&sort_by=total`;
+export const HSGURU_META_URL = buildMetaUrl('standard');
