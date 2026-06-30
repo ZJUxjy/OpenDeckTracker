@@ -22,7 +22,6 @@ interface UserOffset {
 }
 
 const HIDE_DEBOUNCE_MS = 350;
-const Z_ORDER_HEARTBEAT_MS = 1000;
 
 function boundsEqual(a: BoundsRect, b: BoundsRect): boolean {
   return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
@@ -88,7 +87,6 @@ export class OverlayManager {
   private readonly platform: NodeJS.Platform;
   private readonly zOrderReassertHandles = new Set<ReturnType<typeof setTimeout>>();
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
-  private zOrderHeartbeatHandle: ReturnType<typeof setInterval> | null = null;
   private currentShown = false;
 
   constructor(opts: OverlayManagerOptions) {
@@ -127,15 +125,8 @@ export class OverlayManager {
         this.scheduleZOrderReassert();
       } else {
         this.clearZOrderReasserts();
-        this.updateZOrderHeartbeat();
       }
       return;
-    }
-    // No state change, but a repeated tracker signal still means the
-    // host wants the overlay z-order refreshed.
-    if (this.win && !this.win.isDestroyed() && this.shouldBeShown()) {
-      this.syncZOrder();
-      if (foreground) this.scheduleZOrderReassert();
     }
   }
 
@@ -188,7 +179,6 @@ export class OverlayManager {
 
   dispose(): void {
     this.clearPendingHide();
-    this.stopZOrderHeartbeat();
     this.clearZOrderReasserts();
     if (this.win && !this.win.isDestroyed()) {
       this.win.destroy();
@@ -309,9 +299,8 @@ export class OverlayManager {
         this.currentShown = true;
       }
       this.syncZOrder();
-      this.updateZOrderHeartbeat();
+      if (this.targetForeground) this.scheduleZOrderReassert();
     } else {
-      this.updateZOrderHeartbeat();
       this.clearZOrderReasserts();
       this.scheduleHide();
     }
@@ -342,7 +331,6 @@ export class OverlayManager {
 
   private hideImmediately(): void {
     this.clearPendingHide();
-    this.stopZOrderHeartbeat();
     this.clearZOrderReasserts();
     if (!this.win || this.win.isDestroyed()) {
       this.currentShown = false;
@@ -374,41 +362,6 @@ export class OverlayManager {
       clearTimeout(handle);
     }
     this.zOrderReassertHandles.clear();
-  }
-
-  private updateZOrderHeartbeat(): void {
-    if (this.targetForeground && this.shouldBeVisibleNow() && this.currentShown) {
-      this.startZOrderHeartbeat();
-    } else {
-      this.stopZOrderHeartbeat();
-    }
-  }
-
-  private startZOrderHeartbeat(): void {
-    if (this.zOrderHeartbeatHandle !== null) return;
-    this.zOrderHeartbeatHandle = setInterval(() => {
-      if (!this.targetForeground || !this.shouldBeVisibleNow()) {
-        this.stopZOrderHeartbeat();
-        return;
-      }
-      if (!this.win || this.win.isDestroyed()) {
-        this.currentShown = false;
-        this.stopZOrderHeartbeat();
-        return;
-      }
-      if (!this.isWindowVisible()) {
-        this.win.showInactive();
-        this.currentShown = true;
-      }
-      this.syncZOrder();
-    }, Z_ORDER_HEARTBEAT_MS);
-    (this.zOrderHeartbeatHandle as { unref?: () => void }).unref?.();
-  }
-
-  private stopZOrderHeartbeat(): void {
-    if (this.zOrderHeartbeatHandle === null) return;
-    clearInterval(this.zOrderHeartbeatHandle);
-    this.zOrderHeartbeatHandle = null;
   }
 
   private syncZOrder(): void {

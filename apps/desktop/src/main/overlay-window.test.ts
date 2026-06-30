@@ -239,7 +239,7 @@ describe('OverlayManager', () => {
     expect(win.moveTop).toHaveBeenCalledTimes(3);
   });
 
-  it('reasserts z-order on a low-frequency heartbeat while foreground', async () => {
+  it('does not reassert z-order periodically while foreground state is steady', async () => {
     vi.useFakeTimers();
     const mgr = makeManager();
     mgr.enable();
@@ -253,13 +253,9 @@ describe('OverlayManager', () => {
     win.setAlwaysOnTop.mockClear();
     win.moveTop.mockClear();
 
-    await vi.advanceTimersByTimeAsync(749);
+    await vi.advanceTimersByTimeAsync(2000);
     expect(win.setAlwaysOnTop).not.toHaveBeenCalled();
     expect(win.moveTop).not.toHaveBeenCalled();
-
-    await vi.advanceTimersByTimeAsync(1);
-    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
-    expect(win.moveTop).toHaveBeenCalledTimes(1);
   });
 
   it('setVisibleOnScreen(false) after showing hides after a short debounce', async () => {

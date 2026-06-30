@@ -23,6 +23,7 @@ import { hearthstoneProcessMonitor } from './hearthstone-process-monitor';
 import { computeOverlayPanelBounds } from './overlay-layout';
 import { toDipBounds } from './overlay-coords';
 import { createOverlayActiveMatchGate } from './overlay-active-match-gate';
+import { createOverlayStableStateMonitor } from './overlay-stable-state-monitor';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
@@ -110,6 +111,28 @@ if (!gotLock) {
       playerOverlay.setTargetForeground(foreground);
       opponentOverlay.setTargetForeground(foreground);
     };
+
+    // The native window-event stream can briefly flap during game focus,
+    // resize, DPI, or overlay/card-preview interactions. Do not drive
+    // BrowserWindow show/hide/z-order/bounds directly from those raw edges;
+    // apply only values that remain stable for 1s. This avoids overlay
+    // visibility震荡 and prevents repeated OS window operations from
+    // interrupting card-preview hover rendering.
+    const overlayStateMonitor = createOverlayStableStateMonitor({
+      applyBounds: (bounds) => {
+        opponentOverlay.setBounds(bounds.opponent);
+        playerOverlay.setBounds(bounds.player);
+      },
+      applyVisibility: (visible) => {
+        playerOverlay.setVisibleOnScreen(visible);
+        opponentOverlay.setVisibleOnScreen(visible);
+      },
+      applyForeground: (foreground) => {
+        hearthstoneForeground = foreground;
+        recomputeOverlayForeground();
+      },
+    });
+
     tracker.subscribe((event) => {
       if (event.kind === 'bounds') {
         // Windows: GetWindowRect returns PHYSICAL pixels; convert to DIP.
@@ -119,15 +142,12 @@ if (!gotLock) {
           screen.screenToDipRect(null, { x: r.x, y: r.y, width: r.width, height: r.height }),
         );
         const bounds = computeOverlayPanelBounds(hsDip);
-        opponentOverlay.setBounds(bounds.opponent);
-        playerOverlay.setBounds(bounds.player);
+        overlayStateMonitor.setPanelBounds(bounds);
       } else {
         if (event.kind === 'visibility') {
-          playerOverlay.setVisibleOnScreen(event.visible);
-          opponentOverlay.setVisibleOnScreen(event.visible);
+          overlayStateMonitor.setVisibility(event.visible);
         } else {
-          hearthstoneForeground = event.foreground;
-          recomputeOverlayForeground();
+          overlayStateMonitor.setForeground(event.foreground);
         }
       }
     });
@@ -136,6 +156,8 @@ if (!gotLock) {
     let opponentOn = false;
     const enablePlayerOverlay = (): void => {
       if (playerOn) return;
+      const wasAnyOverlayOn = playerOn || opponentOn;
+      if (!wasAnyOverlayOn) overlayStateMonitor.reset();
       playerOn = true;
       playerOverlay.enable();
       tracker.addClient();
@@ -145,9 +167,12 @@ if (!gotLock) {
       playerOn = false;
       playerOverlay.disable();
       tracker.removeClient();
+      if (!playerOn && !opponentOn) overlayStateMonitor.reset();
     };
     const enableOpponentOverlay = (): void => {
       if (opponentOn) return;
+      const wasAnyOverlayOn = playerOn || opponentOn;
+      if (!wasAnyOverlayOn) overlayStateMonitor.reset();
       opponentOn = true;
       opponentOverlay.enable();
       tracker.addClient();
@@ -157,6 +182,7 @@ if (!gotLock) {
       opponentOn = false;
       opponentOverlay.disable();
       tracker.removeClient();
+      if (!playerOn && !opponentOn) overlayStateMonitor.reset();
     };
 
     const cardPreview = new CardPreviewWindow({ rendererUrl, preloadPath });
@@ -226,6 +252,7 @@ if (!gotLock) {
     app.on('before-quit', () => {
       hearthstoneProcessMonitor.stop();
       tracker.stop();
+      overlayStateMonitor.dispose();
       overlayActiveMatchGate.dispose();
       playerOverlay.dispose();
       opponentOverlay.dispose();
