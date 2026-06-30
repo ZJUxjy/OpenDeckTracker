@@ -18,17 +18,7 @@ import { useCardDef } from '../hooks/use-card-def';
 import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useCardPreview } from '../hooks/use-card-preview';
 import { ManaCurveChart } from './ManaCurveChart';
-import deathKnightPortrait from '../assets/reference-ui/portrait/deathknight.png';
-import demonHunterPortrait from '../assets/reference-ui/portrait/demonhunter.png';
-import druidPortrait from '../assets/reference-ui/portrait/druid.png';
-import hunterPortrait from '../assets/reference-ui/portrait/hunter.png';
-import magePortrait from '../assets/reference-ui/portrait/mage.png';
-import paladinPortrait from '../assets/reference-ui/portrait/paladin.png';
-import priestPortrait from '../assets/reference-ui/portrait/priest.png';
-import roguePortrait from '../assets/reference-ui/portrait/rogue.png';
-import shamanPortrait from '../assets/reference-ui/portrait/shaman.png';
-import warlockPortrait from '../assets/reference-ui/portrait/warlock.png';
-import warriorPortrait from '../assets/reference-ui/portrait/warrior.png';
+import { CLASS_ICON_IMAGES } from '../assets/reference-ui/class-icons';
 
 const ART_MASK_STYLE: CSSProperties = {
   maskImage: 'linear-gradient(to right, transparent 0%, black 55%, black 100%)',
@@ -139,20 +129,6 @@ const CLASS_LABEL_KEYS: Record<HeroClass, string> = {
   NEUTRAL: 'decks.finder.classNeutral',
 };
 
-const CLASS_PORTRAITS: Partial<Record<HeroClass, string>> = {
-  DEATHKNIGHT: deathKnightPortrait,
-  DEMONHUNTER: demonHunterPortrait,
-  DRUID: druidPortrait,
-  HUNTER: hunterPortrait,
-  MAGE: magePortrait,
-  PALADIN: paladinPortrait,
-  PRIEST: priestPortrait,
-  ROGUE: roguePortrait,
-  SHAMAN: shamanPortrait,
-  WARLOCK: warlockPortrait,
-  WARRIOR: warriorPortrait,
-};
-
 const FORMATS: Format[] = ['Standard', 'Wild'];
 const SORTS: PopularDeckSort[] = ['popular', 'winrate', 'updated', 'cheapest'];
 const MAX_DUST_LIMIT = 20000;
@@ -192,7 +168,7 @@ function ClassPortrait({
   testIdPrefix: string;
   decorative?: boolean;
 }): ReactElement {
-  const src = CLASS_PORTRAITS[heroClass];
+  const src = CLASS_ICON_IMAGES[heroClass];
   const sizeClass = size === 'sm'
     ? 'w-5 h-5 text-[9px]'
     : size === 'lg'
@@ -388,9 +364,9 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
   };
 
   return (
-    <div className="flex-1 h-full min-h-0 overflow-y-auto flex flex-col">
+    <div className="reference-deck-finder flex-1 h-full min-h-0 overflow-y-auto flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border flex items-baseline gap-4 shrink-0">
+      <div className="reference-deck-finder-header px-6 py-4 border-b border-border flex items-baseline gap-4 shrink-0">
         <div>
           <div className="text-[11px] text-text-mute font-mono tracking-[0.14em]">
             {t('decks.finder.eyebrow')}
@@ -410,7 +386,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       {/* Sync row */}
       <div
         data-testid="deck-finder-sync-row"
-        className="px-6 py-2 border-b border-border flex items-center gap-3 font-mono text-[10px] text-text-dim tracking-[0.06em] shrink-0"
+        className="reference-deck-finder-sync px-6 py-2 border-b border-border flex items-center gap-3 font-mono text-[10px] text-text-dim tracking-[0.06em] shrink-0"
       >
         <button
           type="button"
@@ -454,7 +430,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Filter row 1: includes/excludes + format pills */}
-      <div className="px-6 py-2.5 border-b border-border grid grid-cols-[1fr_1fr_auto] gap-2.5 items-center shrink-0">
+      <div className="reference-deck-finder-filters px-6 py-2.5 border-b border-border grid grid-cols-[1fr_1fr_auto] gap-2.5 items-center shrink-0">
         <div className="relative">
           <input
             value={includesCard}
@@ -493,7 +469,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Filter row 2: class chips */}
-      <div className="px-6 py-2.5 border-b border-border flex gap-1.5 items-center flex-wrap shrink-0">
+      <div className="reference-deck-finder-classbar px-6 py-2.5 border-b border-border flex gap-1.5 items-center flex-wrap shrink-0">
         <button
           onClick={() => setClassFilter('all')}
           className={`px-3 py-1 rounded-full font-mono text-[11px] tracking-[0.08em] font-semibold cursor-pointer ${
@@ -524,7 +500,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Filter row 3: max dust + sort */}
-      <div className="px-6 py-2.5 border-b border-border flex gap-4 items-center font-mono text-[10px] text-text-dim tracking-[0.06em] shrink-0">
+      <div className="reference-deck-finder-sortbar px-6 py-2.5 border-b border-border flex gap-4 items-center font-mono text-[10px] text-text-dim tracking-[0.06em] shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-text-mute tracking-[0.12em]">{t('decks.finder.maxDustLabel')}</span>
           <input
@@ -559,9 +535,9 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
       </div>
 
       {/* Body */}
-      <div className="flex-1 min-h-[420px] grid grid-cols-[1.4fr_1fr] overflow-hidden">
+      <div className="reference-deck-finder-body flex-1 min-h-[420px] grid grid-cols-[1.4fr_1fr] overflow-hidden">
         {/* List */}
-        <div className="overflow-auto border-r border-border">
+        <div className="reference-deck-finder-list overflow-auto border-r border-border">
           {loaded && sorted.length === 0 && (
             <div className="p-10 text-center text-text-mute font-mono text-sm">
               {t('decks.finder.emptyList')}
@@ -573,7 +549,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
               <button
                 key={d.id}
                 onClick={() => setSelectedId(d.id)}
-                className={`w-full text-left border-l-2 border-b border-border px-4 py-3 grid grid-cols-[30px_1fr_auto] gap-3 items-center cursor-pointer transition-colors ${
+                className={`reference-deck-finder-row w-full text-left border-l-2 border-b border-border px-4 py-3 grid grid-cols-[30px_1fr_auto] gap-3 items-center cursor-pointer transition-colors ${
                   active ? 'border-l-accent bg-accent-dim/30' : 'border-l-transparent hover:bg-overlay-surface'
                 }`}
               >
@@ -609,7 +585,7 @@ export function DeckFinderTab(_props: DeckFinderTabProps = {}): ReactElement {
 
         {/* Detail */}
         {selected && (
-          <div className="overflow-auto p-5 flex flex-col gap-4">
+          <div className="reference-deck-finder-detail overflow-auto p-5 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <ClassPortrait
                 heroClass={selected.class}

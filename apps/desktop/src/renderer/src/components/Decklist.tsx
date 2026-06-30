@@ -21,6 +21,7 @@ import type {
 } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 
+import { CLASS_ICON_IMAGES } from '../assets/reference-ui/class-icons';
 import { useDecks } from '../hooks/use-decks';
 import { useTranslation } from '../i18n';
 
@@ -105,19 +106,6 @@ function getClassLabel(t: TFunction, heroClass: HeroClass): string {
   return t(CLASS_LABEL_KEYS[heroClass]);
 }
 
-function getClassAbbreviation(t: TFunction, heroClass: HeroClass): string {
-  const label = getClassLabel(t, heroClass);
-  const parts = label.split(/\s+/).filter(Boolean);
-  if (parts.length > 1) {
-    return parts
-      .map((part) => part[0] ?? '')
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-  }
-  return Array.from(label).slice(0, 2).join('').toUpperCase();
-}
-
 function getFormatLabel(t: TFunction, format: Format): string {
   return t(FORMAT_LABEL_KEYS[format]);
 }
@@ -134,13 +122,17 @@ function getSyncSourceLabel(t: TFunction, source: string): string {
 }
 
 function ClassIcon({ heroClass }: { heroClass: HeroClass }): ReactElement {
-  const { t } = useTranslation();
   return (
     <div
-      className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border ${CLASS_ICON_STYLES[heroClass]}`}
+      className={`reference-class-icon rounded-full flex items-center justify-center border ${CLASS_ICON_STYLES[heroClass]}`}
       aria-hidden="true"
     >
-      {getClassAbbreviation(t, heroClass)}
+      <img
+        src={CLASS_ICON_IMAGES[heroClass]}
+        alt=""
+        className="h-full w-full object-contain"
+        draggable={false}
+      />
     </div>
   );
 }
@@ -149,7 +141,7 @@ function CountBadge({ count }: { count: number }): ReactElement {
   const ok = count === 30;
   return (
     <span
-      className={`text-xs font-semibold px-2 py-0.5 rounded ${
+      className={`reference-count-badge text-xs font-semibold px-2 py-0.5 rounded ${
         ok ? 'bg-green/15 text-green' : 'bg-amber/15 text-amber'
       }`}
       data-testid="card-count-badge"
@@ -535,10 +527,10 @@ function DeckRow({
 
   return (
     <div
-      className="bg-overlay-surface border border-border hover:border-border-hi rounded-md overflow-hidden"
+      className="reference-saved-deck-row bg-overlay-surface border border-border hover:border-border-hi rounded-md overflow-hidden"
       data-testid={`deck-row-${deck.id}`}
     >
-      <div className="flex items-center gap-3 p-3">
+      <div className="reference-saved-deck-row-main flex items-center gap-3 p-3">
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
@@ -685,7 +677,7 @@ function SyncDecksButton({
       disabled={syncing}
       data-testid="manual-deck-sync-button"
       aria-label={t('decks.list.sync.ariaLabel')}
-      className="px-4 py-2 bg-overlay-elevated hover:bg-border-hi disabled:opacity-60 disabled:cursor-not-allowed text-text text-sm font-medium rounded inline-flex items-center gap-2"
+      className="reference-sync-button px-4 py-2 bg-overlay-elevated hover:bg-border-hi disabled:opacity-60 disabled:cursor-not-allowed text-text text-sm font-medium rounded inline-flex items-center gap-2"
     >
       <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
       {syncing ? t('decks.list.sync.syncing') : t('decks.list.sync.button')}
@@ -709,7 +701,7 @@ function FilterSelect({
       aria-label={label}
       value={value}
       onChange={(event) => onChange(event.currentTarget.value)}
-      className="h-9 rounded border border-border bg-overlay-input px-3 text-sm text-text outline-none hover:border-border-hi"
+      className="reference-deck-filter-select h-9 rounded border border-border bg-overlay-input px-3 text-sm text-text outline-none hover:border-border-hi"
     >
       {children}
     </select>
@@ -821,7 +813,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
   if (decks.length === 0) {
     return (
       <div
-        className="flex flex-col items-center justify-center h-full min-h-0 overflow-y-auto p-12 text-text"
+        className="reference-saved-empty flex flex-col items-center justify-center h-full min-h-0 overflow-y-auto p-12 text-text"
         data-testid="decks-empty-state"
       >
         <h2 className="text-xl font-semibold text-text mb-2">{t('decks.list.empty.title')}</h2>
@@ -849,8 +841,8 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
   }
 
   return (
-    <div className="p-6 overflow-y-auto h-full min-h-0">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+    <div className="reference-saved-decks p-6 overflow-y-auto h-full min-h-0">
+      <div className="reference-saved-decks-header flex flex-wrap items-start justify-between gap-4 mb-5">
         <div>
           <h1 className="text-2xl font-bold text-text">{t('decks.list.title')}</h1>
           <div className="mt-1 text-xs text-text-dim">
@@ -874,7 +866,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
         <SyncDecksButton syncing={manualSyncing} onClick={() => { void handleManualSync(); }} />
       </div>
 
-      <div className="mb-5 flex flex-wrap items-center gap-2">
+      <div className="reference-deck-toolbar mb-5 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[240px] flex-1">
           <Search
             size={16}
@@ -930,10 +922,10 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
           {t('decks.list.filters.noResults')}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="reference-deck-group-list space-y-5">
           {grouped.map(({ class: heroClass, decks: rows }) => (
-            <section key={heroClass} data-testid={`group-${heroClass}`}>
-              <h2 className="text-sm font-semibold text-text-dim uppercase tracking-wider mb-2">
+            <section className="reference-deck-group" key={heroClass} data-testid={`group-${heroClass}`}>
+              <h2 className="reference-deck-group-title text-sm font-semibold text-text-dim uppercase tracking-wider mb-2">
                 {getClassLabel(t, heroClass)}
               </h2>
               <div className="space-y-2">

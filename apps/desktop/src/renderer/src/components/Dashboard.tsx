@@ -35,6 +35,7 @@ function useRankLabel(
 }
 
 type StatTone = 'deck' | 'hand' | 'live' | 'idle' | 'warning' | 'danger' | 'success';
+type TrackerDeckCard = { cardId: string; count: number };
 
 function getWatcherTone(kind: HearthWatcherStatusKind | null | undefined): StatTone {
   if (!kind) return 'warning';
@@ -65,6 +66,7 @@ export function Dashboard() {
   const deck = snapshot?.deck ?? null;
   const totalOriginal = deck?.original.reduce((sum, card) => sum + card.count, 0) ?? 0;
   const totalRemaining = deck?.remaining.reduce((sum, card) => sum + card.count, 0) ?? 0;
+  const remainingPercent = totalOriginal > 0 ? Math.round((totalRemaining / totalOriginal) * 100) : 0;
   const phase = snapshot?.phase ?? 'IDLE';
   const phaseLabel = t(`dashboard.phaseKind.${phase}`);
   const rankLabel = useRankLabel(medalInfo?.standard);
@@ -75,14 +77,7 @@ export function Dashboard() {
 
   return (
     <div className="reference-page reference-dashboard flex-1 h-full min-h-0 overflow-hidden">
-      <section className="reference-page-heading">
-        <h1>
-          <span>01 {t('sidebar.deckTracker')} / </span>
-          <strong>Dashboard</strong>
-        </h1>
-        <p>{t('dashboard.reference.subtitle')}</p>
-        <div className="reference-heading-rule" aria-hidden="true" />
-      </section>
+      <h1 className="sr-only">{t('sidebar.deckTracker')}</h1>
 
       <div className="reference-dashboard-grid">
         <section className="reference-panel reference-live-panel" data-testid="arcane-live-tracker-panel">
@@ -91,17 +86,65 @@ export function Dashboard() {
             <b>{t('fallout.dashboard.liveBadge')}</b>
             <span>{t('dashboard.phase', { phase: phaseLabel })}</span>
           </header>
-          <div className="reference-live-empty">
-            <Activity size={56} aria-hidden="true" />
-            <h2>{deck ? deck.name || t('dashboard.unnamedDeck') : t('dashboard.noActiveDeck')}</h2>
-            <p>{deck ? t('deckTracker.live') : t('dashboard.reference.noActivity')}</p>
-            {!deck && !isAlive ? (
-              <div className="reference-primary-action" role="status">
-                <Play size={16} />
-                {t('deckTracker.hearthstoneNotRunning')}
+          {deck ? (
+            <div className="reference-live-body">
+              <div className="reference-active-deck-summary">
+                <div className="min-w-0">
+                  <span className="reference-active-deck-label">{t('deckTracker.deck')}</span>
+                  <h2>{deck.name || t('dashboard.unnamedDeck')}</h2>
+                  <p>
+                    {t('dashboard.reference.modeStandard')}
+                    <span aria-hidden="true"> · </span>
+                    {rankLabel}
+                  </p>
+                </div>
+                <div className="reference-live-count">
+                  <b>{totalRemaining}</b>
+                  <span>/ {totalOriginal}</span>
+                  <small>{t('dashboard.cardsLeft')}</small>
+                </div>
               </div>
-            ) : null}
-          </div>
+              <div className="reference-live-progress" aria-label={t('dashboard.cardsLeft')}>
+                <span style={{ width: `${remainingPercent}%` }} />
+              </div>
+              <div className="reference-live-list-head">
+                <span>{t('deckTracker.remainingCards')}</span>
+                <b>{remainingPercent}%</b>
+              </div>
+              <div className="reference-live-card-list" data-testid="dashboard-remaining-list">
+                {deck.remaining.slice(0, 12).map((card) => (
+                  <DashboardDeckRow key={card.cardId} card={card} />
+                ))}
+                {deck.remaining.length > 12 ? (
+                  <div className="reference-live-overflow">
+                    +{deck.remaining.length - 12}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <div className="reference-live-empty reference-live-empty-workbench">
+              <div className="reference-empty-signal">
+                <Activity size={42} aria-hidden="true" />
+                <div>
+                  <span>{phaseLabel}</span>
+                  <h2>{t('dashboard.noActiveDeck')}</h2>
+                  <p>{t('dashboard.reference.noActivity')}</p>
+                </div>
+              </div>
+              <div className="reference-empty-grid">
+                <MiniMeta icon={<FlaskConical size={16} />} label={t('dashboard.reference.mode')} value={t('dashboard.reference.modeStandard')} />
+                <MiniMeta icon={<Target size={16} />} label={t('dashboard.status')} value={phaseLabel} />
+                <MiniMeta icon={<Radio size={16} />} label={t('dashboard.watcher')} value={watcherKindLabel} />
+              </div>
+              {!isAlive ? (
+                <div className="reference-primary-action" role="status">
+                  <Play size={16} />
+                  {t('deckTracker.hearthstoneNotRunning')}
+                </div>
+              ) : null}
+            </div>
+          )}
           <footer>
             <span className="sr-only">{t('dashboard.rank', { rank: '' })}</span>
             <MiniMeta icon={<FlaskConical size={16} />} label={t('dashboard.reference.mode')} value={t('dashboard.reference.modeStandard')} />
@@ -118,6 +161,7 @@ export function Dashboard() {
           <header>
             <Trophy size={17} aria-hidden="true" />
             <b>{t('opponent.title')}</b>
+            <span>{snapshot?.opposingHandCount ?? 0}</span>
           </header>
           {snapshot?.opponent.revealed.length ? (
             <div className="reference-opponent-list">
@@ -126,7 +170,7 @@ export function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="reference-opponent-empty">
+            <div className="reference-opponent-empty reference-opponent-empty-workbench">
               <UserRound size={56} aria-hidden="true" />
               <h2>{t('opponent.empty')}</h2>
               <p>{t('dashboard.reference.opponentHint')}</p>
@@ -176,6 +220,18 @@ function OpponentIntelCard({ cardId }: { cardId: string }) {
   return (
     <div className="fallout-intel-row rounded border border-border bg-overlay-surface px-3 py-2 text-sm text-text">
       {def?.name ?? cardId}
+    </div>
+  );
+}
+
+function DashboardDeckRow({ card }: { card: TrackerDeckCard }) {
+  const def = useCardDef(card.cardId);
+  const cost = typeof def?.cost === 'number' ? def.cost : '-';
+  return (
+    <div className="reference-live-card-row">
+      <span className="reference-live-cost">{cost}</span>
+      <span className="reference-live-card-name">{def?.name ?? card.cardId}</span>
+      <span className="reference-live-card-count">x{card.count}</span>
     </div>
   );
 }

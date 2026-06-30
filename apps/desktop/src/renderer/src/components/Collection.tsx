@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Database, Sparkles } from 'lucide-react';
+import { BookOpen, Sparkles } from 'lucide-react';
 import type { SetProgress } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
@@ -33,7 +33,6 @@ function aggregateOwnedByDbfId(
 
 export function Collection() {
   const { t } = useTranslation();
-  const [dbStats, setDbStats] = useState<{ total: number; sets: number } | null>(null);
   const [progress, setProgress] = useState<ProgressResponse | null>(null);
   const [selectedSetCode, setSelectedSetCode] = useState<string | null>(null);
   const [ownedByDbfId, setOwnedByDbfId] = useState<Map<number, number>>(new Map());
@@ -58,8 +57,6 @@ export function Collection() {
       .search({ limit: 10000 })
       .then((all) => {
         if (cancelled) return;
-        const sets = new Set(all.map((c) => c.set));
-        setDbStats({ total: all.length, sets: sets.size });
 
         // Pick a representative card per set for tile cover art:
         // prefer LEGENDARY-rarity collectible with the lowest dbfId
@@ -215,15 +212,6 @@ export function Collection() {
 
         <div className="reference-collection-tools">
           <CollectionSyncButton state={syncState} onClick={handleSyncClick} />
-          {dbStats && (
-            <div className="reference-db-pill">
-              <Database size={18} />
-              <div>
-                <span>{t('collection.dbCards')}</span>
-                <b>{dbStats.total.toLocaleString()}</b>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

@@ -189,7 +189,7 @@ export function Stats() {
       <div className="reference-stats-content space-y-5 w-full">
         {/* Header */}
         <div
-          className="flex flex-wrap items-start justify-between gap-4"
+          className="reference-stats-header flex flex-wrap items-start justify-between gap-4"
           data-testid="stats-page-header"
         >
           <div>
@@ -197,7 +197,7 @@ export function Stats() {
             <p className="text-text-secondary text-sm">{t('stats.subtitle')}</p>
           </div>
 
-          <div className="flex flex-col items-end space-y-2">
+          <div className="reference-stats-filter-stack flex flex-col items-end space-y-2">
             <div className="flex bg-overlay-surface dark:bg-black/20 rounded-md p-1 border border-border-hairline">
               {FILTERS.map((filter) => (
                 <button
@@ -238,8 +238,8 @@ export function Stats() {
         </div>
 
         {/* Top Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
+        <div className="reference-stat-summary-grid grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="reference-stats-kpi kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-accent group-hover:opacity-10 transition-opacity">
               <Trophy size={100} />
             </div>
@@ -250,7 +250,7 @@ export function Stats() {
             </div>
           </div>
 
-          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
+          <div className="reference-stats-kpi kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-tertiary group-hover:opacity-10 transition-opacity">
               <Swords size={100} />
             </div>
@@ -259,7 +259,7 @@ export function Stats() {
             <div className="text-sm mt-2 text-text-tertiary">{t('stats.kpi.matchesPlayedSubtitle')}</div>
           </div>
 
-          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
+          <div className="reference-stats-kpi kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-text-tertiary group-hover:opacity-10 transition-opacity">
               <Clock size={100} />
             </div>
@@ -272,7 +272,7 @@ export function Stats() {
             </div>
           </div>
 
-          <div className="kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
+          <div className="reference-stats-kpi kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-red group-hover:opacity-10 transition-opacity">
               <Target size={100} />
             </div>
@@ -293,27 +293,27 @@ export function Stats() {
         </div>
 
         {/* Winrate Time Series + Play/Coin Split */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <div className="xl:col-span-2 tahoe-card p-5">
+        <div className="reference-stats-main-grid grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="reference-chart-card xl:col-span-2 tahoe-card p-5">
             <WinrateTimeSeriesChart
               points={summary.winrateTimeSeries ?? null}
               granularity={granularity}
               onGranularityChange={setGranularity}
             />
           </div>
-          <div className="tahoe-card p-5">
+          <div className="reference-side-card tahoe-card p-5">
             <PlayOrderSplitCard split={summary.playOrderSplit ?? null} />
           </div>
         </div>
 
         {/* Matchup Matrix */}
-        <div className="tahoe-card p-5">
+        <div className="reference-matrix-card tahoe-card p-5">
           <h2 className="text-lg font-bold text-text mb-4">{t('stats.matchup.title')}</h2>
           <MatchupMatrix matrix={summary.matchupMatrix ?? null} />
         </div>
 
         {/* Saved Deck Matchups */}
-        <div className="tahoe-card p-5" data-testid="deck-matchup-card">
+        <div className="reference-deck-matchup-card tahoe-card p-5" data-testid="deck-matchup-card">
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h2 className="text-lg font-bold text-text">{t('stats.deckMatchup.title')}</h2>
             {savedDecks.length > 0 && (
@@ -368,10 +368,10 @@ export function Stats() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="reference-stats-secondary-grid grid grid-cols-1 xl:grid-cols-3 gap-4">
 
           {/* Class Winrate Chart */}
-          <div className="xl:col-span-2 tahoe-card p-5">
+          <div className="reference-class-chart-card xl:col-span-2 tahoe-card p-5">
             <h2 className="text-lg font-bold text-text mb-6 flex items-center">
               {t('stats.classChart.title')}
             </h2>
@@ -399,7 +399,7 @@ export function Stats() {
           </div>
 
           {/* Recent Matches */}
-          <div className="tahoe-card p-5 flex flex-col">
+          <div className="reference-recent-card tahoe-card p-5 flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold text-text">{t('stats.recent.title')}</h2>
               <button className="text-accent text-sm font-medium hover:text-accent">{t('stats.recent.viewAll')}</button>
