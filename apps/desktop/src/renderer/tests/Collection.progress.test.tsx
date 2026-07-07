@@ -82,6 +82,41 @@ describe('Collection — set progress', () => {
     expect(screen.queryByText('Naxxramas')).not.toBeInTheDocument();
   });
 
+  it('hides retired evergreen and starter sets from the collection grid', async () => {
+    mockProgressApi({
+      standard: [row({ setCode: 'SET_1810', totalCopies: 100, ownedCopies: 25 })],
+      wild: [
+        row({ setCode: 'SET_3', format: 'wild', totalCopies: 1000, ownedCopies: 1000 }),
+        row({ setCode: 'SET_17', format: 'wild', totalCopies: 1000, ownedCopies: 1000 }),
+        row({ setCode: 'SET_1635', format: 'wild', totalCopies: 1000, ownedCopies: 1000 }),
+        row({ setCode: 'SET_1637', format: 'wild', totalCopies: 1000, ownedCopies: 1000 }),
+        row({ setCode: 'SET_1463', format: 'wild', totalCopies: 1000, ownedCopies: 1000 }),
+        row({ setCode: 'SET_12', format: 'wild', totalCopies: 60, ownedCopies: 12 }),
+      ],
+      mirrorAlive: true,
+    });
+
+    renderWithLocale('zh-CN');
+
+    await waitFor(() => expect(screen.getByText('核心')).toBeInTheDocument());
+    expect(screen.getByText((_content, element) => (
+      element?.classList.contains('reference-overall-count') === true
+      && element.textContent === '25 / 100'
+    ))).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '狂野' }));
+
+    await waitFor(() => expect(screen.getByText('纳克萨玛斯')).toBeInTheDocument());
+    expect(screen.queryByText('传承')).not.toBeInTheDocument();
+    expect(screen.queryByText('核心（2021）')).not.toBeInTheDocument();
+    expect(screen.queryByText('核心（2022）')).not.toBeInTheDocument();
+    expect(screen.queryByText('恶魔猎手入门')).not.toBeInTheDocument();
+    expect(screen.getByText((_content, element) => (
+      element?.classList.contains('reference-overall-count') === true
+      && element.textContent === '12 / 60'
+    ))).toBeInTheDocument();
+  });
+
   it('switches to Wild rows when the Wild tab is clicked', async () => {
     mockProgressApi({
       standard: [row({ setCode: 'SET_1810' })],
@@ -224,6 +259,7 @@ describe('Collection — set progress', () => {
             synced: 0,
             skippedNonCollectible: 0,
             skippedUnknownClass: 0,
+            removed: 0,
             startedAt: 0,
             finishedAt: 0,
           })),
@@ -261,6 +297,7 @@ describe('Collection — set progress', () => {
       synced: 0,
       skippedNonCollectible: 0,
       skippedUnknownClass: 0,
+      removed: 0,
       startedAt: 0,
       finishedAt: 0,
     });
@@ -300,6 +337,7 @@ describe('Collection — set progress', () => {
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
         startedAt: 0,
         finishedAt: 0,
       }));
@@ -499,6 +537,7 @@ describe('Collection — set progress', () => {
       synced: 1,
       skippedNonCollectible: 0,
       skippedUnknownClass: 0,
+      removed: 0,
       startedAt: 0,
       finishedAt: 0,
     });
@@ -557,6 +596,7 @@ describe('Collection — set progress', () => {
           synced: 0,
           skippedNonCollectible: 0,
           skippedUnknownClass: 0,
+          removed: 0,
           startedAt: 0,
           finishedAt: 0,
         })),
@@ -605,6 +645,7 @@ describe('Collection — set progress', () => {
           synced: 0,
           skippedNonCollectible: 0,
           skippedUnknownClass: 0,
+          removed: 0,
           startedAt: 0,
           finishedAt: 0,
         })),
@@ -651,6 +692,7 @@ describe('Collection — set progress', () => {
           synced: 0,
           skippedNonCollectible: 0,
           skippedUnknownClass: 0,
+          removed: 0,
           startedAt: 0,
           finishedAt: 0,
         })),

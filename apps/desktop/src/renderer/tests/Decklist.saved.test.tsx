@@ -122,6 +122,7 @@ describe('SavedDecksList', () => {
         synced: 0,
         skippedNonCollectible: 0,
         skippedUnknownClass: 0,
+        removed: 0,
         startedAt: 0,
         finishedAt: 0,
       };
@@ -176,6 +177,7 @@ describe('SavedDecksList', () => {
       synced: 2,
       skippedNonCollectible: 0,
       skippedUnknownClass: 0,
+      removed: 0,
       startedAt: 0,
       finishedAt: 1,
     });

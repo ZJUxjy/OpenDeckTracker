@@ -25,6 +25,30 @@ describe('deck-sync-host', () => {
     expect(result.synced).toBe(0);
   });
 
+  it('forwards unavailable diagnostics to the renderer result', async () => {
+    const diagnostic = {
+      mirrorAlive: false,
+      runtimeBoundPid: 0,
+      runtimeReinitCount: 0,
+      editedDeck: null,
+      collectionDiagnostic: null,
+    };
+    const host = createDeckSyncHost({
+      service: makeService(async () => ({
+        source: 'unavailable',
+        synced: 0,
+        skippedNonCollectible: 0,
+        skippedUnknownClass: 0,
+        removed: 0,
+        diagnostic,
+      })),
+    });
+
+    const result = await host.syncFromLive();
+
+    expect(result.diagnostic).toEqual(diagnostic);
+  });
+
   it('reports source=live and ok=true on a successful sync', async () => {
     const host = createDeckSyncHost({
       service: makeService(async () => ({

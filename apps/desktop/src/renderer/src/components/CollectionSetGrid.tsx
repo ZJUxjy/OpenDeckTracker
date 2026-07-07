@@ -48,6 +48,13 @@ const SET_ACCENT: Record<string, string> = {};
 const SET_BACKGROUND_IMAGES: Record<string, string> = {
   SET_1869: marchOfTheLichKingBg,
 };
+const HIDDEN_COLLECTION_SET_CODES = new Set([
+  'SET_3', // Legacy
+  'SET_17', // Legacy
+  'SET_1635', // Core (2021)
+  'SET_1637', // Core (2022)
+  'SET_1463', // Demon Hunter Initiate
+]);
 
 function accentFor(setCode: string): string {
   return SET_ACCENT[setCode] ?? 'var(--class-neutral)';
@@ -68,7 +75,11 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
   const [activeTab, setActiveTab] = useState<TabId>('cards');
   const [search, setSearch] = useState('');
 
-  const overallRows = activeFormat === 'standard' ? progress.standard : progress.wild;
+  const visibleRows = useMemo(() => {
+    const rows = activeFormat === 'standard' ? progress.standard : progress.wild;
+    return rows.filter((row) => !HIDDEN_COLLECTION_SET_CODES.has(row.setCode));
+  }, [progress, activeFormat]);
+  const overallRows = visibleRows;
   const totalOwned = overallRows.reduce((s, r) => s + r.ownedCopies, 0);
   const totalMax = overallRows.reduce((s, r) => s + r.totalCopies, 0);
   const percentage = totalMax > 0 ? Math.round((totalOwned / totalMax) * 100) : 0;
@@ -80,12 +91,11 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
   }
 
   const filteredRows = useMemo(() => {
-    const baseRows: SetProgress[] =
-      activeFormat === 'standard' ? progress.standard : progress.wild;
+    const baseRows: SetProgress[] = visibleRows;
     if (search.trim() === '') return baseRows;
     const q = search.trim().toLowerCase();
     return baseRows.filter((r) => labelFor(r.setCode).toLowerCase().includes(q));
-  }, [progress, activeFormat, search, locale]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [visibleRows, search, locale]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="reference-collection-grid-shell">

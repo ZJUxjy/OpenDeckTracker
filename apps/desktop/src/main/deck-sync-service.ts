@@ -1,4 +1,4 @@
-import type { Deck as LiveDeck } from '@hdt/hearthmirror';
+import type { CollectionDiagnostic, Deck as LiveDeck } from '@hdt/hearthmirror';
 import type { DeckCard, Format, HeroClass } from '@hdt/core';
 import {
   NonCollectibleSnapshotError,
@@ -25,6 +25,27 @@ export interface DeckSyncResult {
   removed: number;
   /** Populated when `source === 'error'`. */
   error?: string;
+  /** Extra HearthMirror state captured when live decks are unavailable. */
+  diagnostic?: DeckSyncUnavailableDiagnostic;
+}
+
+export interface LiveDeckReadSummary {
+  id: number;
+  name: string;
+  hero: string;
+  formatType: number;
+  deckType: number;
+  cardSlots: number;
+  cardCount: number;
+}
+
+export interface DeckSyncUnavailableDiagnostic {
+  mirrorAlive?: boolean;
+  runtimeBoundPid?: number;
+  runtimeReinitCount?: number;
+  editedDeck?: LiveDeckReadSummary | null;
+  collectionDiagnostic?: CollectionDiagnostic | null;
+  error?: string;
 }
 
 export interface DeckSyncDependencies {
@@ -35,6 +56,12 @@ export interface DeckSyncDependencies {
    * as "do nothing" rather than wiping app-managed records.
    */
   getLiveDecks: () => Promise<readonly LiveDeck[] | null>;
+  /**
+   * Optional diagnostics read after all live-deck retries return null. This
+   * keeps the normal sync path lean while making "unavailable" actionable in
+   * logs and renderer status.
+   */
+  getUnavailableDiagnostic?: () => Promise<DeckSyncUnavailableDiagnostic>;
   /** Resolve a hero portrait card id (e.g. `HERO_05`) into a `HeroClass`. */
   resolveHeroClass: (cardId: string) => HeroClass | null;
   /**
@@ -85,7 +112,13 @@ export function createDeckSyncService(deps: DeckSyncDependencies): {
         return result;
       }
       if (live === null) {
-        console.log('[deck-sync] live decks unavailable');
+        const diagnostic = await readUnavailableDiagnostic(deps);
+        if (diagnostic !== undefined) {
+          result.diagnostic = diagnostic;
+          console.log('[deck-sync] live decks unavailable', diagnostic);
+        } else {
+          console.log('[deck-sync] live decks unavailable');
+        }
         result.source = 'unavailable';
         return result;
       }
@@ -180,6 +213,17 @@ export function createDeckSyncService(deps: DeckSyncDependencies): {
       return result;
     },
   };
+}
+
+async function readUnavailableDiagnostic(
+  deps: DeckSyncDependencies,
+): Promise<DeckSyncUnavailableDiagnostic | undefined> {
+  if (deps.getUnavailableDiagnostic === undefined) return undefined;
+  try {
+    return await deps.getUnavailableDiagnostic();
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 function resolveLiveDeckClass(

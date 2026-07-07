@@ -104,6 +104,14 @@ export class HearthMirror {
     return alive;
   }
 
+  async getBoundPid(): Promise<number> {
+    return native.getBoundPid();
+  }
+
+  async getReinitCount(): Promise<number> {
+    return native.getReinitCount();
+  }
+
   /**
    * Locate the Hearthstone window and read its bounds + visibility flags.
    * Resolves to `null` when no window is found or when the native call

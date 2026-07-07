@@ -255,6 +255,7 @@ describe('deck-ipc', () => {
       synced: 2,
       skippedNonCollectible: 0,
       skippedUnknownClass: 0,
+      removed: 0,
       startedAt: 1,
       finishedAt: 2,
     };
@@ -282,6 +283,7 @@ describe('deck-ipc', () => {
       synced: 0,
       skippedNonCollectible: 0,
       skippedUnknownClass: 0,
+      removed: 0,
       startedAt: 0,
       finishedAt: 0,
     }));
@@ -291,6 +293,7 @@ describe('deck-ipc', () => {
       synced: 1,
       skippedNonCollectible: 0,
       skippedUnknownClass: 0,
+      removed: 0,
       startedAt: 0,
       finishedAt: 0,
     }));

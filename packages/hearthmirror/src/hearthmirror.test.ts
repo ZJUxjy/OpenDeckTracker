@@ -11,6 +11,8 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getMatchInfo: vi.fn(),
   getMedalInfo: vi.fn(),
   getDecks: vi.fn(),
+  getBoundPid: vi.fn(),
+  getReinitCount: vi.fn(),
   getEditedDeck: vi.fn(),
   getCollection: vi.fn(),
   getCollectionDiagnostic: vi.fn(),
@@ -255,6 +257,18 @@ describe('HearthMirror', () => {
     it('returns null when native returns null', async () => {
       mocked(native.getDecks).mockResolvedValue(null);
       expect(await mirror.getDecks()).toBeNull();
+    });
+  });
+
+  describe('runtime diagnostics', () => {
+    it('forwards the native bound PID', async () => {
+      mocked(native.getBoundPid).mockResolvedValue(1234);
+      await expect(mirror.getBoundPid()).resolves.toBe(1234);
+    });
+
+    it('forwards the native reinit count', async () => {
+      mocked(native.getReinitCount).mockResolvedValue(3);
+      await expect(mirror.getReinitCount()).resolves.toBe(3);
     });
   });
 

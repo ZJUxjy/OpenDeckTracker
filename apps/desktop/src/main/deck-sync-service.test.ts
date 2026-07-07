@@ -249,6 +249,40 @@ describe('deck-sync-service', () => {
     expect(store.saveFromLive).not.toHaveBeenCalled();
   });
 
+  it('returns unavailable diagnostics when live decks stay null', async () => {
+    const store = makeStore();
+    const diagnostic = {
+      mirrorAlive: true,
+      runtimeBoundPid: 1234,
+      runtimeReinitCount: 2,
+      editedDeck: null,
+      collectionDiagnostic: {
+        listSize: 0,
+        parsed: 0,
+        nonZeroDbfid: 0,
+        nullPtrs: 0,
+        fieldMisses: 0,
+        sampleClass: null,
+        elapsedMs: 1,
+      },
+    };
+    const getUnavailableDiagnostic = vi.fn(async () => diagnostic);
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks: async () => null,
+      getUnavailableDiagnostic,
+      resolveHeroClass: () => 'HUNTER',
+      collectibleLookup: () => ({ collectible: true }),
+      liveReadRetryDelaysMs: [0],
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(result.source).toBe('unavailable');
+    expect(result.diagnostic).toEqual(diagnostic);
+    expect(getUnavailableDiagnostic).toHaveBeenCalledTimes(1);
+  });
+
   it('retries a null live-decks read (transient mirror-attach race) before giving up', async () => {
     const store = makeStore();
     const reads: Array<readonly LiveDeck[] | null> = [null, [liveDeck({ id: 3 })]];

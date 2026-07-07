@@ -52,6 +52,7 @@ import { registerCollectionProgressIpc } from './collection-progress';
 import { createCollectionSnapshotStore } from './collection-snapshot-store';
 import { createDeckSyncService } from './deck-sync-service';
 import { createDeckSyncHost } from './deck-sync-host';
+import { readDeckSyncUnavailableDiagnostic } from './deck-sync-diagnostic';
 import { registerPopularDecksIpc } from './popular-decks-ipc';
 import {
   PopularDeckSyncOrchestrator,
@@ -483,6 +484,7 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
     const deckSync = createDeckSyncService({
       store: deckStore,
       getLiveDecks: () => hm().getDecks(),
+      getUnavailableDiagnostic: () => readDeckSyncUnavailableDiagnostic(hm()),
       resolveHeroClass: heroClassLookup,
       resolveCardClass: heroClassLookup,
       collectibleLookup: makeCollectibleLookup(db),

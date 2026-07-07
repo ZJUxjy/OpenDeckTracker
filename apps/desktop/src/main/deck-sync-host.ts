@@ -1,4 +1,4 @@
-import type { DeckSyncResult } from './deck-sync-service';
+import type { DeckSyncResult, DeckSyncUnavailableDiagnostic } from './deck-sync-service';
 
 export type LiveDeckSyncSource = 'live' | 'unavailable' | 'not-ready' | 'error';
 
@@ -10,6 +10,7 @@ export interface LiveDeckSyncResult {
   skippedUnknownClass: number;
   removed: number;
   error?: string;
+  diagnostic?: DeckSyncUnavailableDiagnostic;
   startedAt: number;
   finishedAt: number;
 }
@@ -74,6 +75,7 @@ export function createDeckSyncHost(options: DeckSyncHostOptions = {}): DeckSyncH
         finishedAt,
       };
       if (inner.error !== undefined) result.error = inner.error;
+      if (inner.diagnostic !== undefined) result.diagnostic = inner.diagnostic;
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
