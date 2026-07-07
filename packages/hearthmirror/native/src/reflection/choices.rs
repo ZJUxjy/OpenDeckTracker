@@ -11,6 +11,7 @@
 //! of entity ids (NOT object pointers — see design D8) and resolves
 //! each id to a card id by re-walking `m_entityMap`.
 
+use crate::collections::list;
 use crate::error::ScryError;
 use crate::mono::MonoRuntime;
 use crate::reflection::entity::{
@@ -19,12 +20,6 @@ use crate::reflection::entity::{
 use crate::reflection::field_paths::*;
 use crate::reflection::tags::choice_type;
 use napi_derive::napi;
-
-/// MonoArray header size before the first element. Mirrors the constant
-/// in `crate::collections::list` (private there); we duplicate here
-/// rather than promote to public because this file is the only other
-/// site that needs raw-i32 array reads.
-const MONO_ARRAY_DATA_OFFSET: u32 = 0x10;
 
 #[napi(object)]
 pub struct ChoiceCard {
@@ -105,15 +100,13 @@ fn read_choice_card_ids(
         return Ok(Vec::new());
     };
 
-    // List<T> layout: vtable, monitor, _items: T[], _size: i32, _version: i32.
-    // _items at +0x08, _size at +0x0C (per `crate::collections::list`).
-    let items_ptr = mem.read_remote_ptr(list_ptr + 0x08)?;
-    let size = mem.read_i32(list_ptr + 0x0C)?.max(0) as usize;
+    let items_ptr = mem.read_remote_ptr(list_ptr + list::list_items_offset(mem))?;
+    let size = mem.read_i32(list_ptr + list::list_size_offset(mem))?.max(0) as usize;
     if items_ptr.is_null() || size == 0 {
         return Ok(Vec::new());
     }
 
-    let data_start = items_ptr + MONO_ARRAY_DATA_OFFSET;
+    let data_start = items_ptr + list::mono_array_data_offset(mem);
     let mut out = Vec::with_capacity(size);
     for i in 0..size as u32 {
         // Each int is 4 bytes inline; NOT a pointer.

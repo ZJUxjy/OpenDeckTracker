@@ -4,30 +4,46 @@ use std::fmt;
 pub enum ScryError {
     ProcessNotFound(String),
     AccessDenied(u32),
-    MemoryAccess { addr: u32, reason: String },
-    ClassNotFound { namespace: String, name: String },
-    FieldNotFound { class: String, field: String },
+    MemoryAccess {
+        addr: u64,
+        reason: String,
+    },
+    ClassNotFound {
+        namespace: String,
+        name: String,
+    },
+    FieldNotFound {
+        class: String,
+        field: String,
+    },
     ModuleNotFound(String),
     MonoNotInitialized,
     MetadataError(String),
-    CollectionOverflow { max: usize },
+    CollectionOverflow {
+        max: usize,
+    },
     Unsupported(String),
     /// A critical disasm-based offset probe failed (5e). The string identifies
     /// the probe site (typically a Mono export name + extracted struct/field).
     OffsetProbeFailed(String),
     /// A required Mono DLL export is missing (5e).
     ExportNotFound(String),
-    /// `OffsetProber` was constructed with `bitness != 32` (5e).
+    /// `OffsetProber` was constructed with unsupported bitness (5e).
     InvalidProbeBitness(u32),
     /// The parent chain of a class exceeded [`crate::mono::class::MAX_PARENT_CHAIN_DEPTH`]
     /// steps before hitting `System.Object` — either the chain is malformed
     /// or a cycle evaded the self-address guard (5f).
-    ClassHierarchyTooDeep { class: String, depth: usize },
+    ClassHierarchyTooDeep {
+        class: String,
+        depth: usize,
+    },
     /// `MonoImage::enumerate_classes` walked a non-NULL `class_cache`
     /// MonoInternalHashTable with `size > 0` but found zero valid class
     /// pointers in any bucket, indicating a probable offset mis-configuration
     /// in the hashtable layout (5f).
-    ClassCacheEmpty { image: String },
+    ClassCacheEmpty {
+        image: String,
+    },
 }
 
 impl fmt::Display for ScryError {
@@ -36,7 +52,7 @@ impl fmt::Display for ScryError {
             Self::ProcessNotFound(name) => write!(f, "process not found: {}", name),
             Self::AccessDenied(code) => write!(f, "access denied (Win32 error {})", code),
             Self::MemoryAccess { addr, reason } => {
-                write!(f, "memory access failed at 0x{:08X}: {}", addr, reason)
+                write!(f, "memory access failed at 0x{:016X}: {}", addr, reason)
             }
             Self::ClassNotFound { namespace, name } => {
                 if namespace.is_empty() {
@@ -58,7 +74,7 @@ impl fmt::Display for ScryError {
             Self::OffsetProbeFailed(site) => write!(f, "offset probe failed: {}", site),
             Self::ExportNotFound(name) => write!(f, "mono export not found: {}", name),
             Self::InvalidProbeBitness(b) => {
-                write!(f, "invalid probe bitness: {} (only 32 supported)", b)
+                write!(f, "invalid probe bitness: {} (only 32/64 supported)", b)
             }
             Self::ClassHierarchyTooDeep { class, depth } => {
                 write!(
@@ -113,8 +129,11 @@ mod tests {
 
     #[test]
     fn memory_access_display_formats_hex() {
-        let e = ScryError::MemoryAccess { addr: 0xDEADBEEF, reason: "test".into() };
-        assert!(e.to_string().contains("0xDEADBEEF"));
+        let e = ScryError::MemoryAccess {
+            addr: 0xDEADBEEF,
+            reason: "test".into(),
+        };
+        assert!(e.to_string().contains("0x00000000DEADBEEF"));
     }
 
     #[test]

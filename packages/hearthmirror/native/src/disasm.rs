@@ -54,6 +54,39 @@ pub fn find_first_absolute_load(bytes: &[u8], bitness: u32) -> Option<u32> {
     None
 }
 
+/// Scan for the first global-pointer load used by `mono_get_root_domain`.
+///
+/// * 32-bit Mono uses `MOV reg, ds:[imm32]`; returns the absolute imm32.
+/// * 64-bit Mono normally uses RIP-relative memory operands such as
+///   `MOV reg, [rip+disp32]`; returns the resolved effective address.
+pub fn find_first_global_pointer_load(bytes: &[u8], bitness: u32, ip: u64) -> Option<u64> {
+    if bitness == 32 {
+        return find_first_absolute_load(bytes, bitness).map(u64::from);
+    }
+    if bitness != 64 {
+        return None;
+    }
+
+    let mut decoder = Decoder::with_ip(bitness, bytes, ip, DecoderOptions::NONE);
+    let mut instr = Instruction::default();
+    while decoder.can_decode() {
+        decoder.decode_out(&mut instr);
+        if instr.is_invalid() {
+            return None;
+        }
+        if instr.mnemonic() == Mnemonic::Mov
+            && instr.op_count() == 2
+            && instr.op0_kind() == OpKind::Register
+            && instr.op1_kind() == OpKind::Memory
+            && instr.memory_base() == Register::RIP
+            && instr.memory_index() == Register::None
+        {
+            return Some(instr.memory_displacement64());
+        }
+    }
+    None
+}
+
 /// Scan `bytes` for the **last** instruction matching `MOV reg, [base+disp]`
 /// (load through a base register with a constant displacement) and return
 /// the displacement value.
@@ -63,10 +96,10 @@ pub fn find_first_absolute_load(bytes: &[u8], bitness: u32) -> Option<u32> {
 /// follows. Picking the last match before the function returns yields the
 /// target offset.
 ///
-/// `bitness` MUST be 32. Returns `None` if no matching instruction is found,
-/// if `bitness != 32`, or on decoder failure.
+/// `bitness` MUST be 32 or 64. Returns `None` if no matching instruction is
+/// found, if the bitness is unsupported, or on decoder failure.
 pub fn find_field_load_displacement(bytes: &[u8], bitness: u32) -> Option<u32> {
-    if bitness != 32 {
+    if bitness != 32 && bitness != 64 {
         return None;
     }
     let mut decoder = Decoder::new(bitness, bytes, DecoderOptions::NONE);
@@ -85,8 +118,13 @@ pub fn find_field_load_displacement(bytes: &[u8], bitness: u32) -> Option<u32> {
             && instr.op0_kind() == OpKind::Register
             && instr.op1_kind() == OpKind::Memory
             && instr.memory_base() != Register::None
+            && instr.memory_base() != Register::RIP
+            && instr.memory_index() == Register::None
         {
-            last = Some(instr.memory_displacement32());
+            let displ = instr.memory_displacement64();
+            if displ <= 0x400 {
+                last = Some(displ as u32);
+            }
         }
     }
     last
@@ -111,6 +149,48 @@ mod tests {
     }
 
     #[test]
+    fn field_load_displacement_recognized_in_x64_pattern() {
+        // mov rax, [rcx+28h] ; ret
+        let bytes = [0x48, 0x8B, 0x41, 0x28, 0xC3];
+        assert_eq!(find_field_load_displacement(&bytes, 64), Some(0x28));
+    }
+
+    #[test]
+    fn field_load_displacement_skips_x64_indexed_tls_noise() {
+        // mov rcx, [rdx+rax*8+1480h] ; thunk TLS lookup noise
+        // mov rax, [rdi+50h]         ; actual field load
+        // ret
+        let bytes = [
+            0x48, 0x8B, 0x8C, 0xC2, 0x80, 0x14, 0x00, 0x00, 0x48, 0x8B, 0x47, 0x50, 0xC3,
+        ];
+        assert_eq!(find_field_load_displacement(&bytes, 64), Some(0x50));
+    }
+
+    #[test]
+    fn field_load_displacement_ignores_late_x64_indexed_tls_noise() {
+        // mov rax, [rdi+50h]         ; actual field load
+        // mov rcx, [rdx+rax*8+1480h] ; later thunk TLS lookup noise
+        // ret
+        let bytes = [
+            0x48, 0x8B, 0x47, 0x50, 0x48, 0x8B, 0x8C, 0xC2, 0x80, 0x14, 0x00, 0x00, 0xC3,
+        ];
+        assert_eq!(find_field_load_displacement(&bytes, 64), Some(0x50));
+    }
+
+    #[test]
+    fn field_load_displacement_ignores_x64_global_and_large_tls_noise() {
+        // mov rax, [rdi+50h]          ; actual field load
+        // mov eax, [rip+123456h]      ; global flag
+        // mov rdx, [rcx+1780h]        ; TLS/profiling slot, not a struct field
+        // ret
+        let bytes = [
+            0x48, 0x8B, 0x47, 0x50, 0x8B, 0x05, 0x56, 0x34, 0x12, 0x00, 0x48, 0x8B, 0x91, 0x80,
+            0x17, 0x00, 0x00, 0xC3,
+        ];
+        assert_eq!(find_field_load_displacement(&bytes, 64), Some(0x50));
+    }
+
+    #[test]
     fn neither_helper_matches_nop_only_function() {
         // nop ; nop ; ret
         let bytes = [0x90, 0x90, 0xC3];
@@ -131,6 +211,17 @@ mod tests {
         let bytes = [0xA1, 0x78, 0x56, 0x34, 0x12, 0xC3];
         assert_eq!(find_first_absolute_load(&bytes, 64), None);
         assert_eq!(find_field_load_displacement(&bytes, 16), None);
+    }
+
+    #[test]
+    fn global_load_recognizes_x64_rip_relative_pattern() {
+        // mov rax, [rip+1234h] ; ret
+        // The effective address is next_ip (base + 7) + 0x1234.
+        let bytes = [0x48, 0x8B, 0x05, 0x34, 0x12, 0x00, 0x00, 0xC3];
+        assert_eq!(
+            find_first_global_pointer_load(&bytes, 64, 0x0000_7FF6_1000_0000),
+            Some(0x0000_7FF6_1000_123B)
+        );
     }
 
     #[test]

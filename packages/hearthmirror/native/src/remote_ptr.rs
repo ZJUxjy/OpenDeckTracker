@@ -1,21 +1,22 @@
 use std::fmt;
 use std::ops::Add;
 
-/// A pointer in the *target* process address space (32-bit Hearthstone).
+/// A pointer in the *target* process address space.
 ///
 /// Distinct from any host (Rust process) pointer to prevent accidental
-/// dereferences. Construct only via `RemotePtr::new(u32)` or `From<u32>`.
+/// dereferences. Construct only via `RemotePtr::new(u64)` or integer `From`
+/// impls.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct RemotePtr(u32);
+pub struct RemotePtr(u64);
 
 impl RemotePtr {
     pub const NULL: Self = Self(0);
 
-    pub fn new(addr: u32) -> Self {
+    pub fn new(addr: u64) -> Self {
         Self(addr)
     }
 
-    pub fn raw(self) -> u32 {
+    pub fn raw(self) -> u64 {
         self.0
     }
 
@@ -26,6 +27,12 @@ impl RemotePtr {
 
 impl From<u32> for RemotePtr {
     fn from(addr: u32) -> Self {
+        Self(u64::from(addr))
+    }
+}
+
+impl From<u64> for RemotePtr {
+    fn from(addr: u64) -> Self {
         Self(addr)
     }
 }
@@ -33,13 +40,13 @@ impl From<u32> for RemotePtr {
 impl Add<u32> for RemotePtr {
     type Output = RemotePtr;
     fn add(self, rhs: u32) -> RemotePtr {
-        RemotePtr(self.0.wrapping_add(rhs))
+        RemotePtr(self.0.wrapping_add(u64::from(rhs)))
     }
 }
 
 impl fmt::Display for RemotePtr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "0x{:08X}", self.0)
+        write!(f, "0x{:016X}", self.0)
     }
 }
 
@@ -60,13 +67,21 @@ mod tests {
     }
 
     #[test]
-    fn display_is_hex_uppercase_8_digit() {
-        assert_eq!(RemotePtr::new(0xABCD).to_string(), "0x0000ABCD");
+    fn display_is_hex_uppercase_16_digit() {
+        assert_eq!(RemotePtr::new(0xABCD).to_string(), "0x000000000000ABCD");
     }
 
     #[test]
     fn from_u32_works() {
         let p: RemotePtr = 0xDEADBEEF_u32.into();
         assert_eq!(p.raw(), 0xDEADBEEF);
+    }
+
+    #[test]
+    fn preserves_64_bit_target_addresses() {
+        let p = RemotePtr::new(0x0000_0001_0000_0010);
+        assert_eq!(p.raw(), 0x0000_0001_0000_0010);
+        assert_eq!((p + 0x20).raw(), 0x0000_0001_0000_0030);
+        assert_eq!(p.to_string(), "0x0000000100000010");
     }
 }

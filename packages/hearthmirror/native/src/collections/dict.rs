@@ -31,13 +31,17 @@ use crate::remote_ptr::RemotePtr;
 /// so the verified layout block stays self-documenting and future helpers
 /// (e.g. bucket-walk-only iteration) have a named anchor.
 #[allow(dead_code)]
-const DICT_BUCKETS_OFFSET: u32 = 0x08;
-const DICT_ENTRIES_OFFSET: u32 = 0x0C;
-const DICT_COUNT_OFFSET: u32 = 0x20;
+fn dict_entries_offset(memory: &ProcessMemory) -> u32 {
+    crate::collections::list::object_data_offset(memory) + memory.ptr_size()
+}
 
-/// MonoArray header occupies 0x10 bytes (vtable, monitor, bounds, max_length)
-/// before the first element starts.
-const ARRAY_DATA_OFFSET: u32 = 0x10;
+fn dict_count_offset(memory: &ProcessMemory) -> u32 {
+    crate::collections::list::object_data_offset(memory) + memory.ptr_size() * 6
+}
+
+pub fn reference_entry_size(memory: &ProcessMemory) -> u32 {
+    8 + memory.ptr_size() * 2
+}
 
 /// Iterate a `System.Collections.Generic.Dictionary<K, V>`, yielding
 /// `(entry_ptr, hash_code)` for each populated entry.
@@ -54,7 +58,7 @@ const ARRAY_DATA_OFFSET: u32 = 0x10;
 /// Caller supplies `entry_size` (sum of header + sizeof(K) + sizeof(V)
 /// rounded up to alignment); for `Dictionary<RefT, RefT>` on 32-bit, this
 /// is 16. Caller computes `key`/`value` field reads relative to
-/// `entry.addr + 0x08` and `entry.addr + 0x0C` respectively.
+/// `entry.addr + 0x08` and `entry.addr + 0x08 + ptr_size` respectively.
 pub fn iter_entries(
     memory: &ProcessMemory,
     dict: RemotePtr,
@@ -64,15 +68,15 @@ pub fn iter_entries(
     if dict.is_null() {
         return Ok(Vec::new());
     }
-    let entries_array = memory.read_remote_ptr(dict + DICT_ENTRIES_OFFSET)?;
-    let count = memory.read_i32(dict + DICT_COUNT_OFFSET)?.max(0) as usize;
+    let entries_array = memory.read_remote_ptr(dict + dict_entries_offset(memory))?;
+    let count = memory.read_i32(dict + dict_count_offset(memory))?.max(0) as usize;
     if count > max_items {
         return Err(ScryError::CollectionOverflow { max: max_items });
     }
     if entries_array.is_null() || count == 0 {
         return Ok(Vec::new());
     }
-    let entries_start = entries_array + ARRAY_DATA_OFFSET;
+    let entries_start = entries_array + crate::collections::list::mono_array_data_offset(memory);
     let mut out = Vec::with_capacity(count);
     for i in 0..count as u32 {
         let entry_addr = entries_start + i * entry_size;
@@ -105,7 +109,7 @@ pub fn read_entry_value_ptr(
     memory: &ProcessMemory,
     entry: DictEntry,
 ) -> Result<RemotePtr, ScryError> {
-    memory.read_remote_ptr(entry.addr + 0x0C)
+    memory.read_remote_ptr(entry.addr + 0x08 + memory.ptr_size())
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -137,16 +141,19 @@ mod tests {
     #[allow(clippy::too_many_lines)]
     fn make_dict_fixture(
         count: i32,
-        entries: &[(i32, u32, u32)],
+        entries: &[(i32, u64, u64)],
+        ptr_size: u32,
     ) -> (RemotePtr, &'static [u8]) {
+        let array_data_offset = ptr_size * 4;
+        let entry_size = 8 + ptr_size * 2;
         // Layout: dict struct (0x30 bytes is enough), then array header (0x10) +
         // N × 16-byte entries. We allocate one combined buffer so addresses
         // are stable.
         let entries_count = entries.len();
-        let array_size = ARRAY_DATA_OFFSET as usize + entries_count * 16;
-        let dict_size = 0x30usize;
+        let array_size = array_data_offset as usize + entries_count * entry_size as usize;
+        let dict_size = if ptr_size == 8 { 0x50usize } else { 0x30usize };
         let total = dict_size + array_size;
-        let mut buf = vec![0u8; total];
+        let buf = vec![0u8; total];
 
         // Compute base addresses (we'll fill in real values after we get
         // the leaked address).
@@ -154,32 +161,38 @@ mod tests {
         let base_addr = leaked.as_ptr() as usize;
         let dict_addr = base_addr;
         let array_addr = base_addr + dict_size;
-        let entries_data_start = array_addr + ARRAY_DATA_OFFSET as usize;
+        let entries_data_start = array_addr + array_data_offset as usize;
 
-        // Fill dict struct: _entries @ +0x0C, _count @ +0x20.
-        let array_addr_u32 = (array_addr as u32).to_le_bytes();
-        leaked[DICT_ENTRIES_OFFSET as usize..DICT_ENTRIES_OFFSET as usize + 4]
-            .copy_from_slice(&array_addr_u32);
-        leaked[DICT_COUNT_OFFSET as usize..DICT_COUNT_OFFSET as usize + 4]
-            .copy_from_slice(&count.to_le_bytes());
-
-        // Fill array header: max_length @ +0x0C is the count (other slots
-        // 0).
-        let arr_offset = dict_size;
-        leaked[arr_offset + 0x0C..arr_offset + 0x10]
-            .copy_from_slice(&(entries_count as u32).to_le_bytes());
+        // Fill dict struct: _entries @ object_data + ptr_size, _count after
+        // the pointer-sized reference slots observed in Mono's Dictionary.
+        let object_data = ptr_size * 2;
+        let entries_off = (object_data + ptr_size) as usize;
+        let count_off = (object_data + ptr_size * 6) as usize;
+        if ptr_size == 4 {
+            leaked[entries_off..entries_off + 4]
+                .copy_from_slice(&(array_addr as u32).to_le_bytes());
+        } else {
+            leaked[entries_off..entries_off + 8]
+                .copy_from_slice(&(array_addr as u64).to_le_bytes());
+        }
+        leaked[count_off..count_off + 4].copy_from_slice(&count.to_le_bytes());
 
         // Fill each entry: hash @ +0, next @ +4 (=-1), key @ +8, value @ +0xC.
         for (i, (hash, key, value)) in entries.iter().enumerate() {
-            let off = entries_data_start - base_addr + i * 16;
+            let off = entries_data_start - base_addr + i * entry_size as usize;
             leaked[off..off + 4].copy_from_slice(&hash.to_le_bytes());
             leaked[off + 4..off + 8].copy_from_slice(&(-1_i32).to_le_bytes());
-            leaked[off + 8..off + 12].copy_from_slice(&key.to_le_bytes());
-            leaked[off + 12..off + 16].copy_from_slice(&value.to_le_bytes());
+            if ptr_size == 4 {
+                leaked[off + 8..off + 12].copy_from_slice(&(*key as u32).to_le_bytes());
+                leaked[off + 12..off + 16].copy_from_slice(&(*value as u32).to_le_bytes());
+            } else {
+                leaked[off + 8..off + 16].copy_from_slice(&key.to_le_bytes());
+                leaked[off + 16..off + 24].copy_from_slice(&value.to_le_bytes());
+            }
         }
 
         let leaked_imm: &'static [u8] = leaked;
-        (RemotePtr::new(dict_addr as u32), leaked_imm)
+        (RemotePtr::new(dict_addr as u64), leaked_imm)
     }
 
     fn self_memory() -> ProcessMemory {
@@ -203,13 +216,13 @@ mod tests {
     fn iter_entries_layout_verified() {
         // 5 entries: 1 and 3 are free-list (hash < 0), 0/2/4 are populated.
         let entries = vec![
-            (0x111_i32, 0xAAAA_AAAA_u32, 0xBBBB_BBBB_u32),
+            (0x111_i32, 0xAAAA_AAAA, 0xBBBB_BBBB),
             (-1, 0, 0),
             (0x222, 0xCCCC_CCCC, 0xDDDD_DDDD),
             (-1, 0, 0),
             (0x333, 0xEEEE_EEEE, 0xFFFF_FFFF),
         ];
-        let (dict_ptr, _backing) = make_dict_fixture(5, &entries);
+        let (dict_ptr, _backing) = make_dict_fixture(5, &entries, 4);
         let mem = self_memory();
 
         let out = iter_entries(&mem, dict_ptr, 16, 100).expect("iter");
@@ -232,7 +245,7 @@ mod tests {
         ignore = "RemotePtr is u32; Box::leak addresses overflow on 64-bit"
     )]
     fn iter_entries_overflow_guard() {
-        let (dict_ptr, _backing) = make_dict_fixture(1_000_000, &[]);
+        let (dict_ptr, _backing) = make_dict_fixture(1_000_000, &[], 4);
         let mem = self_memory();
         let err = iter_entries(&mem, dict_ptr, 16, 100).unwrap_err();
         match err {
@@ -248,12 +261,40 @@ mod tests {
     )]
     fn iter_entries_empty_returns_empty() {
         // _count = 0 with non-null entries pointer.
-        let (dict_ptr, _backing) = make_dict_fixture(
-            0,
-            &[(0x111, 0xAAAA_AAAA, 0xBBBB_BBBB)],
-        );
+        let (dict_ptr, _backing) = make_dict_fixture(0, &[(0x111, 0xAAAA_AAAA, 0xBBBB_BBBB)], 4);
         let mem = self_memory();
         let out = iter_entries(&mem, dict_ptr, 16, 100).expect("iter");
         assert_eq!(out.len(), 0);
+    }
+
+    #[test]
+    fn iter_entries_reads_64_bit_reference_entries() {
+        let entries = vec![
+            (0x111_i32, 0x0000_1234_5678_9ABC, 0x0000_3333_4444_5555),
+            (-1, 0, 0),
+            (0x222, 0x0000_2222_3333_4444, 0x0000_6666_7777_8888),
+        ];
+        let (dict_ptr, _backing) = make_dict_fixture(3, &entries, 8);
+        let mem = ProcessMemory::new_with_ptr_size(OwnedProcessHandle::current(), 8);
+
+        let out = iter_entries(&mem, dict_ptr, reference_entry_size(&mem), 100).unwrap();
+
+        assert_eq!(out.len(), 2);
+        assert_eq!(
+            read_entry_key_ptr(&mem, out[0]).unwrap().raw(),
+            0x0000_1234_5678_9ABC
+        );
+        assert_eq!(
+            read_entry_value_ptr(&mem, out[0]).unwrap().raw(),
+            0x0000_3333_4444_5555
+        );
+        assert_eq!(
+            read_entry_key_ptr(&mem, out[1]).unwrap().raw(),
+            0x0000_2222_3333_4444
+        );
+        assert_eq!(
+            read_entry_value_ptr(&mem, out[1]).unwrap().raw(),
+            0x0000_6666_7777_8888
+        );
     }
 }

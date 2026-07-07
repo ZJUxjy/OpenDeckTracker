@@ -9,7 +9,7 @@ use crate::mono::image::MonoImage;
 use crate::mono::object::MonoObject;
 use crate::mono::offsets::MonoOffsets;
 use crate::mono::probe::{read_exports_map, OffsetProber};
-use crate::process::{enumerate_modules_32bit, find_pid, ModuleInfo};
+use crate::process::{detect_target_pointer_size, enumerate_modules, find_pid, ModuleInfo};
 use crate::reflection::field_paths;
 use crate::remote_ptr::RemotePtr;
 use std::collections::HashMap;
@@ -70,7 +70,8 @@ impl MonoRuntime {
         let pid = find_pid(HEARTHSTONE_EXE)?
             .ok_or_else(|| ScryError::ProcessNotFound(HEARTHSTONE_EXE.into()))?;
         let handle = OwnedProcessHandle::open(pid)?;
-        let memory = ProcessMemory::new(handle);
+        let ptr_size = detect_target_pointer_size(&handle)?;
+        let memory = ProcessMemory::new_with_ptr_size(handle, ptr_size);
 
         let mono_module = find_mono_module(memory.handle())?;
 
@@ -80,8 +81,10 @@ impl MonoRuntime {
         // export does not break init() — Phase 6 still ships a usable runtime,
         // just without the disasm-confirmed offsets for that field.
         let exports = read_exports_map(&memory, &mono_module)?;
-        let offsets = match OffsetProber::new(&memory, &exports, 32)
-            .and_then(|p| p.probe_all(MonoOffsets::default()))
+        let baseline = MonoOffsets::for_pointer_size(ptr_size)?;
+        let bitness = ptr_size * 8;
+        let mut offsets = match OffsetProber::new(&memory, &exports, bitness)
+            .and_then(|p| p.probe_all(baseline.clone()))
         {
             Ok(refined) => refined,
             Err(e) => {
@@ -90,7 +93,7 @@ impl MonoRuntime {
                      falling back to embedded baseline",
                     e
                 );
-                MonoOffsets::default()
+                baseline
             }
         };
 
@@ -100,6 +103,13 @@ impl MonoRuntime {
 
         if root_domain.is_null() {
             return Err(ScryError::MonoNotInitialized);
+        }
+
+        if let Err(e) = refine_offsets_from_live_memory(&memory, root_domain, &mut offsets) {
+            eprintln!(
+                "[hearthmirror] live offset refinement skipped/failed: {}; using baseline/probed offsets",
+                e
+            );
         }
 
         Ok(Self {
@@ -130,9 +140,7 @@ impl MonoRuntime {
     /// reads. Safe to call on every poll.
     pub fn is_process_alive_and_same(&self) -> bool {
         let raw = self.memory.handle().raw();
-        let current_target = crate::process::find_pid(HEARTHSTONE_EXE)
-            .ok()
-            .flatten();
+        let current_target = crate::process::find_pid(HEARTHSTONE_EXE).ok().flatten();
         is_alive_and_same(raw, self.bound_pid, current_target)
     }
 }
@@ -160,12 +168,15 @@ pub(crate) fn is_alive_and_same(
 }
 
 fn find_mono_module(handle: &OwnedProcessHandle) -> Result<ModuleInfo, ScryError> {
-    let modules = enumerate_modules_32bit(handle)?;
+    let modules = enumerate_modules(handle)?;
     if modules.is_empty() {
-        return Err(ScryError::ModuleNotFound("LIST_MODULES_32BIT empty".into()));
+        return Err(ScryError::ModuleNotFound("module list empty".into()));
     }
 
-    if let Some(m) = modules.iter().find(|m| m.name.eq_ignore_ascii_case(PREFERRED_MONO)) {
+    if let Some(m) = modules
+        .iter()
+        .find(|m| m.name.eq_ignore_ascii_case(PREFERRED_MONO))
+    {
         return Ok(m.clone());
     }
 
@@ -186,10 +197,7 @@ fn find_mono_module(handle: &OwnedProcessHandle) -> Result<ModuleInfo, ScryError
 
 /// Resolve a Mono export from the pre-built map. Returns the export's RVA
 /// already biased by `module.base`.
-fn lookup_export(
-    exports: &HashMap<String, RemotePtr>,
-    name: &str,
-) -> Result<RemotePtr, ScryError> {
+fn lookup_export(exports: &HashMap<String, RemotePtr>, name: &str) -> Result<RemotePtr, ScryError> {
     exports
         .get(name)
         .copied()
@@ -200,23 +208,285 @@ fn lookup_export(
 /// `mono_get_root_domain` loads in its prologue.
 ///
 /// Replaces the previous hand-rolled byte-pattern matcher (Patterns A/B,
-/// 16-byte read window) with a generic disassembler scan via
-/// `disasm::find_first_absolute_load`. The disassembler tolerates any
-/// prologue (`push ebp; mov ebp, esp; ...`) before the absolute MOV, where
-/// the byte matcher only handled two specific shapes.
+/// 16-byte read window) with a generic disassembler scan. 32-bit Mono uses
+/// an absolute MOV; 64-bit Mono uses RIP-relative addressing.
 fn extract_global_root_domain_addr(
     memory: &ProcessMemory,
     func_va: RemotePtr,
 ) -> Result<RemotePtr, ScryError> {
     let bytes = memory.read_bytes(func_va, disasm::DEFAULT_PROBE_WINDOW)?;
-    let displ = disasm::find_first_absolute_load(&bytes, 32).ok_or_else(|| {
-        ScryError::OffsetProbeFailed(format!(
-            "mono_get_root_domain: no absolute MOV in first {} bytes at {}",
-            disasm::DEFAULT_PROBE_WINDOW,
-            func_va
-        ))
-    })?;
-    Ok(RemotePtr::new(displ))
+    let bitness = memory.ptr_size() * 8;
+    let addr = disasm::find_first_global_pointer_load(&bytes, bitness, func_va.raw()).ok_or_else(
+        || {
+            ScryError::OffsetProbeFailed(format!(
+                "mono_get_root_domain: no global pointer load in first {} bytes at {}",
+                disasm::DEFAULT_PROBE_WINDOW,
+                func_va
+            ))
+        },
+    )?;
+    Ok(RemotePtr::new(addr))
+}
+
+fn refine_offsets_from_live_memory(
+    memory: &ProcessMemory,
+    root_domain: RemotePtr,
+    offsets: &mut MonoOffsets,
+) -> Result<(), ScryError> {
+    if offsets.ptr_size != 8 {
+        return Ok(());
+    }
+
+    if let Some(domain_assemblies) = discover_domain_assemblies_offset(memory, root_domain, offsets)
+    {
+        if domain_assemblies != offsets.structs.domain.domain_assemblies {
+            eprintln!(
+                "[hearthmirror] x64 offset refinement: MonoDomain.domain_assemblies +0x{:X} -> +0x{:X}",
+                offsets.structs.domain.domain_assemblies, domain_assemblies
+            );
+            offsets.structs.domain.domain_assemblies = domain_assemblies;
+        }
+    }
+
+    let Some(ac_image) = find_image_by_domain(memory, root_domain, offsets, "Assembly-CSharp.dll")?
+    else {
+        return Ok(());
+    };
+
+    if let Some(class_cache) = discover_class_cache_offset(memory, ac_image, offsets) {
+        if class_cache != offsets.structs.image.class_cache {
+            eprintln!(
+                "[hearthmirror] x64 offset refinement: MonoImage.class_cache +0x{:X} -> +0x{:X}",
+                offsets.structs.image.class_cache, class_cache
+            );
+            offsets.structs.image.class_cache = class_cache;
+        }
+    }
+
+    Ok(())
+}
+
+fn discover_domain_assemblies_offset(
+    memory: &ProcessMemory,
+    root_domain: RemotePtr,
+    offsets: &MonoOffsets,
+) -> Option<u32> {
+    let mut best: Option<(u32, usize)> = None;
+    let step = memory.ptr_size() as usize;
+
+    for off in (0..=0x200_u32).step_by(step) {
+        let Ok(head) = memory.read_remote_ptr(root_domain + off) else {
+            continue;
+        };
+        if !looks_like_remote_ptr(head) {
+            continue;
+        }
+        let score = score_domain_assembly_list(memory, head, offsets);
+        if score > best.map_or(0, |(_, s)| s) {
+            best = Some((off, score));
+        }
+    }
+
+    best.and_then(|(off, score)| (score >= 4).then_some(off))
+}
+
+fn score_domain_assembly_list(
+    memory: &ProcessMemory,
+    head: RemotePtr,
+    offsets: &MonoOffsets,
+) -> usize {
+    let Ok(assemblies) = glist::iter(memory, head, 32) else {
+        return 0;
+    };
+    assemblies
+        .iter()
+        .take(24)
+        .filter_map(|asm| {
+            read_assembly_image_name(memory, *asm, offsets)
+                .ok()
+                .flatten()
+        })
+        .map(|name| image_name_score(&name))
+        .sum()
+}
+
+fn find_image_by_domain(
+    memory: &ProcessMemory,
+    root_domain: RemotePtr,
+    offsets: &MonoOffsets,
+    image_name: &str,
+) -> Result<Option<RemotePtr>, ScryError> {
+    let stem = image_name.trim_end_matches(".dll");
+    let head = memory.read_remote_ptr(root_domain + offsets.structs.domain.domain_assemblies)?;
+    let assemblies = glist::iter(memory, head, 500)?;
+    for asm in assemblies {
+        let Some((image, name)) = read_assembly_image(memory, asm, offsets)? else {
+            continue;
+        };
+        if name.ends_with(image_name) || name == stem {
+            return Ok(Some(image));
+        }
+    }
+    Ok(None)
+}
+
+fn read_assembly_image_name(
+    memory: &ProcessMemory,
+    assembly: RemotePtr,
+    offsets: &MonoOffsets,
+) -> Result<Option<String>, ScryError> {
+    Ok(read_assembly_image(memory, assembly, offsets)?.map(|(_, name)| name))
+}
+
+fn read_assembly_image(
+    memory: &ProcessMemory,
+    assembly: RemotePtr,
+    offsets: &MonoOffsets,
+) -> Result<Option<(RemotePtr, String)>, ScryError> {
+    if !looks_like_remote_ptr(assembly) {
+        return Ok(None);
+    }
+    let image = memory.read_remote_ptr(assembly + offsets.structs.assembly.image)?;
+    if !looks_like_remote_ptr(image) {
+        return Ok(None);
+    }
+    let name_ptr = memory.read_remote_ptr(image + offsets.structs.image.name)?;
+    if !looks_like_remote_ptr(name_ptr) {
+        return Ok(None);
+    }
+    let name = memory.read_cstring(name_ptr, 512)?;
+    if !is_plausible_c_string(&name) {
+        return Ok(None);
+    }
+    Ok(Some((image, name)))
+}
+
+fn discover_class_cache_offset(
+    memory: &ProcessMemory,
+    image: RemotePtr,
+    offsets: &MonoOffsets,
+) -> Option<u32> {
+    let mut best: Option<(u32, usize)> = None;
+    for off in (0x100..=0x1000_u32).step_by(4) {
+        let score = score_class_cache_candidate(memory, image, off, offsets);
+        if score > best.map_or(0, |(_, s)| s) {
+            best = Some((off, score));
+        }
+    }
+    best.and_then(|(off, score)| (score >= 3).then_some(off))
+}
+
+fn score_class_cache_candidate(
+    memory: &ProcessMemory,
+    image: RemotePtr,
+    candidate: u32,
+    offsets: &MonoOffsets,
+) -> usize {
+    let ht = image + candidate;
+    let ht_off = &offsets.structs.hash_table;
+    let Ok(size) = memory.read_u32(ht + ht_off.size) else {
+        return 0;
+    };
+    if size == 0 || size > 65_536 {
+        return 0;
+    }
+    let Ok(table) = memory.read_remote_ptr(ht + ht_off.table) else {
+        return 0;
+    };
+    if !looks_like_remote_ptr(table) {
+        return 0;
+    }
+
+    let mut score = 0usize;
+    let sample = size.min(512);
+    for i in 0..sample {
+        let Ok(class_ptr) = memory.read_remote_ptr(table + i * memory.ptr_size()) else {
+            continue;
+        };
+        if class_ptr.is_null() {
+            continue;
+        }
+        let Ok(Some(name)) = read_class_name(memory, class_ptr, offsets) else {
+            continue;
+        };
+        if name == "CollectionManager" {
+            score += 10;
+        } else {
+            score += 1;
+        }
+        if score >= 16 {
+            break;
+        }
+    }
+    score
+}
+
+fn read_class_name(
+    memory: &ProcessMemory,
+    class_ptr: RemotePtr,
+    offsets: &MonoOffsets,
+) -> Result<Option<String>, ScryError> {
+    if !looks_like_remote_ptr(class_ptr) {
+        return Ok(None);
+    }
+    let name_ptr = memory.read_remote_ptr(class_ptr + offsets.structs.class.name)?;
+    if !looks_like_remote_ptr(name_ptr) {
+        return Ok(None);
+    }
+    let name = memory.read_cstring(name_ptr, 256)?;
+    if !is_plausible_class_name(&name) {
+        return Ok(None);
+    }
+    Ok(Some(name))
+}
+
+fn looks_like_remote_ptr(ptr: RemotePtr) -> bool {
+    let raw = ptr.raw();
+    (0x10_000..0x0000_8000_0000_0000).contains(&raw)
+}
+
+fn is_plausible_c_string(s: &str) -> bool {
+    !s.is_empty()
+        && s.len() <= 512
+        && s.bytes()
+            .all(|b| matches!(b, 0x20..=0x7E | b'\t' | b'\r' | b'\n'))
+}
+
+fn is_plausible_class_name(s: &str) -> bool {
+    !s.is_empty()
+        && s.len() <= 256
+        && s.bytes().all(|b| {
+            matches!(
+                b,
+                b'A'..=b'Z'
+                    | b'a'..=b'z'
+                    | b'0'..=b'9'
+                    | b'_'
+                    | b'<'
+                    | b'>'
+                    | b'`'
+                    | b'.'
+                    | b'+'
+            )
+        })
+}
+
+fn image_name_score(name: &str) -> usize {
+    if !is_plausible_c_string(name) {
+        return 0;
+    }
+    let lower = name.to_ascii_lowercase();
+    if lower.ends_with(".dll") {
+        3
+    } else if lower == "mscorlib"
+        || lower == "assembly-csharp"
+        || lower.starts_with("system")
+        || lower.starts_with("unity")
+    {
+        2
+    } else {
+        1
+    }
 }
 
 impl MonoRuntime {
@@ -232,7 +502,9 @@ impl MonoRuntime {
             )
         };
         if len == 0 {
-            return Err(ScryError::MetadataError("GetModuleFileNameExW failed".into()));
+            return Err(ScryError::MetadataError(
+                "GetModuleFileNameExW failed".into(),
+            ));
         }
         let mono_path = String::from_utf16_lossy(&name_buf[..len as usize]);
         let mono_dir = PathBuf::from(&mono_path)
@@ -242,7 +514,10 @@ impl MonoRuntime {
 
         let candidates = [
             mono_dir.join("Assembly-CSharp.dll"),
-            mono_dir.join("..").join("Managed").join("Assembly-CSharp.dll"),
+            mono_dir
+                .join("..")
+                .join("Managed")
+                .join("Assembly-CSharp.dll"),
             mono_dir
                 .join("..")
                 .join("..")
@@ -467,7 +742,12 @@ impl MonoRuntime {
     /// stale-and-not-resolvable). Errors only on genuine memory-read
     /// failures.
     pub fn get_service(&self, name: &str) -> Result<Option<MonoObject>, ScryError> {
-        if let Some(addr) = self.cache.lock().ok().and_then(|c| c.services.get(name).copied()) {
+        if let Some(addr) = self
+            .cache
+            .lock()
+            .ok()
+            .and_then(|c| c.services.get(name).copied())
+        {
             if let Some(valid) = self.materialise_service(addr)? {
                 return Ok(Some(valid));
             }
@@ -506,7 +786,6 @@ impl MonoRuntime {
         }
         MonoObject::from_address(&self.memory, addr, self.offsets.clone())
     }
-
 }
 
 #[cfg(test)]
@@ -582,8 +861,9 @@ mod integration_tests {
     fn pid_getter_returns_bound_pid() {
         skip_if_no_hs!();
         let runtime = MonoRuntime::init().expect("Hearthstone must be running");
-        let expected =
-            crate::process::find_pid("Hearthstone.exe").unwrap().expect("HS pid present");
+        let expected = crate::process::find_pid("Hearthstone.exe")
+            .unwrap()
+            .expect("HS pid present");
         assert_eq!(runtime.pid(), expected);
     }
 
@@ -612,7 +892,10 @@ mod integration_tests {
             "MonoClass.name offset 0x{:X} outside plausible range",
             class_name_off
         );
-        eprintln!("MonoClass.name @ +0x{:02X} (probed or baseline)", class_name_off);
+        eprintln!(
+            "MonoClass.name @ +0x{:02X} (probed or baseline)",
+            class_name_off
+        );
         eprintln!("exports captured: {}", runtime.exports.len());
         assert!(
             runtime.exports.contains_key("mono_get_root_domain"),
@@ -624,10 +907,13 @@ mod integration_tests {
     fn open_assembly_csharp_finds_file() {
         skip_if_no_hs!();
         let runtime = MonoRuntime::init().expect("Hearthstone must be running");
-        let reader = runtime.open_assembly_csharp().expect("Assembly-CSharp.dll not found");
+        let reader = runtime
+            .open_assembly_csharp()
+            .expect("Assembly-CSharp.dll not found");
         let bytes = reader.bytes();
         assert!(bytes.len() > 0, "empty file");
-        let token = reader.find_class_token("", "Entity")
+        let token = reader
+            .find_class_token("", "Entity")
             .or_else(|_| reader.find_class_token("Blizzard.T5.Services", "Entity"))
             .expect("Entity class must exist in Assembly-CSharp.dll");
         eprintln!("Entity token = 0x{:08X}", token);

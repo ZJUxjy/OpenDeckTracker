@@ -54,7 +54,9 @@ pub struct MonoImage<'r> {
 
 impl<'r> std::fmt::Debug for MonoImage<'r> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MonoImage").field("addr", &self.addr).finish()
+        f.debug_struct("MonoImage")
+            .field("addr", &self.addr)
+            .finish()
     }
 }
 
@@ -74,9 +76,7 @@ impl<'r> MonoImage<'r> {
         if name_ptr.is_null() {
             return Ok(String::new());
         }
-        self.runtime
-            .memory
-            .read_cstring(name_ptr, CLASS_STRING_MAX)
+        self.runtime.memory.read_cstring(name_ptr, CLASS_STRING_MAX)
     }
 
     /// Enumerate every `MonoClass*` held in the image's `class_cache`
@@ -91,11 +91,7 @@ impl<'r> MonoImage<'r> {
         let class_ptrs = self.walk_class_cache()?;
         let mut out = Vec::with_capacity(class_ptrs.len());
         for ptr in class_ptrs {
-            match read_mono_class(
-                &self.runtime.memory,
-                ptr,
-                self.runtime.offsets.clone(),
-            ) {
+            match read_mono_class(&self.runtime.memory, ptr, self.runtime.offsets.clone()) {
                 Ok(class) => out.push(class),
                 Err(_) => continue,
             }
@@ -126,11 +122,7 @@ impl<'r> MonoImage<'r> {
             if name_ptr.is_null() {
                 continue;
             }
-            let got_name = match self
-                .runtime
-                .memory
-                .read_cstring(name_ptr, CLASS_STRING_MAX)
-            {
+            let got_name = match self.runtime.memory.read_cstring(name_ptr, CLASS_STRING_MAX) {
                 Ok(s) => s,
                 Err(_) => continue,
             };
@@ -148,11 +140,7 @@ impl<'r> MonoImage<'r> {
             let got_ns = if ns_ptr.is_null() {
                 String::new()
             } else {
-                match self
-                    .runtime
-                    .memory
-                    .read_cstring(ns_ptr, CLASS_STRING_MAX)
-                {
+                match self.runtime.memory.read_cstring(ns_ptr, CLASS_STRING_MAX) {
                     Ok(s) => s,
                     Err(_) => continue,
                 }
@@ -185,9 +173,7 @@ impl<'r> MonoImage<'r> {
 
         let size = self.runtime.memory.read_u32(ht_base + ht_off.size)?;
         if size == 0 {
-            eprintln!(
-                "[hearthmirror] MonoImage.class_cache has size=0 (empty hashtable)"
-            );
+            eprintln!("[hearthmirror] MonoImage.class_cache has size=0 (empty hashtable)");
             return Ok(Vec::new());
         }
         if size > MAX_CACHE_SIZE {
@@ -197,7 +183,10 @@ impl<'r> MonoImage<'r> {
             )));
         }
 
-        let table_ptr = self.runtime.memory.read_remote_ptr(ht_base + ht_off.table)?;
+        let table_ptr = self
+            .runtime
+            .memory
+            .read_remote_ptr(ht_base + ht_off.table)?;
         if table_ptr.is_null() {
             eprintln!(
                 "[hearthmirror] MonoImage.class_cache.table is NULL (size={}); treating as empty",
@@ -210,7 +199,7 @@ impl<'r> MonoImage<'r> {
         let next_off = class_off.next_class_cache;
 
         for i in 0..size {
-            let bucket_slot = table_ptr + i * 4;
+            let bucket_slot = table_ptr + i * self.runtime.memory.ptr_size();
             let mut cursor = match self.runtime.memory.read_remote_ptr(bucket_slot) {
                 Ok(p) => p,
                 // Buckets that straddle page boundaries of corrupt state just

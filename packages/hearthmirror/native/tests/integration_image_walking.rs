@@ -35,8 +35,8 @@ macro_rules! skip_if_no_hs {
 fn enumerate_classes_returns_assembly_csharp_classes() {
     skip_if_no_hs!();
 
-    let rt = MonoRuntime::init()
-        .expect("MonoRuntime::init must succeed when Hearthstone is running");
+    let rt =
+        MonoRuntime::init().expect("MonoRuntime::init must succeed when Hearthstone is running");
 
     // Reach the Assembly-CSharp image via find_class side-effect. We don't
     // care about the class here — we only want the cached ac_image pointer.
@@ -87,8 +87,8 @@ fn enumerate_classes_returns_assembly_csharp_classes() {
 fn find_class_collection_manager() {
     skip_if_no_hs!();
 
-    let rt = MonoRuntime::init()
-        .expect("MonoRuntime::init must succeed when Hearthstone is running");
+    let rt =
+        MonoRuntime::init().expect("MonoRuntime::init must succeed when Hearthstone is running");
 
     let class_ref = rt
         .find_class("", "CollectionManager")
@@ -117,8 +117,8 @@ fn find_class_collection_manager() {
 fn find_class_unknown_class_returns_class_not_found() {
     skip_if_no_hs!();
 
-    let rt = MonoRuntime::init()
-        .expect("MonoRuntime::init must succeed when Hearthstone is running");
+    let rt =
+        MonoRuntime::init().expect("MonoRuntime::init must succeed when Hearthstone is running");
     let err = rt
         .find_class("", "DefinitelyNotAClassInHearthstone_9f3a")
         .expect_err("unknown class must fail");
@@ -174,7 +174,7 @@ fn find_ac_image_via_probe(rt: &MonoRuntime) -> hearthmirror_native::remote_ptr:
             continue;
         }
         let name = rt.memory.read_cstring(name_ptr, 256).unwrap_or_default();
-        if name.contains("Assembly-CSharp") {
+        if name.ends_with("Assembly-CSharp.dll") || name == "Assembly-CSharp" {
             return img;
         }
     }

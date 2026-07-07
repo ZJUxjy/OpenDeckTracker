@@ -46,9 +46,7 @@ const TAG_DICT_ENTRY_SIZE: u32 = 16;
 ///   loading, mode-select screens).
 ///
 /// Errors propagate only on genuine memory-read failures.
-pub fn read_game_state_singleton(
-    runtime: &MonoRuntime,
-) -> Result<Option<MonoObject>, ScryError> {
+pub fn read_game_state_singleton(runtime: &MonoRuntime) -> Result<Option<MonoObject>, ScryError> {
     runtime.get_singleton(CLS_GAME_STATE_FOR_MATCH.0, CLS_GAME_STATE_FOR_MATCH.1)
 }
 
@@ -96,7 +94,7 @@ fn iter_int_keyed_map(
     let Some(map_ptr) = gs.read_pointer_field(mem, field_name)? else {
         return Ok(Vec::new());
     };
-    let entries = custom_map::iter_entries(mem, map_ptr, max_items)?;
+    let entries = custom_map::iter_entries_with_key_size(mem, map_ptr, 4, max_items)?;
 
     let mut out = Vec::with_capacity(entries.len());
     for (key_ptr, value_ptr) in entries {
@@ -122,10 +120,7 @@ fn iter_int_keyed_map(
 /// player has `m_local == true` (spectator mode — currently unsupported,
 /// see design D6 R2). Otherwise returns `(Some(local), Some(other))`
 /// for any standard 1v1 / Battlegrounds layout.
-pub fn discover_player_ids(
-    runtime: &MonoRuntime,
-    gs: &MonoObject,
-) -> (Option<i32>, Option<i32>) {
+pub fn discover_player_ids(runtime: &MonoRuntime, gs: &MonoObject) -> (Option<i32>, Option<i32>) {
     let players = match iter_player_map(runtime, gs) {
         Ok(v) => v,
         Err(_) => return (None, None),
@@ -206,10 +201,7 @@ pub fn read_entity_controller(
 ///
 /// Returns the empty string when neither field resolves (typical for
 /// hidden / face-down entities like opposing-hand cards).
-pub fn read_entity_card_id(
-    runtime: &MonoRuntime,
-    entity: &MonoObject,
-) -> String {
+pub fn read_entity_card_id(runtime: &MonoRuntime, entity: &MonoObject) -> String {
     let mem = &runtime.memory;
     if let Ok(Some(s)) = entity.read_string_field(mem, FLD_CARD_ID_BACKING) {
         if !s.is_empty() {
@@ -234,20 +226,27 @@ pub fn read_realtime_combat_stats(
 ) -> Result<RealtimeStats, ScryError> {
     let mem = &runtime.memory;
     Ok(RealtimeStats {
-        zone_position: entity.read_int32_field(mem, FLD_REALTIME_ZONE_POS)?.unwrap_or(0),
-        attack: entity.read_int32_field(mem, FLD_REALTIME_ATTACK)?.unwrap_or(0),
-        health: entity.read_int32_field(mem, FLD_REALTIME_HEALTH)?.unwrap_or(0),
-        damage: entity.read_int32_field(mem, FLD_REALTIME_DAMAGE)?.unwrap_or(0),
+        zone_position: entity
+            .read_int32_field(mem, FLD_REALTIME_ZONE_POS)?
+            .unwrap_or(0),
+        attack: entity
+            .read_int32_field(mem, FLD_REALTIME_ATTACK)?
+            .unwrap_or(0),
+        health: entity
+            .read_int32_field(mem, FLD_REALTIME_HEALTH)?
+            .unwrap_or(0),
+        damage: entity
+            .read_int32_field(mem, FLD_REALTIME_DAMAGE)?
+            .unwrap_or(0),
     })
 }
 
 /// Read an entity's runtime zone tag mirror (`m_realTimeZone`, an i32
 /// matching one of the `tags::zone::*` constants).
-pub fn read_realtime_zone(
-    memory: &ProcessMemory,
-    entity: &MonoObject,
-) -> Result<i32, ScryError> {
-    Ok(entity.read_int32_field(memory, FLD_REALTIME_ZONE)?.unwrap_or(0))
+pub fn read_realtime_zone(memory: &ProcessMemory, entity: &MonoObject) -> Result<i32, ScryError> {
+    Ok(entity
+        .read_int32_field(memory, FLD_REALTIME_ZONE)?
+        .unwrap_or(0))
 }
 
 /// Resolve a target entity-id to its card id by re-walking

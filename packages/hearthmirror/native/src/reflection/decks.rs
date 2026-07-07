@@ -18,12 +18,10 @@
 //!   create_date_microsec, cards: [{ card_id, count, premium }] }
 //! ```
 //!
-//! `CollectionDeckSlot.m_count` is a pointer to a boxed `int` — Mono
-//! stores boxed primitives as `MonoObject` header (8 bytes) + the
-//! value. The actual i32 lives at `+0x10` within the box (verified live
-//! 2026-04-21 against upstream `hm-rpc/src/handler.rs::read_slot_count`
-//! + the `debug_read_raw` probe at lines 709–798). NULL pointer means
-//!   "default count" → 1 copy.
+//! `CollectionDeckSlot.m_count` changed shape in current 64-bit Hearthstone:
+//! it is a `List<int>` whose buckets sum to the deck-slot copy count. Older
+//! builds exposed a boxed `int`, so the reader keeps a boxed-int fallback. NULL
+//! pointer means "default count" → 1 copy.
 //!
 //! `CollectionDeckSlot` does not declare a `premium` field (premium
 //! lives on `CollectibleCard`, not on the deck slot — different code
@@ -51,9 +49,17 @@ const MAX_DECKS: usize = 1024;
 /// future format expansions like Hero Power slots.
 const MAX_DECK_SLOTS: usize = 256;
 
-/// Mono boxed-int value offset within the boxed `MonoObject`. Constant
-/// across recent Mono runtimes (verified live; see file-header doc).
+/// Mono boxed-int value offset retained for older Hearthstone builds where
+/// `CollectionDeckSlot.m_count` was a boxed `int`.
 const BOXED_INT_VALUE_OFFSET: u32 = 0x10;
+
+/// Soft cap for the current `List<int>`-backed slot-count payload. Live 64-bit
+/// Hearthstone currently stores five values; this leaves room for format drift.
+const MAX_SLOT_COUNT_VALUES: usize = 16;
+
+/// Deck slot copy counts should be tiny. Keep a broad cap so unusual modes do
+/// not break, while still rejecting address fragments from layout drift.
+const MAX_PLAUSIBLE_SLOT_COUNT: i32 = 99;
 
 /// Default deck-slot count when the boxed pointer is null. Hearthstone
 /// writes slots without an explicit count to mean "one copy".
@@ -79,13 +85,64 @@ pub struct DeckResult {
     pub cards: Vec<DeckCardResult>,
 }
 
-/// Read a `CollectionDeckSlot.m_count` boxed-int via the `+0x10`
-/// stable offset. NULL pointer → [`DEFAULT_SLOT_COUNT`].
-fn read_boxed_int(mem: &ProcessMemory, ptr: Option<RemotePtr>) -> Result<i32, ScryError> {
+/// Read `CollectionDeckSlot.m_count`. Current Hearthstone stores this as
+/// `List<int>`; older builds used a boxed `int`.
+fn read_slot_count(mem: &ProcessMemory, ptr: Option<RemotePtr>) -> Result<i32, ScryError> {
     match ptr {
         None => Ok(DEFAULT_SLOT_COUNT),
-        Some(p) => mem.read_i32(p + BOXED_INT_VALUE_OFFSET),
+        Some(p) => {
+            if let Some(count) = read_list_backed_slot_count(mem, p)? {
+                return Ok(count);
+            }
+            read_boxed_slot_count(mem, p)
+        }
     }
+}
+
+fn read_list_backed_slot_count(
+    mem: &ProcessMemory,
+    ptr: RemotePtr,
+) -> Result<Option<i32>, ScryError> {
+    let elem_ptrs = match list::iter_element_ptrs(mem, ptr, 4, MAX_SLOT_COUNT_VALUES) {
+        Ok(v) => v,
+        Err(ScryError::CollectionOverflow { .. }) | Err(ScryError::MemoryAccess { .. }) => {
+            return Ok(None);
+        }
+        Err(e) => return Err(e),
+    };
+    if elem_ptrs.is_empty() {
+        return Ok(None);
+    }
+
+    let mut total = 0_i32;
+    for elem_ptr in elem_ptrs {
+        let count = match mem.read_i32(elem_ptr) {
+            Ok(v) => v,
+            Err(ScryError::MemoryAccess { .. }) => return Ok(None),
+            Err(e) => return Err(e),
+        };
+        if count < 0 || count > MAX_PLAUSIBLE_SLOT_COUNT {
+            return Ok(None);
+        }
+        total += count;
+    }
+    Ok(is_plausible_slot_count(total).then_some(total))
+}
+
+fn read_boxed_slot_count(mem: &ProcessMemory, ptr: RemotePtr) -> Result<i32, ScryError> {
+    let count = mem.read_i32(ptr + BOXED_INT_VALUE_OFFSET)?;
+    if is_plausible_slot_count(count) {
+        Ok(count)
+    } else {
+        Err(ScryError::MetadataError(format!(
+            "deck slot count {} outside plausible range 1..={}",
+            count, MAX_PLAUSIBLE_SLOT_COUNT
+        )))
+    }
+}
+
+fn is_plausible_slot_count(count: i32) -> bool {
+    (DEFAULT_SLOT_COUNT..=MAX_PLAUSIBLE_SLOT_COUNT).contains(&count)
 }
 
 /// Read a single `CollectionDeck` MonoObject into a `DeckResult`.
@@ -121,7 +178,7 @@ pub fn read_deck_from_object(
 
     // CollectionDeck.m_slots is `List<CollectionDeckSlot>`.
     let cards = if let Some(slots_ptr) = deck.read_pointer_field(mem, FLD_COLLECTION_DECK_SLOTS)? {
-        let elem_ptrs = list::iter_element_ptrs(mem, slots_ptr, 4, MAX_DECK_SLOTS)?;
+        let elem_ptrs = list::iter_element_ptrs(mem, slots_ptr, mem.ptr_size(), MAX_DECK_SLOTS)?;
         let mut out = Vec::with_capacity(elem_ptrs.len());
         for elem_ptr in elem_ptrs {
             let slot_addr = mem.read_remote_ptr(elem_ptr)?;
@@ -135,7 +192,7 @@ pub fn read_deck_from_object(
                 .read_string_field(mem, FLD_DECK_SLOT_CARD_ID)?
                 .unwrap_or_default();
             let count_ptr = slot_obj.read_pointer_field(mem, FLD_DECK_SLOT_COUNT)?;
-            let count = read_boxed_int(mem, count_ptr)?;
+            let count = read_slot_count(mem, count_ptr)?;
             out.push(DeckCardResult {
                 card_id,
                 count,
@@ -200,9 +257,52 @@ mod tests {
     /// the Phase-1 chain didn't read counts at all, so this is the
     /// first guarded behaviour for a NULL pointer field.
     #[test]
-    fn read_boxed_int_null_returns_default() {
+    fn read_slot_count_null_returns_default() {
         let mem = ProcessMemory::new(crate::handle::OwnedProcessHandle::current());
-        assert_eq!(read_boxed_int(&mem, None).unwrap(), DEFAULT_SLOT_COUNT);
+        assert_eq!(read_slot_count(&mem, None).unwrap(), DEFAULT_SLOT_COUNT);
+    }
+
+    #[test]
+    fn read_slot_count_reads_first_value_from_list_backed_count() {
+        let mem = ProcessMemory::new_with_ptr_size(crate::handle::OwnedProcessHandle::current(), 8);
+        let mut buf = vec![0_u8; 0x100];
+        let base = buf.as_mut_ptr() as u64;
+        let list_addr = base;
+        let array_addr = base + 0x80;
+
+        buf[0x10..0x18].copy_from_slice(&array_addr.to_le_bytes());
+        buf[0x18..0x1C].copy_from_slice(&5_i32.to_le_bytes());
+        buf[0x80 + 0x20..0x80 + 0x24].copy_from_slice(&2_i32.to_le_bytes());
+
+        let leaked: &'static mut [u8] = Box::leak(buf.into_boxed_slice());
+        let _ = leaked;
+
+        assert_eq!(
+            read_slot_count(&mem, Some(RemotePtr::new(list_addr))).unwrap(),
+            2
+        );
+    }
+
+    #[test]
+    fn read_slot_count_sums_list_backed_count_buckets() {
+        let mem = ProcessMemory::new_with_ptr_size(crate::handle::OwnedProcessHandle::current(), 8);
+        let mut buf = vec![0_u8; 0x100];
+        let base = buf.as_mut_ptr() as u64;
+        let list_addr = base;
+        let array_addr = base + 0x80;
+
+        buf[0x10..0x18].copy_from_slice(&array_addr.to_le_bytes());
+        buf[0x18..0x1C].copy_from_slice(&5_i32.to_le_bytes());
+        buf[0x80 + 0x20..0x80 + 0x24].copy_from_slice(&1_i32.to_le_bytes());
+        buf[0x80 + 0x24..0x80 + 0x28].copy_from_slice(&1_i32.to_le_bytes());
+
+        let leaked: &'static mut [u8] = Box::leak(buf.into_boxed_slice());
+        let _ = leaked;
+
+        assert_eq!(
+            read_slot_count(&mem, Some(RemotePtr::new(list_addr))).unwrap(),
+            2
+        );
     }
 
     /// The boxed-int offset is stable per upstream `read_slot_count` —

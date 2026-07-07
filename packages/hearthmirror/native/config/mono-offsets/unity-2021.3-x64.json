@@ -1,0 +1,144 @@
+{
+  "$schema_comment": "Mono runtime internal struct offsets for Unity 2021.3 BDWGC fork, 64-bit target process. Getter-derived fields are overwritten/confirmed by OffsetProber at runtime; domain_assemblies and class_cache are refined by live memory scanning when Hearthstone is running.",
+  "schema_version": 1,
+  "unity_version": "2021.3.x (BDWGC mono fork: unity-master-bdwgc-release-7_6)",
+  "hearthstone_version": "x64 client (国服 Battle.net, 2026-07)",
+  "extracted_date": "2026-07-07",
+  "extracted_by": "source-derivation + 64-bit getter disassembly diagnostics",
+  "ptr_size": 8,
+  "structs": {
+    "MonoObject": {
+      "$confidence": "HIGH",
+      "vtable": "0x0",
+      "data_start": "0x10"
+    },
+    "MonoString": {
+      "$confidence": "HIGH",
+      "length": "0x10",
+      "chars": "0x14"
+    },
+    "MonoArray": {
+      "$confidence": "HIGH",
+      "bounds": "0x10",
+      "max_length": "0x18",
+      "data_start": "0x20"
+    },
+    "MonoClassField": {
+      "$confidence": "HIGH",
+      "type": "0x0",
+      "name": "0x8",
+      "parent": "0x10",
+      "offset": "0x18",
+      "size": 32
+    },
+    "MonoClass": {
+      "$confidence": "MED (critical getter fields verified by x64 disasm; runtime/static fields still require live validation)",
+      "instance_size": "0x20",
+      "parent": "0x30",
+      "nested_in": "0x38",
+      "image": "0x40",
+      "name": "0x48",
+      "name_space": "0x50",
+      "type_token": "0x58",
+      "vtable_size": "0x5C",
+      "interface_count": "0x60",
+      "fields": "0x98",
+      "methods": "0xA0",
+      "runtime_info": "0xD0",
+      "vtable": "0xD8",
+      "field_count": "0x100",
+      "next_class_cache": "0x108"
+    },
+    "MonoVTable": {
+      "$confidence": "MED",
+      "klass": "0x0",
+      "gc_descr": "0x8",
+      "domain": "0x10",
+      "type": "0x18",
+      "interface_bitmap": "0x20",
+      "max_interface_id": "0x28",
+      "vtable_array_start": "0x48"
+    },
+    "MonoAssembly": {
+      "$confidence": "HIGH (from mono_assembly_get_image x64 disasm)",
+      "image": "0x60"
+    },
+    "MonoImage": {
+      "$confidence": "LOW for class_cache; name is the short assembly name returned by mono_image_get_name on x64",
+      "name": "0x30",
+      "assembly": "0x660",
+      "class_cache": "0x4D0"
+    },
+    "MonoInternalHashTable": {
+      "$confidence": "HIGH",
+      "hash_func": "0x0",
+      "key_extract_func": "0x8",
+      "next_value_func": "0x10",
+      "size": "0x18",
+      "num_entries": "0x1C",
+      "table": "0x20"
+    },
+    "MonoDomain": {
+      "$confidence": "LOW; refined by live scan in MonoRuntime::init when Hearthstone is running",
+      "domain_assemblies": "0xA0",
+      "loaded_images_hash": "0x160"
+    }
+  },
+  "exports_to_probe": [
+    {
+      "name": "mono_get_root_domain",
+      "kind": "rip_relative_load",
+      "extracts": "root_domain_global_var_addr"
+    },
+    {
+      "name": "mono_class_get_name",
+      "kind": "displacement",
+      "extracts": "MonoClass.name"
+    },
+    {
+      "name": "mono_class_get_namespace",
+      "kind": "displacement",
+      "extracts": "MonoClass.name_space"
+    },
+    {
+      "name": "mono_class_get_parent",
+      "kind": "displacement",
+      "extracts": "MonoClass.parent"
+    },
+    {
+      "name": "mono_class_get_fields",
+      "kind": "displacement",
+      "extracts": "MonoClass.fields"
+    },
+    {
+      "name": "mono_class_get_image",
+      "kind": "displacement",
+      "extracts": "MonoClass.image"
+    },
+    {
+      "name": "mono_field_get_name",
+      "kind": "displacement",
+      "extracts": "MonoClassField.name"
+    },
+    {
+      "name": "mono_field_get_offset",
+      "kind": "displacement",
+      "extracts": "MonoClassField.offset"
+    },
+    {
+      "name": "mono_field_get_type",
+      "kind": "displacement",
+      "extracts": "MonoClassField.type"
+    },
+    {
+      "name": "mono_image_get_name",
+      "kind": "displacement",
+      "extracts": "MonoImage.name"
+    },
+    {
+      "name": "mono_assembly_get_image",
+      "kind": "displacement",
+      "extracts": "MonoAssembly.image"
+    }
+  ]
+}

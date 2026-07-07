@@ -59,7 +59,8 @@ use crate::remote_ptr::RemotePtr;
 use std::collections::HashMap;
 
 use crate::mono::offsets::MonoOffsets;
-use pelite::pe32::{Pe, PeView};
+use pelite::pe32::{Pe as Pe32, PeView as PeView32};
+use pelite::pe64::{Pe as Pe64, PeView as PeView64};
 
 /// Read the Mono DLL's export table and return a name → remote address map.
 ///
@@ -71,15 +72,28 @@ pub fn read_exports_map(
     memory: &ProcessMemory,
     module: &ModuleInfo,
 ) -> Result<HashMap<String, RemotePtr>, ScryError> {
-    let base_addr = module.base.0 as u32;
+    let base_addr = module.base.0 as u64;
     let pe_size = module.size as usize;
     let pe_bytes = memory.read_bytes(RemotePtr::new(base_addr), pe_size)?;
 
+    match memory.ptr_size() {
+        4 => read_exports_map_32(base_addr, &pe_bytes),
+        8 => read_exports_map_64(base_addr, &pe_bytes),
+        other => Err(ScryError::Unsupported(format!(
+            "unsupported pointer size for PE export read: {}",
+            other
+        ))),
+    }
+}
+
+fn read_exports_map_32(
+    base_addr: u64,
+    pe_bytes: &[u8],
+) -> Result<HashMap<String, RemotePtr>, ScryError> {
     // Safety: pe_bytes is our local copy of the module's mapped-image layout.
     // PeView::module expects the in-memory mapped PE format, which is what we
-    // capture above via ReadProcessMemory on a 32-bit module.
-    let pe = unsafe { PeView::module(pe_bytes.as_ptr()) };
-
+    // capture above via ReadProcessMemory.
+    let pe = unsafe { PeView32::module(pe_bytes.as_ptr()) };
     let exports = pe
         .exports()
         .map_err(|e| ScryError::MetadataError(format!("no exports: {}", e)))?;
@@ -95,7 +109,41 @@ pub fn read_exports_map(
         if let pelite::pe32::exports::Export::Symbol(rva) = export {
             let name_str = name.to_str().unwrap_or("").to_string();
             if !name_str.is_empty() {
-                map.insert(name_str, RemotePtr::new(base_addr.wrapping_add(*rva)));
+                map.insert(
+                    name_str,
+                    RemotePtr::new(base_addr.wrapping_add(u64::from(*rva))),
+                );
+            }
+        }
+    }
+    Ok(map)
+}
+
+fn read_exports_map_64(
+    base_addr: u64,
+    pe_bytes: &[u8],
+) -> Result<HashMap<String, RemotePtr>, ScryError> {
+    // Safety: pe_bytes is our local copy of the module's mapped-image layout.
+    let pe = unsafe { PeView64::module(pe_bytes.as_ptr()) };
+    let exports = pe
+        .exports()
+        .map_err(|e| ScryError::MetadataError(format!("no exports: {}", e)))?;
+    let by = exports
+        .by()
+        .map_err(|e| ScryError::MetadataError(format!("by name table failed: {}", e)))?;
+
+    let mut map = HashMap::new();
+    for result in by.iter_names() {
+        let (name_res, export_res) = result;
+        let Ok(name) = name_res else { continue };
+        let Ok(export) = export_res else { continue };
+        if let pelite::pe64::exports::Export::Symbol(rva) = export {
+            let name_str = name.to_str().unwrap_or("").to_string();
+            if !name_str.is_empty() {
+                map.insert(
+                    name_str,
+                    RemotePtr::new(base_addr.wrapping_add(u64::from(*rva))),
+                );
             }
         }
     }
@@ -124,13 +172,13 @@ pub struct OffsetProber<'m> {
 }
 
 impl<'m> OffsetProber<'m> {
-    /// Construct a new prober. `bitness` MUST be 32 (Hearthstone is 32-bit).
+    /// Construct a new prober. `bitness` MUST be 32 or 64.
     pub fn new(
         memory: &'m ProcessMemory,
         exports: &'m HashMap<String, RemotePtr>,
         bitness: u32,
     ) -> Result<Self, ScryError> {
-        if bitness != 32 {
+        if bitness != 32 && bitness != 64 {
             return Err(ScryError::InvalidProbeBitness(bitness));
         }
         Ok(Self {
@@ -199,8 +247,9 @@ impl<'m> OffsetProber<'m> {
         let mut off = baseline;
 
         for spec in PROBE_SPECS {
+            let sane_range = sane_range_for(spec, self.bitness);
             match self.probe_displacement(spec.export) {
-                Ok(v) if spec.sane_range.contains(&v) => (spec.setter)(&mut off, v),
+                Ok(v) if sane_range.contains(&v) => (spec.setter)(&mut off, v),
                 Ok(v) => {
                     eprintln!(
                         "OffsetProber: '{}' → {} returned 0x{:X} outside sane range \
@@ -209,8 +258,8 @@ impl<'m> OffsetProber<'m> {
                         spec.export,
                         spec.field_label,
                         v,
-                        spec.sane_range.start(),
-                        spec.sane_range.end(),
+                        sane_range.start(),
+                        sane_range.end(),
                     );
                 }
                 Err(ScryError::ExportNotFound(name)) => {
@@ -331,6 +380,13 @@ const PROBE_SPECS: &[ProbeSpec] = &[
     },
 ];
 
+fn sane_range_for(spec: &ProbeSpec, bitness: u32) -> std::ops::RangeInclusive<u32> {
+    match (spec.export, bitness) {
+        ("mono_image_get_name", 64) => 0x20..=0x40,
+        _ => spec.sane_range.clone(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -346,11 +402,11 @@ mod tests {
     }
 
     #[test]
-    fn invalid_bitness_rejected_at_construction() {
+    fn accepts_32_and_64_bitness_at_construction() {
         let mem = self_memory();
         let exports = HashMap::new();
-        let result = OffsetProber::new(&mem, &exports, 64);
-        assert!(matches!(result, Err(ScryError::InvalidProbeBitness(64))));
+        assert!(OffsetProber::new(&mem, &exports, 32).is_ok());
+        assert!(OffsetProber::new(&mem, &exports, 64).is_ok());
 
         let result16 = OffsetProber::new(&mem, &exports, 16);
         assert!(matches!(result16, Err(ScryError::InvalidProbeBitness(16))));
@@ -367,11 +423,16 @@ mod tests {
         let err = prober.probe_all(baseline).err().expect("must fail");
         match err {
             ScryError::ExportNotFound(name) => {
-                assert_eq!(name, "mono_class_get_name", "first critical export expected");
+                assert_eq!(
+                    name, "mono_class_get_name",
+                    "first critical export expected"
+                );
             }
             other => {
                 #[allow(clippy::panic)]
-                { panic!("expected ExportNotFound, got {:?}", other); }
+                {
+                    panic!("expected ExportNotFound, got {:?}", other);
+                }
             }
         }
     }
@@ -385,10 +446,11 @@ mod tests {
 
     #[test]
     fn invalid_probe_bitness_display_contains_value() {
-        let e = ScryError::InvalidProbeBitness(64);
+        let e = ScryError::InvalidProbeBitness(16);
         let s = e.to_string();
-        assert!(s.contains("64"), "got {}", s);
+        assert!(s.contains("16"), "got {}", s);
         assert!(s.contains("32"), "got {}", s);
+        assert!(s.contains("64"), "got {}", s);
     }
 
     #[test]
@@ -411,7 +473,10 @@ mod tests {
         let baseline = MonoOffsets::default();
         let pairs: &[(&str, u32)] = &[
             ("mono_class_get_name", baseline.structs.class.name),
-            ("mono_class_get_namespace", baseline.structs.class.name_space),
+            (
+                "mono_class_get_namespace",
+                baseline.structs.class.name_space,
+            ),
             ("mono_class_get_fields", baseline.structs.class.fields),
             ("mono_class_get_image", baseline.structs.class.image),
             ("mono_image_get_name", baseline.structs.image.name),
@@ -428,13 +493,14 @@ mod tests {
                 Some(s) => s,
                 None => panic!("no spec for {}", export),
             };
+            let sane_range = sane_range_for(spec, 32);
             assert!(
-                spec.sane_range.contains(value),
+                sane_range.contains(value),
                 "{} baseline 0x{:X} not inside sane range 0x{:X}..=0x{:X}",
                 export,
                 value,
-                spec.sane_range.start(),
-                spec.sane_range.end()
+                sane_range.start(),
+                sane_range.end()
             );
         }
     }
@@ -460,6 +526,18 @@ mod tests {
         );
     }
 
+    #[test]
+    fn x64_mono_image_name_range_accepts_short_name_offset() {
+        #[allow(clippy::expect_used)]
+        let spec = PROBE_SPECS
+            .iter()
+            .find(|s| s.export == "mono_image_get_name")
+            .expect("spec must exist");
+        let range = sane_range_for(spec, 64);
+        assert!(range.contains(&0x30));
+        assert!(!range.contains(&0x1C));
+    }
+
     /// A typical "garbage" displacement from a profiled-thunk wrapper (e.g.
     /// `0xE10` from a TLS fetch) MUST land outside every spec's sane range.
     /// This is the regression guard for the `0xE10` panic that motivated
@@ -469,8 +547,9 @@ mod tests {
         let garbage: &[u32] = &[0xE10, 0x1000, 0x4000, 0xFFFF_FF00];
         for spec in PROBE_SPECS {
             for v in garbage {
+                let sane_range = sane_range_for(spec, 32);
                 assert!(
-                    !spec.sane_range.contains(v),
+                    !sane_range.contains(v),
                     "spec '{}' would silently accept garbage 0x{:X}",
                     spec.export,
                     v

@@ -16,8 +16,9 @@ use std::path::Path;
 
 /// Embedded baseline offsets, derived from Unity 2021.3 BDWGC fork. Used as
 /// the starting point for `OffsetProber::probe_all`.
-pub const DEFAULT_OFFSETS_JSON: &str =
-    include_str!("../../config/mono-offsets/unity-2021.3.json");
+pub const DEFAULT_OFFSETS_JSON: &str = include_str!("../../config/mono-offsets/unity-2021.3.json");
+pub const DEFAULT_OFFSETS_JSON_X64: &str =
+    include_str!("../../config/mono-offsets/unity-2021.3-x64.json");
 
 /// Top-level Mono offsets table loaded from JSON.
 #[derive(Debug, Clone, Deserialize)]
@@ -212,6 +213,17 @@ fn hex_or_int<'de, D: serde::Deserializer<'de>>(d: D) -> Result<u32, D::Error> {
 }
 
 impl MonoOffsets {
+    pub fn for_pointer_size(ptr_size: u32) -> Result<Self, ScryError> {
+        match ptr_size {
+            4 => Self::from_str(DEFAULT_OFFSETS_JSON),
+            8 => Self::from_str(DEFAULT_OFFSETS_JSON_X64),
+            other => Err(ScryError::Unsupported(format!(
+                "unsupported Mono offsets pointer size: {}",
+                other
+            ))),
+        }
+    }
+
     /// Load a `MonoOffsets` table from a JSON file on disk.
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self, ScryError> {
         let s = std::fs::read_to_string(path.as_ref()).map_err(|e| {
@@ -265,12 +277,33 @@ mod tests {
         assert_eq!(off.structs.class.name, 0x2C);
     }
 
+    #[test]
+    fn loads_x64_baseline_with_sentinel_values() {
+        let off = MonoOffsets::from_str(DEFAULT_OFFSETS_JSON_X64)
+            .expect("embedded DEFAULT_OFFSETS_JSON_X64 must parse");
+
+        assert_eq!(off.ptr_size, 8);
+        assert_eq!(off.structs.field.size, 0x20);
+        assert_eq!(off.structs.field.offset, 0x18);
+        assert_eq!(off.structs.object.data_start, 0x10);
+        assert_eq!(off.structs.array.max_length, 0x18);
+        assert_eq!(off.structs.array.data_start, 0x20);
+        assert_eq!(off.structs.class.name, 0x48);
+    }
+
     /// `Default::default()` returns the embedded baseline (non-zero).
     #[test]
     fn default_impl_returns_non_zero_baseline() {
         let off = MonoOffsets::default();
         assert_ne!(off.structs.class.name, 0);
         assert_ne!(off.structs.image.class_cache, 0);
+    }
+
+    #[test]
+    fn for_pointer_size_selects_matching_baseline() {
+        assert_eq!(MonoOffsets::for_pointer_size(4).unwrap().ptr_size, 4);
+        assert_eq!(MonoOffsets::for_pointer_size(8).unwrap().ptr_size, 8);
+        assert!(MonoOffsets::for_pointer_size(16).is_err());
     }
 
     /// `from_file` loads the on-disk file equivalently to `from_str` on the
@@ -281,12 +314,20 @@ mod tests {
             .join("config/mono-offsets/unity-2021.3.json");
         let from_disk = MonoOffsets::from_file(&path).unwrap_or_else(|e| {
             #[allow(clippy::panic)]
-            { panic!("failed to load {}: {}", path.display(), e); }
+            {
+                panic!("failed to load {}: {}", path.display(), e);
+            }
         });
         let from_embedded = MonoOffsets::default();
         assert_eq!(from_disk.ptr_size, from_embedded.ptr_size);
-        assert_eq!(from_disk.structs.class.name, from_embedded.structs.class.name);
-        assert_eq!(from_disk.structs.image.class_cache, from_embedded.structs.image.class_cache);
+        assert_eq!(
+            from_disk.structs.class.name,
+            from_embedded.structs.class.name
+        );
+        assert_eq!(
+            from_disk.structs.image.class_cache,
+            from_embedded.structs.image.class_cache
+        );
     }
 
     /// Hex deserializer accepts strings, plain ints, and uppercase 0X.

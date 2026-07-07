@@ -112,7 +112,7 @@ pub async fn read_collection_with_counters(
         counters.elapsed_ms = start.elapsed().as_millis();
         return Ok((None, counters));
     };
-    let elem_ptrs = list::iter_element_ptrs(mem, list_ptr, 4, COLLECTION_MAX_ITEMS)?;
+    let elem_ptrs = list::iter_element_ptrs(mem, list_ptr, mem.ptr_size(), COLLECTION_MAX_ITEMS)?;
     counters.list_size = elem_ptrs.len();
 
     let mut cards = Vec::with_capacity(elem_ptrs.len());
@@ -129,8 +129,8 @@ pub async fn read_collection_with_counters(
                 let vtable_ptr =
                     mem.read_remote_ptr(card_obj.addr + card_obj.offsets.structs.object.vtable)?;
                 if !vtable_ptr.is_null() {
-                    let klass = mem
-                        .read_remote_ptr(vtable_ptr + card_obj.offsets.structs.vtable.klass)?;
+                    let klass =
+                        mem.read_remote_ptr(vtable_ptr + card_obj.offsets.structs.vtable.klass)?;
                     if !klass.is_null() {
                         let class_ref = read_mono_class(mem, klass, card_obj.offsets.clone())?;
                         counters.sample_class = Some(class_ref.full_name);

@@ -21,7 +21,7 @@
 //! See the change's `design.md` D2 for why we match by string name rather
 //! than by `RuntimeType` key.
 
-use crate::collections::dict::{iter_entries, read_entry_value_ptr};
+use crate::collections::dict::{iter_entries, read_entry_value_ptr, reference_entry_size};
 use crate::error::ScryError;
 use crate::mono::object::MonoObject;
 use crate::mono::MonoRuntime;
@@ -42,10 +42,7 @@ const MAX_SERVICES: usize = 1024;
 /// Dictionary's `_count` exceeds [`MAX_SERVICES`] — this indicates
 /// either memory corruption or an unanticipated layout change rather
 /// than a transient state.
-pub fn get_service_by_name(
-    rt: &MonoRuntime,
-    name: &str,
-) -> Result<Option<MonoObject>, ScryError> {
+pub fn get_service_by_name(rt: &MonoRuntime, name: &str) -> Result<Option<MonoObject>, ScryError> {
     let mem = &rt.memory;
 
     // Step 1: locate the static ServiceManager class in the
@@ -83,10 +80,9 @@ pub fn get_service_by_name(
         return Ok(None);
     };
 
-    // Step 4: walk the dictionary entries. `entry_size = 16` because for
-    // reference-typed K and V the layout is `i32 hash + i32 next +
-    // 4-byte key + 4-byte value`.
-    let entries = iter_entries(mem, dict_ptr, 16, MAX_SERVICES)?;
+    // Step 4: walk the dictionary entries. Reference-typed K/V slots scale
+    // with the target pointer size.
+    let entries = iter_entries(mem, dict_ptr, reference_entry_size(mem), MAX_SERVICES)?;
 
     for entry in entries {
         // value pointer = ServiceInfo*.
@@ -122,10 +118,7 @@ mod tests {
         );
         assert_eq!(FLD_S_RUNTIME_SERVICES, "s_runtimeServices");
         assert_eq!(FLD_M_SERVICES, "m_services");
-        assert_eq!(
-            FLD_SERVICE_TYPE_NAME,
-            "<ServiceTypeName>k__BackingField"
-        );
+        assert_eq!(FLD_SERVICE_TYPE_NAME, "<ServiceTypeName>k__BackingField");
         assert_eq!(FLD_SERVICE, "<Service>k__BackingField");
         assert_eq!(SVC_NET_CACHE, "NetCache");
     }

@@ -5,15 +5,24 @@ use windows::Win32::System::Diagnostics::Debug::ReadProcessMemory;
 
 pub struct ProcessMemory {
     handle: OwnedProcessHandle,
+    ptr_size: u32,
 }
 
 impl ProcessMemory {
     pub fn new(handle: OwnedProcessHandle) -> Self {
-        Self { handle }
+        Self::new_with_ptr_size(handle, 4)
+    }
+
+    pub fn new_with_ptr_size(handle: OwnedProcessHandle, ptr_size: u32) -> Self {
+        Self { handle, ptr_size }
     }
 
     pub fn handle(&self) -> &OwnedProcessHandle {
         &self.handle
+    }
+
+    pub fn ptr_size(&self) -> u32 {
+        self.ptr_size
     }
 
     pub fn read_bytes(&self, addr: RemotePtr, len: usize) -> Result<Vec<u8>, ScryError> {
@@ -57,7 +66,9 @@ impl ProcessMemory {
 
     pub fn read_u64(&self, addr: RemotePtr) -> Result<u64, ScryError> {
         let b = self.read_bytes(addr, 8)?;
-        Ok(u64::from_le_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]))
+        Ok(u64::from_le_bytes([
+            b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
+        ]))
     }
 
     pub fn read_i32(&self, addr: RemotePtr) -> Result<i32, ScryError> {
@@ -73,7 +84,14 @@ impl ProcessMemory {
     }
 
     pub fn read_remote_ptr(&self, addr: RemotePtr) -> Result<RemotePtr, ScryError> {
-        Ok(RemotePtr::new(self.read_u32(addr)?))
+        match self.ptr_size {
+            4 => Ok(RemotePtr::from(self.read_u32(addr)?)),
+            8 => Ok(RemotePtr::new(self.read_u64(addr)?)),
+            other => Err(ScryError::Unsupported(format!(
+                "unsupported remote pointer size: {}",
+                other
+            ))),
+        }
     }
 
     /// Read a null-terminated UTF-8 (ASCII) C string up to `max` bytes.
@@ -84,12 +102,14 @@ impl ProcessMemory {
     }
 
     /// Read a Mono UTF-16 string. Mono strings have layout:
-    /// [vtable: u32][length: i32][chars: [u16; length]]
+    /// [MonoObject header][length: i32][chars: [u16; length]]
     pub fn read_mono_string(&self, addr: RemotePtr) -> Result<String, ScryError> {
         if addr.is_null() {
             return Ok(String::new());
         }
-        let length = self.read_i32(addr + 0x08)?.max(0) as usize;
+        let length_offset = self.ptr_size * 2;
+        let chars_offset = length_offset + 4;
+        let length = self.read_i32(addr + length_offset)?.max(0) as usize;
         if length == 0 {
             return Ok(String::new());
         }
@@ -99,7 +119,7 @@ impl ProcessMemory {
                 reason: format!("mono string length absurd: {}", length),
             });
         }
-        let bytes = self.read_bytes(addr + 0x0C, length * 2)?;
+        let bytes = self.read_bytes(addr + chars_offset, length * 2)?;
         let units: Vec<u16> = bytes
             .chunks_exact(2)
             .map(|c| u16::from_le_bytes([c[0], c[1]]))
@@ -121,7 +141,7 @@ mod tests {
         let pid = std::process::id();
         let handle = OwnedProcessHandle::open(pid).unwrap();
         let mem = ProcessMemory::new(handle);
-        let addr = RemotePtr::new(&MAGIC as *const u32 as u32);
+        let addr = RemotePtr::new(&MAGIC as *const u32 as u64);
         let got = mem.read_u32(addr).unwrap();
         assert_eq!(got, 0xDEADBEEF);
     }
@@ -144,7 +164,38 @@ mod tests {
         // We can't easily construct a static null-terminated cstring at a known address
         // in safe Rust without unsafe pointer manipulation. Skip strict assertion;
         // test that the call returns Ok or Err but doesn't panic on a valid address.
-        let addr = RemotePtr::new(&MAGIC as *const u32 as u32);
+        let addr = RemotePtr::new(&MAGIC as *const u32 as u64);
         let _ = mem.read_cstring(addr, 16);
+    }
+
+    #[test]
+    fn read_remote_ptr_uses_configured_64_bit_pointer_width() {
+        let value: u64 = 0x0000_1234_5678_9ABC;
+        let pid = std::process::id();
+        let handle = OwnedProcessHandle::open(pid).unwrap();
+        let mem = ProcessMemory::new_with_ptr_size(handle, 8);
+        let addr = RemotePtr::new(&value as *const u64 as u64);
+
+        let got = mem.read_remote_ptr(addr).unwrap();
+
+        assert_eq!(got.raw(), value);
+    }
+
+    #[test]
+    fn read_mono_string_uses_configured_64_bit_header_width() {
+        let pid = std::process::id();
+        let handle = OwnedProcessHandle::open(pid).unwrap();
+        let mem = ProcessMemory::new_with_ptr_size(handle, 8);
+        let buf = vec![0u8; 0x20];
+        let leaked: &'static mut [u8] = Box::leak(buf.into_boxed_slice());
+        leaked[0x10..0x14].copy_from_slice(&2_i32.to_le_bytes());
+        leaked[0x14..0x16].copy_from_slice(&('O' as u16).to_le_bytes());
+        leaked[0x16..0x18].copy_from_slice(&('K' as u16).to_le_bytes());
+
+        let got = mem
+            .read_mono_string(RemotePtr::new(leaked.as_ptr() as u64))
+            .unwrap();
+
+        assert_eq!(got, "OK");
     }
 }

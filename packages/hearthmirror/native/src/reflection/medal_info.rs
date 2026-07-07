@@ -166,10 +166,12 @@ pub async fn get_medal_info_internal(
         return Ok(Some(result));
     };
 
-    for (key_ptr, value_ptr) in custom_map::iter_entries(mem, inner_map, MAX_MEDAL_BUCKETS)? {
+    for (key_ptr, value_ptr) in
+        custom_map::iter_entries_with_key_size(mem, inner_map, 4, MAX_MEDAL_BUCKETS)?
+    {
         // `Map<int, V>` stores keys inline; `key_ptr.raw()` IS the FormatType
         // integer rather than a boxed object pointer.
-        let format_type = key_ptr.raw();
+        let format_type = key_ptr.raw() as u32;
         let Some(obj) = MonoObject::from_address(mem, value_ptr, runtime.offsets.clone())? else {
             continue;
         };
