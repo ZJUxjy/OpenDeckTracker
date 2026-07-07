@@ -15,9 +15,7 @@ pub struct ArenaInfoResult {
 pub async fn get_arena_deck_internal(
     runtime: &MonoRuntime,
 ) -> Result<Option<ArenaInfoResult>, ScryError> {
-    let Some(instance) =
-        runtime.get_singleton(CLS_DRAFT_MANAGER.0, CLS_DRAFT_MANAGER.1)?
-    else {
+    let Some(instance) = runtime.get_singleton(CLS_DRAFT_MANAGER.0, CLS_DRAFT_MANAGER.1)? else {
         return Ok(None);
     };
     let mem = &runtime.memory;

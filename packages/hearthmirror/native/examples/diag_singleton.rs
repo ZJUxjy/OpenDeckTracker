@@ -22,7 +22,10 @@ fn main() -> Result<(), ScryError> {
     let mem = &rt.memory;
     let off = &rt.offsets;
 
-    println!("=== diag_singleton: {}.{} ===", CLS_NET_CACHE.0, CLS_NET_CACHE.1);
+    println!(
+        "=== diag_singleton: {}.{} ===",
+        CLS_NET_CACHE.0, CLS_NET_CACHE.1
+    );
     println!(
         "ptr_size={} | class.runtime_info=+0x{:X} class.vtable_size=+0x{:X} \
          class.fields=+0x{:X} class.field_count=+0x{:X}",
@@ -46,8 +49,7 @@ fn main() -> Result<(), ScryError> {
 
     // 2-3. Manually re-walk D12 to validate `read_mono_class`'s computation.
     let class_off = &off.structs.class;
-    let runtime_info =
-        mem.read_remote_ptr(class.addr + class_off.runtime_info)?;
+    let runtime_info = mem.read_remote_ptr(class.addr + class_off.runtime_info)?;
     println!(
         "\n2. *(klass+0x{:X}=runtime_info) = {}",
         class_off.runtime_info, runtime_info
@@ -79,10 +81,7 @@ fn main() -> Result<(), ScryError> {
         vtable_ptr + off.structs.vtable.vtable_array_start + vtable_size * off.ptr_size;
     println!(
         "5. sfd_slot = vtable_ptr + 0x{:X} + {}*{} = {}",
-        off.structs.vtable.vtable_array_start,
-        vtable_size,
-        off.ptr_size,
-        sfd_slot_addr,
+        off.structs.vtable.vtable_array_start, vtable_size, off.ptr_size, sfd_slot_addr,
     );
 
     let sfd_value = mem.read_remote_ptr(sfd_slot_addr)?;
@@ -103,7 +102,13 @@ fn main() -> Result<(), ScryError> {
         } else {
             ""
         };
-        println!("  vtable[{:2}] @ +0x{:X} = {}{}", i, slot.raw() - vtable_ptr.raw(), v, marker);
+        println!(
+            "  vtable[{:2}] @ +0x{:X} = {}{}",
+            i,
+            slot.raw() - vtable_ptr.raw(),
+            v,
+            marker
+        );
     }
 
     // 8. Also dump some vtable header words so we can validate
@@ -124,7 +129,11 @@ fn main() -> Result<(), ScryError> {
     let mut entries: Vec<_> = class.fields.iter().collect();
     entries.sort_by_key(|(_, off)| **off);
     for (name, foff) in entries.iter().take(20) {
-        let mark = if *name == FLD_S_INSTANCE { " ← FLD_S_INSTANCE" } else { "" };
+        let mark = if *name == FLD_S_INSTANCE {
+            " ← FLD_S_INSTANCE"
+        } else {
+            ""
+        };
         println!("  +0x{:04X}  {}{}", foff, name, mark);
     }
 

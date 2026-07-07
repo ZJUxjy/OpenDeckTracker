@@ -128,6 +128,7 @@
         "create": "新建卡组",
         "import": "导入卡组码"
       },
+      "noActiveDeckHint": "提示：将某套卡组设为「当前卡组」，可在实时识别失败时自动作为备用方案。",
       "sync": {
         "button": "同步卡组",
         "syncing": "同步中…",
@@ -136,7 +137,8 @@
         "sourceLive": "实时",
         "sourceUnavailable": "游戏不可用",
         "sourceNotReady": "尚未就绪",
-        "sourceError": "错误"
+        "sourceError": "错误",
+        "unavailableHint": "请先在本局游戏内打开一次「收藏」（或选牌界面），游戏只有访问过这个页面后才会加载卡组数据，然后再重新同步。"
       },
       "filters": {
         "searchLabel": "搜索已保存卡组",
@@ -422,6 +424,7 @@
     "waitingForMatch": "等待对局开始...",
     "loadingMatch": "正在加载对局信息...",
     "deckNotDetected": "未识别到当前卡组。请在弹窗中选择。",
+    "deckNotDetectedHint": "提示：可在「卡组」页将某套卡组设为「当前卡组」，作为下次识别失败时的备用方案。",
     "unnamedDeck": "未命名卡组",
     "ladderWinrate": "天梯 {winrate}",
     "ladderWinrateEmpty": "天梯 --",

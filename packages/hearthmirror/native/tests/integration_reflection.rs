@@ -124,7 +124,10 @@ fn get_battleground_rating_info() {
         hearthmirror_native::reflection::battlegrounds::get_battleground_rating_info_internal(&rt),
     );
     assert!(result.is_ok(), "getBattlegroundRatingInfo should not error");
-    eprintln!("getBattlegroundRatingInfo: is_some={}", result.ok().flatten().is_some());
+    eprintln!(
+        "getBattlegroundRatingInfo: is_some={}",
+        result.ok().flatten().is_some()
+    );
 }
 
 #[test]

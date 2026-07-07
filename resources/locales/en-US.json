@@ -128,6 +128,7 @@
         "create": "Create deck",
         "import": "Import deckstring"
       },
+      "noActiveDeckHint": "Tip: mark a deck as your \"current deck\" so it's used automatically if live deck recognition ever fails.",
       "sync": {
         "button": "Sync decks",
         "syncing": "Syncing…",
@@ -136,7 +137,8 @@
         "sourceLive": "live",
         "sourceUnavailable": "unavailable",
         "sourceNotReady": "not ready",
-        "sourceError": "error"
+        "sourceError": "error",
+        "unavailableHint": "Open Hearthstone's Collection (or deck-picker) screen once this session, then sync again — the game only loads deck data after you visit it."
       },
       "filters": {
         "searchLabel": "Search saved decks",
@@ -422,6 +424,7 @@
     "waitingForMatch": "Waiting for match to start...",
     "loadingMatch": "Loading match information...",
     "deckNotDetected": "Current deck not detected. Select it in the dialog.",
+    "deckNotDetectedHint": "Tip: set a \"current deck\" in the Decks tab as a fallback for next time.",
     "unnamedDeck": "Unnamed Deck",
     "ladderWinrate": "Ladder {winrate}",
     "ladderWinrateEmpty": "Ladder --",

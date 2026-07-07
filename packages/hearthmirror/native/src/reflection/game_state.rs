@@ -27,9 +27,7 @@ pub struct GameTypeResult {
     pub mission_id: Option<i32>,
 }
 
-pub async fn get_game_type_internal(
-    runtime: &MonoRuntime,
-) -> Result<GameTypeResult, ScryError> {
+pub async fn get_game_type_internal(runtime: &MonoRuntime) -> Result<GameTypeResult, ScryError> {
     let Some(game_mgr) = runtime.get_service(SVC_GAME_MGR)? else {
         return Ok(GameTypeResult {
             game_type: None,

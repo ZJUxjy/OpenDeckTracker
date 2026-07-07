@@ -31,7 +31,12 @@ fn main() -> Result<(), ScryError> {
         let mark = if d.id == sel.deck_id { "  ★" } else { "   " };
         println!(
             "{} id={:>12}  name={:?}  hero={}  fmt={}  cards={}",
-            mark, d.id, d.name, d.hero, d.format_type, d.cards.iter().map(|c| c.count).sum::<i32>()
+            mark,
+            d.id,
+            d.name,
+            d.hero,
+            d.format_type,
+            d.cards.iter().map(|c| c.count).sum::<i32>()
         );
     }
 

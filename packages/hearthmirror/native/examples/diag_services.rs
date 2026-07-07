@@ -22,7 +22,11 @@ fn main() -> Result<(), ScryError> {
     let object_off = &rt.offsets.structs.object;
     let vtable_off = &rt.offsets.structs.vtable;
 
-    let sm = rt.find_class_in_image(SVC_LOCATOR_DLL, CLS_SERVICE_MANAGER.0, CLS_SERVICE_MANAGER.1)?;
+    let sm = rt.find_class_in_image(
+        SVC_LOCATOR_DLL,
+        CLS_SERVICE_MANAGER.0,
+        CLS_SERVICE_MANAGER.1,
+    )?;
     let Some(&sr_off) = sm.fields.get(FLD_S_RUNTIME_SERVICES) else {
         eprintln!("ServiceManager.s_runtimeServices field missing");
         std::process::exit(2);

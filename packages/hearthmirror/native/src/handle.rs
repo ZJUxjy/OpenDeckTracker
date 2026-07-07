@@ -25,14 +25,12 @@ impl OwnedProcessHandle {
     // in runtime.rs treats every healthy runtime as "process gone,"
     // causing an infinite invalidate→reinit loop and spamming the offset
     // prober warnings on every reinit.
-    const ACCESS: PROCESS_ACCESS_RIGHTS = PROCESS_ACCESS_RIGHTS(
-        PROCESS_QUERY_INFORMATION.0 | PROCESS_VM_READ.0 | SYNCHRONIZE,
-    );
+    const ACCESS: PROCESS_ACCESS_RIGHTS =
+        PROCESS_ACCESS_RIGHTS(PROCESS_QUERY_INFORMATION.0 | PROCESS_VM_READ.0 | SYNCHRONIZE);
 
     /// Open a target process by PID with read + query rights.
     pub fn open(pid: u32) -> Result<Self, ScryError> {
-        let handle = unsafe { OpenProcess(Self::ACCESS, false, pid) }
-            .map_err(ScryError::from)?;
+        let handle = unsafe { OpenProcess(Self::ACCESS, false, pid) }.map_err(ScryError::from)?;
         if handle.is_invalid() {
             return Err(ScryError::ProcessNotFound(format!("pid={}", pid)));
         }

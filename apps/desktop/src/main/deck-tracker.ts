@@ -101,6 +101,43 @@ function mirrorAbsent(): boolean {
 }
 
 /**
+ * Retry delays for the one-shot `getDecks()` read at match-start. A freshly
+ * (re)launched Hearthstone process may not have finished attaching Mono /
+ * initializing `CollectionManager` yet, so a single failed read shouldn't
+ * immediately fall back to the local "active deck" — give it a few short
+ * chances first, mirroring `deck-sync-service.ts`'s live-read retry pattern.
+ */
+const GET_DECKS_AT_MATCH_START_RETRY_DELAYS_MS = [250, 750, 1_500] as const;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Reads `mirror.getDecks()` at match-start, retrying a few times (short
+ * backoff) before giving up. Returns `true` when the live decks are
+ * genuinely unavailable after all attempts (caller should fall back to the
+ * locally-configured active deck), `false` once a non-null read succeeds.
+ */
+async function isLiveDecksUnavailableAtMatchStart(mirror: {
+  getDecks: () => Promise<unknown[] | null>;
+}): Promise<boolean> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const liveDecks = await mirror.getDecks();
+      if (liveDecks !== null) return false;
+    } catch (err) {
+      console.warn('[deck-tracker] getDecks failed at match-start', err);
+    }
+    if (attempt >= GET_DECKS_AT_MATCH_START_RETRY_DELAYS_MS.length) return true;
+    console.warn(
+      `[deck-tracker] getDecks unavailable at match-start — retrying (attempt ${attempt + 1}/${GET_DECKS_AT_MATCH_START_RETRY_DELAYS_MS.length})`,
+    );
+    await delay(GET_DECKS_AT_MATCH_START_RETRY_DELAYS_MS[attempt]!);
+  }
+}
+
+/**
  * CardDb reference used by `cardClassLookup` to resolve `HERO_*` cardIds
  * into the opposing player's `HeroClass`. Set asynchronously by the IPC
  * host once `ensureCardDb()` resolves; until then, `opponentClass`
@@ -601,17 +638,11 @@ export function startDeckTracker(deckStore: DeckStore): void {
     void (async () => {
       let useLocalActiveDeck = mirrorAbsent();
       if (!useLocalActiveDeck) {
-        try {
-          const liveDecks = await mirror.getDecks();
-          if (liveDecks === null) {
-            useLocalActiveDeck = true;
-            console.warn(
-              '[deck-tracker] getDecks unavailable at match-start — using active saved deck if set',
-            );
-          }
-        } catch (err) {
-          useLocalActiveDeck = true;
-          console.warn('[deck-tracker] getDecks failed at match-start', err);
+        useLocalActiveDeck = await isLiveDecksUnavailableAtMatchStart(mirror);
+        if (useLocalActiveDeck) {
+          console.warn(
+            '[deck-tracker] getDecks unavailable at match-start after retries — using active saved deck if set',
+          );
         }
       }
       applyActiveDeck({

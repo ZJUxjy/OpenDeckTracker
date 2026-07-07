@@ -1209,7 +1209,6 @@ export class DeckTracker {
     },
     opts: { emitSelection?: boolean } = {},
   ): Promise<boolean> {
-    if (matchInfo === null) return false;
     const emitSelection = opts.emitSelection ?? true;
     const decks = (await this.mirror.getDecks()) ?? [];
 
@@ -1227,12 +1226,20 @@ export class DeckTracker {
     }
 
     // Slow path: ask the configured identifier (typically chains
-    // InGameDeckIdentifier → CallbackDeckIdentifier).
-    const identified = await this.identifier.identify({ decks, matchInfo });
-    if (identified !== null) {
-      this.applyIdentifiedDeck(identified);
-      this.awaitingDeckSelection = false;
-      return true;
+    // InGameDeckIdentifier → CallbackDeckIdentifier). Requires a real
+    // `matchInfo` — skipped when HearthMirror never produced one this
+    // match (log-derived phase signals can still drive IDLE→PRE_MATCH→
+    // IN_MATCH transitions on their own, e.g. when the Mono runtime
+    // never attached this session). Falls through to the manual
+    // selection dialog below instead of leaving the user stuck with no
+    // recourse at all.
+    if (matchInfo !== null) {
+      const identified = await this.identifier.identify({ decks, matchInfo });
+      if (identified !== null) {
+        this.applyIdentifiedDeck(identified);
+        this.awaitingDeckSelection = false;
+        return true;
+      }
     }
 
     const visibleCandidates = findDecksFromVisibleFriendlyCards(decks, visibleState);
@@ -1244,7 +1251,10 @@ export class DeckTracker {
     }
     if (!emitSelection) return false;
     // No automatic match — emit a `needs-deck-selection` event with
-    // the available decks so the renderer can prompt the user.
+    // the available decks (possibly empty when HearthMirror is fully
+    // unavailable) so the renderer can prompt the user; the dialog
+    // itself falls back to the user's locally saved decks when the
+    // live list is empty.
     this.cachedDecks = visibleCandidates.length > 0 ? visibleCandidates : decks;
     this.awaitingDeckSelection = true;
     this.emit({

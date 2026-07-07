@@ -38,8 +38,7 @@ pub const FLD_S_INSTANCE: &str = "s_instance";
 // + the change design doc for the verified field layout.
 
 pub const SVC_LOCATOR_DLL: &str = "Blizzard.T5.ServiceLocator.dll";
-pub const CLS_SERVICE_MANAGER: (&str, &str) =
-    ("Blizzard.T5.Services", "ServiceManager");
+pub const CLS_SERVICE_MANAGER: (&str, &str) = ("Blizzard.T5.Services", "ServiceManager");
 pub const FLD_S_RUNTIME_SERVICES: &str = "s_runtimeServices";
 pub const FLD_M_SERVICES: &str = "m_services";
 pub const FLD_SERVICE_TYPE_NAME: &str = "<ServiceTypeName>k__BackingField";

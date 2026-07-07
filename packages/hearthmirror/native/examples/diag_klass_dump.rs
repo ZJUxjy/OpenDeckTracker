@@ -63,7 +63,9 @@ fn main() -> Result<(), ScryError> {
 
     // Try resolving name via the baseline offset
     println!();
-    let name_ptr = mem.read_remote_ptr(klass + class_off.name).unwrap_or(RemotePtr::NULL);
+    let name_ptr = mem
+        .read_remote_ptr(klass + class_off.name)
+        .unwrap_or(RemotePtr::NULL);
     let name = if name_ptr.is_null() {
         "<name_ptr = NULL>".to_string()
     } else {
@@ -79,19 +81,23 @@ fn main() -> Result<(), ScryError> {
     println!();
     println!("--- Brute-force name offset scan (any u32 in [+0x00..+0x80] that points at a printable c-string) ---");
     for off in (0..0x80_u32).step_by(4) {
-        let Ok(candidate) = mem.read_remote_ptr(klass + off) else { continue };
+        let Ok(candidate) = mem.read_remote_ptr(klass + off) else {
+            continue;
+        };
         if candidate.is_null() {
             continue;
         }
-        let Ok(s) = mem.read_cstring(candidate, 64) else { continue };
+        let Ok(s) = mem.read_cstring(candidate, 64) else {
+            continue;
+        };
         let first_bytes = s.as_bytes();
         if first_bytes.is_empty() || first_bytes.len() > 63 {
             continue;
         }
         // Require the first char to be a reasonable class-name starter
-        let ok = first_bytes.iter().take(8).all(|b| {
-            matches!(b, b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'_' | b'<' | b'`' | b' ')
-        });
+        let ok = first_bytes.iter().take(8).all(
+            |b| matches!(b, b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'_' | b'<' | b'`' | b' '),
+        );
         if ok && !s.trim().is_empty() {
             println!("  +0x{:02X} → {} → {:?}", off, candidate, s);
         }

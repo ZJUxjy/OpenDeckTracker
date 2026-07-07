@@ -16,8 +16,8 @@ impl HeapIndexWidth {
     pub fn from_heap_sizes(byte: u8) -> Self {
         Self {
             string: if byte & 0x01 != 0 { 4 } else { 2 },
-            guid:   if byte & 0x02 != 0 { 4 } else { 2 },
-            blob:   if byte & 0x04 != 0 { 4 } else { 2 },
+            guid: if byte & 0x02 != 0 { 4 } else { 2 },
+            blob: if byte & 0x04 != 0 { 4 } else { 2 },
         }
     }
 }
@@ -67,8 +67,8 @@ mod tests {
         for &(hs, sw, gw, bw) in cases {
             let w = HeapIndexWidth::from_heap_sizes(hs);
             assert_eq!(w.string, sw, "heap_sizes={:#03b} string", hs);
-            assert_eq!(w.guid,   gw, "heap_sizes={:#03b} guid",   hs);
-            assert_eq!(w.blob,   bw, "heap_sizes={:#03b} blob",   hs);
+            assert_eq!(w.guid, gw, "heap_sizes={:#03b} guid", hs);
+            assert_eq!(w.blob, bw, "heap_sizes={:#03b} blob", hs);
         }
     }
 

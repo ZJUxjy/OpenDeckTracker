@@ -131,7 +131,12 @@ export function LiveDeckPanel() {
     return <EmptyState message={t('deckTracker.loadingMatch')} />;
   }
   if (!snapshot.deck) {
-    return <EmptyState message={t('deckTracker.deckNotDetected')} />;
+    return (
+      <EmptyState
+        message={t('deckTracker.deckNotDetected')}
+        hint={t('deckTracker.deckNotDetectedHint')}
+      />
+    );
   }
 
   return <DeckPanelInner snapshot={snapshot} />;

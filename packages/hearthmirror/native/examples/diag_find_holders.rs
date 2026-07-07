@@ -44,10 +44,18 @@ fn main() -> Result<(), ScryError> {
     let rt = MonoRuntime::init()?;
     let mem = &rt.memory;
 
-    let sm = rt.find_class_in_image(SVC_LOCATOR_DLL, CLS_SERVICE_MANAGER.0, CLS_SERVICE_MANAGER.1)?;
-    let sr_off = *sm.fields.get(FLD_S_RUNTIME_SERVICES).ok_or_else(|| {
-        ScryError::FieldNotFound { class: "ServiceManager".into(), field: FLD_S_RUNTIME_SERVICES.into() }
-    })?;
+    let sm = rt.find_class_in_image(
+        SVC_LOCATOR_DLL,
+        CLS_SERVICE_MANAGER.0,
+        CLS_SERVICE_MANAGER.1,
+    )?;
+    let sr_off =
+        *sm.fields
+            .get(FLD_S_RUNTIME_SERVICES)
+            .ok_or_else(|| ScryError::FieldNotFound {
+                class: "ServiceManager".into(),
+                field: FLD_S_RUNTIME_SERVICES.into(),
+            })?;
     let locator_ptr = mem.read_remote_ptr(sm.static_field_data + sr_off)?;
     let Some(locator) = MonoObject::from_address(mem, locator_ptr, rt.offsets.clone())? else {
         eprintln!("ServiceLocator NULL");
@@ -73,7 +81,16 @@ fn main() -> Result<(), ScryError> {
         };
 
         let mut visited = HashSet::new();
-        scan(mem, &rt.offsets, svc_inst.addr, &targets, &svc_name, 0, &mut visited, &mut hits)?;
+        scan(
+            mem,
+            &rt.offsets,
+            svc_inst.addr,
+            &targets,
+            &svc_name,
+            0,
+            &mut visited,
+            &mut hits,
+        )?;
     }
 
     println!("\nDone. {} hits.", hits);
@@ -100,20 +117,40 @@ fn scan(
     let object_off = &offsets.structs.object;
     let vtable_off = &offsets.structs.vtable;
     let class_off = &offsets.structs.class;
-    let Ok(vt) = mem.read_remote_ptr(addr + object_off.vtable) else { return Ok(()); };
+    let Ok(vt) = mem.read_remote_ptr(addr + object_off.vtable) else {
+        return Ok(());
+    };
     if vt.is_null() {
         return Ok(());
     }
-    let Ok(klass) = mem.read_remote_ptr(vt + vtable_off.klass) else { return Ok(()); };
+    let Ok(klass) = mem.read_remote_ptr(vt + vtable_off.klass) else {
+        return Ok(());
+    };
     if klass.is_null() {
         return Ok(());
     }
     if targets.contains(&klass.raw()) {
-        let np = mem.read_remote_ptr(klass + class_off.name).unwrap_or(RemotePtr::NULL);
-        let nsp = mem.read_remote_ptr(klass + class_off.name_space).unwrap_or(RemotePtr::NULL);
-        let nm = if np.is_null() { String::new() } else { mem.read_cstring(np, 256).unwrap_or_default() };
-        let ns = if nsp.is_null() { String::new() } else { mem.read_cstring(nsp, 256).unwrap_or_default() };
-        let ty = if ns.is_empty() { nm } else { format!("{}.{}", ns, nm) };
+        let np = mem
+            .read_remote_ptr(klass + class_off.name)
+            .unwrap_or(RemotePtr::NULL);
+        let nsp = mem
+            .read_remote_ptr(klass + class_off.name_space)
+            .unwrap_or(RemotePtr::NULL);
+        let nm = if np.is_null() {
+            String::new()
+        } else {
+            mem.read_cstring(np, 256).unwrap_or_default()
+        };
+        let ns = if nsp.is_null() {
+            String::new()
+        } else {
+            mem.read_cstring(nsp, 256).unwrap_or_default()
+        };
+        let ty = if ns.is_empty() {
+            nm
+        } else {
+            format!("{}.{}", ns, nm)
+        };
         println!("  HIT: {}  →  {} @ {}", path, ty, addr);
         *hits += 1;
         return Ok(());
@@ -124,28 +161,45 @@ fn scan(
     // look like managed object pointers (we don't have full MonoType
     // resolution here — accept any non-null read that has a plausible
     // vtable when we descend).
-    let Ok(defs) = read_class_field_defs(mem, klass, offsets) else { return Ok(()); };
+    let Ok(defs) = read_class_field_defs(mem, klass, offsets) else {
+        return Ok(());
+    };
     for d in defs {
         if d.is_static {
             continue;
         }
         // Read 4 bytes as a candidate pointer.
-        let Ok(child_ptr) = mem.read_remote_ptr(addr + d.offset) else { continue; };
+        let Ok(child_ptr) = mem.read_remote_ptr(addr + d.offset) else {
+            continue;
+        };
         if child_ptr.is_null() || child_ptr.raw() < 0x10000 {
             continue;
         }
         // Try to validate as an object: vtable → klass; if either fails,
         // skip silently.
-        let Ok(cvt) = mem.read_remote_ptr(child_ptr + object_off.vtable) else { continue; };
+        let Ok(cvt) = mem.read_remote_ptr(child_ptr + object_off.vtable) else {
+            continue;
+        };
         if cvt.is_null() {
             continue;
         }
-        let Ok(ck) = mem.read_remote_ptr(cvt + vtable_off.klass) else { continue; };
+        let Ok(ck) = mem.read_remote_ptr(cvt + vtable_off.klass) else {
+            continue;
+        };
         if ck.is_null() {
             continue;
         }
         let new_path = format!("{}.{}", path, d.name);
-        scan(mem, offsets, child_ptr, targets, &new_path, depth + 1, visited, hits)?;
+        scan(
+            mem,
+            offsets,
+            child_ptr,
+            targets,
+            &new_path,
+            depth + 1,
+            visited,
+            hits,
+        )?;
     }
     Ok(())
 }

@@ -202,6 +202,29 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('emits needs-deck-selection even when HearthMirror never produced matchInfo this match (log-driven phase only)', async () => {
+    // Simulates a session where the Mono runtime never attached (mirror.getMatchInfo/
+    // getDecks/getSelectedDeckId all stay null all match), but HearthWatcher's
+    // Power.log-derived signals still drove IDLE -> PRE_MATCH -> IN_MATCH. The user
+    // must still get the manual deck-select dialog instead of being stuck with
+    // deck=null and no way to fix it.
+    const { mirror, state } = makeMirror();
+    state.decks = [];
+    const events: DeckTrackerEvent[] = [];
+    const tracker = new DeckTracker({
+      mirror,
+      logPhaseSignals: () => ({ matchActive: true, inPlay: true, gameOver: false }),
+    });
+    tracker.on('needs-deck-selection', (e) => events.push(e));
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().phase).toBe('IN_MATCH');
+    expect(events.length).toBeGreaterThanOrEqual(1);
+    expect(events[0]?.decks).toEqual([]);
+    tracker.stop();
+  });
+
   it('CallbackDeckIdentifier populates snapshot.deck on transition to IN_MATCH', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

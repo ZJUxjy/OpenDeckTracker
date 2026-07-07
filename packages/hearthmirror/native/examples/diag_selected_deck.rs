@@ -22,24 +22,40 @@ fn main() -> Result<(), ScryError> {
     println!("DeckPickerTrayDisplay @ {}", instance.addr);
 
     let mem = &rt.memory;
-    let format_type = instance.read_int32_field(mem, FLD_VISUALS_FORMAT_TYPE)?.unwrap_or(0);
+    let format_type = instance
+        .read_int32_field(mem, FLD_VISUALS_FORMAT_TYPE)?
+        .unwrap_or(0);
     println!("m_visualsFormatType = {}", format_type);
 
     let Some(box_obj) = instance.read_object_field(mem, FLD_SELECTED_CUSTOM_DECK_BOX)? else {
         println!("m_selectedCustomDeckBox is null (no deck currently highlighted)");
         return Ok(());
     };
-    println!("m_selectedCustomDeckBox @ {}  class = {}", box_obj.addr, box_obj.fields.len());
+    println!(
+        "m_selectedCustomDeckBox @ {}  class = {}",
+        box_obj.addr,
+        box_obj.fields.len()
+    );
 
-    let deck_id = box_obj.read_int64_field(mem, FLD_DECK_BOX_DECK_ID)?.unwrap_or(0);
-    let template_id = box_obj.read_int32_field(mem, FLD_DECK_BOX_TEMPLATE_ID)?.unwrap_or(0);
+    let deck_id = box_obj
+        .read_int64_field(mem, FLD_DECK_BOX_DECK_ID)?
+        .unwrap_or(0);
+    let template_id = box_obj
+        .read_int32_field(mem, FLD_DECK_BOX_TEMPLATE_ID)?
+        .unwrap_or(0);
     println!("m_deckID         = {}", deck_id);
     println!("m_deckTemplateId = {}", template_id);
 
     if deck_id > 0 {
-        println!("\n→ user has highlighted a saved CollectionDeck (id={})", deck_id);
+        println!(
+            "\n→ user has highlighted a saved CollectionDeck (id={})",
+            deck_id
+        );
     } else if template_id > 0 {
-        println!("\n→ user has highlighted a Blizzard template deck (template_id={})", template_id);
+        println!(
+            "\n→ user has highlighted a Blizzard template deck (template_id={})",
+            template_id
+        );
     } else {
         println!("\n→ deck box is empty (very unusual; no deck selected)");
     }

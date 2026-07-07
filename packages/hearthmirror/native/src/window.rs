@@ -13,15 +13,17 @@
 use std::cell::Cell;
 use std::ptr::null_mut;
 
-use windows::Win32::Foundation::{CloseHandle, BOOL, HWND, LPARAM, MAX_PATH, RECT};
+use windows::Win32::Foundation::{
+    CloseHandle, GetLastError, SetLastError, BOOL, HWND, LPARAM, MAX_PATH, RECT, WIN32_ERROR,
+};
 use windows::Win32::System::Threading::{
     OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     EnumWindows, GetClassNameW, GetForegroundWindow, GetWindow, GetWindowLongPtrW, GetWindowRect,
-    GetWindowThreadProcessId, IsIconic, IsWindowVisible, SetWindowPos, GWL_EXSTYLE, GW_HWNDPREV,
-    HWND_NOTOPMOST, HWND_TOP, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE,
-    SWP_SHOWWINDOW, WS_EX_TOPMOST,
+    GetWindowThreadProcessId, IsIconic, IsWindowVisible, SetWindowLongPtrW, SetWindowPos,
+    GWLP_HWNDPARENT, GWL_EXSTYLE, GW_HWNDPREV, HWND_NOTOPMOST, HWND_TOP, SWP_NOACTIVATE,
+    SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE, SWP_SHOWWINDOW, WS_EX_TOPMOST,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -198,6 +200,81 @@ pub fn place_window_above_hearthstone(overlay_hwnd: HWND) -> windows::core::Resu
     Ok(true)
 }
 
+/// Make the Hearthstone window the OWNER (GWLP_HWNDPARENT) of the overlay
+/// window. Owned windows stay above their owner in z-order without any
+/// topmost juggling, and minimize/restore with it. Returns false when the
+/// Hearthstone window cannot be found or the call fails. Passing the same
+/// owner twice is a cheap no-op at the OS level, so callers may re-invoke
+/// freely (e.g. after the game restarts with a new HWND).
+pub fn set_window_owner_to_hearthstone(overlay_hwnd: HWND) -> bool {
+    if overlay_hwnd.0.is_null() {
+        return false;
+    }
+    let Some(hearthstone_hwnd) = find_hearthstone_hwnd() else {
+        return false;
+    };
+    if overlay_hwnd == hearthstone_hwnd {
+        return false;
+    }
+
+    // SetWindowLongPtrW returns the *previous* GWLP_HWNDPARENT value, which
+    // can legitimately be 0 (no prior owner). On a 0 return we must consult
+    // GetLastError to distinguish "no previous owner" from "call failed".
+    unsafe { SetLastError(WIN32_ERROR(0)) };
+    // SAFETY: overlay_hwnd is supplied by Electron for our overlay window;
+    // hearthstone_hwnd was just located via EnumWindows. GWLP_HWNDPARENT is
+    // a documented, 64-bit-only index — this crate targets x64 only.
+    let previous =
+        unsafe { SetWindowLongPtrW(overlay_hwnd, GWLP_HWNDPARENT, hearthstone_hwnd.0 as isize) };
+    if previous == 0 {
+        // SAFETY: read-only call immediately after the operation above.
+        let err = unsafe { GetLastError() };
+        if err.0 != 0 {
+            return false;
+        }
+    }
+
+    // Force the z-order to re-evaluate immediately against the new owner
+    // relationship. Best-effort: ignore failures here, the owner change
+    // itself already succeeded.
+    // SAFETY: overlay_hwnd is a valid top-level window handle.
+    let _ = unsafe {
+        SetWindowPos(
+            overlay_hwnd,
+            HWND_TOP,
+            0,
+            0,
+            0,
+            0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+        )
+    };
+    true
+}
+
+/// Clear any owner previously set via [`set_window_owner_to_hearthstone`].
+/// Needed when the game exits/restarts so a stale owner HWND doesn't keep
+/// the overlay hostage (an owner HWND that no longer exists can leave the
+/// owned window unable to show).
+pub fn clear_window_owner(overlay_hwnd: HWND) -> bool {
+    if overlay_hwnd.0.is_null() {
+        return false;
+    }
+
+    // SAFETY: see set_window_owner_to_hearthstone — same 0-return ambiguity.
+    unsafe { SetLastError(WIN32_ERROR(0)) };
+    // SAFETY: overlay_hwnd is supplied by Electron for our overlay window.
+    let previous = unsafe { SetWindowLongPtrW(overlay_hwnd, GWLP_HWNDPARENT, 0) };
+    if previous == 0 {
+        // SAFETY: read-only call immediately after the operation above.
+        let err = unsafe { GetLastError() };
+        if err.0 != 0 {
+            return false;
+        }
+    }
+    true
+}
+
 /// Locate the Hearthstone window and read its bounds + visibility flags.
 /// Returns `None` if no matching window exists (Hearthstone not running,
 /// or running pre-window).
@@ -255,5 +332,15 @@ mod tests {
     #[test]
     fn no_window_above_hearthstone_needs_reposition_to_top() {
         assert!(should_reposition_overlay(false, HWND(null_mut()), hwnd(1)));
+    }
+
+    #[test]
+    fn set_window_owner_rejects_null_overlay_hwnd() {
+        assert!(!set_window_owner_to_hearthstone(HWND(null_mut())));
+    }
+
+    #[test]
+    fn clear_window_owner_rejects_null_overlay_hwnd() {
+        assert!(!clear_window_owner(HWND(null_mut())));
     }
 }

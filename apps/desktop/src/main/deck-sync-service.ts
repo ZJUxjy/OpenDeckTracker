@@ -46,7 +46,9 @@ export interface DeckSyncDependencies {
   collectibleLookup: SaveFromLiveCardLookup;
   /**
    * Hearthstone may report an empty m_decks map briefly while the collection
-   * scene is still hydrating. Retry empty reads before treating them as real.
+   * scene is still hydrating, or `getDecks()` may return `null` briefly
+   * while HearthMirror/Mono is still attaching after a (re)launch. Retry
+   * both empty and null reads before treating them as real / unavailable.
    */
   liveReadRetryDelaysMs?: readonly number[];
 }
@@ -214,7 +216,7 @@ async function readLiveDecks(
   const delays = deps.liveReadRetryDelaysMs ?? DEFAULT_LIVE_READ_RETRY_DELAYS_MS;
   for (let attempt = 0; ; attempt += 1) {
     const live = await deps.getLiveDecks();
-    if (live === null || live.length > 0 || attempt >= delays.length) {
+    if ((live !== null && live.length > 0) || attempt >= delays.length) {
       return live;
     }
     await sleep(delays[attempt]!);

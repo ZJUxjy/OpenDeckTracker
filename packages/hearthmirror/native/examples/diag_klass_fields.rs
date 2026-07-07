@@ -29,8 +29,16 @@ fn main() -> Result<(), ScryError> {
 
     let name_ptr = mem.read_remote_ptr(klass + class_off.name)?;
     let ns_ptr = mem.read_remote_ptr(klass + class_off.name_space)?;
-    let name = if name_ptr.is_null() { String::new() } else { mem.read_cstring(name_ptr, 256)? };
-    let ns = if ns_ptr.is_null() { String::new() } else { mem.read_cstring(ns_ptr, 256)? };
+    let name = if name_ptr.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(name_ptr, 256)?
+    };
+    let ns = if ns_ptr.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(ns_ptr, 256)?
+    };
 
     println!("=== diag_klass_fields: {}.{}  @ {} ===", ns, name, klass);
 

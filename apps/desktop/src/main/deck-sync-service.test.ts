@@ -241,11 +241,31 @@ describe('deck-sync-service', () => {
       getLiveDecks: async () => null,
       resolveHeroClass: () => 'HUNTER',
       collectibleLookup: () => ({ collectible: true }),
+      liveReadRetryDelaysMs: [0],
     });
 
     const result = await svc.syncOnce();
     expect(result.synced).toBe(0);
     expect(store.saveFromLive).not.toHaveBeenCalled();
+  });
+
+  it('retries a null live-decks read (transient mirror-attach race) before giving up', async () => {
+    const store = makeStore();
+    const reads: Array<readonly LiveDeck[] | null> = [null, [liveDeck({ id: 3 })]];
+    const getLiveDecks = vi.fn(async () => (reads.length > 0 ? reads.shift()! : null));
+    const svc = createDeckSyncService({
+      store,
+      getLiveDecks,
+      resolveHeroClass: () => 'HUNTER',
+      collectibleLookup: () => ({ collectible: true }),
+      liveReadRetryDelaysMs: [0],
+    });
+
+    const result = await svc.syncOnce();
+
+    expect(getLiveDecks).toHaveBeenCalledTimes(2);
+    expect(result.source).toBe('live');
+    expect(result.synced).toBe(1);
   });
 
   it('skips decks with an unrecognized hero portrait', async () => {
@@ -404,6 +424,7 @@ describe('deck-sync-service', () => {
       getLiveDecks: async () => null,
       resolveHeroClass: () => 'HUNTER',
       collectibleLookup: () => ({ collectible: true }),
+      liveReadRetryDelaysMs: [0],
     });
 
     const result = await svc.syncOnce();

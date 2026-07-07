@@ -58,6 +58,8 @@ export interface ChoicesResult {
   general?: ChoiceGroup
 }
 
+export declare function clearWindowOwner(nativeWindowHandle: Buffer): boolean
+
 /**
  * Structured diagnostic surfaced to JS consumers. Mirrors `CollectionCounters`
  * but with napi-compatible field types (`i32` instead of `usize`/`u128`).
@@ -288,6 +290,8 @@ export interface SelectedDeckResult {
   /** Currently visible format tab — `PegasusShared.FormatType` enum. */
   formatType: number
 }
+
+export declare function setWindowOwnerToHearthstone(nativeWindowHandle: Buffer): boolean
 
 export declare function subscribeHearthstoneWindowEvents(callback: (() => void)): number
 

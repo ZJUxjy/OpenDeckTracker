@@ -604,3 +604,94 @@ describe('OverlayManager darwin foreground gate', () => {
     expect(win.isVisible()).toBe(true); // shown without foreground
   });
 });
+
+describe('OverlayManager owner-window (Win32 GWLP_HWNDPARENT)', () => {
+  it('attaches Hearthstone as Win32 owner when available, then skips legacy topmost z-order', () => {
+    const setWindowOwnerToHearthstone = vi.fn(() => true);
+    const placeWindowAboveHearthstone = vi.fn(() => true);
+    const mgr = makeManager({ setWindowOwnerToHearthstone, placeWindowAboveHearthstone });
+    mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+
+    expect(setWindowOwnerToHearthstone).toHaveBeenCalledWith(win._nativeHandle);
+
+    win.setAlwaysOnTop.mockClear();
+    placeWindowAboveHearthstone.mockClear();
+
+    mgr.setTargetForeground(true);
+
+    expect(win.setAlwaysOnTop).not.toHaveBeenCalledWith(true, 'screen-saver');
+    expect(placeWindowAboveHearthstone).not.toHaveBeenCalled();
+  });
+
+  it('falls back to legacy topmost z-order when owner attach fails', () => {
+    const setWindowOwnerToHearthstone = vi.fn(() => false);
+    const mgr = makeManager({ setWindowOwnerToHearthstone });
+    mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+    win.setAlwaysOnTop.mockClear();
+
+    mgr.setTargetForeground(true);
+
+    expect(win.setAlwaysOnTop).toHaveBeenCalledWith(true, 'screen-saver');
+  });
+
+  it('detaches the owner when visibility is lost, and re-attaches on the next show', () => {
+    const setWindowOwnerToHearthstone = vi.fn(() => true);
+    const clearWindowOwner = vi.fn(() => true);
+    const mgr = makeManager({ setWindowOwnerToHearthstone, clearWindowOwner });
+    mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+    expect(setWindowOwnerToHearthstone).toHaveBeenCalledTimes(1);
+
+    mgr.setVisibleOnScreen(false);
+    expect(clearWindowOwner).toHaveBeenCalledTimes(1);
+    expect(clearWindowOwner).toHaveBeenCalledWith(win._nativeHandle);
+
+    mgr.setVisibleOnScreen(true);
+    expect(setWindowOwnerToHearthstone).toHaveBeenCalledTimes(2);
+  });
+
+  it('never attaches an owner on darwin', () => {
+    const setWindowOwnerToHearthstone = vi.fn(() => true);
+    const mgr = new OverlayManager({
+      rendererUrl: 'r',
+      preloadPath: 'p',
+      platform: 'darwin',
+      setWindowOwnerToHearthstone,
+    });
+    mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setVisibleOnScreen(true);
+    mgr.setInActiveMatch(true);
+    mgr.setTargetForeground(true);
+
+    expect(setWindowOwnerToHearthstone).not.toHaveBeenCalled();
+  });
+
+  it('disable() after owner attach detaches the owner', () => {
+    const setWindowOwnerToHearthstone = vi.fn(() => true);
+    const clearWindowOwner = vi.fn(() => true);
+    const mgr = makeManager({ setWindowOwnerToHearthstone, clearWindowOwner });
+    mgr.enable();
+    applyTrackerBounds(mgr);
+    mgr.setInActiveMatch(true);
+    mgr.setVisibleOnScreen(true);
+    const win = lastWindow();
+    expect(setWindowOwnerToHearthstone).toHaveBeenCalledTimes(1);
+
+    mgr.disable();
+
+    expect(clearWindowOwner).toHaveBeenCalledTimes(1);
+    expect(clearWindowOwner).toHaveBeenCalledWith(win._nativeHandle);
+  });
+});

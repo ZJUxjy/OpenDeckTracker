@@ -43,9 +43,15 @@ fn main() -> Result<(), ScryError> {
         .read_remote_ptr(rt.root_domain + domain_off.domain_assemblies)?;
     let assemblies = glist::iter(&rt.memory, head, 500)?;
 
-    println!("=== diag_images: {} assemblies in domain ===", assemblies.len());
+    println!(
+        "=== diag_images: {} assemblies in domain ===",
+        assemblies.len()
+    );
     if !target_name.is_empty() {
-        println!("Searching for: namespace={:?}  name={:?}", target_ns, target_name);
+        println!(
+            "Searching for: namespace={:?}  name={:?}",
+            target_ns, target_name
+        );
     }
     println!();
 
@@ -82,8 +88,7 @@ fn main() -> Result<(), ScryError> {
                         }
                         let lname = c.full_name.split('.').next_back().unwrap_or("");
                         let lns = c.full_name.rsplit_once('.').map(|(a, _)| a).unwrap_or("");
-                        lname == target_name
-                            && (target_ns.is_empty() || lns == target_ns)
+                        lname == target_name && (target_ns.is_empty() || lns == target_ns)
                     })
                     .collect();
                 if !hits.is_empty() {

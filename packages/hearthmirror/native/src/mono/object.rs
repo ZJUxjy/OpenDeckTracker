@@ -113,11 +113,7 @@ impl MonoObject {
     /// stay cheap because the parent walk is shallow (≤4 in practice for
     /// Hearthstone's class graph) and cached `MonoFieldDef`s are computed
     /// from already-paged memory.
-    fn field_offset(
-        &self,
-        memory: &ProcessMemory,
-        field: &str,
-    ) -> Result<Option<u32>, ScryError> {
+    fn field_offset(&self, memory: &ProcessMemory, field: &str) -> Result<Option<u32>, ScryError> {
         if let Some(&offset) = self.fields.get(field) {
             return Ok(Some(offset));
         }
@@ -268,10 +264,13 @@ pub fn read_field_u32(
     instance: RemotePtr,
     field: &str,
 ) -> Result<u32, ScryError> {
-    let offset = *class.fields.get(field).ok_or_else(|| ScryError::FieldNotFound {
-        class: class.full_name.clone(),
-        field: field.into(),
-    })?;
+    let offset = *class
+        .fields
+        .get(field)
+        .ok_or_else(|| ScryError::FieldNotFound {
+            class: class.full_name.clone(),
+            field: field.into(),
+        })?;
     memory.read_u32(instance + offset)
 }
 

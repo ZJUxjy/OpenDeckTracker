@@ -12,8 +12,7 @@ pub struct BattlegroundRatingInfoResult {
 pub async fn get_battleground_rating_info_internal(
     runtime: &MonoRuntime,
 ) -> Result<Option<BattlegroundRatingInfoResult>, ScryError> {
-    let Some(instance) =
-        runtime.get_singleton(CLS_BACON_RATING_MGR.0, CLS_BACON_RATING_MGR.1)?
+    let Some(instance) = runtime.get_singleton(CLS_BACON_RATING_MGR.0, CLS_BACON_RATING_MGR.1)?
     else {
         return Ok(None);
     };

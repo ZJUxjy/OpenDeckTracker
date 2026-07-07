@@ -48,6 +48,16 @@ if (!gotLock) {
     app.commandLine.appendSwitch('disable-http-cache');
   }
 
+  // The overlays sit on top of the (usually maximized) Hearthstone window,
+  // so Chromium's native window-occlusion tracker will mark them or the
+  // main window as occluded and pause rendering. Symptom: after alt-tab
+  // the overlay window stays transparent/blank until a visibility change
+  // forces a repaint. Disable occlusion tracking and background throttling
+  // so overlay renderers keep painting while the game is in front.
+  app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
+  app.commandLine.appendSwitch('disable-renderer-backgrounding');
+  app.commandLine.appendSwitch('disable-background-timer-throttling');
+
   // Track the main window explicitly. `BrowserWindow.getAllWindows()[0]`
   // would happily return an overlay or the card-preview window — neither
   // is what the user expects when they double-click the desktop icon a
@@ -76,6 +86,9 @@ if (!gotLock) {
       onFocusChange: () => recomputeOverlayForeground(),
       placeWindowAboveHearthstone: (handle) =>
         getHearthMirror().placeWindowAboveHearthstone(handle),
+      setWindowOwnerToHearthstone: (handle) =>
+        getHearthMirror().setWindowOwnerToHearthstone(handle),
+      clearWindowOwner: (handle) => getHearthMirror().clearWindowOwner(handle),
     });
     const opponentOverlay = new OverlayManager({
       rendererUrl,
@@ -84,6 +97,9 @@ if (!gotLock) {
       onFocusChange: () => recomputeOverlayForeground(),
       placeWindowAboveHearthstone: (handle) =>
         getHearthMirror().placeWindowAboveHearthstone(handle),
+      setWindowOwnerToHearthstone: (handle) =>
+        getHearthMirror().setWindowOwnerToHearthstone(handle),
+      clearWindowOwner: (handle) => getHearthMirror().clearWindowOwner(handle),
     });
 
     // Each overlay is a small panel-sized window anchored to one edge of

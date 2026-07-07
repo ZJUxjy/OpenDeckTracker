@@ -5,26 +5,43 @@
 
 use hearthmirror_native::collections::custom_map;
 use hearthmirror_native::error::ScryError;
-use hearthmirror_native::mono::object::MonoObject;
 use hearthmirror_native::mono::class::read_mono_class;
+use hearthmirror_native::mono::object::MonoObject;
 use hearthmirror_native::mono::MonoRuntime;
 
-fn klass_name(rt: &MonoRuntime, addr: hearthmirror_native::remote_ptr::RemotePtr)
-    -> Result<String, ScryError>
-{
+fn klass_name(
+    rt: &MonoRuntime,
+    addr: hearthmirror_native::remote_ptr::RemotePtr,
+) -> Result<String, ScryError> {
     let mem = &rt.memory;
     let object_off = &rt.offsets.structs.object;
     let vtable_off = &rt.offsets.structs.vtable;
     let class_off = &rt.offsets.structs.class;
     let vt = mem.read_remote_ptr(addr + object_off.vtable)?;
-    if vt.is_null() { return Ok("<null vt>".into()); }
+    if vt.is_null() {
+        return Ok("<null vt>".into());
+    }
     let kl = mem.read_remote_ptr(vt + vtable_off.klass)?;
-    if kl.is_null() { return Ok("<null kl>".into()); }
+    if kl.is_null() {
+        return Ok("<null kl>".into());
+    }
     let np = mem.read_remote_ptr(kl + class_off.name)?;
     let nsp = mem.read_remote_ptr(kl + class_off.name_space)?;
-    let n = if np.is_null() { String::new() } else { mem.read_cstring(np, 256)? };
-    let ns = if nsp.is_null() { String::new() } else { mem.read_cstring(nsp, 256)? };
-    Ok(if ns.is_empty() { n } else { format!("{}.{}", ns, n) })
+    let n = if np.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(np, 256)?
+    };
+    let ns = if nsp.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(nsp, 256)?
+    };
+    Ok(if ns.is_empty() {
+        n
+    } else {
+        format!("{}.{}", ns, n)
+    })
 }
 
 fn main() -> Result<(), ScryError> {
@@ -32,7 +49,9 @@ fn main() -> Result<(), ScryError> {
     let mem = &rt.memory;
 
     let net_cache = rt.get_service("NetCache")?.expect("NetCache service");
-    let map_ptr = net_cache.read_pointer_field(mem, "m_netCache")?.expect("m_netCache");
+    let map_ptr = net_cache
+        .read_pointer_field(mem, "m_netCache")?
+        .expect("m_netCache");
     println!("NetCache @ {}, m_netCache @ {}", net_cache.addr, map_ptr);
 
     let entries = custom_map::iter_entries(mem, map_ptr, 4096)?;
@@ -44,8 +63,8 @@ fn main() -> Result<(), ScryError> {
         if vn.contains("NetCacheMedalInfo") || vn.contains("Medal") {
             println!("\n>>> hit  key={} ({})  value={} ({})", key, kn, val, vn);
 
-            let medal_info = MonoObject::from_address(mem, *val, rt.offsets.clone())?
-                .expect("medal_info");
+            let medal_info =
+                MonoObject::from_address(mem, *val, rt.offsets.clone())?.expect("medal_info");
             println!("NetCacheMedalInfo.fields (own-class):");
             let mut sorted: Vec<_> = medal_info.fields.iter().collect();
             sorted.sort_by_key(|(_, off)| **off);
@@ -77,7 +96,10 @@ fn main() -> Result<(), ScryError> {
                     println!("  +0x{:04X}  {}", off, name);
                 }
                 let merged = class.fields_recursive(mem)?;
-                println!("MedalData fields_recursive (merged with parents): {}", merged.len());
+                println!(
+                    "MedalData fields_recursive (merged with parents): {}",
+                    merged.len()
+                );
                 let mut sorted2: Vec<_> = merged.iter().collect();
                 sorted2.sort_by_key(|(_, f)| f.offset);
                 for (name, f) in &sorted2 {
@@ -93,7 +115,9 @@ fn main() -> Result<(), ScryError> {
             }
 
             // <PreviousMedalInfo>k__BackingField
-            if let Some(prev) = medal_info.read_object_field(mem, "<PreviousMedalInfo>k__BackingField")? {
+            if let Some(prev) =
+                medal_info.read_object_field(mem, "<PreviousMedalInfo>k__BackingField")?
+            {
                 println!("\nPreviousMedalInfo @ {}", prev.addr);
                 println!("Previous runtime class: {}", klass_name(&rt, prev.addr)?);
             } else {

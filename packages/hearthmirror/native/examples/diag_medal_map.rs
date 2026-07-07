@@ -88,10 +88,7 @@ fn main() -> Result<(), ScryError> {
     for (i, (k, v)) in inner.iter().enumerate() {
         let kn = klass_full_name(&rt, *k).unwrap_or_default();
         let vn = klass_full_name(&rt, *v).unwrap_or_default();
-        println!(
-            "\n#{:02}  key={} ({})  value={} ({})",
-            i, k, kn, v, vn
-        );
+        println!("\n#{:02}  key={} ({})  value={} ({})", i, k, kn, v, vn);
 
         // Key may be a boxed enum — dump first 16 bytes
         if !k.is_null() {
@@ -115,7 +112,11 @@ fn main() -> Result<(), ScryError> {
         };
         let class = read_mono_class(mem, class_addr, rt.offsets.clone())?;
         let merged = class.fields_recursive(mem)?;
-        println!("  value class: {} (declared+inherited fields = {})", class.full_name, merged.len());
+        println!(
+            "  value class: {} (declared+inherited fields = {})",
+            class.full_name,
+            merged.len()
+        );
         let mut sorted: Vec<_> = merged.iter().collect();
         sorted.sort_by_key(|(_, f)| f.offset);
         for (name, f) in &sorted {

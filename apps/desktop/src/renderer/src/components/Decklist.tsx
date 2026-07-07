@@ -862,9 +862,18 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
               </span>
             ) : null}
           </div>
+          {lastSyncStatus?.source === 'unavailable' ? (
+            <div className="mt-1 text-xs text-text-mute">{t('decks.list.sync.unavailableHint')}</div>
+          ) : null}
         </div>
         <SyncDecksButton syncing={manualSyncing} onClick={() => { void handleManualSync(); }} />
       </div>
+
+      {activeDeckId === null && decks.length > 0 ? (
+        <div className="reference-no-active-deck-hint mb-5 rounded border border-border bg-overlay-elevated px-3 py-2 text-xs text-text-dim">
+          {t('decks.list.noActiveDeckHint')}
+        </div>
+      ) : null}
 
       <div className="reference-deck-toolbar mb-5 flex flex-wrap items-center gap-2">
         <div className="relative min-w-[240px] flex-1">

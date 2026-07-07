@@ -98,11 +98,8 @@ pub async fn get_server_info_internal(
         return Ok(None);
     }
 
-    let Some(info) = crate::mono::object::MonoObject::from_address(
-        mem,
-        info_ptr,
-        runtime.offsets.clone(),
-    )?
+    let Some(info) =
+        crate::mono::object::MonoObject::from_address(mem, info_ptr, runtime.offsets.clone())?
     else {
         return Ok(None);
     };
@@ -120,9 +117,7 @@ pub async fn get_server_info_internal(
             .read_string_field(mem, FLD_GS_ADDRESS)?
             .unwrap_or_default(),
         port: info.read_int32_field(mem, FLD_GS_PORT)?.unwrap_or(0),
-        game_handle: info
-            .read_int32_field(mem, FLD_GS_GAME_HANDLE)?
-            .unwrap_or(0),
+        game_handle: info.read_int32_field(mem, FLD_GS_GAME_HANDLE)?.unwrap_or(0),
         client_handle,
         version: info
             .read_string_field(mem, FLD_GS_VERSION)?
@@ -158,11 +153,11 @@ fn struct_field_addr(
     field_name: &str,
 ) -> Result<RemotePtr, ScryError> {
     let class = read_mono_class(&runtime.memory, struct_class_addr, runtime.offsets.clone())?;
-    let f = class.find_field(&runtime.memory, field_name)?.ok_or_else(|| {
-        ScryError::FieldNotFound {
+    let f = class
+        .find_field(&runtime.memory, field_name)?
+        .ok_or_else(|| ScryError::FieldNotFound {
             class: class.full_name.clone(),
             field: field_name.into(),
-        }
-    })?;
+        })?;
     Ok(host_addr + struct_offset + f.offset)
 }

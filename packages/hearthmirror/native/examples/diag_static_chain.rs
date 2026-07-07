@@ -38,7 +38,10 @@ fn main() -> Result<(), ScryError> {
     let mem = &rt.memory;
     let class = read_mono_class(mem, klass_addr, rt.offsets.clone())?;
 
-    println!("=== diag_static_chain: {} @ {} ===", class.full_name, class.addr);
+    println!(
+        "=== diag_static_chain: {} @ {} ===",
+        class.full_name, class.addr
+    );
     println!("static_field_data = {}", class.static_field_data);
     if class.static_field_data.is_null() {
         println!("(class never instantiated — runtime_info NULL or vtable not allocated)");
@@ -54,7 +57,10 @@ fn main() -> Result<(), ScryError> {
             std::process::exit(3);
         }
     };
-    println!("\n--- step 1: static field {} @ static_field_data + 0x{:04X} ---", first, off);
+    println!(
+        "\n--- step 1: static field {} @ static_field_data + 0x{:04X} ---",
+        first, off
+    );
     let mut current = mem.read_remote_ptr(class.static_field_data + off)?;
     print_obj(mem, &rt, "<static>", current)?;
 
@@ -111,10 +117,22 @@ fn print_obj(
     }
     let klass = mem.read_remote_ptr(vtable + rt.offsets.structs.vtable.klass)?;
     let class_off = &rt.offsets.structs.class;
-    let name_ptr = mem.read_remote_ptr(klass + class_off.name).unwrap_or(RemotePtr::NULL);
-    let ns_ptr = mem.read_remote_ptr(klass + class_off.name_space).unwrap_or(RemotePtr::NULL);
-    let name = if name_ptr.is_null() { String::new() } else { mem.read_cstring(name_ptr, 256).unwrap_or_default() };
-    let ns = if ns_ptr.is_null() { String::new() } else { mem.read_cstring(ns_ptr, 256).unwrap_or_default() };
+    let name_ptr = mem
+        .read_remote_ptr(klass + class_off.name)
+        .unwrap_or(RemotePtr::NULL);
+    let ns_ptr = mem
+        .read_remote_ptr(klass + class_off.name_space)
+        .unwrap_or(RemotePtr::NULL);
+    let name = if name_ptr.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(name_ptr, 256).unwrap_or_default()
+    };
+    let ns = if ns_ptr.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(ns_ptr, 256).unwrap_or_default()
+    };
     println!("    vtable = {}", vtable);
     println!("    klass  = {}", klass);
     println!("    type   = {}.{}", ns, name);

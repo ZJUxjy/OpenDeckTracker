@@ -559,15 +559,6 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
 }
 
 if (!nativeBinding) {
-  // The Rust crate is Windows-only. On macOS (and any other platform without
-  // a published native artifact) fall back to a no-op stub so the Electron
-  // shell and renderer can still be started for UI development.
-  if (process.platform === 'darwin') {
-    nativeBinding = require('./stub')
-  }
-}
-
-if (!nativeBinding) {
   if (loadErrors.length > 0) {
     throw new Error(
       `Cannot find native binding. ` +
@@ -585,6 +576,7 @@ if (!nativeBinding) {
 }
 
 module.exports = nativeBinding
+module.exports.clearWindowOwner = nativeBinding.clearWindowOwner
 module.exports.getAccountId = nativeBinding.getAccountId
 module.exports.getArenaDeck = nativeBinding.getArenaDeck
 module.exports.getBattlegroundRatingInfo = nativeBinding.getBattlegroundRatingInfo
@@ -611,5 +603,6 @@ module.exports.isGameOver = nativeBinding.isGameOver
 module.exports.isMulligan = nativeBinding.isMulligan
 module.exports.isSpectating = nativeBinding.isSpectating
 module.exports.placeWindowAboveHearthstone = nativeBinding.placeWindowAboveHearthstone
+module.exports.setWindowOwnerToHearthstone = nativeBinding.setWindowOwnerToHearthstone
 module.exports.subscribeHearthstoneWindowEvents = nativeBinding.subscribeHearthstoneWindowEvents
 module.exports.unsubscribeHearthstoneWindowEvents = nativeBinding.unsubscribeHearthstoneWindowEvents

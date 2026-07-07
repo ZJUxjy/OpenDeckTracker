@@ -39,6 +39,8 @@ const stub = {
   isMulligan: noOpAsync,
   isSpectating: noOpAsyncFalse,
   placeWindowAboveHearthstone: () => false,
+  setWindowOwnerToHearthstone: () => false,
+  clearWindowOwner: () => false,
   subscribeHearthstoneWindowEvents: () => 0,
   unsubscribeHearthstoneWindowEvents: () => true,
 };

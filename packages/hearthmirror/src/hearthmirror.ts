@@ -143,6 +143,24 @@ export class HearthMirror {
     }
   }
 
+  setWindowOwnerToHearthstone(nativeWindowHandle: Uint8Array): boolean {
+    if (this.platform === 'darwin') return false;
+    try {
+      return native.setWindowOwnerToHearthstone(nativeWindowHandle);
+    } catch {
+      return false;
+    }
+  }
+
+  clearWindowOwner(nativeWindowHandle: Uint8Array): boolean {
+    if (this.platform === 'darwin') return false;
+    try {
+      return native.clearWindowOwner(nativeWindowHandle);
+    } catch {
+      return false;
+    }
+  }
+
   subscribeToHearthstoneWindowEvents(onWindowChanged: () => void): (() => void) | null {
     if (this.platform === 'darwin') return null;
     try {

@@ -1,5 +1,5 @@
 use super::MetadataError;
-use pelite::pe32::{PeFile, Pe};
+use pelite::pe32::{Pe, PeFile};
 
 /// Extract the raw BSJB metadata section bytes from a .NET PE image.
 ///
@@ -21,7 +21,7 @@ pub fn locate_metadata_section(image: &[u8]) -> Result<&[u8], MetadataError> {
             extract_metadata_bytes(image, cli_off)
         }
         Some(0x20B) => {
-            use pelite::pe64::{PeFile as PeFile64, Pe as Pe64};
+            use pelite::pe64::{Pe as Pe64, PeFile as PeFile64};
             let pe = PeFile64::from_bytes(image)
                 .map_err(|e| MetadataError::InvalidPe(format!("{}", e)))?;
             let data_dirs = pe.data_directory();
@@ -88,12 +88,9 @@ fn raw_rva_to_offset(image: &[u8], rva: u32) -> Option<usize> {
     for i in 0..n {
         let sh = sections_base.checked_add(i.checked_mul(40)?)?;
         let va = u32::from_le_bytes(image.get(sh + 12..sh + 16)?.try_into().ok()?) as usize;
-        let raw_sz =
-            u32::from_le_bytes(image.get(sh + 16..sh + 20)?.try_into().ok()?) as usize;
-        let virt_sz =
-            u32::from_le_bytes(image.get(sh + 8..sh + 12)?.try_into().ok()?) as usize;
-        let raw_off =
-            u32::from_le_bytes(image.get(sh + 20..sh + 24)?.try_into().ok()?) as usize;
+        let raw_sz = u32::from_le_bytes(image.get(sh + 16..sh + 20)?.try_into().ok()?) as usize;
+        let virt_sz = u32::from_le_bytes(image.get(sh + 8..sh + 12)?.try_into().ok()?) as usize;
+        let raw_off = u32::from_le_bytes(image.get(sh + 20..sh + 24)?.try_into().ok()?) as usize;
         let span = virt_sz.max(raw_sz);
         let r = rva as usize;
         if r >= va && r < va + span {

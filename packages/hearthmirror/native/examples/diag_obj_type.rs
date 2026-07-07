@@ -29,8 +29,16 @@ fn main() -> Result<(), ScryError> {
     let klass = mem.read_remote_ptr(vtable + rt.offsets.structs.vtable.klass)?;
     let name_ptr = mem.read_remote_ptr(klass + rt.offsets.structs.class.name)?;
     let ns_ptr = mem.read_remote_ptr(klass + rt.offsets.structs.class.name_space)?;
-    let name = if name_ptr.is_null() { String::new() } else { mem.read_cstring(name_ptr, 256)? };
-    let ns = if ns_ptr.is_null() { String::new() } else { mem.read_cstring(ns_ptr, 256)? };
+    let name = if name_ptr.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(name_ptr, 256)?
+    };
+    let ns = if ns_ptr.is_null() {
+        String::new()
+    } else {
+        mem.read_cstring(ns_ptr, 256)?
+    };
 
     let field_count = mem.read_u16(klass + rt.offsets.structs.class.field_count)?;
     let parent = mem.read_remote_ptr(klass + rt.offsets.structs.class.parent)?;

@@ -18,9 +18,15 @@ fn main() -> Result<(), ScryError> {
         }
     };
 
-    let player = presence.read_object_field(mem, "m_myPlayer")?.expect("m_myPlayer null");
-    let account = player.read_object_field(mem, "m_account")?.expect("m_account null");
-    let tag = account.read_object_field(mem, "m_battleTag")?.expect("m_battleTag null");
+    let player = presence
+        .read_object_field(mem, "m_myPlayer")?
+        .expect("m_myPlayer null");
+    let account = player
+        .read_object_field(mem, "m_account")?
+        .expect("m_account null");
+    let tag = account
+        .read_object_field(mem, "m_battleTag")?
+        .expect("m_battleTag null");
 
     println!("BnetBattleTag @ {}", tag.addr);
     println!("fields (own-class):");

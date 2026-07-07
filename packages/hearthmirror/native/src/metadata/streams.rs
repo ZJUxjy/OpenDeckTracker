@@ -42,7 +42,9 @@ impl<'a> StreamSet<'a> {
 
         let mut off = 16 + version_padded; // skip to flags
         if metadata.len() < off + 4 {
-            return Err(MetadataError::Truncated("metadata stream count missing".into()));
+            return Err(MetadataError::Truncated(
+                "metadata stream count missing".into(),
+            ));
         }
         // flags (2 bytes, always 0) + NumberOfStreams (2 bytes)
         let n_streams = u16::from_le_bytes([metadata[off + 2], metadata[off + 3]]) as usize;
@@ -55,12 +57,18 @@ impl<'a> StreamSet<'a> {
             if metadata.len() < off + 8 {
                 return Err(MetadataError::Truncated("stream header truncated".into()));
             }
-            let stream_off =
-                u32::from_le_bytes([metadata[off], metadata[off + 1], metadata[off + 2], metadata[off + 3]])
-                    as usize;
-            let stream_size =
-                u32::from_le_bytes([metadata[off + 4], metadata[off + 5], metadata[off + 6], metadata[off + 7]])
-                    as usize;
+            let stream_off = u32::from_le_bytes([
+                metadata[off],
+                metadata[off + 1],
+                metadata[off + 2],
+                metadata[off + 3],
+            ]) as usize;
+            let stream_size = u32::from_le_bytes([
+                metadata[off + 4],
+                metadata[off + 5],
+                metadata[off + 6],
+                metadata[off + 7],
+            ]) as usize;
             off += 8;
 
             // Read null-terminated name, padded to 4-byte boundary

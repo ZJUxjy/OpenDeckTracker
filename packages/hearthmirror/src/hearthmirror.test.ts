@@ -24,6 +24,8 @@ vi.mock('@hdt/hearthmirror-native', () => ({
   getChoices: vi.fn(),
   getHearthstoneWindow: vi.fn(),
   placeWindowAboveHearthstone: vi.fn(),
+  setWindowOwnerToHearthstone: vi.fn(),
+  clearWindowOwner: vi.fn(),
   subscribeHearthstoneWindowEvents: vi.fn(),
   unsubscribeHearthstoneWindowEvents: vi.fn(),
 }));
@@ -479,6 +481,42 @@ describe('HearthMirror', () => {
     });
   });
 
+  describe('setWindowOwnerToHearthstone', () => {
+    it('forwards the native window handle to native', () => {
+      mocked(native.setWindowOwnerToHearthstone).mockReturnValue(true);
+      const handle = new Uint8Array([1, 2, 3, 4]);
+
+      expect(mirror.setWindowOwnerToHearthstone(handle)).toBe(true);
+      expect(native.setWindowOwnerToHearthstone).toHaveBeenCalledWith(handle);
+    });
+
+    it('returns false when native throws', () => {
+      mocked(native.setWindowOwnerToHearthstone).mockImplementation(() => {
+        throw new Error('bad hwnd');
+      });
+
+      expect(mirror.setWindowOwnerToHearthstone(new Uint8Array([1]))).toBe(false);
+    });
+  });
+
+  describe('clearWindowOwner', () => {
+    it('forwards the native window handle to native', () => {
+      mocked(native.clearWindowOwner).mockReturnValue(true);
+      const handle = new Uint8Array([1, 2, 3, 4]);
+
+      expect(mirror.clearWindowOwner(handle)).toBe(true);
+      expect(native.clearWindowOwner).toHaveBeenCalledWith(handle);
+    });
+
+    it('returns false when native throws', () => {
+      mocked(native.clearWindowOwner).mockImplementation(() => {
+        throw new Error('bad hwnd');
+      });
+
+      expect(mirror.clearWindowOwner(new Uint8Array([1]))).toBe(false);
+    });
+  });
+
   describe('subscribeToHearthstoneWindowEvents', () => {
     it('returns an unsubscribe function backed by the native subscription id', () => {
       const onWindowChanged = vi.fn();
@@ -543,5 +581,21 @@ describe('HearthMirror macOS window delegation', () => {
       macWindow: { getHearthstoneWindow: () => null },
     });
     expect(mirror.placeWindowAboveHearthstone(new Uint8Array())).toBe(false);
+  });
+
+  it('reports setWindowOwnerToHearthstone=false on darwin', () => {
+    const mirror = new HearthMirror({
+      platform: 'darwin',
+      macWindow: { getHearthstoneWindow: () => null },
+    });
+    expect(mirror.setWindowOwnerToHearthstone(new Uint8Array())).toBe(false);
+  });
+
+  it('reports clearWindowOwner=false on darwin', () => {
+    const mirror = new HearthMirror({
+      platform: 'darwin',
+      macWindow: { getHearthstoneWindow: () => null },
+    });
+    expect(mirror.clearWindowOwner(new Uint8Array())).toBe(false);
   });
 });

@@ -139,8 +139,7 @@ pub fn read_mono_class(
             // 4. static_field_data slot sits AFTER the function-pointer array.
             //    Dereference the slot to get the actual chunk holding s_instance
             //    and other static fields.
-            let sfd_slot =
-                vtable_ptr + vtable_off.vtable_array_start + vtable_size * ptr_size;
+            let sfd_slot = vtable_ptr + vtable_off.vtable_array_start + vtable_size * ptr_size;
             memory.read_remote_ptr(sfd_slot)?
         }
     };
@@ -206,16 +205,17 @@ impl MonoClassRef {
     ///   metadata or partially-initialised class).
     ///
     /// The returned `MonoClassRef` inherits this class's `Arc<MonoOffsets>`.
-    pub fn parent(
-        &self,
-        memory: &ProcessMemory,
-    ) -> Result<Option<MonoClassRef>, ScryError> {
+    pub fn parent(&self, memory: &ProcessMemory) -> Result<Option<MonoClassRef>, ScryError> {
         let class_off = &self.offsets.structs.class;
         let parent_addr = memory.read_remote_ptr(self.addr + class_off.parent)?;
         if parent_addr.is_null() || parent_addr == self.addr {
             return Ok(None);
         }
-        Ok(Some(read_mono_class(memory, parent_addr, self.offsets.clone())?))
+        Ok(Some(read_mono_class(
+            memory,
+            parent_addr,
+            self.offsets.clone(),
+        )?))
     }
 
     /// Walk the parent chain (deepest first) and build a `name → MonoFieldDef`
@@ -304,9 +304,7 @@ fn build_fields_map(
 ///
 /// Exposed as a pure helper so the "child overrides parent" contract can be
 /// unit-tested without touching `ProcessMemory`.
-pub(crate) fn merge_field_chain(
-    per_class: &[Vec<MonoFieldDef>],
-) -> HashMap<String, MonoFieldDef> {
+pub(crate) fn merge_field_chain(per_class: &[Vec<MonoFieldDef>]) -> HashMap<String, MonoFieldDef> {
     let mut merged: HashMap<String, MonoFieldDef> =
         HashMap::with_capacity(per_class.iter().map(|v| v.len()).sum());
     for defs in per_class.iter().rev() {

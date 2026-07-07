@@ -6,6 +6,21 @@ export interface OverlayManagerOptions {
   routeHash?: string;
   onFocusChange?: () => void;
   placeWindowAboveHearthstone?: (nativeWindowHandle: Uint8Array) => boolean;
+  /**
+   * Windows-only: make the Hearthstone window the Win32 OWNER of the
+   * overlay window (GWLP_HWNDPARENT). Owned windows stay above their
+   * owner in z-order without any topmost juggling, and minimize/restore
+   * with it. When this succeeds, the legacy topmost/placeWindowAbove
+   * z-order machinery is skipped entirely; when it fails (or is absent),
+   * the legacy path is used as a fallback.
+   */
+  setWindowOwnerToHearthstone?: (nativeWindowHandle: Uint8Array) => boolean;
+  /**
+   * Windows-only: remove the owner set by `setWindowOwnerToHearthstone`.
+   * Called when the Hearthstone window disappears so a stale/destroyed
+   * owner HWND can't strand (or take down) the overlay window.
+   */
+  clearWindowOwner?: (nativeWindowHandle: Uint8Array) => boolean;
   platform?: NodeJS.Platform;
 }
 
@@ -88,6 +103,13 @@ export class OverlayManager {
   private readonly zOrderReassertHandles = new Set<ReturnType<typeof setTimeout>>();
   private hideTimer: ReturnType<typeof setTimeout> | null = null;
   private currentShown = false;
+  /**
+   * Whether the overlay is currently owned by the Hearthstone window via
+   * `setWindowOwnerToHearthstone`. While true, the OS enforces the z-order
+   * relationship and the legacy topmost/reassert machinery is skipped.
+   */
+  private ownerAttached = false;
+  private ownerAttachFailedLogged = false;
 
   constructor(opts: OverlayManagerOptions) {
     this.opts = opts;
@@ -106,12 +128,20 @@ export class OverlayManager {
     this.userEnabled = false;
     this.visibleOnScreen = false;
     console.log(`[overlay-mgr ${this.routeHash}] disable()`);
+    this.detachOwner();
     this.hideImmediately();
   }
 
   setVisibleOnScreen(visible: boolean): void {
     this.visibleOnScreen = visible;
     console.log(`[overlay-mgr ${this.routeHash}] setVisibleOnScreen(${visible})`);
+    if (!visible) {
+      // The Hearthstone HWND may be gone (game restart) — re-attach to
+      // whatever HWND exists next time we show. Re-setting the owner to
+      // the same HWND is a cheap no-op, so this is safe even when the
+      // game merely lost visibility temporarily.
+      this.detachOwner();
+    }
     this.syncVisibility();
   }
 
@@ -180,6 +210,7 @@ export class OverlayManager {
   dispose(): void {
     this.clearPendingHide();
     this.clearZOrderReasserts();
+    this.detachOwner();
     if (this.win && !this.win.isDestroyed()) {
       this.win.destroy();
     }
@@ -251,6 +282,24 @@ export class OverlayManager {
       this.windowFocused = false;
       this.opts.onFocusChange?.();
     });
+    this.win.on('closed', () => {
+      // If Hearthstone dies while owning this window, the OS can destroy the
+      // owned overlay out from under Electron. Drop our reference so the next
+      // enable()/syncVisibility() path can recreate instead of operating on a
+      // destroyed window.
+      this.win = null;
+      this.currentShown = false;
+      this.ownerAttached = false;
+      this.lastAppliedBounds = null;
+      this.pendingBounds = this.lastTrackerBounds ? { ...this.lastTrackerBounds } : null;
+      // A destroyed window can't stay "focused" — clear the flag and let
+      // recomputeOverlayForeground re-derive, otherwise foreground state
+      // stays pinned to a dead window.
+      if (this.windowFocused) {
+        this.windowFocused = false;
+        this.opts.onFocusChange?.();
+      }
+    });
 
     if (this.pendingBounds) {
       this.applyComposedBounds(this.pendingBounds);
@@ -283,10 +332,43 @@ export class OverlayManager {
     }
   }
 
+  /**
+   * Attempt to make Hearthstone the Win32 owner of this overlay window.
+   * No-op on non-Windows platforms or when the option isn't provided.
+   * Safe to call repeatedly — a successful attach short-circuits future
+   * calls via `ownerAttached`, and a failed attempt just falls back to
+   * the legacy z-order machinery (retried the next time the overlay
+   * is shown).
+   */
+  private tryAttachOwner(): void {
+    if (this.platform !== 'win32') return;
+    if (!this.opts.setWindowOwnerToHearthstone) return;
+    if (!this.win || this.win.isDestroyed()) return;
+    const attached = this.opts.setWindowOwnerToHearthstone(this.win.getNativeWindowHandle());
+    if (attached) {
+      this.ownerAttached = true;
+      this.ownerAttachFailedLogged = false;
+      console.log(`[overlay-mgr ${this.routeHash}] owner attached to Hearthstone window`);
+    } else {
+      this.ownerAttached = false;
+      if (!this.ownerAttachFailedLogged) {
+        this.ownerAttachFailedLogged = true;
+        console.log(
+          `[overlay-mgr ${this.routeHash}] owner attach failed — falling back to legacy z-order`,
+        );
+      }
+    }
+  }
+
   private syncVisibility(): void {
     if (!this.win || this.win.isDestroyed()) {
-      console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
-      return;
+      if (!this.userEnabled) {
+        console.log(`[overlay-mgr ${this.routeHash}] syncVisibility skipped (no window)`);
+        return;
+      }
+      console.log(`[overlay-mgr ${this.routeHash}] syncVisibility: recreating window`);
+      this.createWindow();
+      if (!this.win || this.win.isDestroyed()) return;
     }
     const shouldShow = this.shouldBeVisibleNow();
     console.log(
@@ -294,6 +376,7 @@ export class OverlayManager {
     );
     if (shouldShow) {
       this.clearPendingHide();
+      if (!this.ownerAttached) this.tryAttachOwner();
       if (!this.currentShown || !this.isWindowVisible()) {
         this.win.showInactive();
         this.currentShown = true;
@@ -345,6 +428,7 @@ export class OverlayManager {
 
   private scheduleZOrderReassert(): void {
     this.clearZOrderReasserts();
+    if (this.platform === 'win32' && this.ownerAttached) return;
     if (!this.targetForeground || !this.shouldBeVisibleNow()) return;
     for (const delayMs of [50, 250]) {
       const handle = setTimeout(() => {
@@ -367,6 +451,7 @@ export class OverlayManager {
   private syncZOrder(): void {
     if (!this.win || this.win.isDestroyed()) return;
     if (!this.shouldBeVisibleNow()) return;
+    if (this.platform === 'win32' && this.ownerAttached) return;
     if (this.targetForeground) {
       this.win.setAlwaysOnTop(true, 'screen-saver');
       (this.win as { moveTop?: () => void }).moveTop?.();
@@ -377,6 +462,21 @@ export class OverlayManager {
       if (!placed) {
         console.log(`[overlay-mgr ${this.routeHash}] placeWindowAboveHearthstone skipped/failed`);
       }
+    }
+  }
+
+  /**
+   * Release the Win32 owner relationship established by `tryAttachOwner`.
+   * Safe to call when no owner is attached (no-op). Called before the
+   * overlay is hidden/disabled/disposed so a stale or destroyed owner HWND
+   * (e.g. Hearthstone exiting) can't strand or take down this window.
+   */
+  private detachOwner(): void {
+    if (!this.ownerAttached) return;
+    this.ownerAttached = false;
+    if (this.platform === 'win32' && this.opts.clearWindowOwner && this.win && !this.win.isDestroyed()) {
+      this.opts.clearWindowOwner(this.win.getNativeWindowHandle());
+      console.log(`[overlay-mgr ${this.routeHash}] owner detached`);
     }
   }
 }

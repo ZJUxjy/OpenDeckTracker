@@ -46,8 +46,7 @@ pub struct SelectedDeckResult {
 pub async fn get_selected_deck_id_internal(
     runtime: &MonoRuntime,
 ) -> Result<Option<SelectedDeckResult>, ScryError> {
-    let Some(instance) = runtime
-        .get_singleton(CLS_DECK_PICKER_TRAY.0, CLS_DECK_PICKER_TRAY.1)?
+    let Some(instance) = runtime.get_singleton(CLS_DECK_PICKER_TRAY.0, CLS_DECK_PICKER_TRAY.1)?
     else {
         return Ok(None);
     };
@@ -61,7 +60,9 @@ pub async fn get_selected_deck_id_internal(
         return Ok(None);
     };
 
-    let deck_id = deck_box.read_int64_field(mem, FLD_DECK_BOX_DECK_ID)?.unwrap_or(0);
+    let deck_id = deck_box
+        .read_int64_field(mem, FLD_DECK_BOX_DECK_ID)?
+        .unwrap_or(0);
     let template_deck_id = deck_box
         .read_int32_field(mem, FLD_DECK_BOX_TEMPLATE_ID)?
         .unwrap_or(0);

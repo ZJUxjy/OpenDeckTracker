@@ -45,12 +45,18 @@ fn main() -> Result<(), ScryError> {
     let mem = &rt.memory;
 
     let Some(mut current) = rt.get_singleton(&namespace, &name)? else {
-        eprintln!("singleton {}.{} is null (s_instance not initialized)", namespace, name);
+        eprintln!(
+            "singleton {}.{} is null (s_instance not initialized)",
+            namespace, name
+        );
         std::process::exit(3);
     };
 
     // Header for the singleton itself
-    println!("=== diag_field_object: {}.{}.s_instance ===", namespace, name);
+    println!(
+        "=== diag_field_object: {}.{}.s_instance ===",
+        namespace, name
+    );
     print_obj(mem, &rt, "<root>", current.addr)?;
 
     for (i, fld) in field_chain.iter().enumerate() {
@@ -113,21 +119,29 @@ fn print_obj(
     println!("    klass  = {}", klass);
 
     let class_off = &rt.offsets.structs.class;
-    let name_ptr = mem.read_remote_ptr(klass + class_off.name).unwrap_or(RemotePtr::NULL);
-    let ns_ptr = mem.read_remote_ptr(klass + class_off.name_space).unwrap_or(RemotePtr::NULL);
+    let name_ptr = mem
+        .read_remote_ptr(klass + class_off.name)
+        .unwrap_or(RemotePtr::NULL);
+    let ns_ptr = mem
+        .read_remote_ptr(klass + class_off.name_space)
+        .unwrap_or(RemotePtr::NULL);
     let kname = if name_ptr.is_null() {
         "<null name_ptr>".into()
     } else {
-        mem.read_cstring(name_ptr, 256).unwrap_or_else(|e| format!("<name read err: {}>", e))
+        mem.read_cstring(name_ptr, 256)
+            .unwrap_or_else(|e| format!("<name read err: {}>", e))
     };
     let kns = if ns_ptr.is_null() {
         "".into()
     } else {
-        mem.read_cstring(ns_ptr, 256).unwrap_or_else(|e| format!("<ns read err: {}>", e))
+        mem.read_cstring(ns_ptr, 256)
+            .unwrap_or_else(|e| format!("<ns read err: {}>", e))
     };
     println!("    type(raw) = {}.{}", kns, kname);
 
-    let vtable_size = mem.read_u32(klass + class_off.vtable_size).unwrap_or(0xDEAD_BEEF);
+    let vtable_size = mem
+        .read_u32(klass + class_off.vtable_size)
+        .unwrap_or(0xDEAD_BEEF);
     println!("    vtable_size = {} (0x{:X})", vtable_size, vtable_size);
 
     match read_mono_class(mem, klass, rt.offsets.clone()) {

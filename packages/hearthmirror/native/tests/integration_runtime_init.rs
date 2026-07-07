@@ -27,7 +27,8 @@ macro_rules! skip_if_no_hs {
 #[test]
 fn init_succeeds_when_hearthstone_running() {
     skip_if_no_hs!();
-    let rt = MonoRuntime::init().expect("MonoRuntime::init must succeed when Hearthstone is running");
+    let rt =
+        MonoRuntime::init().expect("MonoRuntime::init must succeed when Hearthstone is running");
     assert!(!rt.root_domain.is_null(), "root_domain must be non-null");
     eprintln!("init OK: root_domain = {}", rt.root_domain);
 }

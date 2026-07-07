@@ -15,7 +15,7 @@ use hearthmirror_native::disasm;
 use hearthmirror_native::handle::OwnedProcessHandle;
 use hearthmirror_native::memory::ProcessMemory;
 use hearthmirror_native::mono::probe::read_exports_map;
-use hearthmirror_native::process::{enumerate_modules_32bit, find_pid};
+use hearthmirror_native::process::{detect_target_pointer_size, enumerate_modules, find_pid};
 use hearthmirror_native::remote_ptr::RemotePtr;
 use iced_x86::{Decoder, DecoderOptions, FastFormatter, Instruction};
 
@@ -56,23 +56,37 @@ fn main() {
             return;
         }
     };
-    let memory = ProcessMemory::new(handle);
+    let ptr_size = match detect_target_pointer_size(&handle) {
+        Ok(size) => size,
+        Err(e) => {
+            println!("detect_target_pointer_size error: {}", e);
+            return;
+        }
+    };
+    let bitness = ptr_size * 8;
+    let memory = ProcessMemory::new_with_ptr_size(handle, ptr_size);
 
-    let modules = match enumerate_modules_32bit(memory.handle()) {
+    let modules = match enumerate_modules(memory.handle()) {
         Ok(m) => m,
         Err(e) => {
             println!("enumerate_modules error: {}", e);
             return;
         }
     };
-    let mono = match modules.iter().find(|m| m.name.to_lowercase().contains("mono")) {
+    let mono = match modules
+        .iter()
+        .find(|m| m.name.to_lowercase().contains("mono"))
+    {
         Some(m) => m,
         None => {
             println!("no mono module found");
             return;
         }
     };
-    println!("Mono module: {} @ 0x{:08X} (size 0x{:X})", mono.name, mono.base.0 as u32, mono.size);
+    println!(
+        "Mono module: {} @ 0x{:016X} (size 0x{:X}, bitness {})",
+        mono.name, mono.base.0 as u64, mono.size, bitness
+    );
 
     let exports = match read_exports_map(&memory, mono) {
         Ok(e) => e,
@@ -85,22 +99,26 @@ fn main() {
 
     println!("=== CRITICAL ===");
     for (name, field, expected) in CRITICAL_EXPORTS {
-        dump_export(&memory, &exports, name, field, *expected);
+        dump_export(&memory, &exports, bitness, name, field, *expected);
     }
     println!("\n=== BEST-EFFORT ===");
     for (name, field, expected) in BEST_EFFORT_EXPORTS {
-        dump_export(&memory, &exports, name, field, *expected);
+        dump_export(&memory, &exports, bitness, name, field, *expected);
     }
 }
 
 fn dump_export(
     memory: &ProcessMemory,
     exports: &std::collections::HashMap<String, RemotePtr>,
+    bitness: u32,
     name: &str,
     field: &str,
     expected: u32,
 ) {
-    println!("\n--- {} (-> {}, expected 0x{:X}) ---", name, field, expected);
+    println!(
+        "\n--- {} (-> {}, expected 0x{:X}) ---",
+        name, field, expected
+    );
     let va = match exports.get(name) {
         Some(v) => *v,
         None => {
@@ -119,14 +137,17 @@ fn dump_export(
     };
 
     let head_len = 64.min(bytes.len());
-    let hex: Vec<String> = bytes[..head_len].iter().map(|b| format!("{:02X}", b)).collect();
+    let hex: Vec<String> = bytes[..head_len]
+        .iter()
+        .map(|b| format!("{:02X}", b))
+        .collect();
     println!("  First {} bytes:", head_len);
     for chunk in hex.chunks(16) {
         println!("    {}", chunk.join(" "));
     }
 
     println!("  Disasm (until first ret or 32 instr):");
-    let mut decoder = Decoder::with_ip(32, &bytes, va.raw() as u64, DecoderOptions::NONE);
+    let mut decoder = Decoder::with_ip(bitness, &bytes, va.raw(), DecoderOptions::NONE);
     let mut instr = Instruction::default();
     let mut formatter = FastFormatter::new();
     let mut output = String::new();
@@ -141,20 +162,23 @@ fn dump_export(
         output.clear();
         formatter.format(&instr, &mut output);
         let marker = if is_field_load_candidate(&instr) {
-            let disp = instr.memory_displacement32();
+            let disp = instr.memory_displacement64() as u32;
             last_field_disp = Some(disp);
             format!(" <- candidate disp=0x{:X}", disp)
         } else {
             String::new()
         };
-        println!("    0x{:08X}  {}{}", instr.ip(), output, marker);
+        println!("    0x{:016X}  {}{}", instr.ip(), output, marker);
         count += 1;
-        if matches!(instr.mnemonic(), iced_x86::Mnemonic::Ret | iced_x86::Mnemonic::Retf) {
+        if matches!(
+            instr.mnemonic(),
+            iced_x86::Mnemonic::Ret | iced_x86::Mnemonic::Retf
+        ) {
             break;
         }
     }
 
-    let helper_result = disasm::find_field_load_displacement(&bytes, 32);
+    let helper_result = disasm::find_field_load_displacement(&bytes, bitness);
     println!(
         "  find_field_load_displacement => {} (last candidate seen: {})",
         helper_result.map_or("None".to_string(), |v| format!("0x{:X}", v)),

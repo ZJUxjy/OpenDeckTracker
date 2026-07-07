@@ -22,7 +22,8 @@ fn main() -> Result<(), ScryError> {
     let mem = &rt.memory;
     let off = &rt.offsets;
 
-    let assemblies_head = mem.read_remote_ptr(rt.root_domain + off.structs.domain.domain_assemblies)?;
+    let assemblies_head =
+        mem.read_remote_ptr(rt.root_domain + off.structs.domain.domain_assemblies)?;
     println!(
         "root_domain={} domain_assemblies head={} (offset +0x{:X})",
         rt.root_domain, assemblies_head, off.structs.domain.domain_assemblies
@@ -69,9 +70,10 @@ fn main() -> Result<(), ScryError> {
                 if candidate < 0x10000 {
                     continue;
                 }
-                if let Ok(s) =
-                    mem.read_cstring(hearthmirror_native::remote_ptr::RemotePtr::new(candidate), 128)
-                {
+                if let Ok(s) = mem.read_cstring(
+                    hearthmirror_native::remote_ptr::RemotePtr::new(candidate),
+                    128,
+                ) {
                     if !s.is_empty() && s.is_ascii() {
                         let trimmed: String = s.chars().take(60).collect();
                         println!(
@@ -93,7 +95,10 @@ fn main() -> Result<(), ScryError> {
                 p
             }
             Err(e) => {
-                println!("  <ERR reading image_ptr at +0x{:X}: {}>", off.structs.assembly.image, e);
+                println!(
+                    "  <ERR reading image_ptr at +0x{:X}: {}>",
+                    off.structs.assembly.image, e
+                );
                 continue;
             }
         };
@@ -128,7 +133,10 @@ fn main() -> Result<(), ScryError> {
                             String::new()
                         };
                         if !small_marker.is_empty() {
-                            println!("    img+0x{:02X} = {:#X}{}", slot_off, candidate, small_marker);
+                            println!(
+                                "    img+0x{:02X} = {:#X}{}",
+                                slot_off, candidate, small_marker
+                            );
                         }
                         continue;
                     }

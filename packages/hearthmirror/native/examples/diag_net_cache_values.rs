@@ -89,10 +89,7 @@ fn main() -> Result<(), ScryError> {
                 }
             }
         };
-        println!(
-            "  #{:02}  key={}  value={}  type={}",
-            i, k, v, v_type
-        );
+        println!("  #{:02}  key={}  value={}  type={}", i, k, v, v_type);
     }
 
     Ok(())

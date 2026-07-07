@@ -49,7 +49,10 @@ fn live_recovery_round_trip() {
 
     let runtime = MonoRuntime::init().expect("MonoRuntime::init must succeed against running HS");
     assert_eq!(runtime.pid(), pid_before);
-    assert!(runtime.is_process_alive_and_same(), "fresh runtime should report alive");
+    assert!(
+        runtime.is_process_alive_and_same(),
+        "fresh runtime should report alive"
+    );
     eprintln!("PASS: fresh init reports alive");
 
     pause("Now KILL the Hearthstone process (or close the client). Wait until Task Manager shows it gone.");
@@ -82,7 +85,10 @@ fn live_recovery_round_trip() {
     // Re-init succeeds against the new instance.
     let runtime2 = MonoRuntime::init().expect("re-init against new HS instance must succeed");
     assert_eq!(runtime2.pid(), pid_after);
-    assert!(runtime2.is_process_alive_and_same(), "fresh runtime should report alive");
+    assert!(
+        runtime2.is_process_alive_and_same(),
+        "fresh runtime should report alive"
+    );
     eprintln!("PASS: re-init succeeds against new HS instance, probe reports alive");
 
     eprintln!();

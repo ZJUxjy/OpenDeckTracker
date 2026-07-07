@@ -114,7 +114,9 @@ fn read_players(
     let mut out = Vec::new();
     for (_player_id, player) in iter_player_map(runtime, gs)? {
         let id = player.read_int32_field(mem, FLD_PLAYER_M_ID)?.unwrap_or(0);
-        let side = player.read_int32_field(mem, FLD_PLAYER_M_SIDE)?.unwrap_or(0);
+        let side = player
+            .read_int32_field(mem, FLD_PLAYER_M_SIDE)?
+            .unwrap_or(0);
         let name = player
             .read_string_field(mem, FLD_PLAYER_M_NAME)?
             .unwrap_or_default();

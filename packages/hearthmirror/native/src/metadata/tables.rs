@@ -1,9 +1,7 @@
 use crate::error::ScryError;
 use crate::metadata::{
-    pe::locate_metadata_section,
-    streams::StreamSet,
-    tokens::HeapIndexWidth,
-    MetadataError, MetadataReader,
+    pe::locate_metadata_section, streams::StreamSet, tokens::HeapIndexWidth, MetadataError,
+    MetadataReader,
 };
 
 // ─── Row types ───────────────────────────────────────────────────────────────
@@ -87,7 +85,13 @@ impl<'a> TablesReader<'a> {
                 rc_idx += 1;
             }
         }
-        Ok(Self { tilde, strings, heap, row_counts, data_base })
+        Ok(Self {
+            tilde,
+            strings,
+            heap,
+            row_counts,
+            data_base,
+        })
     }
 
     /// Total number of rows in table `t` (0 if absent).
@@ -108,9 +112,7 @@ impl<'a> TablesReader<'a> {
     }
 
     /// Iterate all Field rows (table 0x04).
-    pub fn iter_fields(
-        &'a self,
-    ) -> impl Iterator<Item = Result<FieldRow<'a>, MetadataError>> + 'a {
+    pub fn iter_fields(&'a self) -> impl Iterator<Item = Result<FieldRow<'a>, MetadataError>> + 'a {
         let base = self.field_offset();
         let rs = self.field_row_size();
         let count = self.row_counts[0x04] as usize;
@@ -164,7 +166,10 @@ impl<'a> TablesReader<'a> {
             .ok_or_else(|| MetadataError::Truncated("Field row OOB".into()))?;
         let flags = read_u16(row, 0)?;
         let name_idx = read_idx(row, 2, s)?;
-        Ok(FieldRow { flags, name: self.resolve_string(name_idx)? })
+        Ok(FieldRow {
+            flags,
+            name: self.resolve_string(name_idx)?,
+        })
     }
 
     fn read_methoddef_row(&self, off: usize) -> Result<MethodDefRow<'a>, MetadataError> {
@@ -180,7 +185,12 @@ impl<'a> TablesReader<'a> {
         let impl_flags = read_u16(row, 4)?;
         let flags = read_u16(row, 6)?;
         let name_idx = read_idx(row, 8, s)?;
-        Ok(MethodDefRow { rva, impl_flags, flags, name: self.resolve_string(name_idx)? })
+        Ok(MethodDefRow {
+            rva,
+            impl_flags,
+            flags,
+            name: self.resolve_string(name_idx)?,
+        })
     }
 
     // ── String resolution ────────────────────────────────────────────────────
@@ -201,12 +211,24 @@ impl<'a> TablesReader<'a> {
     // ── Size helpers ─────────────────────────────────────────────────────────
 
     fn simple_idx(&self, table: usize) -> usize {
-        if self.row_counts[table] <= 0xFFFF { 2 } else { 4 }
+        if self.row_counts[table] <= 0xFFFF {
+            2
+        } else {
+            4
+        }
     }
 
     fn coded_idx(&self, tag_bits: u32, tables: &[usize]) -> usize {
-        let max = tables.iter().map(|&t| self.row_counts[t]).max().unwrap_or(0);
-        if max < (1u32 << (16 - tag_bits)) { 2 } else { 4 }
+        let max = tables
+            .iter()
+            .map(|&t| self.row_counts[t])
+            .max()
+            .unwrap_or(0);
+        if max < (1u32 << (16 - tag_bits)) {
+            2
+        } else {
+            4
+        }
     }
 
     fn type_def_or_ref_size(&self) -> usize {
@@ -294,7 +316,9 @@ impl MetadataReader {
         with_tables(self.bytes(), |reader| {
             let class_rid = (class_token & 0x00FF_FFFF) as usize;
             if class_rid == 0 {
-                return Err(ScryError::MetadataError("invalid class token: RID 0".into()));
+                return Err(ScryError::MetadataError(
+                    "invalid class token: RID 0".into(),
+                ));
             }
             // Locate the TypeDef and the next one to determine the field range.
             let mut typedefs = reader.iter_typedefs();
@@ -332,15 +356,13 @@ impl MetadataReader {
 
     /// Find a MethodDef by name within a type identified by `class_token`.
     /// Returns token `0x06000000 | rid`.
-    pub fn find_method_token(
-        &self,
-        class_token: u32,
-        method_name: &str,
-    ) -> Result<u32, ScryError> {
+    pub fn find_method_token(&self, class_token: u32, method_name: &str) -> Result<u32, ScryError> {
         with_tables(self.bytes(), |reader| {
             let class_rid = (class_token & 0x00FF_FFFF) as usize;
             if class_rid == 0 {
-                return Err(ScryError::MetadataError("invalid class token: RID 0".into()));
+                return Err(ScryError::MetadataError(
+                    "invalid class token: RID 0".into(),
+                ));
             }
             let mut typedefs = reader.iter_typedefs();
             let td = typedefs
@@ -390,7 +412,9 @@ fn with_tables<T>(
         .strings()
         .ok_or_else(|| ScryError::MetadataError("no #Strings stream".into()))?;
     if tilde.len() < 7 {
-        return Err(ScryError::MetadataError("#~ header too short for HeapSizes".into()));
+        return Err(ScryError::MetadataError(
+            "#~ header too short for HeapSizes".into(),
+        ));
     }
     let heap = HeapIndexWidth::from_heap_sizes(tilde[6]);
     let reader = TablesReader::new(tilde, strings, heap)?;
@@ -449,10 +473,11 @@ mod tests {
             let found = reader
                 .iter_typedefs()
                 .filter_map(|r| r.ok())
-                .any(|td| {
-                    td.namespace == "Blizzard.T5.Services" && td.name == "ServiceManager"
-                });
-            assert!(found, "expected to find Blizzard.T5.Services.ServiceManager in TypeDef table");
+                .any(|td| td.namespace == "Blizzard.T5.Services" && td.name == "ServiceManager");
+            assert!(
+                found,
+                "expected to find Blizzard.T5.Services.ServiceManager in TypeDef table"
+            );
         });
     }
 
@@ -474,7 +499,10 @@ mod tests {
         with_minimal(|reader| {
             let count = reader.iter_fields().count();
             let row_count = reader.row_count(0x04) as usize;
-            assert_eq!(count, row_count, "iter_fields count should match row_count(Field)");
+            assert_eq!(
+                count, row_count,
+                "iter_fields count should match row_count(Field)"
+            );
         });
     }
 

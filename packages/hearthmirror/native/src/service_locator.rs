@@ -6,10 +6,7 @@ use crate::remote_ptr::RemotePtr;
 ///
 /// Returns Ok(Some(service_object)) if found, Ok(None) if service not registered
 /// (NOT an error per ADR 0001 binding constraint).
-pub fn get_service(
-    runtime: &MonoRuntime,
-    name: &str,
-) -> Result<Option<RemotePtr>, ScryError> {
+pub fn get_service(runtime: &MonoRuntime, name: &str) -> Result<Option<RemotePtr>, ScryError> {
     // ServiceManager.s_runtimeServices is a Dictionary<string, Service>.
     // For Phase F we return Unsupported until we have the full mono::class
     // infrastructure (Phase G needs to look up the class by token, then

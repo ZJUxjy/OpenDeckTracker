@@ -19,10 +19,7 @@ use hearthmirror_native::mono::MonoRuntime;
 use hearthmirror_native::remote_ptr::RemotePtr;
 
 fn main() -> Result<(), ScryError> {
-    let needles: Vec<String> = std::env::args()
-        .skip(1)
-        .map(|s| s.to_lowercase())
-        .collect();
+    let needles: Vec<String> = std::env::args().skip(1).map(|s| s.to_lowercase()).collect();
     if needles.is_empty() {
         eprintln!("usage: diag_class_names <substring> [<substring>...]");
         std::process::exit(2);
@@ -33,7 +30,10 @@ fn main() -> Result<(), ScryError> {
     let ac_image = find_ac_image(&rt)?;
     let image = MonoImage::new(&rt, ac_image);
     let img_name = image.name().unwrap_or_default();
-    println!("=== diag_class_names: image={} @ {} ===", img_name, ac_image);
+    println!(
+        "=== diag_class_names: image={} @ {} ===",
+        img_name, ac_image
+    );
 
     let classes = image.enumerate_classes()?;
     println!("Enumerated {} classes total", classes.len());

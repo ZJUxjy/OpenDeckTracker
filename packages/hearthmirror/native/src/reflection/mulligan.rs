@@ -26,12 +26,8 @@ pub struct IsMulliganResult {
     pub mulligan: Option<bool>,
 }
 
-pub async fn is_mulligan_internal(
-    runtime: &MonoRuntime,
-) -> Result<IsMulliganResult, ScryError> {
-    let Some(instance) =
-        runtime.get_singleton(CLS_MULLIGAN_MGR.0, CLS_MULLIGAN_MGR.1)?
-    else {
+pub async fn is_mulligan_internal(runtime: &MonoRuntime) -> Result<IsMulliganResult, ScryError> {
+    let Some(instance) = runtime.get_singleton(CLS_MULLIGAN_MGR.0, CLS_MULLIGAN_MGR.1)? else {
         return Ok(IsMulliganResult { mulligan: None });
     };
 
@@ -39,7 +35,9 @@ pub async fn is_mulligan_internal(
     // Treat any non-null pointer as "banner present"; we don't
     // dereference it, so the reflector survives even if the GameObject
     // changes shape across game versions.
-    let active = instance.read_pointer_field(mem, FLD_MULLIGAN_BANNER)?.is_some();
+    let active = instance
+        .read_pointer_field(mem, FLD_MULLIGAN_BANNER)?
+        .is_some();
     Ok(IsMulliganResult {
         mulligan: Some(active),
     })
