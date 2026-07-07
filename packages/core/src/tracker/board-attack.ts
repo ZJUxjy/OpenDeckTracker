@@ -11,6 +11,11 @@ export interface HeroVitals {
   effectiveHealth: number;
 }
 
+export interface ManaState {
+  available: number;
+  total: number;
+}
+
 /**
  * Per-entity power-tag overlay. The host fills this from its
  * HearthWatcher state when available; missing entries fall back to
@@ -48,6 +53,8 @@ export interface MinionTags {
   taunt?: boolean;
   /** Divine shield — first incoming hit deals 0 damage and consumes the shield. */
   divineShield?: boolean;
+  poisonous?: boolean;
+  silenced?: boolean;
 }
 
 /**
@@ -57,12 +64,18 @@ export interface MinionTags {
  */
 export interface WeaponState {
   controllerId: number;
+  cardId?: string;
   attack: number;
   windfury?: boolean;
   megaWindfury?: boolean;
   numAttacksThisTurn?: number;
   /** When defined and ≤ 0, the weapon contributes 0. */
   durability?: number;
+}
+
+export interface HeroPowerState {
+  controllerId: number;
+  cardId: string;
 }
 
 /**
@@ -86,6 +99,8 @@ export interface ComputeBoardAttackOptions {
   tagsByEntityId?: ReadonlyMap<number, MinionTags>;
   /** Equipped weapons across both sides. Routed by `controllerId`. */
   weapons?: readonly WeaponState[];
+  /** Hero powers across both sides. Routed by `controllerId`. */
+  heroPowers?: readonly HeroPowerState[];
   /**
    * Hero attack states across both sides. When present, this supersedes
    * weapon contribution because hero tags include attack buffs and
@@ -111,6 +126,8 @@ export interface ComputeBoardAttackOptions {
   opposingHero?: HeroVitals | null;
   /** Friendly hero's current health/armor from the Power.log tag state. */
   friendlyHero?: HeroVitals | null;
+  /** Friendly player's current available/total mana from the Power.log tag state. */
+  friendlyMana?: ManaState | null;
 }
 
 const ZERO_BOARD_ATTACK: BoardAttackTotals = Object.freeze({ friendly: 0, opposing: 0 });

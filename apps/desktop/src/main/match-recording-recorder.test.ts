@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { DeckTrackerSnapshot, MatchRecording, MatchRecordingDetail } from '@hdt/core';
+import type {
+  DeckTrackerSnapshot,
+  MatchRecording,
+  MatchRecordingDetail,
+  RecordedAdvisorHistoryEntry,
+} from '@hdt/core';
 import type { PowerEvent } from '@hdt/hearthwatcher';
 import { createMatchRecordingRecorder } from './match-recording-recorder';
 import type { MatchRecordingStore } from './match-recording-store';
@@ -234,6 +239,48 @@ describe('match-recording-recorder', () => {
       },
       finalSummary: {
         matchFingerprint: 'match-v2-1000-1',
+      },
+    });
+  });
+
+  it('persists advisor suggestion history when the match completes', () => {
+    const store = createMemoryStore();
+    const advisorHistory: RecordedAdvisorHistoryEntry[] = [
+      {
+        id: 'turn-3',
+        kind: 'turn',
+        turn: 3,
+        createdAt: 1_500,
+        suggestion: {
+          actions: [{ kind: 'play', cardId: 'CS2_029', note: 'Push damage.' }],
+          reasoning: 'Set up lethal.',
+          alerts: [],
+        },
+        followUps: [
+          {
+            question: 'Why not trade?',
+            answer: 'Face pressure wins next turn.',
+            createdAt: 1_600,
+          },
+        ],
+      },
+    ];
+    const recorder = createMatchRecordingRecorder({
+      store,
+      getSnapshot: () => snapshot(),
+      getAdvisorHistory: () => advisorHistory,
+      now: vi.fn().mockReturnValueOnce(1_000).mockReturnValueOnce(2_000),
+      createRecordingId: () => 'rec-a',
+    });
+
+    recorder.handleEvent(createGame);
+    recorder.handleEvent(completeState);
+
+    expect(store.recordings.get('rec-a')).toMatchObject({
+      status: 'completed',
+      advisorHistory,
+      finalSummary: {
+        advisorEntryCount: 1,
       },
     });
   });

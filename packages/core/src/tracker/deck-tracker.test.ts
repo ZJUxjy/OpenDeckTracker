@@ -149,6 +149,73 @@ describe('DeckTracker', () => {
     tracker.start();
     await advanceTicks(2);
     expect(tracker.getSnapshot().phase).toBe('IDLE');
+    expect(tracker.getSnapshot().turn).toBeNull();
+    tracker.stop();
+  });
+
+  it('exposes the latest recorded turn number in snapshots', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+
+    expect(tracker.getSnapshot().turn).toBeNull();
+
+    tracker.recordTurnChange(7);
+
+    expect(tracker.getSnapshot().turn).toBe(7);
+  });
+
+  it('exposes isLocalTurn based on current player controller', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+
+    // Before any CURRENT_PLAYER observation, isLocalTurn is false.
+    expect(tracker.getSnapshot().isLocalTurn).toBe(false);
+
+    // Set local controller to 1, then entity 100 with controllerId=1
+    // becomes the current player → isLocalTurn true.
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 100, cardId: '', zone: 'PLAY', controllerId: 1 },
+    ]);
+    tracker.recordCurrentPlayerChange(100);
+    // recordCurrentPlayerChange doesn't rebuild the snapshot on its own;
+    // a turn change or tick is what triggers the rebuild in production.
+    tracker.recordTurnChange(1);
+
+    expect(tracker.getSnapshot().isLocalTurn).toBe(true);
+
+    // Now the opponent (controllerId=2) becomes the current player.
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 200, cardId: '', zone: 'PLAY', controllerId: 2 },
+    ]);
+    tracker.recordCurrentPlayerChange(200);
+    tracker.recordTurnChange(2);
+
+    expect(tracker.getSnapshot().isLocalTurn).toBe(false);
+  });
+
+  it('exposes mulligan phase state in snapshots', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+    state.isMulligan = { mulligan: true };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().isMulligan).toBe(true);
+
+    state.isMulligan = { mulligan: false };
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().isMulligan).toBe(false);
     tracker.stop();
   });
 
@@ -694,6 +761,80 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('exposes board minion details with tag overlay state', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = {
+      friendly: [
+        { entityId: 11, cardId: 'FRIENDLY_MINION', zonePosition: 1, attack: 4, health: 5, damage: 2 },
+      ],
+      opposing: [
+        { entityId: 21, cardId: 'OPPOSING_MINION', zonePosition: 1, attack: 2, health: 3, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        tagsByEntityId: new Map([
+          [11, {
+            taunt: true,
+            divineShield: true,
+            poisonous: true,
+            frozen: true,
+            numTurnsInPlay: 0,
+            windfury: true,
+            silenced: true,
+          }],
+          [21, { numTurnsInPlay: 1 }],
+        ]),
+        localControllerId: 1,
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().boardMinions).toEqual({
+      friendly: [
+        {
+          entityId: 11,
+          cardId: 'FRIENDLY_MINION',
+          atk: 4,
+          health: 3,
+          maxHealth: 5,
+          taunt: true,
+          divineShield: true,
+          poisonous: true,
+          frozen: true,
+          asleep: true,
+          windfury: true,
+          silenced: true,
+        },
+      ],
+      opposing: [
+        {
+          entityId: 21,
+          cardId: 'OPPOSING_MINION',
+          atk: 2,
+          health: 3,
+          maxHealth: 3,
+          taunt: false,
+          divineShield: false,
+          poisonous: false,
+          frozen: false,
+          asleep: false,
+          windfury: false,
+          silenced: false,
+        },
+      ],
+    });
+    tracker.stop();
+  });
+
   it('caches board-attack figures between turn boundaries (lethal heuristic guard)', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();
@@ -780,6 +921,78 @@ describe('DeckTracker', () => {
 
     expect(tracker.getSnapshot().friendlyHero?.health).toBe(20);
     expect(tracker.getSnapshot().opposingHero?.health).toBe(12);
+    tracker.stop();
+  });
+
+  it('updates friendly mana on every tick from the host context', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    let available = 3;
+    let total = 5;
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        friendlyMana: { available, total },
+        localControllerId: 1,
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().friendlyMana).toEqual({ available: 3, total: 5 });
+
+    available = 1;
+    total = 6;
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().friendlyMana).toEqual({ available: 1, total: 6 });
+    tracker.stop();
+  });
+
+  it('exposes hero powers and equipped weapons from the host context', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        heroPowers: [
+          { controllerId: 1, cardId: 'HERO_POWER_FRIENDLY' },
+          { controllerId: 2, cardId: 'HERO_POWER_OPPOSING' },
+        ],
+        weapons: [
+          { controllerId: 1, cardId: 'WEAPON_FRIENDLY', attack: 3, durability: 2 },
+          { controllerId: 2, cardId: 'WEAPON_OPPOSING', attack: 1, durability: 4 },
+        ],
+        localControllerId: 1,
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().friendlyHeroPower).toEqual({ cardId: 'HERO_POWER_FRIENDLY' });
+    expect(tracker.getSnapshot().opposingHeroPower).toEqual({ cardId: 'HERO_POWER_OPPOSING' });
+    expect(tracker.getSnapshot().friendlyWeapon).toEqual({
+      cardId: 'WEAPON_FRIENDLY',
+      atk: 3,
+      durability: 2,
+    });
+    expect(tracker.getSnapshot().opposingWeapon).toEqual({
+      cardId: 'WEAPON_OPPOSING',
+      atk: 1,
+      durability: 4,
+    });
     tracker.stop();
   });
 

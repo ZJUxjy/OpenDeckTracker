@@ -8,6 +8,7 @@ import {
   type MatchRecordingDetail,
   type MatchRecordingSummary,
   type RawEventRef,
+  type RecordedAdvisorHistoryEntry,
 } from '@hdt/core';
 
 // Both real id shapes are confined to [A-Za-z0-9_-]: the recorder-generated
@@ -119,6 +120,7 @@ function normalizeRecording(recording: MatchRecording): MatchRecording {
       readArray<GameProgressNarrationFrame>(recording.narrationFrames),
       validSourceIndexes,
     ),
+    advisorHistory: readArray<RecordedAdvisorHistoryEntry>(recording.advisorHistory),
     entities: readArray(recording.entities),
   };
   return {

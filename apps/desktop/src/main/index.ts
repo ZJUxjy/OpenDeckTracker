@@ -11,7 +11,7 @@ import { app, BrowserWindow, protocol, screen } from 'electron';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createMainWindow } from './window';
-import { registerIpc } from './ipc';
+import { registerIpc, startAdvisorService } from './ipc';
 import { startDeckTracker, onDeckTrackerPhase, onLiveMatchChange } from './deck-tracker';
 import { startHearthWatcher } from './hearthwatcher-host';
 import { OverlayManager } from './overlay-window';
@@ -211,6 +211,7 @@ if (!gotLock) {
       cardPreview,
     });
     startDeckTracker(deckStore);
+    startAdvisorService();
     startHearthWatcher();
     // Global edge-signal for "Hearthstone appeared / disappeared".
     // Subscribers (HearthMirror via deck-tracker, HearthWatcher) wire

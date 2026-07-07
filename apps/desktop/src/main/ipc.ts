@@ -24,8 +24,19 @@ import {
 } from './card-image-cache';
 import { ensureSetLogoCached } from './set-logo-cache';
 import { registerAboutIpc } from './about';
+import {
+  createAdvisorConfigStore,
+  defaultAdvisorConfigPath,
+  isAdvisorConfigured,
+  type AdvisorConfigStore,
+} from './advisor-config-store';
+import { broadcastAdvisorState, registerAdvisorIpc } from './advisor-ipc';
+import { startAdvisor, type AdvisorServiceHandle } from './advisor';
+import { createAdvisorModel } from './advisor-model';
+import { createAdvisorSession } from './advisor-session-factory';
 import { getHearthMirror } from './hearthmirror';
 import {
+  getDeckTracker,
   getLatestDeckTrackerSnapshot,
   onDeckTrackerPhase,
   onDeckTrackerSnapshotChange,
@@ -76,6 +87,12 @@ export interface OverlayControllers {
 
 let cardImageProtocolRegistered = false;
 
+let advisorServiceStarter: (() => void) | null = null;
+
+export function startAdvisorService(): void {
+  advisorServiceStarter?.();
+}
+
 function toHearthstoneLocale(appLocale?: string): 'enUS' | 'zhCN' {
   return appLocale === 'zh-CN' ? 'zhCN' : 'enUS';
 }
@@ -93,6 +110,73 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       if (win.isDestroyed() || win.webContents.id === event.sender.id) continue;
       win.webContents.send('i18n:changed', payload);
     }
+  });
+  const advisorConfigStore = createAdvisorConfigStore(
+    defaultAdvisorConfigPath(app.getPath('userData')),
+  );
+  let advisorCardDb: import('@hdt/hearthdb').CardDb | null = null;
+  let advisorServiceHandle: AdvisorServiceHandle | null = null;
+  let advisorAskFn = async (
+    _question: string,
+    _emitChunk?: (chunk: string) => void,
+  ): Promise<string> => {
+    throw new Error('Advisor session is not available');
+  };
+
+  function rebuildAdvisor(): void {
+    advisorServiceHandle?.dispose();
+    advisorServiceHandle = null;
+    advisorAskFn = async () => {
+      throw new Error('Advisor session is not available');
+    };
+
+    const config = advisorConfigStore.get();
+    if (
+      !isAdvisorConfigured(config, (ref) => advisorConfigStore.getApiKey(ref))
+    )
+      return;
+
+    const modelHandle = createAdvisorModel(config, (ref) =>
+      advisorConfigStore.getApiKey(ref),
+    );
+    if (modelHandle === null) return;
+
+    const tracker = getDeckTracker();
+    if (tracker === null) return;
+
+    advisorServiceHandle = startAdvisor({
+      tracker,
+      createSession: (initialSnapshot) => {
+        const currentConfig = advisorConfigStore.get();
+        if (!currentConfig.enabled) return null;
+        return createAdvisorSession({
+          config: currentConfig,
+          modelHandle,
+          getSnapshot: () =>
+            getLatestDeckTrackerSnapshot() ?? initialSnapshot,
+          cardDb: advisorCardDb,
+        });
+      },
+      broadcast: (_channel, state) => broadcastAdvisorState(state),
+    });
+
+    advisorAskFn = (question: string, emitChunk?: (chunk: string) => void) =>
+      advisorServiceHandle!.ask(question, emitChunk);
+  }
+
+  registerAdvisorIpc({
+    ask: (question, emitChunk) => advisorAskFn(question, emitChunk),
+    getConfig: () => advisorConfigStore.get(),
+    setConfig: (next) => {
+      const result = advisorConfigStore.set(next);
+      rebuildAdvisor();
+      return result;
+    },
+    setApiKey: (provider, apiKey) => {
+      const ref = advisorConfigStore.setApiKey(provider, apiKey);
+      rebuildAdvisor();
+      return ref;
+    },
   });
 
   if (overlay) {
@@ -431,6 +515,7 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
   });
 
   app.on('before-quit', () => {
+    advisorServiceHandle?.dispose();
     cardImageBulkDownload.abort();
     disposeCardImageBulkDownloadIpc();
     popularDecksSync.abort();
@@ -478,6 +563,7 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       ...(collectionSnapshotStore !== undefined ? { snapshotStore: collectionSnapshotStore } : {}),
     });
     popularDecksCardDb = db;
+    advisorCardDb = db;
     setCardDbForDeckTracker(db);
     const heroClassLookup = makeHeroClassLookup(db);
 
@@ -507,6 +593,11 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       console.warn('[deck-sync] initial sync failed', err);
     });
   });
+
+  advisorServiceStarter = () => {
+    rebuildAdvisor();
+  };
+
   return deckStore;
 }
 

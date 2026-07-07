@@ -364,6 +364,46 @@ describe('deck-tracker main host', () => {
     expect(context.friendlyHero).toBeNull();
   });
 
+  it('exposes friendly mana through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 1,
+        cardId: '',
+        tags: {
+          CONTROLLER: 1,
+          RESOURCES: 7,
+          RESOURCES_USED: 2,
+          TEMP_RESOURCES: 1,
+        },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          friendlyMana?: { available: number; total: number } | null;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+
+    expect(trackerArgs.boardAttackContextProvider(null, null, 1).friendlyMana).toEqual({
+      available: 6,
+      total: 7,
+    });
+  });
+
   it('exposes hero attack availability through the board attack context', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
     startDeckTracker(mocks.deckStore as never);
@@ -412,6 +452,116 @@ describe('deck-tracker main host', () => {
         numAttacksThisTurn: 1,
       }),
     ]);
+  });
+
+  it('exposes hero powers and weapon card ids through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 30,
+        cardId: 'HERO_POWER_FRIENDLY',
+        tags: { CARDTYPE: 10, CONTROLLER: 1, ZONE: 'PLAY' },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 31,
+        cardId: 'HERO_POWER_OPPOSING',
+        tags: { CARDTYPE: 10, CONTROLLER: 2, ZONE: 'PLAY' },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 40,
+        cardId: 'WEAPON_FRIENDLY',
+        tags: { CARDTYPE: 7, CONTROLLER: 1, ZONE: 'PLAY', ATK: 4, DURABILITY: 2 },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          heroPowers?: Array<{ controllerId: number; cardId: string }>;
+          weapons?: Array<{ controllerId: number; cardId?: string; attack: number; durability?: number }>;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+    const context = trackerArgs.boardAttackContextProvider(null, null, 1);
+
+    expect(context.heroPowers).toEqual([
+      { controllerId: 1, cardId: 'HERO_POWER_FRIENDLY' },
+      { controllerId: 2, cardId: 'HERO_POWER_OPPOSING' },
+    ]);
+    expect(context.weapons).toEqual([
+      expect.objectContaining({
+        controllerId: 1,
+        cardId: 'WEAPON_FRIENDLY',
+        attack: 4,
+        durability: 2,
+      }),
+    ]);
+  });
+
+  it('exposes board minion status tags through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 42,
+        cardId: 'MINION_001',
+        tags: {
+          CARDTYPE: 4,
+          CONTROLLER: 1,
+          ZONE: 'PLAY',
+          POISONOUS: 1,
+          SILENCED: 1,
+        },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          tagsByEntityId?: Map<number, { poisonous?: boolean; silenced?: boolean }>;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+
+    expect(trackerArgs.boardAttackContextProvider(null, null, 1).tagsByEntityId?.get(42)).toEqual(
+      expect.objectContaining({
+        poisonous: true,
+        silenced: true,
+      }),
+    );
   });
 
   it('uses tracker-supplied localControllerId regardless of matchInfo', async () => {

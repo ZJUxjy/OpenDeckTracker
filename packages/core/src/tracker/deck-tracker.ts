@@ -27,7 +27,11 @@ import {
   computeMaxFaceDamage,
   type BoardAttackTotals,
   type ComputeBoardAttackOptions,
+  type HeroPowerState,
   type HeroVitals,
+  type ManaState,
+  type MinionTags,
+  type WeaponState,
 } from './board-attack';
 import { nextPhase } from './phase-machine';
 import { resolvePhaseSignals, type LogPhaseSignals } from './phase-signals';
@@ -77,8 +81,37 @@ export interface OpponentCardRecord {
   created: boolean;
 }
 
+export interface BoardMinion {
+  entityId: number;
+  cardId: string;
+  atk: number;
+  health: number;
+  maxHealth: number;
+  taunt: boolean;
+  divineShield: boolean;
+  poisonous: boolean;
+  frozen: boolean;
+  asleep: boolean;
+  windfury: boolean;
+  silenced: boolean;
+}
+
+export interface HeroPowerSnapshot {
+  cardId: string;
+}
+
+export interface WeaponSnapshot {
+  cardId: string;
+  atk: number;
+  durability: number | null;
+}
+
 export interface DeckTrackerSnapshot {
   phase: MatchPhase;
+  /** Current Hearthstone turn number from Power.log, null until observed. */
+  turn?: number | null;
+  /** True while the local player is in the mulligan phase. */
+  isMulligan?: boolean;
   /** Match metadata (game/format/mission/players) — null in IDLE. */
   matchInfo: MatchInfo | null;
   /** Wall-clock timestamp for the current match start; null outside a match. */
@@ -173,10 +206,28 @@ export interface DeckTrackerSnapshot {
    * when no tag overlay is present (no taunt info ⇒ assume no taunts).
    */
   boardAttackToFace: BoardAttackTotals;
+  /** Minion details for both sides, derived from mirror boardState plus host tag overlay. */
+  boardMinions?: {
+    friendly: BoardMinion[];
+    opposing: BoardMinion[];
+  };
   /** Friendly hero's current health/armor when available from Power.log tags. */
   friendlyHero?: HeroVitals | null;
   /** Opposing hero's current health/armor when available from Power.log tags. */
   opposingHero?: HeroVitals | null;
+  friendlyHeroPower?: HeroPowerSnapshot | null;
+  opposingHeroPower?: HeroPowerSnapshot | null;
+  friendlyWeapon?: WeaponSnapshot | null;
+  opposingWeapon?: WeaponSnapshot | null;
+  /** Friendly player's available and total mana when available from Power.log tags. */
+  friendlyMana?: ManaState | null;
+  /**
+   * Whether it is currently the local player's turn (based on
+   * `CURRENT_PLAYER` tag). `false` during the opponent's turn and
+   * before the first turn-owner observation. Used by the advisor to
+   * avoid generating suggestions during the opponent's turn.
+   */
+  isLocalTurn?: boolean;
   /**
    * Local player's hero class for the active match (e.g. `'DRUID'`),
    * resolved from the identified deck. `null` until a deck has been
@@ -358,6 +409,7 @@ export class DeckTracker {
   private cachedBoardAttack: BoardAttackTotals | null = null;
   private cachedBoardAttackToFace: BoardAttackTotals | null = null;
   private boardAttackRefreshPending = false;
+  private currentTurn: number | null = null;
   /**
    * Numeric controllerId of whichever player currently owns the turn
    * (CURRENT_PLAYER tag = 1 in Power.log). Updated through
@@ -622,6 +674,7 @@ export class DeckTracker {
   }
 
   recordTurnChange(turn: number): void {
+    this.currentTurn = turn;
     this.extraDisplayState.recordTurnChange(turn);
     // A turn boundary — refresh the cached board-attack figures on
     // this rebuild. Hero vitals are not cached and always reflect the
@@ -879,6 +932,7 @@ export class DeckTracker {
       this.game.reset();
       this.resetOpponentRecords();
       this.opponentClassCache = null;
+      this.currentTurn = null;
       this.resetBoardAttackCache();
       // NOTE: registry.reset() is intentionally NOT called here. The
       // global-effects registry is reset on the `create-game`
@@ -925,6 +979,7 @@ export class DeckTracker {
       this.lastKnownSelectedDeckId = null;
       this.identifiedDeck = null;
       this.opponentClassCache = null;
+      this.currentTurn = null;
       this.resetBoardAttackCache();
     }
     this.game.phase = target;
@@ -1438,9 +1493,28 @@ export class DeckTracker {
     const boardAttackToFace = this.cachedBoardAttackToFace ?? { friendly: 0, opposing: 0 };
     const friendlyHero = boardAttackOpts?.friendlyHero ?? null;
     const opposingHero = boardAttackOpts?.opposingHero ?? null;
+    const friendlyMana = boardAttackOpts?.friendlyMana ?? null;
+    const boardMinions = buildBoardMinions(
+      this.latestBoardState,
+      boardAttackOpts?.tagsByEntityId,
+    );
+    const localControllerId = this.game.localPlayer.controllerId;
+    const opposingControllerId = this.game.opposingPlayer.controllerId;
+    const friendlyHeroPower = heroPowerForController(
+      boardAttackOpts?.heroPowers,
+      localControllerId,
+    );
+    const opposingHeroPower = heroPowerForController(
+      boardAttackOpts?.heroPowers,
+      opposingControllerId,
+    );
+    const friendlyWeapon = weaponForController(boardAttackOpts?.weapons, localControllerId);
+    const opposingWeapon = weaponForController(boardAttackOpts?.weapons, opposingControllerId);
 
     return {
       phase: this.game.phase,
+      turn: this.currentTurn,
+      isMulligan: args?.isMulligan?.mulligan === true,
       matchInfo,
       matchStartedAt: this.game.startedAt,
       deck,
@@ -1457,8 +1531,15 @@ export class DeckTracker {
       opposingEffects: effects.opposing,
       boardAttack,
       boardAttackToFace,
+      boardMinions,
       friendlyHero,
       opposingHero,
+      friendlyHeroPower,
+      opposingHeroPower,
+      friendlyWeapon,
+      opposingWeapon,
+      friendlyMana,
+      isLocalTurn: this.isLocalPlayerTurn(),
       playerClass: this.identifiedDeck?.heroClass ?? null,
       ...(this.savedDeckAttribution !== null
         ? {
@@ -2193,9 +2274,72 @@ function normalizeMetadataToken(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
 }
 
+function buildBoardMinions(
+  boardState: BoardState | null,
+  tagsByEntityId: ReadonlyMap<number, MinionTags> | undefined,
+): NonNullable<DeckTrackerSnapshot['boardMinions']> {
+  if (boardState === null) return { friendly: [], opposing: [] };
+  return {
+    friendly: boardState.friendly.map((entity) => boardEntityToMinion(entity, tagsByEntityId)),
+    opposing: boardState.opposing.map((entity) => boardEntityToMinion(entity, tagsByEntityId)),
+  };
+}
+
+function boardEntityToMinion(
+  entity: BoardState['friendly'][number],
+  tagsByEntityId: ReadonlyMap<number, MinionTags> | undefined,
+): BoardMinion {
+  const tags = tagsByEntityId?.get(entity.entityId);
+  const maxHealth = Math.max(0, entity.health);
+  return {
+    entityId: entity.entityId,
+    cardId: entity.cardId,
+    atk: entity.attack,
+    health: Math.max(0, maxHealth - entity.damage),
+    maxHealth,
+    taunt: tags?.taunt === true,
+    divineShield: tags?.divineShield === true,
+    poisonous: tags?.poisonous === true,
+    frozen: tags?.frozen === true,
+    asleep: isAsleep(tags),
+    windfury: tags?.windfury === true || tags?.megaWindfury === true,
+    silenced: tags?.silenced === true,
+  };
+}
+
+function isAsleep(tags: MinionTags | undefined): boolean {
+  if (tags?.numTurnsInPlay === undefined) return false;
+  if (tags.numTurnsInPlay > 0) return false;
+  return tags.charge !== true && tags.rush !== true;
+}
+
+function heroPowerForController(
+  heroPowers: readonly HeroPowerState[] | undefined,
+  controllerId: number,
+): HeroPowerSnapshot | null {
+  const heroPower = heroPowers?.find((entry) => entry.controllerId === controllerId);
+  if (heroPower === undefined || heroPower.cardId === '') return null;
+  return { cardId: heroPower.cardId };
+}
+
+function weaponForController(
+  weapons: readonly WeaponState[] | undefined,
+  controllerId: number,
+): WeaponSnapshot | null {
+  const weapon = weapons?.find((entry) => entry.controllerId === controllerId && entry.cardId);
+  if (weapon === undefined || weapon.cardId === undefined || weapon.cardId === '') return null;
+  return {
+    cardId: weapon.cardId,
+    atk: weapon.attack,
+    durability: weapon.durability ?? null,
+  };
+}
+
 function blankSnapshot(): DeckTrackerSnapshot {
   return {
     phase: 'IDLE',
+    turn: null,
+    isMulligan: false,
     matchInfo: null,
     matchStartedAt: null,
     deck: null,
@@ -2218,8 +2362,15 @@ function blankSnapshot(): DeckTrackerSnapshot {
     opposingEffects: [],
     boardAttack: { friendly: 0, opposing: 0 },
     boardAttackToFace: { friendly: 0, opposing: 0 },
+    boardMinions: { friendly: [], opposing: [] },
     friendlyHero: null,
     opposingHero: null,
+    friendlyHeroPower: null,
+    opposingHeroPower: null,
+    friendlyWeapon: null,
+    opposingWeapon: null,
+    friendlyMana: null,
+    isLocalTurn: false,
     playerClass: null,
     error: null,
     updatedAt: 0,

@@ -118,4 +118,48 @@ describe('preload api', () => {
     );
     expect(result).toEqual({ ok: true, status: { state: 'running' } });
   });
+
+  it('exposes advisor ask, config, and subscription channels', async () => {
+    await import('./index');
+    const api = mocks.exposed as {
+      advisor: {
+        ask(question: string): Promise<unknown>;
+        getConfig(): Promise<unknown>;
+        setConfig(config: unknown): Promise<unknown>;
+        onState(cb: (state: unknown) => void): () => void;
+        onAskChunk(cb: (chunk: string) => void): () => void;
+      };
+    };
+    const config = { enabled: true, autoSuggest: true };
+    const state = { status: 'ready' };
+    const stateCb = vi.fn();
+    const chunkCb = vi.fn();
+
+    await api.advisor.ask('why trade?');
+    await api.advisor.getConfig();
+    await api.advisor.setConfig(config);
+    const offState = api.advisor.onState(stateCb);
+    const offChunk = api.advisor.onAskChunk(chunkCb);
+    const stateHandler = mocks.ipcRenderer.on.mock.calls.find(
+      ([channel]) => channel === 'advisor:state',
+    )?.[1] as ((event: unknown, state: unknown) => void) | undefined;
+    const chunkHandler = mocks.ipcRenderer.on.mock.calls.find(
+      ([channel]) => channel === 'advisor:ask:chunk',
+    )?.[1] as ((event: unknown, chunk: string) => void) | undefined;
+    stateHandler?.({}, state);
+    chunkHandler?.({}, 'chunk');
+    offState();
+    offChunk();
+
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('advisor:ask', 'why trade?');
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('advisor:config:get');
+    expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith('advisor:config:set', config);
+    expect(stateCb).toHaveBeenCalledWith(state);
+    expect(chunkCb).toHaveBeenCalledWith('chunk');
+    expect(mocks.ipcRenderer.removeListener).toHaveBeenCalledWith('advisor:state', stateHandler);
+    expect(mocks.ipcRenderer.removeListener).toHaveBeenCalledWith(
+      'advisor:ask:chunk',
+      chunkHandler,
+    );
+  });
 });

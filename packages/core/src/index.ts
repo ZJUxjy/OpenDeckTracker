@@ -25,10 +25,13 @@ export type { DeckCopy } from './tracker/expand-copies';
 // Tracker orchestrator.
 export { DeckTracker } from './tracker/deck-tracker';
 export type {
+  BoardMinion,
   DeckTrackerSnapshot,
   DeckTrackerEvent,
   DeckTrackerEventName,
+  HeroPowerSnapshot,
   OpponentCardRecord,
+  WeaponSnapshot,
 } from './tracker/deck-tracker';
 export type {
   ExtraDisplayCardLookup,
@@ -91,7 +94,9 @@ export type {
   BoardAttackTotals,
   ComputeBoardAttackOptions,
   HeroAttackState,
+  HeroPowerState,
   HeroVitals,
+  ManaState,
   MinionTags,
   WeaponState,
 } from './tracker/board-attack';
@@ -193,6 +198,11 @@ export type {
   OpponentRevealTimelineEvent,
   PlayCardTimelineEvent,
   RawEventRef,
+  RecordedAdvisorAction,
+  RecordedAdvisorAlert,
+  RecordedAdvisorFollowUp,
+  RecordedAdvisorHistoryEntry,
+  RecordedAdvisorSuggestion,
   RecordedCardRef,
   RecordedDeckCard,
   RecordedEntityState,
