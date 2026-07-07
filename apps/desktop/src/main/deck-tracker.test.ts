@@ -454,6 +454,49 @@ describe('deck-tracker main host', () => {
     ]);
   });
 
+  it('exposes board minion status tags through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 42,
+        cardId: 'MINION_001',
+        tags: {
+          CARDTYPE: 4,
+          CONTROLLER: 1,
+          ZONE: 'PLAY',
+          POISONOUS: 1,
+          SILENCED: 1,
+        },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          tagsByEntityId?: Map<number, { poisonous?: boolean; silenced?: boolean }>;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+
+    expect(trackerArgs.boardAttackContextProvider(null, null, 1).tagsByEntityId?.get(42)).toEqual(
+      expect.objectContaining({
+        poisonous: true,
+        silenced: true,
+      }),
+    );
+  });
+
   it('uses tracker-supplied localControllerId regardless of matchInfo', async () => {
     // Mid-restart scenario: matchInfo.localPlayer.id is still 0 but the
     // tracker's resolved local controller is 2 (the user is player 2).

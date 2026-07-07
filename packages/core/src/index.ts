@@ -25,6 +25,7 @@ export type { DeckCopy } from './tracker/expand-copies';
 // Tracker orchestrator.
 export { DeckTracker } from './tracker/deck-tracker';
 export type {
+  BoardMinion,
   DeckTrackerSnapshot,
   DeckTrackerEvent,
   DeckTrackerEventName,

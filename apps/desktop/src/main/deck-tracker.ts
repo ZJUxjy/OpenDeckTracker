@@ -402,6 +402,8 @@ function buildBoardAttackContext(
       extraAttacksThisTurn: numericTag(e.tags['EXTRA_ATTACKS_THIS_TURN']) ?? 0,
       taunt: boolTag(e.tags['TAUNT']),
       divineShield: boolTag(e.tags['DIVINE_SHIELD']),
+      poisonous: boolTag(e.tags['POISONOUS']),
+      silenced: boolTag(e.tags['SILENCED']),
     };
     if (numTurnsInPlay !== undefined) tags.numTurnsInPlay = numTurnsInPlay;
     tagsByEntityId.set(e.entityId, tags);

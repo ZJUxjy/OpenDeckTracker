@@ -29,6 +29,7 @@ import {
   type ComputeBoardAttackOptions,
   type HeroVitals,
   type ManaState,
+  type MinionTags,
 } from './board-attack';
 import { nextPhase } from './phase-machine';
 import { resolvePhaseSignals, type LogPhaseSignals } from './phase-signals';
@@ -76,6 +77,21 @@ export interface OpponentCardRecord {
    * exclude `created === true` records to avoid Discover-pollution.
    */
   created: boolean;
+}
+
+export interface BoardMinion {
+  entityId: number;
+  cardId: string;
+  atk: number;
+  health: number;
+  maxHealth: number;
+  taunt: boolean;
+  divineShield: boolean;
+  poisonous: boolean;
+  frozen: boolean;
+  asleep: boolean;
+  windfury: boolean;
+  silenced: boolean;
 }
 
 export interface DeckTrackerSnapshot {
@@ -176,6 +192,11 @@ export interface DeckTrackerSnapshot {
    * when no tag overlay is present (no taunt info ⇒ assume no taunts).
    */
   boardAttackToFace: BoardAttackTotals;
+  /** Minion details for both sides, derived from mirror boardState plus host tag overlay. */
+  boardMinions?: {
+    friendly: BoardMinion[];
+    opposing: BoardMinion[];
+  };
   /** Friendly hero's current health/armor when available from Power.log tags. */
   friendlyHero?: HeroVitals | null;
   /** Opposing hero's current health/armor when available from Power.log tags. */
@@ -1438,6 +1459,10 @@ export class DeckTracker {
     const friendlyHero = boardAttackOpts?.friendlyHero ?? null;
     const opposingHero = boardAttackOpts?.opposingHero ?? null;
     const friendlyMana = boardAttackOpts?.friendlyMana ?? null;
+    const boardMinions = buildBoardMinions(
+      this.latestBoardState,
+      boardAttackOpts?.tagsByEntityId,
+    );
 
     return {
       phase: this.game.phase,
@@ -1458,6 +1483,7 @@ export class DeckTracker {
       opposingEffects: effects.opposing,
       boardAttack,
       boardAttackToFace,
+      boardMinions,
       friendlyHero,
       opposingHero,
       friendlyMana,
@@ -2195,6 +2221,45 @@ function normalizeMetadataToken(value: string | undefined): string {
   return (value ?? '').trim().toUpperCase();
 }
 
+function buildBoardMinions(
+  boardState: BoardState | null,
+  tagsByEntityId: ReadonlyMap<number, MinionTags> | undefined,
+): NonNullable<DeckTrackerSnapshot['boardMinions']> {
+  if (boardState === null) return { friendly: [], opposing: [] };
+  return {
+    friendly: boardState.friendly.map((entity) => boardEntityToMinion(entity, tagsByEntityId)),
+    opposing: boardState.opposing.map((entity) => boardEntityToMinion(entity, tagsByEntityId)),
+  };
+}
+
+function boardEntityToMinion(
+  entity: BoardState['friendly'][number],
+  tagsByEntityId: ReadonlyMap<number, MinionTags> | undefined,
+): BoardMinion {
+  const tags = tagsByEntityId?.get(entity.entityId);
+  const maxHealth = Math.max(0, entity.health);
+  return {
+    entityId: entity.entityId,
+    cardId: entity.cardId,
+    atk: entity.attack,
+    health: Math.max(0, maxHealth - entity.damage),
+    maxHealth,
+    taunt: tags?.taunt === true,
+    divineShield: tags?.divineShield === true,
+    poisonous: tags?.poisonous === true,
+    frozen: tags?.frozen === true,
+    asleep: isAsleep(tags),
+    windfury: tags?.windfury === true || tags?.megaWindfury === true,
+    silenced: tags?.silenced === true,
+  };
+}
+
+function isAsleep(tags: MinionTags | undefined): boolean {
+  if (tags?.numTurnsInPlay === undefined) return false;
+  if (tags.numTurnsInPlay > 0) return false;
+  return tags.charge !== true && tags.rush !== true;
+}
+
 function blankSnapshot(): DeckTrackerSnapshot {
   return {
     phase: 'IDLE',
@@ -2221,6 +2286,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     opposingEffects: [],
     boardAttack: { friendly: 0, opposing: 0 },
     boardAttackToFace: { friendly: 0, opposing: 0 },
+    boardMinions: { friendly: [], opposing: [] },
     friendlyHero: null,
     opposingHero: null,
     friendlyMana: null,

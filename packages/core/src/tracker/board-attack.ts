@@ -53,6 +53,8 @@ export interface MinionTags {
   taunt?: boolean;
   /** Divine shield — first incoming hit deals 0 damage and consumes the shield. */
   divineShield?: boolean;
+  poisonous?: boolean;
+  silenced?: boolean;
 }
 
 /**

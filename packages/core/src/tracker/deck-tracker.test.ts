@@ -683,6 +683,80 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('exposes board minion details with tag overlay state', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = {
+      friendly: [
+        { entityId: 11, cardId: 'FRIENDLY_MINION', zonePosition: 1, attack: 4, health: 5, damage: 2 },
+      ],
+      opposing: [
+        { entityId: 21, cardId: 'OPPOSING_MINION', zonePosition: 1, attack: 2, health: 3, damage: 0 },
+      ],
+    };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        tagsByEntityId: new Map([
+          [11, {
+            taunt: true,
+            divineShield: true,
+            poisonous: true,
+            frozen: true,
+            numTurnsInPlay: 0,
+            windfury: true,
+            silenced: true,
+          }],
+          [21, { numTurnsInPlay: 1 }],
+        ]),
+        localControllerId: 1,
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().boardMinions).toEqual({
+      friendly: [
+        {
+          entityId: 11,
+          cardId: 'FRIENDLY_MINION',
+          atk: 4,
+          health: 3,
+          maxHealth: 5,
+          taunt: true,
+          divineShield: true,
+          poisonous: true,
+          frozen: true,
+          asleep: true,
+          windfury: true,
+          silenced: true,
+        },
+      ],
+      opposing: [
+        {
+          entityId: 21,
+          cardId: 'OPPOSING_MINION',
+          atk: 2,
+          health: 3,
+          maxHealth: 3,
+          taunt: false,
+          divineShield: false,
+          poisonous: false,
+          frozen: false,
+          asleep: false,
+          windfury: false,
+          silenced: false,
+        },
+      ],
+    });
+    tracker.stop();
+  });
+
   it('caches board-attack figures between turn boundaries (lethal heuristic guard)', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();
