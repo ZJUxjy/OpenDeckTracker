@@ -21,6 +21,8 @@
     "package": "electron-vite build && pnpm run prepare:native-runtime && electron-builder --config electron-builder.yml --win"
   },
   "dependencies": {
+    "@earendil-works/pi-agent-core": "0.80.3",
+    "@earendil-works/pi-ai": "0.80.3",
     "better-sqlite3": "^12.9.0",
     "electron-updater": "^6.8.3",
     "pngjs": "^7.0.0"
