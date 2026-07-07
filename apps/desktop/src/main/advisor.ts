@@ -107,6 +107,9 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   let requestInFlight = false;
   let history: RecordedAdvisorHistoryEntry[] = [];
   let disposed = false;
+  let currentSuggestion: AdvisorSuggestion | null = null;
+  let currentAlerts: AdvisorAlert[] = [];
+  let lastLethalFingerprint: string | null = null;
 
   function emitState(state: Omit<AdvisorMainState, 'updatedAt'>): void {
     if (disposed) return;
@@ -143,6 +146,8 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   ): void {
     const seq = ++requestSeq;
     requestInFlight = true;
+    currentSuggestion = null;
+    currentAlerts = [];
     emitState({ status: 'loading', suggestion: null, alerts: [], error: null });
 
     void Promise.resolve()
@@ -152,6 +157,8 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
         if (historyEntry !== null) {
           recordSuggestion(historyEntry.kind, historyEntry.turn, suggestion);
         }
+        currentSuggestion = suggestion;
+        currentAlerts = suggestion.alerts;
         emitState({
           status: 'ready',
           suggestion,
@@ -161,6 +168,8 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
       })
       .catch((error: unknown) => {
         if (disposed || seq !== requestSeq) return;
+        currentSuggestion = null;
+        currentAlerts = [];
         emitState({
           status: 'error',
           suggestion: null,
@@ -281,13 +290,20 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     abortStaleTurnWork(snapshot);
 
     const lethalAlert = formatLethalAlert(snapshot);
-    if (lethalAlert !== null) {
-      emitState({
-        status: 'ready',
-        suggestion: null,
-        alerts: [lethalAlert],
-        error: null,
-      });
+    const lethalFingerprint =
+      lethalAlert !== null ? `${lethalAlert.detail}` : null;
+
+    if (lethalFingerprint !== lastLethalFingerprint) {
+      lastLethalFingerprint = lethalFingerprint;
+      if (lethalAlert !== null) {
+        const alerts = [...currentAlerts, lethalAlert];
+        emitState({
+          status: 'ready',
+          suggestion: currentSuggestion,
+          alerts,
+          error: null,
+        });
+      }
     }
 
     maybeSuggestMulligan(snapshot);
@@ -302,6 +318,9 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     mulliganSuggested = false;
     suggestedTurn = null;
     scheduledTurn = null;
+    currentSuggestion = null;
+    currentAlerts = [];
+    lastLethalFingerprint = null;
     previousSnapshot = event.snapshot;
     maybeSuggestMulligan(event.snapshot);
   }
@@ -312,6 +331,9 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     mulliganSuggested = false;
     suggestedTurn = null;
     scheduledTurn = null;
+    currentSuggestion = null;
+    currentAlerts = [];
+    lastLethalFingerprint = null;
     previousSnapshot = event.snapshot;
     emitState({ status: 'idle', suggestion: null, alerts: [], error: null });
   }

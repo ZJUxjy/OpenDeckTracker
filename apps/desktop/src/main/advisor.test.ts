@@ -92,6 +92,63 @@ describe('advisor main service', () => {
     );
   });
 
+  it('does not re-broadcast the same lethal alert on consecutive snapshots', () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+
+    startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => null,
+    });
+    const lethalSnap = snapshot({
+      boardAttackToFace: { friendly: 6, opposing: 0 },
+      opposingHero: { health: 4, armor: 2, effectiveHealth: 6 },
+    });
+    emit('state-change', lethalSnap);
+    const callsBefore = broadcast.mock.calls.length;
+    emit('state-change', lethalSnap);
+
+    expect(broadcast.mock.calls.length).toBe(callsBefore);
+  });
+
+  it('preserves current suggestion when broadcasting a lethal alert', async () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+    const session = {
+      suggestMulligan: vi.fn(async () => suggestion),
+      suggestTurn: vi.fn(async () => suggestion),
+      abortInFlight: vi.fn(),
+    };
+
+    startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => session,
+      shouldSuggestTurn: (current) => current.turn === 1,
+      debounceMs: 0,
+    });
+    emit('match-started', snapshot({ turn: 1 }));
+    emit('state-change', snapshot({ turn: 1 }));
+    await vi.runAllTimersAsync();
+
+    broadcast.mockClear();
+    emit('state-change', snapshot({
+      turn: 1,
+      boardAttackToFace: { friendly: 6, opposing: 0 },
+      opposingHero: { health: 4, armor: 2, effectiveHealth: 6 },
+    }));
+
+    expect(broadcast).toHaveBeenCalledWith(
+      'advisor:state',
+      expect.objectContaining({
+        status: 'ready',
+        suggestion,
+        alerts: [{ type: 'lethal', detail: '6 damage available against 6 effective health.' }],
+      }),
+    );
+  });
+
   it('triggers a mulligan suggestion only once per match', async () => {
     const { tracker, emit } = trackerHarness();
     const broadcast = vi.fn();
