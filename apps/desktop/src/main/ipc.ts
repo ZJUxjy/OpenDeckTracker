@@ -25,9 +25,10 @@ import {
 import { ensureSetLogoCached } from './set-logo-cache';
 import { registerAboutIpc } from './about';
 import {
-  DEFAULT_ADVISOR_CONFIG,
-  registerAdvisorIpc,
-} from './advisor-ipc';
+  createAdvisorConfigStore,
+  defaultAdvisorConfigPath,
+} from './advisor-config-store';
+import { registerAdvisorIpc } from './advisor-ipc';
 import { getHearthMirror } from './hearthmirror';
 import {
   getLatestDeckTrackerSnapshot,
@@ -97,16 +98,15 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       win.webContents.send('i18n:changed', payload);
     }
   });
-  let advisorConfig = { ...DEFAULT_ADVISOR_CONFIG };
+  const advisorConfigStore = createAdvisorConfigStore(
+    defaultAdvisorConfigPath(app.getPath('userData')),
+  );
   registerAdvisorIpc({
     ask: async () => {
       throw new Error('Advisor session is not available');
     },
-    getConfig: () => advisorConfig,
-    setConfig: (next) => {
-      advisorConfig = { ...next };
-      return advisorConfig;
-    },
+    getConfig: () => advisorConfigStore.get(),
+    setConfig: (next) => advisorConfigStore.set(next),
   });
 
   if (overlay) {
