@@ -64,12 +64,18 @@ export interface MinionTags {
  */
 export interface WeaponState {
   controllerId: number;
+  cardId?: string;
   attack: number;
   windfury?: boolean;
   megaWindfury?: boolean;
   numAttacksThisTurn?: number;
   /** When defined and ≤ 0, the weapon contributes 0. */
   durability?: number;
+}
+
+export interface HeroPowerState {
+  controllerId: number;
+  cardId: string;
 }
 
 /**
@@ -93,6 +99,8 @@ export interface ComputeBoardAttackOptions {
   tagsByEntityId?: ReadonlyMap<number, MinionTags>;
   /** Equipped weapons across both sides. Routed by `controllerId`. */
   weapons?: readonly WeaponState[];
+  /** Hero powers across both sides. Routed by `controllerId`. */
+  heroPowers?: readonly HeroPowerState[];
   /**
    * Hero attack states across both sides. When present, this supersedes
    * weapon contribution because hero tags include attack buffs and

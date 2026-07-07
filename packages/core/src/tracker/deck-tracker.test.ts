@@ -902,6 +902,47 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('exposes hero powers and equipped weapons from the host context', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        heroPowers: [
+          { controllerId: 1, cardId: 'HERO_POWER_FRIENDLY' },
+          { controllerId: 2, cardId: 'HERO_POWER_OPPOSING' },
+        ],
+        weapons: [
+          { controllerId: 1, cardId: 'WEAPON_FRIENDLY', attack: 3, durability: 2 },
+          { controllerId: 2, cardId: 'WEAPON_OPPOSING', attack: 1, durability: 4 },
+        ],
+        localControllerId: 1,
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().friendlyHeroPower).toEqual({ cardId: 'HERO_POWER_FRIENDLY' });
+    expect(tracker.getSnapshot().opposingHeroPower).toEqual({ cardId: 'HERO_POWER_OPPOSING' });
+    expect(tracker.getSnapshot().friendlyWeapon).toEqual({
+      cardId: 'WEAPON_FRIENDLY',
+      atk: 3,
+      durability: 2,
+    });
+    expect(tracker.getSnapshot().opposingWeapon).toEqual({
+      cardId: 'WEAPON_OPPOSING',
+      atk: 1,
+      durability: 4,
+    });
+    tracker.stop();
+  });
+
   it('does not populate the board-attack cache while boardState is still null (PRE_MATCH bootstrap)', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

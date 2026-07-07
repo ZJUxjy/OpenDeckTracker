@@ -29,7 +29,9 @@ export type {
   DeckTrackerSnapshot,
   DeckTrackerEvent,
   DeckTrackerEventName,
+  HeroPowerSnapshot,
   OpponentCardRecord,
+  WeaponSnapshot,
 } from './tracker/deck-tracker';
 export type {
   ExtraDisplayCardLookup,
@@ -92,6 +94,7 @@ export type {
   BoardAttackTotals,
   ComputeBoardAttackOptions,
   HeroAttackState,
+  HeroPowerState,
   HeroVitals,
   ManaState,
   MinionTags,

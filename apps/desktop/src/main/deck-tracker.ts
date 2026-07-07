@@ -15,6 +15,7 @@ import {
   type ExtraDisplayCardMetadata,
   type HeroAttackState,
   type HeroClass,
+  type HeroPowerState,
   type HeroVitals,
   type LogDerivedEntityUpdate,
   type ManaState,
@@ -281,6 +282,11 @@ function isWeaponEntity(tags: Readonly<Record<string, unknown>>): boolean {
   return ct === 'WEAPON' || ct === 7;
 }
 
+function isHeroPowerEntity(tags: Readonly<Record<string, unknown>>): boolean {
+  const ct = tags['CARDTYPE'];
+  return ct === 'HERO_POWER' || ct === 10;
+}
+
 function isHeroEntity(entity: { cardId: string; tags: Readonly<Record<string, unknown>> }): boolean {
   const ct = entity.tags['CARDTYPE'];
   return ct === 'HERO' || ct === 3 || entity.cardId.startsWith('HERO_');
@@ -351,10 +357,20 @@ function buildBoardAttackContext(
   const tagsByEntityId = new Map<number, MinionTags>();
   const weapons: WeaponState[] = [];
   const heroAttacks: HeroAttackState[] = [];
+  const heroPowers: HeroPowerState[] = [];
 
   for (const e of boardAttackState.entities.values()) {
     if (e.zone !== 'PLAY') continue;
     const wfNum = numericTag(e.tags['WINDFURY']);
+    if (isHeroPowerEntity(e.tags)) {
+      if (e.cardId !== '') {
+        heroPowers.push({
+          controllerId: e.controllerId,
+          cardId: e.cardId,
+        });
+      }
+      continue;
+    }
     if (isHeroEntity(e)) {
       const attack = numericTag(e.tags['ATK']);
       if (attack !== undefined) {
@@ -377,6 +393,7 @@ function buildBoardAttackContext(
       const durability = numericTag(e.tags['DURABILITY']);
       const weapon: WeaponState = {
         controllerId: e.controllerId,
+        ...(e.cardId !== '' ? { cardId: e.cardId } : {}),
         attack,
         windfury: boolTag(e.tags['WINDFURY']),
         megaWindfury: wfNum === 3 || boolTag(e.tags['MEGA_WINDFURY']),
@@ -413,6 +430,7 @@ function buildBoardAttackContext(
     tagsByEntityId,
     weapons,
     heroAttacks,
+    heroPowers,
     localControllerId: localId,
     friendlyHero: heroVitalsForController(localId),
     opposingHero: opposingHeroVitals(localId),

@@ -27,9 +27,11 @@ import {
   computeMaxFaceDamage,
   type BoardAttackTotals,
   type ComputeBoardAttackOptions,
+  type HeroPowerState,
   type HeroVitals,
   type ManaState,
   type MinionTags,
+  type WeaponState,
 } from './board-attack';
 import { nextPhase } from './phase-machine';
 import { resolvePhaseSignals, type LogPhaseSignals } from './phase-signals';
@@ -92,6 +94,16 @@ export interface BoardMinion {
   asleep: boolean;
   windfury: boolean;
   silenced: boolean;
+}
+
+export interface HeroPowerSnapshot {
+  cardId: string;
+}
+
+export interface WeaponSnapshot {
+  cardId: string;
+  atk: number;
+  durability: number | null;
 }
 
 export interface DeckTrackerSnapshot {
@@ -203,6 +215,10 @@ export interface DeckTrackerSnapshot {
   friendlyHero?: HeroVitals | null;
   /** Opposing hero's current health/armor when available from Power.log tags. */
   opposingHero?: HeroVitals | null;
+  friendlyHeroPower?: HeroPowerSnapshot | null;
+  opposingHeroPower?: HeroPowerSnapshot | null;
+  friendlyWeapon?: WeaponSnapshot | null;
+  opposingWeapon?: WeaponSnapshot | null;
   /** Friendly player's available and total mana when available from Power.log tags. */
   friendlyMana?: ManaState | null;
   /**
@@ -1465,6 +1481,18 @@ export class DeckTracker {
       this.latestBoardState,
       boardAttackOpts?.tagsByEntityId,
     );
+    const localControllerId = this.game.localPlayer.controllerId;
+    const opposingControllerId = this.game.opposingPlayer.controllerId;
+    const friendlyHeroPower = heroPowerForController(
+      boardAttackOpts?.heroPowers,
+      localControllerId,
+    );
+    const opposingHeroPower = heroPowerForController(
+      boardAttackOpts?.heroPowers,
+      opposingControllerId,
+    );
+    const friendlyWeapon = weaponForController(boardAttackOpts?.weapons, localControllerId);
+    const opposingWeapon = weaponForController(boardAttackOpts?.weapons, opposingControllerId);
 
     return {
       phase: this.game.phase,
@@ -1489,6 +1517,10 @@ export class DeckTracker {
       boardMinions,
       friendlyHero,
       opposingHero,
+      friendlyHeroPower,
+      opposingHeroPower,
+      friendlyWeapon,
+      opposingWeapon,
       friendlyMana,
       playerClass: this.identifiedDeck?.heroClass ?? null,
       ...(this.savedDeckAttribution !== null
@@ -2263,6 +2295,28 @@ function isAsleep(tags: MinionTags | undefined): boolean {
   return tags.charge !== true && tags.rush !== true;
 }
 
+function heroPowerForController(
+  heroPowers: readonly HeroPowerState[] | undefined,
+  controllerId: number,
+): HeroPowerSnapshot | null {
+  const heroPower = heroPowers?.find((entry) => entry.controllerId === controllerId);
+  if (heroPower === undefined || heroPower.cardId === '') return null;
+  return { cardId: heroPower.cardId };
+}
+
+function weaponForController(
+  weapons: readonly WeaponState[] | undefined,
+  controllerId: number,
+): WeaponSnapshot | null {
+  const weapon = weapons?.find((entry) => entry.controllerId === controllerId && entry.cardId);
+  if (weapon === undefined || weapon.cardId === undefined || weapon.cardId === '') return null;
+  return {
+    cardId: weapon.cardId,
+    atk: weapon.attack,
+    durability: weapon.durability ?? null,
+  };
+}
+
 function blankSnapshot(): DeckTrackerSnapshot {
   return {
     phase: 'IDLE',
@@ -2293,6 +2347,10 @@ function blankSnapshot(): DeckTrackerSnapshot {
     boardMinions: { friendly: [], opposing: [] },
     friendlyHero: null,
     opposingHero: null,
+    friendlyHeroPower: null,
+    opposingHeroPower: null,
+    friendlyWeapon: null,
+    opposingWeapon: null,
     friendlyMana: null,
     playerClass: null,
     error: null,

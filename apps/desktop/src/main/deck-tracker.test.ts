@@ -454,6 +454,73 @@ describe('deck-tracker main host', () => {
     ]);
   });
 
+  it('exposes hero powers and weapon card ids through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 30,
+        cardId: 'HERO_POWER_FRIENDLY',
+        tags: { CARDTYPE: 10, CONTROLLER: 1, ZONE: 'PLAY' },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 31,
+        cardId: 'HERO_POWER_OPPOSING',
+        tags: { CARDTYPE: 10, CONTROLLER: 2, ZONE: 'PLAY' },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 40,
+        cardId: 'WEAPON_FRIENDLY',
+        tags: { CARDTYPE: 7, CONTROLLER: 1, ZONE: 'PLAY', ATK: 4, DURABILITY: 2 },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          heroPowers?: Array<{ controllerId: number; cardId: string }>;
+          weapons?: Array<{ controllerId: number; cardId?: string; attack: number; durability?: number }>;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+    const context = trackerArgs.boardAttackContextProvider(null, null, 1);
+
+    expect(context.heroPowers).toEqual([
+      { controllerId: 1, cardId: 'HERO_POWER_FRIENDLY' },
+      { controllerId: 2, cardId: 'HERO_POWER_OPPOSING' },
+    ]);
+    expect(context.weapons).toEqual([
+      expect.objectContaining({
+        controllerId: 1,
+        cardId: 'WEAPON_FRIENDLY',
+        attack: 4,
+        durability: 2,
+      }),
+    ]);
+  });
+
   it('exposes board minion status tags through the board attack context', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
     startDeckTracker(mocks.deckStore as never);
