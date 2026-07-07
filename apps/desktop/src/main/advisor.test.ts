@@ -222,6 +222,35 @@ describe('advisor main service', () => {
     );
   });
 
+  it('does not trigger turn suggestions during the opponent\'s turn', async () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+    const session = {
+      suggestMulligan: vi.fn(async () => suggestion),
+      suggestTurn: vi.fn(async () => suggestion),
+      abortInFlight: vi.fn(),
+    };
+
+    startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => session,
+      debounceMs: 0,
+    });
+    // Start at turn 0; local player's turn 1 should trigger.
+    emit('match-started', snapshot({ turn: 0, isLocalTurn: true }));
+    emit('state-change', snapshot({ turn: 1, isLocalTurn: true }));
+    await vi.runAllTimersAsync();
+
+    expect(session.suggestTurn).toHaveBeenCalledTimes(1);
+
+    // Opponent's turn — should NOT trigger.
+    emit('state-change', snapshot({ turn: 2, isLocalTurn: false }));
+    await vi.runAllTimersAsync();
+
+    expect(session.suggestTurn).toHaveBeenCalledTimes(1);
+  });
+
   it('records suggestions and follow-up answers for match recording persistence', async () => {
     const { tracker, emit } = trackerHarness();
     const broadcast = vi.fn();

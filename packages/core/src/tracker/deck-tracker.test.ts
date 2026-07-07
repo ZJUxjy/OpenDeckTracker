@@ -164,6 +164,36 @@ describe('DeckTracker', () => {
     expect(tracker.getSnapshot().turn).toBe(7);
   });
 
+  it('exposes isLocalTurn based on current player controller', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+
+    // Before any CURRENT_PLAYER observation, isLocalTurn is false.
+    expect(tracker.getSnapshot().isLocalTurn).toBe(false);
+
+    // Set local controller to 1, then entity 100 with controllerId=1
+    // becomes the current player → isLocalTurn true.
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 100, cardId: '', zone: 'PLAY', controllerId: 1 },
+    ]);
+    tracker.recordCurrentPlayerChange(100);
+    // recordCurrentPlayerChange doesn't rebuild the snapshot on its own;
+    // a turn change or tick is what triggers the rebuild in production.
+    tracker.recordTurnChange(1);
+
+    expect(tracker.getSnapshot().isLocalTurn).toBe(true);
+
+    // Now the opponent (controllerId=2) becomes the current player.
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 200, cardId: '', zone: 'PLAY', controllerId: 2 },
+    ]);
+    tracker.recordCurrentPlayerChange(200);
+    tracker.recordTurnChange(2);
+
+    expect(tracker.getSnapshot().isLocalTurn).toBe(false);
+  });
+
   it('exposes mulligan phase state in snapshots', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

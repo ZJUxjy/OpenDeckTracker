@@ -65,6 +65,7 @@ function defaultShouldSuggestTurn(
   return (
     current.phase === 'IN_MATCH' &&
     !current.isMulligan &&
+    current.isLocalTurn === true &&
     typeof current.turn === 'number' &&
     current.turn !== previous?.turn
   );

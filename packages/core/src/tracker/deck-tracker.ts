@@ -222,6 +222,13 @@ export interface DeckTrackerSnapshot {
   /** Friendly player's available and total mana when available from Power.log tags. */
   friendlyMana?: ManaState | null;
   /**
+   * Whether it is currently the local player's turn (based on
+   * `CURRENT_PLAYER` tag). `false` during the opponent's turn and
+   * before the first turn-owner observation. Used by the advisor to
+   * avoid generating suggestions during the opponent's turn.
+   */
+  isLocalTurn?: boolean;
+  /**
    * Local player's hero class for the active match (e.g. `'DRUID'`),
    * resolved from the identified deck. `null` until a deck has been
    * identified or selected. Used by recorders that need class context
@@ -1522,6 +1529,7 @@ export class DeckTracker {
       friendlyWeapon,
       opposingWeapon,
       friendlyMana,
+      isLocalTurn: this.isLocalPlayerTurn(),
       playerClass: this.identifiedDeck?.heroClass ?? null,
       ...(this.savedDeckAttribution !== null
         ? {
@@ -2352,6 +2360,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     friendlyWeapon: null,
     opposingWeapon: null,
     friendlyMana: null,
+    isLocalTurn: false,
     playerClass: null,
     error: null,
     updatedAt: 0,
