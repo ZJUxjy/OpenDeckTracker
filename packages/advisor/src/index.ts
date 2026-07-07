@@ -25,3 +25,10 @@ export { checkManaCombination } from './tools/mana-math-tool';
 export type { ManaCombinationInput, ManaCombinationResult } from './tools/mana-math-tool';
 export { computeDeckOdds } from './tools/deck-odds-tool';
 export type { DeckOddsCount, DeckOddsInput, DeckOddsResult } from './tools/deck-odds-tool';
+export { serializeAdvisorState } from './agent/state-serializer';
+export type {
+  AdvisorCardLookup,
+  AdvisorSerializableDeck,
+  AdvisorSerializableSnapshot,
+  SerializeAdvisorStateArgs,
+} from './agent/state-serializer';
