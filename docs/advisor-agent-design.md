@@ -213,3 +213,79 @@ packages/advisor/src/
 - 未配置 key / 断网时记牌器一切功能不受影响。
 - 对局结束后在复盘中能看到每回合当时的建议。
 - 本地端点（OpenAI 兼容）配置后全程无外网调用（卡图 CDN 除外）。
+
+## 11. 实施进度审核（2026-07-07，分支 `codex/advisor-agent` @ f56ad61，worktree `.worktrees/advisor-agent`）
+
+### 已完成（验证通过）
+
+| 里程碑 | 状态 | 验证 |
+|---|---|---|
+| M1 T1.1–T1.6 快照扩展 | ✅ 全部完成 | `turn` / `isMulligan`（mirror `isMulligan()` 反射器）/ `friendlyMana` / `boardMinions` / heroPower / weapon 均已入快照；`@hdt/core` 442 测试全绿 |
+| M2 T2.1–T2.9 advisor 包 | ✅ 全部完成 | pi 两包 pinned `0.80.3`；5 工具 + serializer + `AdvisorAgentRunner`（含 JSON 修复重试、tool discipline 校验）+ `AdvisorSession`（摘要窗口、abort）；31 测试全绿 |
+| M3 T3.2 IPC + preload | ✅ | 5 个 channel + `window.hdt.advisor` 已暴露 |
+| M3 T3.3 配置持久化 | ✅ | `advisor-config-store.ts`：schemaVersion、原子写、secrets 分离、`isConfigured` |
+| M3 T3.4 过期处理 | ✅ | `startAdvisor` 内 seq guard + abort + stale 广播，有测试 |
+| M3 T3.5 建议历史入录像 | ✅ | recorder/store 已扩展 `RecordedAdvisorHistoryEntry` |
+
+### 发现的问题（按严重度）
+
+1. **[阻塞] 组装层缺失**：`startAdvisor` 只有测试在调用，应用启动路径没接；`ipc.ts` 里 `ask` 是抛错占位符；**没有任何代码从 `AdvisorConfig` 构建 pi-ai `Model`**，也没有把 serializer + `AdvisorAgentRunner` + `AdvisorSession` 组合成 `createSession` 工厂。当前功能实际不可用。
+2. **[高] 回合归属判断缺失**：`advisor.ts` 的 `defaultShouldSuggestTurn` 只看 `turn` 数变化——**对手回合也会触发建议**。快照没有 `isLocalTurn` 字段（tracker 内部已有 `currentTurnController`，只差暴露）。
+3. **[中] lethal alert 会覆盖已有建议**：`handleStateChange` 里 lethal 命中时广播 `{ status:'ready', suggestion:null }`，UI 侧若直接整体替换 state 会把已展示的建议清掉；且斩杀持续期间每个 snapshot 重复广播。需 main 侧去重 + 渲染层 store 定义合并语义。
+4. **[中] API key 无 IPC 通道**：config store 有 `setApiKey/getApiKey`，但 `advisor-ipc.ts` 没有对应 channel，渲染层设置页无法写 key。
+5. **[低] ask 流式为空壳**：`ADVISOR_ASK_CHUNK_CHANNEL` 通道就绪，但 `AdvisorAgentRunner.ask` 等完整回答后一次性返回，从不产生 chunk。组装时需把 agent 的 streamFn/事件接到 emitChunk，或本期接受非流式并注明。
+6. M4（渲染层）完全未开始：renderer 目录零 advisor 代码。
+
+## 12. 修订后的剩余计划
+
+> 在 `codex/advisor-agent` 分支继续。顺序：M3.5 →（M4 各任务多数可并行）→ M5。
+
+### M3.5 — 组装与修复（新，优先级最高）
+
+- **T3.6** 快照暴露 `isLocalTurn: boolean`（tracker 用 `isLocalPlayerTurn()` 写入 `buildSnapshot`，blankSnapshot 置 false）；`defaultShouldSuggestTurn` 增加 `current.isLocalTurn` 条件 + 测试（对手回合不触发）。→ 修问题 2
+- **T3.7** `apps/desktop/src/main/advisor-model.ts`：`AdvisorConfig` → pi-ai `Model` 工厂（openai / anthropic / google / openai-compatible + baseURL + key 解析自 config store）；未配置返回 null。单测覆盖四种 provider 分支。→ 修问题 1
+- **T3.8** `createSession` 工厂：组合 `StateSerializer`（快照 provider 读 tracker 最新 snapshot）+ `createAdvisorAgent` + `AdvisorAgentRunner` + `AdvisorSession`；语言取自 config。→ 修问题 1
+- **T3.9** 启动接线：应用启动（deck-tracker 启动处）调用 `startAdvisor`，`broadcast` 用 `broadcastAdvisorState`；`ipc.ts` 的 `ask` 占位符替换为 `handle.ask`；config `enabled=false` 或未配置时 advisor 休眠（`createSession` 返回 null 已支持）；config 变更时重建。→ 修问题 1
+- **T3.10** IPC 增加 `advisor:api-key:set`（provider + key → `setApiKey`，返回更新后的 `apiKeyRef`）+ preload 暴露 + 测试。→ 修问题 4
+- **T3.11** lethal alert 去重：main 侧记录上次 alert 指纹，仅在 hasLethal 边沿（false→true 或数值变化）广播；广播结构改为不覆盖 suggestion（alerts 独立字段随最新建议一起带出）。→ 修问题 3
+- **T3.12**（可选，随 T3.9）ask 流式：若 pi-agent-core 事件流可拿到增量文本则接 `emitChunk`；否则本期一次性返回，UI 显示 spinner。→ 问题 5
+
+### M3.5 验收记录（2026-07-07，@ da2f683）
+
+| 任务 | 结论 |
+|---|---|
+| T3.6 `isLocalTurn` | ✅ 快照 + `defaultShouldSuggestTurn` 守卫 + 测试（core 443 绿） |
+| T3.7 Model 工厂 | ✅ `advisor-model.ts` 四 provider 分支 + 自定义模型回退 + `StaticCredentialStore`，有测试 |
+| T3.8 `createSession` 工厂 | ✅ `advisor-session-factory.ts` 组合 serializer + runner + session，有测试 |
+| T3.9 启动接线 | ✅ `index.ts` → `startAdvisorService` → `rebuildAdvisor`；ask 占位符已替换；config 变更重建；before-quit dispose |
+| T3.10 api-key IPC | ✅ `advisor:api-key:set` + preload `setApiKey`，有测试 |
+| T3.11 lethal 去重 | ✅ 指纹去重 + 广播保留 `currentSuggestion`（非破坏性） |
+| T3.12 ask chunk | ✅（最小实现）完整回答作为单个 chunk 发出，符合计划中的非流式后备选项 |
+
+测试：`@hdt/advisor` 31 绿、`@hdt/core` 443 绿、desktop main advisor 相关 35 绿。
+
+**验收遗留（非阻塞，转入后续任务）：**
+
+- **[跟进 A]** 分支 typecheck 失败：`LiveDeckSyncResult.removed` 相关错误为分支基点（2208c6e）遗留、main 已修复且与 advisor 无关。**动作：merge main 进 `codex/advisor-agent`**（M4 开工前做）。
+- **[跟进 B]** `advisor-session-factory.ts:89` 把 `config.maxToolRounds` 误用作会话摘要 `historyLimit`——语义错位，应各自独立配置。归入 T5.2 修正。
+- **[跟进 C]** lethal alert 只在指纹变化且非 null 时广播：斩杀窗口消失后（指纹变 null）不发清除广播，UI 会残留过期 alert。T4.1 store 设计时处理，或 main 侧补一次清除广播。
+
+### M4 — 渲染层 UI（原计划不变，注意事项更新）
+
+- **T4.1** `advisor-store.ts` + `use-advisor.ts`：store 合并语义须区分 `suggestion` 与 `alerts`（配合 T3.11），stale/error 不清 alerts。
+- **T4.2** `TrackerPanelTabs` 加 `advisorSlot`（模式照抄 `narrationSlot`），玩家侧 `OverlayView` 传入。
+- **T4.3** [P] `AdvisorPanel`：行动步骤列表 + reasoning + AlertBanner + loading/stale/error 态；卡牌 hover 复用 card-preview 协议。
+- **T4.4** [P] `FollowUpChat`：调 `window.hdt.advisor.ask`，订阅 `onAskChunk`（若 T3.12 落地则流式渲染）。
+- **T4.5** 设置页 "AI 建议" 区块：开关 / provider / model / baseURL / API key（走 T3.10 新通道）/ 隐私提示。
+- **T4.6** i18n zh/en 词条 + README 隐私声明补充。
+
+### M5 — 打磨与验证（原计划不变）
+
+- T5.1 复盘页展示历史建议；T5.2 成本控制设置；T5.3 录像回放评估脚本；T5.4 全仓 lint/typecheck/test 绿 + OpenSpec 归档。
+
+### 真机冒烟清单（M3.5 完成后即可做）
+
+1. 配置 openai-compatible + 本地端点，`pnpm dev` 起 app，进一局对战。
+2. 观察 main 进程日志：mulligan 触发一次、每个己方回合触发一次、对手回合不触发。
+3. 场面可斩杀时 alert 先于 LLM 响应出现。
+4. 对局结束后录像记录含 advisor history。
