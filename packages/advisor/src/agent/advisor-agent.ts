@@ -51,19 +51,65 @@ export class AdvisorAgentRunner {
     private readonly language: AdvisorLanguage,
   ) {}
 
-  async runSuggestionPrompt(serializedState: string): Promise<AdvisorSuggestion> {
-    await this.agent.prompt(buildTurnSuggestionPrompt(serializedState, this.language));
-    const firstText = latestAssistantText(this.agent.state.messages) ?? '';
-    const firstSuggestion = parseAdvisorSuggestionJson(firstText);
-    if (firstSuggestion !== null) return firstSuggestion;
-
-    await this.agent.prompt(buildJsonRepairPrompt(firstText, this.language));
-    const repairedText = latestAssistantText(this.agent.state.messages) ?? '';
-    const repairedSuggestion = parseAdvisorSuggestionJson(repairedText);
-    if (repairedSuggestion !== null) return repairedSuggestion;
-
-    throw new Error('Advisor agent did not return valid AdvisorSuggestion JSON');
+  abort(): void {
+    this.agent.abort();
   }
+
+  async runSuggestionPrompt(
+    serializedState: string,
+    signal?: AbortSignal,
+  ): Promise<AdvisorSuggestion> {
+    return this.withAbort(signal, async () => {
+      await this.agent.prompt(buildTurnSuggestionPrompt(serializedState, this.language));
+      throwIfAborted(signal);
+      const firstText = latestAssistantText(this.agent.state.messages) ?? '';
+      const firstSuggestion = parseAdvisorSuggestionJson(firstText);
+      if (firstSuggestion !== null) return firstSuggestion;
+
+      await this.agent.prompt(buildJsonRepairPrompt(firstText, this.language));
+      throwIfAborted(signal);
+      const repairedText = latestAssistantText(this.agent.state.messages) ?? '';
+      const repairedSuggestion = parseAdvisorSuggestionJson(repairedText);
+      if (repairedSuggestion !== null) return repairedSuggestion;
+
+      throw new Error('Advisor agent did not return valid AdvisorSuggestion JSON');
+    });
+  }
+
+  async ask(question: string, context: string, signal?: AbortSignal): Promise<string> {
+    return this.withAbort(signal, async () => {
+      await this.agent.prompt(
+        [
+          'Answer this follow-up question using the current session context.',
+          `Question: ${question}`,
+          '',
+          context,
+        ].join('\n'),
+      );
+      throwIfAborted(signal);
+      return latestAssistantText(this.agent.state.messages) ?? '';
+    });
+  }
+
+  private async withAbort<T>(signal: AbortSignal | undefined, work: () => Promise<T>): Promise<T> {
+    try {
+      throwIfAborted(signal);
+    } catch (error) {
+      this.agent.abort();
+      throw error;
+    }
+    const abort = (): void => this.agent.abort();
+    signal?.addEventListener('abort', abort, { once: true });
+    try {
+      return await work();
+    } finally {
+      signal?.removeEventListener('abort', abort);
+    }
+  }
+}
+
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (signal?.aborted === true) throw new Error('Advisor request aborted');
 }
 
 export function createAdvisorAgentRunner(args: CreateAdvisorAgentArgs): AdvisorAgentRunner {

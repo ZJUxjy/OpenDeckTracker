@@ -44,3 +44,5 @@ export {
   parseAdvisorSuggestionJson,
 } from './agent/advisor-agent';
 export type { CreateAdvisorAgentArgs } from './agent/advisor-agent';
+export { AdvisorSession } from './session/advisor-session';
+export type { AdvisorSessionOptions, AdvisorSuggestionRunner } from './session/advisor-session';
