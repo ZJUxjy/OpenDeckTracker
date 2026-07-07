@@ -115,7 +115,10 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
   );
   let advisorCardDb: import('@hdt/hearthdb').CardDb | null = null;
   let advisorServiceHandle: AdvisorServiceHandle | null = null;
-  let advisorAskFn = async (_question: string): Promise<string> => {
+  let advisorAskFn = async (
+    _question: string,
+    _emitChunk?: (chunk: string) => void,
+  ): Promise<string> => {
     throw new Error('Advisor session is not available');
   };
 
@@ -156,11 +159,12 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       broadcast: (_channel, state) => broadcastAdvisorState(state),
     });
 
-    advisorAskFn = (question: string) => advisorServiceHandle!.ask(question);
+    advisorAskFn = (question: string, emitChunk?: (chunk: string) => void) =>
+      advisorServiceHandle!.ask(question, emitChunk);
   }
 
   registerAdvisorIpc({
-    ask: (question) => advisorAskFn(question),
+    ask: (question, emitChunk) => advisorAskFn(question, emitChunk),
     getConfig: () => advisorConfigStore.get(),
     setConfig: (next) => {
       const result = advisorConfigStore.set(next);

@@ -348,4 +348,29 @@ describe('advisor main service', () => {
       },
     ]);
   });
+
+  it('emits the full answer as a single chunk via emitChunk', async () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+    const session = {
+      suggestMulligan: vi.fn(async () => suggestion),
+      suggestTurn: vi.fn(async () => suggestion),
+      ask: vi.fn(async () => 'Face pressure wins next turn.'),
+      abortInFlight: vi.fn(),
+    };
+
+    const handle = startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => session,
+      shouldSuggestTurn: () => false,
+      debounceMs: 0,
+    });
+    emit('match-started', snapshot({ turn: 1 }));
+    const emitChunk = vi.fn();
+    const answer = await handle.ask('Why not trade?', emitChunk);
+
+    expect(answer).toBe('Face pressure wins next turn.');
+    expect(emitChunk).toHaveBeenCalledWith('Face pressure wins next turn.');
+  });
 });

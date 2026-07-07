@@ -52,7 +52,7 @@ export interface StartAdvisorOptions {
 export interface AdvisorServiceHandle {
   dispose(): void;
   abortInFlight(): void;
-  ask(question: string): Promise<string>;
+  ask(question: string, emitChunk?: (chunk: string) => void): Promise<string>;
   getHistory(): RecordedAdvisorHistoryEntry[];
 }
 
@@ -352,11 +352,12 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
       for (const dispose of disposers) dispose();
     },
     abortInFlight: () => abortInFlight({ forceSessionAbort: true }),
-    async ask(question: string): Promise<string> {
+    async ask(question: string, emitChunk?: (chunk: string) => void): Promise<string> {
       if (session?.ask === undefined) {
         throw new Error('Advisor session does not support follow-up questions');
       }
       const answer = await session.ask(question);
+      emitChunk?.(answer);
       recordFollowUp(question, answer);
       return answer;
     },
