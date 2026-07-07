@@ -46,10 +46,22 @@ export function createAdvisorAgent(args: CreateAdvisorAgentArgs): Agent {
 }
 
 export class AdvisorAgentRunner {
+  private currentToolCallHistory: string[] = [];
+
   constructor(
     readonly agent: Agent,
     private readonly language: AdvisorLanguage,
-  ) {}
+  ) {
+    this.agent.subscribe((event) => {
+      if (event.type === 'tool_execution_start') {
+        this.currentToolCallHistory.push(event.toolName);
+      }
+    });
+  }
+
+  get toolCallHistory(): string[] {
+    return this.currentToolCallHistory.slice();
+  }
 
   abort(): void {
     this.agent.abort();
@@ -59,18 +71,23 @@ export class AdvisorAgentRunner {
     serializedState: string,
     signal?: AbortSignal,
   ): Promise<AdvisorSuggestion> {
+    this.currentToolCallHistory = [];
     return this.withAbort(signal, async () => {
       await this.agent.prompt(buildTurnSuggestionPrompt(serializedState, this.language));
       throwIfAborted(signal);
       const firstText = latestAssistantText(this.agent.state.messages) ?? '';
       const firstSuggestion = parseAdvisorSuggestionJson(firstText);
-      if (firstSuggestion !== null) return firstSuggestion;
+      if (firstSuggestion !== null && this.validateToolDiscipline(firstSuggestion) === null) {
+        return firstSuggestion;
+      }
 
       await this.agent.prompt(buildJsonRepairPrompt(firstText, this.language));
       throwIfAborted(signal);
       const repairedText = latestAssistantText(this.agent.state.messages) ?? '';
       const repairedSuggestion = parseAdvisorSuggestionJson(repairedText);
-      if (repairedSuggestion !== null) return repairedSuggestion;
+      if (repairedSuggestion !== null && this.validateToolDiscipline(repairedSuggestion) === null) {
+        return repairedSuggestion;
+      }
 
       throw new Error('Advisor agent did not return valid AdvisorSuggestion JSON');
     });
@@ -105,6 +122,14 @@ export class AdvisorAgentRunner {
     } finally {
       signal?.removeEventListener('abort', abort);
     }
+  }
+
+  private validateToolDiscipline(suggestion: AdvisorSuggestion): string | null {
+    const hasLethalAlert = suggestion.alerts.some((alert) => alert.type === 'lethal');
+    if (hasLethalAlert && !this.currentToolCallHistory.includes('lethal_check')) {
+      return 'lethal alerts require lethal_check';
+    }
+    return null;
   }
 }
 

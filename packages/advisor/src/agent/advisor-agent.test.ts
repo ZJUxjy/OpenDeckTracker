@@ -1,5 +1,9 @@
 import { CardDb, type CardDef } from '@hdt/hearthdb';
-import { createFauxCore, fauxAssistantMessage } from '@earendil-works/pi-ai/providers/faux';
+import {
+  createFauxCore,
+  fauxAssistantMessage,
+  fauxToolCall,
+} from '@earendil-works/pi-ai/providers/faux';
 import { describe, expect, test } from 'vitest';
 
 import type { AdvisorSerializableSnapshot } from './state-serializer';
@@ -88,7 +92,7 @@ describe('advisor agent', () => {
         JSON.stringify({
           actions: [{ kind: 'play', cardId: 'CS2_029', note: 'Use burn for lethal.' }],
           reasoning: 'The opponent is at six effective health.',
-          alerts: [{ type: 'lethal', detail: 'Fireball is exact lethal.' }],
+          alerts: [{ type: 'danger', detail: 'Opponent can answer next turn.' }],
         }),
       ),
     ]);
@@ -104,8 +108,61 @@ describe('advisor agent', () => {
 
     await expect(runner.runSuggestionPrompt('# State')).resolves.toMatchObject({
       reasoning: 'The opponent is at six effective health.',
-      alerts: [{ type: 'lethal' }],
+      alerts: [{ type: 'danger' }],
     });
     expect(faux.state.callCount).toBe(2);
+  });
+
+  test('records tool call order before parsing the final suggestion', async () => {
+    const faux = createFauxCore({ tokensPerSecond: 0 });
+    faux.setResponses([
+      fauxAssistantMessage(fauxToolCall('action_enum', {}), { stopReason: 'toolUse' }),
+      fauxAssistantMessage(fauxToolCall('lethal_check', {}), { stopReason: 'toolUse' }),
+      fauxAssistantMessage(
+        JSON.stringify({
+          actions: [{ kind: 'play', cardId: 'CS2_029', note: 'Use Fireball.' }],
+          reasoning: 'The lethal check confirms exact damage.',
+          alerts: [{ type: 'lethal', detail: 'Exact lethal is available.' }],
+        }),
+      ),
+    ]);
+    const runner = createAdvisorAgentRunner({
+      model: faux.getModel(),
+      streamFn: faux.streamSimple,
+      snapshot: snapshot(),
+      cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
+      cardDb: new CardDb(cards),
+      language: 'en',
+    });
+
+    await expect(runner.runSuggestionPrompt('# State')).resolves.toMatchObject({
+      alerts: [{ type: 'lethal' }],
+    });
+    expect(runner.toolCallHistory).toEqual(['action_enum', 'lethal_check']);
+  });
+
+  test('rejects lethal alerts that were not verified by lethal_check', async () => {
+    const faux = createFauxCore({ tokensPerSecond: 0 });
+    faux.setResponses([
+      fauxAssistantMessage(fauxToolCall('action_enum', {}), { stopReason: 'toolUse' }),
+      fauxAssistantMessage(
+        JSON.stringify({
+          actions: [{ kind: 'play', cardId: 'CS2_029', note: 'Use Fireball.' }],
+          reasoning: 'The opponent is low.',
+          alerts: [{ type: 'lethal', detail: 'Looks lethal.' }],
+        }),
+      ),
+      fauxAssistantMessage('still not verified'),
+    ]);
+    const runner = createAdvisorAgentRunner({
+      model: faux.getModel(),
+      streamFn: faux.streamSimple,
+      snapshot: snapshot(),
+      cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
+      cardDb: new CardDb(cards),
+      language: 'en',
+    });
+
+    await expect(runner.runSuggestionPrompt('# State')).rejects.toThrow('valid AdvisorSuggestion');
   });
 });
