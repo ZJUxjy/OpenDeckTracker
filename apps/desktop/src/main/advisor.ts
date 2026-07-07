@@ -95,6 +95,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   let scheduledTurn: number | null = null;
   let suggestedTurn: number | null = null;
   let requestSeq = 0;
+  let requestInFlight = false;
   let disposed = false;
 
   function emitState(state: Omit<AdvisorMainState, 'updatedAt'>): void {
@@ -114,17 +115,25 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     scheduledTurn = null;
   }
 
-  function abortInFlight(): void {
+  function abortInFlight(options: { forceSessionAbort?: boolean; markStale?: boolean } = {}): void {
+    const hadActiveWork = requestInFlight || turnTimer !== null;
+    if (!hadActiveWork && !options.forceSessionAbort) return;
     requestSeq += 1;
+    requestInFlight = false;
     clearTurnTimer();
     session?.abortInFlight?.();
+    if (options.markStale && hadActiveWork) {
+      emitState({ status: 'stale', suggestion: null, alerts: [], error: null });
+    }
   }
 
   function runSuggestion(load: () => Promise<AdvisorSuggestion>): void {
     const seq = ++requestSeq;
+    requestInFlight = true;
     emitState({ status: 'loading', suggestion: null, alerts: [], error: null });
 
-    void load()
+    void Promise.resolve()
+      .then(load)
       .then((suggestion) => {
         if (disposed || seq !== requestSeq) return;
         emitState({
@@ -142,6 +151,9 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
           alerts: [],
           error: formatError(error),
         });
+      })
+      .finally(() => {
+        if (seq === requestSeq) requestInFlight = false;
       });
   }
 
@@ -173,8 +185,25 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     }, debounceMs);
   }
 
+  function didTurnChange(snapshot: DeckTrackerSnapshot): boolean {
+    return (
+      previousSnapshot !== null &&
+      typeof snapshot.turn === 'number' &&
+      typeof previousSnapshot.turn === 'number' &&
+      snapshot.turn !== previousSnapshot.turn
+    );
+  }
+
+  function abortStaleTurnWork(snapshot: DeckTrackerSnapshot): void {
+    if (didTurnChange(snapshot)) {
+      abortInFlight({ markStale: true });
+    }
+  }
+
   function handleStateChange(event: DeckTrackerEvent): void {
     const { snapshot } = event;
+    abortStaleTurnWork(snapshot);
+
     const lethalAlert = formatLethalAlert(snapshot);
     if (lethalAlert !== null) {
       emitState({
@@ -191,7 +220,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   }
 
   function handleMatchStarted(event: DeckTrackerEvent): void {
-    abortInFlight();
+    abortInFlight({ forceSessionAbort: true });
     session = createSession(event.snapshot);
     mulliganSuggested = false;
     suggestedTurn = null;
@@ -201,7 +230,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   }
 
   function handleMatchEnded(event: DeckTrackerEvent): void {
-    abortInFlight();
+    abortInFlight({ forceSessionAbort: true });
     session = null;
     mulliganSuggested = false;
     suggestedTurn = null;
@@ -219,10 +248,10 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   return {
     dispose() {
       if (disposed) return;
-      abortInFlight();
+      abortInFlight({ forceSessionAbort: true });
       disposed = true;
       for (const dispose of disposers) dispose();
     },
-    abortInFlight,
+    abortInFlight: () => abortInFlight({ forceSessionAbort: true }),
   };
 }
