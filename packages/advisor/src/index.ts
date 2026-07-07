@@ -32,3 +32,15 @@ export type {
   AdvisorSerializableSnapshot,
   SerializeAdvisorStateArgs,
 } from './agent/state-serializer';
+export {
+  buildAdvisorSystemPrompt,
+  buildJsonRepairPrompt,
+  buildTurnSuggestionPrompt,
+} from './agent/prompts';
+export {
+  AdvisorAgentRunner,
+  createAdvisorAgent,
+  createAdvisorAgentRunner,
+  parseAdvisorSuggestionJson,
+} from './agent/advisor-agent';
+export type { CreateAdvisorAgentArgs } from './agent/advisor-agent';
