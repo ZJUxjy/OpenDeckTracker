@@ -8,3 +8,5 @@ export type {
   SuggestedAction,
   SuggestedActionKind,
 } from './types';
+export { precheckLethal, snapshotLethalPrecheck } from './tools/lethal-tool';
+export type { LethalPrecheck, LethalPrecheckResult } from './tools/lethal-tool';
