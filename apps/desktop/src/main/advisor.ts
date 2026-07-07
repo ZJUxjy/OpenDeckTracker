@@ -1,6 +1,11 @@
 import { precheckLethal } from '@hdt/advisor';
 import type { AdvisorAlert, AdvisorSuggestion } from '@hdt/advisor';
-import type { DeckTrackerEvent, DeckTrackerEventName, DeckTrackerSnapshot } from '@hdt/core';
+import type {
+  DeckTrackerEvent,
+  DeckTrackerEventName,
+  DeckTrackerSnapshot,
+  RecordedAdvisorHistoryEntry,
+} from '@hdt/core';
 
 type AdvisorTrackerEventName = Extract<
   DeckTrackerEventName,
@@ -18,6 +23,7 @@ export interface AdvisorTrackerLike {
 export interface AdvisorSessionLike {
   suggestMulligan(): Promise<AdvisorSuggestion>;
   suggestTurn(): Promise<AdvisorSuggestion>;
+  ask?(question: string): Promise<string>;
   abortInFlight?(): void;
 }
 
@@ -46,6 +52,8 @@ export interface StartAdvisorOptions {
 export interface AdvisorServiceHandle {
   dispose(): void;
   abortInFlight(): void;
+  ask(question: string): Promise<string>;
+  getHistory(): RecordedAdvisorHistoryEntry[];
 }
 
 const DEFAULT_DEBOUNCE_MS = 1_000;
@@ -96,6 +104,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   let suggestedTurn: number | null = null;
   let requestSeq = 0;
   let requestInFlight = false;
+  let history: RecordedAdvisorHistoryEntry[] = [];
   let disposed = false;
 
   function emitState(state: Omit<AdvisorMainState, 'updatedAt'>): void {
@@ -127,7 +136,10 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     }
   }
 
-  function runSuggestion(load: () => Promise<AdvisorSuggestion>): void {
+  function runSuggestion(
+    load: () => Promise<AdvisorSuggestion>,
+    historyEntry: { kind: RecordedAdvisorHistoryEntry['kind']; turn: number | null } | null,
+  ): void {
     const seq = ++requestSeq;
     requestInFlight = true;
     emitState({ status: 'loading', suggestion: null, alerts: [], error: null });
@@ -136,6 +148,9 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
       .then(load)
       .then((suggestion) => {
         if (disposed || seq !== requestSeq) return;
+        if (historyEntry !== null) {
+          recordSuggestion(historyEntry.kind, historyEntry.turn, suggestion);
+        }
         emitState({
           status: 'ready',
           suggestion,
@@ -157,12 +172,71 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
       });
   }
 
+  function recordSuggestion(
+    kind: RecordedAdvisorHistoryEntry['kind'],
+    turn: number | null,
+    suggestion: AdvisorSuggestion,
+  ): void {
+    const createdAt = now();
+    history = [
+      ...history,
+      {
+        id: `${kind}-${turn ?? 'unknown'}-${createdAt}`,
+        kind,
+        turn,
+        createdAt,
+        suggestion: cloneSuggestion(suggestion),
+        followUps: [],
+      },
+    ];
+  }
+
+  function recordFollowUp(question: string, answer: string): void {
+    const last = history.at(-1);
+    if (last === undefined) return;
+    history = [
+      ...history.slice(0, -1),
+      {
+        ...last,
+        followUps: [
+          ...last.followUps,
+          {
+            question,
+            answer,
+            createdAt: now(),
+          },
+        ],
+      },
+    ];
+  }
+
+  function cloneSuggestion(suggestion: AdvisorSuggestion): RecordedAdvisorHistoryEntry['suggestion'] {
+    return {
+      reasoning: suggestion.reasoning,
+      actions: suggestion.actions.map((action) => ({ ...action })),
+      alerts: suggestion.alerts.map((alert) => ({ ...alert })),
+    };
+  }
+
+  function cloneHistory(): RecordedAdvisorHistoryEntry[] {
+    return history.map((entry) => ({
+      ...entry,
+      suggestion: {
+        ...entry.suggestion,
+        actions: entry.suggestion.actions.map((action) => ({ ...action })),
+        alerts: entry.suggestion.alerts.map((alert) => ({ ...alert })),
+      },
+      followUps: entry.followUps.map((followUp) => ({ ...followUp })),
+    }));
+  }
+
   function maybeSuggestMulligan(snapshot: DeckTrackerSnapshot): void {
     if (!snapshot.isMulligan || mulliganSuggested) return;
     const currentSession = ensureSession(snapshot);
     if (currentSession === null) return;
     mulliganSuggested = true;
-    runSuggestion(() => currentSession.suggestMulligan());
+    const turn = typeof snapshot.turn === 'number' ? snapshot.turn : null;
+    runSuggestion(() => currentSession.suggestMulligan(), { kind: 'mulligan', turn });
   }
 
   function maybeSuggestTurn(snapshot: DeckTrackerSnapshot): void {
@@ -180,8 +254,9 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
       turnTimer = null;
       if (disposed || session === null) return;
       if (scheduledTurn !== null) suggestedTurn = scheduledTurn;
+      const turnForHistory = scheduledTurn;
       scheduledTurn = null;
-      runSuggestion(() => session!.suggestTurn());
+      runSuggestion(() => session!.suggestTurn(), { kind: 'turn', turn: turnForHistory });
     }, debounceMs);
   }
 
@@ -222,6 +297,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   function handleMatchStarted(event: DeckTrackerEvent): void {
     abortInFlight({ forceSessionAbort: true });
     session = createSession(event.snapshot);
+    history = [];
     mulliganSuggested = false;
     suggestedTurn = null;
     scheduledTurn = null;
@@ -253,5 +329,14 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
       for (const dispose of disposers) dispose();
     },
     abortInFlight: () => abortInFlight({ forceSessionAbort: true }),
+    async ask(question: string): Promise<string> {
+      if (session?.ask === undefined) {
+        throw new Error('Advisor session does not support follow-up questions');
+      }
+      const answer = await session.ask(question);
+      recordFollowUp(question, answer);
+      return answer;
+    },
+    getHistory: cloneHistory,
   };
 }

@@ -221,4 +221,45 @@ describe('advisor main service', () => {
       expect.objectContaining({ status: 'idle', suggestion: null }),
     );
   });
+
+  it('records suggestions and follow-up answers for match recording persistence', async () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+    const session = {
+      suggestMulligan: vi.fn(async () => suggestion),
+      suggestTurn: vi.fn(async () => suggestion),
+      ask: vi.fn(async () => 'Face pressure wins next turn.'),
+      abortInFlight: vi.fn(),
+    };
+    let timestamp = 1_500;
+
+    const handle = startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => session,
+      shouldSuggestTurn: (current) => current.turn === 3,
+      debounceMs: 0,
+      now: () => timestamp++,
+    });
+    emit('match-started', snapshot({ turn: 2 }));
+    emit('state-change', snapshot({ turn: 3 }));
+    await vi.runAllTimersAsync();
+    await handle.ask('Why not trade?');
+
+    expect(handle.getHistory()).toMatchObject([
+      {
+        kind: 'turn',
+        turn: 3,
+        createdAt: expect.any(Number),
+        suggestion,
+        followUps: [
+          {
+            question: 'Why not trade?',
+            answer: 'Face pressure wins next turn.',
+            createdAt: expect.any(Number),
+          },
+        ],
+      },
+    ]);
+  });
 });

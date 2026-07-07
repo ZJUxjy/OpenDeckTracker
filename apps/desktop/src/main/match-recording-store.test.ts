@@ -111,11 +111,12 @@ describe('match-recording-store', () => {
     expect(store.loadRecording('match-v2-1000-1')?.recordingId).toBe('rec-1');
   });
 
-  it('loads legacy recordings with empty analysis and narration arrays', async () => {
+  it('loads legacy recordings with empty analysis, narration, and advisor arrays', async () => {
     const store = createMatchRecordingStore(dir);
     const legacy = completedRecording({ recordingId: 'legacy' }) as Partial<MatchRecording>;
     delete legacy.analysisEvents;
     delete legacy.narrationFrames;
+    delete (legacy as Partial<MatchRecording> & { advisorHistory?: unknown }).advisorHistory;
     legacy.finalSummary = {
       recordingId: 'legacy',
       status: 'completed',
@@ -133,15 +134,18 @@ describe('match-recording-store', () => {
     expect(store.loadRecording('legacy')).toMatchObject({
       analysisEvents: [],
       narrationFrames: [],
+      advisorHistory: [],
       finalSummary: {
         analysisEventCount: 0,
         narrationFrameCount: 0,
+        advisorEntryCount: 0,
       },
     });
     expect(store.listCompleted()[0]).toMatchObject({
       recordingId: 'legacy',
       analysisEventCount: 0,
       narrationFrameCount: 0,
+      advisorEntryCount: 0,
     });
   });
 

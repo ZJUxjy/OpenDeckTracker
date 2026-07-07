@@ -118,6 +118,40 @@ export interface MatchRecordingSummary {
   timelineEventCount: number;
   analysisEventCount: number;
   narrationFrameCount: number;
+  advisorEntryCount?: number;
+}
+
+export interface RecordedAdvisorAction {
+  kind: string;
+  cardId?: string;
+  targetCardId?: string;
+  note: string;
+}
+
+export interface RecordedAdvisorAlert {
+  type: string;
+  detail: string;
+}
+
+export interface RecordedAdvisorSuggestion {
+  actions: RecordedAdvisorAction[];
+  reasoning: string;
+  alerts: RecordedAdvisorAlert[];
+}
+
+export interface RecordedAdvisorFollowUp {
+  question: string;
+  answer: string;
+  createdAt: number;
+}
+
+export interface RecordedAdvisorHistoryEntry {
+  id: string;
+  kind: 'mulligan' | 'turn';
+  turn: number | null;
+  createdAt: number;
+  suggestion: RecordedAdvisorSuggestion;
+  followUps: RecordedAdvisorFollowUp[];
 }
 
 export interface MatchRecording {
@@ -131,6 +165,7 @@ export interface MatchRecording {
   timeline: MatchTimelineEvent[];
   analysisEvents: GameProgressAnalysisEvent[];
   narrationFrames: GameProgressNarrationFrame[];
+  advisorHistory: RecordedAdvisorHistoryEntry[];
   rawEventRefs: RawEventRef[];
   entities: RecordedEntityState[];
 }
@@ -168,6 +203,7 @@ export function createEmptyMatchRecording(args: {
     timeline: [],
     analysisEvents: [],
     narrationFrames: [],
+    advisorHistory: [],
     rawEventRefs: [],
     entities: [],
   };
@@ -189,5 +225,6 @@ export function buildMatchRecordingSummary(recording: MatchRecording): MatchReco
     timelineEventCount: recording.timeline.length,
     analysisEventCount: recording.analysisEvents?.length ?? 0,
     narrationFrameCount: recording.narrationFrames?.length ?? 0,
+    advisorEntryCount: recording.advisorHistory?.length ?? 0,
   };
 }

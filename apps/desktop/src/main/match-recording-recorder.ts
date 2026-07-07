@@ -10,6 +10,7 @@ import {
   type DeckTrackerSnapshot,
   type GameProgressNarrationFrame,
   type MatchRecording,
+  type RecordedAdvisorHistoryEntry,
   type RecordedCardRef,
   type RecordingEntityLike,
 } from '@hdt/core';
@@ -33,6 +34,7 @@ export function createMatchRecordingRecorder(args: {
   store: MatchRecordingStore;
   getSnapshot: () => DeckTrackerSnapshot | null;
   getMatchFingerprint?: () => string | null;
+  getAdvisorHistory?: () => readonly RecordedAdvisorHistoryEntry[];
   resolveCardName?: CardNameResolver;
   onNarrationFrames?: (frames: readonly GameProgressNarrationFrame[]) => void;
   now?: () => number;
@@ -64,6 +66,7 @@ export function createMatchRecordingRecorder(args: {
       current.status = 'incomplete';
       current.endedAt = now();
       applyMatchFingerprint(current);
+      applyAdvisorHistory(current, args.getAdvisorHistory?.());
       current.finalSummary = buildMatchRecordingSummary(current);
       persist();
     }
@@ -144,6 +147,7 @@ export function createMatchRecordingRecorder(args: {
         current.status = 'completed';
         current.endedAt = now();
         applyMatchFingerprint(current);
+        applyAdvisorHistory(current, args.getAdvisorHistory?.());
         current.timeline.push({ kind: 'game-completed', sourceEventIndex });
         current.finalSummary = buildMatchRecordingSummary(current);
       }
@@ -151,6 +155,22 @@ export function createMatchRecordingRecorder(args: {
       persist();
     },
   };
+}
+
+function applyAdvisorHistory(
+  recording: MatchRecording,
+  advisorHistory: readonly RecordedAdvisorHistoryEntry[] | undefined,
+): void {
+  if (advisorHistory === undefined) return;
+  recording.advisorHistory = advisorHistory.map((entry) => ({
+    ...entry,
+    suggestion: {
+      ...entry.suggestion,
+      actions: entry.suggestion.actions.map((action) => ({ ...action })),
+      alerts: entry.suggestion.alerts.map((alert) => ({ ...alert })),
+    },
+    followUps: entry.followUps.map((followUp) => ({ ...followUp })),
+  }));
 }
 
 function applySnapshotMetadata(recording: MatchRecording, snapshot: DeckTrackerSnapshot | null): void {

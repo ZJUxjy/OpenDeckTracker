@@ -27,6 +27,7 @@ describe('createEmptyMatchRecording', () => {
       rawEventRefs: [],
       analysisEvents: [],
       narrationFrames: [],
+      advisorHistory: [],
     });
     expect(recording.endedAt).toBeNull();
   });
@@ -66,6 +67,27 @@ describe('createEmptyMatchRecording', () => {
     expect(buildMatchRecordingSummary(recording)).toMatchObject({
       analysisEventCount: 12,
       narrationFrameCount: 3,
+    });
+  });
+
+  it('summarizes advisor history count', () => {
+    const recording = createEmptyMatchRecording({
+      recordingId: 'rec-1',
+      startedAt: 1_000,
+    });
+    recording.advisorHistory = [
+      {
+        id: 'turn-3',
+        kind: 'turn',
+        turn: 3,
+        createdAt: 1_500,
+        suggestion: { actions: [], reasoning: 'Hold.', alerts: [] },
+        followUps: [],
+      },
+    ];
+
+    expect(buildMatchRecordingSummary(recording)).toMatchObject({
+      advisorEntryCount: 1,
     });
   });
 });
