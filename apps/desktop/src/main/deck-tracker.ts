@@ -736,6 +736,10 @@ export function getLatestDeckTrackerSnapshot(): DeckTrackerSnapshot | null {
   return tracker?.getSnapshot() ?? null;
 }
 
+export function getDeckTracker(): DeckTracker | null {
+  return tracker;
+}
+
 /**
  * Forward a HearthWatcher PowerEvent to the deck-tracker's
  * global-effects detector. Called from the watcher host alongside
