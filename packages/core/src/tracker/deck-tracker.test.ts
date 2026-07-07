@@ -149,7 +149,19 @@ describe('DeckTracker', () => {
     tracker.start();
     await advanceTicks(2);
     expect(tracker.getSnapshot().phase).toBe('IDLE');
+    expect(tracker.getSnapshot().turn).toBeNull();
     tracker.stop();
+  });
+
+  it('exposes the latest recorded turn number in snapshots', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+
+    expect(tracker.getSnapshot().turn).toBeNull();
+
+    tracker.recordTurnChange(7);
+
+    expect(tracker.getSnapshot().turn).toBe(7);
   });
 
   it('stays IDLE when HearthMirror returns only shell match info from the deck picker', async () => {

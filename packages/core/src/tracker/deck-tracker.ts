@@ -79,6 +79,8 @@ export interface OpponentCardRecord {
 
 export interface DeckTrackerSnapshot {
   phase: MatchPhase;
+  /** Current Hearthstone turn number from Power.log, null until observed. */
+  turn: number | null;
   /** Match metadata (game/format/mission/players) — null in IDLE. */
   matchInfo: MatchInfo | null;
   /** Wall-clock timestamp for the current match start; null outside a match. */
@@ -358,6 +360,7 @@ export class DeckTracker {
   private cachedBoardAttack: BoardAttackTotals | null = null;
   private cachedBoardAttackToFace: BoardAttackTotals | null = null;
   private boardAttackRefreshPending = false;
+  private currentTurn: number | null = null;
   /**
    * Numeric controllerId of whichever player currently owns the turn
    * (CURRENT_PLAYER tag = 1 in Power.log). Updated through
@@ -622,6 +625,7 @@ export class DeckTracker {
   }
 
   recordTurnChange(turn: number): void {
+    this.currentTurn = turn;
     this.extraDisplayState.recordTurnChange(turn);
     // A turn boundary — refresh the cached board-attack figures on
     // this rebuild. Hero vitals are not cached and always reflect the
@@ -879,6 +883,7 @@ export class DeckTracker {
       this.game.reset();
       this.resetOpponentRecords();
       this.opponentClassCache = null;
+      this.currentTurn = null;
       this.resetBoardAttackCache();
       // NOTE: registry.reset() is intentionally NOT called here. The
       // global-effects registry is reset on the `create-game`
@@ -925,6 +930,7 @@ export class DeckTracker {
       this.lastKnownSelectedDeckId = null;
       this.identifiedDeck = null;
       this.opponentClassCache = null;
+      this.currentTurn = null;
       this.resetBoardAttackCache();
     }
     this.game.phase = target;
@@ -1431,6 +1437,7 @@ export class DeckTracker {
 
     return {
       phase: this.game.phase,
+      turn: this.currentTurn,
       matchInfo,
       matchStartedAt: this.game.startedAt,
       deck,
@@ -2186,6 +2193,7 @@ function normalizeMetadataToken(value: string | undefined): string {
 function blankSnapshot(): DeckTrackerSnapshot {
   return {
     phase: 'IDLE',
+    turn: null,
     matchInfo: null,
     matchStartedAt: null,
     deck: null,
