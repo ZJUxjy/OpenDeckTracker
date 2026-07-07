@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.4",
+    "@hdt/advisor": "workspace:*",
     "@hdt/core": "workspace:*",
     "@hdt/hearthdb": "workspace:*",
     "@hdt/hearthmirror": "workspace:*",

@@ -75,6 +75,9 @@ importers:
       '@electron/rebuild':
         specifier: ^4.0.4
         version: 4.0.4
+      '@hdt/advisor':
+        specifier: workspace:*
+        version: link:../../packages/advisor
       '@hdt/core':
         specifier: workspace:*
         version: link:../../packages/core
