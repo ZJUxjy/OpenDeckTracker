@@ -19,3 +19,9 @@ export type {
   EnumerateActionsArgs,
   EnumeratedAction,
 } from './tools/action-enum-tool';
+export { lookupCard } from './tools/card-lookup-tool';
+export type { CardLookupArgs } from './tools/card-lookup-tool';
+export { checkManaCombination } from './tools/mana-math-tool';
+export type { ManaCombinationInput, ManaCombinationResult } from './tools/mana-math-tool';
+export { computeDeckOdds } from './tools/deck-odds-tool';
+export type { DeckOddsCount, DeckOddsInput, DeckOddsResult } from './tools/deck-odds-tool';
