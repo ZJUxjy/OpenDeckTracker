@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
+import type { AdvisorConfig } from '@hdt/advisor';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
 import type {
   OpponentDeckPrediction,
@@ -84,6 +85,14 @@ import type {
 } from '@hdt/core';
 import type { LiveDeckSnapshotInput } from '../main/deck-store';
 import type { LiveDeckSyncResult } from '../main/deck-sync-host';
+import type { AdvisorMainState } from '../main/advisor';
+import {
+  ADVISOR_ASK_CHANNEL,
+  ADVISOR_ASK_CHUNK_CHANNEL,
+  ADVISOR_CONFIG_GET_CHANNEL,
+  ADVISOR_CONFIG_SET_CHANNEL,
+  ADVISOR_STATE_CHANNEL,
+} from '../main/advisor-ipc';
 import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 import {
   CARD_IMAGE_BULK_DOWNLOAD_ABORT_CHANNEL,
@@ -364,6 +373,22 @@ const api = {
       const handler = (_e: IpcRendererEvent, payload: I18nSyncPayload): void => cb(payload);
       ipcRenderer.on('i18n:changed', handler);
       return () => ipcRenderer.removeListener('i18n:changed', handler);
+    },
+  },
+  advisor: {
+    ask: (question: string): Promise<string> => ipcRenderer.invoke(ADVISOR_ASK_CHANNEL, question),
+    getConfig: (): Promise<AdvisorConfig> => ipcRenderer.invoke(ADVISOR_CONFIG_GET_CHANNEL),
+    setConfig: (config: AdvisorConfig): Promise<AdvisorConfig> =>
+      ipcRenderer.invoke(ADVISOR_CONFIG_SET_CHANNEL, config),
+    onState: (cb: (state: AdvisorMainState) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, state: AdvisorMainState): void => cb(state);
+      ipcRenderer.on(ADVISOR_STATE_CHANNEL, handler);
+      return () => ipcRenderer.removeListener(ADVISOR_STATE_CHANNEL, handler);
+    },
+    onAskChunk: (cb: (chunk: string) => void): (() => void) => {
+      const handler = (_e: IpcRendererEvent, chunk: string): void => cb(chunk);
+      ipcRenderer.on(ADVISOR_ASK_CHUNK_CHANNEL, handler);
+      return () => ipcRenderer.removeListener(ADVISOR_ASK_CHUNK_CHANNEL, handler);
     },
   },
   opponentDeckPrediction: {
