@@ -772,6 +772,37 @@ describe('DeckTracker', () => {
     tracker.stop();
   });
 
+  it('updates friendly mana on every tick from the host context', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+
+    let available = 3;
+    let total = 5;
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+      boardAttackContextProvider: () => ({
+        friendlyMana: { available, total },
+        localControllerId: 1,
+      }),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().friendlyMana).toEqual({ available: 3, total: 5 });
+
+    available = 1;
+    total = 6;
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().friendlyMana).toEqual({ available: 1, total: 6 });
+    tracker.stop();
+  });
+
   it('does not populate the board-attack cache while boardState is still null (PRE_MATCH bootstrap)', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = fakeMatch();

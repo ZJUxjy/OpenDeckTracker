@@ -28,6 +28,7 @@ import {
   type BoardAttackTotals,
   type ComputeBoardAttackOptions,
   type HeroVitals,
+  type ManaState,
 } from './board-attack';
 import { nextPhase } from './phase-machine';
 import { resolvePhaseSignals, type LogPhaseSignals } from './phase-signals';
@@ -80,7 +81,7 @@ export interface OpponentCardRecord {
 export interface DeckTrackerSnapshot {
   phase: MatchPhase;
   /** Current Hearthstone turn number from Power.log, null until observed. */
-  turn: number | null;
+  turn?: number | null;
   /** Match metadata (game/format/mission/players) — null in IDLE. */
   matchInfo: MatchInfo | null;
   /** Wall-clock timestamp for the current match start; null outside a match. */
@@ -179,6 +180,8 @@ export interface DeckTrackerSnapshot {
   friendlyHero?: HeroVitals | null;
   /** Opposing hero's current health/armor when available from Power.log tags. */
   opposingHero?: HeroVitals | null;
+  /** Friendly player's available and total mana when available from Power.log tags. */
+  friendlyMana?: ManaState | null;
   /**
    * Local player's hero class for the active match (e.g. `'DRUID'`),
    * resolved from the identified deck. `null` until a deck has been
@@ -1434,6 +1437,7 @@ export class DeckTracker {
     const boardAttackToFace = this.cachedBoardAttackToFace ?? { friendly: 0, opposing: 0 };
     const friendlyHero = boardAttackOpts?.friendlyHero ?? null;
     const opposingHero = boardAttackOpts?.opposingHero ?? null;
+    const friendlyMana = boardAttackOpts?.friendlyMana ?? null;
 
     return {
       phase: this.game.phase,
@@ -1456,6 +1460,7 @@ export class DeckTracker {
       boardAttackToFace,
       friendlyHero,
       opposingHero,
+      friendlyMana,
       playerClass: this.identifiedDeck?.heroClass ?? null,
       ...(this.savedDeckAttribution !== null
         ? {
@@ -2218,6 +2223,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
     boardAttackToFace: { friendly: 0, opposing: 0 },
     friendlyHero: null,
     opposingHero: null,
+    friendlyMana: null,
     playerClass: null,
     error: null,
     updatedAt: 0,

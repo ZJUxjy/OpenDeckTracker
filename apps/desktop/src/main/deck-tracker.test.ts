@@ -364,6 +364,46 @@ describe('deck-tracker main host', () => {
     expect(context.friendlyHero).toBeNull();
   });
 
+  it('exposes friendly mana through the board attack context', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    forwardPowerEventToDeckTracker(
+      {
+        type: 'full-entity',
+        entityId: 1,
+        cardId: '',
+        tags: {
+          CONTROLLER: 1,
+          RESOURCES: 7,
+          RESOURCES_USED: 2,
+          TEMP_RESOURCES: 1,
+        },
+        raw: '',
+        content: '',
+      },
+      'replay',
+    );
+
+    const trackerCalls = mocks.DeckTracker.mock.calls as unknown as Array<[
+      {
+        boardAttackContextProvider: (
+          boardState: null,
+          matchInfo: { localPlayer: { id: number } } | null,
+          localControllerId: number,
+        ) => {
+          friendlyMana?: { available: number; total: number } | null;
+        };
+      },
+    ]>;
+    const trackerArgs = trackerCalls[0]![0];
+
+    expect(trackerArgs.boardAttackContextProvider(null, null, 1).friendlyMana).toEqual({
+      available: 6,
+      total: 7,
+    });
+  });
+
   it('exposes hero attack availability through the board attack context', async () => {
     const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
     startDeckTracker(mocks.deckStore as never);

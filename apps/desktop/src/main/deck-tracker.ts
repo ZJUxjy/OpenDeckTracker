@@ -17,6 +17,7 @@ import {
   type HeroClass,
   type HeroVitals,
   type LogDerivedEntityUpdate,
+  type ManaState,
   type MatchPhase,
   type MinionTags,
   type NormalizedCompletedMatch,
@@ -320,6 +321,21 @@ function opposingHeroVitals(localControllerId: number): HeroVitals | null {
   return null;
 }
 
+function manaForController(controllerId: number): ManaState | null {
+  for (const e of boardAttackState.entities.values()) {
+    if (e.controllerId !== controllerId) continue;
+    const resources = numericTag(e.tags['RESOURCES']);
+    if (resources === undefined) continue;
+    const used = numericTag(e.tags['RESOURCES_USED']) ?? 0;
+    const temporary = numericTag(e.tags['TEMP_RESOURCES']) ?? 0;
+    return {
+      available: Math.max(0, resources + temporary - used),
+      total: Math.max(0, resources),
+    };
+  }
+  return null;
+}
+
 function buildBoardAttackContext(
   _boardState: BoardState | null,
   _matchInfo: MatchInfo | null,
@@ -398,6 +414,7 @@ function buildBoardAttackContext(
     localControllerId: localId,
     friendlyHero: heroVitalsForController(localId),
     opposingHero: opposingHeroVitals(localId),
+    friendlyMana: manaForController(localId),
   };
 }
 

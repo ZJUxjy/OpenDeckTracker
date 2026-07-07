@@ -11,6 +11,11 @@ export interface HeroVitals {
   effectiveHealth: number;
 }
 
+export interface ManaState {
+  available: number;
+  total: number;
+}
+
 /**
  * Per-entity power-tag overlay. The host fills this from its
  * HearthWatcher state when available; missing entries fall back to
@@ -111,6 +116,8 @@ export interface ComputeBoardAttackOptions {
   opposingHero?: HeroVitals | null;
   /** Friendly hero's current health/armor from the Power.log tag state. */
   friendlyHero?: HeroVitals | null;
+  /** Friendly player's current available/total mana from the Power.log tag state. */
+  friendlyMana?: ManaState | null;
 }
 
 const ZERO_BOARD_ATTACK: BoardAttackTotals = Object.freeze({ friendly: 0, opposing: 0 });

@@ -92,6 +92,7 @@ export type {
   ComputeBoardAttackOptions,
   HeroAttackState,
   HeroVitals,
+  ManaState,
   MinionTags,
   WeaponState,
 } from './tracker/board-attack';
