@@ -1,5 +1,5 @@
 import { BrowserWindow, ipcMain, type IpcMainInvokeEvent } from 'electron';
-import type { AdvisorConfig } from '@hdt/advisor';
+import type { AdvisorConfig, AdvisorProvider } from '@hdt/advisor';
 import type { AdvisorMainState } from './advisor';
 export { DEFAULT_ADVISOR_CONFIG } from './advisor-config-store';
 
@@ -8,11 +8,13 @@ export const ADVISOR_ASK_CHANNEL = 'advisor:ask';
 export const ADVISOR_ASK_CHUNK_CHANNEL = 'advisor:ask:chunk';
 export const ADVISOR_CONFIG_GET_CHANNEL = 'advisor:config:get';
 export const ADVISOR_CONFIG_SET_CHANNEL = 'advisor:config:set';
+export const ADVISOR_API_KEY_SET_CHANNEL = 'advisor:api-key:set';
 
 export interface AdvisorIpcDeps {
   ask: (question: string, emitChunk: (chunk: string) => void) => Promise<string> | string;
   getConfig: () => AdvisorConfig;
   setConfig: (config: AdvisorConfig) => Promise<AdvisorConfig> | AdvisorConfig;
+  setApiKey: (provider: AdvisorProvider, apiKey: string) => string;
 }
 
 export function broadcastAdvisorState(
@@ -57,9 +59,16 @@ export function registerAdvisorIpc(deps: AdvisorIpcDeps): () => void {
       deps.setConfig(config),
   );
 
+  ipcMain.handle(
+    ADVISOR_API_KEY_SET_CHANNEL,
+    (_event, provider: AdvisorProvider, apiKey: string): string =>
+      deps.setApiKey(provider, apiKey),
+  );
+
   return () => {
     ipcMain.removeHandler(ADVISOR_ASK_CHANNEL);
     ipcMain.removeHandler(ADVISOR_CONFIG_GET_CHANNEL);
     ipcMain.removeHandler(ADVISOR_CONFIG_SET_CHANNEL);
+    ipcMain.removeHandler(ADVISOR_API_KEY_SET_CHANNEL);
   };
 }

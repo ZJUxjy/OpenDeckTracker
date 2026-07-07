@@ -19,9 +19,10 @@ vi.mock('electron', () => {
 });
 
 import * as electron from 'electron';
-import type { AdvisorConfig } from '@hdt/advisor';
+import type { AdvisorConfig, AdvisorProvider } from '@hdt/advisor';
 import type { AdvisorMainState } from './advisor';
 import {
+  ADVISOR_API_KEY_SET_CHANNEL,
   ADVISOR_ASK_CHANNEL,
   ADVISOR_ASK_CHUNK_CHANNEL,
   ADVISOR_CONFIG_GET_CHANNEL,
@@ -56,6 +57,7 @@ describe('advisor IPC', () => {
       ask: vi.fn(async () => 'answer'),
       getConfig: () => config,
       setConfig: (next) => next,
+      setApiKey: () => 'ref:test',
     });
 
     expect(electron.ipcMain.handle).toHaveBeenCalledWith(ADVISOR_ASK_CHANNEL, expect.any(Function));
@@ -65,6 +67,10 @@ describe('advisor IPC', () => {
     );
     expect(electron.ipcMain.handle).toHaveBeenCalledWith(
       ADVISOR_CONFIG_SET_CHANNEL,
+      expect.any(Function),
+    );
+    expect(electron.ipcMain.handle).toHaveBeenCalledWith(
+      ADVISOR_API_KEY_SET_CHANNEL,
       expect.any(Function),
     );
   });
@@ -80,6 +86,7 @@ describe('advisor IPC', () => {
       ask,
       getConfig: () => config,
       setConfig: (next) => next,
+      setApiKey: () => 'ref:test',
     });
 
     const result = await (electron.ipcMain as unknown as {
@@ -98,6 +105,7 @@ describe('advisor IPC', () => {
       ask: vi.fn(async () => 'answer'),
       getConfig: () => config,
       setConfig,
+      setApiKey: () => 'ref:test',
     });
     const ipc = electron.ipcMain as unknown as {
       invoke: (channel: string, event: unknown, config?: AdvisorConfig) => Promise<AdvisorConfig>;
@@ -110,6 +118,24 @@ describe('advisor IPC', () => {
       model: 'gpt-next-saved',
     });
     expect(setConfig).toHaveBeenCalledWith(next);
+  });
+
+  it('sets API key through IPC handler and returns the ref', async () => {
+    const setApiKey = vi.fn((provider: AdvisorProvider, apiKey: string) => `ref:${provider}`);
+    dispose = registerAdvisorIpc({
+      ask: vi.fn(async () => 'answer'),
+      getConfig: () => config,
+      setConfig: (next) => next,
+      setApiKey,
+    });
+    const ipc = electron.ipcMain as unknown as {
+      invoke: (channel: string, event: unknown, provider?: AdvisorProvider, apiKey?: string) => Promise<string>;
+    };
+
+    await expect(ipc.invoke(ADVISOR_API_KEY_SET_CHANNEL, {}, 'anthropic', 'sk-ant-test')).resolves.toBe(
+      'ref:anthropic',
+    );
+    expect(setApiKey).toHaveBeenCalledWith('anthropic', 'sk-ant-test');
   });
 
   it('broadcasts advisor state to every live window', () => {

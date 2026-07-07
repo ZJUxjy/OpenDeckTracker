@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
-import type { AdvisorConfig } from '@hdt/advisor';
+import type { AdvisorConfig, AdvisorProvider } from '@hdt/advisor';
 import type { CardDef, DeckBlueprint, SearchFilter } from '@hdt/hearthdb';
 import type {
   OpponentDeckPrediction,
@@ -87,6 +87,7 @@ import type { LiveDeckSnapshotInput } from '../main/deck-store';
 import type { LiveDeckSyncResult } from '../main/deck-sync-host';
 import type { AdvisorMainState } from '../main/advisor';
 import {
+  ADVISOR_API_KEY_SET_CHANNEL,
   ADVISOR_ASK_CHANNEL,
   ADVISOR_ASK_CHUNK_CHANNEL,
   ADVISOR_CONFIG_GET_CHANNEL,
@@ -380,6 +381,8 @@ const api = {
     getConfig: (): Promise<AdvisorConfig> => ipcRenderer.invoke(ADVISOR_CONFIG_GET_CHANNEL),
     setConfig: (config: AdvisorConfig): Promise<AdvisorConfig> =>
       ipcRenderer.invoke(ADVISOR_CONFIG_SET_CHANNEL, config),
+    setApiKey: (provider: AdvisorProvider, apiKey: string): Promise<string> =>
+      ipcRenderer.invoke(ADVISOR_API_KEY_SET_CHANNEL, provider, apiKey),
     onState: (cb: (state: AdvisorMainState) => void): (() => void) => {
       const handler = (_e: IpcRendererEvent, state: AdvisorMainState): void => cb(state);
       ipcRenderer.on(ADVISOR_STATE_CHANNEL, handler);

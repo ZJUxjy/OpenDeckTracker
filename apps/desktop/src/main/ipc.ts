@@ -167,6 +167,11 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       rebuildAdvisor();
       return result;
     },
+    setApiKey: (provider, apiKey) => {
+      const ref = advisorConfigStore.setApiKey(provider, apiKey);
+      rebuildAdvisor();
+      return ref;
+    },
   });
 
   if (overlay) {
