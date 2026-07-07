@@ -98,6 +98,8 @@ export interface DeckTrackerSnapshot {
   phase: MatchPhase;
   /** Current Hearthstone turn number from Power.log, null until observed. */
   turn?: number | null;
+  /** True while the local player is in the mulligan phase. */
+  isMulligan?: boolean;
   /** Match metadata (game/format/mission/players) — null in IDLE. */
   matchInfo: MatchInfo | null;
   /** Wall-clock timestamp for the current match start; null outside a match. */
@@ -1467,6 +1469,7 @@ export class DeckTracker {
     return {
       phase: this.game.phase,
       turn: this.currentTurn,
+      isMulligan: args?.isMulligan?.mulligan === true,
       matchInfo,
       matchStartedAt: this.game.startedAt,
       deck,
@@ -2264,6 +2267,7 @@ function blankSnapshot(): DeckTrackerSnapshot {
   return {
     phase: 'IDLE',
     turn: null,
+    isMulligan: false,
     matchInfo: null,
     matchStartedAt: null,
     deck: null,

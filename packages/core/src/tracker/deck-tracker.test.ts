@@ -164,6 +164,31 @@ describe('DeckTracker', () => {
     expect(tracker.getSnapshot().turn).toBe(7);
   });
 
+  it('exposes mulligan phase state in snapshots', async () => {
+    const { mirror, state } = makeMirror();
+    state.matchInfo = fakeMatch();
+    state.decks = [fakeDeck(1, 'A')];
+    state.deckState = { friendlyDeck: [], opposingDeckCount: 0 };
+    state.handState = { friendlyHand: [], opposingHandCount: 0 };
+    state.boardState = { friendly: [], opposing: [] };
+    state.isMulligan = { mulligan: true };
+
+    const tracker = new DeckTracker({
+      mirror,
+      identifier: new CallbackDeckIdentifier(async () => 1),
+    });
+    tracker.start();
+    await advanceTicks(4);
+
+    expect(tracker.getSnapshot().isMulligan).toBe(true);
+
+    state.isMulligan = { mulligan: false };
+    await advanceTicks(2);
+
+    expect(tracker.getSnapshot().isMulligan).toBe(false);
+    tracker.stop();
+  });
+
   it('stays IDLE when HearthMirror returns only shell match info from the deck picker', async () => {
     const { mirror, state } = makeMirror();
     state.matchInfo = shellMatchInfo();
