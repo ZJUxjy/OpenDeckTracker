@@ -1,20 +1,36 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Database, Info, Monitor, Palette } from 'lucide-react';
+import { Database, Info, Monitor, Palette, Sparkles } from 'lucide-react';
+import type { AdvisorConfig, AdvisorProvider } from '@hdt/advisor';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
 import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme, type UiStyle } from '../stores/appearance-store';
 
 const ALL_ACCENTS: Accent[] = ['blue', 'red', 'orange', 'yellow', 'green', 'mint', 'purple', 'pink'];
 const UI_STYLE_OPTIONS: UiStyle[] = ['reference', 'macos'];
+const ADVISOR_PROVIDER_OPTIONS: AdvisorProvider[] = [
+  'openai',
+  'anthropic',
+  'google',
+  'openai-compatible',
+];
 const ACCENT_LABELS: Record<Accent, string> = {
   blue: 'Blue', red: 'Red', orange: 'Orange', yellow: 'Yellow',
   green: 'Green', mint: 'Mint', purple: 'Purple', pink: 'Pink',
+};
+const DEFAULT_ADVISOR_CONFIG: AdvisorConfig = {
+  enabled: false,
+  autoSuggest: true,
+  provider: 'openai',
+  model: 'gpt-4o-mini',
+  language: 'zh',
+  maxToolRounds: 4,
 };
 
 const categories = [
   { id: 'appearance', labelKey: 'settings.appearance.categoryLabel', icon: Palette },
   { id: 'overlay', labelKey: 'settings.overlay', icon: Monitor },
   { id: 'data', labelKey: 'settings.data', icon: Database },
+  { id: 'advisor', labelKey: 'settings.advisor.categoryLabel', icon: Sparkles },
   { id: 'about', labelKey: 'settings.about.categoryLabel', icon: Info },
 ];
 
@@ -73,11 +89,20 @@ function SettingsRow({
   );
 }
 
-function ReferenceToggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+function ReferenceToggle({
+  checked,
+  onChange,
+  testId,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  testId?: string;
+}) {
   return (
     <button
       type="button"
       role="switch"
+      data-testid={testId}
       aria-checked={checked}
       onClick={onChange}
       className={`reference-toggle shrink-0 ${checked ? 'is-on' : ''}`}
@@ -135,6 +160,7 @@ export function Settings() {
             <button
               key={cat.id}
               type="button"
+              data-testid={`settings-category-${cat.id}`}
               onClick={() => setActiveCategory(cat.id)}
               className={activeCategory === cat.id ? 'is-active' : undefined}
             >
@@ -241,6 +267,8 @@ export function Settings() {
 
             {activeCategory === 'data' && <DataPanel />}
 
+            {activeCategory === 'advisor' && <AdvisorSettingsPanel />}
+
             {activeCategory === 'about' && <AboutPanel />}
 
             {activeCategory === 'overlay' && (
@@ -271,6 +299,216 @@ export function Settings() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AdvisorSettingsPanel() {
+  const { t } = useTranslation();
+  const [config, setConfig] = useState<AdvisorConfig>(DEFAULT_ADVISOR_CONFIG);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
+  const [apiKeySaved, setApiKeySaved] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    setLoaded(false);
+    setError(null);
+    const api = window.hdt?.advisor;
+    if (!api?.getConfig) {
+      setError(t('settings.advisor.unavailable'));
+      setLoaded(true);
+      return () => {
+        alive = false;
+      };
+    }
+    void api
+      .getConfig()
+      .then((next) => {
+        if (!alive) return;
+        setConfig({ ...DEFAULT_ADVISOR_CONFIG, ...next });
+        setLoaded(true);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setError(t('settings.advisor.unavailable'));
+        setLoaded(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [t]);
+
+  const saveConfig = async (next: AdvisorConfig): Promise<void> => {
+    setConfig(next);
+    setError(null);
+    const api = window.hdt?.advisor;
+    if (!api?.setConfig) {
+      setError(t('settings.advisor.unavailable'));
+      return;
+    }
+    try {
+      const saved = await api.setConfig(next);
+      setConfig({ ...DEFAULT_ADVISOR_CONFIG, ...saved });
+    } catch {
+      setError(t('settings.advisor.saveFailed'));
+    }
+  };
+
+  const patchConfig = (patch: Partial<AdvisorConfig>): void => {
+    let next: AdvisorConfig = { ...config, ...patch };
+    if (next.provider !== 'openai-compatible') {
+      const { baseURL, ...withoutBaseURL } = next;
+      void baseURL;
+      next = withoutBaseURL;
+    }
+    void saveConfig(next);
+  };
+
+  const handleTextCommit = (patch: Partial<AdvisorConfig>): void => {
+    patchConfig(patch);
+  };
+
+  const handleApiKeySave = async (): Promise<void> => {
+    const key = apiKey.trim();
+    if (!key) return;
+    const api = window.hdt?.advisor;
+    if (!api?.setApiKey) {
+      setError(t('settings.advisor.unavailable'));
+      return;
+    }
+    setError(null);
+    try {
+      const apiKeyRef = await api.setApiKey(config.provider, key);
+      setApiKey('');
+      setApiKeySaved(true);
+      await saveConfig({ ...config, apiKeyRef });
+    } catch {
+      setError(t('settings.advisor.keySaveFailed'));
+    }
+  };
+
+  if (!loaded) {
+    return (
+      <div className="reference-panel px-5 py-4 text-text-mute">
+        {t('settings.advisor.loading')}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 animate-in fade-in duration-300">
+      <SettingsRow
+        title={t('settings.advisor.enabledTitle')}
+        description={t('settings.advisor.enabledDescription')}
+        control={
+          <ReferenceToggle
+            checked={config.enabled}
+            onChange={() => patchConfig({ enabled: !config.enabled })}
+            testId="settings-advisor-enabled"
+          />
+        }
+      />
+
+      <SettingsRow
+        title={t('settings.advisor.autoSuggestTitle')}
+        description={t('settings.advisor.autoSuggestDescription')}
+        control={
+          <ReferenceToggle
+            checked={config.autoSuggest}
+            onChange={() => patchConfig({ autoSuggest: !config.autoSuggest })}
+            testId="settings-advisor-autosuggest"
+          />
+        }
+      />
+
+      <SettingsRow
+        title={t('settings.advisor.providerTitle')}
+        description={t('settings.advisor.providerDescription')}
+        control={
+          <SettingsSegment
+            label={t('settings.advisor.providerTitle')}
+            options={ADVISOR_PROVIDER_OPTIONS.map((provider) => ({
+              value: provider,
+              label: t(`settings.advisor.provider.${provider}`),
+            }))}
+            value={config.provider}
+            onChange={(provider) => patchConfig({ provider })}
+          />
+        }
+      />
+
+      <SettingsRow
+        title={t('settings.advisor.modelTitle')}
+        description={t('settings.advisor.modelDescription')}
+        control={
+          <input
+            data-testid="settings-advisor-model"
+            value={config.model}
+            onChange={(event) => setConfig({ ...config, model: event.currentTarget.value })}
+            onBlur={(event) => handleTextCommit({ model: event.currentTarget.value.trim() })}
+            placeholder={t('settings.advisor.modelPlaceholder')}
+            className="min-w-[220px] rounded border border-border bg-overlay-surface px-3 py-2 text-sm text-text outline-none focus:border-accent"
+          />
+        }
+      />
+
+      {config.provider === 'openai-compatible' ? (
+        <SettingsRow
+          title={t('settings.advisor.baseURLTitle')}
+          description={t('settings.advisor.baseURLDescription')}
+          control={
+            <input
+              data-testid="settings-advisor-base-url"
+              value={config.baseURL ?? ''}
+              onChange={(event) => setConfig({ ...config, baseURL: event.currentTarget.value })}
+              onBlur={(event) => handleTextCommit({ baseURL: event.currentTarget.value.trim() })}
+              placeholder={t('settings.advisor.baseURLPlaceholder')}
+              className="min-w-[260px] rounded border border-border bg-overlay-surface px-3 py-2 text-sm text-text outline-none focus:border-accent"
+            />
+          }
+        />
+      ) : null}
+
+      <SettingsRow
+        title={t('settings.advisor.apiKeyTitle')}
+        description={t('settings.advisor.apiKeyDescription')}
+        control={
+          <div className="flex min-w-[280px] items-center gap-2">
+            <input
+              data-testid="settings-advisor-api-key"
+              type="password"
+              value={apiKey}
+              onChange={(event) => {
+                setApiKey(event.currentTarget.value);
+                setApiKeySaved(false);
+              }}
+              placeholder={
+                config.apiKeyRef ? t('settings.advisor.apiKeyConfigured') : t('settings.advisor.apiKeyPlaceholder')
+              }
+              className="min-w-0 flex-1 rounded border border-border bg-overlay-surface px-3 py-2 text-sm text-text outline-none focus:border-accent"
+            />
+            <button
+              type="button"
+              data-testid="settings-advisor-api-key-save"
+              onClick={() => {
+                void handleApiKeySave();
+              }}
+              disabled={apiKey.trim().length === 0}
+              className="reference-action-button shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {apiKeySaved ? t('settings.advisor.apiKeySaved') : t('settings.advisor.saveApiKey')}
+            </button>
+          </div>
+        }
+      />
+
+      <div className="reference-panel reference-settings-disclaimer">
+        <p>{t('settings.advisor.privacyNote')}</p>
+      </div>
+
+      {error ? <p className="reference-settings-error">{error}</p> : null}
     </div>
   );
 }

@@ -1,9 +1,11 @@
 import { useEffect, type CSSProperties } from 'react';
 import { LiveDeckPanel } from './LiveDeckPanel';
 import { LiveNarrationPanel } from './LiveNarrationPanel';
+import { AdvisorPanel } from './AdvisorPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
 import { GlobalEffectsPanel } from './GlobalEffectsPanel';
 import { FriendlyGraveyardPanel } from './FriendlyGraveyardPanel';
+import { useAdvisorStore } from '../stores/advisor-store';
 import { useFriendlyEffects, useFriendlyGraveyard } from '../stores/deck-tracker-store';
 import { partitionAnimalCompanionEffects } from '../lib/animal-companion-effects';
 
@@ -26,6 +28,7 @@ export function OverlayView() {
   };
   const friendlyEffects = useFriendlyEffects();
   const friendlyGraveyard = useFriendlyGraveyard();
+  const advisorBadge = useAdvisorStore((s) => s.alerts.length > 0);
   const { effectiveRowCount } = partitionAnimalCompanionEffects(friendlyEffects);
   return (
     <div className="w-full h-full relative">
@@ -39,6 +42,8 @@ export function OverlayView() {
         graveyardSlot={<FriendlyGraveyardPanel records={friendlyGraveyard} />}
         graveyardCount={friendlyGraveyard.length}
         narrationSlot={<LiveNarrationPanel />}
+        advisorSlot={<AdvisorPanel />}
+        advisorBadge={advisorBadge}
       />
       <button
         type="button"

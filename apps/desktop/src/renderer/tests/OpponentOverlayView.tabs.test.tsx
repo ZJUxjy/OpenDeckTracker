@@ -31,4 +31,13 @@ describe('OpponentOverlayView tabs', () => {
     expect(screen.getByTestId('tracker-tab-effects')).toBeInTheDocument();
     expect(screen.getByTestId('tracker-tab-graveyard')).toBeInTheDocument();
   });
+
+  it('does not render the advisor tab on the opponent overlay', () => {
+    render(
+      <I18nProvider preference="en-US">
+        <OpponentOverlayView />
+      </I18nProvider>,
+    );
+    expect(screen.queryByTestId('tracker-tab-advisor')).not.toBeInTheDocument();
+  });
 });

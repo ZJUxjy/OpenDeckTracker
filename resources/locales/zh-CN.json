@@ -310,6 +310,38 @@
         "dark": "深色"
       }
     },
+    "advisor": {
+      "categoryLabel": "AI 建议",
+      "loading": "正在加载 AI 建议设置…",
+      "unavailable": "AI 建议设置不可用。",
+      "saveFailed": "无法保存 AI 建议设置。",
+      "keySaveFailed": "无法保存 API key。",
+      "enabledTitle": "启用 AI 建议",
+      "enabledDescription": "允许游戏内建议器分析当前对局状态。",
+      "autoSuggestTitle": "对局中自动建议",
+      "autoSuggestDescription": "当场面状态变化时自动生成建议。",
+      "providerTitle": "服务商",
+      "providerDescription": "选择用于生成建议的 AI 服务商。",
+      "provider": {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google",
+        "openai-compatible": "OpenAI 兼容"
+      },
+      "modelTitle": "模型",
+      "modelDescription": "传给所选服务商的模型名称。",
+      "modelPlaceholder": "gpt-4o-mini",
+      "baseURLTitle": "Base URL",
+      "baseURLDescription": "OpenAI 兼容服务商的接口地址。",
+      "baseURLPlaceholder": "https://api.example.com/v1",
+      "apiKeyTitle": "API key",
+      "apiKeyDescription": "通过桌面端安全引用保存。保存后不会再显示明文 key。",
+      "apiKeyPlaceholder": "粘贴 API key",
+      "apiKeyConfigured": "已设置",
+      "saveApiKey": "保存 key",
+      "apiKeySaved": "已保存",
+      "privacyNote": "启用此功能后，AI 建议会把当前对局状态和你的追问发送给所选服务商。API key 仅以本地引用保存，保存后不会显示明文。"
+    },
     "about": {
       "categoryLabel": "关于",
       "title": "关于 OpenDeckTracker",
@@ -460,6 +492,7 @@
     "bannerInMatchBody": "记牌器已激活。可拖动游戏内浮窗以调整位置，下次启动时位置会被记住。"
   },
   "tracker": {
+    "tabAdvisor": "建议",
     "tabNarration": "旁白",
     "narrationTitle": "实时旁白",
     "narrationEmpty": "等待对局动态…",
@@ -475,6 +508,46 @@
       "MINION": "随从",
       "SPELL": "法术",
       "WEAPON": "武器"
+    }
+  },
+  "advisor": {
+    "title": "AI 建议",
+    "status": {
+      "idle": "空闲",
+      "loading": "思考中",
+      "ready": "就绪",
+      "error": "错误",
+      "stale": "已过期"
+    },
+    "state": {
+      "idle": "等待对局建议。",
+      "loading": "正在分析当前局面…",
+      "stale": "场面变化后，此建议可能已经过期。",
+      "error": "请求建议失败。"
+    },
+    "errorFallback": "请求建议失败。",
+    "actionsTitle": "建议路线",
+    "noActions": "暂无具体动作建议。",
+    "reasoningTitle": "理由",
+    "alert": {
+      "lethal": "斩杀",
+      "danger": "危险"
+    },
+    "action": {
+      "play": "打出",
+      "attack": "攻击",
+      "heroPower": "英雄技能",
+      "trade": "交换",
+      "hold": "保留",
+      "endTurn": "结束回合"
+    },
+    "chat": {
+      "title": "追问",
+      "placeholder": "追问当前局面…",
+      "send": "发送",
+      "thinking": "思考中…",
+      "unavailable": "AI 建议不可用。",
+      "failed": "无法回答。"
     }
   },
   "globalEffects": {

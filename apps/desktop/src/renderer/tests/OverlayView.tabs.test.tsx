@@ -39,4 +39,13 @@ describe('OverlayView tabs', () => {
     );
     expect(screen.getByTestId('tracker-tab-narration')).toBeInTheDocument();
   });
+
+  it('renders the advisor tab on the player overlay', () => {
+    render(
+      <I18nProvider preference="en-US">
+        <OverlayView />
+      </I18nProvider>,
+    );
+    expect(screen.getByTestId('tracker-tab-advisor')).toBeInTheDocument();
+  });
 });

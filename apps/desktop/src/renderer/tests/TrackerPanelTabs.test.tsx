@@ -12,12 +12,13 @@ function MountCounter({ id }: { id: string }) {
   return <div data-testid={`mounts-${id}`}>{n}</div>;
 }
 
-function setup(props?: { effectsCount?: number }) {
+function setup(props?: { effectsCount?: number; advisorBadge?: boolean }) {
   return render(
     <I18nProvider preference="en-US">
       <TrackerPanelTabs
         side="player"
         effectsCount={props?.effectsCount ?? 0}
+        advisorBadge={props?.advisorBadge ?? false}
         deckSlot={
           <div data-testid="deck-slot">
             <MountCounter id="deck" />
@@ -26,6 +27,11 @@ function setup(props?: { effectsCount?: number }) {
         effectsSlot={
           <div data-testid="effects-slot">
             <MountCounter id="effects" />
+          </div>
+        }
+        advisorSlot={
+          <div data-testid="advisor-slot">
+            <MountCounter id="advisor" />
           </div>
         }
       />
@@ -51,8 +57,10 @@ describe('TrackerPanelTabs', () => {
         <TrackerPanelTabs
           side="player"
           effectsCount={3}
+          advisorBadge={false}
           deckSlot={<div data-testid="deck-slot" />}
           effectsSlot={<div data-testid="effects-slot" />}
+          advisorSlot={<div data-testid="advisor-slot" />}
         />
       </I18nProvider>,
     );
@@ -72,5 +80,27 @@ describe('TrackerPanelTabs', () => {
     // never re-runs because the slot containers stay in the DOM.
     expect(screen.getByTestId('mounts-deck').textContent).toBe('1');
     expect(screen.getByTestId('mounts-effects').textContent).toBe('1');
+  });
+
+  it('renders an optional advisor tab with a status badge', () => {
+    setup({ advisorBadge: true });
+
+    const advisorTab = screen.getByTestId('tracker-tab-advisor');
+    expect(advisorTab).toBeInTheDocument();
+    expect(screen.getByTestId('tracker-tab-advisor-badge')).toBeInTheDocument();
+
+    fireEvent.click(advisorTab);
+    expect(advisorTab.getAttribute('data-active')).toBe('true');
+    expect(screen.getByTestId('advisor-slot')).toBeVisible();
+  });
+
+  it('keeps the optional advisor slot mounted across tab switches', () => {
+    setup();
+    expect(screen.getByTestId('mounts-advisor').textContent).toBe('1');
+
+    fireEvent.click(screen.getByTestId('tracker-tab-advisor'));
+    fireEvent.click(screen.getByTestId('tracker-tab-deck'));
+
+    expect(screen.getByTestId('mounts-advisor').textContent).toBe('1');
   });
 });

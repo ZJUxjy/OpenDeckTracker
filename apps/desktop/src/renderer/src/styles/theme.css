@@ -4437,3 +4437,254 @@ body[data-overlay='true'] .tavern-empty-row {
   border-color: var(--ref-line-strong);
   color: var(--ref-ink);
 }
+
+/* Reference/Arcane in-game overlay.
+   The desktop shell and dashboard use the cool ink + emerald palette above;
+   keep the two narrow tracker windows in that same visual family while
+   retaining enough opacity and blur for card text over a moving game scene. */
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-shell {
+  --overlay-side-accent: var(--ref-green-bright);
+  --overlay-side-line: var(--ref-green-line);
+  color: var(--ref-ink);
+  border: 1px solid var(--overlay-side-line) !important;
+  border-radius: 12px !important;
+  background: linear-gradient(180deg, rgba(14, 23, 25, 0.9), rgba(6, 11, 13, 0.86)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 3px 0 0 color-mix(in srgb, var(--overlay-side-accent) 42%, transparent),
+    0 18px 46px rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(20px) saturate(135%) brightness(88%);
+  -webkit-backdrop-filter: blur(20px) saturate(135%) brightness(88%);
+}
+
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  .tracker-panel-shell[data-tracker-side='opponent'] {
+  --overlay-side-accent: var(--ref-gold);
+  --overlay-side-line: rgba(230, 178, 77, 0.32);
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-shell::before {
+  display: block;
+  background: radial-gradient(
+    220px circle at var(--glass-mx, -100px) var(--glass-my, -100px),
+    color-mix(in srgb, var(--overlay-side-accent) 10%, transparent),
+    transparent 68%
+  );
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-shell::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 18%),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--overlay-side-accent) 8%, transparent),
+      transparent 46%
+    ) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-tabbar {
+  min-height: 48px;
+  gap: 4px !important;
+  padding: 8px 38px 7px 9px !important;
+  border-bottom: 1px solid var(--ref-line) !important;
+  background: rgba(4, 8, 9, 0.7) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-tab-pill {
+  min-width: 0;
+  min-height: 32px;
+  flex: 1 1 0;
+  justify-content: center;
+  overflow: hidden;
+  padding-inline: 6px !important;
+  color: var(--ref-ink-mute) !important;
+  border: 1px solid transparent;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-tab-pill > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-tab-pill:hover {
+  color: var(--ref-ink) !important;
+  border-color: var(--ref-line-strong);
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-tab-pill[data-active='true'] {
+  color: var(--overlay-side-accent) !important;
+  border-color: var(--overlay-side-line);
+  background: color-mix(in srgb, var(--overlay-side-accent) 11%, transparent) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 8px 18px -14px var(--overlay-side-accent) !important;
+}
+
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  [data-testid='tracker-tab-effects-badge'],
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  [data-testid='tracker-tab-graveyard-badge'] {
+  min-width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-left: 3px;
+  padding-inline: 4px;
+  color: #042a16 !important;
+  background: var(--ref-green-bright) !important;
+}
+
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  .tracker-panel-shell[data-tracker-side='opponent']
+  [data-testid='tracker-tab-effects-badge'],
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  .tracker-panel-shell[data-tracker-side='opponent']
+  [data-testid='tracker-tab-graveyard-badge'] {
+  color: #241504 !important;
+  background: var(--ref-gold) !important;
+}
+
+/* The close control shares the top rail instead of visually floating over
+   the last tab. The tab bar reserves its width above. */
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-shell + button {
+  top: 9px !important;
+  right: 9px !important;
+  width: 28px !important;
+  height: 30px !important;
+  color: var(--ref-ink-mute) !important;
+  border: 1px solid var(--ref-line);
+  border-radius: 8px !important;
+  background: rgba(5, 9, 10, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  font-size: 17px !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-shell + button:hover {
+  color: var(--ref-red) !important;
+  border-color: color-mix(in srgb, var(--ref-red) 44%, transparent);
+  background: color-mix(in srgb, var(--ref-red) 10%, rgba(5, 9, 10, 0.76));
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-overlay-header {
+  padding: 13px 15px 11px !important;
+  border-bottom: 1px solid var(--ref-line) !important;
+  background: linear-gradient(180deg, rgba(17, 28, 30, 0.7), rgba(7, 12, 14, 0.24)) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] [data-overlay-list-area] {
+  padding: 9px !important;
+  border-top: 1px solid var(--ref-line) !important;
+  background: rgba(4, 8, 9, 0.62) !important;
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-overlay-footer {
+  border-top: 1px solid var(--ref-line) !important;
+  background: rgba(4, 8, 9, 0.54) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-shell h3 {
+  color: var(--overlay-side-accent) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-board-card {
+  color: var(--ref-violet) !important;
+  border: 1px solid rgba(168, 132, 240, 0.3) !important;
+  border-radius: 9px !important;
+  background: var(--ref-violet-soft) !important;
+  box-shadow: none !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-board-card[data-tone='success'] {
+  color: var(--ref-green-bright) !important;
+  border-color: var(--ref-green-line) !important;
+  background: var(--ref-green-soft) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-board-card[data-tone='danger'] {
+  color: var(--ref-red) !important;
+  border-color: color-mix(in srgb, var(--ref-red) 36%, transparent) !important;
+  background: color-mix(in srgb, var(--ref-red) 11%, transparent) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-card-row {
+  min-height: 36px;
+  margin-bottom: 5px;
+  color: var(--ref-ink);
+  border: 1px solid var(--ref-line) !important;
+  border-radius: 8px !important;
+  background: linear-gradient(
+    90deg,
+    rgba(4, 8, 9, 0.76),
+    rgba(13, 22, 24, 0.62) 48%,
+    rgba(4, 8, 9, 0.18)
+  ) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-card-row:hover {
+  border-color: var(--overlay-side-line) !important;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--overlay-side-accent) 10%, rgba(4, 8, 9, 0.84)),
+    rgba(17, 29, 31, 0.7) 48%,
+    rgba(4, 8, 9, 0.2)
+  ) !important;
+  box-shadow: inset 3px 0 0 var(--overlay-side-accent) !important;
+}
+
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  .tavern-card-row[data-row-state='exiting'] {
+  border-color: var(--overlay-side-accent) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-mana-gem {
+  color: #eaf6ff !important;
+  border: 1px solid rgba(88, 174, 240, 0.48) !important;
+  border-radius: 7px !important;
+  background: linear-gradient(180deg, #277ec2, #164c75) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 2px 7px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-mana-gem-opponent {
+  border-color: color-mix(in srgb, var(--ref-red) 52%, transparent) !important;
+  background: linear-gradient(180deg, #a63b50, #5f2330) !important;
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-row-count {
+  min-width: 27px;
+  padding: 2px 6px;
+  color: var(--overlay-side-accent) !important;
+  border: 1px solid var(--overlay-side-line);
+  border-radius: 7px;
+  background: rgba(4, 8, 9, 0.68);
+}
+
+:root[data-ui-style='reference'] body[data-overlay='true'] .tavern-empty-row {
+  color: var(--ref-ink-mute) !important;
+  border-color: var(--ref-line) !important;
+  background: rgba(4, 8, 9, 0.54) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-ui-style='reference'] body[data-overlay='true'] .tracker-panel-shell::before {
+    display: none;
+  }
+}

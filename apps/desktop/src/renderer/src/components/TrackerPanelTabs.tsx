@@ -3,7 +3,7 @@ import { clsx } from 'clsx';
 import { useTranslation } from '../i18n';
 import { useGlassMouseFollow } from '../hooks/use-glass-mouse-follow';
 
-type Tab = 'deck' | 'effects' | 'graveyard' | 'narration';
+type Tab = 'deck' | 'effects' | 'graveyard' | 'narration' | 'advisor';
 
 // Frameless overlay BrowserWindows recognize `-webkit-app-region: drag`
 // as the OS drag handle. The styles are inert in framed windows (the
@@ -30,6 +30,10 @@ interface TrackerPanelTabsProps {
    * player overlay passes this; when omitted, the tab is not rendered.
    */
   narrationSlot?: ReactNode;
+  /** Optional tab showing player-side AI advice. Omitted for opponent overlays. */
+  advisorSlot?: ReactNode;
+  /** Shows a compact badge on the advisor tab when urgent advice is available. */
+  advisorBadge?: boolean;
 }
 
 /**
@@ -46,6 +50,8 @@ export function TrackerPanelTabs({
   graveyardSlot,
   graveyardCount = 0,
   narrationSlot,
+  advisorSlot,
+  advisorBadge = false,
 }: TrackerPanelTabsProps) {
   const { t } = useTranslation();
   const [active, setActive] = useState<Tab>('deck');
@@ -114,6 +120,22 @@ export function TrackerPanelTabs({
             {t('tracker.tabNarration')}
           </TabPill>
         ) : null}
+        {advisorSlot ? (
+          <TabPill
+            testId="tracker-tab-advisor"
+            active={active === 'advisor'}
+            onClick={() => setActive('advisor')}
+          >
+            <span>{t('tracker.tabAdvisor')}</span>
+            {advisorBadge ? (
+              <span
+                data-testid="tracker-tab-advisor-badge"
+                style={NO_DRAG}
+                className="ml-1.5 inline-flex h-2.5 w-2.5 rounded-full bg-red shadow-[0_0_0_2px_rgba(0,0,0,0.16)]"
+              />
+            ) : null}
+          </TabPill>
+        ) : null}
       </div>
       <div className="flex-1 min-h-0 overflow-hidden">
         <div
@@ -146,6 +168,15 @@ export function TrackerPanelTabs({
             className="w-full h-full"
           >
             {narrationSlot}
+          </div>
+        ) : null}
+        {advisorSlot ? (
+          <div
+            aria-hidden={active !== 'advisor'}
+            hidden={active !== 'advisor'}
+            className="w-full h-full"
+          >
+            {advisorSlot}
           </div>
         ) : null}
       </div>

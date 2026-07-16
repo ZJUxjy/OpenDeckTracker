@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest';
+import type { AdvisorConfig } from '@hdt/advisor';
 
 Object.defineProperty(window, 'hdt', {
   value: {
@@ -36,6 +37,22 @@ Object.defineProperty(window, 'hdt', {
     gameProgressNarration: {
       getRecent: async () => Promise.resolve([]),
       subscribe: () => () => {},
+    },
+    advisor: {
+      ask: async () => Promise.resolve(''),
+      getConfig: async () =>
+        Promise.resolve({
+          enabled: false,
+          autoSuggest: true,
+          provider: 'openai' as const,
+          model: 'gpt-4o-mini',
+          language: 'zh' as const,
+          maxToolRounds: 4,
+        }),
+      setConfig: async (config: AdvisorConfig) => Promise.resolve(config),
+      setApiKey: async () => Promise.resolve('keyref:test'),
+      onState: () => () => {},
+      onAskChunk: () => () => {},
     },
     decks: {
       list: async () => Promise.resolve([]),

@@ -17,7 +17,7 @@ describe('Settings — Appearance category', () => {
     vi.resetModules();
   });
 
-  it('exposes Appearance, Overlay, and About in the sidebar (placeholder categories hidden)', () => {
+  it('exposes the supported Settings categories in the sidebar', () => {
     renderSettings();
 
     const sidebarButtons = screen.getAllByRole('button');
@@ -25,10 +25,20 @@ describe('Settings — Appearance category', () => {
       .map((b) => b.textContent?.trim())
       .filter((label) =>
         label &&
-        ['General', 'Appearance', 'Deck Tracker', 'In-Game Overlay', 'Notifications', 'Data', 'Audio', 'About'].includes(label),
+        [
+          'General',
+          'Appearance',
+          'Deck Tracker',
+          'In-Game Overlay',
+          'Notifications',
+          'Data & Sync',
+          'AI Advice',
+          'Audio',
+          'About',
+        ].includes(label),
       );
 
-    expect(sidebarLabels).toEqual(['Appearance', 'In-Game Overlay', 'About']);
+    expect(sidebarLabels).toEqual(['Appearance', 'In-Game Overlay', 'Data & Sync', 'AI Advice', 'About']);
   });
 
   it('shows language picker, the two UI-style options, and density under Appearance', () => {

@@ -12,6 +12,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router';
 import { DeckSelectDialog } from './components/DeckSelectDialog';
 import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
+import { useAdvisor } from './hooks/use-advisor';
 import { useTranslation } from './i18n';
 import { useAppearanceStore } from './stores/appearance-store';
 import heroArt from './assets/reference-ui/hero.png';
@@ -48,6 +49,8 @@ export default function App() {
   // Subscribe the global deck-tracker store to main-process IPC pushes.
   // Mounted at App root so the subscription survives all route changes.
   useDeckTracker();
+  // Subscribe the global advisor store to main-process suggestion pushes.
+  useAdvisor();
   // Activate hearthwatcher diagnostics subscription (status displayed in Dashboard).
   useHearthWatcherStatus();
 

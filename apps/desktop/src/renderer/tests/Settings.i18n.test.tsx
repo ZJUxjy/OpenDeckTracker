@@ -30,7 +30,7 @@ describe('Settings i18n', () => {
     await user.click(screen.getByRole('button', { name: 'Simplified Chinese' }));
 
     expect(localStorage.getItem(LANGUAGE_PREFERENCE_STORAGE_KEY)).toBe('zh-CN');
-    expect(screen.getByText('设置')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /设置/ })).toBeInTheDocument();
     // Sidebar entry for Appearance now reads in Chinese as "外观"; appears
     // both in the sidebar button and the panel heading, so just confirm
     // it's present (multiple matches are expected).
@@ -44,7 +44,7 @@ describe('Settings i18n', () => {
       </I18nProvider>,
     );
 
-    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Settings/ })).toBeInTheDocument();
 
     act(() => {
       localStorage.setItem(LANGUAGE_PREFERENCE_STORAGE_KEY, 'zh-CN');
@@ -55,7 +55,7 @@ describe('Settings i18n', () => {
       );
     });
 
-    expect(await screen.findByText('设置')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /设置/ })).toBeInTheDocument();
   });
 
   it('hydrates from the saved language preference when memory state is stale', async () => {
@@ -68,6 +68,6 @@ describe('Settings i18n', () => {
       </I18nProvider>,
     );
 
-    expect(await screen.findByText('设置')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /设置/ })).toBeInTheDocument();
   });
 });

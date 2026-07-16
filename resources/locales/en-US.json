@@ -310,6 +310,38 @@
         "dark": "Dark"
       }
     },
+    "advisor": {
+      "categoryLabel": "AI Advice",
+      "loading": "Loading AI advice settings…",
+      "unavailable": "AI advice settings are unavailable.",
+      "saveFailed": "Could not save AI advice settings.",
+      "keySaveFailed": "Could not save the API key.",
+      "enabledTitle": "Enable AI advice",
+      "enabledDescription": "Allow the in-game advisor to analyze the current match state.",
+      "autoSuggestTitle": "Auto-suggest during matches",
+      "autoSuggestDescription": "Generate advice automatically when the board state changes.",
+      "providerTitle": "Provider",
+      "providerDescription": "Choose which AI provider handles advice requests.",
+      "provider": {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "google": "Google",
+        "openai-compatible": "OpenAI Compatible"
+      },
+      "modelTitle": "Model",
+      "modelDescription": "Model name passed to the selected provider.",
+      "modelPlaceholder": "gpt-4o-mini",
+      "baseURLTitle": "Base URL",
+      "baseURLDescription": "Endpoint for OpenAI-compatible providers.",
+      "baseURLPlaceholder": "https://api.example.com/v1",
+      "apiKeyTitle": "API key",
+      "apiKeyDescription": "Stored through the desktop secure key reference. The key is never shown after saving.",
+      "apiKeyPlaceholder": "Paste API key",
+      "apiKeyConfigured": "Already set",
+      "saveApiKey": "Save key",
+      "apiKeySaved": "Saved",
+      "privacyNote": "AI advice sends the current game state and your follow-up questions to the selected provider only when this feature is enabled. API keys are stored as local references and are not displayed after saving."
+    },
     "about": {
       "categoryLabel": "About",
       "title": "About OpenDeckTracker",
@@ -460,6 +492,7 @@
     "bannerInMatchBody": "Tracking active. Drag the in-game overlays to reposition them; they remember their last placement."
   },
   "tracker": {
+    "tabAdvisor": "Advisor",
     "tabNarration": "Narration",
     "narrationTitle": "Live narration",
     "narrationEmpty": "Waiting for match activity…",
@@ -475,6 +508,46 @@
       "MINION": "Minion",
       "SPELL": "Spell",
       "WEAPON": "Weapon"
+    }
+  },
+  "advisor": {
+    "title": "AI advisor",
+    "status": {
+      "idle": "Idle",
+      "loading": "Thinking",
+      "ready": "Ready",
+      "error": "Error",
+      "stale": "Stale"
+    },
+    "state": {
+      "idle": "Waiting for match advice.",
+      "loading": "Analyzing the current position…",
+      "stale": "This advice may be stale after the latest board change.",
+      "error": "Advice request failed."
+    },
+    "errorFallback": "Advice request failed.",
+    "actionsTitle": "Suggested line",
+    "noActions": "No concrete action suggested.",
+    "reasoningTitle": "Reasoning",
+    "alert": {
+      "lethal": "Lethal",
+      "danger": "Danger"
+    },
+    "action": {
+      "play": "Play",
+      "attack": "Attack",
+      "heroPower": "Hero Power",
+      "trade": "Trade",
+      "hold": "Hold",
+      "endTurn": "End Turn"
+    },
+    "chat": {
+      "title": "Follow-up",
+      "placeholder": "Ask about this position…",
+      "send": "Send",
+      "thinking": "Thinking…",
+      "unavailable": "AI advice is unavailable.",
+      "failed": "Could not answer."
     }
   },
   "globalEffects": {
