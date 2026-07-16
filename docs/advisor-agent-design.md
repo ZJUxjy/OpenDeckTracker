@@ -270,18 +270,82 @@ packages/advisor/src/
 - **[跟进 B]** `advisor-session-factory.ts:89` 把 `config.maxToolRounds` 误用作会话摘要 `historyLimit`——语义错位，应各自独立配置。归入 T5.2 修正。
 - **[跟进 C]** lethal alert 只在指纹变化且非 null 时广播：斩杀窗口消失后（指纹变 null）不发清除广播，UI 会残留过期 alert。T4.1 store 设计时处理，或 main 侧补一次清除广播。
 
-### M4 — 渲染层 UI（原计划不变，注意事项更新）
+### M4 — 渲染层 UI（细化版，2026-07-07 更新）
 
-- **T4.1** `advisor-store.ts` + `use-advisor.ts`：store 合并语义须区分 `suggestion` 与 `alerts`（配合 T3.11），stale/error 不清 alerts。
-- **T4.2** `TrackerPanelTabs` 加 `advisorSlot`（模式照抄 `narrationSlot`），玩家侧 `OverlayView` 传入。
-- **T4.3** [P] `AdvisorPanel`：行动步骤列表 + reasoning + AlertBanner + loading/stale/error 态；卡牌 hover 复用 card-preview 协议。
-- **T4.4** [P] `FollowUpChat`：调 `window.hdt.advisor.ask`，订阅 `onAskChunk`（若 T3.12 落地则流式渲染）。
-- **T4.5** 设置页 "AI 建议" 区块：开关 / provider / model / baseURL / API key（走 T3.10 新通道）/ 隐私提示。
-- **T4.6** i18n zh/en 词条 + README 隐私声明补充。
+> 前置：**T4.0 必须最先做**。路径均相对 `apps/desktop/src/renderer/src/`。每个任务先写测试（渲染层测试在 `apps/desktop/src/renderer/tests/`，vitest + testing-library，参考现有 `*.test.tsx`）。
+
+- **T4.0** merge `main` 进 `codex/advisor-agent`，解掉基点遗留的 `LiveDeckSyncResult.removed` typecheck 错误（跟进 A）；merge 后全仓 `pnpm typecheck` 须绿。
+- **T4.1** `stores/advisor-store.ts`：Zustand，模式照抄 `stores/deck-tracker-store.ts`。State：`{ status, suggestion, alerts, error, updatedAt }`（即 `AdvisorMainState`）+ `applyState(state)`。**合并语义**：`suggestion` 与 `alerts` 独立保留——`status:'stale'|'error'` 不清 `alerts`；连续两次 `updatedAt` 之间 alerts 为空且上一条是 lethal 时视为解除（处理跟进 C 的残留问题；若改在 main 侧发清除广播，则此条简化为直接覆盖）。订阅在 App 挂载处：`window.hdt.advisor.onState(applyState)`（模式参考 deck-tracker snapshot 订阅）。
+- **T4.2** `components/TrackerPanelTabs.tsx`：`Tab` union 加 `'advisor'`，props 加可选 `advisorSlot?: ReactNode` + `advisorBadge?: boolean`（有未读建议/lethal 时显示圆点，样式照抄 `effectsCount` badge）；tab pill `testId="tracker-tab-advisor"`，文案 key `tracker.tabAdvisor`。`OverlayView.tsx` 传入 `advisorSlot={<AdvisorPanel />}`；`OpponentOverlayView` 不传。
+- **T4.3** [P] `components/AdvisorPanel.tsx`：布局仿 `LiveNarrationPanel`（标题栏 + 滚动内容区 + `NO_DRAG`）。内容自上而下：
+  - AlertBanner：`alerts` 非空时红色高亮条（lethal 用 `text-red`/边框强调），`data-testid="advisor-alert"`。
+  - 建议区：`suggestion.actions[]` 有序步骤列表（序号 + kind 图标 + 卡名 + note），`reasoning` 小字段落；卡名 hover 触发 `window.hdt` 的 card-preview 协议（参考 `LiveDeckPanel` 行 hover 实现）。
+  - 状态区：`loading` spinner + "生成中"；`stale` 灰字"已过期"；`error` 内联错误 + 重试提示；`idle` 空态文案（未配置时引导去设置页）。
+- **T4.4** [P] `components/AdvisorFollowUpChat.tsx`（AdvisorPanel 底部内嵌）：输入框 + 发送按钮，调 `window.hdt.advisor.ask(q)`；`onAskChunk` 订阅追加到当前回答气泡（T3.12 目前是单 chunk，代码按流式写、天然兼容）；请求中禁用输入；历史保留在组件 state（回合切换不清空，match-ended 清空——监听 store `status:'idle'`）。
+- **T4.5** `components/Settings.tsx`：`categories` 数组加 `{ id: 'advisor', labelKey: 'settings.advisor.categoryLabel', icon: Sparkles }`（lucide）。区块内容用现有 `SettingsRow` / `SettingsSegment` / `ReferenceToggle`：
+  - 开关（`config.enabled`）、自动建议开关（`autoSuggest`）；
+  - provider 四选一 Segment、model 文本框、baseURL 文本框（仅 openai-compatible 时显示）；
+  - API key 密码框：保存走 `window.hdt.advisor.setApiKey(provider, key)`，返回的 `apiKeyRef` 回写 config 后 `setConfig`；已配置时显示 "已设置" 占位，不回显明文；
+  - 隐私提示常显文案（`settings.advisor.privacyNote`）。
+  - 载入时 `getConfig()` 初始化本地表单 state；语言字段直接跟随 app locale，不单独出 UI。
+- **T4.6** i18n + 文档：新词条全部写入 `resources/locales/en-US.json` 与 `zh-CN.json`（`tracker.tabAdvisor`、`advisor.*`、`settings.advisor.*`）；README 隐私声明补充 "启用 AI 建议后对局状态发送至所选 LLM 端点" 例外。
+- **T4.7** 收尾验证：`pnpm --filter desktop test` 全绿、全仓 typecheck/lint 绿；随后按第 12 节"真机冒烟清单"跑一局实测（这是 M4 的 DoD）。
+
+依赖关系：T4.0 → T4.1 → T4.2 →（T4.3 ∥ T4.4 ∥ T4.5）→ T4.6 → T4.7。
+
+### M4 验收记录（2026-07-07，main 工作区未提交变更 @ e2428be 之上）
+
+| 任务 | 结论 |
+|---|---|
+| T4.0 merge | ✅ 以反向方式完成（`codex/advisor-agent` 已 merge 进 main，949ad53）；desktop typecheck 0 错误 |
+| T4.1 store | ✅ `stores/advisor-store.ts`：`stale`/`error` 保留 suggestion+alerts，`idle` 全清；`hooks/use-advisor.ts` 挂载于 `App.tsx` 根部 |
+| T4.2 tab | ✅ `advisorSlot` + `advisorBadge`（alerts 非空亮点），`OverlayView` 传入，对手侧未传 |
+| T4.3 面板 | ✅ `AdvisorPanel.tsx`：StatusPill + AlertBanner（lethal 红色）+ 步骤列表（kind 标签 + CardToken hover 卡图走 `useCardPreview`）+ reasoning + 四态 Notice |
+| T4.4 追问 | ✅ `AdvisorFollowUpChat.tsx`：chunk 流式追加（去重防单 chunk 双写）、pending 禁用输入、`status:'idle'` 清空 |
+| T4.5 设置 | ✅ Settings 加 `advisor` 分类：双开关 / provider Segment / model / baseURL（仅 compatible 显示）/ key 密码框走 `setApiKey` 不回显 / 隐私提示 |
+| T4.6 i18n + README | ✅ zh/en 词条齐全；README 增 Privacy Note（双语）及网络说明 AI 例外 |
+| T4.7 验证 | ✅ advisor 相关 7 个测试文件 23 绿；渲染层全量 491/492 绿；typecheck 0 错误 |
+
+**验收遗留：**
+
+- **[跟进 C 已缓解]** lethal 残留：store 在 `loading`/`ready` 时整体替换 alerts，过期 alert 最迟在下一次建议调度时清除（同回合内短暂残留，可接受）。
+- **[跟进 D]** `density.test.tsx` 1 例失败（Stats KPI `.kpi-card`）：**与 advisor 无关的既有失败**（在无 M4 变更的 worktree 上同样失败），需单独排查修复。
+- **[环境]** `pnpm --filter desktop test` 的 pretest（better-sqlite3 native rebuild）在当前机器失败，直接 `vitest run` 正常；不影响 CI 结论但建议排查本机 node-gyp 环境。
+- 变更尚未 commit：M4 全部内容在 main 工作区未提交状态，验收通过后应按 Conventional Commits 分批提交。
 
 ### M5 — 打磨与验证（原计划不变）
 
 - T5.1 复盘页展示历史建议；T5.2 成本控制设置；T5.3 录像回放评估脚本；T5.4 全仓 lint/typecheck/test 绿 + OpenSpec 归档。
+
+## 13. 缺陷修复与打磨记录（2026-07-16，main 工作区）
+
+本节记录一次「回放真实对局 → 评审 advisor 链路」驱动的修复批次。方法：用录像 `events.jsonl` 逐事件回放 `HearthWatcherGameState.reducePowerEvent`，在本地回合边界重建 `AdvisorSerializableSnapshot` 后跑通 agent 流程（faux provider）。回放 harness 为一次性脚本（`tmp/replay-advisor/`，不入库），其结论直接催生了下列修复。
+
+### 已修复并验证
+
+| # | 问题 | 修复 | 提交 |
+|---|---|---|---|
+| 1 | preload 打包把 `node:fs`/`node:path` 经 `advisor-ipc.ts → advisor-config-store.ts` 再导出链拖进沙箱 preload，整个脚本在 `exposeInMainWorld` 前崩溃，渲染层 `window.hdt` undefined（白屏报错 `reading 'decks'`） | 频道常量抽到零依赖 `src/shared/ipc-channels.ts`，main/preload 双侧引用 | `f54d4c6` |
+| 2 | 工具闭包开局快照：`action_enum`/`lethal_check`/`deck_odds`/`mana_math` 全程回答对局开始时的场面 | `CreateAdvisorAgentArgs.snapshot` 改为 `getSnapshot()` 惰性取值，工厂内文本序列化与工具共用一个实时访问器 | `743c3e0` |
+| 3 | `autoSuggest` 设置项从未被主进程消费（开关无效） | `startAdvisor` 新增 `autoSuggest` 选项，关闭时换乱/回合建议与斩杀提醒全部静默，`ask` 保留；`ipc.ts` 接线 | `743c3e0` |
+| 4 | `maxToolRounds` 被误用为 session `historyLimit` | 恢复本意：每次建议运行的工具执行预算，超预算调用短路并指示模型直接产出最终 JSON；runner 每轮重置预算 | `743c3e0` |
+| 5 | ask 流式为空壳（原问题 5 / T3.12） | `runner.ask` 订阅 `text_delta` 逐段回调 `onChunk`；非流式 provider 兜底整段单 chunk；`handle.ask` 防重复。链路直抵渲染层 `AdvisorFollowUpChat`（M4 已订阅 `onAskChunk`） | 未提交 |
+| 6 | 快照信息缺口：对手手牌数 / 已揭示牌 / 双方墓地未进 prompt | `AdvisorSerializableSnapshot` 新增 `opposingHandCount`、`opponentRevealed`、`opponentGraveyard`、`friendlyGraveyard`；序列化新增 `## Opponent` 与 `## Friendly Graveyard` 区块 | 未提交 |
+| 7 | 录像写入放大：`recording.json`（~1MB pretty JSON）每条 PowerEvent 全量同步重写，一局 ~9500 次 | 中间事件 2s 节流（`persistIntervalMs` 可注入，0 = 旧行为）；开始/完成/中断立即写；`events.jsonl` 逐条追加不变 | 未提交 |
+| 8 | 全仓 `eslint .` OOM（4GB 堆） | `.worktrees/`（5 个完整检出，类型感知 lint 图 ×6）及 `tmp/`、`data/`、各 agent 工具目录加入 ignores | 未提交 |
+| 9 | lint 44 问题（25 错误） | 清零；仅剩 7 个 react-refresh 混合导出告警（`i18n/index.tsx`、`routes.tsx`，架构性保留） | 未提交 |
+| 10 | [跟进 D] `density.test.tsx` KPI 断言失败 | `e502b8d` 给类名加了 `reference-stats-kpi` 前缀导致 `className="kpi-card` 首位匹配失败；断言放宽为类列表内匹配 | 未提交 |
+| 11 | `log-watcher.test.ts` 固定 sleep 在全量负载下抖动 | 改为 `waitForCondition` 轮询条件；连续 3 次 + 全量负载验证稳定 | 未提交 |
+
+### 环境说明（非代码问题）
+
+- 5 个 sqlite 测试文件（`deck-store`、`match-history-store`、`collection-snapshot-store`、`player-profile-store`、`deck-store.active-deck`）在直接 `vitest run` 下报 `NODE_MODULE_VERSION` 不匹配：`better-sqlite3` 当前为 Electron 编译（136），系统 node 需要 127。项目既有流程是 `pnpm test`（pretest 先 `pnpm rebuild:node`），dev 启动时 predev 再 `rebuild:native` 切回 Electron。**正在运行的 app 会锁住 `.node` 文件，需关闭后再跑 `pnpm test`。**
+- `scripts/prepare-native-runtime.test.ts` 的 EPERM 同为运行中 app 锁文件所致。
+
+### 测试现状（2026-07-16）
+
+- 根套件 1658 用例：1595 绿，62 失败全部位于上述 6 个环境受限文件；其余包（advisor 35、core 444、hearthdb 57、hearthmirror 56、hearthwatcher 56、shared 1）全绿。
+- eslint 0 错误 / 7 警告（见 #9）；`tsc --noEmit`：desktop、core、advisor 均 0 错误。
 
 ### 真机冒烟清单（M3.5 完成后即可做）
 
