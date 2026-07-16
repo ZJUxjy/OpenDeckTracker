@@ -43,7 +43,7 @@
 - **Collection progress** — see how close you are to "all collectible cards" per set.
 - **Bilingual UI** — full English / 简体中文 interface.
 - **Live overlays** — separate player + opponent panels with deck list, active global effects, graveyard, and live narration tabs.
-- **Privacy-first** — everything runs locally. No game data leaves your machine; the only outbound calls are card-art fetches to a public CDN.
+- **Privacy-first core** — tracking and recordings run locally. The optional AI Advice feature sends match state and follow-up questions to your selected AI provider only when you enable and configure it; card-art fetches use a public CDN.
 
 中文说明：
 
@@ -53,7 +53,7 @@
 - **收藏进度**——按系列展示离"全收齐"还差多少。
 - **中英文双语界面**——简体中文 + 英文均可切换。
 - **可分置覆盖层**——己方 / 对方各自一个面板，含卡组列表、全局效应、墓地、实时旁白 4 个 tab。
-- **本地优先**——一切运行在本机，游戏数据不外传。唯一会请求的外网是公共 CDN 的卡牌图片。
+- **核心功能本地优先**——记牌和录像在本机运行。可选的 AI 建议功能只有在你启用并配置后，才会把对局状态和追问发送给你选择的 AI 服务商；卡牌图片来自公共 CDN。
 
 ## 🛠 System Requirements / 系统要求
 
@@ -61,9 +61,19 @@
 - **Hearthstone**: latest live client (running in DirectX mode, default)
 - **Disk**: ~500 MB after install (cached card images grow over time, capped via LRU)
 - **Memory**: <300 MB typical
-- **Network**: required for first-time card-image downloads and auto-update checks; gameplay tracking itself is fully local
+- **Network**: required for first-time card-image downloads and auto-update checks; gameplay tracking itself is fully local. Optional AI Advice also requires network access to the provider you configure.
 
-中文：仅支持 64 位 Windows 10 / 11；炉石使用最新正式版客户端、默认 DX 渲染；安装后磁盘约 500 MB（卡图缓存按 LRU 上限自动回收）；内存常驻 300 MB 左右；首次下载卡图和检查更新需要网络，对局期间的追踪是完全本地的。
+中文：仅支持 64 位 Windows 10 / 11；炉石使用最新正式版客户端、默认 DX 渲染；安装后磁盘约 500 MB（卡图缓存按 LRU 上限自动回收）；内存常驻 300 MB 左右；首次下载卡图和检查更新需要网络，对局期间的追踪是完全本地的。可选 AI 建议还需要访问你配置的服务商。
+
+## 🔐 Privacy Note / 隐私说明
+
+Core tracking, recordings, deck storage, and statistics stay on your machine. When AI Advice is disabled, no match state is sent to an AI provider.
+
+If you enable AI Advice, OpenDeckTracker sends the current match state and any follow-up questions you type to the provider configured in Settings → AI Advice. API keys are stored locally as secure references and are not displayed again after saving.
+
+核心记牌、录像、卡组存储和统计数据都保留在本机。关闭 AI 建议时，不会向 AI 服务商发送对局状态。
+
+启用 AI 建议后，OpenDeckTracker 会把当前对局状态和你输入的追问发送给「设置 → AI 建议」中配置的服务商。API key 仅以本地安全引用保存，保存后不会再次明文显示。
 
 ## 🚀 Quick start (users) / 普通用户快速上手
 
