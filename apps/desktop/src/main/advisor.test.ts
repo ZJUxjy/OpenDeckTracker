@@ -308,6 +308,63 @@ describe('advisor main service', () => {
     expect(session.suggestTurn).toHaveBeenCalledTimes(1);
   });
 
+  it('generates no proactive advice at all when autoSuggest is off', async () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+    const session = {
+      suggestMulligan: vi.fn(async () => suggestion),
+      suggestTurn: vi.fn(async () => suggestion),
+      abortInFlight: vi.fn(),
+    };
+
+    startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => session,
+      autoSuggest: false,
+      debounceMs: 0,
+    });
+    // Mulligan, a fresh local turn, and a lethal board — each would
+    // normally trigger advice; all must stay silent now.
+    emit('match-started', snapshot({ turn: 0, isMulligan: true, isLocalTurn: true }));
+    emit('state-change', snapshot({ turn: 0, isMulligan: true, isLocalTurn: true }));
+    emit('state-change', snapshot({ turn: 1, isLocalTurn: true }));
+    emit('state-change', snapshot({
+      turn: 1,
+      isLocalTurn: true,
+      boardAttackToFace: { friendly: 6, opposing: 0 },
+      opposingHero: { health: 4, armor: 2, effectiveHealth: 6 },
+    }));
+    await vi.runAllTimersAsync();
+
+    expect(session.suggestMulligan).not.toHaveBeenCalled();
+    expect(session.suggestTurn).not.toHaveBeenCalled();
+    expect(broadcast).not.toHaveBeenCalled();
+  });
+
+  it('still answers follow-up questions when autoSuggest is off', async () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+    const session = {
+      suggestMulligan: vi.fn(async () => suggestion),
+      suggestTurn: vi.fn(async () => suggestion),
+      ask: vi.fn(async () => 'Face pressure wins next turn.'),
+      abortInFlight: vi.fn(),
+    };
+
+    const handle = startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => session,
+      autoSuggest: false,
+      debounceMs: 0,
+    });
+    emit('match-started', snapshot({ turn: 1 }));
+
+    await expect(handle.ask('Why not trade?')).resolves.toBe('Face pressure wins next turn.');
+    expect(session.ask).toHaveBeenCalledTimes(1);
+  });
+
   it('records suggestions and follow-up answers for match recording persistence', async () => {
     const { tracker, emit } = trackerHarness();
     const broadcast = vi.fn();

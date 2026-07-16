@@ -146,6 +146,7 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
 
     advisorServiceHandle = startAdvisor({
       tracker,
+      autoSuggest: config.autoSuggest !== false,
       createSession: (initialSnapshot) => {
         const currentConfig = advisorConfigStore.get();
         if (!currentConfig.enabled) return null;

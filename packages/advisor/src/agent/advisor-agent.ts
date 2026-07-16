@@ -24,10 +24,27 @@ import {
 export interface CreateAdvisorAgentArgs {
   model: Model<any>;
   streamFn?: StreamFn;
-  snapshot: AdvisorSerializableSnapshot;
+  /**
+   * Lazy accessor for the CURRENT match snapshot. Tools call it at
+   * execution time so their answers reflect the live board — a snapshot
+   * captured at agent creation goes stale after the first turn.
+   */
+  getSnapshot: () => AdvisorSerializableSnapshot;
   cardLookup: AdvisorCardLookup;
   cardDb?: CardLookupArgs['cardDb'];
   language?: AdvisorLanguage;
+  /**
+   * Maximum tool executions allowed per suggestion run. Once the budget is
+   * spent, further tool calls short-circuit with an instruction to produce
+   * the final answer without more tool use.
+   */
+  maxToolRounds?: number;
+  /**
+   * Shared per-run tool-execution counter. `createAdvisorAgentRunner`
+   * resets it before every suggestion run; supply your own to observe
+   * consumption in tests. Created internally when omitted.
+   */
+  toolBudget?: { used: number };
 }
 
 export function createAdvisorAgent(args: CreateAdvisorAgentArgs): Agent {
@@ -36,7 +53,7 @@ export function createAdvisorAgent(args: CreateAdvisorAgentArgs): Agent {
     initialState: {
       model: args.model,
       systemPrompt: buildAdvisorSystemPrompt(language),
-      tools: createAdvisorTools(args),
+      tools: createAdvisorTools(args, args.toolBudget ?? { used: 0 }),
       thinkingLevel: 'low',
     },
     toolExecution: 'sequential',
@@ -51,6 +68,7 @@ export class AdvisorAgentRunner {
   constructor(
     readonly agent: Agent,
     private readonly language: AdvisorLanguage,
+    private readonly toolBudget?: { used: number },
   ) {
     this.agent.subscribe((event) => {
       if (event.type === 'tool_execution_start') {
@@ -72,6 +90,7 @@ export class AdvisorAgentRunner {
     signal?: AbortSignal,
   ): Promise<AdvisorSuggestion> {
     this.currentToolCallHistory = [];
+    if (this.toolBudget !== undefined) this.toolBudget.used = 0;
     return this.withAbort(signal, async () => {
       await this.agent.prompt(buildTurnSuggestionPrompt(serializedState, this.language));
       throwIfAborted(signal);
@@ -139,11 +158,28 @@ function throwIfAborted(signal: AbortSignal | undefined): void {
 
 export function createAdvisorAgentRunner(args: CreateAdvisorAgentArgs): AdvisorAgentRunner {
   const language = args.language ?? 'en';
-  return new AdvisorAgentRunner(createAdvisorAgent({ ...args, language }), language);
+  const toolBudget = args.toolBudget ?? { used: 0 };
+  const agent = createAdvisorAgent({ ...args, language, toolBudget });
+  return new AdvisorAgentRunner(agent, language, toolBudget);
 }
 
-function createAdvisorTools(args: CreateAdvisorAgentArgs): AgentTool[] {
+function createAdvisorTools(args: CreateAdvisorAgentArgs, budget: { used: number }): AgentTool[] {
   const emptyParameters = Type.Object({});
+  /**
+   * Per-run tool budget gate. Within the cap the real tool runs; past it the
+   * call short-circuits with an instruction to finish the answer, so a
+   * runaway tool loop cannot burn tokens indefinitely.
+   */
+  const withBudget = <T>(run: () => AgentToolResult<T>): AgentToolResult<T> | AgentToolResult<{ error: string }> => {
+    const cap = args.maxToolRounds;
+    if (cap !== undefined && budget.used >= cap) {
+      return toolResult({
+        error: `Tool round limit (${cap}) reached for this suggestion. Stop calling tools and produce the final AdvisorSuggestion JSON now.`,
+      });
+    }
+    budget.used += 1;
+    return run();
+  };
   return [
     {
       name: 'action_enum',
@@ -151,14 +187,16 @@ function createAdvisorTools(args: CreateAdvisorAgentArgs): AgentTool[] {
       description: 'Enumerate candidate actions for the current Hearthstone turn.',
       parameters: emptyParameters,
       execute: async () =>
-        toolResult(enumerateActions({ snapshot: args.snapshot, cardLookup: args.cardLookup })),
+        withBudget(() =>
+          toolResult(enumerateActions({ snapshot: args.getSnapshot(), cardLookup: args.cardLookup })),
+        ),
     },
     {
       name: 'lethal_check',
       label: 'Lethal check',
       description: 'Check whether friendly face damage reaches opposing effective health.',
       parameters: emptyParameters,
-      execute: async () => toolResult(precheckLethal(args.snapshot)),
+      execute: async () => withBudget(() => toolResult(precheckLethal(args.getSnapshot()))),
     },
     {
       name: 'card_lookup',
@@ -168,14 +206,15 @@ function createAdvisorTools(args: CreateAdvisorAgentArgs): AgentTool[] {
         cardId: Type.Optional(Type.String()),
         name: Type.Optional(Type.String()),
       }),
-      execute: async (_toolCallId, params) => {
-        if (!args.cardDb) return toolResult(null);
-        const lookupParams = params as { cardId?: string; name?: string };
-        const lookupArgs: CardLookupArgs = { cardDb: args.cardDb };
-        if (lookupParams.cardId !== undefined) lookupArgs.cardId = lookupParams.cardId;
-        if (lookupParams.name !== undefined) lookupArgs.name = lookupParams.name;
-        return toolResult(lookupCard(lookupArgs));
-      },
+      execute: async (_toolCallId, params) =>
+        withBudget(() => {
+          if (!args.cardDb) return toolResult(null);
+          const lookupParams = params as { cardId?: string; name?: string };
+          const lookupArgs: CardLookupArgs = { cardDb: args.cardDb };
+          if (lookupParams.cardId !== undefined) lookupArgs.cardId = lookupParams.cardId;
+          if (lookupParams.name !== undefined) lookupArgs.name = lookupParams.name;
+          return toolResult(lookupCard(lookupArgs));
+        }),
     },
     {
       name: 'mana_math',
@@ -185,15 +224,16 @@ function createAdvisorTools(args: CreateAdvisorAgentArgs): AgentTool[] {
         available: Type.Optional(Type.Number()),
         costs: Type.Array(Type.Number()),
       }),
-      execute: async (_toolCallId, params) => {
-        const manaParams = params as { available?: number; costs: number[] };
-        return toolResult(
-          checkManaCombination({
-            available: manaParams.available ?? args.snapshot.friendlyMana?.available ?? 0,
-            costs: manaParams.costs,
-          }),
-        );
-      },
+      execute: async (_toolCallId, params) =>
+        withBudget(() => {
+          const manaParams = params as { available?: number; costs: number[] };
+          return toolResult(
+            checkManaCombination({
+              available: manaParams.available ?? args.getSnapshot().friendlyMana?.available ?? 0,
+              costs: manaParams.costs,
+            }),
+          );
+        }),
     },
     {
       name: 'deck_odds',
@@ -203,17 +243,19 @@ function createAdvisorTools(args: CreateAdvisorAgentArgs): AgentTool[] {
         targetCardIds: Type.Array(Type.String()),
         draws: Type.Number(),
       }),
-      execute: async (_toolCallId, params) => {
-        const oddsParams = params as { targetCardIds: string[]; draws: number };
-        return toolResult(
-          computeDeckOdds({
-            remaining: args.snapshot.deck?.remaining ?? [],
-            knownPositions: args.snapshot.deck?.knownPositions ?? [],
-            targetCardIds: oddsParams.targetCardIds,
-            draws: oddsParams.draws,
-          }),
-        );
-      },
+      execute: async (_toolCallId, params) =>
+        withBudget(() => {
+          const oddsParams = params as { targetCardIds: string[]; draws: number };
+          const snapshot = args.getSnapshot();
+          return toolResult(
+            computeDeckOdds({
+              remaining: snapshot.deck?.remaining ?? [],
+              knownPositions: snapshot.deck?.knownPositions ?? [],
+              targetCardIds: oddsParams.targetCardIds,
+              draws: oddsParams.draws,
+            }),
+          );
+        }),
     },
   ];
 }

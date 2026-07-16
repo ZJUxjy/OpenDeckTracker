@@ -60,22 +60,29 @@ export function createAdvisorSession(args: CreateAdvisorSessionArgs): AdvisorSes
       : null,
   });
 
+  const currentSerializable = (): AdvisorSerializableSnapshot =>
+    buildSerializable(args.getSnapshot());
+
   const stateProvider = (): string =>
     serializeAdvisorState({
-      snapshot: buildSerializable(args.getSnapshot()),
+      snapshot: currentSerializable(),
       cardLookup,
     });
-
-  const initialSerializable = buildSerializable(args.getSnapshot());
 
   const runnerArgs: Parameters<typeof createAdvisorAgentRunner>[0] = {
     model: args.modelHandle.model,
     streamFn: args.modelHandle.streamFn,
-    snapshot: initialSerializable,
+    // Lazy: tools (action_enum / lethal_check / deck_odds / mana_math)
+    // must evaluate the board at call time, not the state from when this
+    // session was created.
+    getSnapshot: currentSerializable,
     cardLookup,
     language,
   };
   if (args.cardDb) runnerArgs.cardDb = args.cardDb;
+  if (args.config.maxToolRounds !== undefined) {
+    runnerArgs.maxToolRounds = args.config.maxToolRounds;
+  }
 
   const runner = createAdvisorAgentRunner(runnerArgs);
 
@@ -86,7 +93,6 @@ export function createAdvisorSession(args: CreateAdvisorSessionArgs): AdvisorSes
       abort: () => runner.abort(),
     },
     stateProvider,
-    historyLimit: args.config.maxToolRounds ?? 3,
   });
 
   return {

@@ -56,7 +56,7 @@ describe('advisor agent', () => {
     const agent = createAdvisorAgent({
       model: faux.getModel(),
       streamFn: faux.streamSimple,
-      snapshot: snapshot(),
+      getSnapshot: snapshot,
       cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
       cardDb: new CardDb(cards),
       language: 'en',
@@ -100,7 +100,7 @@ describe('advisor agent', () => {
     const runner = createAdvisorAgentRunner({
       model: faux.getModel(),
       streamFn: faux.streamSimple,
-      snapshot: snapshot(),
+      getSnapshot: snapshot,
       cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
       cardDb: new CardDb(cards),
       language: 'en',
@@ -129,7 +129,7 @@ describe('advisor agent', () => {
     const runner = createAdvisorAgentRunner({
       model: faux.getModel(),
       streamFn: faux.streamSimple,
-      snapshot: snapshot(),
+      getSnapshot: snapshot,
       cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
       cardDb: new CardDb(cards),
       language: 'en',
@@ -157,12 +157,107 @@ describe('advisor agent', () => {
     const runner = createAdvisorAgentRunner({
       model: faux.getModel(),
       streamFn: faux.streamSimple,
-      snapshot: snapshot(),
+      getSnapshot: snapshot,
       cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
       cardDb: new CardDb(cards),
       language: 'en',
     });
 
     await expect(runner.runSuggestionPrompt('# State')).rejects.toThrow('valid AdvisorSuggestion');
+  });
+
+  test('tools evaluate the live snapshot, not the state captured at creation', async () => {
+    const faux = createFauxCore({ tokensPerSecond: 0 });
+    const live = snapshot();
+    const agent = createAdvisorAgent({
+      model: faux.getModel(),
+      streamFn: faux.streamSimple,
+      getSnapshot: () => live,
+      cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
+      cardDb: new CardDb(cards),
+      language: 'en',
+    });
+
+    const lethalTool = agent.state.tools.find((tool) => tool.name === 'lethal_check');
+    expect(lethalTool).toBeDefined();
+
+    const before = await lethalTool!.execute('call-1', {});
+    expect(before.details).toMatchObject({ hasLethal: true, damage: 6, requiredHealth: 6 });
+
+    // Board state moves on after the agent was created — the next tool
+    // call must see the updated state, not the creation-time snapshot.
+    live.boardAttackToFace = { friendly: 0, opposing: 0 };
+
+    const after = await lethalTool!.execute('call-2', {});
+    expect(after.details).toMatchObject({ hasLethal: false, damage: 0 });
+  });
+
+  test('short-circuits tool calls once the per-run tool budget is spent', async () => {
+    const faux = createFauxCore({ tokensPerSecond: 0 });
+    const budget = { used: 0 };
+    const agent = createAdvisorAgent({
+      model: faux.getModel(),
+      streamFn: faux.streamSimple,
+      getSnapshot: snapshot,
+      cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
+      cardDb: new CardDb(cards),
+      language: 'en',
+      maxToolRounds: 1,
+      toolBudget: budget,
+    });
+
+    const lethalTool = agent.state.tools.find((tool) => tool.name === 'lethal_check');
+    expect(lethalTool).toBeDefined();
+
+    const first = await lethalTool!.execute('call-1', {});
+    expect(first.details).toMatchObject({ hasLethal: true, damage: 6 });
+    expect(budget.used).toBe(1);
+
+    const blocked = await lethalTool!.execute('call-2', {});
+    expect(blocked.details).toMatchObject({ error: expect.stringContaining('Tool round limit') });
+    expect(budget.used).toBe(1);
+  });
+
+  test('resets the tool budget before each suggestion run', async () => {
+    const faux = createFauxCore({ tokensPerSecond: 0 });
+    const budget = { used: 0 };
+    let lookedUp = 0;
+    const runner = createAdvisorAgentRunner({
+      model: faux.getModel(),
+      streamFn: faux.streamSimple,
+      getSnapshot: snapshot,
+      cardLookup: (cardId) => {
+        lookedUp += 1;
+        return cards.find((card) => card.id === cardId) ?? null;
+      },
+      cardDb: new CardDb(cards),
+      language: 'en',
+      maxToolRounds: 1,
+      toolBudget: budget,
+    });
+
+    const responses = () => [
+      fauxAssistantMessage(fauxToolCall('action_enum', {}), { stopReason: 'toolUse' }),
+      fauxAssistantMessage(
+        JSON.stringify({
+          actions: [{ kind: 'endTurn', note: 'Done.' }],
+          reasoning: 'No better play.',
+          alerts: [],
+        }),
+      ),
+    ];
+
+    faux.setResponses(responses());
+    await runner.runSuggestionPrompt('# State');
+    const afterFirstRun = lookedUp;
+    // The single allowed action_enum call really executed (it resolves
+    // hand card names through cardLookup).
+    expect(afterFirstRun).toBeGreaterThan(0);
+
+    // Without a per-run reset the second run's action_enum would be
+    // short-circuited and cardLookup would see no new calls.
+    faux.setResponses(responses());
+    await runner.runSuggestionPrompt('# State');
+    expect(lookedUp).toBeGreaterThan(afterFirstRun);
   });
 });

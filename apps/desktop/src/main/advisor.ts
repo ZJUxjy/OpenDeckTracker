@@ -39,6 +39,12 @@ export interface StartAdvisorOptions {
   tracker: AdvisorTrackerLike;
   createSession: (snapshot: DeckTrackerSnapshot) => AdvisorSessionLike | null;
   broadcast: (channel: 'advisor:state', payload: AdvisorMainState) => void;
+  /**
+   * Master switch for proactive advice. When false, no mulligan/turn
+   * suggestions and no lethal alerts are generated — the user can still
+   * ask follow-up questions manually. Defaults to true.
+   */
+  autoSuggest?: boolean;
   shouldSuggestTurn?: (
     current: DeckTrackerSnapshot,
     previous: DeckTrackerSnapshot | null,
@@ -90,6 +96,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     tracker,
     createSession,
     broadcast,
+    autoSuggest = true,
     debounceMs = DEFAULT_DEBOUNCE_MS,
     now = () => Date.now(),
     shouldSuggestTurn = defaultShouldSuggestTurn,
@@ -241,7 +248,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   }
 
   function maybeSuggestMulligan(snapshot: DeckTrackerSnapshot): void {
-    if (!snapshot.isMulligan || mulliganSuggested) return;
+    if (!autoSuggest || !snapshot.isMulligan || mulliganSuggested) return;
     const currentSession = ensureSession(snapshot);
     if (currentSession === null) return;
     mulliganSuggested = true;
@@ -250,7 +257,7 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
   }
 
   function maybeSuggestTurn(snapshot: DeckTrackerSnapshot): void {
-    if (!shouldSuggestTurn(snapshot, previousSnapshot)) return;
+    if (!autoSuggest || !shouldSuggestTurn(snapshot, previousSnapshot)) return;
     const currentSession = ensureSession(snapshot);
     if (currentSession === null) return;
 
@@ -289,20 +296,22 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
     const { snapshot } = event;
     abortStaleTurnWork(snapshot);
 
-    const lethalAlert = formatLethalAlert(snapshot);
-    const lethalFingerprint =
-      lethalAlert !== null ? `${lethalAlert.detail}` : null;
+    if (autoSuggest) {
+      const lethalAlert = formatLethalAlert(snapshot);
+      const lethalFingerprint =
+        lethalAlert !== null ? `${lethalAlert.detail}` : null;
 
-    if (lethalFingerprint !== lastLethalFingerprint) {
-      lastLethalFingerprint = lethalFingerprint;
-      if (lethalAlert !== null) {
-        const alerts = [...currentAlerts, lethalAlert];
-        emitState({
-          status: 'ready',
-          suggestion: currentSuggestion,
-          alerts,
-          error: null,
-        });
+      if (lethalFingerprint !== lastLethalFingerprint) {
+        lastLethalFingerprint = lethalFingerprint;
+        if (lethalAlert !== null) {
+          const alerts = [...currentAlerts, lethalAlert];
+          emitState({
+            status: 'ready',
+            suggestion: currentSuggestion,
+            alerts,
+            error: null,
+          });
+        }
       }
     }
 
