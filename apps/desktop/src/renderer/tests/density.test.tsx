@@ -41,7 +41,7 @@ describe('compact density marker classes are wired into components', () => {
   });
 
   it('Stats KPI cards carry the .kpi-card class', () => {
-    expect(read('components/Stats.tsx')).toMatch(/className="kpi-card\b/);
+    expect(read('components/Stats.tsx')).toMatch(/className="[^"]*\bkpi-card\b/);
   });
 
   it('Stats recent-match rows carry the .recent-match-row class', () => {

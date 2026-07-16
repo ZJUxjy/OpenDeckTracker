@@ -19,6 +19,20 @@ afterEach(async () => {
   await rm(dir, { recursive: true, force: true });
 });
 
+/**
+ * Poll until the watcher observes the expected state. Fixed sleeps flake
+ * under full-suite load (the 10ms poll loop may not be scheduled within a
+ * 30ms sleep window), so every post-append assertion waits on the
+ * condition itself instead of the clock.
+ */
+async function waitForCondition(check: () => boolean, timeoutMs = 2_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (check()) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
 describe('HearthWatcher', () => {
   it('emits parsed events from tailed Power.log lines', async () => {
     const path = join(dir, 'Power.log');
@@ -34,7 +48,11 @@ describe('HearthWatcher', () => {
       path,
       'D 00:00:00.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=64 tag=ZONE value=HAND\n',
     );
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await waitForCondition(
+      () =>
+        events.some((event) => event.type === 'tag-change' && event.entity === 64) &&
+        statuses.some((status) => status.kind === 'ready'),
+    );
 
     expect(events).toContainEqual(
       expect.objectContaining({ type: 'tag-change', entity: 64, tag: 'ZONE', value: 'HAND' }),
@@ -78,12 +96,14 @@ describe('HearthWatcher', () => {
 
     await writeFile(path, '');
     exists = true;
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await waitForCondition(() => statuses.some((status) => status.kind === 'ready'));
     await appendFile(
       path,
       'D 00:00:00.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=64 tag=ZONE value=HAND  \n',
     );
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await waitForCondition(() =>
+      events.some((event) => event.type === 'tag-change' && event.entity === 64),
+    );
 
     expect(events).toContainEqual(
       expect.objectContaining({ type: 'tag-change', entity: 64, tag: 'ZONE', value: 'HAND' }),
@@ -106,7 +126,7 @@ describe('HearthWatcher', () => {
     watcher.onStatus((status) => statuses.push(status));
 
     await watcher.start();
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await waitForCondition(() => statuses.some((status) => status.kind === 'parser-error'));
 
     expect(statuses).toContainEqual(
       expect.objectContaining({
@@ -143,7 +163,11 @@ describe('HearthWatcher', () => {
       path,
       'D 18:42:02.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=65 tag=ZONE value=DECK\n',
     );
-    await new Promise((resolve) => setTimeout(resolve, 40));
+    await waitForCondition(() =>
+      events.some(
+        (entry) => entry.phase === 'live' && entry.event.type === 'tag-change' && entry.event.entity === 65,
+      ),
+    );
 
     const replayed = events.filter((e) => e.phase === 'replay').map((e) => e.event);
     const live = events.filter((e) => e.phase === 'live').map((e) => e.event);
@@ -208,16 +232,20 @@ describe('HearthWatcher', () => {
       oldPowerLog,
       'D 00:00:00.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=64 tag=ZONE value=HAND\n',
     );
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await waitForCondition(() =>
+      events.some((event) => event.type === 'tag-change' && event.entity === 64),
+    );
 
     await mkdir(newLogDir, { recursive: true });
     await writeFile(newPowerLog, '');
-    await new Promise((resolve) => setTimeout(resolve, 40));
+    await waitForCondition(() => statuses.some((status) => status.path === newPowerLog));
     await appendFile(
       newPowerLog,
       'D 00:00:00.0000000 GameState.DebugPrintPower() - TAG_CHANGE Entity=65 tag=ZONE value=DECK\n',
     );
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await waitForCondition(() =>
+      events.some((event) => event.type === 'tag-change' && event.entity === 65),
+    );
 
     expect(statuses).toContainEqual(expect.objectContaining({ path: newPowerLog }));
     expect(events).toContainEqual(
