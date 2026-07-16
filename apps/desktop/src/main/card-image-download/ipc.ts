@@ -3,13 +3,23 @@ import type {
   BulkDownloadProgressCallback,
   CardImageBulkDownloadOrchestrator,
 } from './orchestrator';
+import {
+  CARD_IMAGE_BULK_DOWNLOAD_ABORT_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_PAUSE_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_PROGRESS_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_RESUME_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_START_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_STATUS_CHANNEL,
+} from '../../shared/ipc-channels';
 
-export const CARD_IMAGE_BULK_DOWNLOAD_START_CHANNEL = 'card-image-bulk-download:start';
-export const CARD_IMAGE_BULK_DOWNLOAD_PAUSE_CHANNEL = 'card-image-bulk-download:pause';
-export const CARD_IMAGE_BULK_DOWNLOAD_RESUME_CHANNEL = 'card-image-bulk-download:resume';
-export const CARD_IMAGE_BULK_DOWNLOAD_ABORT_CHANNEL = 'card-image-bulk-download:abort';
-export const CARD_IMAGE_BULK_DOWNLOAD_STATUS_CHANNEL = 'card-image-bulk-download:status';
-export const CARD_IMAGE_BULK_DOWNLOAD_PROGRESS_CHANNEL = 'card-image-bulk-download:progress';
+export {
+  CARD_IMAGE_BULK_DOWNLOAD_ABORT_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_PAUSE_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_PROGRESS_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_RESUME_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_START_CHANNEL,
+  CARD_IMAGE_BULK_DOWNLOAD_STATUS_CHANNEL,
+};
 
 export function registerCardImageBulkDownloadIpc(
   orchestrator: CardImageBulkDownloadOrchestrator,

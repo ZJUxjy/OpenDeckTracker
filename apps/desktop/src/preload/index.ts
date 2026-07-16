@@ -86,6 +86,11 @@ import type {
 import type { LiveDeckSnapshotInput } from '../main/deck-store';
 import type { LiveDeckSyncResult } from '../main/deck-sync-host';
 import type { AdvisorMainState } from '../main/advisor';
+// Channel-name constants live in src/shared/ipc-channels.ts — a
+// dependency-free module. Importing them from main-process modules pulled
+// node:fs/node:path into this sandboxed preload bundle (via
+// advisor-ipc.ts → advisor-config-store.ts), which crashed the preload
+// before `window.hdt` was exposed.
 import {
   ADVISOR_API_KEY_SET_CHANNEL,
   ADVISOR_ASK_CHANNEL,
@@ -93,16 +98,14 @@ import {
   ADVISOR_CONFIG_GET_CHANNEL,
   ADVISOR_CONFIG_SET_CHANNEL,
   ADVISOR_STATE_CHANNEL,
-} from '../main/advisor-ipc';
-import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
-import {
   CARD_IMAGE_BULK_DOWNLOAD_ABORT_CHANNEL,
   CARD_IMAGE_BULK_DOWNLOAD_PAUSE_CHANNEL,
   CARD_IMAGE_BULK_DOWNLOAD_PROGRESS_CHANNEL,
   CARD_IMAGE_BULK_DOWNLOAD_RESUME_CHANNEL,
   CARD_IMAGE_BULK_DOWNLOAD_START_CHANNEL,
   CARD_IMAGE_BULK_DOWNLOAD_STATUS_CHANNEL,
-} from '../main/card-image-download/ipc';
+} from '../shared/ipc-channels';
+import type { HearthWatcherDiagnostic, PowerEvent } from '@hdt/hearthwatcher';
 import type {
   BulkDownloadStatus,
   BulkDownloadType,

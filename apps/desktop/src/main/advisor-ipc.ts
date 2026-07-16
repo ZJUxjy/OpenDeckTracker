@@ -1,14 +1,23 @@
 import { BrowserWindow, ipcMain, type IpcMainInvokeEvent } from 'electron';
 import type { AdvisorConfig, AdvisorProvider } from '@hdt/advisor';
 import type { AdvisorMainState } from './advisor';
+import {
+  ADVISOR_API_KEY_SET_CHANNEL,
+  ADVISOR_ASK_CHANNEL,
+  ADVISOR_ASK_CHUNK_CHANNEL,
+  ADVISOR_CONFIG_GET_CHANNEL,
+  ADVISOR_CONFIG_SET_CHANNEL,
+  ADVISOR_STATE_CHANNEL,
+} from '../shared/ipc-channels';
 export { DEFAULT_ADVISOR_CONFIG } from './advisor-config-store';
-
-export const ADVISOR_STATE_CHANNEL = 'advisor:state';
-export const ADVISOR_ASK_CHANNEL = 'advisor:ask';
-export const ADVISOR_ASK_CHUNK_CHANNEL = 'advisor:ask:chunk';
-export const ADVISOR_CONFIG_GET_CHANNEL = 'advisor:config:get';
-export const ADVISOR_CONFIG_SET_CHANNEL = 'advisor:config:set';
-export const ADVISOR_API_KEY_SET_CHANNEL = 'advisor:api-key:set';
+export {
+  ADVISOR_API_KEY_SET_CHANNEL,
+  ADVISOR_ASK_CHANNEL,
+  ADVISOR_ASK_CHUNK_CHANNEL,
+  ADVISOR_CONFIG_GET_CHANNEL,
+  ADVISOR_CONFIG_SET_CHANNEL,
+  ADVISOR_STATE_CHANNEL,
+};
 
 export interface AdvisorIpcDeps {
   ask: (question: string, emitChunk: (chunk: string) => void) => Promise<string> | string;
