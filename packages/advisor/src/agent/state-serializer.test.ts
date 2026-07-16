@@ -94,6 +94,10 @@ describe('advisor state serializer', () => {
       isMulligan: false,
       friendlyMana: { available: 4, total: 5 },
       friendlyHand: ['CS2_029', 'EX1_008'],
+      opposingHandCount: 4,
+      opponentRevealed: [{ cardId: 'EX1_008', created: true }],
+      opponentGraveyard: [{ cardId: 'TAUNT', created: false }],
+      friendlyGraveyard: [{ cardId: 'CS2_029', created: false }],
       boardAttackToFace: { friendly: 5, opposing: 0 },
       friendlyHero: { health: 20, armor: 3, effectiveHealth: 23 },
       opposingHero: { health: 12, armor: 0, effectiveHealth: 12 },
@@ -175,6 +179,16 @@ describe('advisor state serializer', () => {
       - Argent Squire [EX1_008] 1/1, atk 1; divineShield
       Opposing:
       - Shield Guard [TAUNT] 3/3, atk 2; taunt
+
+      ## Opponent
+      - Hand size: 4
+      Revealed:
+      - Argent Squire [EX1_008] (generated)
+      Graveyard:
+      - Shield Guard [TAUNT]
+
+      ## Friendly Graveyard
+      - Fireball [CS2_029]
 
       ## Deck
       - Remaining cards: 3

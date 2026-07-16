@@ -44,6 +44,7 @@ export function createAdvisorSession(args: CreateAdvisorSessionArgs): AdvisorSes
     isMulligan: snapshot.isMulligan === true,
     friendlyMana: snapshot.friendlyMana ?? null,
     friendlyHand: snapshot.friendlyHand,
+    opposingHandCount: snapshot.opposingHandCount ?? 0,
     boardAttackToFace: snapshot.boardAttackToFace,
     friendlyHero: snapshot.friendlyHero ?? null,
     opposingHero: snapshot.opposingHero ?? null,
@@ -58,6 +59,9 @@ export function createAdvisorSession(args: CreateAdvisorSessionArgs): AdvisorSes
           knownPositions: snapshot.deck.knownPositions,
         }
       : null,
+    opponentRevealed: snapshot.opponent?.revealed ?? [],
+    opponentGraveyard: snapshot.opponent?.graveyard ?? [],
+    friendlyGraveyard: snapshot.friendlyGraveyard ?? [],
   });
 
   const currentSerializable = (): AdvisorSerializableSnapshot =>
@@ -89,7 +93,7 @@ export function createAdvisorSession(args: CreateAdvisorSessionArgs): AdvisorSes
   const session = new AdvisorSession({
     runner: {
       runSuggestionPrompt: (prompt, signal) => runner.runSuggestionPrompt(prompt, signal),
-      ask: (question, context, signal) => runner.ask(question, context, signal),
+      ask: (question, context, signal, onChunk) => runner.ask(question, context, signal, onChunk),
       abort: () => runner.abort(),
     },
     stateProvider,
@@ -98,7 +102,8 @@ export function createAdvisorSession(args: CreateAdvisorSessionArgs): AdvisorSes
   return {
     suggestMulligan: (): Promise<AdvisorSuggestion> => session.suggestMulligan(),
     suggestTurn: (): Promise<AdvisorSuggestion> => session.suggestTurn(),
-    ask: (question: string): Promise<string> => session.ask(question),
+    ask: (question: string, onChunk?: (chunk: string) => void): Promise<string> =>
+      session.ask(question, onChunk),
     abortInFlight: () => session.abortInFlight(),
   };
 }

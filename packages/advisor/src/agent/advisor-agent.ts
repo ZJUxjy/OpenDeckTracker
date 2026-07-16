@@ -112,18 +112,41 @@ export class AdvisorAgentRunner {
     });
   }
 
-  async ask(question: string, context: string, signal?: AbortSignal): Promise<string> {
+  async ask(
+    question: string,
+    context: string,
+    signal?: AbortSignal,
+    onChunk?: (chunk: string) => void,
+  ): Promise<string> {
     return this.withAbort(signal, async () => {
-      await this.agent.prompt(
-        [
-          'Answer this follow-up question using the current session context.',
-          `Question: ${question}`,
-          '',
-          context,
-        ].join('\n'),
-      );
-      throwIfAborted(signal);
-      return latestAssistantText(this.agent.state.messages) ?? '';
+      let streamed = 0;
+      const unsubscribe =
+        onChunk === undefined
+          ? undefined
+          : this.agent.subscribe((event) => {
+              if (event.type !== 'message_update') return;
+              const assistantEvent = event.assistantMessageEvent;
+              if (assistantEvent.type !== 'text_delta') return;
+              streamed += assistantEvent.delta.length;
+              onChunk(assistantEvent.delta);
+            });
+      try {
+        await this.agent.prompt(
+          [
+            'Answer this follow-up question using the current session context.',
+            `Question: ${question}`,
+            '',
+            context,
+          ].join('\n'),
+        );
+        throwIfAborted(signal);
+        const answer = latestAssistantText(this.agent.state.messages) ?? '';
+        // Providers that never stream partial text still surface the answer.
+        if (streamed === 0 && answer.length > 0) onChunk?.(answer);
+        return answer;
+      } finally {
+        unsubscribe?.();
+      }
     });
   }
 

@@ -6,6 +6,11 @@ export type AdvisorSerializableDeck = Pick<
   'remaining' | 'knownPositions'
 >;
 
+type SnapshotCardRecord = DeckTrackerSnapshot['opponent']['revealed'][number];
+
+/** A seen/used card, stripped to what the advisor prompt needs. */
+export type AdvisorCardRecord = Pick<SnapshotCardRecord, 'cardId' | 'created'>;
+
 export type AdvisorSerializableSnapshot = Pick<
   DeckTrackerSnapshot,
   | 'phase'
@@ -13,6 +18,7 @@ export type AdvisorSerializableSnapshot = Pick<
   | 'isMulligan'
   | 'friendlyMana'
   | 'friendlyHand'
+  | 'opposingHandCount'
   | 'boardAttackToFace'
   | 'friendlyHero'
   | 'opposingHero'
@@ -23,6 +29,12 @@ export type AdvisorSerializableSnapshot = Pick<
   | 'boardMinions'
 > & {
   deck: AdvisorSerializableDeck | null;
+  /** Opponent cards publicly revealed this match. */
+  opponentRevealed: AdvisorCardRecord[];
+  /** Opponent cards that died / were used this match. */
+  opponentGraveyard: AdvisorCardRecord[];
+  /** Local cards used / lost this match. */
+  friendlyGraveyard: AdvisorCardRecord[];
 };
 
 export type AdvisorCardLookup = (cardId: string) => CardDef | null | undefined;
@@ -68,6 +80,16 @@ export function serializeAdvisorState(args: SerializeAdvisorStateArgs): string {
   appendBoard(lines, snapshot.boardMinions?.friendly ?? [], cardLookup);
   lines.push('Opposing:');
   appendBoard(lines, snapshot.boardMinions?.opposing ?? [], cardLookup);
+
+  lines.push('');
+  lines.push('## Opponent');
+  lines.push(`- Hand size: ${snapshot.opposingHandCount}`);
+  appendCardRecords(lines, 'Revealed', snapshot.opponentRevealed, cardLookup);
+  appendCardRecords(lines, 'Graveyard', snapshot.opponentGraveyard, cardLookup);
+
+  lines.push('');
+  lines.push('## Friendly Graveyard');
+  appendCardRecords(lines, null, snapshot.friendlyGraveyard, cardLookup);
 
   lines.push('');
   lines.push('## Deck');
@@ -145,6 +167,23 @@ function appendBoard(
     lines.push(
       `- ${formatCardRef(minion.cardId, cardLookup)} ${minion.health}/${minion.maxHealth}, atk ${minion.atk}${suffix}`,
     );
+  }
+}
+
+function appendCardRecords(
+  lines: string[],
+  label: string | null,
+  records: AdvisorCardRecord[],
+  cardLookup: AdvisorCardLookup,
+): void {
+  if (label !== null) lines.push(`${label}:`);
+  if (records.length === 0) {
+    lines.push('- (none)');
+    return;
+  }
+  for (const record of records) {
+    const generated = record.created ? ' (generated)' : '';
+    lines.push(`- ${formatCardRef(record.cardId, cardLookup)}${generated}`);
   }
 }
 

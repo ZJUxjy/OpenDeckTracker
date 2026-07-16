@@ -23,7 +23,7 @@ export interface AdvisorTrackerLike {
 export interface AdvisorSessionLike {
   suggestMulligan(): Promise<AdvisorSuggestion>;
   suggestTurn(): Promise<AdvisorSuggestion>;
-  ask?(question: string): Promise<string>;
+  ask?(question: string, onChunk?: (chunk: string) => void): Promise<string>;
   abortInFlight?(): void;
 }
 
@@ -365,8 +365,13 @@ export function startAdvisor(options: StartAdvisorOptions): AdvisorServiceHandle
       if (session?.ask === undefined) {
         throw new Error('Advisor session does not support follow-up questions');
       }
-      const answer = await session.ask(question);
-      emitChunk?.(answer);
+      let streamed = false;
+      const answer = await session.ask(question, (chunk) => {
+        streamed = true;
+        emitChunk?.(chunk);
+      });
+      // Sessions without streaming support still surface the full answer.
+      if (!streamed) emitChunk?.(answer);
       recordFollowUp(question, answer);
       return answer;
     },

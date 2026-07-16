@@ -430,4 +430,33 @@ describe('advisor main service', () => {
     expect(answer).toBe('Face pressure wins next turn.');
     expect(emitChunk).toHaveBeenCalledWith('Face pressure wins next turn.');
   });
+
+  it('forwards streamed chunks without re-emitting the full answer', async () => {
+    const { tracker, emit } = trackerHarness();
+    const broadcast = vi.fn();
+    const session = {
+      suggestMulligan: vi.fn(async () => suggestion),
+      suggestTurn: vi.fn(async () => suggestion),
+      ask: vi.fn(async (_question: string, onChunk?: (chunk: string) => void) => {
+        onChunk?.('Face pressure ');
+        onChunk?.('wins next turn.');
+        return 'Face pressure wins next turn.';
+      }),
+      abortInFlight: vi.fn(),
+    };
+
+    const handle = startAdvisor({
+      tracker,
+      broadcast,
+      createSession: () => session,
+      shouldSuggestTurn: () => false,
+      debounceMs: 0,
+    });
+    emit('match-started', snapshot({ turn: 1 }));
+    const emitChunk = vi.fn();
+    const answer = await handle.ask('Why not trade?', emitChunk);
+
+    expect(answer).toBe('Face pressure wins next turn.');
+    expect(emitChunk.mock.calls).toEqual([['Face pressure '], ['wins next turn.']]);
+  });
 });

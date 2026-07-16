@@ -35,6 +35,10 @@ function snapshot(): AdvisorSerializableSnapshot {
     isMulligan: false,
     friendlyMana: { available: 4, total: 4 },
     friendlyHand: ['CS2_029'],
+    opposingHandCount: 0,
+    opponentRevealed: [],
+    opponentGraveyard: [],
+    friendlyGraveyard: [],
     boardAttackToFace: { friendly: 6, opposing: 0 },
     friendlyHero: { health: 30, armor: 0, effectiveHealth: 30 },
     opposingHero: { health: 6, armor: 0, effectiveHealth: 6 },
@@ -259,5 +263,29 @@ describe('advisor agent', () => {
     faux.setResponses(responses());
     await runner.runSuggestionPrompt('# State');
     expect(lookedUp).toBeGreaterThan(afterFirstRun);
+  });
+
+  test('streams answer text to onChunk during ask', async () => {
+    const faux = createFauxCore({ tokensPerSecond: 0 });
+    faux.setResponses([fauxAssistantMessage('Face pressure wins next turn.')]);
+    const runner = createAdvisorAgentRunner({
+      model: faux.getModel(),
+      streamFn: faux.streamSimple,
+      getSnapshot: snapshot,
+      cardLookup: (cardId) => cards.find((card) => card.id === cardId) ?? null,
+      cardDb: new CardDb(cards),
+      language: 'en',
+    });
+
+    const chunks: string[] = [];
+    const answer = await runner.ask('What next?', '# Context', undefined, (chunk) =>
+      chunks.push(chunk),
+    );
+
+    expect(answer).toBe('Face pressure wins next turn.');
+    // Delta-by-delta streaming or one whole-answer chunk for
+    // non-streaming providers — either way the text arrives exactly once.
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks.join('')).toBe(answer);
   });
 });

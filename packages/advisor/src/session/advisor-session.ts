@@ -2,7 +2,12 @@ import type { AdvisorSuggestion } from '../types';
 
 export interface AdvisorSuggestionRunner {
   runSuggestionPrompt(prompt: string, signal?: AbortSignal): Promise<AdvisorSuggestion>;
-  ask?(question: string, context: string, signal?: AbortSignal): Promise<string>;
+  ask?(
+    question: string,
+    context: string,
+    signal?: AbortSignal,
+    onChunk?: (chunk: string) => void,
+  ): Promise<string>;
   abort?(): void;
 }
 
@@ -47,11 +52,13 @@ export class AdvisorSession {
     );
   }
 
-  ask(question: string): Promise<string> {
+  ask(question: string, onChunk?: (chunk: string) => void): Promise<string> {
     if (!this.runner.ask) {
       throw new Error('Advisor runner does not support follow-up questions');
     }
-    return this.runWithAbort((signal) => this.runner.ask!(question, this.buildContext(null), signal));
+    return this.runWithAbort((signal) =>
+      this.runner.ask!(question, this.buildContext(null), signal, onChunk),
+    );
   }
 
   endTurn(summary: string): void {
