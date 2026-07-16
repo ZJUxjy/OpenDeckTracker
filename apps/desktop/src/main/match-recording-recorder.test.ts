@@ -116,6 +116,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: () => 1_000,
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -143,6 +144,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: () => 1_000,
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -169,6 +171,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: () => 1_000,
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -204,6 +207,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: vi.fn().mockReturnValueOnce(1_000).mockReturnValueOnce(2_000),
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -227,6 +231,7 @@ describe('match-recording-recorder', () => {
       getMatchFingerprint: () => 'match-v2-1000-1',
       now: vi.fn().mockReturnValueOnce(1_000).mockReturnValueOnce(2_000),
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -271,6 +276,7 @@ describe('match-recording-recorder', () => {
       getAdvisorHistory: () => advisorHistory,
       now: vi.fn().mockReturnValueOnce(1_000).mockReturnValueOnce(2_000),
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -292,6 +298,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: vi.fn().mockReturnValueOnce(1_000).mockReturnValueOnce(2_000).mockReturnValueOnce(3_000),
       createRecordingId: vi.fn().mockReturnValueOnce('rec-a').mockReturnValueOnce('rec-b'),
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -314,6 +321,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: () => 1_000,
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
     });
 
     recorder.handleEvent(createGame);
@@ -364,6 +372,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: () => 1_000,
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
       resolveCardName: (cardId) => (cardId === 'MEND_300' ? '驯服宠物' : null),
     });
 
@@ -417,6 +426,7 @@ describe('match-recording-recorder', () => {
       getSnapshot: () => snapshot(),
       now: () => 1_000,
       createRecordingId: () => 'rec-a',
+      persistIntervalMs: 0,
       resolveCardName: () => {
         throw new Error('resolver failed');
       },
@@ -476,5 +486,45 @@ describe('match-recording-recorder', () => {
         controllerId: null,
       },
     });
+  });
+
+  it('throttles intermediate recording.json writes but always persists start and completion', () => {
+    const store = createMemoryStore();
+    const writeSpy = vi.spyOn(store, 'writeRecording');
+    let timestamp = 1_000;
+    const recorder = createMatchRecordingRecorder({
+      store,
+      getSnapshot: () => snapshot(),
+      now: () => timestamp,
+      createRecordingId: () => 'rec-a',
+      // persistIntervalMs omitted on purpose — covers the 2s default.
+    });
+
+    const turnEvent = (turn: number): PowerEvent => ({
+      type: 'tag-change',
+      entity: 'GameEntity',
+      tag: 'TURN',
+      value: turn,
+      raw: '',
+      content: '',
+    });
+
+    recorder.handleEvent(createGame); // match start → immediate persist
+    expect(writeSpy).toHaveBeenCalledTimes(1);
+
+    // Same wall-clock second — intermediate writes are throttled.
+    recorder.handleEvent(turnEvent(1));
+    recorder.handleEvent(turnEvent(2));
+    expect(writeSpy).toHaveBeenCalledTimes(1);
+
+    // Once the interval has elapsed, the next event persists again.
+    timestamp = 3_500;
+    recorder.handleEvent(turnEvent(3));
+    expect(writeSpy).toHaveBeenCalledTimes(2);
+
+    // Completion always persists immediately.
+    recorder.handleEvent(completeState);
+    expect(writeSpy).toHaveBeenCalledTimes(3);
+    expect(store.recordings.get('rec-a')?.status).toBe('completed');
   });
 });

@@ -30,6 +30,9 @@ export function createDefaultMatchRecordingStore(userDataPath: string): MatchRec
   return createMatchRecordingStore(join(userDataPath, 'match-recordings'));
 }
 
+/** Default minimum gap between intermediate recording.json rewrites. */
+export const DEFAULT_RECORDING_PERSIST_INTERVAL_MS = 2_000;
+
 export function createMatchRecordingRecorder(args: {
   store: MatchRecordingStore;
   getSnapshot: () => DeckTrackerSnapshot | null;
@@ -39,18 +42,45 @@ export function createMatchRecordingRecorder(args: {
   onNarrationFrames?: (frames: readonly GameProgressNarrationFrame[]) => void;
   now?: () => number;
   createRecordingId?: (startedAt: number) => string;
+  /**
+   * Minimum wall-clock gap between intermediate `recording.json` rewrites.
+   * The structured recording is a DERIVED artifact (the append-only
+   * `events.jsonl` is the source of truth), and a match produces thousands
+   * of events — rewriting a ~1 MB pretty JSON synchronously on every event
+   * blocks the main process and writes gigabytes per match. Match start /
+   * completion / interruption always persist immediately; intermediate
+   * events persist at most once per this interval. 0 restores
+   * persist-on-every-event behavior (used by tests).
+   */
+  persistIntervalMs?: number;
 }): MatchRecordingRecorder {
   const now = args.now ?? Date.now;
   const createRecordingId = args.createRecordingId ?? defaultRecordingId;
+  const persistIntervalMs = args.persistIntervalMs ?? DEFAULT_RECORDING_PERSIST_INTERVAL_MS;
   const narrationOptions = args.resolveCardName !== undefined
     ? { resolveCardName: args.resolveCardName }
     : {};
   let current: MatchRecording | null = null;
   let state: HearthWatcherGameState | null = null;
+  let lastPersistAt: number | null = null;
 
   function persist(): void {
     if (current !== null) {
       args.store.writeRecording(current);
+    }
+  }
+
+  function persistThrottled(): void {
+    if (persistIntervalMs <= 0) {
+      // Legacy persist-on-every-event behavior; also avoids sampling the
+      // clock when no throttle window is configured.
+      persist();
+      return;
+    }
+    const at = now();
+    if (lastPersistAt === null || at - lastPersistAt >= persistIntervalMs) {
+      lastPersistAt = at;
+      persist();
     }
   }
 
@@ -72,6 +102,7 @@ export function createMatchRecordingRecorder(args: {
     }
 
     const startedAt = now();
+    lastPersistAt = startedAt;
     const snapshot = args.getSnapshot();
     const localControllerId = localControllerFromSnapshot(snapshot);
     const opponentControllerId = opponentControllerFromSnapshot(snapshot, localControllerId);
@@ -150,9 +181,11 @@ export function createMatchRecordingRecorder(args: {
         applyAdvisorHistory(current, args.getAdvisorHistory?.());
         current.timeline.push({ kind: 'game-completed', sourceEventIndex });
         current.finalSummary = buildMatchRecordingSummary(current);
+        // Terminal state always lands on disk immediately.
+        persist();
+      } else {
+        persistThrottled();
       }
-
-      persist();
     },
   };
 }
