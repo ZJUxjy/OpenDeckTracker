@@ -10,7 +10,7 @@ function fakeTracker() {
   return {
     setOriginalDeck: vi.fn(),
     selectSavedDeck: vi.fn(),
-    getLocalOriginalDeck: vi.fn<() => unknown | null>(() => null),
+    getLocalOriginalDeck: vi.fn<() => unknown>(() => null),
   };
 }
 

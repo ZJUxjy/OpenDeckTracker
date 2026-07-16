@@ -10,7 +10,6 @@ import {
   cardTileCachePath,
   cardTileCacheUrl,
   cleanLegacyTileCacheDirs,
-  clearFileExistenceCache,
   enforceCardImageCacheCap,
   ensureCardImageCached,
   ensureCardImagesCachedBatch,

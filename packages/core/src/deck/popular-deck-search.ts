@@ -1,7 +1,6 @@
 import type {
   Format,
   HeroClass,
-  PopularDeck,
   PopularDeckArchetype,
   PopularDeckEnriched,
 } from './deck-types';

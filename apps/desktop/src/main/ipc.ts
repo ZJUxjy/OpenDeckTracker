@@ -28,7 +28,6 @@ import {
   createAdvisorConfigStore,
   defaultAdvisorConfigPath,
   isAdvisorConfigured,
-  type AdvisorConfigStore,
 } from './advisor-config-store';
 import { broadcastAdvisorState, registerAdvisorIpc } from './advisor-ipc';
 import { startAdvisor, type AdvisorServiceHandle } from './advisor';

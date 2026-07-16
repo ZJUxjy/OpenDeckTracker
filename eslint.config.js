@@ -17,6 +17,19 @@ export default tseslint.config(
       '**/coverage/**',
       'figma_design/**',
       'packages/hearthmirror/native/**',
+      // Full repo checkouts created by git worktree — linting them
+      // multiplies the type-aware lint graph ~6x and OOMs the worker.
+      '.worktrees/**',
+      // Scratch / generated data, not project code.
+      'tmp/**',
+      'data/**',
+      '.tile-preview/**',
+      '.codex-run/**',
+      // Agent/tool plugin directories (third-party code).
+      '.agents/**',
+      '.codex/**',
+      '.copilot/**',
+      '.cursor/**',
     ],
   },
   js.configs.recommended,

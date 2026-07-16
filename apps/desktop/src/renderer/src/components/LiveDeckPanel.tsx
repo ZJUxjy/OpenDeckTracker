@@ -1243,7 +1243,6 @@ function computeBindings(
 ): Bindings {
   const counters = extraDisplay?.counters ?? {};
   const pools = (extraDisplay?.pools ?? {}) as NonNullable<DeckTrackerSnapshot['extraDisplay']>['pools'];
-  const stateNeeded = candidate.extraDisplay?.stateNeeded ?? [];
   const bindings: Bindings = { ...counters };
 
   const primaryPool = allowsPoolPreview(candidate.extraDisplay?.displayType)

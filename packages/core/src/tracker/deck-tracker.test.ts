@@ -8,7 +8,7 @@ import type {
   MatchInfo,
 } from '@hdt/hearthmirror';
 import { DeckTracker, type DeckTrackerEvent } from './deck-tracker';
-import { CallbackDeckIdentifier, ChainedDeckIdentifier } from './deck-identifier';
+import { CallbackDeckIdentifier } from './deck-identifier';
 import { DeckSnapshot } from '../game/deck-snapshot';
 
 /** Minimal stub HearthMirror that returns whatever's pushed into `state`. */

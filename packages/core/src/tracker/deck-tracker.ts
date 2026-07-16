@@ -1157,7 +1157,6 @@ export class DeckTracker {
         : localControllerId === 1
           ? 2
           : 1;
-    // eslint-disable-next-line no-console
     console.log(
       `[deck-tracker] applyMatchInfo raw local=${info.localPlayer?.id} opposing=${info.opposingPlayer?.id} fallback=${fallbackId ?? 'none'} resolved local=${localControllerId} opposing=${opposingControllerId}`,
     );

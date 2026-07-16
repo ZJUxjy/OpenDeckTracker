@@ -1,5 +1,7 @@
+import type { Zone } from '../game/types';
+
 export interface ZoneEntityObservation {
-  zone: 'HAND' | 'PLAY' | 'DECK' | 'SECRET' | string;
+  zone: Zone;
   controllerId: number;
   cardId: string;
 }

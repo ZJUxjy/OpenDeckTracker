@@ -121,7 +121,7 @@ describe('advisor IPC', () => {
   });
 
   it('sets API key through IPC handler and returns the ref', async () => {
-    const setApiKey = vi.fn((provider: AdvisorProvider, apiKey: string) => `ref:${provider}`);
+    const setApiKey = vi.fn((provider: AdvisorProvider, _apiKey: string) => `ref:${provider}`);
     dispose = registerAdvisorIpc({
       ask: vi.fn(async () => 'answer'),
       getConfig: () => config,

@@ -5,7 +5,6 @@ import { randomUUID } from 'node:crypto';
 import { openWithIntegrityGuard } from './db/open-with-recovery';
 
 import {
-  type Deck,
   type DeckCard,
   type DeckDetail,
   type DeckSource,

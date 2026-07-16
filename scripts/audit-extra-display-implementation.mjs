@@ -38,7 +38,6 @@ const SOFT_KEYS = new Set([
   'friendlyBoardSpace',
 ]);
 const specialCards = new Set([...livePanel.matchAll(/if \(cardId === '([^']+)'\)/g)].map((m) => m[1]));
-const staticHover = new Set([...livePanel.matchAll(/getStaticHoverPoolCardIds|STATIC_HOVER|staticHover/g)]);
 
 function classifyKey(key) {
   if (key.startsWith('counter.') || key.startsWith('cardState.')) {

@@ -3,7 +3,7 @@ import type { MatchPhase } from '@hdt/core';
 export const DEFAULT_OVERLAY_INACTIVE_DEBOUNCE_MS = 1500;
 
 export interface OverlayActiveMatchGate {
-  setPhase(phase: MatchPhase | string): void;
+  setPhase(phase: MatchPhase): void;
   setLiveMatchActive(active: boolean): void;
   dispose(): void;
 }
@@ -15,7 +15,7 @@ export interface OverlayActiveMatchGateOptions {
 
 export function createOverlayActiveMatchGate(opts: OverlayActiveMatchGateOptions): OverlayActiveMatchGate {
   const inactiveDebounceMs = opts.inactiveDebounceMs ?? DEFAULT_OVERLAY_INACTIVE_DEBOUNCE_MS;
-  let phaseSignal: MatchPhase | string = 'IDLE';
+  let phaseSignal: MatchPhase = 'IDLE';
   let livePowerSignal = false;
   let emittedActive = false;
   let inactiveTimer: ReturnType<typeof setTimeout> | null = null;

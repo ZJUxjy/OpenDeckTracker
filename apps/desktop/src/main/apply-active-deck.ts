@@ -13,7 +13,7 @@ interface ApplyActiveDeckDeps {
   tracker: {
     setOriginalDeck(identified: { deckId: number; name: string; originalDeck: DeckSnapshot }): void;
     selectSavedDeck(savedDeckId: string, savedDeckVersion: number): void;
-    getLocalOriginalDeck(): unknown | null;
+    getLocalOriginalDeck(): unknown;
   };
   mirrorAbsent: boolean;
   getActiveDeckId(): string | null;
