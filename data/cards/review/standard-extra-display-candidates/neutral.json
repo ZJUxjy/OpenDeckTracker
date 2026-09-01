@@ -15,7 +15,7 @@
       "zhCN": "ä¸­ç«‹"
     }
   },
-  "count": 20,
+  "count": 26,
   "cards": [
     {
       "rank": 16,
@@ -635,6 +635,189 @@
         ],
         "suggestedDisplayTextZhCN": "上一张已使用牌费用：{lastCost}；当前费用 {currentCost}",
         "reasoningZhCN": "戈隆巨人费用由上一张使用牌的费用决定。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_407",
+      "cardNameZhCN": "通缉海报",
+      "cardTextZhCN": "<b>发现</b>一张法力值消耗大于或等于（5）点的随从牌，使其获得<b>预备</b>。",
+      "cardTextZhCNPlain": "发现一张法力值消耗大于或等于（5）点的随从牌，使其获得预备。",
+      "cardClass": "NEUTRAL",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "prepare_counter",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "prepareCountThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "本局已预备：{prepareCountThisGame}",
+        "reasoningZhCN": "通缉海报给发现的随从授予预备。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_442",
+      "cardNameZhCN": "伪装的医生",
+      "cardTextZhCN": "可以使用在对战面板的任意一侧。<b>亡语：</b>将4张疾疫牌洗入你的牌库。抽到疾疫牌时，造成2点伤害。",
+      "cardTextZhCNPlain": "可以使用在对战面板的任意一侧。亡语：将4张疾疫牌洗入你的牌库。抽到疾疫牌时，造成2点伤害。",
+      "cardClass": "NEUTRAL",
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE",
+        "DISGUISED"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "board_side",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "disguisedBoard"
+        ],
+        "suggestedDisplayTextZhCN": "伪装场面：{disguiseSide}",
+        "reasoningZhCN": "伪装的医生可以出现在任意一侧场面。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_453",
+      "cardNameZhCN": "狱中老鸟",
+      "cardTextZhCN": "<b>嘲讽</b>。当你在本牌在你手中时<b>预备</b>，本牌的法力值消耗也会等量减少。",
+      "cardTextZhCNPlain": "嘲讽。当你在本牌在你手中时预备，本牌的法力值消耗也会等量减少。",
+      "cardClass": "NEUTRAL",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [
+        "TAUNT"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "hand_cost",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "jailbirdPrepareDiscountForEntity"
+        ],
+        "suggestedDisplayTextZhCN": "预备减费：-{jailbirdPrepareDiscountForEntity}；当前费用 {currentCost}",
+        "reasoningZhCN": "狱中老鸟在手牌期间会吃到同等预备减费。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_461",
+      "cardNameZhCN": "伪装的行刑者",
+      "cardTextZhCN": "可以使用在\n对战面板的任意一侧。<b>战吼：</b>随机消灭一个相邻随从。",
+      "cardTextZhCNPlain": "可以使用在\n对战面板的任意一侧。战吼：随机消灭一个相邻随从。",
+      "cardClass": "NEUTRAL",
+      "type": "MINION",
+      "cost": 3,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY",
+        "DISGUISED"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "board_side",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "disguisedBoard"
+        ],
+        "suggestedDisplayTextZhCN": "伪装场面：{disguiseSide}",
+        "reasoningZhCN": "伪装的行刑者可以出现在任意一侧场面。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_445",
+      "cardNameZhCN": "骨刃乱舞",
+      "cardTextZhCN": "造成$3点伤害，随机分配到所有敌人身上。如果在本回合中有友方随从死亡，再造成$3点。",
+      "cardTextZhCNPlain": "造成$3点伤害，随机分配到所有敌人身上。如果在本回合中有友方随从死亡，再造成$3点。",
+      "cardClass": "NEUTRAL",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "turn_death_counter",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyMinionsDiedThisTurn"
+        ],
+        "suggestedDisplayTextZhCN": "本回合友方随从死亡：{friendlyMinionsDiedThisTurn}；{yesNo}",
+        "reasoningZhCN": "骨刃乱舞在本回合有友方随从死亡时再造成伤害。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_974",
+      "cardNameZhCN": "被绑的大法师",
+      "cardTextZhCN": "<b>亡语：</b>在本局对战中，如果你有4个其他被绑的大法师死亡，随机对一个敌人施放火球术。@<i>（@/4）</i>",
+      "cardTextZhCNPlain": "亡语：在本局对战中，如果你有4个其他被绑的大法师死亡，随机对一个敌人施放火球术。@（@/4）",
+      "cardClass": "NEUTRAL",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "game_counter",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "boundArchmagesDiedThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "被绑的大法师死亡：{boundArchmagesDiedThisGame}/4",
+        "reasoningZhCN": "第四个被绑的大法师死亡时会放火球。"
       }
     }
   ],

@@ -161,4 +161,22 @@ describe('convertHsdataCardsForTest', () => {
     expect(caster?.deckActionCost).toBe(1);
     expect(cards.find((card) => card.id === 'TEST_PREPARE_REF')?.referencedTags).toContain('PREPARE');
   });
+
+  it('preserves Disguised mechanics from hsdata XML', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'hdt-hsdata-disguised-'));
+    const disguisedXml = path.join(root, 'scripts/fixtures/hsdata-disguised.xml');
+
+    await convertHsdataCardsForTest(disguisedXml, dir, {
+      generatedAt: '2026-09-01T00:00:00.000Z',
+      locales: ['enUS'],
+    });
+
+    const cards = JSON.parse(
+      await readFile(path.join(dir, 'cards.collectible.enUS.json'), 'utf8'),
+    ) as Array<{ id: string; mechanics?: string[] }>;
+
+    expect(cards.find((card) => card.id === 'TEST_DISGUISED_MINION')?.mechanics).toContain(
+      'DISGUISED',
+    );
+  });
 });

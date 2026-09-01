@@ -15,7 +15,7 @@
       "zhCN": "ç‰§å¸ˆ"
     }
   },
-  "count": 10,
+  "count": 14,
   "cards": [
     {
       "rank": 3,
@@ -329,6 +329,123 @@
         ],
         "suggestedDisplayTextZhCN": "计数：{count}；当前效果：{currentText}",
         "reasoningZhCN": "效果数值由对局计数决定，需要显示当前可用数值。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_802",
+      "cardNameZhCN": "跟随幽灵",
+      "cardTextZhCN": "召唤一个2/1并具有<b>复生</b>的幽灵。使你手牌中一张可用的卡牌在一回合内获得此效果。",
+      "cardTextZhCNPlain": "召唤一个2/1并具有复生的幽灵。使你手牌中一张可用的卡牌在一回合内获得此效果。",
+      "cardClass": "PRIEST",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "hand_flag",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "followedHand"
+        ],
+        "suggestedDisplayTextZhCN": "跟随：{followYesNo}",
+        "reasoningZhCN": "跟随幽灵把效果挂在一张手牌上。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_805",
+      "cardNameZhCN": "灵质处决",
+      "cardTextZhCN": "消灭所有随从。每个\n玩家各获取一张法力值消耗\n为（3）的法术牌，该法术可以重新召唤其\n被消灭的随从。",
+      "cardTextZhCNPlain": "消灭所有随从。每个\n玩家各获取一张法力值消耗\n为（3）的法术牌，该法术可以重新召唤其\n被消灭的随从。",
+      "cardClass": "PRIEST",
+      "type": "SPELL",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "graveyard_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "slimeEmDestroyedFriendlyMinions"
+        ],
+        "suggestedDisplayTextZhCN": "可召回：{cardNames}（{count}）",
+        "reasoningZhCN": "灵质处决生成的灵质只召回这次被消灭的友方随从。",
+        "emptyWarning": true
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_806",
+      "cardNameZhCN": "雷斯·范盖斯特",
+      "cardTextZhCN": "<b>战吼：</b>复活在本局对战中你的<b>复生</b>过的随从，并使其攻击随机敌方随从。",
+      "cardTextZhCNPlain": "战吼：复活在本局对战中你的复生过的随从，并使其攻击随机敌方随从。",
+      "cardClass": "PRIEST",
+      "type": "MINION",
+      "cost": 7,
+      "rarity": "LEGENDARY",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "graveyard_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "minionsRebornThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "本局复生过：{cardNames}（{count}）",
+        "reasoningZhCN": "雷斯·范盖斯特复活本局真正复生过的友方随从。",
+        "emptyWarning": true
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_940",
+      "cardNameZhCN": "不死徒刑",
+      "cardTextZhCN": "随机触发本局对战中死亡的一个友方随从的<b>亡语</b>。",
+      "cardTextZhCNPlain": "随机触发本局对战中死亡的一个友方随从的亡语。",
+      "cardClass": "PRIEST",
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "graveyard_pool",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyDeadDeathrattleMinionsThisGameUnique"
+        ],
+        "suggestedDisplayTextZhCN": "可触发亡语：{cardNames}",
+        "reasoningZhCN": "不死徒刑随机触发本局死亡友方随从的亡语。",
+        "emptyWarning": true
       }
     }
   ],

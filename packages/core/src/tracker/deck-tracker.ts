@@ -44,6 +44,10 @@ import type {
   ExtractCtx,
 } from '../global-effects/types';
 import type { HeroClass } from '../deck/deck-types';
+import { BLOODSPORT_HAND_CARD_IDS, SLIME_EM_CARD_ID } from './extra-display-ids';
+import type { ExtraDisplayLogFact } from './extra-display-log-detector';
+import { scanLiveExtraDisplay } from './extra-display-live-scan';
+import { followSourceCardId, isStealthMinion } from './follow';
 import {
   createEmptyExtraDisplaySnapshot,
   MatchExtraDisplayState,
@@ -533,6 +537,11 @@ export class DeckTracker {
           localControllerId,
           cardLookup: this.cardMetadataLookup,
         });
+        if (event.cardId === SLIME_EM_CARD_ID) {
+          this.extraDisplayState.recordSlimeEmBoardSnapshot(
+            this.buildFriendlyBoard().map((row) => row.cardId),
+          );
+        }
       } else {
         this.extraDisplayState.recordOpponentCardPlayed({
           event,
@@ -630,6 +639,18 @@ export class DeckTracker {
       }
 
       const historyController = this.resolveHistoryController(after);
+
+      if (after.cardId !== '' && (previousZone !== after.zone || (before?.cardId ?? '') === '')) {
+        this.extraDisplayState.recordEntityZoneChange({
+          entityId: after.entityId,
+          cardId: after.cardId,
+          previousZone: previousZone ?? null,
+          zone: after.zone,
+          controllerId: after.controllerId,
+          localControllerId,
+          cardLookup: this.cardMetadataLookup,
+        });
+      }
 
       if (after.cardId === '' || after.zone !== 'GRAVEYARD') continue;
       if (previousZone === 'GRAVEYARD') continue;
@@ -769,6 +790,52 @@ export class DeckTracker {
       discount: args.discount,
       cardLookup: this.cardMetadataLookup,
     });
+    this.currentSnapshot = this.buildSnapshot();
+  }
+
+  recordExtraDisplayLogFact(fact: ExtraDisplayLogFact): void {
+    const localControllerId = this.game.localPlayer.controllerId;
+    switch (fact.type) {
+      case 'follow-attach': {
+        const target = this.game.entities.get(fact.targetEntityId);
+        this.extraDisplayState.recordFollowAttach({
+          enchantmentEntityId: fact.enchantmentEntityId,
+          targetEntityId: fact.targetEntityId,
+          targetCardId: fact.targetCardId || target?.cardId || '',
+          sourceCardId: followSourceCardId(fact.enchantmentCardId) ?? '',
+        });
+        break;
+      }
+      case 'follow-detach':
+        this.extraDisplayState.recordFollowDetach(fact);
+        break;
+      case 'attack': {
+        if (fact.attackerControllerId !== localControllerId) break;
+        const metadata = this.cardMetadataLookup?.(fact.attackerCardId) ?? {
+          type: fact.attackerCardId.startsWith('HERO_') ? 'HERO' : 'MINION',
+        };
+        this.extraDisplayState.recordFriendlyCharacterAttack({
+          hero: metadata.type === 'HERO',
+        });
+        if (isStealthMinion(metadata)) {
+          this.extraDisplayState.recordFriendlyStealthMinionAttacked();
+        }
+        break;
+      }
+      case 'discard':
+        if (fact.controllerId !== localControllerId) break;
+        this.extraDisplayState.recordEntityZoneChange({
+          entityId: fact.entityId,
+          cardId: fact.cardId,
+          previousZone: 'HAND',
+          zone: 'GRAVEYARD',
+          controllerId: fact.controllerId,
+          localControllerId,
+          cardLookup: this.cardMetadataLookup,
+          discarded: true,
+        });
+        break;
+    }
     this.currentSnapshot = this.buildSnapshot();
   }
 
@@ -1346,9 +1413,11 @@ export class DeckTracker {
         .sort((a, b) => a.zonePosition - b.zonePosition || a.entityId - b.entityId) ?? [];
     const friendlyHand = friendlyHandRows.map((c) => c.cardId);
     let friendlyHandExtras = friendlyHandRows.map(() => false);
-    if (handState !== null) {
-      this.extraDisplayState.syncPreparedHandEntities(friendlyHandRows);
-    }
+    const extraDisplayHand =
+      handState !== null ? friendlyHandRows : this.friendlyHandEntitiesFromGame();
+    this.extraDisplayState.syncHandEntities(extraDisplayHand);
+    this.extraDisplayState.syncPreparedHandEntities(extraDisplayHand);
+    this.extraDisplayState.syncFollowedHandEntities(extraDisplayHand);
 
     let deck: DeckTrackerSnapshot['deck'] = null;
     const original = this.game.localPlayer.originalDeck;
@@ -1700,6 +1769,18 @@ export class DeckTracker {
       .sort((a, b) => a.order - b.order || a.entityId - b.entityId);
   }
 
+  private friendlyHandEntitiesFromGame(): { entityId: number; cardId: string }[] {
+    const localControllerId = this.game.localPlayer.controllerId;
+    return Array.from(this.game.entities.values())
+      .filter(
+        (entity) =>
+          entity.isInHand &&
+          entity.controllerId === localControllerId &&
+          entity.cardId !== '',
+      )
+      .map((entity) => ({ entityId: entity.entityId, cardId: entity.cardId }));
+  }
+
   private isFriendlyHandExtraCard(
     card: { entityId: number; cardId: string },
     displayOriginal: DeckSnapshot,
@@ -1715,10 +1796,16 @@ export class DeckTracker {
     friendlyHand: readonly string[],
   ): NonNullable<DeckTrackerSnapshot['extraDisplay']> {
     const base = this.extraDisplayState.snapshot();
+    const live = scanLiveExtraDisplay({
+      entities: this.game.entities.values(),
+      localControllerId: this.game.localPlayer.controllerId,
+      cardLookup: this.cardMetadataLookup,
+    });
     const opponentBoard = this.buildOpponentBoard();
     const pools: ExtraDisplaySnapshot['pools'] = {
       ...base.pools,
       ...this.buildDeckAndHandPools(deck, friendlyHand),
+      ...live.pools,
       opponentMinionsPlayedLastTurnStillInPlay:
         this.extraDisplayState.opponentMinionsPlayedLastTurnStillInPlay(
           new Set(opponentBoard.map((record) => record.entityId)),
@@ -1726,7 +1813,9 @@ export class DeckTracker {
     };
     return {
       ...base,
+      counters: { ...base.counters, ...live.counters },
       pools,
+      ...(live.disguisedBoard.length > 0 ? { disguisedBoard: live.disguisedBoard } : {}),
       friendlyBoard: this.buildFriendlyBoard(),
     };
   }
@@ -1777,6 +1866,7 @@ export class DeckTracker {
     add('spellsInHand', filter(handCards, (m) => m.type === 'SPELL'));
     add('oneCostMinionsInHandAndDeck', filter(handAndDeck, (m) => m.type === 'MINION' && m.cost === 1));
     add('oneCostSpellsInHandAndDeck', filter(handAndDeck, (m) => m.type === 'SPELL' && m.cost === 1));
+    add('bloodsportMinionsInHand', filter(handCards, (_m, cardId) => BLOODSPORT_HAND_CARD_IDS.has(cardId)));
 
     add('deckPool.CORE_REV_015', filter(deckCards, (m) => m.type === 'MINION', { excludeCardId: 'CORE_REV_015' }));
     add('deckPool.CORE_ICC_812', filter(deckCards, (m) => m.type === 'MINION' && (m.attack ?? 0) < 1));

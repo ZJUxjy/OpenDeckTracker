@@ -15,7 +15,7 @@
       "zhCN": "æˆ˜å£«"
     }
   },
-  "count": 6,
+  "count": 8,
   "cards": [
     {
       "rank": 5,
@@ -203,6 +203,66 @@
         ],
         "suggestedDisplayTextZhCN": "本回合已施放火焰法术：{yesNo}；当前伤害 {damage}",
         "reasoningZhCN": "喷发火山与怨毒焰魔共用本回合火焰法术状态。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_101",
+      "cardNameZhCN": "跟随引线",
+      "cardTextZhCN": "随机对一个敌人造成$2点伤害。使你手牌中一张可用的海盗牌在一回合内获得此效果。",
+      "cardTextZhCNPlain": "随机对一个敌人造成$2点伤害。使你手牌中一张可用的海盗牌在一回合内获得此效果。",
+      "cardClass": "WARRIOR",
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "hand_flag",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "followedHand"
+        ],
+        "suggestedDisplayTextZhCN": "跟随：{followYesNo}",
+        "reasoningZhCN": "跟随引线把效果挂在一张手牌上。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_455",
+      "cardNameZhCN": "伪装的看守",
+      "cardTextZhCN": "可以使用在对战面板的任意一侧。<b>战吼：</b>对所有其他友方随从造成1点伤害，触发两次。",
+      "cardTextZhCNPlain": "可以使用在对战面板的任意一侧。战吼：对所有其他友方随从造成1点伤害，触发两次。",
+      "cardClass": "WARRIOR",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [
+        "BATTLECRY",
+        "DISGUISED"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "board_side",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "disguisedBoard"
+        ],
+        "suggestedDisplayTextZhCN": "伪装场面：{disguiseSide}",
+        "reasoningZhCN": "伪装的看守可以出现在任意一侧场面。"
       }
     }
   ],

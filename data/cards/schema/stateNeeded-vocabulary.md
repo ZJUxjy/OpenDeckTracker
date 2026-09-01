@@ -141,12 +141,30 @@ name a real tracker state source, not a generic placeholder such as
 | `handEntityEffectiveCost` | Current COST tag for a hand entity (may differ from card def). |
 | `preparedHandEntities` | Snapshot list of hand entities carrying a Prepare discount. |
 
-## EVH / Disguise (planned)
+## EVH / Disguise
 
 | Key | Meaning |
 |---|---|
+| `disguisedBoard` | Disguised minions currently in PLAY, with friendly or opposing side. |
 | `minionBoardSideForEntity` | Whether a controlled minion sits on the friendly or opposing board. |
 | `disguisedMinionsPlayedThisGame` | Disguised minions played to the opposing board this game. |
+
+## 36.4 / Imp-formants, Follow, Reborn
+
+| Key | Meaning |
+|---|---|
+| `impFormantsInOpponentDeck` | Imp-formant tokens currently sitting in the opponent's deck. |
+| `impFormantsSummonedThisGame` | Imp-formants summoned for the local player this game. |
+| `kabalMastermindActive` | Kabal Mastermind rest-of-game +2/+2 aura is active. |
+| `minionsRebornThisGame` | Friendly minions whose Reborn copy actually entered play this game. |
+| `followedHand` | Hand entities currently carrying a one-turn Follow enchantment. |
+| `stealthMinionAttackedWhileThisEntityInHand` | A friendly stealth minion attacked while this hand entity was held. |
+| `slimeEmDestroyedFriendlyMinions` | Friendly minions destroyed by the latest Slime 'em resolution. |
+| `collapsingStarDamage` | Current damage on the Collapsing Star hero power. |
+| `collapsingStarHeroPowerActive` | The local hero power is currently Collapsing Star. |
+| `jailbirdPrepareDiscountForEntity` | Prepare discounts stacked onto a Jailbird copy in hand. |
+| `friendlyHeroAttacksThisGame` | Friendly hero attacks this game. |
+| `boundArchmagesDiedThisGame` | Friendly Bound Archmage deaths this game. |
 
 ## EVH / Bribe
 

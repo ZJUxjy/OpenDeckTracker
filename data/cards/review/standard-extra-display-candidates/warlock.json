@@ -15,7 +15,7 @@
       "zhCN": "æœ¯å£«"
     }
   },
-  "count": 12,
+  "count": 17,
   "cards": [
     {
       "rank": 4,
@@ -390,6 +390,158 @@
         ],
         "suggestedDisplayTextZhCN": "已弃牌：{cardsDiscardedThisGame}；当前加成 +{buff}/+{buff}",
         "reasoningZhCN": "地狱公爵身材由本局弃牌次数决定。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_400",
+      "cardNameZhCN": "暗金教密谋者",
+      "cardTextZhCN": "<b>亡语：</b>将两张3/3的卧底小鬼置入敌方牌库。当抽到卧底小鬼时，为你召唤。",
+      "cardTextZhCNPlain": "亡语：将两张3/3的卧底小鬼置入敌方牌库。当抽到卧底小鬼时，为你召唤。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 2,
+      "rarity": "FREE",
+      "mechanics": [
+        "DEATHRATTLE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "opponent_deck_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "deck",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "impFormantsInOpponentDeck"
+        ],
+        "suggestedDisplayTextZhCN": "敌方牌库卧底小鬼：{impFormantsInOpponentDeck}",
+        "reasoningZhCN": "暗金教密谋者亡语把卧底小鬼洗入敌方牌库。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_401",
+      "cardNameZhCN": "腐败警员",
+      "cardTextZhCN": "<b>战吼：</b>如果敌方牌库中有卧底小鬼，将其中一张移至敌方牌库顶并使其获得+2/+2。",
+      "cardTextZhCNPlain": "战吼：如果敌方牌库中有卧底小鬼，将其中一张移至敌方牌库顶并使其获得+2/+2。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "FREE",
+      "mechanics": [
+        "BATTLECRY"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "opponent_deck_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "impFormantsInOpponentDeck"
+        ],
+        "suggestedDisplayTextZhCN": "敌方牌库卧底小鬼：{impFormantsInOpponentDeck}；{yesNo}",
+        "reasoningZhCN": "腐败警员只在敌方牌库有卧底小鬼时生效。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_402",
+      "cardNameZhCN": "跟随证据",
+      "cardTextZhCN": "将一张3/3的卧底小鬼置入敌方牌库。使你手牌中一张可用的卡牌在一回合内获得此效果。",
+      "cardTextZhCNPlain": "将一张3/3的卧底小鬼置入敌方牌库。使你手牌中一张可用的卡牌在一回合内获得此效果。",
+      "cardClass": "WARLOCK",
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "opponent_deck_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "impFormantsInOpponentDeck",
+          "followedHand"
+        ],
+        "suggestedDisplayTextZhCN": "敌方牌库卧底小鬼：{impFormantsInOpponentDeck}；跟随：{followYesNo}",
+        "reasoningZhCN": "跟随证据会洗入卧底小鬼，并把效果挂在手牌上。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_404",
+      "cardNameZhCN": "强力裁决",
+      "cardTextZhCN": "下个回合，敌方随从牌的法力值消耗增加（2）点。将两张3/3的卧底小鬼置入敌方牌库。",
+      "cardTextZhCNPlain": "下个回合，敌方随从牌的法力值消耗增加（2）点。将两张3/3的卧底小鬼置入敌方牌库。",
+      "cardClass": "WARLOCK",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "opponent_deck_pool",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "impFormantsInOpponentDeck"
+        ],
+        "suggestedDisplayTextZhCN": "敌方牌库卧底小鬼：{impFormantsInOpponentDeck}",
+        "reasoningZhCN": "强力裁决把两张卧底小鬼洗入敌方牌库。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_406",
+      "cardNameZhCN": "暗金教主谋",
+      "cardTextZhCN": "<b>嘲讽</b>。<b>战吼：</b>在本局对战中，每当你召唤一个卧底小鬼，使其获得+2/+2。",
+      "cardTextZhCNPlain": "嘲讽。战吼：在本局对战中，每当你召唤一个卧底小鬼，使其获得+2/+2。",
+      "cardClass": "WARLOCK",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "TAUNT"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "rest_of_game_flag",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "kabalMastermindActive",
+          "impFormantsSummonedThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "主谋光环：{activeText}；本局已召唤卧底小鬼：{impFormantsSummonedThisGame}",
+        "reasoningZhCN": "暗金教主谋需要知道光环是否生效以及本局召唤次数。"
       }
     }
   ],

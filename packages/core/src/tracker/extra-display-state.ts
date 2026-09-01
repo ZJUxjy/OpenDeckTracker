@@ -1,4 +1,27 @@
 import type { CardPlayedEvent } from '../global-effects/types';
+import {
+  BOUND_ARCHMAGE_CARD_ID,
+  BOUND_ARCHMAGES_DIED_THIS_GAME_KEY,
+  CARDS_DISCARDED_THIS_GAME_KEY,
+  COLLAPSING_STAR_ACTIVE_KEY,
+  COLLAPSING_STAR_DAMAGE_KEY,
+  COLLAPSING_STAR_HERO_POWER_ID,
+  FRIENDLY_CHARACTER_ATTACKS_THIS_GAME_KEY,
+  FRIENDLY_HERO_ATTACKS_THIS_GAME_KEY,
+  IMP_FORMANT_CARD_ID,
+  IMP_FORMANTS_IN_OPPONENT_DECK_KEY,
+  IMP_FORMANTS_SUMMONED_THIS_GAME_KEY,
+  JAILBIRD_CARD_ID,
+  JAILBIRD_PREPARE_DISCOUNT_KEY,
+  KABAL_MASTERMIND_ACTIVE_KEY,
+  KABAL_MASTERMIND_ENCHANTMENT_ID,
+  MINIONS_REBORN_THIS_GAME_KEY,
+  SLIME_EM_DESTROYED_FRIENDLY_KEY,
+  SLIME_EM_TOKEN_CARD_ID,
+  STEALTH_ATTACKED_WHILE_IN_HAND_KEY,
+  TRICKS_OF_THE_TRADE_CARD_ID,
+  entityScopedKey,
+} from './extra-display-ids';
 import { HERALD_COUNTER_KEY, heraldTriggerTiming } from './herald';
 import { PREPARE_COUNTER_KEY, isPrepareRelatedCard } from './prepare';
 
@@ -30,6 +53,19 @@ export interface PreparedHandEntry {
   preparedAtTurn: number;
 }
 
+export interface FollowedHandEntry {
+  entityId: number;
+  cardId: string;
+  sourceCardId: string;
+  enchantmentEntityId: number;
+}
+
+export interface DisguisedBoardEntry {
+  entityId: number;
+  cardId: string;
+  side: 'friendly' | 'opponent';
+}
+
 export interface ExtraDisplaySnapshot {
   /** Stable scalar states keyed by the review vocabulary names where possible. */
   counters: Record<string, number>;
@@ -41,6 +77,21 @@ export interface ExtraDisplaySnapshot {
   };
   /** Hand entities that currently carry a Prepare discount. */
   preparedHand?: PreparedHandEntry[];
+  /** Hand entities that currently carry a one-turn Follow enchantment. */
+  followedHand?: FollowedHandEntry[];
+  /** Disguised minions currently in PLAY, including the opposing side. */
+  disguisedBoard?: DisguisedBoardEntry[];
+}
+
+export interface EntityZoneChangeArgs {
+  entityId: number;
+  cardId: string;
+  previousZone: string | null | undefined;
+  zone: string;
+  controllerId: number;
+  localControllerId: number;
+  cardLookup: ExtraDisplayCardLookup | null;
+  discarded?: boolean;
 }
 
 export type ExtraDisplayCardLookup = (cardId: string) => ExtraDisplayCardMetadata | null;
@@ -59,8 +110,7 @@ const EMPTY_COUNTERS: Readonly<Record<string, number>> = Object.freeze({});
 const RANGER_SYLVANAS_CARD_IDS = new Set(['TIME_609', 'TIME_609t1', 'TIME_609t2']);
 
 /** Pool key for 时光领主埃博克 (TIME_714) hover preview. */
-export const OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL =
-  'opponentMinionsPlayedLastTurnStillInPlay';
+export const OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL = 'opponentMinionsPlayedLastTurnStillInPlay';
 
 export function createEmptyExtraDisplaySnapshot(): ExtraDisplaySnapshot {
   return {
@@ -87,6 +137,14 @@ export class MatchExtraDisplayState {
   private readonly opponentMinionsPlayedCurrentOpponentTurn = new Map<number, string>();
   private opponentMinionsPlayedLastOpponentTurn = new Map<number, string>();
   private readonly preparedHandEntities = new Map<number, PreparedHandEntry>();
+  private readonly followedHandEntities = new Map<number, FollowedHandEntry>();
+  private readonly opponentDeckImpFormants = new Set<number>();
+  private readonly summonedImpFormantEntities = new Set<number>();
+  private readonly pendingRebornByCardId = new Map<string, number>();
+  private readonly handEntities = new Map<number, string>();
+  private readonly jailbirdDiscounts = new Map<number, number>();
+  private readonly stealthAttackedHandEntities = new Set<number>();
+  private slimeEmPendingBoard: string[] | null = null;
 
   reset(): void {
     this.currentTurn = null;
@@ -103,6 +161,14 @@ export class MatchExtraDisplayState {
     this.opponentMinionsPlayedCurrentOpponentTurn.clear();
     this.opponentMinionsPlayedLastOpponentTurn.clear();
     this.preparedHandEntities.clear();
+    this.followedHandEntities.clear();
+    this.opponentDeckImpFormants.clear();
+    this.summonedImpFormantEntities.clear();
+    this.pendingRebornByCardId.clear();
+    this.handEntities.clear();
+    this.jailbirdDiscounts.clear();
+    this.stealthAttackedHandEntities.clear();
+    this.slimeEmPendingBoard = null;
   }
 
   setOriginalDeckCardIds(cardIds: Iterable<string>): void {
@@ -142,6 +208,10 @@ export class MatchExtraDisplayState {
       this.clearPool('fireSpellsCastThisTurnByYou');
       this.clearPool('holySpellsCastThisTurn');
       this.clearPool('shadowSpellsCastThisTurn');
+      this.pendingRebornByCardId.clear();
+    } else {
+      this.setCounter('friendlySpellCastLastTurn', 0);
+      this.setCounter('elementalPlayedLastTurn', 0);
     }
     this.currentTurn = turn;
     this.setCounter('currentTurn', turn);
@@ -283,6 +353,7 @@ export class MatchExtraDisplayState {
       discount: args.discount,
       preparedAtTurn: this.currentTurn ?? 0,
     });
+    this.applyJailbirdPrepareDiscount(args.discount);
   }
 
   syncPreparedHandEntities(hand: readonly { entityId: number; cardId: string }[]): void {
@@ -291,6 +362,77 @@ export class MatchExtraDisplayState {
       if (!handIds.has(entityId)) {
         this.preparedHandEntities.delete(entityId);
       }
+    }
+  }
+
+  syncHandEntities(hand: readonly { entityId: number; cardId: string }[]): void {
+    this.handEntities.clear();
+    for (const entry of hand) {
+      this.handEntities.set(entry.entityId, entry.cardId);
+    }
+    this.refreshHandScopedAggregates();
+  }
+
+  syncFollowedHandEntities(hand: readonly { entityId: number; cardId: string }[]): void {
+    const handIds = new Set(hand.map((entry) => entry.entityId));
+    for (const [enchantmentEntityId, entry] of [...this.followedHandEntities.entries()]) {
+      if (!handIds.has(entry.entityId)) {
+        this.followedHandEntities.delete(enchantmentEntityId);
+      }
+    }
+  }
+
+  recordFollowAttach(args: {
+    enchantmentEntityId: number;
+    targetEntityId: number;
+    targetCardId: string;
+    sourceCardId: string;
+  }): void {
+    if (args.sourceCardId === '' || args.targetEntityId <= 0) return;
+    this.followedHandEntities.set(args.enchantmentEntityId, {
+      entityId: args.targetEntityId,
+      cardId: args.targetCardId,
+      sourceCardId: args.sourceCardId,
+      enchantmentEntityId: args.enchantmentEntityId,
+    });
+  }
+
+  recordFollowDetach(args: { enchantmentEntityId: number }): void {
+    this.followedHandEntities.delete(args.enchantmentEntityId);
+  }
+
+  recordFriendlyStealthMinionAttacked(): void {
+    for (const [entityId, cardId] of this.handEntities) {
+      if (cardId !== TRICKS_OF_THE_TRADE_CARD_ID) continue;
+      this.stealthAttackedHandEntities.add(entityId);
+      this.setCounter(entityScopedKey(STEALTH_ATTACKED_WHILE_IN_HAND_KEY, entityId), 1);
+    }
+    this.refreshHandScopedAggregates();
+  }
+
+  recordFriendlyCharacterAttack(args: { hero: boolean }): void {
+    this.increment(FRIENDLY_CHARACTER_ATTACKS_THIS_GAME_KEY, 1);
+    if (args.hero) this.increment(FRIENDLY_HERO_ATTACKS_THIS_GAME_KEY, 1);
+  }
+
+  recordSlimeEmBoardSnapshot(cardIds: readonly string[]): void {
+    this.slimeEmPendingBoard = [...cardIds];
+  }
+
+  recordEntityZoneChange(args: EntityZoneChangeArgs): void {
+    if (args.cardId === '') return;
+    const previous = normalizeZoneName(args.previousZone);
+    const zone = normalizeZoneName(args.zone);
+    const isFriendly = args.controllerId === args.localControllerId;
+    const metadata = args.cardLookup?.(args.cardId) ?? { id: args.cardId };
+
+    this.trackImpFormantZone(args, previous, zone, isFriendly);
+    this.trackKabalMastermind(args.cardId, zone, isFriendly);
+    this.trackReborn(args, previous, zone, isFriendly, metadata);
+    this.trackSlimeEmToken(args, zone, isFriendly);
+
+    if (args.discarded === true && isFriendly && previous === 'HAND' && zone === 'GRAVEYARD') {
+      this.increment(CARDS_DISCARDED_THIS_GAME_KEY, 1);
     }
   }
 
@@ -368,6 +510,9 @@ export class MatchExtraDisplayState {
     if (isUnstableSkeleton(args.entity.cardId)) this.increment('friendlyUnstableSkeletonDeathsThisGame', 1);
     if (isTreant(metadata)) this.increment('friendlyTreantDeathsThisGame', 1);
     if (args.entity.cardId === 'EDR_465') this.increment('ysendraDeathsThisGame', 1);
+    if (args.entity.cardId === BOUND_ARCHMAGE_CARD_ID) {
+      this.increment(BOUND_ARCHMAGES_DIED_THIS_GAME_KEY, 1);
+    }
   }
 
   recordEntityTagValue(args: {
@@ -381,9 +526,14 @@ export class MatchExtraDisplayState {
     if (!isScriptValueTag(args.tag)) return;
     this.setCounter(`counter.${args.entity.cardId}`, args.value);
     this.setCounter(`cardState.${args.entity.cardId}`, args.value);
+    if (args.entity.cardId === COLLAPSING_STAR_HERO_POWER_ID) {
+      this.setCounter(COLLAPSING_STAR_DAMAGE_KEY, args.value);
+      this.setCounter(COLLAPSING_STAR_ACTIVE_KEY, 1);
+    }
   }
 
   snapshot(): ExtraDisplaySnapshot {
+    this.writeImpFormantDeckSnapshot();
     const pools: ExtraDisplaySnapshot['pools'] = {
       friendlyDeadDemonsThisGameUnique: entriesFromCountMap(this.friendlyDeadDemons),
       friendlyDeadMinionsThisGameUnique: entriesFromCountMap(this.friendlyDeadMinions),
@@ -402,10 +552,14 @@ export class MatchExtraDisplayState {
     const preparedHand = [...this.preparedHandEntities.values()].sort(
       (a, b) => a.entityId - b.entityId,
     );
+    const followedHand = [...this.followedHandEntities.values()].sort(
+      (a, b) => a.entityId - b.entityId || a.enchantmentEntityId - b.enchantmentEntityId,
+    );
     return {
       counters: Object.fromEntries([...this.counters.entries()].sort(([a], [b]) => a.localeCompare(b))),
       pools,
       ...(preparedHand.length > 0 ? { preparedHand } : {}),
+      ...(followedHand.length > 0 ? { followedHand } : {}),
     };
   }
 
@@ -455,6 +609,111 @@ export class MatchExtraDisplayState {
       .filter(([cardId]) => (this.friendlyDeadUndeadCosts.get(cardId) ?? 0) === maxCost)
       .map(([cardId, count]) => ({ cardId, count }))
       .sort((a, b) => b.count - a.count || a.cardId.localeCompare(b.cardId));
+  }
+
+  private trackImpFormantZone(
+    args: EntityZoneChangeArgs,
+    previous: string,
+    zone: string,
+    isFriendly: boolean,
+  ): void {
+    if (args.cardId !== IMP_FORMANT_CARD_ID) return;
+    if (zone === 'DECK' && !isFriendly) {
+      this.opponentDeckImpFormants.add(args.entityId);
+    } else if (previous === 'DECK' || zone !== 'DECK') {
+      this.opponentDeckImpFormants.delete(args.entityId);
+    }
+    if (zone === 'PLAY' && isFriendly && !this.summonedImpFormantEntities.has(args.entityId)) {
+      this.summonedImpFormantEntities.add(args.entityId);
+      this.increment(IMP_FORMANTS_SUMMONED_THIS_GAME_KEY, 1);
+    }
+  }
+
+  private trackKabalMastermind(cardId: string, zone: string, isFriendly: boolean): void {
+    if (cardId !== KABAL_MASTERMIND_ENCHANTMENT_ID || !isFriendly) return;
+    this.setCounter(KABAL_MASTERMIND_ACTIVE_KEY, zone === 'PLAY' ? 1 : 0);
+  }
+
+  private trackReborn(
+    args: EntityZoneChangeArgs,
+    previous: string,
+    zone: string,
+    isFriendly: boolean,
+    metadata: ExtraDisplayCardMetadata,
+  ): void {
+    if (!isFriendly) return;
+    if (previous === 'PLAY' && zone === 'GRAVEYARD' && hasMechanic(metadata, 'REBORN')) {
+      this.pendingRebornByCardId.set(
+        args.cardId,
+        (this.pendingRebornByCardId.get(args.cardId) ?? 0) + 1,
+      );
+      return;
+    }
+    if (zone !== 'PLAY' || previous === 'HAND' || previous === 'DECK' || previous === 'PLAY') return;
+    const pending = this.pendingRebornByCardId.get(args.cardId) ?? 0;
+    if (pending <= 0) return;
+    this.pendingRebornByCardId.set(args.cardId, pending - 1);
+    this.incrementPool(MINIONS_REBORN_THIS_GAME_KEY, args.cardId);
+  }
+
+  private trackSlimeEmToken(args: EntityZoneChangeArgs, zone: string, isFriendly: boolean): void {
+    if (!isFriendly || zone !== 'HAND' || args.cardId !== SLIME_EM_TOKEN_CARD_ID) return;
+    if (this.slimeEmPendingBoard === null) return;
+    this.replacePool(
+      entityScopedKey(SLIME_EM_DESTROYED_FRIENDLY_KEY, args.entityId),
+      this.slimeEmPendingBoard,
+    );
+    this.replacePool(SLIME_EM_DESTROYED_FRIENDLY_KEY, this.slimeEmPendingBoard);
+  }
+
+  private applyJailbirdPrepareDiscount(discount: number): void {
+    for (const [entityId, cardId] of this.handEntities) {
+      if (cardId !== JAILBIRD_CARD_ID) continue;
+      const next = (this.jailbirdDiscounts.get(entityId) ?? 0) + discount;
+      this.jailbirdDiscounts.set(entityId, next);
+      this.setCounter(entityScopedKey(JAILBIRD_PREPARE_DISCOUNT_KEY, entityId), next);
+    }
+    this.refreshHandScopedAggregates();
+  }
+
+  private refreshHandScopedAggregates(): void {
+    let stealthFlag = 0;
+    let jailbirdDiscount = 0;
+    for (const [entityId, cardId] of this.handEntities) {
+      if (cardId === TRICKS_OF_THE_TRADE_CARD_ID && this.stealthAttackedHandEntities.has(entityId)) {
+        stealthFlag = 1;
+      }
+      if (cardId === JAILBIRD_CARD_ID) {
+        jailbirdDiscount = Math.max(jailbirdDiscount, this.jailbirdDiscounts.get(entityId) ?? 0);
+      }
+    }
+    this.setCounter(STEALTH_ATTACKED_WHILE_IN_HAND_KEY, stealthFlag);
+    this.setCounter(JAILBIRD_PREPARE_DISCOUNT_KEY, jailbirdDiscount);
+  }
+
+  private writeImpFormantDeckSnapshot(): void {
+    const count = this.opponentDeckImpFormants.size;
+    if (count === 0 && !this.counters.has(IMP_FORMANTS_IN_OPPONENT_DECK_KEY)) {
+      this.clearPool(IMP_FORMANTS_IN_OPPONENT_DECK_KEY);
+      return;
+    }
+    this.setCounter(IMP_FORMANTS_IN_OPPONENT_DECK_KEY, count);
+    if (count === 0) {
+      this.clearPool(IMP_FORMANTS_IN_OPPONENT_DECK_KEY);
+      return;
+    }
+    this.replacePool(
+      IMP_FORMANTS_IN_OPPONENT_DECK_KEY,
+      Array.from({ length: count }, () => IMP_FORMANT_CARD_ID),
+    );
+  }
+
+  private replacePool(key: string, cardIds: readonly string[]): void {
+    const map = new Map<string, number>();
+    for (const cardId of cardIds) {
+      incrementMap(map, cardId);
+    }
+    this.poolMaps.set(key, map);
   }
 }
 
@@ -520,6 +779,10 @@ function overloadAmountFromMetadata(metadata: ExtraDisplayCardMetadata): number 
 }
 
 function normalizeToken(value: string | undefined): string {
+  return (value ?? '').trim().toUpperCase();
+}
+
+function normalizeZoneName(value: string | null | undefined): string {
   return (value ?? '').trim().toUpperCase();
 }
 

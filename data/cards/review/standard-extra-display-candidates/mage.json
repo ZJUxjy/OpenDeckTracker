@@ -15,7 +15,7 @@
       "zhCN": "æ³•å¸ˆ"
     }
   },
-  "count": 8,
+  "count": 10,
   "cards": [
     {
       "rank": 5,
@@ -267,6 +267,67 @@
         "notesZhCN": [
           "状态应展示在被影响的魔网牌上。"
         ]
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_321",
+      "cardNameZhCN": "机灵的即兴舞者",
+      "cardTextZhCN": "<b>预备</b>。<b>战吼：</b>如果你在本回合中施放过法术，随机施放两个法师<b>奥秘</b>。",
+      "cardTextZhCNPlain": "预备。战吼：如果你在本回合中施放过法术，随机施放两个法师奥秘。",
+      "cardClass": "MAGE",
+      "type": "MINION",
+      "cost": 5,
+      "rarity": "EPIC",
+      "mechanics": [
+        "BATTLECRY",
+        "PREPARE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "current_turn_stat_preview",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlySpellsCastThisTurn"
+        ],
+        "suggestedDisplayTextZhCN": "本回合已施放法术：{friendlySpellsCastThisTurn}；{readyText}",
+        "reasoningZhCN": "机灵的即兴舞者战吼检查本回合是否施放过法术。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_735",
+      "cardNameZhCN": "紫罗兰条令",
+      "cardTextZhCN": "<b>预备</b>。召唤一个法力值消耗为（8）的随从。在本回合中，如果你施放过3个其他法术，重复一次。@<i>（还剩{0}个！）</i>@<i>（已经就绪！）</i>",
+      "cardTextZhCNPlain": "预备。召唤一个法力值消耗为（8）的随从。在本回合中，如果你施放过3个其他法术，重复一次。@（还剩{0}个！）@（已经就绪！）",
+      "cardClass": "MAGE",
+      "type": "SPELL",
+      "cost": 7,
+      "rarity": "EPIC",
+      "mechanics": [
+        "PREPARE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "current_turn_stat_preview",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlySpellsCastThisTurn"
+        ],
+        "suggestedDisplayTextZhCN": "本回合其他法术：{friendlySpellsCastThisTurn}/3；{readyText}",
+        "reasoningZhCN": "紫罗兰条令在本回合施放3个其他法术后重复召唤。"
       }
     }
   ],

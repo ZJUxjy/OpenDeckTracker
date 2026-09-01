@@ -143,6 +143,11 @@ const CARD_DEFS: Record<
     mechanics: ['PREPARE'],
     text: '<b>预备</b>。在你使用一张牌后，随机获取一张<b>战吼</b>随从牌，其法力值消耗减少（2）点。',
   },
+  CAP_400: { name: '暗金教密谋者', cost: 2, rarity: 'FREE', type: 'MINION' },
+  CAP_004: { name: '伪装的特工', cost: 1, rarity: 'EPIC', type: 'MINION', mechanics: ['DISGUISED'] },
+  CAP_101: { name: '跟随引线', cost: 1, rarity: 'EPIC', type: 'SPELL' },
+  PIRATE_CARD: { name: '测试海盗', cost: 1, rarity: 'COMMON', type: 'MINION' },
+  JAIL_453: { name: '狱中老鸟', cost: 5, rarity: 'RARE', type: 'MINION' },
   TIME_714: { name: 'Time Lord Ebonok', cost: 6, rarity: 'LEGENDARY', type: 'MINION' },
   OPP_LAST_A: { name: 'Opponent Last Turn A', cost: 3, rarity: 'COMMON', type: 'MINION' },
   OPP_LAST_B: { name: 'Opponent Last Turn B', cost: 4, rarity: 'COMMON', type: 'MINION' },
@@ -1259,6 +1264,98 @@ describe('LiveDeckPanel hover', () => {
 
     expect(screen.getByTestId('prepare-hand-badge')).toHaveTextContent('预备 -4');
     expect(screen.getByText('2')).toBeTruthy();
+  });
+
+  it('renders an Imp-formant chip when related cards are in the deck', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CAP_400', count: 2 }],
+      extraDisplay: {
+        counters: { impFormantsInOpponentDeck: 2 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+          impFormantsInOpponentDeck: [{ cardId: 'CAP_400t2t', count: 2 }],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    expect(screen.getByTestId('imp-formant-counter-chip')).toHaveTextContent('卧底小鬼 2');
+  });
+
+  it('shows a Follow badge on followed hand cards', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'PIRATE_CARD', count: 1 }],
+      remaining: [],
+      friendlyHand: ['PIRATE_CARD'],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        followedHand: [
+          {
+            entityId: 80,
+            cardId: 'PIRATE_CARD',
+            sourceCardId: 'CAP_101',
+            enchantmentEntityId: 500,
+          },
+        ],
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    expect(screen.getByTestId('follow-hand-badge')).toHaveTextContent('跟随');
+  });
+
+  it('labels disguised minions by the board side they currently occupy', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'CAP_004', count: 1 }],
+      extraDisplay: {
+        counters: {},
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        disguisedBoard: [{ entityId: 30, cardId: 'CAP_004', side: 'opponent' }],
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    const row = screen.getAllByTestId('card-copy-row')[0]!;
+    fireEvent.mouseEnter(row);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    const call = cardPreviewShowEnhancedExtra.mock.calls.at(-1)!;
+    expect(call[1].lines).toContain('伪装场面：对方');
+  });
+
+  it('shows Jailbird prepare-discount on the hand row', () => {
+    const snap = makeSnapshot({
+      original: [{ cardId: 'JAIL_453', count: 1 }],
+      remaining: [],
+      friendlyHand: ['JAIL_453'],
+      extraDisplay: {
+        counters: { jailbirdPrepareDiscountForEntity: 3 },
+        pools: {
+          friendlyDeadDemonsThisGameUnique: [],
+          friendlyDeadMinionsThisGameUnique: [],
+        },
+        friendlyBoard: [],
+      },
+    });
+    useDeckTrackerStore.setState({ snapshot: snap });
+
+    render(<LiveDeckPanel />);
+    expect(screen.getByTestId('jailbird-discount-badge')).toHaveTextContent('预备减费 -3');
   });
 
   it('invokes cardPreview.show after the hover-delay threshold', () => {

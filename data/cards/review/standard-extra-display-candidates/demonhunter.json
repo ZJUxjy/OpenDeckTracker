@@ -15,7 +15,7 @@
       "zhCN": "æ¶é­”çŒŽæ‰‹"
     }
   },
-  "count": 6,
+  "count": 7,
   "cards": [
     {
       "rank": 1,
@@ -205,6 +205,35 @@
         ],
         "suggestedDisplayTextZhCN": "本局已施放邪能法术：{felSpellsCastThisGame}；费用减少 {discount}；当前费用 {currentCost}",
         "reasoningZhCN": "邪能钓鱼者费用是全局邪能法术计数，不按实体追踪。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_EVENT_101",
+      "cardNameZhCN": "灵魂献祭",
+      "cardTextZhCN": "你的英雄技能变为坍缩之星。如果你的技能已经为坍缩之星，其伤害提高1点。",
+      "cardTextZhCNPlain": "你的英雄技能变为坍缩之星。如果你的技能已经为坍缩之星，其伤害提高1点。",
+      "cardClass": "DEMONHUNTER",
+      "type": "SPELL",
+      "cost": 2,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "hero_power_counter",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "collapsingStarDamage",
+          "collapsingStarHeroPowerActive"
+        ],
+        "suggestedDisplayTextZhCN": "坍缩之星伤害：{collapsingStarDamage}；{activeText}",
+        "reasoningZhCN": "重复打出灵魂献祭会提高坍缩之星伤害。"
       }
     }
   ],

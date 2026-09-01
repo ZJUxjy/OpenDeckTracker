@@ -34,10 +34,12 @@ export type {
   WeaponSnapshot,
 } from './tracker/deck-tracker';
 export type {
+  DisguisedBoardEntry,
   ExtraDisplayCardLookup,
   ExtraDisplayCardMetadata,
   ExtraDisplayPoolEntry,
   ExtraDisplaySnapshot,
+  FollowedHandEntry,
   PreparedHandEntry,
 } from './tracker/extra-display-state';
 export { OPPONENT_MINIONS_PLAYED_LAST_TURN_STILL_IN_PLAY_POOL } from './tracker/extra-display-state';
@@ -64,6 +66,12 @@ export {
 export type { PrepareCardMetadata } from './tracker/prepare';
 export { PrepareActionDetector } from './tracker/prepare-action-detector';
 export type { PrepareActionEvent } from './tracker/prepare-action-detector';
+export { ExtraDisplayLogDetector } from './tracker/extra-display-log-detector';
+export type { ExtraDisplayLogFact } from './tracker/extra-display-log-detector';
+export {
+  IMP_FORMANT_CARD_ID,
+  IMP_FORMANTS_IN_OPPONENT_DECK_KEY,
+} from './tracker/extra-display-ids';
 export type {
   KnownDeckPosition,
   DeckPositionPlacement,

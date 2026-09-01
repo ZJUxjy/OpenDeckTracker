@@ -2253,4 +2253,85 @@ describe('DeckTracker', () => {
     expect(lookupCalls).toBe(callsAfterFirstResolve);
     tracker.stop();
   });
+
+  it('tracks Imp-formants in the opponent deck from log-derived entity updates', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) =>
+        cardId === 'CAP_400t2t'
+          ? { type: 'MINION', races: ['DEMON'], name: 'Imp-formant', cost: 3 }
+          : null,
+    });
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 201, cardId: 'CAP_400t2t', zone: 'DECK', controllerId: 2 },
+      { entityId: 202, cardId: 'CAP_400t2t', zone: 'DECK', controllerId: 2 },
+    ]);
+
+    const snapshot = tracker.getSnapshot().extraDisplay!;
+    expect(snapshot.counters.impFormantsInOpponentDeck).toBe(2);
+    expect(snapshot.pools.impFormantsInOpponentDeck).toEqual([
+      { cardId: 'CAP_400t2t', count: 2 },
+    ]);
+  });
+
+  it('counts Bloodsport minions currently in the friendly hand', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: (cardId) =>
+        cardId === 'TIME_850t' || cardId === 'TIME_850t1'
+          ? { type: 'MINION', cost: 7 }
+          : null,
+    });
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 20, cardId: 'TIME_850t', zone: 'HAND', controllerId: 1 },
+      { entityId: 21, cardId: 'TIME_850t1', zone: 'HAND', controllerId: 1 },
+    ]);
+
+    expect(tracker.getSnapshot().extraDisplay?.counters.bloodsportMinionsInHand).toBe(2);
+  });
+
+  it('attaches Follow extra-display state from log facts', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.applyLocalControllerId(1);
+    tracker.applyLogDerivedEntityUpdates([
+      { entityId: 80, cardId: 'PIRATE_CARD', zone: 'HAND', controllerId: 1 },
+    ]);
+    tracker.recordExtraDisplayLogFact({
+      type: 'follow-attach',
+      enchantmentEntityId: 500,
+      enchantmentCardId: 'CAP_101e',
+      targetEntityId: 80,
+      targetCardId: 'PIRATE_CARD',
+    });
+
+    expect(tracker.getSnapshot().extraDisplay?.followedHand).toEqual([
+      {
+        entityId: 80,
+        cardId: 'PIRATE_CARD',
+        sourceCardId: 'CAP_101',
+        enchantmentEntityId: 500,
+      },
+    ]);
+  });
+
+  it('counts a friendly discard from extra-display log facts', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({
+      mirror,
+      cardMetadataLookup: () => ({ type: 'SPELL', cost: 2 }),
+    });
+    tracker.applyLocalControllerId(1);
+    tracker.recordExtraDisplayLogFact({
+      type: 'discard',
+      entityId: 40,
+      cardId: 'HAND_SPELL',
+      controllerId: 1,
+    });
+    expect(tracker.getSnapshot().extraDisplay?.counters.cardsDiscardedThisGame).toBe(1);
+  });
 });

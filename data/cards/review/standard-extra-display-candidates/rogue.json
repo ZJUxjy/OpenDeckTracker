@@ -15,7 +15,7 @@
       "zhCN": "æ½œè¡Œè€…"
     }
   },
-  "count": 11,
+  "count": 15,
   "cards": [
     {
       "rank": 4,
@@ -352,6 +352,128 @@
         ],
         "suggestedDisplayTextZhCN": "吞食数量：{count}；已知牌：{knownCardNames}；休眠剩余 {turns} 回合",
         "reasoningZhCN": "被吞食的对手手牌默认不可见，只能展示数量和已知信息。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_002",
+      "cardNameZhCN": "跟随足迹",
+      "cardTextZhCN": "<b>发现</b>一张<b>潜行</b>随从牌。使该牌在一回合内获得此效果。",
+      "cardTextZhCNPlain": "发现一张潜行随从牌。使该牌在一回合内获得此效果。",
+      "cardClass": "ROGUE",
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISCOVER"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "hand_flag",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "followedHand"
+        ],
+        "suggestedDisplayTextZhCN": "跟随：{followYesNo}",
+        "reasoningZhCN": "跟随足迹把效果挂在一张手牌上，需要按实体显示。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_004",
+      "cardNameZhCN": "伪装的特工",
+      "cardTextZhCN": "可以使用在对战面板的任意一侧。<b>突袭</b>。<b>亡语：</b>你的对手抽两张牌。",
+      "cardTextZhCNPlain": "可以使用在对战面板的任意一侧。突袭。亡语：你的对手抽两张牌。",
+      "cardClass": "ROGUE",
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "EPIC",
+      "mechanics": [
+        "DEATHRATTLE",
+        "DISGUISED",
+        "RUSH"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "board_side",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "disguisedBoard"
+        ],
+        "suggestedDisplayTextZhCN": "伪装场面：{disguiseSide}",
+        "reasoningZhCN": "伪装随从可以出现在己方或对方场面。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "CAP_006",
+      "cardNameZhCN": "嫁祸诀窍",
+      "cardTextZhCN": "造成$1点伤害。如果在本牌在你手中时有<b><b>潜行</b>的</b>随从攻击过，改为造成$3点。",
+      "cardTextZhCNPlain": "造成$1点伤害。如果在本牌在你手中时有潜行的随从攻击过，改为造成$3点。",
+      "cardClass": "ROGUE",
+      "type": "SPELL",
+      "cost": 1,
+      "rarity": "EPIC",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "hand_condition",
+        "implementationPriority": "high",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "stealthMinionAttackedWhileThisEntityInHand"
+        ],
+        "suggestedDisplayTextZhCN": "潜行随从已攻击：{yesNo}",
+        "reasoningZhCN": "嫁祸诀窍在这张牌在手期间检查潜行随从是否攻击过。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_909",
+      "cardNameZhCN": "迪菲亚跟风狗",
+      "cardTextZhCN": "<b>预备</b>。<b>连击：</b>在本回合中，你每使用一张其他牌，便获得+1/+1。@<i>（已使用@张）</i>",
+      "cardTextZhCNPlain": "预备。连击：在本回合中，你每使用一张其他牌，便获得+1/+1。@（已使用@张）",
+      "cardClass": "ROGUE",
+      "type": "MINION",
+      "cost": 4,
+      "rarity": "EPIC",
+      "mechanics": [
+        "COMBO",
+        "PREPARE"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "current_turn_stat_preview",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "otherCardsPlayedThisTurn"
+        ],
+        "suggestedDisplayTextZhCN": "本回合其他牌：{otherCardsPlayedThisTurn}",
+        "reasoningZhCN": "迪菲亚跟风狗连击身材随本回合其他出牌数增长。"
       }
     }
   ],

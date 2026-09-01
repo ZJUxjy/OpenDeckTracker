@@ -9,6 +9,7 @@ import {
   expandDeckToCopies,
   formatCostReductionHoverLine,
   HERALD_COUNTER_KEY,
+  IMP_FORMANTS_IN_OPPONENT_DECK_KEY,
   PREPARE_COUNTER_KEY,
   getCostReductionRule,
   isHeraldRelatedCard,
@@ -47,6 +48,14 @@ const ANIMAL_COMPANION_POOL_PREVIEW_CARD_IDS = new Set([
   'EDR_853',
 ]);
 const RANGER_SYLVANAS_CARD_IDS = new Set(['TIME_609', 'TIME_609t1', 'TIME_609t2']);
+const IMP_FORMANT_RELATED_CARD_IDS = new Set([
+  'CAP_400',
+  'CAP_401',
+  'CAP_402',
+  'CAP_404',
+  'CAP_406',
+]);
+const JAILBIRD_CARD_ID = 'JAIL_453';
 const STRANGE_DOG_TRAINER_CARD_ID = 'EDR_226';
 
 // Mask the tile's left edge into transparency so it blends smoothly with
@@ -296,6 +305,9 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
   );
   const heraldCount = Number(snapshot.extraDisplay?.counters?.[HERALD_COUNTER_KEY] ?? 0);
   const prepareCount = Number(snapshot.extraDisplay?.counters?.[PREPARE_COUNTER_KEY] ?? 0);
+  const impFormantCount = Number(
+    snapshot.extraDisplay?.counters?.[IMP_FORMANTS_IN_OPPONENT_DECK_KEY] ?? 0,
+  );
   const hasHeraldContext =
     allVisibleCardIds.some((cardId) => isHeraldRelatedCard(cardDefs.get(cardId))) ||
     (snapshot.extraDisplay?.friendlyBoard ?? []).some((record) =>
@@ -309,6 +321,12 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
     ) ||
     prepareCount > 0 ||
     (snapshot.extraDisplay?.preparedHand?.length ?? 0) > 0;
+  const hasImpFormantContext =
+    impFormantCount > 0 ||
+    allVisibleCardIds.some((cardId) => IMP_FORMANT_RELATED_CARD_IDS.has(cardId)) ||
+    (snapshot.extraDisplay?.friendlyBoard ?? []).some((record) =>
+      IMP_FORMANT_RELATED_CARD_IDS.has(record.cardId),
+    );
 
   const totalOriginal = deck.original.reduce((s, c) => s + c.count, 0);
   const totalRemaining = deck.remaining.reduce((s, c) => s + c.count, 0);
@@ -447,6 +465,8 @@ function DeckPanelInner({ snapshot }: DeckPanelInnerProps) {
           showHerald={hasHeraldContext}
           prepareCount={prepareCount}
           showPrepare={hasPrepareContext}
+          impFormantCount={impFormantCount}
+          showImpFormant={hasImpFormantContext}
         />
       </div>
 
@@ -801,13 +821,17 @@ function KeywordCounterStrip({
   showHerald,
   prepareCount,
   showPrepare,
+  impFormantCount,
+  showImpFormant,
 }: {
   heraldCount: number;
   showHerald: boolean;
   prepareCount: number;
   showPrepare: boolean;
+  impFormantCount: number;
+  showImpFormant: boolean;
 }) {
-  if (!showHerald && !showPrepare) return null;
+  if (!showHerald && !showPrepare && !showImpFormant) return null;
   return (
     <div className="mt-2 flex flex-wrap gap-1.5" data-testid="keyword-counter-strip">
       {showHerald ? (
@@ -830,6 +854,17 @@ function KeywordCounterStrip({
           <span>预备</span>
           {' '}
           <span className="font-mono tabular-nums">{prepareCount}</span>
+        </span>
+      ) : null}
+      {showImpFormant ? (
+        <span
+          data-testid="imp-formant-counter-chip"
+          className="inline-flex items-center gap-1 rounded border border-accent/30 bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent"
+          title="敌方牌库中的卧底小鬼"
+        >
+          <span>卧底小鬼</span>
+          {' '}
+          <span className="font-mono tabular-nums">{impFormantCount}</span>
         </span>
       ) : null}
     </div>
@@ -993,7 +1028,14 @@ function CardCopyRow({
   const def = useCardDef(cardId);
   const cost = def?.cost ?? 0;
   const preparedEntry = extraDisplay?.preparedHand?.find((entry) => entry.cardId === cardId);
-  const displayCost = preparedEntry?.effectiveCost ?? cost;
+  const followedEntry = extraDisplay?.followedHand?.find((entry) => entry.cardId === cardId);
+  const jailbirdDiscount =
+    cardId === JAILBIRD_CARD_ID
+      ? Number(extraDisplay?.counters?.jailbirdPrepareDiscountForEntity ?? 0)
+      : 0;
+  const displayCost =
+    preparedEntry?.effectiveCost ??
+    (jailbirdDiscount > 0 ? Math.max(0, cost - jailbirdDiscount) : cost);
   const name = def?.name ?? cardId;
   const rarity = def?.rarity as Rarity | undefined;
   const tileUrl = useCardTileUrl(cardId);
@@ -1067,6 +1109,22 @@ function CardCopyRow({
               className="text-[10px] font-semibold text-accent"
             >
               预备 -{preparedEntry.discount}
+            </div>
+          ) : null}
+          {followedEntry ? (
+            <div
+              data-testid="follow-hand-badge"
+              className="text-[10px] font-semibold text-accent"
+            >
+              跟随
+            </div>
+          ) : null}
+          {jailbirdDiscount > 0 ? (
+            <div
+              data-testid="jailbird-discount-badge"
+              className="text-[10px] font-semibold text-accent"
+            >
+              预备减费 -{jailbirdDiscount}
             </div>
           ) : null}
         </div>
@@ -1163,6 +1221,16 @@ function buildRowExtraDisplay(
   }
   if (isLastTurnHistory && extraDisplay) {
     extraLines.push(`可消灭：${formatPoolNames(lastTurnPool)}`);
+  }
+  const followedEntry = extraDisplay?.followedHand?.find((entry) => entry.cardId === cardId);
+  if (followedEntry) {
+    extraLines.push('跟随：本回合可再次触发');
+  }
+  const disguisedSides = (extraDisplay?.disguisedBoard ?? [])
+    .filter((entry) => entry.cardId === cardId)
+    .map((entry) => (entry.side === 'friendly' ? '己方' : '对方'));
+  if (disguisedSides.length > 0) {
+    extraLines.push(`伪装场面：${[...new Set(disguisedSides)].join('、')}`);
   }
   const triggerHit = matchOnBoardTrigger(def, extraDisplay?.friendlyBoard ?? []);
   if (triggerHit) {
@@ -1321,6 +1389,14 @@ function computeBindings(
     bindings.damage = Number(bindings.fireSpellsCastThisTurnByYou ?? 0) > 0 ? 6 : 3;
   }
 
+  const followed = extraDisplay?.followedHand?.filter((entry) => entry.cardId === cardId) ?? [];
+  bindings.followYesNo = followed.length > 0 ? '是' : '否';
+  const disguised = extraDisplay?.disguisedBoard?.filter((entry) => entry.cardId === cardId) ?? [];
+  bindings.disguiseSide =
+    disguised.length === 0
+      ? '未上场'
+      : [...new Set(disguised.map((entry) => (entry.side === 'friendly' ? '己方' : '对方')))].join('、');
+
   return bindings;
 }
 
@@ -1337,10 +1413,17 @@ function hasTrackedExtraDisplayState(
   extraDisplay: DeckTrackerSnapshot['extraDisplay'] | undefined,
 ): boolean {
   const counters = extraDisplay?.counters ?? {};
+  const pools = extraDisplay?.pools ?? {};
   for (const key of candidate.extraDisplay?.stateNeeded ?? []) {
     if (key === 'currentCost') continue;
     if (Object.prototype.hasOwnProperty.call(counters, key)) return true;
+    if (Object.keys(counters).some((counterKey) => counterKey.startsWith(`${key}.`))) return true;
     if (poolForStateKey(key, extraDisplay).length > 0) return true;
+    if (Object.keys(pools).some((poolKey) => poolKey === key || poolKey.startsWith(`${key}.`))) {
+      return true;
+    }
+    if (key === 'followedHand' && (extraDisplay?.followedHand?.length ?? 0) > 0) return true;
+    if (key === 'disguisedBoard' && (extraDisplay?.disguisedBoard?.length ?? 0) > 0) return true;
   }
   return false;
 }
@@ -1382,6 +1465,11 @@ function poolForStateKey(
   const pools = extraDisplay?.pools;
   if (!pools) return [];
   if (key === 'friendlyMinionsDiedThisTurn') return pools.friendlyGraveyardThisTurn ?? [];
+  if (pools[key] && pools[key].length > 0) return pools[key];
+  const prefixed = Object.entries(pools)
+    .filter(([poolKey]) => poolKey.startsWith(`${key}.`))
+    .flatMap(([, entries]) => entries);
+  if (prefixed.length > 0) return prefixed;
   return pools[key] ?? [];
 }
 

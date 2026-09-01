@@ -15,7 +15,7 @@
       "zhCN": "å¾·é²ä¼Š"
     }
   },
-  "count": 16,
+  "count": 17,
   "cards": [
     {
       "rank": 1,
@@ -509,6 +509,34 @@
         ],
         "suggestedDisplayTextZhCN": "状态：{value}",
         "reasoningZhCN": "audit 后保留；实现侧按本卡专属状态键读取。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_200",
+      "cardNameZhCN": "污染厨房",
+      "cardTextZhCN": "随机召唤两个法力值消耗为（@）的随从。<i>（在本局对战中你的英雄每攻击一次都会提升。）</i>",
+      "cardTextZhCNPlain": "随机召唤两个法力值消耗为（@）的随从。（在本局对战中你的英雄每攻击一次都会提升。）",
+      "cardClass": "DRUID",
+      "type": "SPELL",
+      "cost": 5,
+      "rarity": "RARE",
+      "mechanics": [],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "game_counter",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "hand",
+          "hover"
+        ],
+        "stateNeeded": [
+          "friendlyHeroAttacksThisGame"
+        ],
+        "suggestedDisplayTextZhCN": "本局英雄攻击：{friendlyHeroAttacksThisGame}",
+        "reasoningZhCN": "污染厨房召唤随从的费用随本局英雄攻击次数提升。"
       }
     }
   ],

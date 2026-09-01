@@ -21,6 +21,13 @@ const livePanel = fs.readFileSync(
 
 const trackedCounters = new Set([...stateSrc.matchAll(/(?:increment|setCounter)\('([^']+)'/g)].map((m) => m[1]));
 const trackedPools = new Set([...stateSrc.matchAll(/incrementPool\('([^']+)'/g)].map((m) => m[1]));
+for (const fileName of ['extra-display-ids.ts', 'prepare.ts', 'herald.ts', 'extra-display-state.ts']) {
+  const src = fs.readFileSync(path.join(root, 'packages/core/src/tracker', fileName), 'utf8');
+  for (const match of src.matchAll(/export const \w+_(KEY|POOL) = '([^']+)'/g)) {
+    trackedCounters.add(match[2]);
+    trackedPools.add(match[2]);
+  }
+}
 const trackedPoolAliases = new Set([
   ...stateSrc.matchAll(/pools\['([^']+)'\]/g),
   ...stateSrc.matchAll(/pools\.([a-zA-Z0-9_.]+)\s*=/g),
@@ -36,10 +43,15 @@ const SOFT_KEYS = new Set([
   'spellstoneUpgradeState',
   'currentSpellDamageValue',
   'friendlyBoardSpace',
+  'followedHand',
+  'disguisedBoard',
 ]);
 const specialCards = new Set([...livePanel.matchAll(/if \(cardId === '([^']+)'\)/g)].map((m) => m[1]));
 
 function classifyKey(key) {
+  if (key === 'followedHand' || key === 'disguisedBoard') {
+    return { status: 'implemented_counter' };
+  }
   if (key.startsWith('counter.') || key.startsWith('cardState.')) {
     return { status: 'entity_tag' };
   }

@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => {
     resetGlobalEffects: vi.fn(),
     recordHeraldTriggered: vi.fn(),
     recordPrepareAction: vi.fn(),
+    recordExtraDisplayLogFact: vi.fn(),
     selectDeckById: vi.fn(async () => undefined),
     cancelDeckSelection: vi.fn(),
   };
@@ -47,6 +48,10 @@ const mocks = vi.hoisted(() => {
     handle: vi.fn(),
     reset: vi.fn(),
   };
+  const extraDisplayLogDetector = {
+    handle: vi.fn(),
+    reset: vi.fn(),
+  };
 
   const deckStore = {
     getActiveDeckId: vi.fn(() => null as string | null),
@@ -59,6 +64,7 @@ const mocks = vi.hoisted(() => {
     cardPlayedDetector,
     heraldTriggerDetector,
     prepareActionDetector,
+    extraDisplayLogDetector,
     setHeraldTriggerEmit: (emit: (event: HeraldTriggerEvent) => void) => {
       heraldTriggerEmit = emit;
     },
@@ -90,6 +96,7 @@ vi.mock('@hdt/core', () => ({
     return mocks.heraldTriggerDetector;
   }),
   PrepareActionDetector: vi.fn().mockImplementation(() => mocks.prepareActionDetector),
+  ExtraDisplayLogDetector: vi.fn().mockImplementation(() => mocks.extraDisplayLogDetector),
   zoneFromNumber: (value: number) =>
     ({ 0: 'INVALID', 1: 'PLAY', 2: 'DECK', 3: 'HAND', 4: 'GRAVEYARD', 5: 'REMOVEDFROMGAME', 6: 'SETASIDE', 7: 'SECRET' })[value] ?? 'INVALID',
   createLocalPlayerResolver: () => mocks.localPlayerResolver,
@@ -254,6 +261,26 @@ describe('deck-tracker main host', () => {
     forwardPowerEventToDeckTracker({ type: 'create-game', raw: '', content: '' } as never, 'replay');
 
     expect(mocks.heraldTriggerDetector.reset).toHaveBeenCalled();
+    expect(mocks.extraDisplayLogDetector.reset).toHaveBeenCalled();
+  });
+
+  it('forwards extra-display log facts to the tracker', async () => {
+    const { forwardPowerEventToDeckTracker, startDeckTracker } = await import('./deck-tracker');
+    startDeckTracker(mocks.deckStore as never);
+
+    const event = {
+      type: 'block-start',
+      blockType: 'ATTACK',
+      entity: '[entityName=Stealth id=64 zone=PLAY cardId=STEALTH_MINION player=1]',
+      effectCardId: '',
+      target: null,
+      subOption: null,
+      raw: '',
+      content: '',
+    };
+    forwardPowerEventToDeckTracker(event as never, 'replay');
+
+    expect(mocks.extraDisplayLogDetector.handle).toHaveBeenCalledWith(event);
   });
 
   it('backfills card id and controller from TAG_CHANGE entity refs', async () => {

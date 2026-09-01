@@ -3,9 +3,10 @@
 // MAINTENANCE BURDEN: Update STANDARD_SET_CODES every time Blizzard
 // announces a new Standard rotation (typically each April and with
 // each new expansion launch). The current list reflects the Standard
-// rotation in effect as of May 2026 (post-Cataclysm rotation).
+// rotation in effect as of August 2026 (Escape from Violet Hold plus
+// Azeroth's Most Wanted class sets, which share SET_1988 as a mini-set).
 //
-// Source: https://news.blizzard.com/en-us/hearthstone/24058436/
+// Source: https://hearthstone.blizzard.com/en-us/news/24293283/364-patch-notes
 //   (last verified rotation; refresh with a newer announcement URL
 //    when the next rotation lands.)
 //
@@ -26,6 +27,7 @@ export const STANDARD_SET_CODES: readonly string[] = [
   'SET_1952', // The Lost City of Un'Goro
   'SET_1957', // Across the Timeways
   'SET_1980', // Cataclysm
+  'SET_1988', // Escape from Violet Hold
 ] as const;
 
 /**
@@ -41,6 +43,7 @@ export const SET_LABELS: Record<string, { 'en-US': string; 'zh-CN': string }> = 
   SET_1952: { 'en-US': "The Lost City of Un'Goro",   'zh-CN': '安戈洛龟途' },
   SET_1957: { 'en-US': 'Across the Timeways',        'zh-CN': '穿越时间流' },
   SET_1980: { 'en-US': 'Cataclysm',                  'zh-CN': '大地的裂变' },
+  SET_1988: { 'en-US': 'Escape from Violet Hold',    'zh-CN': '逃离紫罗兰监狱' },
 
   // ── Recently rotated out (still in Wild) ──────────────────
   SET_1809: { 'en-US': 'Festival of Legends',        'zh-CN': '传奇节日' },

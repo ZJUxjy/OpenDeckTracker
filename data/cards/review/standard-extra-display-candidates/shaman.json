@@ -15,7 +15,7 @@
       "zhCN": "è¨æ»¡ç¥­å¸"
     }
   },
-  "count": 14,
+  "count": 15,
   "cards": [
     {
       "rank": 3,
@@ -444,6 +444,38 @@
         ],
         "suggestedDisplayTextZhCN": "本局友方角色攻击：{count}；当前费用 {currentCost}",
         "reasoningZhCN": "穆拉丁的奋战费用由友方角色攻击次数决定。"
+      }
+    },
+    {
+      "rank": 100,
+      "sourceRank": 100,
+      "cardCode": "JAIL_452",
+      "cardNameZhCN": "伪装的侦探",
+      "cardTextZhCN": "可以使用在对战面板的任意一侧。使对应玩家<b>过载</b>（2）。",
+      "cardTextZhCNPlain": "可以使用在对战面板的任意一侧。使对应玩家过载（2）。",
+      "cardClass": "SHAMAN",
+      "type": "MINION",
+      "cost": 1,
+      "rarity": "RARE",
+      "mechanics": [
+        "DISGUISED",
+        "OVERLOAD"
+      ],
+      "extraDisplay": {
+        "schemaVersion": 2,
+        "auditDecision": "keep",
+        "displayType": "board_side",
+        "implementationPriority": "medium",
+        "displaySurfaces": [
+          "deck",
+          "board",
+          "hover"
+        ],
+        "stateNeeded": [
+          "disguisedBoard"
+        ],
+        "suggestedDisplayTextZhCN": "伪装场面：{disguiseSide}",
+        "reasoningZhCN": "伪装的侦探可以出现在任意一侧场面。"
       }
     }
   ],

@@ -8,6 +8,7 @@ import {
   DeckTracker,
   HeraldTriggerDetector,
   PrepareActionDetector,
+  ExtraDisplayLogDetector,
   type ComputeBoardAttackOptions,
   type DeckTrackerEvent,
   type DeckTrackerSnapshot,
@@ -284,6 +285,7 @@ function isStartOfGameDisappearCard(cardId: string): boolean {
 let cardPlayedDetector: CardPlayedDetector | null = null;
 let heraldTriggerDetector: HeraldTriggerDetector | null = null;
 let prepareActionDetector: PrepareActionDetector | null = null;
+let extraDisplayLogDetector: ExtraDisplayLogDetector | null = null;
 let localPlayerTriggerRevealPending = false;
 
 // ── Board-attack tag overlay ────────────────────────────────────────
@@ -641,6 +643,9 @@ export function startDeckTracker(deckStore: DeckStore): void {
   prepareActionDetector = new PrepareActionDetector({
     emit: (event) => tracker?.recordPrepareAction(event),
   });
+  extraDisplayLogDetector = new ExtraDisplayLogDetector({
+    emit: (fact) => tracker?.recordExtraDisplayLogFact(fact),
+  });
 
   let lastPhaseLogged: string | null = null;
   let lastDeckIdLogged: number | string | null = null;
@@ -798,6 +803,7 @@ export function forwardPowerEventToDeckTracker(
     cardPlayedDetector?.reset();
     heraldTriggerDetector?.reset();
     prepareActionDetector?.reset();
+    extraDisplayLogDetector?.reset();
     tracker?.resetGlobalEffects();
     localPlayerResolver.reset();
     resetLocalPlayerTriggerRevealContext();
@@ -867,6 +873,7 @@ export function forwardPowerEventToDeckTracker(
   }
   heraldTriggerDetector?.handle(event);
   prepareActionDetector?.handle(event);
+  extraDisplayLogDetector?.handle(event);
   for (const tagUpdate of extraDisplayTagUpdatesFromPowerEvent(event)) {
     tracker?.recordExtraDisplayEntityTag(tagUpdate);
   }
