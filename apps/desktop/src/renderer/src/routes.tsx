@@ -3,7 +3,7 @@ import { Dashboard } from './components/Dashboard';
 import { DecksPage } from './components/DecksPage';
 import { Stats } from './components/Stats';
 import { Collection } from './components/Collection';
-import { Settings } from './components/Settings';
+import { SettingsRoute } from './components/SettingsRoute';
 import { OverlayView } from './components/OverlayView';
 import { OpponentOverlayView } from './components/OpponentOverlayView';
 import { CardPreviewView } from './components/CardPreviewView';
@@ -24,7 +24,7 @@ export const routes: RouteObject[] = [
   { path: 'decks', element: <DecksPage /> },
   { path: 'stats', element: <Stats /> },
   { path: 'collection', element: <Collection /> },
-  { path: 'settings', element: <Settings /> },
+  { path: 'settings', element: <SettingsRoute /> },
   { path: 'overlay', element: <OverlayView /> },
   { path: 'overlay-opponent', element: <OpponentOverlayView /> },
   { path: 'card-preview', element: <CardPreviewView /> },

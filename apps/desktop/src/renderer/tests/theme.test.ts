@@ -5,10 +5,9 @@ import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const themeCss = readFileSync(
-  resolve(__dirname, '../src/styles/theme.css'),
-  'utf-8',
-);
+const themeCss = ['theme.css', 'desktop-shell.css', 'reference.css', 'reference-overlay.css',
+  'refinements.css', 'reliability.css'].map(name =>
+  readFileSync(resolve(__dirname, '../src/styles', name), 'utf-8')).join('\n');
 
 describe('macOS Liquid Glass theme tokens', () => {
   it('declares macOS System Blue as default light accent', () => {

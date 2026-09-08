@@ -1,7 +1,16 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as hearthdb from '@hdt/hearthdb';
 import { clearCardDbCacheForTests, ensureCardDb } from './cards';
 
 describe('localized card database loading', () => {
+  it('does not retain a rejected database initialization promise', async () => {
+    const load = vi.spyOn(hearthdb, 'loadCards').mockRejectedValueOnce(new Error('temporary read failure'));
+    try {
+      await expect(ensureCardDb('enUS')).rejects.toThrow('temporary read failure');
+      expect((await ensureCardDb('enUS')).findById('EX1_277')?.name).toBe('Arcane Missiles');
+      expect(load).toHaveBeenCalledTimes(2);
+    } finally { load.mockRestore(); }
+  });
   beforeEach(() => {
     clearCardDbCacheForTests();
   });

@@ -31,8 +31,11 @@ target/
 
 # Downloaded card data (refresh with `pnpm cards:download`)
 data/cards/*.json
+!data/cards/source.json
 data/cards/hsdata/
 data/cards/generated/*.json
+data/cards/.update-*/
+data/cards/.previous-*/
 
 # Git worktrees
 .worktrees/

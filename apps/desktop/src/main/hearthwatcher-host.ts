@@ -1,4 +1,5 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import path from 'node:path';
 import {
   createHearthWatcher,
   type EventPhase,
@@ -135,6 +136,15 @@ function logHearthWatcherStatus(status: HearthWatcherDiagnostic): void {
 }
 
 export function registerHearthWatcherIpc(): void {
+  ipcMain.handle('hearthwatcher:rediscover', (): boolean => {
+    if (!watcher) return false;
+    watcher.triggerDiscovery();
+    return true;
+  });
+  ipcMain.handle('hearthwatcher:open-log-directory', async (): Promise<boolean> => {
+    if (!latestStatus?.path) return false;
+    return (await shell.openPath(path.dirname(latestStatus.path))) === '';
+  });
   ipcMain.handle('hearthwatcher:get-status', (): HearthWatcherDiagnostic | null => {
     return latestStatus;
   });

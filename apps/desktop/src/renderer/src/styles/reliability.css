@@ -1,0 +1,31 @@
+/* Tracker card interactions and settings diagnostics, shared by both skins. */
+.tavern-app-shell .reference-live-dot[data-live='false'] {
+  background: var(--ref-ink-mute, var(--text-muted));
+  box-shadow: none;
+  animation: none;
+}
+.reference-connection-hint { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.reference-live-empty-workbench > .reference-action-button { align-self: flex-start; }
+.tavern-app-shell .reference-live-card-row { width: 100%; text-align: left; }
+.tavern-app-shell .reference-intel-card {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 10px 12px; border: 1px solid var(--ref-line, var(--border)); border-radius: 8px;
+  background: var(--ref-inset, var(--overlay-surface)); color: var(--ref-ink, var(--text));
+}
+.reference-intel-copy { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.reference-intel-copy small { color: var(--ref-ink-dim, var(--text-secondary)); font-size: 11px; }
+.tavern-app-shell :is(.reference-live-card-row, .reference-intel-card):hover {
+  background: var(--ref-panel-hover, var(--surface-raised));
+}
+.tavern-app-shell .reliability-panel { padding: 18px; }
+.reliability-panel h3 { margin-bottom: 8px; font-size: 15px; font-weight: 600; }
+.reliability-panel p { font-size: 13px; line-height: 1.65; color: var(--ref-ink-dim, var(--text-secondary)); }
+.reliability-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 16px 0; }
+.reliability-details dt { color: var(--ref-ink-dim, var(--text-secondary)); font-size: 12px; margin-bottom: 4px; }
+.reliability-details dd { font-size: 14px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.reliability-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.reliability-actions button:disabled { opacity: .5; }
+.reliability-path { display: block; overflow-wrap: anywhere; white-space: pre-wrap; font-size: 12px; margin: 8px 0; }
+.reliability-panel [role='alert'] { color: var(--danger, #d65d64); margin-top: 8px; }
+.reliability-panel summary { cursor: pointer; font-size: 13px; margin-top: 12px; }
+@media (max-width: 760px) { .reliability-details { grid-template-columns: minmax(0, 1fr); } }

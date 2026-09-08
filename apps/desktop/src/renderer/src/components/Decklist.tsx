@@ -729,7 +729,7 @@ export function SavedDecksList(props: SavedDecksListProps = {}): ReactElement {
   const [activeDeckId, setActiveDeckId] = useState<string | null>(null);
 
   useEffect(() => {
-    void window.hdt.decks.getActive().then(setActiveDeckId);
+    void window.hdt?.decks?.getActive().then(setActiveDeckId);
   }, []);
 
   const handleSetActive = async (id: string): Promise<void> => {

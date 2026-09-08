@@ -1,4 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { CardDataPanel } from './CardDataPanel';
+import { ConnectionDiagnostics } from './ConnectionDiagnostics';
 import { Database, Info, Monitor, Palette, Sparkles } from 'lucide-react';
 import type { AdvisorConfig, AdvisorProvider } from '@hdt/advisor';
 import { useTranslation, type LanguagePreference } from '../i18n';
@@ -60,6 +62,7 @@ function SettingsSegment<T extends string>({
           key={option.value}
           type="button"
           onClick={() => onChange(option.value)}
+          aria-pressed={value === option.value}
           className={value === option.value ? 'is-active' : undefined}
         >
           {option.label}
@@ -112,7 +115,10 @@ function ReferenceToggle({
   );
 }
 
-export function Settings() {
+export function Settings({ category, onCategoryChange }: {
+  category?: string;
+  onCategoryChange?: (category: string) => void;
+} = {}) {
   const { t } = useTranslation();
   const languagePreference = useI18nStore((state) => state.languagePreference);
   const setLanguagePreference = useI18nStore((state) => state.setLanguagePreference);
@@ -128,7 +134,13 @@ export function Settings() {
   const setTheme = useAppearanceStore((state) => state.setTheme);
   const setGameOverlay = useAppearanceStore((state) => state.setGameOverlay);
   const setGameOverlayOpponent = useAppearanceStore((state) => state.setGameOverlayOpponent);
-  const [activeCategory, setActiveCategory] = useState('appearance');
+  const [localCategory, setLocalCategory] = useState('appearance');
+  const requestedCategory = category ?? localCategory;
+  const activeCategory = categories.some(c => c.id === requestedCategory) ? requestedCategory : 'appearance';
+  const setActiveCategory = (value: string) => {
+    setLocalCategory(value);
+    onCategoryChange?.(value);
+  };
 
   const languageOptions: { value: LanguagePreference; label: string }[] = [
     { value: 'system', label: t('settings.languageSystem') },
@@ -265,7 +277,7 @@ export function Settings() {
               </div>
             )}
 
-            {activeCategory === 'data' && <DataPanel />}
+            {activeCategory === 'data' && <><ConnectionDiagnostics /><CardDataPanel /><DataPanel /></>}
 
             {activeCategory === 'advisor' && <AdvisorSettingsPanel />}
 

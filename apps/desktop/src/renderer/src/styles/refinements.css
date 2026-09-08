@@ -1,0 +1,189 @@
+/* Shared desktop refinements. Overlay windows keep their independent layout. */
+:root[data-ui-style='reference'] {
+  --ref-panel: rgba(19, 30, 34, 0.92);
+  --ref-panel-2: rgba(28, 41, 45, 0.8);
+  --ref-panel-hover: rgba(34, 50, 53, 0.92);
+  --ref-line: rgba(159, 191, 182, 0.15);
+  --ref-line-strong: rgba(159, 211, 191, 0.3);
+  --ref-ink-dim: #afc2bc;
+  --ref-ink-mute: #91a8a0;
+  --ref-radius: 12px;
+}
+
+.tavern-app-shell {
+  min-width: 0;
+  width: 100%;
+  font-family: Inter, 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-app-shell { min-width: 0; }
+
+.tavern-app-shell :is(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+.tavern-app-shell button:not(:disabled) { cursor: pointer; }
+.tavern-app-shell button:disabled { cursor: not-allowed; }
+.tavern-app-shell :is(input, select, textarea) { font: inherit; }
+
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-topbar {
+  height: 72px;
+  grid-template-columns: minmax(210px, 250px) minmax(0, 1fr) auto;
+  gap: 16px;
+  background: var(--ref-bg-1);
+}
+
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-brand-title { font-size: 17px; font-weight: 700; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-brand-subtitle { font-size: 11px; letter-spacing: 0.4px; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-brand-emblem { width: 36px; height: 36px; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-main-tabs { gap: 4px; justify-content: flex-start; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-main-tabs > .tavern-nav-tab {
+  position: relative;
+  min-width: 0;
+  max-width: 150px;
+  flex: 1 1 auto;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 8px;
+}
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-nav-label { font-size: 13px; font-weight: 600; }
+@media (min-width: 600px) {
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-nav-label { display: block; }
+}
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-nav-tab[data-active='true'] { box-shadow: none; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-nav-tab[data-active='true']::after { display: none; }
+.tavern-topbar-actions { gap: 8px; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-status-pill { font-size: 12px; padding: 0 10px; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-player-pill { max-width: 140px; }
+:root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-bottom-status { height: 28px; padding-inline: 24px; }
+:root[data-ui-style='reference'] .reference-global-hero { opacity: 0.24; }
+
+.tavern-app-shell .reference-page { padding: 24px; }
+.tavern-app-shell .reference-dashboard { gap: 16px; }
+.tavern-app-shell .reference-dashboard .reference-dashboard-grid {
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr);
+  gap: 16px;
+  margin: 0;
+  min-height: 380px;
+}
+.tavern-app-shell .reference-dashboard .reference-dashboard-grid:has(.reference-live-empty-workbench) {
+  flex: 1 0 auto;
+  min-height: 380px;
+}
+.tavern-app-shell .reference-panel { overflow: hidden; }
+.tavern-app-shell .reference-live-empty-workbench {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 680px;
+  gap: 20px;
+}
+.tavern-app-shell .reference-empty-signal {
+  grid-template-columns: 48px minmax(0, 1fr);
+  min-height: 120px;
+  gap: 18px;
+  padding: 12px 4px;
+  border: 0;
+  background: transparent;
+}
+.tavern-app-shell .reference-empty-signal > svg { width: 48px; height: 48px; padding: 10px; }
+.tavern-app-shell .reference-empty-signal h2 { font-weight: 650; line-height: 1.4; }
+.tavern-app-shell .reference-empty-signal p { line-height: 1.7; }
+.tavern-app-shell .reference-mini-meta { min-width: 0; }
+.tavern-app-shell .reference-mini-meta b { font-size: 13px; overflow-wrap: anywhere; }
+.tavern-app-shell .reference-mini-meta small { font-size: 11px; }
+.tavern-app-shell .reference-live-card-list,
+.tavern-app-shell .reference-opponent-list { overflow-y: auto; min-height: 0; }
+.tavern-app-shell .reference-live-body { min-height: 0; }
+.tavern-app-shell .reference-opponent-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+.tavern-app-shell .reference-opponent-empty h2 { font-size: 18px; line-height: 1.5; font-weight: 600; }
+.tavern-app-shell .reference-opponent-empty p { max-width: 270px; line-height: 1.7; }
+.tavern-app-shell .reference-stat-grid .dashboard-stat-card { min-height: 96px; }
+.tavern-app-shell .dashboard-stat-value { font-family: Inter, 'Segoe UI', sans-serif; font-variant-numeric: tabular-nums; }
+.tavern-app-shell .dashboard-stat-value[data-compact='true'] { font-size: 18px; }
+
+.tavern-app-shell :is(.reference-stats-header, .reference-saved-decks-header, .reference-collection-heading) {
+  padding: 4px 0 18px;
+  border: 0;
+  border-bottom: 1px solid var(--ref-line);
+  border-radius: 0;
+  background: transparent;
+}
+.tavern-app-shell :is(.reference-stats-header, .reference-saved-decks-header, .reference-collection-heading)::after { display: none; }
+.tavern-app-shell :is(.reference-stats-header, .reference-saved-decks-header, .reference-collection-heading) h1 {
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.tavern-app-shell .reference-decks { padding: 0; }
+.tavern-app-shell .reference-page-tabs { padding-inline: 24px; }
+.tavern-app-shell .reference-decks [role='tabpanel'] > :is(.reference-saved-decks, .reference-deck-finder) { padding: 20px 24px; }
+.tavern-app-shell .reference-settings-nav { width: 180px; flex-shrink: 0; }
+.tavern-app-shell .reference-settings-nav button { font-weight: 600; }
+.tavern-app-shell .reference-settings .settings-row { padding: 18px; }
+.tavern-app-shell .reference-settings .settings-row p { line-height: 1.65; }
+.tavern-app-shell .reference-settings-panel { min-width: 0; }
+.tavern-app-shell .reference-stats-filter-stack { min-width: 0; gap: 10px; }
+.tavern-app-shell .reference-stats-filter-stack > div { flex-wrap: wrap; justify-content: flex-start; }
+.tavern-app-shell .reference-stats-kpi .text-3xl { font-family: Inter, 'Segoe UI', sans-serif; font-variant-numeric: tabular-nums; }
+.tavern-app-shell .reference-settings .reference-page-heading h1 { font-size: 24px; font-weight: 650; }
+.tavern-app-shell .reference-settings .reference-page-heading h1 strong { font-weight: 650; text-shadow: none; }
+.tavern-app-shell .reference-segment button { font-weight: 600; }
+.tavern-app-shell .reference-segment button.is-active {
+  background: var(--ref-green-soft);
+  color: var(--ref-green-bright);
+  box-shadow: inset 0 0 0 1px var(--ref-green-line);
+}
+
+@media (max-width: 1200px) {
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-topbar { grid-template-columns: 220px minmax(0, 1fr) auto; }
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-player-pill { display: none; }
+  .tavern-app-shell .reference-stats-main-grid { grid-template-columns: minmax(0, 1fr); }
+  .tavern-app-shell .reference-settings .settings-row { flex-wrap: wrap; }
+}
+
+@media (max-width: 980px) {
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-topbar { grid-template-columns: 200px minmax(0, 1fr) auto; gap: 10px; padding-inline: 16px; }
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-status-pill { display: none; }
+  .tavern-app-shell .reference-page { padding: 16px; }
+  .tavern-app-shell .reference-decks { padding: 0; }
+  .tavern-app-shell .reference-dashboard .reference-dashboard-grid { grid-template-columns: minmax(0, 1.5fr) minmax(230px, 1fr); }
+  .tavern-app-shell .reference-settings-layout { gap: 16px; }
+  .tavern-app-shell .reference-collection-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 760px) {
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-brand-plaque { padding: 0; justify-content: center; }
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-topbar { grid-template-columns: 40px minmax(0, 1fr) 40px; }
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-brand-copy { display: none; }
+  :root:is([data-ui-style='reference'], [data-ui-style='macos']) .tavern-main-tabs > .tavern-nav-tab { padding-inline: 8px; }
+  .tavern-app-shell .reference-dashboard .reference-dashboard-grid { grid-template-columns: minmax(0, 1fr); flex: none; }
+  .tavern-app-shell .reference-stat-grid.dashboard-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tavern-app-shell .reference-settings-layout { flex-direction: column; }
+  .tavern-app-shell .reference-settings-nav { width: 100%; flex-direction: row; overflow-x: auto; flex-shrink: 0; }
+  .tavern-app-shell .reference-settings-nav button { white-space: nowrap; flex-shrink: 0; }
+  .tavern-app-shell .reference-deck-finder-body { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tavern-app-shell *, .tavern-app-shell *::before, .tavern-app-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.tavern-brand-emblem { display: flex; flex: 0 0 36px; width: 36px; height: 36px; }
+.tavern-brand-emblem img { width: 100%; height: 100%; object-fit: contain; }
+:root[data-ui-style='macos'] .tavern-brand-plaque { gap: 12px; }

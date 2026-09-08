@@ -265,5 +265,5 @@ function controllerIdFromRef(ref: number | string | null | undefined): number {
 
 function zoneFromRef(ref: string): string | null {
   const match = /zone=([A-Z]+)/i.exec(ref);
-  return match ? match[1].toUpperCase() : null;
+  return match?.[1]?.toUpperCase() ?? null;
 }

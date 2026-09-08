@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import type { BattleTag, MedalInfo } from '@hdt/hearthmirror';
 
 export interface CachedPlayerIdentity {
@@ -16,80 +16,65 @@ export interface HearthMirrorStatus {
   lastUpdatedAt: number;
 }
 
+const empty: HearthMirrorStatus = {
+  isAlive: false, battleTag: null, medalInfo: null, cachedIdentity: null,
+  displayBattleTag: null, lastUpdatedAt: 0,
+};
+let state = empty;
+const listeners = new Set<() => void>();
+let generation = 0;
+let timer: ReturnType<typeof setTimeout> | undefined;
+let inFlight: Promise<void> | null = null;
+
+/** One poll per renderer, regardless of how many panels subscribe. */
+export function refreshHearthMirrorStatus(): Promise<void> {
+  if (inFlight) return inFlight;
+  clearTimeout(timer);
+  const run = generation;
+  const task = (async () => {
+    const api = window.hdt?.hearthmirror;
+    const isAlive = await api?.isAlive().catch(() => false) ?? false;
+    const [battleTag, medalInfo, profile] = await Promise.all([
+      isAlive ? api?.getBattleTag().catch(() => null) : null,
+      isAlive ? api?.getMedalInfo().catch(() => null) : null,
+      window.hdt?.playerProfile?.get?.().catch(() => null),
+    ]);
+    if (run !== generation) return;
+    const cachedIdentity = profile
+      ? { battleTag: profile.battleTag, lastSeenAt: profile.lastSeenAt }
+      : state.cachedIdentity;
+    state = { isAlive, battleTag: battleTag ?? null, medalInfo: medalInfo ?? null,
+      cachedIdentity, displayBattleTag: battleTag ?? cachedIdentity?.battleTag ?? null,
+      lastUpdatedAt: Date.now() };
+    listeners.forEach(listener => listener());
+  })().catch(() => {
+    if (run !== generation) return;
+    state = { ...state, isAlive: false, battleTag: null, medalInfo: null,
+      displayBattleTag: state.cachedIdentity?.battleTag ?? null, lastUpdatedAt: Date.now() };
+    listeners.forEach(listener => listener());
+  }).finally(() => {
+    if (run !== generation) return;
+    inFlight = null;
+    if (listeners.size) timer = setTimeout(() => { void refreshHearthMirrorStatus(); }, 5000);
+  });
+  inFlight = task;
+  return task;
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  if (listeners.size === 1) void refreshHearthMirrorStatus();
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) {
+      generation++;
+      clearTimeout(timer);
+      inFlight = null;
+      state = empty;
+    }
+  };
+}
+
 export function useHearthMirrorStatus(): HearthMirrorStatus {
-  const [isAlive, setIsAlive] = useState(false);
-  const [battleTag, setBattleTag] = useState<BattleTag | null>(null);
-  const [medalInfo, setMedalInfo] = useState<MedalInfo | null>(null);
-  const [cachedIdentity, setCachedIdentity] = useState<CachedPlayerIdentity | null>(null);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function refreshCachedIdentity(): Promise<void> {
-      const profile = await window.hdt?.playerProfile?.get?.().catch(() => null);
-      if (cancelled) return;
-      if (profile !== null && profile !== undefined) {
-        setCachedIdentity({
-          battleTag: profile.battleTag,
-          lastSeenAt: profile.lastSeenAt,
-        });
-      }
-    }
-
-    async function poll(): Promise<void> {
-      // Defensive: `window.hdt` is provided by the preload bridge and
-      // is undefined in unit tests / when the preload script fails to
-      // load. Without this guard the first poll throws synchronously
-      // before the `.catch`, which surfaces as an Unhandled Rejection.
-      const api = window.hdt?.hearthmirror;
-      if (!api) {
-        if (!cancelled) {
-          setIsAlive(false);
-          setBattleTag(null);
-          setMedalInfo(null);
-          setLastUpdatedAt(Date.now());
-        }
-        return;
-      }
-
-      const alive = await api.isAlive().catch(() => false);
-      if (cancelled) return;
-      setIsAlive(alive);
-
-      if (alive) {
-        const tag = await api.getBattleTag().catch(() => null);
-        if (cancelled) return;
-        setBattleTag(tag);
-
-        const medal = await api.getMedalInfo().catch(() => null);
-        if (cancelled) return;
-        setMedalInfo(medal);
-
-        // A successful live read may have just refreshed the cache on
-        // the main side; pull the latest snapshot so the fallback stays
-        // in sync.
-        if (tag !== null) {
-          await refreshCachedIdentity();
-        }
-      } else {
-        setBattleTag(null);
-        setMedalInfo(null);
-      }
-
-      setLastUpdatedAt(Date.now());
-    }
-
-    void refreshCachedIdentity();
-    void poll();
-    const timer = setInterval(() => { void poll(); }, 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, []);
-
-  const displayBattleTag = battleTag ?? cachedIdentity?.battleTag ?? null;
-
-  return { isAlive, battleTag, medalInfo, cachedIdentity, displayBattleTag, lastUpdatedAt };
+  return useSyncExternalStore(subscribe, () => state, () => empty);
 }

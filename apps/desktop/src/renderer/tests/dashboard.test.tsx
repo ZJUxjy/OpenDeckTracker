@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import { createMemoryRouter, RouterProvider } from 'react-router';
+import { createMemoryRouter, RouterProvider, MemoryRouter } from 'react-router';
+import { Profiler } from 'react';
+import { Dashboard } from '../src/components/Dashboard';
 import type { DeckTrackerSnapshot } from '@hdt/core';
 import type { CardDef } from '@hdt/hearthdb';
 import App from '../src/App';
@@ -44,6 +46,24 @@ function makeSnapshot(overrides: Partial<DeckTrackerSnapshot> = {}): DeckTracker
 }
 
 describe('Dashboard rank display', () => {
+  it('does not redraw for unrelated board events but updates hand counts', async () => {
+    const snapshot = makeSnapshot({ updatedAt: 1000 });
+    useDeckTrackerStore.setState({ snapshot });
+    window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(false);
+    const commits = vi.fn();
+    render(<MemoryRouter><Profiler id="dashboard" onRender={commits}><Dashboard /></Profiler></MemoryRouter>);
+    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    commits.mockClear();
+    for (let i = 1; i <= 30; i++) {
+      act(() => useDeckTrackerStore.setState({ snapshot: {
+        ...snapshot, updatedAt: 1000 + i, boardAttack: { friendly: i, opposing: 0 },
+      } }));
+    }
+    expect(commits).not.toHaveBeenCalled();
+    act(() => useDeckTrackerStore.setState({ snapshot: { ...snapshot, opposingHandCount: 5 } }));
+    expect(screen.getByText('Hand: 5')).toBeInTheDocument();
+    expect(commits).toHaveBeenCalledTimes(1);
+  });
   beforeEach(() => {
     vi.useFakeTimers();
     useDeckTrackerStore.setState({
@@ -89,6 +109,10 @@ describe('Dashboard rank display', () => {
   });
 
   it('shows "Star N" when starLevel > 0 and not legend', async () => {
+    useDeckTrackerStore.setState({ snapshot: makeSnapshot({ matchInfo: {
+      gameType: 3, formatType: 2, missionId: 0, localPlayer: null, opposingPlayer: null,
+      rankedSeasonId: 0, arenaSeasonId: 0, brawlSeasonId: 0,
+    } }) });
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
     window.hdt.hearthmirror.getBattleTag = vi
       .fn()
@@ -116,6 +140,10 @@ describe('Dashboard rank display', () => {
   });
 
   it('shows "Legend N" when legendRank > 0', async () => {
+    useDeckTrackerStore.setState({ snapshot: makeSnapshot({ matchInfo: {
+      gameType: 3, formatType: 2, missionId: 0, localPlayer: null, opposingPlayer: null,
+      rankedSeasonId: 0, arenaSeasonId: 0, brawlSeasonId: 0,
+    } }) });
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
     window.hdt.hearthmirror.getBattleTag = vi
       .fn()
@@ -191,6 +219,33 @@ describe('Dashboard rank display', () => {
     expect(screen.getByText('Fireball')).toBeInTheDocument();
   });
 
+  it('keeps all revealed opponent cards available beyond the first six', async () => {
+    useDeckTrackerStore.setState({
+      snapshot: makeSnapshot({
+        opponent: {
+          revealed: Array.from({ length: 8 }, (_, index) => ({
+            entityId: index + 1,
+            cardId: `VISIBLE_CARD_${index}`,
+            zone: 'PLAY' as const,
+            order: index,
+            created: false,
+          })),
+          graveyard: [],
+        },
+      }),
+    });
+    window.hdt.cards.findById = vi.fn().mockImplementation(async (id: string) => ({
+      id, dbfId: 1, name: id, type: 'SPELL', cost: 1,
+    } as CardDef));
+
+    renderRoute();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+
+    expect(screen.getByText('VISIBLE_CARD_7')).toBeInTheDocument();
+  });
+
   it('renders dashboard stats as a semantic status grid', async () => {
     window.hdt.hearthmirror.isAlive = vi.fn().mockResolvedValue(true);
     useDeckTrackerStore.setState({ snapshot: makeSnapshot() });
@@ -204,7 +259,7 @@ describe('Dashboard rank display', () => {
     expect(screen.getAllByTestId('dashboard-stat-card').map((card) => card.dataset.tone)).toEqual([
       'deck',
       'hand',
-      'idle',
+      'live',
       'warning',
     ]);
   });

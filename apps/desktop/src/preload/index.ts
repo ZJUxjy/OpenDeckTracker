@@ -134,6 +134,7 @@ import type {
 } from '@hdt/hearthmirror';
 
 type AppLocale = 'en-US' | 'zh-CN';
+import type { CardDataStatus } from '../main/card-data-store';
 
 type UpdateCheckResult =
   | { state: 'unsupported' }
@@ -142,6 +143,12 @@ type UpdateCheckResult =
   | { state: 'error'; message: string };
 
 const api = {
+  cardData: {
+    getStatus: (): Promise<CardDataStatus> => ipcRenderer.invoke('card-data:status'),
+    check: (): Promise<CardDataStatus> => ipcRenderer.invoke('card-data:check'),
+    install: (): Promise<CardDataStatus> => ipcRenderer.invoke('card-data:install'),
+    rollback: (): Promise<CardDataStatus> => ipcRenderer.invoke('card-data:rollback'),
+  },
   app: {
     getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
   },
@@ -325,6 +332,8 @@ const api = {
     },
   },
   hearthwatcher: {
+    rediscover: (): Promise<boolean> => ipcRenderer.invoke('hearthwatcher:rediscover'),
+    openLogDirectory: (): Promise<boolean> => ipcRenderer.invoke('hearthwatcher:open-log-directory'),
     getStatus: (): Promise<HearthWatcherDiagnostic | null> =>
       ipcRenderer.invoke('hearthwatcher:get-status'),
     onStatus: (cb: (status: HearthWatcherDiagnostic) => void): (() => void) => {

@@ -1,4 +1,9 @@
-﻿import type { ReactNode } from 'react';
+﻿import { memo, type ReactNode } from 'react';
+import { Link } from 'react-router';
+import type { OpponentCardRecord } from '@hdt/core';
+import { useShallow } from 'zustand/react/shallow';
+import { useCardPreview } from '../hooks/use-card-preview';
+import { matchPresentation } from '../lib/match-presentation';
 import {
   Activity,
   Clock,
@@ -15,7 +20,7 @@ import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useDeckTrackerStore } from '../stores/deck-tracker-store';
 import { useHearthWatcherStore } from '../stores/hearthwatcher-store';
 import { useTranslation } from '../i18n';
-import { useCardDef } from '../hooks/use-card-def';
+import { useCardLookup } from '../hooks/use-card-def';
 import type { HearthWatcherStatusKind } from '@hdt/hearthwatcher';
 
 function useRankLabel(
@@ -60,7 +65,13 @@ function formatElapsedDuration(startedAt: number | null | undefined, updatedAt: 
 
 export function Dashboard() {
   const { t } = useTranslation();
-  const snapshot = useDeckTrackerStore((s) => s.snapshot);
+  const snapshot = useDeckTrackerStore(useShallow((s) => ({
+    deck: s.snapshot?.deck, phase: s.snapshot?.phase, matchInfo: s.snapshot?.matchInfo,
+    matchStartedAt: s.snapshot?.matchStartedAt,
+    updatedAt: s.snapshot ? Math.floor(s.snapshot.updatedAt / 1000) * 1000 : undefined,
+    handCount: s.snapshot?.friendlyHand.length ?? 0,
+    opposingHandCount: s.snapshot?.opposingHandCount, opponent: s.snapshot?.opponent,
+  })));
   const { medalInfo, isAlive } = useHearthMirrorStatus();
   const watcherStatus = useHearthWatcherStore((s) => s.status);
   const deck = snapshot?.deck ?? null;
@@ -69,7 +80,9 @@ export function Dashboard() {
   const remainingPercent = totalOriginal > 0 ? Math.round((totalRemaining / totalOriginal) * 100) : 0;
   const phase = snapshot?.phase ?? 'IDLE';
   const phaseLabel = t(`dashboard.phaseKind.${phase}`);
-  const rankLabel = useRankLabel(medalInfo?.standard);
+  const presentation = matchPresentation(snapshot.matchInfo, medalInfo);
+  const modeLabel = t(presentation.modeKey);
+  const rankLabel = useRankLabel(presentation.medal);
 
   const watcherKindLabel = watcherStatus
     ? t(`dashboard.watcherKind.${watcherStatus.kind}`)
@@ -82,7 +95,7 @@ export function Dashboard() {
       <div className="reference-dashboard-grid">
         <section className="reference-panel reference-live-panel" data-testid="arcane-live-tracker-panel">
           <header>
-            <span className="reference-live-dot" aria-hidden="true" />
+            <span className="reference-live-dot" data-live={isAlive && phase === 'IN_MATCH' && watcherStatus?.kind === 'ready'} aria-hidden="true" />
             <b>{t('fallout.dashboard.liveBadge')}</b>
             <span>{t('dashboard.phase', { phase: phaseLabel })}</span>
           </header>
@@ -93,7 +106,7 @@ export function Dashboard() {
                   <span className="reference-active-deck-label">{t('deckTracker.deck')}</span>
                   <h2>{deck.name || t('dashboard.unnamedDeck')}</h2>
                   <p>
-                    {t('dashboard.reference.modeStandard')}
+                    {modeLabel}
                     <span aria-hidden="true"> · </span>
                     {rankLabel}
                   </p>
@@ -112,14 +125,9 @@ export function Dashboard() {
                 <b>{remainingPercent}%</b>
               </div>
               <div className="reference-live-card-list" data-testid="dashboard-remaining-list">
-                {deck.remaining.slice(0, 12).map((card) => (
+                {deck.remaining.map((card) => (
                   <DashboardDeckRow key={card.cardId} card={card} />
                 ))}
-                {deck.remaining.length > 12 ? (
-                  <div className="reference-live-overflow">
-                    +{deck.remaining.length - 12}
-                  </div>
-                ) : null}
               </div>
             </div>
           ) : (
@@ -132,22 +140,17 @@ export function Dashboard() {
                   <p>{t('dashboard.reference.noActivity')}</p>
                 </div>
               </div>
-              <div className="reference-empty-grid">
-                <MiniMeta icon={<FlaskConical size={16} />} label={t('dashboard.reference.mode')} value={t('dashboard.reference.modeStandard')} />
-                <MiniMeta icon={<Target size={16} />} label={t('dashboard.status')} value={phaseLabel} />
-                <MiniMeta icon={<Radio size={16} />} label={t('dashboard.watcher')} value={watcherKindLabel} />
+              <div className="reference-connection-hint" role="status">
+                <Play size={16} aria-hidden="true" />
+                {!isAlive ? t('deckTracker.hearthstoneNotRunning')
+                  : watcherStatus?.kind !== 'ready' ? watcherKindLabel : t('reliability.waitingMatch')}
               </div>
-              {!isAlive ? (
-                <div className="reference-primary-action" role="status">
-                  <Play size={16} />
-                  {t('deckTracker.hearthstoneNotRunning')}
-                </div>
-              ) : null}
+              <Link className="reference-action-button" to="/settings?category=data">{t('reliability.diagnostics')}</Link>
             </div>
           )}
           <footer>
             <span className="sr-only">{t('dashboard.rank', { rank: '' })}</span>
-            <MiniMeta icon={<FlaskConical size={16} />} label={t('dashboard.reference.mode')} value={t('dashboard.reference.modeStandard')} />
+            <MiniMeta icon={<FlaskConical size={16} />} label={t('dashboard.reference.mode')} value={modeLabel} />
             <MiniMeta icon={<Target size={16} />} label={t('dashboard.reference.rank')} value={rankLabel} />
             <MiniMeta
               icon={<Clock size={16} />}
@@ -161,12 +164,12 @@ export function Dashboard() {
           <header>
             <Trophy size={17} aria-hidden="true" />
             <b>{t('opponent.title')}</b>
-            <span>{snapshot?.opposingHandCount ?? 0}</span>
+            <span>{t('reliability.opponentHand', { count: snapshot.opposingHandCount ?? 0 })}</span>
           </header>
-          {snapshot?.opponent.revealed.length ? (
+          {snapshot.opponent?.revealed.length ? (
             <div className="reference-opponent-list">
-              {snapshot.opponent.revealed.slice(0, 6).map((card) => (
-                <OpponentIntelCard key={`${card.entityId}-${card.cardId}`} cardId={card.cardId} />
+              {snapshot.opponent.revealed.map((card) => (
+                <OpponentIntelCard key={`${card.entityId}-${card.cardId}`} card={card} />
               ))}
             </div>
           ) : (
@@ -195,13 +198,13 @@ export function Dashboard() {
           tone="hand"
           label={t('dashboard.hand')}
           icon={<Hand size={20} />}
-          value={snapshot?.friendlyHand.length ?? 0}
+          value={snapshot.handCount}
         />
         <StatCard
-          tone={deck ? 'live' : 'idle'}
+          tone={phase === 'IN_MATCH' ? 'live' : 'idle'}
           label={t('dashboard.status')}
           icon={<Activity size={20} />}
-          value={deck ? t('dashboard.statusLive') : t('dashboard.statusIdle')}
+          value={phaseLabel}
         />
         <StatCard
           tone={getWatcherTone(watcherStatus?.kind)}
@@ -215,26 +218,45 @@ export function Dashboard() {
   );
 }
 
-function OpponentIntelCard({ cardId }: { cardId: string }) {
-  const def = useCardDef(cardId);
+const OpponentIntelCard = memo(function OpponentIntelCard({ card }: { card: OpponentCardRecord }) {
+  const { t } = useTranslation();
+  const { card: def, error, retry } = useCardLookup(card.cardId);
+  const preview = useCardPreview();
   return (
-    <div className="fallout-intel-row rounded border border-border bg-overlay-surface px-3 py-2 text-sm text-text">
-      {def?.name ?? cardId}
-    </div>
+    <button type="button" className="fallout-intel-row reference-intel-card"
+      onMouseEnter={e => preview.onRowEnter(card.cardId, e.currentTarget)} onMouseLeave={preview.onRowLeave}
+      onFocus={e => preview.onRowEnter(card.cardId, e.currentTarget)} onBlur={preview.onRowLeave}
+      onClick={e => error ? retry() : preview.onRowEnter(card.cardId, e.currentTarget)}>
+      <span className="reference-live-cost">{def?.cost ?? '-'}</span>
+      <span className="reference-intel-copy">
+        <span className="reference-live-card-name">{def?.name ?? card.cardId}</span>
+        <small>{t('reliability.order', { count: card.order })} · {t(`reliability.zone.${card.zone}`)}
+          {card.created ? ` · ${t('reliability.created')}` : ''}</small>
+        {error && <small role="status">{t('reliability.retryCard')}</small>}
+      </span>
+    </button>
   );
-}
+}, (a, b) => a.card.cardId === b.card.cardId && a.card.order === b.card.order &&
+  a.card.zone === b.card.zone && a.card.created === b.card.created);
 
-function DashboardDeckRow({ card }: { card: TrackerDeckCard }) {
-  const def = useCardDef(card.cardId);
+const DashboardDeckRow = memo(function DashboardDeckRow({ card }: { card: TrackerDeckCard }) {
+  const { t } = useTranslation();
+  const { card: def, error, retry } = useCardLookup(card.cardId);
+  const preview = useCardPreview();
   const cost = typeof def?.cost === 'number' ? def.cost : '-';
   return (
-    <div className="reference-live-card-row">
+    <button type="button" className="reference-live-card-row"
+      onMouseEnter={e => preview.onRowEnter(card.cardId, e.currentTarget)} onMouseLeave={preview.onRowLeave}
+      onFocus={e => preview.onRowEnter(card.cardId, e.currentTarget)} onBlur={preview.onRowLeave}
+      onClick={e => error ? retry() : preview.onRowEnter(card.cardId, e.currentTarget)}>
       <span className="reference-live-cost">{cost}</span>
-      <span className="reference-live-card-name">{def?.name ?? card.cardId}</span>
+      <span className="reference-live-card-name">{def?.name ?? card.cardId}
+        {error && <small role="status"> · {t('reliability.retryCard')}</small>}
+      </span>
       <span className="reference-live-card-count">x{card.count}</span>
-    </div>
+    </button>
   );
-}
+}, (a, b) => a.card.cardId === b.card.cardId && a.card.count === b.card.count);
 
 function MiniMeta({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (

@@ -12,15 +12,33 @@ app.
 
 Current local dump:
 
-- Hearthstone version: `36.4.0.250339`
-- Build: `250339`
+- Hearthstone version: `36.4.2.251332`
+- Build: `251332`
+- Upstream commit: `dee8a641ef8427cf853ca707c2e427e752a1e11f`
 
-The `hsdata/` directory is ignored by git because it is a local source checkout
-or dump. Update it from your local hsdata source, then regenerate runtime JSON:
+`source.json` pins the upstream commit, client version, build and XML SHA-256.
+CI caches the generated data by this manifest and converter sources, so a new
+release cannot silently reuse an old cache. Reproduce the pinned release with:
 
 ```powershell
-pnpm cards:convert
+pnpm cards:sync
 ```
+
+To select the latest upstream release, run `pnpm cards:update`, review and commit
+the changed `source.json`. Both commands validate the XML hash (when pinned),
+build, unique card IDs and nonempty collectible/full datasets before switching
+the generated directory. The previous directory is preserved as `.previous-*`.
+Failed downloads or validation leave the existing generated data untouched.
+
+The ignored `hsdata/` directory remains usable for offline/manual conversion
+with `pnpm cards:convert`; it does not change the pinned release manifest.
+
+## Desktop updates
+
+Settings → Data & Sync → Card database shows the active version and lets users
+check, download, or restore the previous version. Downloads live in the app's
+user-data directory; the bundled data is preserved. A validated version becomes
+active only after restart, so open matches keep one consistent database.
 
 ## Generated files
 
@@ -40,7 +58,7 @@ tracker flows can resolve non-collectible cards such as tokens and hero powers.
 
 `pnpm cards:download` still downloads collectible-only data from
 [HearthstoneJSON](https://hearthstonejson.com/). It is kept as a fallback
-utility, but local development and CI use `pnpm cards:convert`.
+utility, but reproducible local development and CI use `pnpm cards:sync`.
 
 ## License attribution
 

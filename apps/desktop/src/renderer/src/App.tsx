@@ -150,6 +150,8 @@ export default function App() {
                   key={item.id}
                   type="button"
                   aria-label={t(item.labelKey)}
+                  aria-current={active ? 'page' : undefined}
+                  title={t(item.labelKey)}
                   data-active={active ? 'true' : 'false'}
                   className="tavern-nav-tab flex min-w-0 items-center justify-center gap-2"
                   onClick={() => {
@@ -177,7 +179,6 @@ export default function App() {
                   ? (battleTag ? t('app.status.gameRunning') : t('app.status.notLoggedIn'))
                   : t('app.status.gameNotRunning')}
               </span>
-              <span className="reference-status-chevron" aria-hidden="true" />
             </span>
             <div
               data-testid="player-identity"
@@ -193,6 +194,8 @@ export default function App() {
             <button
               type="button"
               aria-label={t('sidebar.settings')}
+              aria-current={isActive('settings') ? 'page' : undefined}
+              title={t('sidebar.settings')}
               data-active={isActive('settings') ? 'true' : 'false'}
               className="tavern-settings-button flex h-10 w-10 items-center justify-center"
               onClick={() => {

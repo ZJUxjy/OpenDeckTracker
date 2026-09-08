@@ -982,5 +982,64 @@
       "empty": "Recording is empty.",
       "close": "Close"
     }
+  },
+  "reliability": {
+    "mode": {
+      "unknown": "Unknown mode",
+      "standard": "Standard",
+      "wild": "Wild",
+      "classic": "Classic",
+      "twist": "Twist",
+      "adventure": "Adventure"
+    },
+    "waitingMatch": "Connected. Waiting for match data.",
+    "diagnostics": "Connection diagnostics",
+    "opponentHand": "Hand: {count}",
+    "order": "Reveal #{count}",
+    "created": "Generated",
+    "retryCard": "Lookup failed · click to retry",
+    "zone": {
+      "INVALID": "Unknown zone",
+      "PLAY": "In play",
+      "DECK": "In deck",
+      "HAND": "In hand",
+      "GRAVEYARD": "Graveyard",
+      "REMOVEDFROMGAME": "Removed",
+      "SETASIDE": "Set aside",
+      "SECRET": "Secret"
+    },
+    "cards": {
+      "title": "Card database",
+      "description": "Download a verified card release. Changes take effect after restarting the tracker.",
+      "active": "Active version",
+      "pending": "After restart",
+      "updatedAt": "Data generated",
+      "counts": "Card definitions",
+      "unknown": "Unavailable",
+      "check": "Check card updates",
+      "install": "Download update",
+      "rollback": "Restore previous version",
+      "checkBusy": "Checking the upstream version…",
+      "installBusy": "Downloading and validating card data…",
+      "rollbackBusy": "Restoring the previous version…",
+      "restartNote": "A version change is ready. Restart the tracker after your match to apply it.",
+      "available": "Available: {version}",
+      "upToDate": "The selected version is up to date.",
+      "desktopOnly": "Card updates are available in the desktop app.",
+      "error": "The operation failed. Your active card data is unchanged. Check your connection and retry."
+    },
+    "connection": {
+      "game": "Hearthstone process",
+      "player": "Live player",
+      "connected": "Connected",
+      "offline": "Not running",
+      "noPlayer": "Not read yet",
+      "checked": "Last checked",
+      "searchedPaths": "Searched log paths",
+      "refresh": "Check again / reconnect",
+      "refreshing": "Checking…",
+      "open": "Open game log folder",
+      "error": "Could not complete the action. Check that the desktop app and game are running, then retry."
+    }
   }
 }

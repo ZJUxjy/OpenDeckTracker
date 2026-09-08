@@ -6,7 +6,7 @@ import {
   type DeckBlueprint,
   type SearchFilter,
 } from '@hdt/hearthdb';
-import { ensureCardDb } from './cards';
+import { ensureCardDb, getCardDataStore } from './cards';
 import {
   CARD_IMAGE_PRIMARY_LOCALE,
   CARD_IMAGE_PROTOCOL,
@@ -293,7 +293,7 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       return db.findByDbfId(dbfId) ?? null;
     } catch (e) {
       console.error('[ipc cards:findByDbfId]', (e as Error).message);
-      return null;
+      throw e;
     }
   });
 
@@ -303,7 +303,7 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       return db.findById(id) ?? null;
     } catch (e) {
       console.error('[ipc cards:findById]', (e as Error).message);
-      return null;
+      throw e;
     }
   });
 
@@ -313,9 +313,14 @@ export function registerIpc(overlay?: OverlayControllers): DeckStore {
       return db.search(filter);
     } catch (e) {
       console.error('[ipc cards:search]', (e as Error).message);
-      return [];
+      throw e;
     }
   });
+
+  ipcMain.handle('card-data:status', () => getCardDataStore().getStatus());
+  ipcMain.handle('card-data:check', () => getCardDataStore().check());
+  ipcMain.handle('card-data:install', () => getCardDataStore().install());
+  ipcMain.handle('card-data:rollback', () => getCardDataStore().rollback());
 
   ipcMain.handle('card-images:get', async (_, cardId: string, appLocale?: string) => {
     try {

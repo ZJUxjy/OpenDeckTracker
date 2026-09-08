@@ -1,8 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useHearthMirrorStatus } from '../src/hooks/use-hearthmirror-status';
+import { useHearthMirrorStatus, refreshHearthMirrorStatus } from '../src/hooks/use-hearthmirror-status';
 
 describe('useHearthMirrorStatus', () => {
+  it('coalesces two subscribers and manual refresh, without overlapping a slow IPC call', async () => {
+    let finish!: (alive: boolean) => void;
+    const spy = vi.fn().mockImplementation(() => new Promise<boolean>(resolve => { finish = resolve; }));
+    window.hdt.hearthmirror.isAlive = spy;
+    const first = renderHook(() => useHearthMirrorStatus());
+    const second = renderHook(() => useHearthMirrorStatus());
+    void refreshHearthMirrorStatus();
+    await act(async () => { await vi.advanceTimersByTimeAsync(15000); });
+    expect(spy).toHaveBeenCalledTimes(1);
+    await act(async () => { finish(false); await Promise.resolve(); });
+    first.unmount();
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+    expect(spy).toHaveBeenCalledTimes(2);
+    second.unmount();
+    await act(async () => { finish(true); await vi.advanceTimersByTimeAsync(15000); });
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
   beforeEach(() => {
     vi.useFakeTimers();
   });

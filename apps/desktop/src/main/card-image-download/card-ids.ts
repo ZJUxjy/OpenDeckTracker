@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app } from 'electron';
+import { getCardDataStore } from '../cards';
 
 export async function loadCollectibleCardIds(locale = 'zhCN'): Promise<string[]> {
   const relativeJsonPath = `data/cards/generated/cards.collectible.${locale}.json`;
@@ -11,6 +12,8 @@ export async function loadCollectibleCardIds(locale = 'zhCN'): Promise<string[]>
   const resourcesPath = typeof process.resourcesPath === 'string' ? process.resourcesPath : null;
 
   const candidates = [
+    ...(typeof app?.getPath === 'function'
+      ? [resolve(getCardDataStore().activeDirectory, `cards.collectible.${locale}.json`)] : []),
     ...(resourcesPath ? [resolve(resourcesPath, relativeJsonPath)] : []),
     resolve(here, '../../../../..', relativeJsonPath),
     resolve(process.cwd(), relativeJsonPath),

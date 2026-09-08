@@ -982,5 +982,64 @@
       "empty": "录像为空。",
       "close": "关闭"
     }
+  },
+  "reliability": {
+    "mode": {
+      "unknown": "模式未知",
+      "standard": "标准",
+      "wild": "狂野",
+      "classic": "经典",
+      "twist": "幻变",
+      "adventure": "冒险"
+    },
+    "waitingMatch": "已连接，等待对局数据。",
+    "diagnostics": "连接诊断",
+    "opponentHand": "手牌：{count}",
+    "order": "第 {count} 张揭示",
+    "created": "生成牌",
+    "retryCard": "查询失败 · 点击重试",
+    "zone": {
+      "INVALID": "区域未知",
+      "PLAY": "场上",
+      "DECK": "牌库",
+      "HAND": "手牌",
+      "GRAVEYARD": "墓地",
+      "REMOVEDFROMGAME": "已移除",
+      "SETASIDE": "暂存",
+      "SECRET": "奥秘"
+    },
+    "cards": {
+      "title": "卡牌数据库",
+      "description": "下载并校验指定版本的卡牌数据，重启记牌器后生效。",
+      "active": "当前版本",
+      "pending": "重启后使用",
+      "updatedAt": "数据生成时间",
+      "counts": "卡牌定义数",
+      "unknown": "暂不可用",
+      "check": "检查卡牌更新",
+      "install": "下载更新",
+      "rollback": "恢复上一版",
+      "checkBusy": "正在检查上游版本…",
+      "installBusy": "正在下载并校验卡牌数据…",
+      "rollbackBusy": "正在恢复上一版…",
+      "restartNote": "版本切换已准备好，请在对局结束后重启记牌器以生效。",
+      "available": "可更新至：{version}",
+      "upToDate": "已选版本为最新版本。",
+      "desktopOnly": "请在桌面应用中更新卡牌数据。",
+      "error": "操作失败，当前卡牌数据未改变。请检查网络后重试。"
+    },
+    "connection": {
+      "game": "炉石进程",
+      "player": "实时玩家",
+      "connected": "已连接",
+      "offline": "未运行",
+      "noPlayer": "尚未读取",
+      "checked": "最近检查",
+      "searchedPaths": "已搜索的日志路径",
+      "refresh": "重新检查 / 连接",
+      "refreshing": "正在检查…",
+      "open": "打开游戏日志目录",
+      "error": "暂时无法完成操作，请确认桌面应用和游戏已运行后重试。"
+    }
   }
 }
