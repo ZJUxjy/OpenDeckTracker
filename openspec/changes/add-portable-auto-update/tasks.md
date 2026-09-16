@@ -18,4 +18,4 @@
 ## 4. Validation
 
 - [x] 4.1 Run `pnpm lint`, `pnpm typecheck`, `pnpm test`; all pass apart from existing warnings/skipped test.
-- [ ] 4.2 Build isolated Windows artifacts, run `pnpm release:verify`, installed updater smoke and `powershell -NoProfile -File scripts/smoke-portable-update.ps1`; verify successful replacement/relaunch and failed replacement recovery. Record commands/results in `docs/RELEASING.md` and this file.
+- [x] 4.2 Build isolated Windows artifacts, run `pnpm release:verify`, installed updater smoke and `powershell -NoProfile -File scripts/smoke-portable-update.ps1`; verify successful replacement/relaunch and failed replacement recovery. Record commands/results in `docs/RELEASING.md` and this file.
