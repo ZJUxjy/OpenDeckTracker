@@ -4,6 +4,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+[Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 function Assert-NoLink([string]$path) {

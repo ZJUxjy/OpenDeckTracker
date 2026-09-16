@@ -10,7 +10,9 @@ const version = JSON.parse(
   fs.readFileSync(path.join(root, 'apps/desktop/package.json'), 'utf8'),
 ).version;
 const scratch = path.join(root, 'tmp');
-const output = path.join(root, 'apps/desktop/release');
+const portable = process.env.HDT_SMOKE_PORTABLE === '1';
+const prefix = portable ? 'portable-update-smoke' : 'update-smoke';
+const output = path.resolve(process.env.HDT_RELEASE_DIR ?? path.join(root, 'apps/desktop/release'));
 const resources = path.join(output, 'win-unpacked/resources');
 const archive = path.join(resources, 'app.asar');
 const sandbox = path.join(scratch, `update-smoke-profile-${Date.now()}`);
@@ -20,7 +22,8 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'hdt-card-image', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ]);
 protocol.registerSchemesAsPrivileged = () => {};
-fs.writeFileSync(path.join(sandbox, 'Uninstall OpenDeckTracker.exe'), 'test marker only');
+if (!portable) fs.writeFileSync(path.join(sandbox, 'Uninstall OpenDeckTracker.exe'), 'test marker only');
+else fs.writeFileSync(path.join(sandbox, 'OpenDeckTracker.exe'), 'test placeholder');
 app.setPath('userData', sandbox);
 app.setPath('sessionData', path.join(sandbox, 'session'));
 app.setName('OpenDeckTracker Update Smoke');
@@ -43,6 +46,7 @@ const server = http.createServer((request, response) => {
       'latest.yml',
       `OpenDeckTracker-Setup-${version}.exe`,
       `OpenDeckTracker-Setup-${version}.exe.blockmap`,
+      `OpenDeckTracker-${version}-win.zip`,
     ].includes(name)
   ) {
     response.writeHead(404);
@@ -50,7 +54,7 @@ const server = http.createServer((request, response) => {
     return;
   }
   response.setHeader('Content-Length', fs.statSync(file).size);
-  if (name.endsWith('.exe') && corruptFirstInstaller) {
+  if (name.endsWith(portable ? '.zip' : '.exe') && corruptFirstInstaller) {
     corruptFirstInstaller = false;
     let first = true;
     fs.createReadStream(file)
@@ -76,7 +80,7 @@ function finish(error) {
     console.error(error);
   }
   fs.writeFileSync(
-    path.join(scratch, 'update-smoke-result.json'),
+    path.join(scratch, `${prefix}-result.json`),
     JSON.stringify(results, null, 2),
   );
   server.close();
@@ -92,12 +96,24 @@ async function until(work, predicate) {
 }
 server.listen(0, '127.0.0.1', async () => {
   try {
-    const updater = require(path.join(archive, 'node_modules/electron-updater')).autoUpdater;
-    updater.setFeedURL({ provider: 'generic', url: `http://127.0.0.1:${server.address().port}` });
-    updater.disableDifferentialDownload = true;
-    updater.quitAndInstall = (silent, restart) => {
+    const library = require(path.join(archive, 'node_modules/electron-updater'));
+    let updater;
+    const interceptInstall = (silent, restart) => {
       results.installRequest = { silent, restart };
     };
+    const configure = (instance) => {
+      updater = instance;
+      updater.setFeedURL({ provider: 'generic', url: `http://127.0.0.1:${server.address().port}` });
+      updater.disableDifferentialDownload = true;
+      updater.quitAndInstall = interceptInstall;
+    };
+    if (portable) {
+      const check = library.AppUpdater.prototype.checkForUpdates;
+      library.AppUpdater.prototype.checkForUpdates = function (...args) {
+        configure(this);
+        return check.apply(this, args);
+      };
+    } else configure(library.autoUpdater);
     await import(pathToFileURL(path.join(archive, 'out/main/index.js')).href);
     const window = await until(
       async () =>
@@ -124,7 +140,7 @@ server.listen(0, '127.0.0.1', async () => {
     await window.webContents
       .capturePage()
       .then((png) =>
-        fs.writeFileSync(path.join(scratch, 'update-smoke-available.png'), png.toPNG()),
+        fs.writeFileSync(path.join(scratch, `${prefix}-available.png`), png.toPNG()),
       );
     results.rejectedCorruptDownload = await evaluate('window.hdt.updates.download()');
     assert.equal(results.rejectedCorruptDownload.state, 'error');
@@ -146,7 +162,7 @@ server.listen(0, '127.0.0.1', async () => {
     await window.webContents
       .capturePage()
       .then((png) =>
-        fs.writeFileSync(path.join(scratch, 'update-smoke-downloaded.png'), png.toPNG()),
+        fs.writeFileSync(path.join(scratch, `${prefix}-downloaded.png`), png.toPNG()),
       );
     results.installing = await evaluate('window.hdt.updates.install()');
     assert.deepEqual(results.installRequest, { silent: true, restart: true });

@@ -35,9 +35,9 @@
 >
 > ⚠️ Windows SmartScreen 会因为本测试版尚未代码签名而提示"未知发布者"。点 **详细信息 → 仍要运行** 即可继续。详细说明见 release notes。
 
-Windows installations from v0.7.0 onward support in-app updates under **Settings → About**. Older releases need one manual upgrade to v0.7.0; portable ZIP builds update manually.
+Windows installations from v0.7.0 onward support in-app updates under **Settings → About**. This source also supports Windows portable ZIP updates: download, confirm restart, then replace files automatically. Existing v0.7.0 ZIP users need one manual upgrade to a release containing this feature. Development builds do not update themselves.
 
-从 v0.7.0 起，Windows 安装版支持在 **设置 → 关于** 中更新。旧版需手动安装 v0.7.0 一次，ZIP 便携版仍需手动更新。维护者见 [发版指南](docs/RELEASING.md)。
+从 v0.7.0 起，Windows 安装版支持在 **设置 → 关于** 中更新。当前源码也支持 ZIP 便携版：点击下载、确认重启后自动替换文件。已有 v0.7.0 ZIP 用户需先手动升级一次到包含此功能的新版本；开发版不支持自动更新。维护者见 [发版指南](docs/RELEASING.md)。
 
 ## ✨ Features / 主要功能
 

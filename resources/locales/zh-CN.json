@@ -482,7 +482,7 @@
       "upToDate": "已是最新版本。",
       "updateAvailable": "发现新版本 {version}。",
       "updateError": "更新失败：{message}",
-      "updateUnsupported": "自动更新需要 Windows 安装版，开发版和 ZIP 便携版暂不支持。",
+      "updateUnsupported": "自动更新支持 Windows 安装版和 ZIP 便携版，开发版暂不支持。",
       "viewLicense": "查看许可协议",
       "viewThirdPartyNotices": "第三方组件声明",
       "openFailed": "无法打开文件，可能不存在或无访问权限。",

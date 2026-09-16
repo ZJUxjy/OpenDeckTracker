@@ -18,7 +18,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "prepare:native-runtime": "node scripts/prepare-native-runtime.mjs",
-    "package": "electron-vite build && pnpm run rebuild:native && pnpm run prepare:native-runtime && electron-builder --config electron-builder.yml --win --publish never"
+    "package": "electron-vite build && pnpm run rebuild:native && pnpm run prepare:native-runtime && electron-builder --config electron-builder.yml --win --publish never && node ../../scripts/add-portable-update-metadata.mjs"
   },
   "dependencies": {
     "@earendil-works/pi-agent-core": "0.80.3",

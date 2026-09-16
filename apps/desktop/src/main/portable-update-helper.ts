@@ -84,7 +84,8 @@ function runHelper(plan: string, mode: 'Prepare' | 'Apply'): Promise<void> {
       clearTimeout(timer);
       reject(error);
     });
-    child.on('exit', (code) => {
+    // Wait for drained stdout/stderr; exit can precede the final PREPARED marker.
+    child.on('close', (code) => {
       clearTimeout(timer);
       if (ready) return;
       if (mode === 'Prepare' && code === 0 && stdout.includes('PREPARED')) resolve();

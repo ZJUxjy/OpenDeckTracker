@@ -16,7 +16,7 @@ const version = desktop.version;
 assert.equal(workspace.version, version, 'Workspace and desktop versions differ');
 if (process.env.GITHUB_REF_TYPE === 'tag')
   assert.equal(process.env.GITHUB_REF_NAME, `v${version}`, 'Tag does not match app version');
-const output = resolve(root, 'apps/desktop/release');
+const output = resolve(process.env.HDT_RELEASE_DIR ?? resolve(root, 'apps/desktop/release'));
 const manifest = load(await readFile(resolve(output, 'latest.yml'), 'utf8'));
 assert.equal(manifest.version, version, 'Update manifest has a stale version');
 const installer = `OpenDeckTracker-Setup-${version}.exe`;
@@ -25,6 +25,19 @@ assert.ok(Array.isArray(manifest.files) && manifest.files.length > 0, 'Missing m
 assert.ok(
   manifest.files.some((file) => file.url === installer),
   'Installer missing from manifest',
+);
+assert.ok(
+  manifest.files.some((file) => file.url === `OpenDeckTracker-${version}-win.zip`),
+  'Portable ZIP missing from manifest',
+);
+assert.ok(
+  (await stat(resolve(output, 'win-unpacked/resources/portable-update.ps1'))).size > 0,
+  'Portable update helper missing',
+);
+assert.deepEqual(
+  await readFile(resolve(output, 'win-unpacked/resources/portable-update.ps1')),
+  await readFile(resolve(root, 'apps/desktop/build/portable-update.ps1')),
+  'Packaged portable helper is stale',
 );
 for (const file of manifest.files) {
   assert.equal(basename(file.url), file.url, 'Release asset must be a plain file name');

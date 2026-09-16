@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
+import { readFile, stat, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const desktopRequire = createRequire(resolve(root, 'apps/desktop/package.json'));
+const { load, dump } = createRequire(desktopRequire.resolve('electron-updater'))('js-yaml');
+const { version } = JSON.parse(await readFile(resolve(root, 'apps/desktop/package.json'), 'utf8'));
+const output = resolve(process.env.HDT_RELEASE_DIR ?? resolve(root, 'apps/desktop/release'));
+const manifestPath = resolve(output, 'latest.yml');
+const manifest = load(await readFile(manifestPath, 'utf8'));
+assert.equal(manifest.version, version, 'Cannot append ZIP metadata to a different version');
+const name = `OpenDeckTracker-${version}-win.zip`;
+const archive = resolve(output, name);
+const hash = createHash('sha512');
+for await (const chunk of createReadStream(archive)) hash.update(chunk);
+manifest.files = manifest.files.filter((file) => !file.url.toLowerCase().endsWith('.zip'));
+manifest.files.push({ url: name, sha512: hash.digest('base64'), size: (await stat(archive)).size });
+await writeFile(manifestPath, dump(manifest), 'utf8');
+console.log(`Added verified portable ZIP to latest.yml: ${name}`);

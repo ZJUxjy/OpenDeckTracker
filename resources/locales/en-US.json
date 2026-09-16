@@ -482,7 +482,7 @@
       "upToDate": "You're on the latest version.",
       "updateAvailable": "Update available: {version}.",
       "updateError": "Update failed: {message}",
-      "updateUnsupported": "Auto-update requires the Windows installed version. Development and ZIP builds are not supported.",
+      "updateUnsupported": "Auto-update supports Windows installed and portable versions. Development builds are not supported.",
       "viewLicense": "View License",
       "viewThirdPartyNotices": "Third-Party Notices",
       "openFailed": "Failed to open the file. It may be missing or inaccessible.",

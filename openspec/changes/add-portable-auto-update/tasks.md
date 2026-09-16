@@ -12,7 +12,7 @@
 
 ## 3. Distribution
 
-- [ ] 3.1 Add `scripts/add-portable-update-metadata.mjs`, update `apps/desktop/package.json`, `apps/desktop/electron-builder.yml`, `scripts/verify-release.mjs` and `.github/workflows/release.yml`; `pnpm release:verify` checks ZIP SHA-512 and bundled helper.
+- [x] 3.1 Add `scripts/add-portable-update-metadata.mjs`, update `apps/desktop/package.json`, `apps/desktop/electron-builder.yml`, `scripts/verify-release.mjs` and `.github/workflows/release.yml`; `pnpm release:verify` checks ZIP SHA-512 and bundled helper.
 - [x] 3.2 Update `resources/locales/en-US.json`, `resources/locales/zh-CN.json`, `README.md`, `docs/RELEASING.md` and affected About tests; `rg '便携版|portable' README.md docs/RELEASING.md` shows supported Windows ZIP and first-upgrade instructions. Commit: `build: publish portable update metadata`.
 
 ## 4. Validation

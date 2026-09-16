@@ -26,7 +26,8 @@
     "cards:images": "tsx scripts/download-card-images.ts",
     "notices": "node scripts/generate-third-party-notices.mjs",
     "release:verify": "node scripts/verify-release.mjs",
-    "release:smoke": "node scripts/run-update-smoke.mjs"
+    "release:smoke": "node scripts/run-update-smoke.mjs",
+    "release:smoke:portable": "node scripts/run-update-smoke.mjs --portable && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke-portable-update.ps1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

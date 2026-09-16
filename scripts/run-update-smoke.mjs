@@ -8,10 +8,13 @@ import { promisify } from 'node:util';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(resolve(root, 'apps/desktop/package.json'));
 const environment = { ...process.env };
+const portable = process.argv.includes('--portable');
+if (portable) environment.HDT_SMOKE_PORTABLE = '1';
+const prefix = portable ? 'portable-update-smoke' : 'update-smoke';
 delete environment.ELECTRON_RUN_AS_NODE;
 const scratch = resolve(root, 'tmp');
 await mkdir(scratch, { recursive: true });
-await rm(resolve(scratch, 'update-smoke-result.json'), { force: true });
+await rm(resolve(scratch, `${prefix}-result.json`), { force: true });
 try {
   const { stdout, stderr } = await promisify(execFile)(
     require('electron'),
@@ -24,13 +27,13 @@ try {
       maxBuffer: 10 * 1024 * 1024,
     },
   );
-  await writeFile(resolve(scratch, 'update-smoke.out.log'), stdout);
-  await writeFile(resolve(scratch, 'update-smoke.err.log'), stderr);
-  const result = JSON.parse(await readFile(resolve(scratch, 'update-smoke-result.json'), 'utf8'));
+  await writeFile(resolve(scratch, `${prefix}.out.log`), stdout);
+  await writeFile(resolve(scratch, `${prefix}.err.log`), stderr);
+  const result = JSON.parse(await readFile(resolve(scratch, `${prefix}-result.json`), 'utf8'));
   if (!result.passed || result.installerExecuted)
     throw new Error('Packaged update smoke test failed');
   console.log(
-    `Packaged v${result.detected.version}: update detected; corrupt installer rejected; retry downloaded and verified; explicit install call confirmed. Installer execution was intercepted.`,
+    `Packaged v${result.detected.version} (${portable ? 'portable ZIP' : 'NSIS'}): update detected; corrupt download rejected; retry downloaded and verified; explicit install call confirmed. Installation was intercepted.`,
   );
 } catch (error) {
   console.error(error);

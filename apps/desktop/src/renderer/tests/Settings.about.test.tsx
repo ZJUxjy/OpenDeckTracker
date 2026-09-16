@@ -68,7 +68,7 @@ describe('Settings — About category', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Auto-update requires the Windows installed version. Development and ZIP builds are not supported.'),
+        screen.getByText('Auto-update supports Windows installed and portable versions. Development builds are not supported.'),
       ).toBeInTheDocument();
     });
   });
