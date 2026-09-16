@@ -43,6 +43,7 @@ interface MatchHistoryRow {
   player_class: string | null;
   saved_deck_id: string | null;
   saved_deck_version: number | null;
+  turn_count: number | null;
   source: MatchHistoryRecord['source'];
 }
 
@@ -70,6 +71,7 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
       player_class,
       saved_deck_id,
       saved_deck_version,
+      turn_count,
       source
     ) VALUES (
       @fingerprint,
@@ -89,6 +91,7 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
       @playerClass,
       @savedDeckId,
       @savedDeckVersion,
+      @turnCount,
       @source
     )
   `);
@@ -108,6 +111,7 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
       player_class = @playerClass,
       saved_deck_id = @savedDeckId,
       saved_deck_version = @savedDeckVersion,
+      turn_count = @turnCount,
       mission_id = @missionId,
       match_mode = @matchMode
     WHERE fingerprint = @fingerprint
@@ -135,6 +139,7 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
         playerClass: match.playerClass ?? null,
         savedDeckId: match.savedDeckId ?? null,
         savedDeckVersion: match.savedDeckVersion ?? null,
+        turnCount: match.turnCount ?? null,
         source: match.source,
       };
 
@@ -157,6 +162,7 @@ export function createMatchHistoryStore(dbPath: string): MatchHistoryStore {
         playerClass: pickNonNull(existing.player_class, incoming.playerClass),
         savedDeckId: pickNonNull(existing.saved_deck_id, incoming.savedDeckId),
         savedDeckVersion: pickNonNull(existing.saved_deck_version, incoming.savedDeckVersion),
+        turnCount: pickNonNull(existing.turn_count, incoming.turnCount),
         missionId: pickNonNull(existing.mission_id, incoming.missionId),
         matchMode: existing.match_mode ?? incoming.matchMode,
       };
@@ -218,6 +224,9 @@ function initializeSchema(db: Database.Database): void {
   if (!existingCols.includes('saved_deck_version')) {
     db.exec('ALTER TABLE match_history ADD COLUMN saved_deck_version INTEGER');
   }
+  if (!existingCols.includes('turn_count')) {
+    db.exec('ALTER TABLE match_history ADD COLUMN turn_count INTEGER');
+  }
   if (!existingCols.includes('mission_id')) {
     db.exec('ALTER TABLE match_history ADD COLUMN mission_id INTEGER');
   }
@@ -255,6 +264,7 @@ function rowToRecord(row: MatchHistoryRow): MatchHistoryRecord | null {
     });
   if (matchMode === null) return null;
   const record: MatchHistoryRecord = {
+    ...(row.turn_count != null ? { turnCount: row.turn_count } : {}),
     id: row.id,
     fingerprint: row.fingerprint,
     startedAt: row.started_at,

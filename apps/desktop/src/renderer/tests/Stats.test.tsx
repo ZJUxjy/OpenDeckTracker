@@ -53,6 +53,7 @@ function mockStatsApi(args: {
   (window as unknown as { hdt: typeof window.hdt }).hdt = {
     ...window.hdt,
     stats: {
+      deckVersionMatches: vi.fn(async () => []),
       getSummary: args.getSummary ?? vi.fn(async () => args.summary),
       listRecent: args.listRecent ?? vi.fn(async () => args.recent),
       getSavedDeckMatchups:

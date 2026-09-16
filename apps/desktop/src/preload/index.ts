@@ -71,9 +71,13 @@ import type {
   DeckLadderWinrateStats,
   DeckDetail,
   DeckSummary,
+  DeckVersion,
+  MulliganFilter,
+  MulliganStats,
   FormatFilter,
   GameProgressNarrationFrame,
   MatchRecordingDetail,
+  RecordingAnnotation,
   MatchRecordingSummary,
   MatchHistoryRecord,
   MatchModeFilter,
@@ -136,13 +140,21 @@ import type {
 type AppLocale = 'en-US' | 'zh-CN';
 import type { CardDataStatus } from '../main/card-data-store';
 
-type UpdateCheckResult =
-  | { state: 'unsupported' }
-  | { state: 'up-to-date' }
-  | { state: 'update-available'; version: string }
-  | { state: 'error'; message: string };
+import { APP_UPDATE_STATUS_CHANNEL, type AppUpdateStatus } from '../shared/app-update';
 
 const api = {
+  updates: {
+    getStatus: (): Promise<AppUpdateStatus> => ipcRenderer.invoke('app-update:get-status'),
+    check: (): Promise<AppUpdateStatus> => ipcRenderer.invoke('app-update:check'),
+    download: (): Promise<AppUpdateStatus> => ipcRenderer.invoke('app-update:download'),
+    install: (): Promise<AppUpdateStatus> => ipcRenderer.invoke('app-update:install'),
+    openReleases: (): Promise<void> => ipcRenderer.invoke('app-update:open-releases'),
+    onStatus: (cb: (status: AppUpdateStatus) => void): (() => void) => {
+      const handler = (_event: IpcRendererEvent, status: AppUpdateStatus) => cb(status);
+      ipcRenderer.on(APP_UPDATE_STATUS_CHANNEL, handler);
+      return () => ipcRenderer.removeListener(APP_UPDATE_STATUS_CHANNEL, handler);
+    },
+  },
   cardData: {
     getStatus: (): Promise<CardDataStatus> => ipcRenderer.invoke('card-data:status'),
     check: (): Promise<CardDataStatus> => ipcRenderer.invoke('card-data:check'),
@@ -153,7 +165,7 @@ const api = {
     getVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
   },
   about: {
-    checkForUpdates: (): Promise<UpdateCheckResult> =>
+    checkForUpdates: (): Promise<AppUpdateStatus> =>
       ipcRenderer.invoke('about:check-for-updates'),
     openLicense: (): Promise<boolean> => ipcRenderer.invoke('about:open-license'),
     openThirdPartyNotices: (): Promise<boolean> =>
@@ -204,6 +216,7 @@ const api = {
       ipcRenderer.invoke('deck:decode', deckstring),
   },
   stats: {
+    deckVersionMatches: (savedDeckId: string): Promise<MatchHistoryRecord[]> => ipcRenderer.invoke('stats:deck-version-matches', savedDeckId),
     getSummary: (
       filter: StatsTimeFilter,
       options?: Omit<StatsQueryOptions, 'filter' | 'now' | 'recentLimit'>,
@@ -227,6 +240,9 @@ const api = {
       ipcRenderer.invoke('stats:get-deck-ladder-winrate', query),
   },
   recordings: {
+    saveAnnotation: (recordingId: string, annotation: RecordingAnnotation): Promise<RecordingAnnotation[]> =>
+      ipcRenderer.invoke('recordings:save-annotation', recordingId, annotation),
+    mulliganStats: (filter: MulliganFilter): Promise<MulliganStats> => ipcRenderer.invoke('recordings:mulligan-stats', filter),
     list: (): Promise<MatchRecordingSummary[]> => ipcRenderer.invoke('recordings:list'),
     get: (recordingId: string): Promise<MatchRecordingDetail | null> =>
       ipcRenderer.invoke('recordings:get', recordingId),
@@ -241,6 +257,7 @@ const api = {
     },
   },
   decks: {
+    listVersions: (id: string): Promise<DeckVersion[]> => ipcRenderer.invoke('decks:list-versions', id),
     list: (): Promise<DeckSummary[]> => ipcRenderer.invoke('decks:list'),
     getById: (id: string): Promise<DeckDetail | null> => ipcRenderer.invoke('decks:get-by-id', id),
     create: (input: CreateDeckInput): Promise<DeckDetail> => ipcRenderer.invoke('decks:create', input),

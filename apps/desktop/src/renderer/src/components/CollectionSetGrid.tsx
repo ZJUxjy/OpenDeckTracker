@@ -176,27 +176,26 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
 
       {/* Overall Progress */}
       <div className="reference-panel reference-overall-progress">
-        <ProgressRing percent={percentage} label={t('collection.reference.completion')} />
         <div className="reference-overall-copy">
           <div>
             <h2>{t('collection.overallProgress')}</h2>
-            <p>
-              {t('collection.reference.collectedLine', {
-                owned: totalOwned,
-                total: totalMax,
-              })}
+            <p className="reference-overall-count" aria-label={t('collection.reference.collectedLine', {
+              owned: totalOwned,
+              total: totalMax,
+            })}>
+              <b>{totalOwned}</b>
+              <span> / {totalMax}</span>
             </p>
           </div>
-          <div className="reference-overall-count">
-            <b>{totalOwned}</b>
-            <span> / {totalMax}</span>
+          <div className="reference-overall-percentage" aria-hidden="true">
+            <b>{percentage}</b><span>%</span>
           </div>
-          <div className="reference-progress-bar">
+          <div className="reference-progress-bar" role="progressbar"
+            aria-label={t('collection.overallProgress')}
+            aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage}
+            aria-valuetext={t('collection.percentComplete', { percent: percentage })}>
             <span style={{ width: `${percentage}%` }} />
           </div>
-          <p className="reference-progress-caption">
-            {t('collection.percentComplete', { percent: percentage })}
-          </p>
         </div>
       </div>
 
@@ -222,31 +221,6 @@ export function CollectionSetGrid({ progress, coverCardIds, onOpenSet }: Collect
             />
           );
         })}
-      </div>
-    </div>
-  );
-}
-
-function ProgressRing({ percent, label }: { percent: number; label: string }) {
-  const radius = 50;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - percent / 100);
-  return (
-    <div className="reference-progress-ring" aria-label={`${percent}%`}>
-      <svg viewBox="0 0 116 116" aria-hidden="true">
-        <circle cx="58" cy="58" r={radius} className="reference-progress-ring-track" />
-        <circle
-          cx="58"
-          cy="58"
-          r={radius}
-          className="reference-progress-ring-value"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <div>
-        <b>{percent}%</b>
-        <span>{label}</span>
       </div>
     </div>
   );

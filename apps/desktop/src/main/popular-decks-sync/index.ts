@@ -185,6 +185,10 @@ export class PopularDeckSyncOrchestrator {
       });
       const rows = parseLegendArchetypes(metaHtml, plan.archetypeLimit);
       console.log(`[popular-decks-sync] parsed ${rows.length} ${plan.format} archetypes`);
+      if (rows.length === 0) {
+        console.warn(`[popular-decks-sync] ${plan.format} meta parse yielded 0 archetypes; keeping cache`);
+        return { ok: false, error: 'parse-failed' };
+      }
       for (const row of rows) {
         plannedArchetypes.push({
           row,
@@ -200,11 +204,6 @@ export class PopularDeckSyncOrchestrator {
         currentLabel: plan.format,
       });
     }
-    if (plannedArchetypes.length === 0) {
-      console.warn('[popular-decks-sync] meta parse yielded 0 archetypes (DOM changed?)');
-      return { ok: false, error: 'parse-failed' };
-    }
-
     // Phase 2: variants (one round-trip set per archetype)
     const variantsByArchetypeResults: Array<{
       archetype: HsguruArchetypeRow;

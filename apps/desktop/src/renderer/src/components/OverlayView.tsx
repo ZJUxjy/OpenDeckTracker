@@ -1,5 +1,6 @@
 import { useEffect, type CSSProperties } from 'react';
 import { LiveDeckPanel } from './LiveDeckPanel';
+import { TrackerAnalysisPanel } from './TrackerAnalysisPanel';
 import { LiveNarrationPanel } from './LiveNarrationPanel';
 import { AdvisorPanel } from './AdvisorPanel';
 import { TrackerPanelTabs } from './TrackerPanelTabs';
@@ -36,6 +37,7 @@ export function OverlayView() {
         side="player"
         effectsCount={effectiveRowCount}
         deckSlot={<LiveDeckPanel />}
+        analysisSlot={<TrackerAnalysisPanel />}
         effectsSlot={
           <GlobalEffectsPanel side="player" effects={friendlyEffects} />
         }

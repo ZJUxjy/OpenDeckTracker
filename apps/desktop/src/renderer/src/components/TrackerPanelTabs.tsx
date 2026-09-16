@@ -1,16 +1,10 @@
-import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { clsx } from 'clsx';
+import { useRef, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from '../i18n';
 import { useGlassMouseFollow } from '../hooks/use-glass-mouse-follow';
+import * as Tabs from './beui/tabs';
 
-type Tab = 'deck' | 'effects' | 'graveyard' | 'narration' | 'advisor';
-
-// Frameless overlay BrowserWindows recognize `-webkit-app-region: drag`
-// as the OS drag handle. The styles are inert in framed windows (the
-// main window has its own native title bar), so applying them here
-// unconditionally is safe.
-const DRAG: CSSProperties = { WebkitAppRegion: 'drag' } as CSSProperties;
-const NO_DRAG: CSSProperties = { WebkitAppRegion: 'no-drag' } as CSSProperties;
+const DRAG = { WebkitAppRegion: 'drag' } as CSSProperties;
+const NO_DRAG = { WebkitAppRegion: 'no-drag' } as CSSProperties;
 
 interface TrackerPanelTabsProps {
   side: 'player' | 'opponent';
@@ -32,16 +26,12 @@ interface TrackerPanelTabsProps {
   narrationSlot?: ReactNode;
   /** Optional tab showing player-side AI advice. Omitted for opponent overlays. */
   advisorSlot?: ReactNode;
+  analysisSlot?: ReactNode;
   /** Shows a compact badge on the advisor tab when urgent advice is available. */
   advisorBadge?: boolean;
 }
 
-/**
- * Tabbed vertical container used to wrap the deck panel, global
- * effects panel, and optional graveyard panel on each side. Slots stay mounted across tab
- * switches (the inactive one is `hidden`) so per-row state — hover
- * targets, draw animations, image refs — survives a toggle.
- */
+/** Keep every panel mounted so live card state survives tab switches. */
 export function TrackerPanelTabs({
   side,
   deckSlot,
@@ -51,164 +41,86 @@ export function TrackerPanelTabs({
   graveyardCount = 0,
   narrationSlot,
   advisorSlot,
+  analysisSlot,
   advisorBadge = false,
 }: TrackerPanelTabsProps) {
   const { t } = useTranslation();
-  const [active, setActive] = useState<Tab>('deck');
   const shellRef = useRef<HTMLDivElement | null>(null);
   useGlassMouseFollow(shellRef);
+  const panels = [
+    { id: 'deck', label: t('globalEffects.tabDeck'), content: deckSlot, count: 0 },
+    {
+      id: 'effects',
+      label: t('globalEffects.tabEffects'),
+      content: effectsSlot,
+      count: effectsCount,
+    },
+    ...(graveyardSlot
+      ? [
+          {
+            id: 'graveyard',
+            label: t('tracker.tabGraveyard'),
+            content: graveyardSlot,
+            count: graveyardCount,
+          },
+        ]
+      : []),
+    ...(narrationSlot
+      ? [{ id: 'narration', label: t('tracker.tabNarration'), content: narrationSlot, count: 0 }]
+      : []),
+    ...(analysisSlot
+      ? [{ id: 'analysis', label: t('analysis.tab'), content: analysisSlot, count: 0 }]
+      : []),
+    ...(advisorSlot
+      ? [{ id: 'advisor', label: t('tracker.tabAdvisor'), content: advisorSlot, count: 0 }]
+      : []),
+  ];
 
   return (
-    <div
+    <Tabs.Root
       ref={shellRef}
+      defaultValue="deck"
       className="tracker-panel-shell w-full h-full flex flex-col"
       data-tracker-side={side}
     >
-      <div
-        role="tablist"
+      <Tabs.List
         aria-label={`${side} tracker tabs`}
         style={DRAG}
-        className="tracker-panel-tabbar shrink-0 flex items-stretch gap-1 px-2 pt-2 pb-1 bg-overlay-surface border-b border-border"
+        className="tracker-panel-tabbar shrink-0 flex flex-wrap items-stretch gap-1 pl-2 pr-9 pt-2 pb-1 bg-overlay-surface border-b border-border"
       >
-        <TabPill
-          testId="tracker-tab-deck"
-          active={active === 'deck'}
-          onClick={() => setActive('deck')}
-        >
-          {t('globalEffects.tabDeck')}
-        </TabPill>
-        <TabPill
-          testId="tracker-tab-effects"
-          active={active === 'effects'}
-          onClick={() => setActive('effects')}
-        >
-          <span>{t('globalEffects.tabEffects')}</span>
-          {effectsCount > 0 ? (
-            <span
-              data-testid="tracker-tab-effects-badge"
-              style={NO_DRAG}
-              className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-accent text-bg text-[11px] font-bold tabular-nums"
-            >
-              {effectsCount}
-            </span>
-          ) : null}
-        </TabPill>
-        {graveyardSlot ? (
-          <TabPill
-            testId="tracker-tab-graveyard"
-            active={active === 'graveyard'}
-            onClick={() => setActive('graveyard')}
+        {panels.map((panel) => (
+          <Tabs.Trigger
+            key={panel.id}
+            value={panel.id}
+            data-testid={`tracker-tab-${panel.id}`}
+            style={NO_DRAG}
+            className="tracker-tab-pill px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1"
           >
-            <span>{t('tracker.tabGraveyard')}</span>
-            {graveyardCount > 0 ? (
+            <span>{panel.label}</span>
+            {panel.count > 0 && (
               <span
-                data-testid="tracker-tab-graveyard-badge"
-                style={NO_DRAG}
-                className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-accent text-bg text-[11px] font-bold tabular-nums"
+                data-testid={`tracker-tab-${panel.id}-badge`}
+                className="beui-tab-count ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-[11px] font-bold tabular-nums"
               >
-                {graveyardCount}
+                {panel.count}
               </span>
-            ) : null}
-          </TabPill>
-        ) : null}
-        {narrationSlot ? (
-          <TabPill
-            testId="tracker-tab-narration"
-            active={active === 'narration'}
-            onClick={() => setActive('narration')}
-          >
-            {t('tracker.tabNarration')}
-          </TabPill>
-        ) : null}
-        {advisorSlot ? (
-          <TabPill
-            testId="tracker-tab-advisor"
-            active={active === 'advisor'}
-            onClick={() => setActive('advisor')}
-          >
-            <span>{t('tracker.tabAdvisor')}</span>
-            {advisorBadge ? (
+            )}
+            {panel.id === 'advisor' && advisorBadge && (
               <span
                 data-testid="tracker-tab-advisor-badge"
-                style={NO_DRAG}
-                className="ml-1.5 inline-flex h-2.5 w-2.5 rounded-full bg-red shadow-[0_0_0_2px_rgba(0,0,0,0.16)]"
+                className="ml-1.5 inline-flex h-2.5 w-2.5 rounded-full bg-red"
               />
-            ) : null}
-          </TabPill>
-        ) : null}
-      </div>
+            )}
+          </Tabs.Trigger>
+        ))}
+      </Tabs.List>
       <div className="flex-1 min-h-0 overflow-hidden">
-        <div
-          aria-hidden={active !== 'deck'}
-          hidden={active !== 'deck'}
-          className="w-full h-full"
-        >
-          {deckSlot}
-        </div>
-        <div
-          aria-hidden={active !== 'effects'}
-          hidden={active !== 'effects'}
-          className="w-full h-full"
-        >
-          {effectsSlot}
-        </div>
-        {graveyardSlot ? (
-          <div
-            aria-hidden={active !== 'graveyard'}
-            hidden={active !== 'graveyard'}
-            className="w-full h-full"
-          >
-            {graveyardSlot}
-          </div>
-        ) : null}
-        {narrationSlot ? (
-          <div
-            aria-hidden={active !== 'narration'}
-            hidden={active !== 'narration'}
-            className="w-full h-full"
-          >
-            {narrationSlot}
-          </div>
-        ) : null}
-        {advisorSlot ? (
-          <div
-            aria-hidden={active !== 'advisor'}
-            hidden={active !== 'advisor'}
-            className="w-full h-full"
-          >
-            {advisorSlot}
-          </div>
-        ) : null}
+        {panels.map((panel) => (
+          <Tabs.Content key={panel.id} value={panel.id} forceMount className="w-full h-full">
+            {panel.content}
+          </Tabs.Content>
+        ))}
       </div>
-    </div>
-  );
-}
-
-interface TabPillProps {
-  testId: string;
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}
-
-function TabPill({ testId, active, onClick, children }: TabPillProps) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      data-testid={testId}
-      data-active={active ? 'true' : 'false'}
-      aria-selected={active}
-      onClick={onClick}
-      style={NO_DRAG}
-      className={clsx(
-        'tracker-tab-pill px-3 py-1 rounded-md text-xs font-medium flex items-center gap-1 transition-colors',
-        active
-          ? 'bg-accent text-text-on-accent shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
-          : 'text-text-mute hover:text-text hover:bg-overlay-surface',
-      )}
-    >
-      {children}
-    </button>
+    </Tabs.Root>
   );
 }

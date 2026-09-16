@@ -239,8 +239,23 @@ function captureHands(
     recording.initialState.startingHand = hand;
     recording.timeline.push({ kind: 'starting-hand', sourceEventIndex: recording.rawEventRefs.length - 1 });
   }
-  if (event.type === 'tag-change' && event.tag === 'MULLIGAN_STATE') {
+  const flags = recording.initialState.mulliganCapture ?? { startingComplete: false, postComplete: false };
+  recording.initialState.mulliganCapture = flags;
+  if (event.type !== 'tag-change') return;
+  const playerRef = typeof event.entity === 'number' ? event.entity : Number(/\bid=(\d+)/.exec(String(event.entity))?.[1]);
+  const isLocalPlayer = entities.some(entity => entity.entityId === playerRef && entity.controllerId === localControllerId);
+  const startingBoundary = event.tag === 'STEP' && event.entity === 'GameEntity' && event.value === 'BEGIN_MULLIGAN'
+    || event.tag === 'MULLIGAN_STATE' && event.value === 'INPUT' && isLocalPlayer;
+  if (startingBoundary && !flags.postComplete) {
+    recording.initialState.startingHand = hand;
+    // Fewer than three known cards indicates partial/unsupported starting-hand data.
+    flags.startingComplete = hand.length >= 3;
+  }
+  const endingBoundary = event.tag === 'STEP' && event.entity === 'GameEntity' && String(event.value).startsWith('MAIN_')
+    || event.tag === 'MULLIGAN_STATE' && event.value === 'DONE' && isLocalPlayer;
+  if (endingBoundary && flags.startingComplete && !flags.postComplete && hand.length >= recording.initialState.startingHand.length) {
     recording.initialState.postMulliganHand = hand;
+    flags.postComplete = true;
     recording.timeline.push({
       kind: 'post-mulligan-hand',
       sourceEventIndex: recording.rawEventRefs.length - 1,

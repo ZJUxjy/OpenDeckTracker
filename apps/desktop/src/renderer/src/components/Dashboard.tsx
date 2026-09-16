@@ -1,5 +1,7 @@
 ﻿import { memo, type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { TrackerAnalysisPanel } from './TrackerAnalysisPanel';
+import { OpponentHandTimelinePanel } from './OpponentHandTimelinePanel';
 import type { OpponentCardRecord } from '@hdt/core';
 import { useShallow } from 'zustand/react/shallow';
 import { useCardPreview } from '../hooks/use-card-preview';
@@ -125,6 +127,10 @@ export function Dashboard() {
                 <b>{remainingPercent}%</b>
               </div>
               <div className="reference-live-card-list" data-testid="dashboard-remaining-list">
+                <details className="mb-3 rounded border border-border p-2">
+                  <summary className="cursor-pointer text-accent text-sm">{t('analysis.tab')}</summary>
+                  <TrackerAnalysisPanel />
+                </details>
                 {deck.remaining.map((card) => (
                   <DashboardDeckRow key={card.cardId} card={card} />
                 ))}
@@ -168,12 +174,14 @@ export function Dashboard() {
           </header>
           {snapshot.opponent?.revealed.length ? (
             <div className="reference-opponent-list">
+              <OpponentHandTimelinePanel />
               {snapshot.opponent.revealed.map((card) => (
                 <OpponentIntelCard key={`${card.entityId}-${card.cardId}`} card={card} />
               ))}
             </div>
           ) : (
             <div className="reference-opponent-empty reference-opponent-empty-workbench">
+              <OpponentHandTimelinePanel />
               <UserRound size={56} aria-hidden="true" />
               <h2>{t('opponent.empty')}</h2>
               <p>{t('dashboard.reference.opponentHint')}</p>

@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => {
     stop: vi.fn(),
     getSnapshot: vi.fn(() => null),
     applyLogDerivedEntityUpdates: vi.fn(),
+    recordAnalysisPowerEvent: vi.fn(),
     applyLocalControllerId: vi.fn(),
     resetGlobalEffects: vi.fn(),
     recordHeraldTriggered: vi.fn(),

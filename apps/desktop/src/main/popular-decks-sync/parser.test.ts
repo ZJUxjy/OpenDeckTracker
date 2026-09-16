@@ -16,6 +16,33 @@ const ARCHETYPE_HTML = readFileSync(join(FIX_DIR, 'hsguru-archetype.html'), 'utf
 const DECK_DETAIL_HTML = readFileSync(join(FIX_DIR, 'hsguru-deck-detail.html'), 'utf-8');
 
 describe('parseLegendArchetypes', () => {
+  it('parses the September 2026 table with styled rows and cells', () => {
+    const html = readFileSync(join(FIX_DIR, 'hsguru-meta-2026-09.html'), 'utf-8');
+    expect(parseLegendArchetypes(html)).toEqual([
+      {
+        archetype: 'Attack Druid',
+        archetypeUrl: 'https://www.hsguru.com/archetype/Attack%20Druid?rank=legend',
+        winrate: 54.7, popularityPercent: 21.5, games: 12278,
+      },
+      {
+        archetype: 'Dragon Warrior',
+        archetypeUrl: 'https://www.hsguru.com/archetype/Dragon%20Warrior?rank=legend',
+        winrate: 56, popularityPercent: 12.2, games: 6962,
+      },
+    ]);
+  });
+
+  it('reads cell text independently of presentation markup and grouped game counts', () => {
+    expect(parseLegendArchetypes(`
+      <tr class="meta-row">
+        <td><a href="/archetype/Tempo%20Rogue"><strong>Tempo Rogue</strong></a></td>
+        <td class="winrate"><span class="value">52.3%</span></td>
+        <td class="popularity"><span>12.4%</span> (43,449)</td>
+      </tr>`)).toEqual([expect.objectContaining({
+      archetype: 'Tempo Rogue', winrate: 52.3, popularityPercent: 12.4, games: 43449,
+    })]);
+  });
+
   it('extracts archetype rows from the meta fixture', () => {
     const rows = parseLegendArchetypes(META_HTML);
     expect(rows.length).toBeGreaterThanOrEqual(2);

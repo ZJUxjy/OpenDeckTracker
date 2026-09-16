@@ -1,3 +1,4 @@
+import { Button } from './beui/button';
 import { AlertTriangle, Check, Loader2, RefreshCw } from 'lucide-react';
 
 import { useTranslation } from '../i18n';
@@ -35,7 +36,7 @@ export function CollectionSyncButton({ state, onClick }: CollectionSyncButtonPro
           : RefreshCw;
 
   return (
-    <button
+    <Button
       type="button"
       data-testid="collection-sync-button"
       data-state={state}
@@ -54,6 +55,6 @@ export function CollectionSyncButton({ state, onClick }: CollectionSyncButtonPro
         aria-hidden
       />
       <span>{t(labelKey)}</span>
-    </button>
+    </Button>
   );
 }

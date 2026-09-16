@@ -136,6 +136,22 @@ async function advanceTicks(maxTicks = 6): Promise<void> {
 }
 
 describe('DeckTracker', () => {
+  it('projects observed draw tags and public hand history into snapshots and resets them', () => {
+    const { mirror } = makeMirror();
+    const tracker = new DeckTracker({ mirror });
+    tracker.applyLogDerivedEntityUpdates([{ entityId: 2, controllerId: 1 }]);
+    tracker.recordExtraDisplayEntityTag({ entityId: 2, tag: 'FATIGUE', value: 3 });
+    tracker.recordExtraDisplayEntityTag({ entityId: 2, tag: 'MAXHANDSIZE', value: 12 });
+    expect(tracker.getSnapshot().friendlyDrawContext).toMatchObject({ fatigueTaken: 3, handLimit: 12 });
+    tracker.recordAnalysisPowerEvent({ type: 'tag-change', entity: 'GameEntity', tag: 'TURN', value: 4, raw: '', content: '' });
+    tracker.recordAnalysisPowerEvent({ type: 'full-entity', entityId: 20, cardId: 'PRIVATE',
+      tags: { CONTROLLER: 2, ZONE: 'DECK' }, raw: '', content: '' });
+    tracker.recordAnalysisPowerEvent({ type: 'tag-change', entity: 20, tag: 'ZONE', value: 'HAND', raw: '', content: '' });
+    expect(tracker.getSnapshot().opposingHandTimeline).toEqual([expect.objectContaining({ entityId: 20, acquiredTurn: 4, cardId: null })]);
+    tracker.resetGlobalEffects();
+    expect(tracker.getSnapshot().opposingHandTimeline).toEqual([]);
+    expect(tracker.getSnapshot().friendlyDrawContext).toMatchObject({ fatigueTaken: null, handLimit: null });
+  });
   beforeEach(() => {
     vi.useFakeTimers();
   });

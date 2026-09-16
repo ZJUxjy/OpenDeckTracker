@@ -20,6 +20,7 @@ function mockStatsApi(): void {
   (window as unknown as { hdt: typeof window.hdt }).hdt = {
     ...window.hdt,
     stats: {
+      deckVersionMatches: vi.fn(async () => []),
       getSummary: vi.fn(async () => emptySummary()),
       listRecent: vi.fn(async () => []),
       getSavedDeckMatchups: vi.fn(async () => []),

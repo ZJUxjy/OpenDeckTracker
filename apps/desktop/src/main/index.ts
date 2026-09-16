@@ -253,9 +253,8 @@ if (!gotLock) {
       if (mainWindowRef === mainWindow) mainWindowRef = null;
     });
 
-    // Wire electron-updater. No-ops in dev / unpackaged builds; in
-    // packaged signed builds, checks for updates on launch and again
-    // every 6 hours.
+    // Installed Windows builds check on launch and every six hours.
+    // Download and installation both require explicit player actions.
     initAutoUpdate();
 
     // Closing the main window quits the whole app (including the

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { MatchRecordingDetail } from '@hdt/core';
 
 import { MatchRecordingViewer } from '../src/components/MatchRecordingViewer';
@@ -66,6 +66,38 @@ describe('MatchRecordingViewer', () => {
     });
 
     await waitFor(() => expect(get).toHaveBeenCalledWith('rec-1'));
+  });
+
+  it('saves a bookmark and note, reopens it, and navigates to the original event', async () => {
+    const detail = fakeDetail({ rawEvents: [{ type: 'create-game' },
+      { type: 'tag-change', entity: 'GameEntity', tag: 'TURN', value: 2 }],
+    rawEventRefs: [{ index: 0, type: 'create-game' }, { index: 1, type: 'tag-change' }],
+    timeline: [{ kind: 'game-started', sourceEventIndex: 0 }, { kind: 'turn-start', sourceEventIndex: 1, turnNumber: 2, controllerId: 1 }] });
+    const saveAnnotation = vi.fn(async (_id, annotation) => { detail.annotations = [annotation]; return [annotation]; });
+    window.hdt.recordings = { ...savedRecordings, get: vi.fn(async () => ({ ...detail })), saveAnnotation };
+    const view = renderViewer({ open: true, recordingId: 'rec-1' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Next key event' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Bookmark this event' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Note' }), { target: { value: 'Keep removal' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save bookmark and note' }));
+    await screen.findByText('Saved locally.');
+    expect(saveAnnotation).toHaveBeenCalledWith('rec-1', { sourceEventIndex: 1, bookmarked: true, note: 'Keep removal' });
+    view.unmount();
+    renderViewer({ open: true, recordingId: 'rec-1' });
+    fireEvent.click(await screen.findByRole('button', { name: /★ #1 Keep removal/ }));
+    expect(screen.getByText('Event 1 · Turn 2')).toBeTruthy();
+    expect((screen.getByRole('textbox', { name: 'Note' }) as HTMLTextAreaElement).value).toBe('Keep removal');
+  });
+
+  it('keeps the draft and offers a retry when annotation persistence fails', async () => {
+    window.hdt.recordings = { ...savedRecordings, get: vi.fn(async () => fakeDetail({ rawEvents: [{ type: 'create-game' }] })),
+      saveAnnotation: vi.fn().mockRejectedValue(new Error('disk full')) };
+    renderViewer({ open: true, recordingId: 'rec-1' });
+    const note = await screen.findByRole('textbox', { name: 'Note' });
+    fireEvent.change(note, { target: { value: 'Unsaved thought' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save bookmark and note' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Could not save');
+    expect((note as HTMLTextAreaElement).value).toBe('Unsaved thought');
   });
 
   it('renders deck, hand, and timeline sections from the detail', async () => {

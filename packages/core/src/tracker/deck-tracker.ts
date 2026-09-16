@@ -7,6 +7,9 @@ import type {
   MatchInfo,
 } from '@hdt/hearthmirror';
 import { DeckSnapshot } from '../game/deck-snapshot';
+import { PlayerDrawState, type PlayerDrawContext } from '../analysis/player-draw-state';
+import { OpponentHandTimeline, type OpponentHandCard } from './opponent-hand-timeline';
+import type { PowerEvent } from '@hdt/hearthwatcher';
 import { Game, type LogDerivedEntityUpdate } from '../game/game';
 import type { MatchPhase, Zone } from '../game/types';
 import { zoneFromNumber } from '../game/types';
@@ -161,6 +164,8 @@ export interface DeckTrackerSnapshot {
   friendlyHandExtras: boolean[];
   /** Opposing hand size (count only — info-leak guard). */
   opposingHandCount: number;
+  opposingHandTimeline?: OpponentHandCard[];
+  resourcePlays?: { entityId: number; cardId: string; created: boolean; side: 'friendly' | 'opposing' }[];
   /** Opponent cards that have been publicly revealed this match. */
   opponent: {
     revealed: OpponentCardRecord[];
@@ -190,6 +195,8 @@ export interface DeckTrackerSnapshot {
   };
   /** Friendly remaining deck count (for header summary). */
   friendlyDeckCount: number;
+  /** Observed player tags for ordinary draw forecasts. Missing values stay unknown. */
+  friendlyDrawContext?: PlayerDrawContext;
   /** Global effects whose caster is the local player (per-match scope). */
   friendlyEffects: ActiveEffect[];
   /** Global effects whose caster is the opposing player (per-match scope). */
@@ -383,6 +390,9 @@ export class DeckTracker {
    * snapshot rebuild so drawn copies decay automatically.
    */
   private readonly deckPositionState = new MatchDeckPositionState();
+  private readonly playerDrawState = new PlayerDrawState();
+  private readonly opponentHandTimeline = new OpponentHandTimeline();
+  private readonly resourcePlays = new Map<number, { entityId: number; cardId: string; created: boolean; controllerId: number }>();
   /** Optional context provider for parameterized deck-position extractors. */
   private readonly deckPositionExtractCtx:
     | (() => ExtractCtx)
@@ -529,6 +539,8 @@ export class DeckTracker {
     this.transientGraveyardOriginEntityIds.delete(event.entityId);
     this.suppressedGraveyardEntityIds.delete(event.entityId);
     if (event.isManualPlay !== false) {
+      this.resourcePlays.set(event.entityId, { entityId: event.entityId, cardId: event.cardId,
+        created: this.game.entities.get(event.entityId)?.info.created === true, controllerId: event.controllerId });
       const localControllerId = this.game.localPlayer.controllerId;
       if (event.controllerId === localControllerId) {
         this.syncExtraDisplayOriginalDeck();
@@ -704,6 +716,12 @@ export class DeckTracker {
     this.currentSnapshot = this.buildSnapshot();
   }
 
+  recordAnalysisPowerEvent(event: PowerEvent): void {
+    this.opponentHandTimeline.handle(event);
+    this.currentSnapshot = { ...this.currentSnapshot,
+      opposingHandTimeline: this.opponentHandTimeline.snapshot(this.game.opposingPlayer.controllerId) };
+  }
+
   /**
    * Forward a `CURRENT_PLAYER` tag observation from the host. Drives
    * the board-attack cache live-refresh policy: during the local
@@ -741,6 +759,10 @@ export class DeckTracker {
   }
 
   recordExtraDisplayEntityTag(args: { entityId: number; tag: string; value: number }): void {
+    this.playerDrawState.record(args.entityId, args.tag, args.value);
+    this.currentSnapshot = { ...this.currentSnapshot,
+      friendlyDrawContext: this.playerDrawState.forController(this.game.localPlayer.controllerId,
+        id => this.game.entities.get(id)?.controllerId) };
     const entity = this.game.entities.get(args.entityId);
     if (!entity) return;
     const historyController = this.resolveHistoryController(entity);
@@ -845,6 +867,9 @@ export class DeckTracker {
    * publicly for tests + manual reset paths.
    */
   resetGlobalEffects(): void {
+    this.resourcePlays.clear();
+    this.opponentHandTimeline.reset();
+    this.playerDrawState.reset();
     this.registry.reset();
     this.extraDisplayState.reset();
     this.deckPositionState.reset();
@@ -1036,6 +1061,10 @@ export class DeckTracker {
       this.game.transitionTo('POST_MATCH');
     }
     if (previousPhase === 'POST_MATCH' && target === 'IDLE') {
+      this.savedDeckAttribution = null;
+      this.resourcePlays.clear();
+      this.opponentHandTimeline.reset();
+      this.playerDrawState.reset();
       this.game.reset();
       this.previousFriendlyHandSize = 0;
       this.resetOpponentRecords();
@@ -1590,11 +1619,15 @@ export class DeckTracker {
       friendlyHand,
       friendlyHandExtras,
       opposingHandCount: handState?.opposingHandCount ?? 0,
+      opposingHandTimeline: this.opponentHandTimeline.snapshot(opposingControllerId),
+      resourcePlays: [...this.resourcePlays.values()].map(play => ({ entityId: play.entityId, cardId: play.cardId,
+        created: play.created, side: play.controllerId === localControllerId ? 'friendly' as const : 'opposing' as const })),
       opponent: this.buildOpponentRecords(),
       opponentClass: this.resolveOpponentClass(),
       friendlyGraveyard: this.buildFriendlyGraveyard(),
       extraDisplay: this.buildExtraDisplaySnapshot(deck, friendlyHand),
       friendlyDeckCount: deckState?.friendlyDeck.length ?? this.game.localPlayer.deck.length,
+      friendlyDrawContext: this.playerDrawState.forController(localControllerId, id => this.game.entities.get(id)?.controllerId),
       friendlyEffects: effects.local,
       opposingEffects: effects.opposing,
       boardAttack,
@@ -1955,6 +1988,7 @@ export class DeckTracker {
     const endedAt = this.game.endedAt ?? Date.now();
 
     return normalizeCompletedMatch({
+      ...(this.currentTurn !== null ? { turnCount: this.currentTurn } : {}),
       fingerprint: '',
       startedAt,
       endedAt,

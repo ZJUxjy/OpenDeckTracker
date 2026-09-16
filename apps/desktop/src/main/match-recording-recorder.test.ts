@@ -73,6 +73,7 @@ function createMemoryStore(): MatchRecordingStore & { recordings: Map<string, Ma
   return {
     recordings,
     events,
+    saveAnnotation: () => [],
     appendRawEvent(recordingId, event) {
       events.set(recordingId, [...(events.get(recordingId) ?? []), event]);
     },
@@ -164,7 +165,7 @@ describe('match-recording-recorder', () => {
     });
   });
 
-  it('captures starting and post-mulligan hands from local entities', () => {
+  it('does not treat partial hand arrival or mulligan INPUT as a completed mulligan', () => {
     const store = createMemoryStore();
     const recorder = createMatchRecordingRecorder({
       store,
@@ -195,9 +196,26 @@ describe('match-recording-recorder', () => {
     expect(store.recordings.get('rec-a')?.initialState.startingHand).toEqual([
       { entityId: 10, cardId: 'CS2_029', controllerId: 1 },
     ]);
-    expect(store.recordings.get('rec-a')?.initialState.postMulliganHand).toEqual([
-      { entityId: 10, cardId: 'CS2_029', controllerId: 1 },
-    ]);
+    expect(store.recordings.get('rec-a')?.initialState.postMulliganHand).toEqual([]);
+    expect(store.recordings.get('rec-a')?.initialState.mulliganCapture?.postComplete).toBe(false);
+  });
+
+  it('captures complete offered cards and replacements before the first normal turn draw', () => {
+    const store = createMemoryStore();
+    const recorder = createMatchRecordingRecorder({ store, getSnapshot: () => snapshot(), now: () => 1000,
+      createRecordingId: () => 'rec-mulligan', persistIntervalMs: 0 });
+    recorder.handleEvent(createGame);
+    for (const entityId of [10, 11, 12]) recorder.handleEvent({ type: 'full-entity', entityId, cardId: `CARD_${entityId}`,
+      tags: { CONTROLLER: 1, ZONE: 'HAND' }, raw: '', content: '' });
+    recorder.handleEvent({ type: 'tag-change', entity: 'GameEntity', tag: 'STEP', value: 'BEGIN_MULLIGAN', raw: '', content: '' });
+    recorder.handleEvent({ type: 'tag-change', entity: 10, tag: 'ZONE', value: 'DECK', raw: '', content: '' });
+    recorder.handleEvent({ type: 'full-entity', entityId: 13, cardId: 'REPLACEMENT', tags: { CONTROLLER: 1, ZONE: 'HAND' }, raw: '', content: '' });
+    recorder.handleEvent({ type: 'tag-change', entity: 'GameEntity', tag: 'STEP', value: 'MAIN_BEGIN', raw: '', content: '' });
+    recorder.handleEvent({ type: 'full-entity', entityId: 14, cardId: 'TURN_DRAW', tags: { CONTROLLER: 1, ZONE: 'HAND' }, raw: '', content: '' });
+    const initial = store.recordings.get('rec-mulligan')?.initialState;
+    expect(initial?.mulliganCapture).toEqual({ startingComplete: true, postComplete: true });
+    expect(initial?.startingHand.map(card => card.entityId)).toEqual([10, 11, 12]);
+    expect(initial?.postMulliganHand.map(card => card.entityId)).toEqual([11, 12, 13]);
   });
 
   it.each([completeState, completeStep])('finalizes on game completion %#', (event) => {

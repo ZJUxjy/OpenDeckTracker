@@ -68,7 +68,7 @@ describe('Settings — About category', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('Auto-update is only available in packaged builds.'),
+        screen.getByText('Auto-update requires the Windows installed version. Development and ZIP builds are not supported.'),
       ).toBeInTheDocument();
     });
   });

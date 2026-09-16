@@ -119,4 +119,21 @@ describe('transformVariant', () => {
     const out = transformVariant(ARCHETYPE, VARIANT_ROGUE, FETCHED_AT, ctx);
     expect(out).toBeNull();
   });
+
+  it('keeps Death Knight decks when the card database marks HERO_11 as neutral', () => {
+    const code = 'AAECAfHhBAyh1ATDgwe8lAf1mAfsmwfXnQfgnQftnwfSrgfa1wed2we/3wcJ054Gl4IHupUHn54HkqQH4rEHrtoHtNoHptwHAAA=';
+    const out = transformVariant(ARCHETYPE, { ...VARIANT_ROGUE, code }, FETCHED_AT, {
+      findByDbfId: (dbfId) => dbfId === 78065
+        ? fakeCard({ id: 'HERO_11', cardClass: 'NEUTRAL' }) : null,
+    });
+    expect(out?.class).toBe('DEATHKNIGHT');
+    expect(out?.deckstring).toBe(code);
+  });
+
+  it('still rejects unrecognized neutral heroes instead of guessing from the title', () => {
+    const out = transformVariant(ARCHETYPE, VARIANT_ROGUE, FETCHED_AT, {
+      findByDbfId: () => fakeCard({ id: 'UNKNOWN_HERO', cardClass: 'NEUTRAL' }),
+    });
+    expect(out).toBeNull();
+  });
 });

@@ -36,6 +36,8 @@ export interface MatchRecordingMetadata {
 }
 
 export interface MatchRecordingInitialState {
+  /** True only when complete hands were captured at semantic mulligan boundaries. */
+  mulliganCapture?: { startingComplete: boolean; postComplete: boolean };
   originalDeck: RecordedDeckCard[];
   startingHand: RecordedCardRef[];
   postMulliganHand: RecordedCardRef[];
@@ -172,6 +174,13 @@ export interface MatchRecording {
 
 export interface MatchRecordingDetail extends MatchRecording {
   rawEvents: unknown[];
+  annotations?: RecordingAnnotation[];
+}
+
+export interface RecordingAnnotation {
+  sourceEventIndex: number;
+  bookmarked: boolean;
+  note: string;
 }
 
 export function createEmptyMatchRecording(args: {

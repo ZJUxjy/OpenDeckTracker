@@ -1,4 +1,5 @@
-﻿import { useState, type ReactElement } from 'react';
+import { Button } from './beui/button';
+import { useState, type ReactElement } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Clipboard, X } from 'lucide-react';
 
@@ -64,9 +65,9 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
             </Dialog.Title>
             <Dialog.Description className="sr-only">{t('decks.import.title')}</Dialog.Description>
             <Dialog.Close asChild>
-              <button aria-label={t('decks.import.cancel')} className="p-1 hover:bg-overlay-hover rounded">
+              <Button aria-label={t('decks.import.cancel')} className="p-1 hover:bg-overlay-hover rounded">
                 <X size={18} />
-              </button>
+              </Button>
             </Dialog.Close>
           </div>
           <div className="p-4 space-y-3">
@@ -81,13 +82,13 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
               className="w-full px-3 py-2 bg-overlay-input border border-border rounded text-text text-sm font-mono"
               data-testid="deckstring-input"
             />
-            <button
+            <Button
               onClick={() => void onPasteFromClipboard()}
               className="text-sm text-text-dim hover:text-text inline-flex items-center gap-1"
             >
               <Clipboard size={14} />
               {t('decks.import.deckstringLabel')}
-            </button>
+            </Button>
             {error !== null && (
               <div
                 className="text-sm text-red bg-red/10 border border-red/30 px-3 py-2 rounded"
@@ -99,17 +100,17 @@ export function DeckImportDialog({ open, onOpenChange }: DeckImportDialogProps):
           </div>
           <div className="flex justify-end gap-2 p-4 border-t border-border">
             <Dialog.Close asChild>
-              <button className="px-4 py-2 rounded text-sm hover:bg-overlay-hover">
+              <Button className="px-4 py-2 rounded text-sm hover:bg-overlay-hover">
                 {t('decks.import.cancel')}
-              </button>
+              </Button>
             </Dialog.Close>
-            <button
+            <Button
               disabled={importing || text.trim() === ''}
               onClick={() => void onImport()}
               className="px-4 py-2 rounded text-sm bg-accent hover:bg-accent/90 text-bg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('decks.import.confirm')}
-            </button>
+            </Button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>

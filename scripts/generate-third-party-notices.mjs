@@ -14,7 +14,7 @@
  */
 
 import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -92,6 +92,11 @@ function format(rows) {
     if (row.homepage) lines.push(`    Homepage: ${row.homepage}`);
     lines.push('');
   }
+  lines.push('', '=========================================================================',
+    'beUI — adapted Button, Tabs, Switch and motion primitives',
+    'Source: https://github.com/starc007/ui-components',
+    '=========================================================================', '',
+    readFileSync(path.join(REPO_ROOT, 'apps/desktop/src/renderer/src/components/beui/LICENSE'), 'utf8'));
   return lines.join('\n');
 }
 

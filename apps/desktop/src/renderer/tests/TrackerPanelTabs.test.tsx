@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useEffect, useState } from 'react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { I18nProvider } from '../src/i18n';
 import { TrackerPanelTabs } from '../src/components/TrackerPanelTabs';
@@ -40,6 +41,25 @@ function setup(props?: { effectsCount?: number; advisorBadge?: boolean }) {
 }
 
 describe('TrackerPanelTabs', () => {
+  it('supports arrow/Home/End navigation and links each tab to its mounted panel', async () => {
+    const user = userEvent.setup();
+    setup();
+    const deck = screen.getByTestId('tracker-tab-deck');
+    await user.click(deck);
+    await user.keyboard('{ArrowRight}');
+    const effects = screen.getByTestId('tracker-tab-effects');
+    expect(effects).toHaveFocus();
+    expect(effects).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('id', effects.getAttribute('aria-controls'));
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('aria-labelledby', effects.id);
+    await user.keyboard('{End}');
+    expect(screen.getByTestId('tracker-tab-advisor')).toHaveFocus();
+    await user.keyboard('{Home}');
+    expect(deck).toHaveFocus();
+    expect(screen.getByTestId('mounts-effects')).toHaveTextContent('1');
+    expect(screen.getByTestId('effects-slot')).not.toBeVisible();
+  });
+
   it('defaults to the Deck tab on mount', () => {
     setup();
     const deckTab = screen.getByTestId('tracker-tab-deck');

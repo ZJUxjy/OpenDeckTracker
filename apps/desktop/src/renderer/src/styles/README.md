@@ -8,6 +8,7 @@
 - `reference-overlay.css`: Arcane game overlays.
 - `refinements.css`: desktop responsive layout, spacing and focus treatment.
 - `reliability.css`: interactive tracker rows and diagnostic/update settings.
+- `beui.css`: adapted beUI controls, selection indicators and motion accessibility.
 
 Do not move rules across this order without checking both themes. Overlay
 windows must remain independent of desktop width and responsive rules.

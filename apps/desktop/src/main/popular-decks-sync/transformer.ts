@@ -58,6 +58,9 @@ function classFromBlueprint(
   const card = ctx.findByDbfId(heroDbfId);
   if (!card) return null;
   const cls = card.cardClass;
+  // Some card-data builds label the base Death Knight hero as NEUTRAL.
+  // Its canonical hero id still identifies the deck's class unambiguously.
+  if (cls === 'NEUTRAL' && card.id === 'HERO_11') return 'DEATHKNIGHT';
   return HERO_CLASS_VALUES.has(cls) ? (cls as HeroClass) : null;
 }
 

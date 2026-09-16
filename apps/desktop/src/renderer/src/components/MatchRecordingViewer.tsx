@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import type { MatchRecordingDetail } from '@hdt/core';
 
 import { useTranslation } from '../i18n';
+import { ReplayAnalysisPanel } from './ReplayAnalysisPanel';
 
 export interface MatchRecordingViewerProps {
   open: boolean;
@@ -19,6 +20,7 @@ export function MatchRecordingViewer({
   const { t } = useTranslation();
   const [detail, setDetail] = useState<MatchRecordingDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!open || recordingId === null) {
@@ -26,12 +28,15 @@ export function MatchRecordingViewer({
       return;
     }
     let cancelled = false;
+    setDetail(null);
+    setError(false);
     setLoading(true);
     void window.hdt.recordings
       .get(recordingId)
       .then((d) => {
         if (!cancelled) setDetail(d);
       })
+      .catch(() => { if (!cancelled) setError(true); })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -63,6 +68,7 @@ export function MatchRecordingViewer({
           </div>
           <div className="overflow-y-auto p-4 flex-1 space-y-4 text-sm">
             {loading && <div className="text-text-mute">…</div>}
+            {error && <div role="alert">{t('analysis.loadFailed')}</div>}
             {!loading && !detail && (
               <div data-testid="recording-empty" className="text-text-mute">
                 {t('stats.recordingViewer.empty')}
@@ -70,6 +76,7 @@ export function MatchRecordingViewer({
             )}
             {detail && (
               <>
+                <ReplayAnalysisPanel key={detail.recordingId} recording={detail} />
                 <section data-testid="recording-deck">
                   <h3 className="text-xs uppercase tracking-wider text-text-dim mb-1">
                     {t('stats.recordingViewer.deck')}

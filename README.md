@@ -20,20 +20,24 @@
 
 ## 🎯 Download / 下载
 
-**v0.6.0** is the latest public release. Two install forms available:
+**v0.7.0** is the latest public release. Two install forms available:
 
-**v0.6.0** 是最新公开版本，提供两种安装形态：
+**v0.7.0** 是最新公开版本，提供两种安装形态：
 
 | | EN | 中文 |
 |---|---|---|
-| **Installer** | NSIS installer (~95 MB), registers Start Menu shortcut + uninstaller. Recommended for normal use. | 标准安装包（约 95 MB），自动建开始菜单快捷方式 + 卸载入口。**推荐普通用户**。 |
-| **Portable** | Zip bundle (~131 MB), unzip anywhere and run. No registry writes, no install. | 免安装版（约 131 MB），解压即用，不写注册表。 |
+| **Installer** | NSIS installer , registers Start Menu shortcut + uninstaller. Recommended for normal use. | 标准安装包，自动建开始菜单快捷方式 + 卸载入口。**推荐普通用户**。 |
+| **Portable** | Zip bundle , unzip anywhere and run. No registry writes, no install. | 免安装版，解压即用，不写注册表。 |
 
 👉 **Get it: [Releases page](https://github.com/ZJUxjy/OpenDeckTracker/releases/latest)** —— 下载地址：[Releases 页面](https://github.com/ZJUxjy/OpenDeckTracker/releases/latest)
 
 > ⚠️ Windows SmartScreen will warn about an "unknown publisher" because this beta isn't yet code-signed. Click **More info → Run anyway** to proceed. See the release notes for the full walkthrough.
 >
 > ⚠️ Windows SmartScreen 会因为本测试版尚未代码签名而提示"未知发布者"。点 **详细信息 → 仍要运行** 即可继续。详细说明见 release notes。
+
+Windows installations from v0.7.0 onward support in-app updates under **Settings → About**. Older releases need one manual upgrade to v0.7.0; portable ZIP builds update manually.
+
+从 v0.7.0 起，Windows 安装版支持在 **设置 → 关于** 中更新。旧版需手动安装 v0.7.0 一次，ZIP 便携版仍需手动更新。维护者见 [发版指南](docs/RELEASING.md)。
 
 ## ✨ Features / 主要功能
 
@@ -148,7 +152,7 @@ docs/              Design references, ADRs, spike reports
 
 ## 📌 Project status / 项目状态
 
-Pre-1.0. This project is in beta — APIs, persistence shape, and IPC contracts may still change between releases. The current public release (`v0.6.0`) builds on the v0.5.0-beta install / launch verification with the live deck-position tracker, opponent effect-summon filtering, and a much tighter overlay-window experience. See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for what's in each release.
+Pre-1.0. This project is in beta — APIs, persistence shape, and IPC contracts may still change between releases. The current public release (`v0.7.0`) adds player-controlled in-app updates for Windows installations, alongside tracker analysis and desktop improvements. See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for what's in each release.
 
 Foundational subsystems (matched against `openspec/changes/`):
 
@@ -168,7 +172,7 @@ Foundational subsystems (matched against `openspec/changes/`):
 - ⏳ Code signing certificate (will remove the SmartScreen warning)
 - ⏳ macOS / Linux builds
 
-中文：1.0 之前的预发布阶段，**API、数据格式、IPC 协议在 release 间仍可能调整**。当前对外版本 `v0.6.0` 在 v0.5.0-beta 的安装 / 启动验证基础上，新增了已知牌库底位置跟踪、对手效果触发卡牌过滤、以及更稳的 overlay 窗口体验。每次发版的细节见 [`RELEASE_NOTES.md`](./RELEASE_NOTES.md)。
+中文：1.0 之前的预发布阶段，**API、数据格式、IPC 协议在 release 间仍可能调整**。当前对外版本 `v0.7.0` 新增 Windows 安装版应用内更新，以及追踪分析和桌面体验改进。每次发版的细节见 [`RELEASE_NOTES.md`](./RELEASE_NOTES.md)。
 
 ## ⚖️ License & disclaimer / 许可证与免责声明
 

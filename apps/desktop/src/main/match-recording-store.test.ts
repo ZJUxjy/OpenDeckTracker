@@ -47,6 +47,29 @@ function completedRecording(overrides: Partial<MatchRecording> = {}): MatchRecor
 }
 
 describe('match-recording-store', () => {
+  it('persists annotation edits and deletion independently of recording rewrites', () => {
+    const store = createMatchRecordingStore(dir);
+    const recording = completedRecording({ rawEventRefs: [{ index: 2, type: 'tag-change' }] });
+    store.writeRecording(recording);
+    const annotation = { sourceEventIndex: 2, bookmarked: true, note: 'Save removal for next turn' };
+    store.saveAnnotation('rec-a', annotation);
+    store.writeRecording(recording);
+    const reopened = createMatchRecordingStore(dir);
+    expect(reopened.loadRecording('rec-a')?.annotations).toEqual([annotation]);
+    expect(() => reopened.saveAnnotation('rec-a', { ...annotation, sourceEventIndex: 500 })).toThrow();
+    expect(() => reopened.saveAnnotation('rec-a', { ...annotation, note: 'a'.repeat(4001) })).toThrow();
+    expect(() => reopened.saveAnnotation('../outside', annotation)).toThrow();
+    expect(reopened.saveAnnotation('rec-a', { ...annotation, note: '', bookmarked: false })).toEqual([]);
+    expect(createMatchRecordingStore(dir).loadRecording('rec-a')?.annotations).toEqual([]);
+  });
+
+  it('keeps corrupt and blank raw-event slots so later bookmarks retain their indexes', async () => {
+    const store = createMatchRecordingStore(dir);
+    store.writeRecording(completedRecording());
+    await writeFile(join(dir, 'rec-a', 'events.jsonl'), '{"type":"create-game"}\nnot-json\n\n{"type":"block-end"}\n');
+    expect(store.loadRecording('rec-a')?.rawEvents).toEqual([{ type: 'create-game' }, null, null, { type: 'block-end' }]);
+  });
+
   it('appends raw events to events.jsonl', () => {
     const store = createMatchRecordingStore(dir);
     store.appendRawEvent('rec-a', { type: 'create-game', raw: 'raw', content: 'content' });

@@ -65,7 +65,7 @@ describe('Settings — Overlay category', () => {
       .getByText('Show in-game overlay')
       .closest('.settings-row')!
       .querySelector('button')!;
-    expect(toggle.className).toContain('is-on');
+    expect(toggle).toHaveAttribute('data-state', 'checked');
     expect(toggle).toHaveAttribute('aria-checked', 'true');
   });
 
@@ -131,7 +131,7 @@ describe('Settings — Overlay category', () => {
       .getByText('Show opponent overlay')
       .closest('.settings-row')!
       .querySelector('button')!;
-    expect(opponentToggle.className).toContain('is-on');
+    expect(opponentToggle).toHaveAttribute('data-state', 'checked');
     expect(opponentToggle).toHaveAttribute('aria-checked', 'true');
   });
 

@@ -36,6 +36,7 @@ vi.mock('electron', () => ({
 }));
 
 const ALL_CHANNELS = [
+  'decks:list-versions',
   'decks:list',
   'decks:get-by-id',
   'decks:create',

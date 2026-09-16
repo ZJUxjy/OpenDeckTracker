@@ -1,4 +1,5 @@
-﻿import { useState, type ReactElement } from 'react';
+import { Button } from './beui/button';
+import { useState, type ReactElement } from 'react';
 import { Save } from 'lucide-react';
 import type { DeckCard, Format, HeroClass } from '@hdt/core';
 
@@ -69,7 +70,7 @@ export function SaveLiveDeckButton({ liveDeck }: SaveLiveDeckButtonProps): React
 
   return (
     <div className="inline-flex flex-col gap-1">
-      <button
+      <Button
         onClick={() => void onSave()}
         disabled={busy}
         aria-label={t('decks.saveLive.button')}
@@ -78,7 +79,7 @@ export function SaveLiveDeckButton({ liveDeck }: SaveLiveDeckButtonProps): React
       >
         <Save size={12} />
         {t('decks.saveLive.button')}
-      </button>
+      </Button>
       {error !== null && (
         <span
           className="text-xs text-red max-w-[280px]"

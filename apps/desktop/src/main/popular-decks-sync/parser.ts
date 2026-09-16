@@ -89,15 +89,20 @@ function parseMatchupCells(
 
 export function parseLegendArchetypes(html: string, limit = 20): HsguruArchetypeRow[] {
   const rows: HsguruArchetypeRow[] = [];
-  const rowPattern = /<tr>([\s\S]*?)<\/tr>/g;
+  const rowPattern = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
 
   for (const rowMatch of html.matchAll(rowPattern)) {
     const row = rowMatch[1] ?? '';
-    const archetypeMatch = row.match(
-      /<a[^>]+href="\/archetype\/([^"]+)"[^>]*>\s*([^<]+?)\s*<\/a>/,
+    const cells = Array.from(row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi),
+      (match) => match[1] ?? '');
+    const archetypeMatch = cells[0]?.match(
+      /<a\b[^>]+href="\/archetype\/([^"]+)"[^>]*>([\s\S]*?)<\/a>/i,
     );
-    const winrateMatch = row.match(/<span>([\d.]+)<\/span>/);
-    const popularityMatch = row.match(/<td>\s*([\d.]+)%\s*\((\d+)\)\s*<\/td>/);
+    // Read the data cells, not presentation-specific span/class markup.
+    // HSGuru added Tailwind attributes to both rows and cells in September 2026.
+    const winrateMatch = htmlCellText(cells[1] ?? '').match(/^(\d+(?:\.\d+)?)%?$/);
+    const popularityMatch = htmlCellText(cells[2] ?? '')
+      .match(/^(\d+(?:\.\d+)?)%\s*\(([\d,]+)\)$/);
 
     if (!archetypeMatch || !winrateMatch || !popularityMatch) continue;
     const slug = archetypeMatch[1] ?? '';
@@ -107,11 +112,11 @@ export function parseLegendArchetypes(html: string, limit = 20): HsguruArchetype
     const games = popularityMatch[2] ?? '0';
 
     rows.push({
-      archetype: decodeHtml(labelRaw.trim()),
+      archetype: htmlCellText(labelRaw),
       archetypeUrl: `${BASE_URL}/archetype/${decodeHtml(slug)}`,
       winrate: Number(wr),
       popularityPercent: Number(pop),
-      games: Number(games),
+      games: Number(games.replace(/,/g, '')),
     });
 
     if (rows.length >= limit) break;

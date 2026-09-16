@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { resolveLiveDeckVersion } from './deck-version-attribution';
 import {
   CardPlayedDetector,
   createLocalPlayerResolver,
@@ -649,8 +650,18 @@ export function startDeckTracker(deckStore: DeckStore): void {
 
   let lastPhaseLogged: string | null = null;
   let lastDeckIdLogged: number | string | null = null;
+  let attributedMatchStart: number | null = null;
   tracker.on('state-change', (event: DeckTrackerEvent) => {
     const s = event.snapshot;
+    if (s?.phase === 'IDLE') attributedMatchStart = null;
+    if (s?.phase === 'IN_MATCH' && typeof s.matchStartedAt === 'number' && s.matchStartedAt !== attributedMatchStart
+      && !s.savedDeckId) {
+      const attribution = resolveLiveDeckVersion(s, deckStore);
+      if (attribution) {
+        tracker?.selectSavedDeck(attribution.savedDeckId, attribution.savedDeckVersion);
+        attributedMatchStart = s.matchStartedAt;
+      }
+    }
     const phase = s?.phase ?? 'NULL';
     const deckId = s?.deck?.id ?? null;
     if (phase !== lastPhaseLogged || deckId !== lastDeckIdLogged) {
@@ -879,6 +890,7 @@ export function forwardPowerEventToDeckTracker(
   }
   cardPlayedDetector?.handle(event);
   reducePowerEvent(boardAttackState, event);
+  tracker?.recordAnalysisPowerEvent(event);
 }
 
 function extraDisplayTagUpdatesFromPowerEvent(
@@ -926,7 +938,8 @@ export { isRealMatchStepValue } from './match-step-values';
 
 function isScriptValueTag(tag: string): boolean {
   const normalized = tag.toUpperCase();
-  return normalized === 'TAG_SCRIPT_DATA_NUM_1' ||
+  return normalized === 'FATIGUE' || normalized === 'MAXHANDSIZE' || normalized === 'CANT_BE_FATIGUED' ||
+    normalized === 'TAG_SCRIPT_DATA_NUM_1' ||
     normalized === 'TAG_SCRIPT_DATA_NUM_2' ||
     normalized === 'SCRIPT_DATA_NUM_1' ||
     normalized === 'SCRIPT_DATA_NUM_2';

@@ -36,6 +36,18 @@ const makeCompletedMatch = (
   });
 
 describe('match-history-store', () => {
+  it('persists observed final turns without inventing values for legacy matches', () => {
+    const dbPath = join(dir, 'stats.sqlite');
+    const first = createMatchHistoryStore(dbPath);
+    first.record(makeCompletedMatch({ fingerprint: 'observed', turnCount: 12, savedDeckId: 'deck', savedDeckVersion: 1 }));
+    first.record(makeCompletedMatch({ fingerprint: 'legacy' }));
+    first.close();
+    const second = createMatchHistoryStore(dbPath);
+    const rows = second.getAllForFilter({ filter: 'all-time' });
+    expect(rows.find(row => row.fingerprint === 'observed')).toMatchObject({ turnCount: 12, savedDeckVersion: 1 });
+    expect(rows.find(row => row.fingerprint === 'legacy')?.turnCount).toBeUndefined();
+    second.close();
+  });
   it('persists and reloads completed matches', () => {
     const dbPath = join(dir, 'stats.sqlite');
     const first = createMatchHistoryStore(dbPath);

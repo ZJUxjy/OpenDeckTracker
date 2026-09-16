@@ -60,9 +60,10 @@ packages/hearthmirror/native/dump_reflection_*.jsonl
 
 # Temporary git commit message scratchpads
 .commitmsg.tmp
-.github
 .cursor
 .codex
+.github/*
+!.github/workflows/
 data/hsguru-data/
 data/hsguru-data-spider/
 .claude

@@ -10,6 +10,7 @@ import type {
 } from '@hdt/core';
 
 import { aggregateCardCount, validateDeck } from '@hdt/core';
+import { DeckVersionComparison } from './DeckVersionComparison';
 import { useLocale, useTranslation } from '../i18n';
 
 const CLASSES: HeroClass[] = [
@@ -226,6 +227,7 @@ export function DeckEditor({ open, onOpenChange, deck, onSave }: DeckEditorProps
           </div>
 
           <div className="grid grid-cols-2 gap-4 p-4 overflow-y-auto flex-1">
+            <DeckVersionComparison key={deck.id} deckId={deck.id} beforeLoad={flushSave} />
             {/* Left column: metadata */}
             <div className="space-y-3">
               <div>

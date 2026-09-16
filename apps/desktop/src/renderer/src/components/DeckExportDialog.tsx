@@ -1,4 +1,5 @@
-﻿import { useEffect, useState, type ReactElement } from 'react';
+import { Button } from './beui/button';
+import { useEffect, useState, type ReactElement } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Copy, X } from 'lucide-react';
@@ -62,9 +63,9 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
             </Dialog.Title>
             <Dialog.Description className="sr-only">{t('decks.export.title')}</Dialog.Description>
             <Dialog.Close asChild>
-              <button aria-label="Close" className="p-1 hover:bg-overlay-hover rounded">
+              <Button aria-label="Close" className="p-1 hover:bg-overlay-hover rounded">
                 <X size={18} />
-              </button>
+              </Button>
             </Dialog.Close>
           </div>
           <Tabs.Root defaultValue="deckstring" className="p-4">
@@ -99,7 +100,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
                   {deckstring ?? '...'}
                 </pre>
               )}
-              <button
+              <Button
                 onClick={() => deckstring && copy('deckstring', deckstring)}
                 disabled={deckstring === null}
                 className="px-3 py-1.5 text-sm bg-overlay-elevated hover:bg-overlay-hover rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -107,7 +108,7 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
               >
                 <Copy size={14} />
                 {copyAck === 'deckstring' ? t('decks.export.copied') : t('decks.export.copy')}
-              </button>
+              </Button>
             </Tabs.Content>
 
             <Tabs.Content value="json" className="space-y-3" data-testid="tab-json">
@@ -117,14 +118,14 @@ export function DeckExportDialog({ open, onOpenChange, deckId }: DeckExportDialo
               >
                 {json || '...'}
               </pre>
-              <button
+              <Button
                 onClick={() => copy('json', json)}
                 disabled={json === ''}
                 className="px-3 py-1.5 text-sm bg-overlay-elevated hover:bg-overlay-hover rounded inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Copy size={14} />
                 {copyAck === 'json' ? t('decks.export.copied') : t('decks.export.copy')}
-              </button>
+              </Button>
             </Tabs.Content>
           </Tabs.Root>
         </Dialog.Content>

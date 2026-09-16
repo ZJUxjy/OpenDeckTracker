@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import * as Tabs from '@radix-ui/react-tabs';
+import * as Tabs from './beui/tabs';
 
 import { useTranslation } from '../i18n';
 import { SavedDecksTab } from './SavedDecksTab';

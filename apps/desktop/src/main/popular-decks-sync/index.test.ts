@@ -375,6 +375,22 @@ describe('PopularDeckSyncOrchestrator.startSync', () => {
     expect(existsSync(join(dir, SYNCED_FILENAME))).toBe(false);
   });
 
+  it.each(['standard', 'wild'] as const)('preserves the cache when only %s meta fails to parse', async (failedFormat) => {
+    const seed = makeOrchestrator({ cacheDir: dir });
+    await seed.startSync(() => undefined);
+    const before = readFileSync(join(dir, SYNCED_FILENAME), 'utf-8');
+    const fetchSpy = vi.fn(async (url: string) => {
+      const format = new URL(url).searchParams.get('format') === '1' ? 'wild' : 'standard';
+      return new Response(format === failedFormat ? '<html>changed markup</html>' : META_HTML);
+    });
+    const orch = makeOrchestrator({ cacheDir: dir, formats: ['standard', 'wild'], fetchSpy });
+    expect(await orch.startSync(() => undefined)).toEqual({ ok: false, error: 'parse-failed' });
+    expect(readFileSync(join(dir, SYNCED_FILENAME), 'utf-8')).toBe(before);
+    expect(orch.getSnapshot()?.decks).toHaveLength(1);
+    expect(orch.getStatus().inFlight).toBe(false);
+    expect(fetchSpy.mock.calls.every(([url]) => String(url).includes('/meta?'))).toBe(true);
+  });
+
   it('returns network-failed when fetch throws non-abort error', async () => {
     const fetchSpy = vi.fn(async () => {
       throw new Error('ECONNREFUSED');

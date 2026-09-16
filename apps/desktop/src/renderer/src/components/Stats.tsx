@@ -18,6 +18,7 @@ import { MatchupMatrix } from './MatchupMatrix';
 import { WinrateTimeSeriesChart } from './WinrateTimeSeriesChart';
 import { PlayOrderSplitCard } from './PlayOrderSplitCard';
 import { MatchRecordingViewer } from './MatchRecordingViewer';
+import { MulliganStatsPanel } from './MulliganStatsPanel';
 import { useTranslation } from '../i18n';
 
 const FILTERS: StatsTimeFilter[] = ['today', 'week', 'season', 'all-time'];
@@ -238,6 +239,7 @@ export function Stats() {
         </div>
 
         {/* Top Summary Cards */}
+        <MulliganStatsPanel />
         <div className="reference-stat-summary-grid grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="reference-stats-kpi kpi-card tahoe-card p-5 flex flex-col relative overflow-hidden group">
             <div className="absolute right-[-10px] top-[-10px] opacity-5 text-accent group-hover:opacity-10 transition-opacity">

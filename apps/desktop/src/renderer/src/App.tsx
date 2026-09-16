@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import { DeckSelectDialog } from './components/DeckSelectDialog';
+import { AppUpdatePanel } from './components/AppUpdatePanel';
 import { useHearthMirrorStatus } from './hooks/use-hearthmirror-status';
 import { useDeckTracker } from './hooks/use-deck-tracker';
 import { useAdvisor } from './hooks/use-advisor';
@@ -19,6 +20,8 @@ import heroArt from './assets/reference-ui/hero.png';
 import logoHsCut from './assets/reference-ui/logo-hs-cut.png';
 
 import { useHearthWatcherStatus } from './hooks/use-hearthwatcher-status';
+import { Button } from './components/beui/button';
+import { SelectionIndicator, SelectionScope } from './components/beui/selection';
 
 const MAIN_NAV_ITEMS = [
   { id: 'tracker', icon: AppWindow, labelKey: 'sidebar.deckTracker', code: 'DASHBOARD' },
@@ -143,29 +146,32 @@ export default function App() {
             className="tavern-main-tabs flex min-w-0 flex-1 items-center justify-start gap-2"
             style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
           >
-            {MAIN_NAV_ITEMS.map((item) => {
-              const active = isActive(item.id);
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-label={t(item.labelKey)}
-                  aria-current={active ? 'page' : undefined}
-                  title={t(item.labelKey)}
-                  data-active={active ? 'true' : 'false'}
-                  className="tavern-nav-tab flex min-w-0 items-center justify-center gap-2"
-                  onClick={() => {
-                    void navigate(`/${item.id}`);
-                  }}
-                >
-                  <item.icon size={17} className="shrink-0" />
-                  <span className="tavern-nav-labels min-w-0">
-                    <span className="tavern-nav-label truncate">{t(item.labelKey)}</span>
-                    <span className="tavern-nav-code truncate">{item.code}</span>
-                  </span>
-                </button>
-              );
-            })}
+            <SelectionScope>
+              {MAIN_NAV_ITEMS.map((item) => {
+                const active = isActive(item.id);
+                return (
+                  <Button
+                    key={item.id}
+                    type="button"
+                    aria-label={t(item.labelKey)}
+                    aria-current={active ? 'page' : undefined}
+                    title={t(item.labelKey)}
+                    data-active={active ? 'true' : 'false'}
+                    className="tavern-nav-tab beui-selection flex min-w-0 items-center justify-center gap-2"
+                    onClick={() => {
+                      void navigate(`/${item.id}`);
+                    }}
+                  >
+                    <SelectionIndicator active={active} />
+                    <item.icon size={17} className="shrink-0" />
+                    <span className="tavern-nav-labels min-w-0">
+                      <span className="tavern-nav-label truncate">{t(item.labelKey)}</span>
+                      <span className="tavern-nav-code truncate">{item.code}</span>
+                    </span>
+                  </Button>
+                );
+              })}
+            </SelectionScope>
           </nav>
 
           <div
@@ -191,7 +197,7 @@ export default function App() {
                 {displayBattleTag?.fullBattleTag ?? t('app.playerFallback')}
               </span>
             </div>
-            <button
+            <Button
               type="button"
               aria-label={t('sidebar.settings')}
               aria-current={isActive('settings') ? 'page' : undefined}
@@ -203,7 +209,7 @@ export default function App() {
               }}
             >
               <Settings size={18} />
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -217,6 +223,7 @@ export default function App() {
             <Outlet />
           </section>
         </main>
+        <AppUpdatePanel compact />
         <footer
           className="tavern-bottom-status shrink-0"
           aria-label={t('app.versionAriaLabel')}

@@ -27,6 +27,8 @@ export interface CompletedMatchSummary extends MatchClassification {
    */
   savedDeckId?: string;
   savedDeckVersion?: number;
+  /** Observed final TURN counter (both players' turns); absent on legacy matches. */
+  turnCount?: number;
   opponentName: string | null;
   opponentClass: string | null;
   /**

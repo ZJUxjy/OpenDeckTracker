@@ -4,6 +4,7 @@ import {
   type CreateDeckInput,
   type DeckDetail,
   type DeckSummary,
+  type DeckVersion,
   type UpdateDeckPatch,
 } from '@hdt/core';
 import {
@@ -38,6 +39,7 @@ export interface DeckIpcOptions {
 const CHANNELS = {
   list: 'decks:list',
   getById: 'decks:get-by-id',
+  listVersions: 'decks:list-versions',
   create: 'decks:create',
   update: 'decks:update',
   duplicate: 'decks:duplicate',
@@ -79,6 +81,10 @@ export function registerDeckIpc(options: DeckIpcOptions): void {
   ipcMain.handle(CHANNELS.list, (): DeckSummary[] => store.list());
 
   ipcMain.handle(CHANNELS.getById, (_e, id: string): DeckDetail | null => store.getById(id));
+  ipcMain.handle(CHANNELS.listVersions, (_e, id: string): DeckVersion[] => {
+    if (typeof id !== 'string' || id.length > 200) throw new Error('Invalid deck id');
+    return store.listVersions(id);
+  });
 
   ipcMain.handle(CHANNELS.create, (_e, input: CreateDeckInput): DeckDetail => {
     try {

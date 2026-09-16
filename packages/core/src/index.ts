@@ -261,3 +261,16 @@ export type {
 } from './global-effects';
 export { EFFECT_CATALOG, GlobalEffectsRegistry, CardPlayedDetector } from './global-effects';
 export type { GlobalEffectsRegistryArgs } from './global-effects';
+export { calculateDrawOdds } from './analysis/draw-odds';
+export type { DrawOddsInput, DrawOddsResult } from './analysis/draw-odds';
+export { forecastDrawRisk } from './analysis/draw-risk';
+export type { DrawRiskInput, DrawRiskForecast } from './analysis/draw-risk';
+export type { PlayerDrawContext } from './analysis/player-draw-state';
+export type { OpponentHandCard } from './tracker/opponent-hand-timeline';
+export { summarizeResources } from './analysis/resources';
+export type { ResourceGroup, ResourceSummaryInput } from './analysis/resources';
+export { compareDeckVersions } from './stats/deck-version-comparison';
+export { computeMulliganStats } from './stats/mulligan-stats';
+export type { MulliganFilter, MulliganRow, MulliganStats } from './stats/mulligan-stats';
+export { indexReplayKeyEvents, reconstructReplayFrame, type ReplayCard, type ReplayFrame, type ReplayKeyEvent } from './recordings/key-turns';
+export type { RecordingAnnotation } from './recordings/match-recording';

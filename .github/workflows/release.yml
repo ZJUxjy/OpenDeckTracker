@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require a matching version tag
+        shell: pwsh
+        run: |
+          $version = (Get-Content apps/desktop/package.json | ConvertFrom-Json).version
+          if ($env:GITHUB_REF -ne "refs/tags/v$version") { throw 'Run releases from the matching version tag.' }
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm cards:sync
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm --filter @hdt/hearthmirror-native build
+      - run: pnpm notices
+      - run: pnpm package
+      - run: pnpm release:verify
+      - run: pnpm release:smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.exe.blockmap
+            apps/desktop/release/*.zip
+            apps/desktop/release/latest.yml
+          if-no-files-found: error
+      - name: Publish complete release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content apps/desktop/package.json | ConvertFrom-Json).version
+          $tag = "v$version"
+          $existing = gh release view $tag --json isDraft 2>$null
+          if ($LASTEXITCODE -eq 0) { throw "Release $tag already exists; inspect it before retrying." }
+          gh release create $tag --verify-tag --draft --title $tag --notes-file RELEASE_NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw 'Could not create draft release.' }
+          gh release upload $tag "apps/desktop/release/OpenDeckTracker-Setup-$version.exe" "apps/desktop/release/OpenDeckTracker-Setup-$version.exe.blockmap" "apps/desktop/release/OpenDeckTracker-$version-win.zip" apps/desktop/release/latest.yml
+          if ($LASTEXITCODE -ne 0) { throw 'Upload failed; draft remains unpublished.' }
+          gh release edit $tag --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Could not publish release.' }

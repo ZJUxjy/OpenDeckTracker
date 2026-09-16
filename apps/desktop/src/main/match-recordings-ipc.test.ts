@@ -19,6 +19,19 @@ vi.mock('electron', () => ({
 }));
 
 describe('match-recordings-ipc', () => {
+  it('passes annotation changes through the recording store', () => {
+    const annotation = { sourceEventIndex: 2, bookmarked: true, note: 'Replay this turn' };
+    const store = { listCompleted: vi.fn(() => []), loadRecording: vi.fn(() => null), saveAnnotation: vi.fn(() => [annotation]) };
+    registerMatchRecordingsIpc({ store });
+    expect(mocks.handlers.get('recordings:save-annotation')?.({}, 'rec-a', annotation)).toEqual([annotation]);
+    expect(store.saveAnnotation).toHaveBeenCalledWith('rec-a', annotation);
+  });
+  it('loads structured recordings without raw events for mulligan statistics', () => {
+    const store = { listCompleted: vi.fn(() => [{ recordingId: 'rec-a' }] as MatchRecordingSummary[]), loadRecording: vi.fn(() => null) };
+    registerMatchRecordingsIpc({ store, getMatches: () => [] });
+    expect(mocks.handlers.get('recordings:mulligan-stats')?.({}, {})).toMatchObject({ sampleSize: 0, rows: [] });
+    expect(store.loadRecording).toHaveBeenCalledWith('rec-a', { includeRawEvents: false });
+  });
   it('registers read-only list and detail handlers', async () => {
     const summaries: MatchRecordingSummary[] = [{
       recordingId: 'rec-a',

@@ -1,0 +1,224 @@
+/* beUI motion primitives, mapped to the existing application themes. */
+:root {
+  --beui-accent: var(--accent);
+  --beui-selected-ink: var(--text-on-accent);
+  --beui-selection: var(--accent-dim);
+}
+
+:root[data-ui-style='reference'] {
+  --beui-accent: var(--ref-green-bright);
+  --beui-selected-ink: #042a16;
+  --beui-selection: var(--ref-green-soft);
+}
+
+.beui-button {
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.beui-button:disabled,
+.beui-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.beui-button:not(.beui-button-plain) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.beui-button-primary {
+  background: var(--beui-accent);
+  color: var(--beui-selected-ink);
+}
+.beui-button-secondary {
+  background: var(--overlay-surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+.beui-button-ghost {
+  background: transparent;
+  color: var(--text-dim);
+}
+.beui-button:not(:disabled):hover {
+  filter: brightness(1.06);
+}
+
+.beui-selection {
+  position: relative;
+  isolation: isolate;
+  -webkit-app-region: no-drag;
+  transition: color 150ms ease;
+}
+
+.beui-selection-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: var(--beui-selection);
+  border: 1px solid color-mix(in srgb, var(--beui-accent) 28%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 5%, transparent);
+}
+
+.beui-filter-group {
+  width: fit-content;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--overlay-input);
+}
+
+.beui-filter-group .beui-selection {
+  color: var(--text-dim);
+  min-height: 30px;
+}
+.beui-filter-group .beui-selection[aria-pressed='true'] {
+  color: var(--text);
+}
+.beui-filter-group .beui-selection:hover {
+  color: var(--text);
+}
+
+:root:is([data-ui-style='reference'], [data-ui-style='macos'])
+  .tavern-nav-tab.beui-selection[data-active='true'] {
+  background: transparent;
+  border-color: transparent;
+  color: var(--beui-accent);
+  box-shadow: none;
+}
+
+.reference-segment .beui-selection[aria-pressed='true'] {
+  color: var(--beui-selected-ink);
+}
+.reference-segment .beui-selection-indicator {
+  background: var(--beui-accent);
+  border-color: transparent;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--beui-accent) 14%, transparent);
+}
+
+.reference-settings-nav .beui-selection[aria-current='page'] {
+  color: var(--beui-accent);
+}
+.reference-settings-nav .beui-selection-indicator {
+  border-radius: 9px;
+}
+.reference-settings-nav .beui-selection {
+  border-radius: 9px;
+}
+
+.reference-page-tab.beui-selection[data-state='active'] {
+  color: var(--beui-accent);
+  background: transparent;
+  border-color: transparent;
+}
+.reference-page-tab.beui-selection::after {
+  display: none;
+}
+.reference-page-tab .beui-selection-indicator {
+  inset: auto 12px 0;
+  height: 3px;
+  border: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--beui-accent);
+}
+
+.tracker-tab-pill.beui-selection {
+  color: var(--text-dim);
+  min-height: 30px;
+}
+.tracker-tab-pill.beui-selection[data-active='true'] {
+  color: var(--beui-accent);
+}
+.tracker-tab-pill .beui-selection-indicator {
+  background: color-mix(in srgb, var(--overlay-side-accent, var(--beui-accent)) 14%, transparent);
+  border-color: color-mix(in srgb, var(--overlay-side-accent, var(--beui-accent)) 30%, transparent);
+}
+.beui-tab-count {
+  background: var(--overlay-hover);
+  color: inherit;
+}
+
+/* Existing overlay skin has !important selected backgrounds; the moving pill owns them now. */
+:root[data-ui-style='reference'] body[data-overlay='true'] .tracker-tab-pill.beui-selection {
+  flex: 1 0 auto;
+}
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  .tracker-tab-pill.beui-selection[data-active='true'] {
+  background: transparent !important;
+  border-color: transparent;
+  box-shadow: none !important;
+}
+:root[data-ui-style='reference']
+  body[data-overlay='true']
+  .tracker-tab-pill
+  > .beui-selection-indicator {
+  overflow: visible;
+}
+
+.beui-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 48px;
+  height: 28px;
+  padding: 3px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-hi);
+  border-radius: 999px;
+  background: var(--overlay-pressed);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+.beui-switch[data-state='checked'] {
+  background: var(--beui-accent);
+  border-color: transparent;
+}
+.beui-switch-thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 20%);
+  pointer-events: none;
+}
+:root[data-ui-style='reference'] .beui-switch[data-state='checked'] .beui-switch-thumb {
+  background: #082919;
+}
+
+.beui-button:focus-visible,
+.beui-switch:focus-visible,
+.beui-selection:focus-visible,
+.beui-tab-content:focus-visible {
+  outline: 2px solid var(--beui-accent);
+  outline-offset: 3px;
+}
+.beui-tab-content[hidden] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beui-button,
+  .beui-switch,
+  .beui-selection {
+    transition: none;
+  }
+}

@@ -7,6 +7,8 @@ import { useCardTileUrl } from '../hooks/use-card-image-url';
 import { useHearthMirrorStatus } from '../hooks/use-hearthmirror-status';
 import { useLocale, useTranslation } from '../i18n';
 import { OpponentDeckPredictionSection } from './OpponentDeckPredictionSection';
+import { OpponentHandTimelinePanel } from './OpponentHandTimelinePanel';
+import { OpponentResourcePanel } from './OpponentResourcePanel';
 
 const NAME_TEXT_SHADOW: CSSProperties = { textShadow: '0 1px 2px rgba(0,0,0,0.7)' };
 
@@ -143,6 +145,8 @@ export function OpponentCardsPanel({
             observedCount={revealed.length}
             revealed={revealed}
           />
+          <OpponentHandTimelinePanel />
+          <OpponentResourcePanel predictions={predictions} />
           {isEmpty ? (
             <div className="h-full flex items-center justify-center text-text-mute text-sm px-4 text-center">
               {emptyMessage}

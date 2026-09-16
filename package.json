@@ -1,6 +1,6 @@
 {
   "name": "opendecktracker",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "OpenDeckTracker — TypeScript Hearthstone deck tracker",
@@ -16,7 +16,7 @@
     "build": "pnpm -r build",
     "lint": "eslint .",
     "typecheck": "pnpm -r typecheck",
-    "pretest": "pnpm rebuild better-sqlite3",
+    "pretest": "pnpm --filter @hdt/desktop run rebuild:node",
     "test": "vitest run",
     "package": "pnpm --filter @hdt/desktop package",
     "cards:convert": "tsx scripts/convert-hsdata-cards.ts",
@@ -24,7 +24,9 @@
     "cards:update": "tsx scripts/sync-card-data.ts --latest",
     "cards:download": "tsx scripts/download-cards.ts",
     "cards:images": "tsx scripts/download-card-images.ts",
-    "notices": "node scripts/generate-third-party-notices.mjs"
+    "notices": "node scripts/generate-third-party-notices.mjs",
+    "release:verify": "node scripts/verify-release.mjs",
+    "release:smoke": "node scripts/run-update-smoke.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

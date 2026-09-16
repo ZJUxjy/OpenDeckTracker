@@ -1,11 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { CardDataPanel } from './CardDataPanel';
+import { AppUpdatePanel } from './AppUpdatePanel';
 import { ConnectionDiagnostics } from './ConnectionDiagnostics';
 import { Database, Info, Monitor, Palette, Sparkles } from 'lucide-react';
 import type { AdvisorConfig, AdvisorProvider } from '@hdt/advisor';
 import { useTranslation, type LanguagePreference } from '../i18n';
 import { useI18nStore } from '../i18n/i18n-store';
 import { useAppearanceStore, ACCENT_PALETTE, type Accent, type Density, type Theme, type UiStyle } from '../stores/appearance-store';
+import { Button } from './beui/button';
+import { Switch } from './beui/switch';
+import { SelectionIndicator, SelectionScope } from './beui/selection';
 
 const ALL_ACCENTS: Accent[] = ['blue', 'red', 'orange', 'yellow', 'green', 'mint', 'purple', 'pink'];
 const UI_STYLE_OPTIONS: UiStyle[] = ['reference', 'macos'];
@@ -36,14 +40,6 @@ const categories = [
   { id: 'about', labelKey: 'settings.about.categoryLabel', icon: Info },
 ];
 
-type UpdateState =
-  | { kind: 'idle' }
-  | { kind: 'checking' }
-  | { kind: 'up-to-date' }
-  | { kind: 'update-available'; version: string }
-  | { kind: 'unsupported' }
-  | { kind: 'error'; message: string };
-
 function SettingsSegment<T extends string>({
   options,
   value,
@@ -57,17 +53,20 @@ function SettingsSegment<T extends string>({
 }) {
   return (
     <div className="reference-segment shrink-0" role="group" aria-label={label}>
-      {options.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          onClick={() => onChange(option.value)}
-          aria-pressed={value === option.value}
-          className={value === option.value ? 'is-active' : undefined}
-        >
-          {option.label}
-        </button>
-      ))}
+      <SelectionScope>
+        {options.map((option) => (
+          <Button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            aria-pressed={value === option.value}
+            className="beui-selection"
+          >
+            <SelectionIndicator active={value === option.value} />
+            {option.label}
+          </Button>
+        ))}
+      </SelectionScope>
     </div>
   );
 }
@@ -96,22 +95,20 @@ function ReferenceToggle({
   checked,
   onChange,
   testId,
+  label,
 }: {
   checked: boolean;
   onChange: () => void;
   testId?: string;
+  label: string;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
+    <Switch
       data-testid={testId}
-      aria-checked={checked}
-      onClick={onChange}
-      className={`reference-toggle shrink-0 ${checked ? 'is-on' : ''}`}
-    >
-      <span aria-hidden="true" />
-    </button>
+      aria-label={label}
+      checked={checked}
+      onCheckedChange={onChange}
+    />
   );
 }
 
@@ -168,18 +165,22 @@ export function Settings({ category, onCategoryChange }: {
       >
 
         <nav className="reference-settings-nav shrink-0" aria-label={t('settings.title')}>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              data-testid={`settings-category-${cat.id}`}
-              onClick={() => setActiveCategory(cat.id)}
-              className={activeCategory === cat.id ? 'is-active' : undefined}
-            >
-              <cat.icon size={18} aria-hidden="true" />
-              <span>{t(cat.labelKey)}</span>
-            </button>
-          ))}
+          <SelectionScope>
+            {categories.map((cat) => (
+              <Button
+                key={cat.id}
+                type="button"
+                data-testid={`settings-category-${cat.id}`}
+                onClick={() => setActiveCategory(cat.id)}
+                className="beui-selection"
+                aria-current={activeCategory === cat.id ? 'page' : undefined}
+              >
+                <SelectionIndicator active={activeCategory === cat.id} />
+                <cat.icon size={18} aria-hidden="true" />
+                <span>{t(cat.labelKey)}</span>
+              </Button>
+            ))}
+          </SelectionScope>
         </nav>
 
         <div className="reference-settings-content flex-1 min-h-0 overflow-y-auto">
@@ -289,7 +290,7 @@ export function Settings({ category, onCategoryChange }: {
                   title={t('settings.overlayPanel.enableTitle')}
                   description={t('settings.overlayPanel.enableDescription')}
                   control={
-                    <ReferenceToggle checked={gameOverlay} onChange={() => setGameOverlay(!gameOverlay)} />
+                    <ReferenceToggle label={t('settings.overlayPanel.enableTitle')} checked={gameOverlay} onChange={() => setGameOverlay(!gameOverlay)} />
                   }
                 />
 
@@ -298,6 +299,7 @@ export function Settings({ category, onCategoryChange }: {
                   description={t('settings.overlayPanel.enableOpponentDescription')}
                   control={
                     <ReferenceToggle
+                      label={t('settings.overlayPanel.enableOpponentTitle')}
                       checked={gameOverlayOpponent}
                       onChange={() => setGameOverlayOpponent(!gameOverlayOpponent)}
                     />
@@ -416,6 +418,7 @@ function AdvisorSettingsPanel() {
         description={t('settings.advisor.enabledDescription')}
         control={
           <ReferenceToggle
+            label={t('settings.advisor.enabledTitle')}
             checked={config.enabled}
             onChange={() => patchConfig({ enabled: !config.enabled })}
             testId="settings-advisor-enabled"
@@ -428,6 +431,7 @@ function AdvisorSettingsPanel() {
         description={t('settings.advisor.autoSuggestDescription')}
         control={
           <ReferenceToggle
+            label={t('settings.advisor.autoSuggestTitle')}
             checked={config.autoSuggest}
             onChange={() => patchConfig({ autoSuggest: !config.autoSuggest })}
             testId="settings-advisor-autosuggest"
@@ -683,7 +687,6 @@ function DataPanel() {
 function AboutPanel() {
   const { t } = useTranslation();
   const [version, setVersion] = useState<string>('');
-  const [updateState, setUpdateState] = useState<UpdateState>({ kind: 'idle' });
   const [openError, setOpenError] = useState<boolean>(false);
 
   useEffect(() => {
@@ -695,32 +698,6 @@ function AboutPanel() {
       alive = false;
     };
   }, []);
-
-  const handleCheckForUpdates = async () => {
-    if (updateState.kind === 'checking') return;
-    setUpdateState({ kind: 'checking' });
-    setOpenError(false);
-    const api = window.hdt?.about;
-    if (!api) {
-      setUpdateState({ kind: 'unsupported' });
-      return;
-    }
-    const result = await api.checkForUpdates();
-    switch (result.state) {
-      case 'unsupported':
-        setUpdateState({ kind: 'unsupported' });
-        break;
-      case 'up-to-date':
-        setUpdateState({ kind: 'up-to-date' });
-        break;
-      case 'update-available':
-        setUpdateState({ kind: 'update-available', version: result.version });
-        break;
-      case 'error':
-        setUpdateState({ kind: 'error', message: result.message });
-        break;
-    }
-  };
 
   const handleOpenLicense = async () => {
     setOpenError(false);
@@ -740,22 +717,7 @@ function AboutPanel() {
         {t('settings.about.version', { version: version || '—' })}
       </p>
 
-      <SettingsRow
-        title={t('settings.about.checkForUpdates')}
-        description={renderUpdateMessage(t, updateState)}
-        control={
-          <button
-            type="button"
-            onClick={handleCheckForUpdates}
-            disabled={updateState.kind === 'checking'}
-            className="reference-action-button shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {updateState.kind === 'checking'
-              ? t('settings.about.checking')
-              : t('settings.about.checkForUpdates')}
-          </button>
-        }
-      />
+      <AppUpdatePanel />
 
       <SettingsRow
         title={t('settings.about.viewLicense')}
@@ -781,24 +743,4 @@ function AboutPanel() {
       </div>
     </div>
   );
-}
-
-function renderUpdateMessage(
-  t: (key: string, values?: Record<string, string | number | boolean>) => string,
-  state: UpdateState,
-): string {
-  switch (state.kind) {
-    case 'idle':
-      return '';
-    case 'checking':
-      return t('settings.about.checking');
-    case 'up-to-date':
-      return t('settings.about.upToDate');
-    case 'update-available':
-      return t('settings.about.updateAvailable', { version: state.version });
-    case 'unsupported':
-      return t('settings.about.updateUnsupported');
-    case 'error':
-      return t('settings.about.updateError', { message: state.message });
-  }
 }

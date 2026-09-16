@@ -60,6 +60,10 @@ export interface SavedDeckMatchupsIpcOptions {
 }
 
 export function registerStatsIpc(store: MatchHistoryStore = getMatchHistoryStore()): void {
+  ipcMain.handle('stats:deck-version-matches', (_event, savedDeckId: string): MatchHistoryRecord[] => {
+    if (typeof savedDeckId !== 'string' || savedDeckId.length > 200) throw new Error('Invalid deck id');
+    return store.getAllForFilter({ filter: 'all-time' }).filter(match => match.savedDeckId === savedDeckId);
+  });
   ipcMain.handle(
     'stats:get-summary',
     (_event, filter: StatsTimeFilter, options?: SummaryIpcOptions): StatsSummary => {

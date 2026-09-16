@@ -20,6 +20,25 @@ vi.mock('electron', () => ({
 }));
 
 describe('preload api', () => {
+  it('exposes update actions and removes the exact status subscription', async () => {
+    await import('./index');
+    const api = mocks.exposed as typeof window.hdt;
+    await api.updates.getStatus();
+    await api.updates.check();
+    await api.updates.download();
+    await api.updates.install();
+    await api.updates.openReleases();
+    for (const action of ['get-status', 'check', 'download', 'install', 'open-releases']) {
+      expect(mocks.ipcRenderer.invoke).toHaveBeenCalledWith(`app-update:${action}`);
+    }
+    const cb = vi.fn();
+    const off = api.updates.onStatus(cb);
+    const handler = mocks.ipcRenderer.on.mock.calls.find(([channel]) => channel === 'app-update:status-changed')?.[1];
+    handler({}, { state: 'downloaded', version: '0.8.0' });
+    expect(cb).toHaveBeenCalledWith({ state: 'downloaded', version: '0.8.0' });
+    off();
+    expect(mocks.ipcRenderer.removeListener).toHaveBeenCalledWith('app-update:status-changed', handler);
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.exposed = null;
