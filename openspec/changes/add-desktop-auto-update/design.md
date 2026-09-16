@@ -41,4 +41,4 @@ Keep appId, productName and userData paths unchanged; bump workspace versions to
 
 ## Open Questions
 
-Whether existing uncommitted product changes should be included in this release is being confirmed with the user.
+The release includes the current development snapshot together with the updater. Remaining tasks in complete-tracker-enhancements retain their existing in-progress status.

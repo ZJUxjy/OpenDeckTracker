@@ -11,4 +11,4 @@
 
 - [x] 3.1 Configure apps/desktop/electron-builder.yml GitHub feed, bump workspace versions to 0.7.0, add scripts/verify-release.mjs, .github/workflows/release.yml and docs/RELEASING.md; run pnpm release:verify after pnpm package, expecting matching manifest/version/hash and complete assets. Commit: build(release): prepare v0.7.0 and automate complete releases.
 - [x] 3.2 Run pnpm lint, pnpm typecheck and pnpm test; build the NSIS/ZIP packages and inspect the packaged feed and native runtime. Record test and packaging results in docs/RELEASING.md.
-- [ ] 3.3 Commit the approved release scope, push source and v0.7.0 tag, upload verified assets to a draft with gh release create/upload, then publish and verify the public release via gh release view. Expected result: published v0.7.0 with installer, ZIP, latest.yml and blockmap.
+- [x] 3.3 Commit the approved release scope, push source and v0.7.0 tag, upload verified assets to a draft with gh release create/upload, then publish and verify the public release via gh release view. Expected result: published v0.7.0 with installer, ZIP, latest.yml and blockmap.
