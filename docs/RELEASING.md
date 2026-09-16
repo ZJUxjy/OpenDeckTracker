@@ -23,7 +23,7 @@ Use an isolated Windows installation and disposable userData to validate the two
 
 For isolated build outputs, set `HDT_RELEASE_DIR` to the absolute output path for metadata generation, validation and smoke scripts. Pass the same path to electron-builder with `--config.directories.output=...`.
 
-v0.7.0 is the installer bootstrap release: older builds contain a placeholder feed and require one manual install. Portable v0.7.0 does not contain the ZIP updater; those users need one manual upgrade to a later release containing this change. Do not overwrite v0.7.0 to add the feature.
+v0.7.0 is the installer bootstrap release: older builds contain a placeholder feed and require one manual install. v0.7.1 is the portable bootstrap release: portable v0.7.0 does not contain the ZIP updater, so those users need one manual upgrade to v0.7.1. Do not overwrite an older release to add the feature.
 
 ## Portable replacement
 
