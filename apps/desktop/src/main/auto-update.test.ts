@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('electron', () => ({ app: {}, BrowserWindow: {}, ipcMain: {}, shell: {} }));
 vi.mock('electron-updater', () => ({ default: { autoUpdater: {} } }));
-import { createUpdateController, isInstalledWindowsApp } from './auto-update';
+vi.mock('./portable-updater', () => ({ PortableUpdater: vi.fn() }));
+import { createUpdateController, getUpdateDistribution } from './auto-update';
 
 function setup(supported = true) {
   const updater = Object.assign(new EventEmitter(), {
@@ -28,6 +29,23 @@ function setup(supported = true) {
 }
 
 describe('desktop update lifecycle', () => {
+  it('retains a previous portable recovery error until a new check is requested', async () => {
+    const { updater } = setup();
+    const controller = createUpdateController(
+      updater,
+      true,
+      vi.fn(),
+      'File locked; old files restored',
+    );
+    expect(controller.getStatus()).toMatchObject({
+      state: 'error',
+      retry: 'check',
+      message: 'File locked; old files restored',
+    });
+    expect(updater.checkForUpdates).not.toHaveBeenCalled();
+    await controller.check();
+    expect(controller.getStatus().state).toBe('update-available');
+  });
   it('checks without downloading and installs only after explicit consent', async () => {
     const { updater, controller, publish } = setup();
     expect(updater.autoDownload).toBe(false);
@@ -124,9 +142,9 @@ describe('desktop update lifecycle', () => {
     expect(updater.checkForUpdates).not.toHaveBeenCalled();
     expect(updater.downloadUpdate).not.toHaveBeenCalled();
     expect(updater.quitAndInstall).not.toHaveBeenCalled();
-    expect(isInstalledWindowsApp(false, 'win32', true)).toBe(false);
-    expect(isInstalledWindowsApp(true, 'win32', false)).toBe(false);
-    expect(isInstalledWindowsApp(true, 'darwin', true)).toBe(false);
-    expect(isInstalledWindowsApp(true, 'win32', true)).toBe(true);
+    expect(getUpdateDistribution(false, 'win32', true)).toBe('unsupported');
+    expect(getUpdateDistribution(true, 'win32', false)).toBe('portable');
+    expect(getUpdateDistribution(true, 'darwin', true)).toBe('unsupported');
+    expect(getUpdateDistribution(true, 'win32', true)).toBe('installed');
   });
 });

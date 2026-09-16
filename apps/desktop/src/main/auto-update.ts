@@ -4,6 +4,8 @@ import type { EventEmitter } from 'node:events';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { APP_UPDATE_STATUS_CHANNEL, type AppUpdateStatus } from '../shared/app-update';
+import { PortableUpdater } from './portable-updater';
+import { takePortableUpdateError } from './portable-update-helper';
 
 const RELEASES_URL = 'https://github.com/ZJUxjy/OpenDeckTracker/releases/latest';
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -24,12 +26,13 @@ type ReleaseInfo = {
   releaseNotes?: string | { version: string; note: string | null }[] | null;
 };
 
-export function isInstalledWindowsApp(
+export function getUpdateDistribution(
   packaged: boolean,
   platform: string,
   hasUninstaller: boolean,
-): boolean {
-  return packaged && platform === 'win32' && hasUninstaller;
+): 'unsupported' | 'installed' | 'portable' {
+  if (!packaged || platform !== 'win32') return 'unsupported';
+  return hasUninstaller ? 'installed' : 'portable';
 }
 
 /** One source of truth for startup checks, settings and the desktop notice. */
@@ -37,8 +40,12 @@ export function createUpdateController(
   updater: Updater,
   supported: boolean,
   publish: (status: AppUpdateStatus) => void,
+  previousError?: string,
 ) {
-  let status: AppUpdateStatus = { state: supported ? 'idle' : 'unsupported' };
+  let status: AppUpdateStatus =
+    previousError && supported
+      ? { state: 'error', retry: 'check', message: previousError }
+      : { state: supported ? 'idle' : 'unsupported' };
   let pending: Promise<AppUpdateStatus> | undefined;
   let operation: 'check' | 'download' | 'install' = 'check';
   updater.autoDownload = false;
@@ -146,17 +153,24 @@ let controller: ReturnType<typeof createUpdateController> | undefined;
 
 export function getUpdateController() {
   if (!controller) {
-    const supported = isInstalledWindowsApp(
+    const distribution = getUpdateDistribution(
       app.isPackaged,
       process.platform,
       existsSync(join(dirname(app.getPath('exe')), 'Uninstall OpenDeckTracker.exe')),
     );
-    controller = createUpdateController(electronUpdater.autoUpdater, supported, (status) => {
-      for (const window of BrowserWindow.getAllWindows()) {
-        if (!window.isDestroyed() && !window.webContents.isDestroyed())
-          window.webContents.send(APP_UPDATE_STATUS_CHANNEL, status);
-      }
-    });
+    const updater =
+      distribution === 'portable' ? new PortableUpdater() : electronUpdater.autoUpdater;
+    controller = createUpdateController(
+      updater,
+      distribution !== 'unsupported',
+      (status) => {
+        for (const window of BrowserWindow.getAllWindows()) {
+          if (!window.isDestroyed() && !window.webContents.isDestroyed())
+            window.webContents.send(APP_UPDATE_STATUS_CHANNEL, status);
+        }
+      },
+      distribution === 'portable' ? takePortableUpdateError() : undefined,
+    );
   }
   return controller;
 }
@@ -169,7 +183,7 @@ export function initAutoUpdate(): void {
   ipcMain.handle('app-update:install', () => updates.install());
   ipcMain.handle('app-update:open-releases', () => shell.openExternal(RELEASES_URL));
   if (updates.getStatus().state === 'unsupported') return;
-  void updates.check();
+  if (updates.getStatus().state === 'idle') void updates.check();
   const timer = setInterval(() => {
     void updates.check();
   }, SIX_HOURS_MS);

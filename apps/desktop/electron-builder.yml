@@ -42,6 +42,8 @@ asarUnpack:
 # under app.getPath('exe')'s sibling directory at runtime so the About
 # dialog can link to them.
 extraResources:
+  - from: build/portable-update.ps1
+    to: portable-update.ps1
   - from: ../../LICENSE
     to: LICENSE
   - from: ../../THIRD_PARTY_NOTICES.txt
